@@ -212,6 +212,48 @@ export async function getClosePreview(yearId: number): Promise<ClosePreview | nu
     }
 }
 
+// ─── Year Summary & History ───────────────────────────────────
+
+export type YearSummary = {
+    year: { name: string; start_date: string; end_date: string; status: string; is_hard_locked: boolean; closed_at: string | null }
+    journal_entries: { total: number; posted: number; draft: number; total_debit: number; total_credit: number }
+    pnl: { revenue: number; expenses: number; net_income: number }
+    balance_sheet: { assets: number; liabilities: number; equity: number }
+    closing_entry: { reference: string; date: string; description: string; lines: { code: string; name: string; debit: number; credit: number }[] } | null
+    opening_balances: { code: string; name: string; type: string; debit: number; credit: number }[]
+    opening_balances_target: string | null
+    periods: { name: string; status: string; start_date: string; end_date: string; journal_entries: number }[]
+}
+
+export type YearHistoryEvent = {
+    type: string; date: string; description: string; user?: string
+}
+
+export type DraftAuditEntry = {
+    id: number; reference: string; date: string; description: string; total_debit: number; total_credit: number
+}
+
+export async function getYearSummary(yearId: number): Promise<YearSummary | null> {
+    try {
+        return await erpFetch(`fiscal-years/${yearId}/summary/`)
+    } catch { return null }
+}
+
+export async function getYearHistory(yearId: number): Promise<{ events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }> {
+    try {
+        return await erpFetch(`fiscal-years/${yearId}/history/`)
+    } catch { return { events: [], je_by_month: [] } }
+}
+
+export async function getDraftAudit(yearId: number, periodId?: number): Promise<{ drafts: DraftAuditEntry[]; total: number }> {
+    try {
+        const url = periodId
+            ? `fiscal-years/${yearId}/draft-audit/?period_id=${periodId}`
+            : `fiscal-years/${yearId}/draft-audit/`
+        return await erpFetch(url)
+    } catch { return { drafts: [], total: 0 } }
+}
+
 export type FiscalGap = {
     days: number
     after: string

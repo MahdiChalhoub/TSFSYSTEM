@@ -259,6 +259,30 @@ class CategoryViewSet(TenantModelViewSet):
             "all": list(all_brands),
         })
 
+    @action(detail=True, methods=['post'])
+    def link_brand(self, request, pk=None):
+        """Add a brand to this category's M2M brands."""
+        category = self.get_object()
+        brand_id = request.data.get('brand_id')
+        try:
+            brand = Brand.objects.get(id=brand_id, organization=category.organization)
+            brand.categories.add(category)
+            return Response({"status": "linked", "brand": brand.name})
+        except Brand.DoesNotExist:
+            return Response({"error": "Brand not found"}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def unlink_brand(self, request, pk=None):
+        """Remove a brand from this category's M2M brands."""
+        category = self.get_object()
+        brand_id = request.data.get('brand_id')
+        try:
+            brand = Brand.objects.get(id=brand_id, organization=category.organization)
+            brand.categories.remove(category)
+            return Response({"status": "unlinked", "brand": brand.name})
+        except Brand.DoesNotExist:
+            return Response({"error": "Brand not found"}, status=404)
+
     @action(detail=True, methods=['get'])
     def linked_attributes(self, request, pk=None):
         """Return attribute groups linked to this category via M2M."""
@@ -278,6 +302,32 @@ class CategoryViewSet(TenantModelViewSet):
             "linked": list(linked),
             "all": list(all_attrs),
         })
+
+    @action(detail=True, methods=['post'])
+    def link_attribute(self, request, pk=None):
+        """Add an attribute group to this category's M2M attributes."""
+        category = self.get_object()
+        from apps.inventory.models import ProductAttribute
+        attr_id = request.data.get('attribute_id')
+        try:
+            attr = ProductAttribute.objects.get(id=attr_id, organization=category.organization, parent__isnull=True)
+            category.attributes.add(attr)
+            return Response({"status": "linked", "attribute": attr.name})
+        except ProductAttribute.DoesNotExist:
+            return Response({"error": "Attribute group not found"}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def unlink_attribute(self, request, pk=None):
+        """Remove an attribute group from this category's M2M attributes."""
+        category = self.get_object()
+        from apps.inventory.models import ProductAttribute
+        attr_id = request.data.get('attribute_id')
+        try:
+            attr = ProductAttribute.objects.get(id=attr_id, organization=category.organization, parent__isnull=True)
+            category.attributes.remove(attr)
+            return Response({"status": "unlinked", "attribute": attr.name})
+        except ProductAttribute.DoesNotExist:
+            return Response({"error": "Attribute group not found"}, status=404)
 
     @action(detail=True, methods=['get'])
     def explore(self, request, pk=None):

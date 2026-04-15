@@ -133,10 +133,187 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         fiscal_year = self.get_object()
         if not fiscal_year.is_closed:
             return Response({"error": "Year must be closed before locking"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         fiscal_year.is_hard_locked = True
         fiscal_year.save()
         return Response({"status": "Fiscal Year Locked"})
+
+    @action(detail=True, methods=['get'], url_path='summary')
+    def summary(self, request, pk=None):
+        """Year-end summary: P&L, BS, closing entry, opening balances, period stats."""
+        fiscal_year = self.get_object()
+        organization_id = get_current_tenant_id()
+        org = Organization.objects.get(id=organization_id)
+
+        from apps.finance.models import ChartOfAccount, JournalEntry, JournalEntryLine, OpeningBalance
+        from django.db.models import Sum, Count, Q
+        from decimal import Decimal
+
+        periods = fiscal_year.periods.all().order_by('start_date')
+
+        # Journal entry stats
+        je_qs = JournalEntry.objects.filter(organization=org, fiscal_year=fiscal_year)
+        je_stats = je_qs.aggregate(
+            total=Count('id'),
+            posted=Count('id', filter=Q(status='POSTED')),
+            draft=Count('id', filter=Q(status='DRAFT')),
+            total_debit=Sum('total_debit'),
+            total_credit=Sum('total_credit'),
+        )
+
+        # P&L
+        income_bal = ChartOfAccount.objects.filter(organization=org, type='INCOME', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
+        expense_bal = ChartOfAccount.objects.filter(organization=org, type='EXPENSE', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
+        revenue = abs(income_bal)
+        net_income = revenue - expense_bal
+
+        # Balance sheet
+        asset_bal = ChartOfAccount.objects.filter(organization=org, type='ASSET', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
+        liability_bal = ChartOfAccount.objects.filter(organization=org, type='LIABILITY', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
+        equity_bal = ChartOfAccount.objects.filter(organization=org, type='EQUITY', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
+
+        # Closing entry
+        closing_je = None
+        if fiscal_year.closing_journal_entry_id:
+            cje = fiscal_year.closing_journal_entry
+            closing_lines = JournalEntryLine.objects.filter(journal_entry=cje).select_related('account').order_by('-debit', 'credit')
+            closing_je = {
+                'reference': cje.reference,
+                'date': str(cje.transaction_date),
+                'description': cje.description,
+                'lines': [{'code': l.account.code, 'name': l.account.name, 'debit': float(l.debit), 'credit': float(l.credit)} for l in closing_lines],
+            }
+
+        # Opening balances generated for next year
+        from apps.finance.models import FiscalYear as FY
+        next_fy = FY.objects.filter(organization=org, start_date__gt=fiscal_year.end_date).order_by('start_date').first()
+        opening_bals = []
+        if next_fy:
+            obs = OpeningBalance.objects.filter(organization=org, fiscal_year=next_fy).select_related('account').order_by('account__type', 'account__code')
+            opening_bals = [{'code': ob.account.code, 'name': ob.account.name, 'type': ob.account.type,
+                             'debit': float(ob.debit_amount), 'credit': float(ob.credit_amount)} for ob in obs]
+
+        # Period breakdown
+        period_data = []
+        for p in periods:
+            p_je_count = JournalEntry.objects.filter(fiscal_period=p, status='POSTED').count()
+            period_data.append({
+                'name': p.name, 'status': p.status,
+                'start_date': str(p.start_date), 'end_date': str(p.end_date),
+                'journal_entries': p_je_count,
+            })
+
+        return Response({
+            'year': {'name': fiscal_year.name, 'start_date': str(fiscal_year.start_date), 'end_date': str(fiscal_year.end_date),
+                     'status': fiscal_year.status, 'is_hard_locked': fiscal_year.is_hard_locked,
+                     'closed_at': fiscal_year.closed_at.isoformat() if fiscal_year.closed_at else None},
+            'journal_entries': {
+                'total': je_stats['total'] or 0, 'posted': je_stats['posted'] or 0, 'draft': je_stats['draft'] or 0,
+                'total_debit': float(je_stats['total_debit'] or 0), 'total_credit': float(je_stats['total_credit'] or 0),
+            },
+            'pnl': {'revenue': float(revenue), 'expenses': float(expense_bal), 'net_income': float(net_income)},
+            'balance_sheet': {
+                'assets': float(asset_bal), 'liabilities': float(abs(liability_bal)),
+                'equity': float(abs(equity_bal)),
+            },
+            'closing_entry': closing_je,
+            'opening_balances': opening_bals,
+            'opening_balances_target': next_fy.name if next_fy else None,
+            'periods': period_data,
+        })
+
+    @action(detail=True, methods=['get'], url_path='history')
+    def year_history(self, request, pk=None):
+        """Audit log for a fiscal year — period changes, closings, JE counts by month."""
+        fiscal_year = self.get_object()
+        organization_id = get_current_tenant_id()
+        org = Organization.objects.get(id=organization_id)
+
+        from apps.finance.models import JournalEntry
+        from django.db.models import Count, Q
+
+        events = []
+
+        # Year creation
+        events.append({
+            'type': 'CREATED', 'date': str(fiscal_year.start_date),
+            'description': f'Fiscal year {fiscal_year.name} created ({fiscal_year.start_date} — {fiscal_year.end_date})',
+        })
+
+        # Period events
+        for p in fiscal_year.periods.all().order_by('start_date'):
+            if p.is_closed and p.closed_at:
+                events.append({
+                    'type': 'PERIOD_CLOSED', 'date': p.closed_at.isoformat(),
+                    'description': f'{p.name} closed',
+                    'user': p.closed_by.username if p.closed_by else 'system',
+                })
+
+        # Year close
+        if fiscal_year.is_closed and fiscal_year.closed_at:
+            events.append({
+                'type': 'YEAR_CLOSED', 'date': fiscal_year.closed_at.isoformat(),
+                'description': f'Year-end close executed',
+                'user': fiscal_year.closed_by.username if fiscal_year.closed_by else 'system',
+            })
+
+        # Closing JE
+        if fiscal_year.closing_journal_entry_id:
+            cje = fiscal_year.closing_journal_entry
+            events.append({
+                'type': 'CLOSING_ENTRY', 'date': str(cje.transaction_date),
+                'description': f'Closing journal entry {cje.reference} posted',
+            })
+
+        # Hard lock
+        if fiscal_year.is_hard_locked:
+            events.append({
+                'type': 'HARD_LOCKED', 'date': fiscal_year.closed_at.isoformat() if fiscal_year.closed_at else '',
+                'description': 'Year permanently locked (immutable)',
+            })
+
+        # Sort by date
+        events.sort(key=lambda e: e.get('date', ''))
+
+        # JE count by month
+        je_by_month = list(
+            JournalEntry.objects.filter(organization=org, fiscal_year=fiscal_year, status='POSTED')
+            .extra(select={'month': "TO_CHAR(transaction_date, 'YYYY-MM')"})
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+
+        return Response({
+            'events': events,
+            'je_by_month': je_by_month,
+        })
+
+    @action(detail=True, methods=['get'], url_path='draft-audit')
+    def draft_audit(self, request, pk=None):
+        """List all draft JEs in this fiscal year — for blocker resolution."""
+        fiscal_year = self.get_object()
+        organization_id = get_current_tenant_id()
+
+        from apps.finance.models import JournalEntry
+
+        period_id = request.query_params.get('period_id')
+        qs = JournalEntry.objects.filter(
+            organization_id=organization_id, status='DRAFT'
+        )
+        if period_id:
+            qs = qs.filter(fiscal_period_id=period_id)
+        else:
+            qs = qs.filter(fiscal_year=fiscal_year)
+
+        drafts = qs.order_by('transaction_date')[:50]
+        data = [{
+            'id': je.id, 'reference': je.reference,
+            'date': str(je.transaction_date), 'description': je.description,
+            'total_debit': float(je.total_debit or 0), 'total_credit': float(je.total_credit or 0),
+        } for je in drafts]
+
+        return Response({'drafts': data, 'total': qs.count()})
 
 
 class FiscalPeriodViewSet(TenantModelViewSet):

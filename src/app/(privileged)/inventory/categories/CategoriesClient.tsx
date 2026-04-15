@@ -51,7 +51,7 @@ function ProductsPopup({ category, onClose }: { category: CategoryNode; onClose:
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+            className="fixed inset-0 z-[60] flex items-center justify-center animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
             onClick={e => { if (e.target === e.currentTarget) onClose() }}
         >
@@ -159,19 +159,13 @@ function BrandsPopup({ category, onClose }: { category: CategoryNode; onClose: (
     const unlinkBrand = async (brandId: number) => {
         setLinking(true)
         try {
-            const brand = allBrands.find(b => b.id === brandId)
-            if (brand) {
-                // Get current category IDs, remove this one
-                const currentCatIds = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
-                const newCatIds = currentCatIds.filter((id: number) => id !== category.id)
-                await erpFetch(`inventory/brands/${brandId}/`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ category_ids: newCatIds }),
-                })
-                toast.success(`Unlinked "${brand.name}"`)
-                loadBrands()
-                router.refresh()
-            }
+            await erpFetch(`inventory/categories/${category.id}/unlink_brand/`, {
+                method: 'POST',
+                body: JSON.stringify({ brand_id: brandId }),
+            })
+            toast.success('Brand unlinked')
+            loadBrands()
+            router.refresh()
         } catch (e: any) {
             toast.error(e?.message || 'Failed to unlink brand')
         } finally {
@@ -182,19 +176,13 @@ function BrandsPopup({ category, onClose }: { category: CategoryNode; onClose: (
     const linkBrand = async (brandId: number) => {
         setLinking(true)
         try {
-            const brand = allBrands.find(b => b.id === brandId)
-            if (brand) {
-                // Get current category IDs, add this one
-                const currentCatIds = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
-                const newCatIds = [...currentCatIds, category.id]
-                await erpFetch(`inventory/brands/${brandId}/`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ category_ids: newCatIds }),
-                })
-                toast.success(`Linked "${brand.name}" to "${category.name}"`)
-                loadBrands()
-                router.refresh()
-            }
+            await erpFetch(`inventory/categories/${category.id}/link_brand/`, {
+                method: 'POST',
+                body: JSON.stringify({ brand_id: brandId }),
+            })
+            toast.success('Brand linked')
+            loadBrands()
+            router.refresh()
         } catch (e: any) {
             toast.error(e?.message || 'Failed to link brand')
         } finally {
@@ -207,7 +195,7 @@ function BrandsPopup({ category, onClose }: { category: CategoryNode; onClose: (
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+            className="fixed inset-0 z-[60] flex items-center justify-center animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
             onClick={e => { if (e.target === e.currentTarget) onClose() }}
         >
@@ -1079,7 +1067,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
 
                         {/* Filter Popup — Searchable Dropdowns (same as Product Inventory) */}
                         {showFilterPopup && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+                            <div className="fixed inset-0 z-[60] flex items-center justify-center animate-in fade-in duration-200"
                                 style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
                                 onClick={e => { if (e.target === e.currentTarget) setShowFilterPopup(false) }}>
                                 <div className="w-full max-w-md mx-4 rounded-2xl animate-in zoom-in-95 duration-200"
@@ -1736,16 +1724,12 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
     const linkBrand = async (brandId: number) => {
         setLinking(true)
         try {
-            const brand = allBrands.find(b => b.id === brandId)
-            if (brand) {
-                const existingCatIds = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
-                await erpFetch(`inventory/brands/${brandId}/`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ category_ids: [...existingCatIds, categoryId] }),
-                })
-                toast.success(`Linked "${brand.name}"`)
-                loadData(); router.refresh()
-            }
+            await erpFetch(`inventory/categories/${categoryId}/link_brand/`, {
+                method: 'POST',
+                body: JSON.stringify({ brand_id: brandId }),
+            })
+            toast.success('Brand linked')
+            loadData(); router.refresh()
         } catch (e: any) { toast.error(e?.message || 'Failed to link') }
         finally { setLinking(false) }
     }
@@ -1753,16 +1737,12 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
     const unlinkBrand = async (brandId: number) => {
         setLinking(true)
         try {
-            const brand = allBrands.find(b => b.id === brandId)
-            if (brand) {
-                const existingCatIds = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
-                await erpFetch(`inventory/brands/${brandId}/`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ category_ids: existingCatIds.filter((id: number) => id !== categoryId) }),
-                })
-                toast.success(`Unlinked "${brand.name}"`)
-                loadData(); router.refresh()
-            }
+            await erpFetch(`inventory/categories/${categoryId}/unlink_brand/`, {
+                method: 'POST',
+                body: JSON.stringify({ brand_id: brandId }),
+            })
+            toast.success('Brand unlinked')
+            loadData(); router.refresh()
         } catch (e: any) { toast.error(e?.message || 'Failed to unlink') }
         finally { setLinking(false) }
     }
@@ -1840,81 +1820,122 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
 
 /* ── Attributes Tab — fetches attribute groups linked to this category ── */
 function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
-    const [attributes, setAttributes] = useState<any[]>([])
+    const [linkedAttrs, setLinkedAttrs] = useState<any[]>([])
+    const [allAttrs, setAllAttrs] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [linking, setLinking] = useState(false)
+    const [showLink, setShowLink] = useState(false)
+    const router = useRouter()
 
-    useEffect(() => {
-        let cancelled = false
+    const loadData = useCallback(() => {
         setLoading(true)
-        // Fetch attribute groups linked to this category via M2M
         erpFetch(`inventory/categories/${categoryId}/linked_attributes/`)
             .then((data: any) => {
-                if (!cancelled) {
-                    setAttributes(Array.isArray(data?.linked) ? data.linked : [])
-                    setLoading(false)
-                }
-            })
-            .catch(() => { if (!cancelled) { setAttributes([]); setLoading(false) } })
-        return () => { cancelled = true }
+                setLinkedAttrs(Array.isArray(data?.linked) ? data.linked : [])
+                setAllAttrs(Array.isArray(data?.all) ? data.all : [])
+                setLoading(false)
+            }).catch(() => setLoading(false))
     }, [categoryId])
+
+    useEffect(() => { loadData() }, [loadData])
+
+    const linkedIds = useMemo(() => new Set(linkedAttrs.map(a => a.id)), [linkedAttrs])
+    const unlinkedAttrs = allAttrs.filter(a => !linkedIds.has(a.id))
+
+    const linkAttr = async (attrId: number) => {
+        setLinking(true)
+        try {
+            await erpFetch(`inventory/categories/${categoryId}/link_attribute/`, {
+                method: 'POST',
+                body: JSON.stringify({ attribute_id: attrId }),
+            })
+            toast.success('Attribute linked')
+            loadData(); router.refresh()
+        } catch (e: any) { toast.error(e?.message || 'Failed to link') }
+        finally { setLinking(false) }
+    }
+
+    const unlinkAttr = async (attrId: number) => {
+        setLinking(true)
+        try {
+            await erpFetch(`inventory/categories/${categoryId}/unlink_attribute/`, {
+                method: 'POST',
+                body: JSON.stringify({ attribute_id: attrId }),
+            })
+            toast.success('Attribute unlinked')
+            loadData(); router.refresh()
+        } catch (e: any) { toast.error(e?.message || 'Failed to unlink') }
+        finally { setLinking(false) }
+    }
 
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-200">
-            <div className="flex-shrink-0 px-4 py-2.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
+            <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <p className="text-[10px] font-bold text-app-muted-foreground">
-                    {loading ? 'Loading...' : `${attributes.length} attribute group${attributes.length !== 1 ? 's' : ''} linked`}
+                    {loading ? 'Loading...' : `${linkedAttrs.length} attribute group${linkedAttrs.length !== 1 ? 's' : ''} linked`}
                 </p>
+                <button onClick={() => setShowLink(!showLink)}
+                    className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg transition-all"
+                    style={showLink ? {
+                        background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)',
+                        color: 'var(--app-warning)',
+                    } : {
+                        color: 'var(--app-muted-foreground)',
+                    }}>
+                    <Link2 size={11} /> {showLink ? 'Hide' : 'Link'}
+                </button>
             </div>
+
+            {showLink && (
+                <div className="flex-shrink-0 px-4 py-2.5 animate-in slide-in-from-top-2 duration-200"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-warning) 3%, var(--app-surface))' }}>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                        Available ({unlinkedAttrs.length})
+                    </p>
+                    {unlinkedAttrs.length === 0 ? (
+                        <p className="text-[11px] text-app-muted-foreground">All attribute groups are already linked.</p>
+                    ) : (
+                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar">
+                            {unlinkedAttrs.map(a => (
+                                <button key={a.id} onClick={() => linkAttr(a.id)} disabled={linking}
+                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all hover:brightness-110 disabled:opacity-50"
+                                    style={{ background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 15%, transparent)' }}>
+                                    <Plus size={9} />{a.name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {loading ? (
                     <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: 'var(--app-warning)' }} /></div>
-                ) : attributes.length === 0 ? (
+                ) : linkedAttrs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <Tag size={32} className="text-app-muted-foreground mb-2 opacity-40" />
                         <p className="text-sm font-bold text-app-muted-foreground">No attribute groups linked</p>
                         <p className="text-[11px] text-app-muted-foreground mt-1">
-                            Link attributes from the Attributes page.
+                            Click &ldquo;Link&rdquo; to associate attribute groups with this category.
                         </p>
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
-                        {attributes.map((group: any) => (
-                            <div key={group.id} className="px-4 py-2.5">
-                                {/* Attribute Group header */}
-                                <div className="flex items-center gap-2.5 mb-1.5">
-                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                        style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
-                                        <Tag size={12} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[12px] font-bold text-app-foreground truncate">{group.name}</p>
-                                        {group.code && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{group.code}</p>}
-                                    </div>
-                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
-                                        style={{ background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', color: 'var(--app-warning)' }}>
-                                        {group.children?.length ?? 0} values
-                                    </span>
+                        {linkedAttrs.map((group: any) => (
+                            <div key={group.id} className="flex items-center gap-3 px-4 py-2.5 group transition-all hover:bg-app-surface/50">
+                                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
+                                    <Tag size={12} />
                                 </div>
-                                {/* Attribute values as chips */}
-                                {group.children && group.children.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 ml-8">
-                                        {group.children.map((val: any) => (
-                                            <span key={val.id}
-                                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-                                                style={{
-                                                    background: val.color_hex
-                                                        ? `color-mix(in srgb, ${val.color_hex} 12%, transparent)`
-                                                        : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
-                                                    color: val.color_hex || 'var(--app-muted-foreground)',
-                                                    border: val.color_hex
-                                                        ? `1px solid color-mix(in srgb, ${val.color_hex} 25%, transparent)`
-                                                        : '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
-                                                }}>
-                                                {val.name}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[12px] font-bold text-app-foreground truncate">{group.name}</p>
+                                    {group.code && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{group.code}</p>}
+                                </div>
+                                <button onClick={() => unlinkAttr(group.id)} disabled={linking}
+                                    className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                    <Unlink size={10} />Unlink
+                                </button>
                             </div>
                         ))}
                     </div>

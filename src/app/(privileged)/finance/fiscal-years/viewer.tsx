@@ -11,7 +11,8 @@ import { toast } from 'sonner'
 import {
     deleteFiscalYear, updatePeriodStatus, closeFiscalYear,
     hardLockFiscalYear, createFiscalYear, getClosePreview,
-    type ClosePreview,
+    getYearSummary, getYearHistory, getDraftAudit,
+    type ClosePreview, type YearSummary, type YearHistoryEvent, type DraftAuditEntry,
 } from '@/app/actions/finance/fiscal-year'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import PeriodEditor from './period-editor'
@@ -40,6 +41,10 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     const [closeResult, setCloseResult] = useState<string | null>(null)
     const [closingYearId, setClosingYearId] = useState<number | null>(null)
     const pendingPeriodChange = useRef<{ periodId: number; newStatus: string; period: Record<string, any> } | null>(null)
+    const [yearTab, setYearTab] = useState<Record<number, 'periods' | 'summary' | 'history'>>({})
+    const [summaryCache, setSummaryCache] = useState<Record<number, YearSummary>>({})
+    const [historyCache, setHistoryCache] = useState<Record<number, { events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }>>({})
+    const [draftAudit, setDraftAudit] = useState<{ drafts: DraftAuditEntry[]; total: number; periodName: string } | null>(null)
 
     const currentYear = new Date().getFullYear()
     const lastYear = years[0] || null
@@ -112,13 +117,15 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
         // ── Rule 1: Can't CLOSE or FUTURE if draft JEs exist ──
         const draftCount = period.draft_je_count || 0
-        const draftRefs = period.draft_je_refs || []
         if ((newStatus === 'CLOSED' || newStatus === 'FUTURE') && draftCount > 0) {
-            const refList = draftRefs.length > 0 ? draftRefs.join(', ') : ''
-            toast.error(
-                `Cannot ${newStatus === 'CLOSED' ? 'close' : 'set to future'} ${period.name} — ${draftCount} draft journal ${draftCount === 1 ? 'entry' : 'entries'} must be posted or deleted first${refList ? ': ' + refList : ''}`,
-                { duration: 8000 }
-            )
+            // Load full draft audit panel
+            const fy = yearData || years.find(y => (y.periods || []).some((pp: any) => pp.id === periodId))
+            if (fy) {
+                startTransition(async () => {
+                    const audit = await getDraftAudit(fy.id, periodId)
+                    setDraftAudit({ ...audit, periodName: period.name })
+                })
+            }
             return
         }
 
@@ -384,81 +391,241 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                 <span className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{periods.length} periods · {openCount} open</span>
                             </button>
 
-                            {isExpanded && (
-                                <div style={{ background: 'var(--app-bg)' }}>
-                                    <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                                        {yearStatus === 'OPEN' && (
-                                            <button onClick={() => setPendingAction({ type: 'close', yearId: year.id, title: 'Soft Close?', description: 'Closes all periods. You can still reopen them if needed. No P&L closing or balance transfer.', variant: 'warning' })}
-                                                disabled={isPending} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
-                                                style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
-                                                <Lock size={11} /> Soft Close
-                                            </button>
-                                        )}
-                                        {yearStatus === 'OPEN' && (
-                                            <button onClick={() => {
-                                                setClosingYearId(year.id)
-                                                startTransition(async () => {
-                                                    const preview = await getClosePreview(year.id)
-                                                    if (preview) { setClosePreview(preview); setCloseStep('preview') }
-                                                    else toast.error('Failed to load close preview')
-                                                })
-                                            }}
-                                                disabled={isPending} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
-                                                style={{ color: 'var(--app-error, #ef4444)', borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>
-                                                {isPending && closingYearId === year.id ? <Loader2 size={11} className="animate-spin" /> : <ShieldCheck size={11} />} Year-End Close
-                                            </button>
-                                        )}
-                                        {year.isHardLocked && (
-                                            <span className="flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded"
-                                                style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', color: 'var(--app-error, #ef4444)' }}>
-                                                <ShieldCheck size={10} /> Immutable
-                                            </span>
-                                        )}
-                                        <div className="flex-1" />
-                                        {!year.isHardLocked && (
-                                            <button onClick={() => setPendingAction({ type: 'delete', yearId: year.id, title: 'Delete Fiscal Year?', description: 'Permanently remove this year and all periods.', variant: 'danger' })}
-                                                disabled={isPending} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--app-muted-foreground)' }}>
-                                                <Trash2 size={13} />
-                                            </button>
-                                        )}
-                                    </div>
+                            {isExpanded && (() => {
+                                const activeTab = yearTab[year.id] || 'periods'
+                                const TABS = [
+                                    { id: 'periods' as const, label: 'Periods' },
+                                    { id: 'summary' as const, label: 'Summary' },
+                                    { id: 'history' as const, label: 'History' },
+                                ]
+                                return (
+                                    <div style={{ background: 'var(--app-bg)' }}>
+                                        {/* Actions bar + Tabs */}
+                                        <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                                            {/* Tabs */}
+                                            {TABS.map(t => (
+                                                <button key={t.id} onClick={() => {
+                                                    setYearTab(prev => ({ ...prev, [year.id]: t.id }))
+                                                    if (t.id === 'summary' && !summaryCache[year.id]) {
+                                                        startTransition(async () => {
+                                                            const s = await getYearSummary(year.id)
+                                                            if (s) setSummaryCache(prev => ({ ...prev, [year.id]: s }))
+                                                        })
+                                                    }
+                                                    if (t.id === 'history' && !historyCache[year.id]) {
+                                                        startTransition(async () => {
+                                                            const h = await getYearHistory(year.id)
+                                                            setHistoryCache(prev => ({ ...prev, [year.id]: h }))
+                                                        })
+                                                    }
+                                                }}
+                                                    className="text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all"
+                                                    style={{
+                                                        background: activeTab === t.id ? 'var(--app-primary)' : 'transparent',
+                                                        color: activeTab === t.id ? 'white' : 'var(--app-muted-foreground)',
+                                                    }}>
+                                                    {t.label}
+                                                </button>
+                                            ))}
+                                            <div className="flex-1" />
+                                            {/* Year actions */}
+                                            {yearStatus === 'OPEN' && (
+                                                <button onClick={() => setPendingAction({ type: 'close', yearId: year.id, title: 'Soft Close?', description: 'Closes all periods. No P&L closing.', variant: 'warning' })}
+                                                    disabled={isPending} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
+                                                    style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                                                    <Lock size={11} /> Soft Close
+                                                </button>
+                                            )}
+                                            {yearStatus === 'OPEN' && (
+                                                <button onClick={() => { setClosingYearId(year.id); startTransition(async () => { const p = await getClosePreview(year.id); if (p) { setClosePreview(p); setCloseStep('preview') } else toast.error('Failed') }) }}
+                                                    disabled={isPending} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
+                                                    style={{ color: 'var(--app-error, #ef4444)', borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>
+                                                    {isPending && closingYearId === year.id ? <Loader2 size={11} className="animate-spin" /> : <ShieldCheck size={11} />} Year-End Close
+                                                </button>
+                                            )}
+                                            {year.isHardLocked && (
+                                                <span className="flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', color: 'var(--app-error, #ef4444)' }}>
+                                                    <ShieldCheck size={10} /> Immutable
+                                                </span>
+                                            )}
+                                            {!year.isHardLocked && (
+                                                <button onClick={() => setPendingAction({ type: 'delete', yearId: year.id, title: 'Delete Fiscal Year?', description: 'Permanently remove this year and all periods.', variant: 'danger' })}
+                                                    disabled={isPending} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            )}
+                                        </div>
 
-                                    <div className="p-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '8px' }}>
-                                        {periods.map((p: Record<string, any>, pidx: number) => {
-                                            const pStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
-                                            const ps = getStatusStyle(pStatus)
-                                            const pLabel = p.name || `P${String(pidx + 1).padStart(2, '0')}`
-                                            const monthLabel = p.start_date ? new Date(p.start_date).toLocaleDateString('en', { month: 'short', year: '2-digit' }) : ''
+                                        {/* ── Periods Tab ── */}
+                                        {activeTab === 'periods' && (
+                                            <div className="p-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '8px' }}>
+                                                {periods.map((p: Record<string, any>, pidx: number) => {
+                                                    const pStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
+                                                    const ps = getStatusStyle(pStatus)
+                                                    const pLabel = p.name || `P${String(pidx + 1).padStart(2, '0')}`
+                                                    const monthLabel = p.start_date ? new Date(p.start_date).toLocaleDateString('en', { month: 'short', year: '2-digit' }) : ''
+                                                    return (
+                                                        <div key={p.id} className="rounded-xl p-2.5 text-center transition-all" style={{ background: ps.bg, border: `1px solid ${ps.color}20` }}>
+                                                            <div className="text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{pLabel}</div>
+                                                            <div className="text-[11px] font-bold mt-0.5" style={{ color: 'var(--app-foreground)' }}>{monthLabel}</div>
+                                                            <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full mt-1 inline-block" style={{ background: ps.bg, color: ps.color, border: `1px solid ${ps.color}30` }}>{pStatus}</span>
+                                                            {(p.journal_entry_count || 0) > 0 && (
+                                                                <div className="text-[8px] font-bold mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{p.journal_entry_count} JEs</div>
+                                                            )}
+                                                            {!year.isHardLocked && (
+                                                                <div className="flex items-center justify-center gap-1 mt-1.5">
+                                                                    <button onClick={() => handlePeriodStatus(p.id, 'OPEN')} title="Open" disabled={isPending || pStatus === 'OPEN'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'OPEN' ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}><PlayCircle size={13} /></button>
+                                                                    <button onClick={() => handlePeriodStatus(p.id, 'CLOSED')} title="Close" disabled={isPending || pStatus === 'CLOSED'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'CLOSED' ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}><Lock size={13} /></button>
+                                                                    <button onClick={() => handlePeriodStatus(p.id, 'FUTURE')} title="Future" disabled={isPending || pStatus === 'FUTURE'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'FUTURE' ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }}><Clock size={13} /></button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* ── Summary Tab ── */}
+                                        {activeTab === 'summary' && (() => {
+                                            const s = summaryCache[year.id]
+                                            if (!s) return <div className="p-8 text-center"><Loader2 size={20} className="animate-spin mx-auto text-app-muted-foreground" /></div>
                                             return (
-                                                <div key={p.id} className="rounded-xl p-2.5 text-center transition-all" style={{ background: ps.bg, border: `1px solid ${ps.color}20` }}>
-                                                    <div className="text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{pLabel}</div>
-                                                    <div className="text-[11px] font-bold mt-0.5" style={{ color: 'var(--app-foreground)' }}>{monthLabel}</div>
-                                                    <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full mt-1 inline-block" style={{ background: ps.bg, color: ps.color, border: `1px solid ${ps.color}30` }}>{pStatus}</span>
-                                                    {!year.isHardLocked && (
-                                                        <div className="flex items-center justify-center gap-1 mt-1.5">
-                                                            <button onClick={() => handlePeriodStatus(p.id, 'OPEN')} title="Open" disabled={isPending || pStatus === 'OPEN'}
-                                                                className="p-1 rounded-lg transition-all disabled:opacity-30"
-                                                                style={{ color: pStatus === 'OPEN' ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
-                                                                <PlayCircle size={13} />
-                                                            </button>
-                                                            <button onClick={() => handlePeriodStatus(p.id, 'CLOSED')} title="Close" disabled={isPending || pStatus === 'CLOSED'}
-                                                                className="p-1 rounded-lg transition-all disabled:opacity-30"
-                                                                style={{ color: pStatus === 'CLOSED' ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
-                                                                <Lock size={13} />
-                                                            </button>
-                                                            <button onClick={() => handlePeriodStatus(p.id, 'FUTURE')} title="Future" disabled={isPending || pStatus === 'FUTURE'}
-                                                                className="p-1 rounded-lg transition-all disabled:opacity-30"
-                                                                style={{ color: pStatus === 'FUTURE' ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }}>
-                                                                <Clock size={13} />
-                                                            </button>
+                                                <div className="p-4 space-y-3">
+                                                    {/* P&L */}
+                                                    <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                                        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Profit & Loss</div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                                                            {[
+                                                                { label: 'Revenue', value: s.pnl.revenue, color: 'var(--app-success, #22c55e)' },
+                                                                { label: 'Expenses', value: s.pnl.expenses, color: 'var(--app-error, #ef4444)' },
+                                                                { label: s.pnl.net_income >= 0 ? 'Net Income' : 'Net Loss', value: s.pnl.net_income, color: s.pnl.net_income >= 0 ? 'var(--app-success, #22c55e)' : 'var(--app-error, #ef4444)' },
+                                                            ].map(v => (
+                                                                <div key={v.label} className="text-center">
+                                                                    <div className="text-[14px] font-black tabular-nums" style={{ color: v.color }}>{v.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                                    <div className="text-[9px] font-bold uppercase" style={{ color: 'var(--app-muted-foreground)' }}>{v.label}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    {/* Balance Sheet */}
+                                                    <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                                        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Balance Sheet</div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                                                            {[
+                                                                { label: 'Assets', value: s.balance_sheet.assets, color: 'var(--app-info, #3b82f6)' },
+                                                                { label: 'Liabilities', value: s.balance_sheet.liabilities, color: 'var(--app-error, #ef4444)' },
+                                                                { label: 'Equity', value: s.balance_sheet.equity, color: '#8b5cf6' },
+                                                            ].map(v => (
+                                                                <div key={v.label} className="text-center">
+                                                                    <div className="text-[14px] font-black tabular-nums" style={{ color: v.color }}>{v.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                                    <div className="text-[9px] font-bold uppercase" style={{ color: 'var(--app-muted-foreground)' }}>{v.label}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    {/* Journal Entry Stats */}
+                                                    <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                                        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Journal Entries</div>
+                                                        <div className="flex gap-4">
+                                                            <span className="text-[12px] font-bold" style={{ color: 'var(--app-foreground)' }}>{s.journal_entries.total} total</span>
+                                                            <span className="text-[12px] font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>{s.journal_entries.posted} posted</span>
+                                                            {s.journal_entries.draft > 0 && <span className="text-[12px] font-bold" style={{ color: 'var(--app-warning, #f59e0b)' }}>{s.journal_entries.draft} draft</span>}
+                                                        </div>
+                                                    </div>
+                                                    {/* Closing Entry */}
+                                                    {s.closing_entry && (
+                                                        <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                                            <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                                Closing Entry — {s.closing_entry.reference}
+                                                            </div>
+                                                            <div className="max-h-[120px] overflow-y-auto custom-scrollbar space-y-0.5">
+                                                                {s.closing_entry.lines.map((l, i) => (
+                                                                    <div key={i} className="flex items-center justify-between text-[10px] py-0.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                                                                        <span className="font-medium truncate" style={{ color: 'var(--app-foreground)' }}>{l.code} — {l.name}</span>
+                                                                        <div className="flex gap-3 flex-shrink-0 ml-2 tabular-nums font-bold">
+                                                                            <span style={{ color: l.debit > 0 ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{l.debit > 0 ? l.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</span>
+                                                                            <span style={{ color: l.credit > 0 ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{l.credit > 0 ? l.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {/* Opening Balances */}
+                                                    {s.opening_balances.length > 0 && (
+                                                        <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                                            <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                                Opening Balances → {s.opening_balances_target || 'Next Year'} ({s.opening_balances.length} accounts)
+                                                            </div>
+                                                            <div className="max-h-[120px] overflow-y-auto custom-scrollbar space-y-0.5">
+                                                                {s.opening_balances.map((ob, i) => (
+                                                                    <div key={i} className="flex items-center justify-between text-[10px] py-0.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                                                                        <span className="font-medium truncate" style={{ color: 'var(--app-foreground)' }}>{ob.code} — {ob.name}</span>
+                                                                        <span className="font-bold tabular-nums flex-shrink-0 ml-2" style={{ color: 'var(--app-foreground)' }}>
+                                                                            {ob.debit > 0 ? `DR ${ob.debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : `CR ${ob.credit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
                                             )
-                                        })}
+                                        })()}
+
+                                        {/* ── History Tab ── */}
+                                        {activeTab === 'history' && (() => {
+                                            const h = historyCache[year.id]
+                                            if (!h) return <div className="p-8 text-center"><Loader2 size={20} className="animate-spin mx-auto text-app-muted-foreground" /></div>
+                                            const typeIcon: Record<string, any> = {
+                                                CREATED: <Calendar size={12} style={{ color: 'var(--app-primary)' }} />,
+                                                PERIOD_CLOSED: <Lock size={12} style={{ color: 'var(--app-muted-foreground)' }} />,
+                                                YEAR_CLOSED: <ShieldCheck size={12} style={{ color: 'var(--app-warning, #f59e0b)' }} />,
+                                                CLOSING_ENTRY: <CheckCircle2 size={12} style={{ color: 'var(--app-success, #22c55e)' }} />,
+                                                HARD_LOCKED: <ShieldCheck size={12} style={{ color: 'var(--app-error, #ef4444)' }} />,
+                                            }
+                                            return (
+                                                <div className="p-4 space-y-3">
+                                                    {/* Timeline */}
+                                                    <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                                        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Event Log</div>
+                                                        <div className="space-y-1">
+                                                            {h.events.map((ev, i) => (
+                                                                <div key={i} className="flex items-center gap-2 py-1" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                                                                    {typeIcon[ev.type] || <Calendar size={12} style={{ color: 'var(--app-muted-foreground)' }} />}
+                                                                    <span className="text-[10px] font-medium flex-1" style={{ color: 'var(--app-foreground)' }}>{ev.description}</span>
+                                                                    {ev.user && <span className="text-[9px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>{ev.user}</span>}
+                                                                    <span className="text-[9px] font-mono tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                                        {ev.date ? new Date(ev.date).toLocaleDateString() : ''}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                            {h.events.length === 0 && (
+                                                                <div className="text-[11px] font-medium py-4 text-center" style={{ color: 'var(--app-muted-foreground)' }}>No events recorded</div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {/* JE by Month */}
+                                                    {h.je_by_month.length > 0 && (
+                                                        <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                                            <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Journal Entries by Month</div>
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {h.je_by_month.map(m => (
+                                                                    <div key={m.month} className="text-center px-2 py-1 rounded-lg" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                                                                        <div className="text-[12px] font-black tabular-nums" style={{ color: 'var(--app-primary)' }}>{m.count}</div>
+                                                                        <div className="text-[8px] font-bold uppercase" style={{ color: 'var(--app-muted-foreground)' }}>{m.month}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )
+                                        })()}
                                     </div>
-                                </div>
-                            )}
+                                )
+                            })()}
                         </div>
                     )
                 })}
@@ -544,6 +711,69 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             )}
 
             {editingPeriod && <PeriodEditor period={editingPeriod} onClose={() => { setEditingPeriod(null); refreshData() }} />}
+
+            {/* ── Draft Audit Modal ── */}
+            {draftAudit && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+                    <div className="rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                        <div className="px-5 py-4 flex justify-between items-center"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error, #ef4444) 4%, transparent)' }}>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                    style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 15%, transparent)' }}>
+                                    <AlertTriangle size={16} style={{ color: 'var(--app-error, #ef4444)' }} />
+                                </div>
+                                <div>
+                                    <h2 className="text-[13px] font-black" style={{ color: 'var(--app-foreground)' }}>
+                                        Cannot Close {draftAudit.periodName}
+                                    </h2>
+                                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
+                                        {draftAudit.total} draft journal {draftAudit.total === 1 ? 'entry' : 'entries'} must be posted or deleted
+                                    </p>
+                                </div>
+                            </div>
+                            <button onClick={() => setDraftAudit(null)} className="p-1.5 rounded-lg" style={{ color: 'var(--app-muted-foreground)' }}>
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="p-4 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                            <div className="space-y-1">
+                                {draftAudit.drafts.map(d => (
+                                    <div key={d.id} className="flex items-center gap-3 px-3 py-2 rounded-xl transition-all"
+                                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                                        <div className="flex-shrink-0">
+                                            <AlertTriangle size={13} style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>{d.reference}</div>
+                                            <div className="text-[9px] font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>{d.description}</div>
+                                        </div>
+                                        <div className="text-right flex-shrink-0">
+                                            <div className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>
+                                                {d.total_debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </div>
+                                            <div className="text-[9px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>{d.date}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {draftAudit.total > draftAudit.drafts.length && (
+                                    <div className="text-[10px] font-bold text-center py-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        ... and {draftAudit.total - draftAudit.drafts.length} more
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="px-5 py-3" style={{ borderTop: '1px solid var(--app-border)' }}>
+                            <button onClick={() => setDraftAudit(null)}
+                                className="w-full py-2 text-[11px] font-bold rounded-xl border transition-all"
+                                style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <ConfirmDialog open={pendingAction !== null} onOpenChange={o => { if (!o) setPendingAction(null) }} onConfirm={confirmAction}
                 title={pendingAction?.title ?? ''} description={pendingAction?.description ?? ''} confirmText="Confirm" variant={pendingAction?.variant ?? 'danger'} />
