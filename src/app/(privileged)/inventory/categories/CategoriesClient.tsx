@@ -1019,73 +1019,193 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                             )}
                         </button>
 
-                        {/* Filter Popup */}
+                        {/* Filter Popup — Comprehensive */}
                         {showFilterPopup && (
-                            <div className="absolute right-0 top-full mt-1.5 z-50 w-56 rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                                style={{
-                                    background: 'var(--app-surface)',
-                                    border: '1px solid var(--app-border)',
-                                    boxShadow: '0 12px 40px -8px rgba(0,0,0,0.25)',
-                                }}>
-                                <div className="px-3 py-2 flex items-center justify-between"
-                                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Filters</span>
-                                    {activeFilterCount > 0 && (
-                                        <button onClick={() => { setFilterBrand(null); setFilterStatus(null) }}
-                                            className="text-[9px] font-bold text-app-error hover:underline">Clear all</button>
-                                    )}
-                                </div>
-
-                                {/* Brand Filter */}
-                                {uniqueBrands.length > 0 && (
-                                    <div className="px-3 py-2" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                            <Paintbrush size={9} className="inline mr-1" />Brand
-                                        </p>
-                                        <div className="flex flex-wrap gap-1">
-                                            {uniqueBrands.map(b => (
-                                                <button key={b} onClick={() => setFilterBrand(filterBrand === b ? null : b)}
-                                                    className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
-                                                    style={{
-                                                        background: filterBrand === b ? 'color-mix(in srgb, #8b5cf6 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
-                                                        color: filterBrand === b ? '#8b5cf6' : 'var(--app-muted-foreground)',
-                                                        border: filterBrand === b ? '1px solid color-mix(in srgb, #8b5cf6 30%, transparent)' : '1px solid transparent',
-                                                    }}>
-                                                    {filterBrand === b && <Check size={8} className="inline mr-0.5" />}{b}
-                                                </button>
-                                            ))}
+                            <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+                                style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+                                onClick={e => { if (e.target === e.currentTarget) setShowFilterPopup(false) }}>
+                                <div className="w-full max-w-md mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
+                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+                                    onClick={e => e.stopPropagation()}>
+                                    {/* Header */}
+                                    <div className="px-4 py-2.5 flex items-center justify-between flex-shrink-0"
+                                        style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                                        <div className="flex items-center gap-2">
+                                            <SlidersHorizontal size={13} className="text-app-primary" />
+                                            <span className="text-[11px] font-black uppercase tracking-wider text-app-foreground">Filters</span>
+                                            {activeFilterCount > 0 && (
+                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-app-primary text-white">{activeFilterCount}</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {activeFilterCount > 0 && (
+                                                <button onClick={clearAllFilters}
+                                                    className="text-[10px] font-bold text-app-error hover:underline">Clear all</button>
+                                            )}
+                                            <button onClick={() => setShowFilterPopup(false)}
+                                                className="p-1 rounded-lg hover:bg-app-border/50 text-app-muted-foreground hover:text-app-foreground transition-all">
+                                                <X size={14} />
+                                            </button>
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Status Filter */}
-                                {uniqueStatuses.length > 0 && (
-                                    <div className="px-3 py-2" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                            <AlertCircle size={9} className="inline mr-1" />Status
-                                        </p>
-                                        <div className="flex flex-wrap gap-1">
-                                            {uniqueStatuses.map(s => (
-                                                <button key={s} onClick={() => setFilterStatus(filterStatus === s ? null : s)}
-                                                    className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all uppercase"
-                                                    style={{
-                                                        background: filterStatus === s ? 'color-mix(in srgb, var(--app-primary) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
-                                                        color: filterStatus === s ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                                        border: filterStatus === s ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid transparent',
-                                                    }}>
-                                                    {filterStatus === s && <Check size={8} className="inline mr-0.5" />}{s}
-                                                </button>
-                                            ))}
+                                    {/* Filter Grid */}
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+                                        {/* Row 1: Type + Brand */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                            {/* Type */}
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                                                    <Box size={9} className="inline mr-1" />Type
+                                                </p>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {uniqueTypes.map(t => (
+                                                        <button key={t} onClick={() => setFilterType(filterType === t ? null : t)}
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
+                                                            style={{
+                                                                background: filterType === t ? 'color-mix(in srgb, var(--app-primary) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                                                                color: filterType === t ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                                                border: filterType === t ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid transparent',
+                                                            }}>
+                                                            {filterType === t && <Check size={8} className="inline mr-0.5" />}{t}
+                                                        </button>
+                                                    ))}
+                                                    {uniqueTypes.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No types</span>}
+                                                </div>
+                                            </div>
+
+                                            {/* Brand */}
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                                                    <Paintbrush size={9} className="inline mr-1" />Brand
+                                                </p>
+                                                <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto custom-scrollbar">
+                                                    {uniqueBrands.map(b => (
+                                                        <button key={b} onClick={() => setFilterBrand(filterBrand === b ? null : b)}
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
+                                                            style={{
+                                                                background: filterBrand === b ? 'color-mix(in srgb, #8b5cf6 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                                                                color: filterBrand === b ? '#8b5cf6' : 'var(--app-muted-foreground)',
+                                                                border: filterBrand === b ? '1px solid color-mix(in srgb, #8b5cf6 30%, transparent)' : '1px solid transparent',
+                                                            }}>
+                                                            {filterBrand === b && <Check size={8} className="inline mr-0.5" />}{b}
+                                                        </button>
+                                                    ))}
+                                                    {uniqueBrands.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No brands</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 2: Status + Unit */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                            {/* Status */}
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                                                    <AlertCircle size={9} className="inline mr-1" />Status
+                                                </p>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {uniqueStatuses.map(s => (
+                                                        <button key={s} onClick={() => setFilterStatus(filterStatus === s ? null : s)}
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all uppercase"
+                                                            style={{
+                                                                background: filterStatus === s ? 'color-mix(in srgb, var(--app-primary) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                                                                color: filterStatus === s ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                                                border: filterStatus === s ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid transparent',
+                                                            }}>
+                                                            {filterStatus === s && <Check size={8} className="inline mr-0.5" />}{s}
+                                                        </button>
+                                                    ))}
+                                                    {uniqueStatuses.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No statuses</span>}
+                                                </div>
+                                            </div>
+
+                                            {/* Unit */}
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                                                    <Hash size={9} className="inline mr-1" />Unit
+                                                </p>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {uniqueUnits.map(u => (
+                                                        <button key={u} onClick={() => setFilterUnit(filterUnit === u ? null : u)}
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
+                                                            style={{
+                                                                background: filterUnit === u ? 'color-mix(in srgb, var(--app-success) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                                                                color: filterUnit === u ? 'var(--app-success)' : 'var(--app-muted-foreground)',
+                                                                border: filterUnit === u ? '1px solid color-mix(in srgb, var(--app-success) 30%, transparent)' : '1px solid transparent',
+                                                            }}>
+                                                            {filterUnit === u && <Check size={8} className="inline mr-0.5" />}{u}
+                                                        </button>
+                                                    ))}
+                                                    {uniqueUnits.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No units</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 3: TVA Rate */}
+                                        <div>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                                                TVA Rate %
+                                            </p>
+                                            <div className="flex flex-wrap gap-1">
+                                                {uniqueTvaRates.map(r => (
+                                                    <button key={r} onClick={() => setFilterTva(filterTva === r ? null : r)}
+                                                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
+                                                        style={{
+                                                            background: filterTva === r ? 'color-mix(in srgb, var(--app-warning) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                                                            color: filterTva === r ? 'var(--app-warning)' : 'var(--app-muted-foreground)',
+                                                            border: filterTva === r ? '1px solid color-mix(in srgb, var(--app-warning) 30%, transparent)' : '1px solid transparent',
+                                                        }}>
+                                                        {filterTva === r && <Check size={8} className="inline mr-0.5" />}{r}%
+                                                    </button>
+                                                ))}
+                                                {uniqueTvaRates.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No TVA rates</span>}
+                                            </div>
+                                        </div>
+
+                                        {/* Row 4: Margin + Price Range */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                            {/* Margin Range */}
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                                                    Margin % Range
+                                                </p>
+                                                <div className="flex items-center gap-1">
+                                                    <input type="number" placeholder="Min" value={filterMarginMin} onChange={e => setFilterMarginMin(e.target.value)}
+                                                        className="w-full text-[11px] px-2 py-1.5 rounded-lg bg-app-background border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary transition-all" />
+                                                    <span className="text-[10px] text-app-muted-foreground flex-shrink-0">—</span>
+                                                    <input type="number" placeholder="Max" value={filterMarginMax} onChange={e => setFilterMarginMax(e.target.value)}
+                                                        className="w-full text-[11px] px-2 py-1.5 rounded-lg bg-app-background border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary transition-all" />
+                                                </div>
+                                            </div>
+
+                                            {/* Price Range */}
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                                                    Price TTC Range
+                                                </p>
+                                                <div className="flex items-center gap-1">
+                                                    <input type="number" placeholder="Min" value={filterPriceMin} onChange={e => setFilterPriceMin(e.target.value)}
+                                                        className="w-full text-[11px] px-2 py-1.5 rounded-lg bg-app-background border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary transition-all" />
+                                                    <span className="text-[10px] text-app-muted-foreground flex-shrink-0">—</span>
+                                                    <input type="number" placeholder="Max" value={filterPriceMax} onChange={e => setFilterPriceMax(e.target.value)}
+                                                        className="w-full text-[11px] px-2 py-1.5 rounded-lg bg-app-background border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary transition-all" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Apply/Close */}
-                                <div className="px-3 py-2">
-                                    <button onClick={() => setShowFilterPopup(false)}
-                                        className="w-full text-[11px] font-bold py-1.5 rounded-lg bg-app-primary text-white hover:brightness-110 transition-all">
-                                        Apply
-                                    </button>
+                                    {/* Footer */}
+                                    <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between"
+                                        style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, var(--app-surface))' }}>
+                                        <span className="text-[10px] font-bold text-app-muted-foreground">
+                                            {filtered.length} of {totalCount} products
+                                        </span>
+                                        <button onClick={() => setShowFilterPopup(false)}
+                                            className="text-[11px] font-bold px-4 py-1.5 rounded-xl bg-app-primary text-white hover:brightness-110 transition-all"
+                                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                            Apply Filters
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -1379,32 +1499,42 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                                             }}>
                                                                             <Link2 size={10} /> Link to category
                                                                         </button>
-                                                                        {movePreview.target_brands?.length > 0 && (
-                                                                            <select
-                                                                                value={isReassigned ? String(reassignBrands[b.id]) : ''}
-                                                                                onChange={e => {
-                                                                                    const val = e.target.value
-                                                                                    if (val) {
-                                                                                        setReassignBrands({ ...reassignBrands, [b.id]: Number(val) })
-                                                                                        const next = new Set(autoLinkBrands)
-                                                                                        next.delete(b.id)
-                                                                                        setAutoLinkBrands(next)
-                                                                                    } else {
-                                                                                        const r = { ...reassignBrands }
-                                                                                        delete r[b.id]
-                                                                                        setReassignBrands(r)
-                                                                                    }
-                                                                                }}
-                                                                                className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-app-background text-app-foreground outline-none flex-1 min-w-0 transition-all"
-                                                                                style={{
-                                                                                    border: isReassigned ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid var(--app-border)',
-                                                                                    color: isReassigned ? 'var(--app-primary)' : undefined,
-                                                                                }}>
-                                                                                <option value="">Reassign to...</option>
-                                                                                {movePreview.target_brands.map((tb: any) => (
-                                                                                    <option key={tb.id} value={String(tb.id)}>{tb.name}</option>
-                                                                                ))}
-                                                                            </select>
+                                                                        {!isLinked && (
+                                                                            movePreview.target_brands?.length > 0 ? (
+                                                                                <select
+                                                                                    value={isReassigned ? String(reassignBrands[b.id]) : ''}
+                                                                                    onChange={e => {
+                                                                                        const val = e.target.value
+                                                                                        if (val) {
+                                                                                            setReassignBrands({ ...reassignBrands, [b.id]: Number(val) })
+                                                                                            const next = new Set(autoLinkBrands)
+                                                                                            next.delete(b.id)
+                                                                                            setAutoLinkBrands(next)
+                                                                                        } else {
+                                                                                            const r = { ...reassignBrands }
+                                                                                            delete r[b.id]
+                                                                                            setReassignBrands(r)
+                                                                                        }
+                                                                                    }}
+                                                                                    className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-app-background text-app-foreground outline-none flex-1 min-w-0 transition-all"
+                                                                                    style={{
+                                                                                        border: isReassigned
+                                                                                            ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)'
+                                                                                            : '1px solid color-mix(in srgb, var(--app-error) 40%, transparent)',
+                                                                                        color: isReassigned ? 'var(--app-primary)' : undefined,
+                                                                                        animation: !isReassigned ? 'pulse 2s ease-in-out infinite' : 'none',
+                                                                                    }}>
+                                                                                    <option value="">⚠ Select a brand...</option>
+                                                                                    {movePreview.target_brands.map((tb: any) => (
+                                                                                        <option key={tb.id} value={String(tb.id)}>{tb.name}</option>
+                                                                                    ))}
+                                                                                </select>
+                                                                            ) : (
+                                                                                <span className="text-[9px] font-bold px-2 py-1 rounded-lg"
+                                                                                    style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)' }}>
+                                                                                    No brands in target — must link
+                                                                                </span>
+                                                                            )
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -1478,21 +1608,47 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                         </div>
 
                         {/* Modal Footer */}
-                        {(moveStep === 'preview' || moveStep === 'executing') && movePreview && (
-                            <div className="px-5 py-3 flex items-center gap-2"
-                                style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, var(--app-surface))' }}>
-                                <button onClick={() => { setMoveStep('picking'); setMovePreview(null) }}
-                                    className="flex-1 text-[12px] font-bold py-2 rounded-xl border border-app-border text-app-muted-foreground hover:bg-app-border/30 transition-all">
-                                    ← Back
-                                </button>
-                                <button onClick={executeMove} disabled={moveStep === 'executing'}
-                                    className="flex-[2] flex items-center justify-center gap-2 text-[12px] font-bold bg-app-primary text-white py-2 rounded-xl hover:brightness-110 transition-all disabled:opacity-50"
-                                    style={{ boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                                    {moveStep === 'executing' ? <Loader2 size={14} className="animate-spin" /> : <ArrowRightLeft size={14} />}
-                                    {moveStep === 'executing' ? 'Moving...' : `Move ${selected.size} Product${selected.size > 1 ? 's' : ''}`}
-                                </button>
-                            </div>
-                        )}
+                        {(moveStep === 'preview' || moveStep === 'executing') && movePreview && (() => {
+                            // Enforce: every conflict brand must be linked OR reassigned
+                            const unresolvedBrands = (movePreview.conflict_brands || []).filter((b: any) =>
+                                !autoLinkBrands.has(b.id) && !(b.id in reassignBrands)
+                            )
+                            // Enforce: every conflict attribute must be linked
+                            const unresolvedAttrs = (movePreview.conflict_attributes || []).filter((a: any) =>
+                                !autoLinkAttrs.has(a.id)
+                            )
+                            const hasUnresolved = unresolvedBrands.length > 0 || unresolvedAttrs.length > 0
+                            const canMove = !hasUnresolved && moveStep !== 'executing'
+
+                            return (
+                                <div className="px-5 py-3 space-y-2"
+                                    style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, var(--app-surface))' }}>
+                                    {hasUnresolved && (
+                                        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
+                                            style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error) 15%, transparent)' }}>
+                                            <AlertTriangle size={12} style={{ color: 'var(--app-error)' }} />
+                                            <p className="text-[10px] font-bold" style={{ color: 'var(--app-error)' }}>
+                                                {unresolvedBrands.length > 0 && `${unresolvedBrands.length} brand${unresolvedBrands.length > 1 ? 's' : ''} must be linked or reassigned`}
+                                                {unresolvedBrands.length > 0 && unresolvedAttrs.length > 0 && ' · '}
+                                                {unresolvedAttrs.length > 0 && `${unresolvedAttrs.length} attribute${unresolvedAttrs.length > 1 ? 's' : ''} must be linked`}
+                                            </p>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => { setMoveStep('picking'); setMovePreview(null) }}
+                                            className="flex-1 text-[12px] font-bold py-2 rounded-xl border border-app-border text-app-muted-foreground hover:bg-app-border/30 transition-all">
+                                            ← Back
+                                        </button>
+                                        <button onClick={executeMove} disabled={!canMove}
+                                            className="flex-[2] flex items-center justify-center gap-2 text-[12px] font-bold bg-app-primary text-white py-2 rounded-xl hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                            style={{ boxShadow: canMove ? '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' : 'none' }}>
+                                            {moveStep === 'executing' ? <Loader2 size={14} className="animate-spin" /> : <ArrowRightLeft size={14} />}
+                                            {moveStep === 'executing' ? 'Moving...' : `Move ${selected.size} Product${selected.size > 1 ? 's' : ''}`}
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        })()}
                     </div>
                 </div>
             )}

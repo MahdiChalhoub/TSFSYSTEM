@@ -3,7 +3,7 @@ Inventory Module Signals
 ========================
 Event-driven signal handlers for stock adjustments and transfers.
 """
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 import logging
 
@@ -11,10 +11,15 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from apps.inventory.models import StockAdjustmentOrder, StockTransferOrder
+    from apps.inventory.models import (
+        StockAdjustmentOrder, StockTransferOrder,
+        Product, ProductAttribute
+    )
 except ImportError:
     StockAdjustmentOrder = None
     StockTransferOrder = None
+    Product = None
+    ProductAttribute = None
 
 
 if StockAdjustmentOrder:
@@ -39,3 +44,64 @@ if StockTransferOrder:
         if instance.status != 'POSTED':
             return
         logger.info(f"[SIGNAL] StockTransferOrder #{instance.id} posted — stock transferred")
+
+
+if Product:
+    @receiver(post_save, sender=Product)
+    def handle_product_auto_linkage(sender, instance, **kwargs):
+        """
+        Auto-link Brand to Country and Category on product save.
+        """
+        brand = instance.brand
+        category = instance.category
+        country = instance.country_of_origin
+
+        if not brand:
+            return
+
+        # 1. Link Brand to Product's Country of Origin
+        if country:
+            if not brand.origin_countries.filter(id=country.id).exists():
+                brand.origin_countries.add(country)
+                logger.info(f"[SIGNAL] Auto-linked Brand {brand.name} to Country {country.name}")
+
+        # 2. Link Brand to Product's Category
+        if category:
+            if not brand.categories.filter(id=category.id).exists():
+                brand.categories.add(category)
+                logger.info(f"[SIGNAL] Auto-linked Brand {brand.name} to Category {category.name}")
+
+
+    @receiver(m2m_changed, sender=Product.attribute_values.through)
+    def handle_product_attribute_linkage(sender, instance, action, pk_set, **kwargs):
+        """
+        Auto-link Attribute Groups to Brand and Category when attributes are assigned.
+        """
+        if action != "post_add" or not pk_set:
+            return
+
+        brand = instance.brand
+        category = instance.category
+        
+        if not brand and not category:
+            return
+
+        # Resolve parent attribute groups for the added values
+        group_ids = ProductAttribute.objects.filter(
+            id__in=pk_set, parent__isnull=False
+        ).values_list('parent_id', flat=True).distinct()
+
+        if not group_ids:
+            return
+
+        groups = ProductAttribute.objects.filter(id__in=group_ids)
+        for group in groups:
+            if brand:
+                if not brand.attributes.filter(id=group.id).exists():
+                    brand.attributes.add(group)
+                    logger.info(f"[SIGNAL] Auto-linked Attribute Group {group.name} to Brand {brand.name}")
+            
+            if category:
+                if not category.attributes.filter(id=group.id).exists():
+                    category.attributes.add(group)
+                    logger.info(f"[SIGNAL] Auto-linked Attribute Group {group.name} to Category {category.name}")
