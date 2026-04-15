@@ -745,7 +745,7 @@ function PanelOverviewTab({ node, onAdd, onDelete, isParent, childCount, product
     )
 }
 
-/* ── Products Tab ── */
+/* ── Products Tab — uses categories/{id}/explore/ ── */
 function PanelProductsTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
     const [products, setProducts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -754,9 +754,18 @@ function PanelProductsTab({ categoryId, categoryName }: { categoryId: number; ca
     useEffect(() => {
         let cancelled = false
         setLoading(true)
-        erpFetch(`inventory/products/?category=${categoryId}&page_size=200`)
-            .then((data: any) => { if (!cancelled) { setProducts(Array.isArray(data) ? data : data?.results ?? []); setLoading(false) } })
-            .catch(() => { if (!cancelled) { setProducts([]); setLoading(false) } })
+        setSearch('')
+        // Use the explore endpoint which returns products for this category
+        erpFetch(`inventory/categories/${categoryId}/explore/`)
+            .then((data: any) => {
+                if (!cancelled) {
+                    setProducts(data?.products ?? [])
+                    setLoading(false)
+                }
+            })
+            .catch(() => {
+                if (!cancelled) { setProducts([]); setLoading(false) }
+            })
         return () => { cancelled = true }
     }, [categoryId])
 
@@ -788,7 +797,7 @@ function PanelProductsTab({ categoryId, categoryName }: { categoryId: number; ca
                 ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <Package size={32} className="text-app-muted-foreground mb-2 opacity-40" />
-                        <p className="text-sm font-bold text-app-muted-foreground">{search ? 'No matching products' : 'No products assigned'}</p>
+                        <p className="text-sm font-bold text-app-muted-foreground">{search ? 'No matching products' : 'No products in this category'}</p>
                         <p className="text-[11px] text-app-muted-foreground mt-1">Assign products from the Products page.</p>
                     </div>
                 ) : (
@@ -802,13 +811,14 @@ function PanelProductsTab({ categoryId, categoryName }: { categoryId: number; ca
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[12px] font-bold text-app-foreground truncate">{p.name}</p>
                                     <div className="flex items-center gap-2 text-[10px] text-app-muted-foreground">
-                                        {p.sku && <span className="font-mono">{p.sku}</span>}
-                                        {p.barcode && <span>· {p.barcode}</span>}
+                                        {p.sku && <span className="font-mono font-bold">{p.sku}</span>}
+                                        {p.brand_name && <span>· {p.brand_name}</span>}
+                                        {p.parfum_name && <span>· {p.parfum_name}</span>}
                                     </div>
                                 </div>
-                                {p.selling_price != null && (
+                                {p.selling_price_ttc != null && (
                                     <span className="text-[11px] font-bold text-app-foreground tabular-nums flex-shrink-0">
-                                        {Number(p.selling_price).toLocaleString()}
+                                        {Number(p.selling_price_ttc).toLocaleString()}
                                     </span>
                                 )}
                                 <Link href={`/inventory/products/${p.id}`}
@@ -824,32 +834,31 @@ function PanelProductsTab({ categoryId, categoryName }: { categoryId: number; ca
     )
 }
 
-/* ── Brands Tab ── */
+/* ── Brands Tab — uses brands/by_category + brands M2M ── */
 function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
-    const [brands, setBrands] = useState<any[]>([])
+    const [linkedBrands, setLinkedBrands] = useState<any[]>([])
     const [allBrands, setAllBrands] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [linking, setLinking] = useState(false)
     const [showLink, setShowLink] = useState(false)
     const router = useRouter()
 
-    const loadBrands = useCallback(() => {
+    const loadData = useCallback(() => {
         setLoading(true)
-        erpFetch('inventory/brands/')
-            .then((data: any) => {
-                const all = Array.isArray(data) ? data : data?.results ?? []
-                setAllBrands(all)
-                setBrands(all.filter((b: any) =>
-                    (b.categories || []).some((c: any) => (typeof c === 'object' ? c.id : c) === categoryId)
-                ))
-                setLoading(false)
-            })
-            .catch(() => setLoading(false))
+        // Fetch brands linked to this category (M2M) AND all brands for the link palette
+        Promise.all([
+            erpFetch(`inventory/brands/by_category/?category_id=${categoryId}`),
+            erpFetch('inventory/brands/'),
+        ]).then(([linked, all]: any[]) => {
+            setLinkedBrands(Array.isArray(linked) ? linked : linked?.results ?? [])
+            setAllBrands(Array.isArray(all) ? all : all?.results ?? [])
+            setLoading(false)
+        }).catch(() => setLoading(false))
     }, [categoryId])
 
-    useEffect(() => { loadBrands() }, [loadBrands])
+    useEffect(() => { loadData() }, [loadData])
 
-    const linkedIds = useMemo(() => new Set(brands.map(b => b.id)), [brands])
+    const linkedIds = useMemo(() => new Set(linkedBrands.map(b => b.id)), [linkedBrands])
     const unlinkedBrands = allBrands.filter(b => !linkedIds.has(b.id))
 
     const linkBrand = async (brandId: number) => {
@@ -857,12 +866,15 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
         try {
             const brand = allBrands.find(b => b.id === brandId)
             if (brand) {
-                const ids = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
-                await erpFetch(`inventory/brands/${brandId}/`, { method: 'PATCH', body: JSON.stringify({ category_ids: [...ids, categoryId] }) })
+                const existingCatIds = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
+                await erpFetch(`inventory/brands/${brandId}/`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ category_ids: [...existingCatIds, categoryId] }),
+                })
                 toast.success(`Linked "${brand.name}"`)
-                loadBrands(); router.refresh()
+                loadData(); router.refresh()
             }
-        } catch (e: any) { toast.error(e?.message || 'Failed') }
+        } catch (e: any) { toast.error(e?.message || 'Failed to link') }
         finally { setLinking(false) }
     }
 
@@ -871,12 +883,15 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
         try {
             const brand = allBrands.find(b => b.id === brandId)
             if (brand) {
-                const ids = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
-                await erpFetch(`inventory/brands/${brandId}/`, { method: 'PATCH', body: JSON.stringify({ category_ids: ids.filter((id: number) => id !== categoryId) }) })
+                const existingCatIds = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
+                await erpFetch(`inventory/brands/${brandId}/`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ category_ids: existingCatIds.filter((id: number) => id !== categoryId) }),
+                })
                 toast.success(`Unlinked "${brand.name}"`)
-                loadBrands(); router.refresh()
+                loadData(); router.refresh()
             }
-        } catch (e: any) { toast.error(e?.message || 'Failed') }
+        } catch (e: any) { toast.error(e?.message || 'Failed to unlink') }
         finally { setLinking(false) }
     }
 
@@ -884,7 +899,7 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
         <div className="flex flex-col h-full animate-in fade-in duration-200">
             <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <p className="text-[10px] font-bold text-app-muted-foreground">
-                    {loading ? 'Loading...' : `${brands.length} linked`}
+                    {loading ? 'Loading...' : `${linkedBrands.length} brand${linkedBrands.length !== 1 ? 's' : ''} linked`}
                 </p>
                 <button onClick={() => setShowLink(!showLink)}
                     className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1 rounded-xl hover:bg-app-surface transition-all">
@@ -899,7 +914,7 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                         Available ({unlinkedBrands.length})
                     </p>
                     {unlinkedBrands.length === 0 ? (
-                        <p className="text-[11px] text-app-muted-foreground">All brands linked.</p>
+                        <p className="text-[11px] text-app-muted-foreground">All brands are already linked.</p>
                     ) : (
                         <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar">
                             {unlinkedBrands.map(b => (
@@ -917,15 +932,15 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {loading ? (
                     <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: '#8b5cf6' }} /></div>
-                ) : brands.length === 0 ? (
+                ) : linkedBrands.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <Paintbrush size={32} className="text-app-muted-foreground mb-2 opacity-40" />
                         <p className="text-sm font-bold text-app-muted-foreground">No brands linked</p>
-                        <p className="text-[11px] text-app-muted-foreground mt-1">Click &ldquo;Link&rdquo; to associate brands.</p>
+                        <p className="text-[11px] text-app-muted-foreground mt-1">Click &ldquo;Link&rdquo; to associate brands with this category.</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
-                        {brands.map((b: any) => (
+                        {linkedBrands.map((b: any) => (
                             <div key={b.id} className="flex items-center gap-3 px-4 py-2 group transition-all hover:bg-app-surface/50">
                                 <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                                     style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
@@ -933,7 +948,9 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[12px] font-bold text-app-foreground truncate">{b.name}</p>
-                                    {b.short_name && <p className="text-[10px] font-bold text-app-muted-foreground">{b.short_name}</p>}
+                                    {b.product_count != null && (
+                                        <p className="text-[10px] font-bold text-app-muted-foreground">{b.product_count} products</p>
+                                    )}
                                 </div>
                                 <button onClick={() => unlinkBrand(b.id)} disabled={linking}
                                     className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
@@ -949,7 +966,7 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
     )
 }
 
-/* ── Attributes Tab ── */
+/* ── Attributes Tab — fetches attribute groups linked to this category ── */
 function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
     const [attributes, setAttributes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -957,8 +974,19 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
     useEffect(() => {
         let cancelled = false
         setLoading(true)
-        erpFetch(`inventory/parfums/by_category/?category_id=${categoryId}`)
-            .then((data: any) => { if (!cancelled) { setAttributes(Array.isArray(data) ? data : data?.results ?? []); setLoading(false) } })
+        // Fetch the full attribute tree, then filter to those linked to this category
+        erpFetch('inventory/product-attributes/tree/')
+            .then((data: any) => {
+                if (!cancelled) {
+                    const tree = Array.isArray(data) ? data : data?.results ?? []
+                    // Filter: only show attribute groups that are linked to this category
+                    const linked = tree.filter((group: any) =>
+                        (group.linked_categories || []).some((c: any) => c.id === categoryId)
+                    )
+                    setAttributes(linked)
+                    setLoading(false)
+                }
+            })
             .catch(() => { if (!cancelled) { setAttributes([]); setLoading(false) } })
         return () => { cancelled = true }
     }, [categoryId])
@@ -967,7 +995,7 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
         <div className="flex flex-col h-full animate-in fade-in duration-200">
             <div className="flex-shrink-0 px-4 py-2.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <p className="text-[10px] font-bold text-app-muted-foreground">
-                    {loading ? 'Loading...' : `${attributes.length} attribute${attributes.length !== 1 ? 's' : ''}`}
+                    {loading ? 'Loading...' : `${attributes.length} attribute group${attributes.length !== 1 ? 's' : ''} linked`}
                 </p>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -976,21 +1004,50 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                 ) : attributes.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <Tag size={32} className="text-app-muted-foreground mb-2 opacity-40" />
-                        <p className="text-sm font-bold text-app-muted-foreground">No attributes found</p>
-                        <p className="text-[11px] text-app-muted-foreground mt-1">Attributes link through products in this category.</p>
+                        <p className="text-sm font-bold text-app-muted-foreground">No attribute groups linked</p>
+                        <p className="text-[11px] text-app-muted-foreground mt-1">
+                            Link attributes from the Attributes page.
+                        </p>
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
-                        {attributes.map((a: any) => (
-                            <div key={a.id} className="flex items-center gap-3 px-4 py-2 transition-all hover:bg-app-surface/50">
-                                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
-                                    <Tag size={12} />
+                        {attributes.map((group: any) => (
+                            <div key={group.id} className="px-4 py-2.5">
+                                {/* Attribute Group header */}
+                                <div className="flex items-center gap-2.5 mb-1.5">
+                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
+                                        <Tag size={12} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[12px] font-bold text-app-foreground truncate">{group.name}</p>
+                                        {group.code && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{group.code}</p>}
+                                    </div>
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
+                                        style={{ background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', color: 'var(--app-warning)' }}>
+                                        {group.children?.length ?? 0} values
+                                    </span>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[12px] font-bold text-app-foreground truncate">{a.name}</p>
-                                    {a.code && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{a.code}</p>}
-                                </div>
+                                {/* Attribute values as chips */}
+                                {group.children && group.children.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 ml-8">
+                                        {group.children.map((val: any) => (
+                                            <span key={val.id}
+                                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                                                style={{
+                                                    background: val.color_hex
+                                                        ? `color-mix(in srgb, ${val.color_hex} 12%, transparent)`
+                                                        : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                    color: val.color_hex || 'var(--app-muted-foreground)',
+                                                    border: val.color_hex
+                                                        ? `1px solid color-mix(in srgb, ${val.color_hex} 25%, transparent)`
+                                                        : '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                                }}>
+                                                {val.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

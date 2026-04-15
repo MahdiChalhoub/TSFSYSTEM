@@ -59,7 +59,7 @@ services:
     volumes:
       - dev_redisdata:/data
     ports:
-      - "6380:6379"   # 6380 on host avoids conflict with any local Redis
+      - "127.0.0.1:6380:6379"   # Localhost only — never expose Redis to internet
     networks:
       - tsf-dev
     healthcheck:
