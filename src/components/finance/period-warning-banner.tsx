@@ -93,10 +93,10 @@ export function PeriodWarningBanner() {
     return (
         <div className="flex items-center gap-3 px-4 py-1.5 text-[11px]"
             style={{
-                background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, var(--app-bg))',
-                borderBottom: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)',
+                background: 'color-mix(in srgb, var(--app-warning) 8%, var(--app-bg))',
+                borderBottom: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)',
             }}>
-            <AlertTriangle size={13} style={{ color: 'var(--app-warning, #f59e0b)', flexShrink: 0 }} />
+            <AlertTriangle size={13} style={{ color: 'var(--app-warning)', flexShrink: 0 }} />
             <span className="font-bold flex-1" style={{ color: 'var(--app-foreground)' }}>
                 Period <strong>{warning.periodName}</strong> is {warning.status} — transactions blocked
             </span>

@@ -1769,7 +1769,7 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
         } catch (e: any) {
             const conflictData = e?.data || e
             if (conflictData?.error === 'conflict' && conflictData?.products) {
-                setConflict(conflictData)
+                setConflict({ ...conflictData, _brandId: brandId })
             } else {
                 toast.error(e?.message || 'Failed to unlink')
             }
@@ -1817,7 +1817,7 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                 </div>
             )}
 
-            {/* Conflict Dialog — shows affected products when unlinking */}
+            {/* Conflict Dialog — shows affected products with inline brand reassignment */}
             {conflict && (
                 <div className="flex-shrink-0 px-4 py-3 animate-in slide-in-from-top-2 duration-200"
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
@@ -1826,12 +1826,90 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                         <span className="text-[11px] font-black text-app-error">Cannot Unlink — {conflict.affected_count} product{conflict.affected_count !== 1 ? 's' : ''} affected</span>
                     </div>
                     <p className="text-[10px] text-app-muted-foreground mb-2">{conflict.message}</p>
-                    <div className="max-h-32 overflow-y-auto custom-scrollbar space-y-1">
+
+                    {/* Bulk reassign all to one brand */}
+                    <div className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg"
+                        style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
+                        <span className="text-[10px] font-bold text-app-foreground whitespace-nowrap">Reassign all to:</span>
+                        <select
+                            id="bulk-brand-select"
+                            className="flex-1 text-[10px] font-bold rounded-md px-2 py-1 bg-transparent border border-app-border text-app-foreground"
+                            defaultValue="">
+                            <option value="" disabled>Select brand...</option>
+                            {allBrands
+                                .filter(b => b.id !== conflict._brandId)
+                                .map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                        </select>
+                        <button
+                            onClick={async () => {
+                                const sel = document.getElementById('bulk-brand-select') as HTMLSelectElement
+                                const newBrandId = parseInt(sel?.value)
+                                if (!newBrandId) { toast.error('Select a target brand'); return }
+                                setLinking(true)
+                                let ok = 0
+                                for (const p of conflict.products || []) {
+                                    try {
+                                        await erpFetch(`inventory/products/${p.id}/`, {
+                                            method: 'PATCH',
+                                            body: JSON.stringify({ brand: newBrandId }),
+                                        })
+                                        ok++
+                                    } catch { /* skip */ }
+                                }
+                                toast.success(`${ok} product${ok !== 1 ? 's' : ''} reassigned`)
+                                setConflict(null)
+                                setLinking(false)
+                                loadData()
+                            }}
+                            disabled={linking}
+                            className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg transition-all disabled:opacity-50"
+                            style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            {linking ? 'Working...' : 'Reassign All'}
+                        </button>
+                    </div>
+
+                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
                         {(conflict.products || []).map((p: any) => (
-                            <div key={p.id} className="flex items-center gap-2 text-[10px] py-1 px-2 rounded-lg"
+                            <div key={p.id} className="flex items-center gap-2 text-[10px] py-1.5 px-2 rounded-lg"
                                 style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
-                                <span className="font-mono font-bold text-app-muted-foreground">{p.sku}</span>
+                                <span className="font-mono font-bold text-app-muted-foreground flex-shrink-0">{p.sku}</span>
                                 <span className="font-bold text-app-foreground truncate flex-1">{p.name}</span>
+                                <select
+                                    id={`brand-sel-${p.id}`}
+                                    className="text-[10px] font-bold rounded-md px-1.5 py-0.5 bg-transparent border border-app-border text-app-foreground max-w-[100px]"
+                                    defaultValue="">
+                                    <option value="" disabled>Brand...</option>
+                                    {allBrands
+                                        .filter(b => b.id !== conflict._brandId)
+                                        .map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                </select>
+                                <button
+                                    onClick={async () => {
+                                        const sel = document.getElementById(`brand-sel-${p.id}`) as HTMLSelectElement
+                                        const newBrandId = parseInt(sel?.value)
+                                        if (!newBrandId) { toast.error('Select a brand'); return }
+                                        try {
+                                            await erpFetch(`inventory/products/${p.id}/`, {
+                                                method: 'PATCH',
+                                                body: JSON.stringify({ brand: newBrandId }),
+                                            })
+                                            toast.success(`${p.name} reassigned`)
+                                            // Remove from conflict list
+                                            setConflict((prev: any) => {
+                                                if (!prev) return null
+                                                const remaining = prev.products.filter((x: any) => x.id !== p.id)
+                                                if (remaining.length === 0) {
+                                                    loadData()
+                                                    return null
+                                                }
+                                                return { ...prev, products: remaining, affected_count: remaining.length }
+                                            })
+                                        } catch (e: any) { toast.error(e?.message || 'Failed to reassign') }
+                                    }}
+                                    className="text-[9px] font-black px-1.5 py-0.5 rounded transition-all flex-shrink-0"
+                                    style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                    ✓
+                                </button>
                             </div>
                         ))}
                         {conflict.affected_count > 20 && (
@@ -2004,7 +2082,7 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                 </div>
             )}
 
-            {/* Conflict Dialog — shows affected products + barcode warnings */}
+            {/* Conflict Dialog — shows affected products with edit access */}
             {conflict && (
                 <div className="flex-shrink-0 px-4 py-3 animate-in slide-in-from-top-2 duration-200"
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
@@ -2020,29 +2098,46 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                             </span>
                         )}
                     </div>
-                    <p className="text-[10px] text-app-muted-foreground mb-2">{conflict.message}</p>
-                    <div className="max-h-32 overflow-y-auto custom-scrollbar space-y-1">
+                    <p className="text-[10px] text-app-muted-foreground mb-2">
+                        {conflict.message} Open each product to reassign its attribute values.
+                    </p>
+                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
                         {(conflict.products || []).map((p: any) => (
-                            <div key={p.id} className="flex items-center gap-2 text-[10px] py-1 px-2 rounded-lg"
+                            <div key={p.id} className="flex items-center gap-2 text-[10px] py-1.5 px-2 rounded-lg"
                                 style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
-                                <span className="font-mono font-bold text-app-muted-foreground">{p.sku}</span>
+                                <span className="font-mono font-bold text-app-muted-foreground flex-shrink-0">{p.sku}</span>
                                 <span className="font-bold text-app-foreground truncate flex-1">{p.name}</span>
                                 {p.has_barcode && (
-                                    <span className="text-[8px] font-black px-1 py-0.5 rounded"
+                                    <span className="text-[8px] font-black px-1 py-0.5 rounded flex-shrink-0"
                                         style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
                                         BARCODE
                                     </span>
                                 )}
+                                <button
+                                    onClick={() => {
+                                        window.open(`/inventory/products/${p.id}`, '_blank')
+                                    }}
+                                    className="flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded transition-all flex-shrink-0"
+                                    style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                    <Pencil size={9} /> Edit
+                                </button>
                             </div>
                         ))}
                         {conflict.affected_count > 20 && (
                             <p className="text-[10px] font-bold text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>
                         )}
                     </div>
-                    <button onClick={() => setConflict(null)}
-                        className="mt-2 text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all">
-                        Dismiss
-                    </button>
+                    <div className="flex items-center gap-3 mt-2">
+                        <button onClick={() => { setConflict(null); loadData() }}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                            style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            Refresh & Retry
+                        </button>
+                        <button onClick={() => setConflict(null)}
+                            className="text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all">
+                            Dismiss
+                        </button>
+                    </div>
                 </div>
             )}
 
