@@ -7,7 +7,7 @@ import {
     Trash2, Layers, Box, GitBranch,
     Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp, Bookmark, AlertCircle, Wrench,
     Package, Paintbrush, Link2, Unlink, Loader2, ExternalLink, LayoutPanelLeft, PanelLeftClose,
-    Hash, Tag, ChevronUp, Info
+    Hash, Tag, ChevronUp, Info, ArrowRightLeft, Check, AlertTriangle
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -648,7 +648,7 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories }: {
                     <PanelOverviewTab node={node} onAdd={onAdd} onDelete={onDelete} isParent={isParent}
                         childCount={childCount} productCount={productCount} brandCount={brandCount} />
                 )}
-                {activeTab === 'products' && <PanelProductsTab categoryId={node.id} categoryName={node.name} />}
+                {activeTab === 'products' && <PanelProductsTab categoryId={node.id} categoryName={node.name} allCategories={allCategories} />}
                 {activeTab === 'brands' && <PanelBrandsTab categoryId={node.id} categoryName={node.name} />}
                 {activeTab === 'attributes' && <PanelAttributesTab categoryId={node.id} categoryName={node.name} />}
             </div>
@@ -745,52 +745,287 @@ function PanelOverviewTab({ node, onAdd, onDelete, isParent, childCount, product
     )
 }
 
-/* ── Products Tab — uses categories/{id}/explore/ ── */
-function PanelProductsTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
+/* ── Products Tab — uses categories/{id}/explore/ — with multi-select & smart move ── */
+function PanelProductsTab({ categoryId, categoryName, allCategories }: {
+    categoryId: number; categoryName: string; allCategories: any[]
+}) {
     const [products, setProducts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const [selected, setSelected] = useState<Set<number>>(new Set())
+    const [moveTarget, setMoveTarget] = useState<number | null>(null)
+    const [showMovePicker, setShowMovePicker] = useState(false)
+    const [movePreview, setMovePreview] = useState<any>(null)
+    const [moveStep, setMoveStep] = useState<'idle' | 'picking' | 'preview' | 'executing'>('idle')
+    const [catSearch, setCatSearch] = useState('')
+    const [autoLinkBrands, setAutoLinkBrands] = useState<Set<number>>(new Set())
+    const [autoLinkAttrs, setAutoLinkAttrs] = useState<Set<number>>(new Set())
+    const router = useRouter()
 
-    useEffect(() => {
-        let cancelled = false
+    const loadProducts = useCallback(() => {
         setLoading(true)
         setSearch('')
-        // Use the explore endpoint which returns products for this category
+        setSelected(new Set())
         erpFetch(`inventory/categories/${categoryId}/explore/`)
-            .then((data: any) => {
-                if (!cancelled) {
-                    setProducts(data?.products ?? [])
-                    setLoading(false)
-                }
-            })
-            .catch(() => {
-                if (!cancelled) { setProducts([]); setLoading(false) }
-            })
-        return () => { cancelled = true }
+            .then((data: any) => { setProducts(data?.products ?? []); setLoading(false) })
+            .catch(() => { setProducts([]); setLoading(false) })
     }, [categoryId])
+
+    useEffect(() => { loadProducts() }, [loadProducts])
 
     const filtered = search.trim()
         ? products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()) || p.sku?.toLowerCase().includes(search.toLowerCase()))
         : products
 
+    const toggleSelect = (id: number) => {
+        const next = new Set(selected)
+        next.has(id) ? next.delete(id) : next.add(id)
+        setSelected(next)
+    }
+    const toggleAll = () => {
+        if (selected.size === filtered.length) setSelected(new Set())
+        else setSelected(new Set(filtered.map(p => p.id)))
+    }
+
+    // Flat list of categories excluding current
+    const moveTargets = allCategories.filter((c: any) => c.id !== categoryId)
+    const filteredTargets = catSearch.trim()
+        ? moveTargets.filter((c: any) => c.name?.toLowerCase().includes(catSearch.toLowerCase()))
+        : moveTargets
+
+    // Preview conflicts
+    const previewMove = async (targetId: number) => {
+        setMoveTarget(targetId)
+        setMoveStep('preview')
+        try {
+            const preview = await erpFetch('inventory/categories/move_products/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    product_ids: Array.from(selected),
+                    target_category_id: targetId,
+                    preview: true,
+                }),
+            })
+            setMovePreview(preview)
+            // Pre-select all conflicts for auto-link (recommended)
+            setAutoLinkBrands(new Set((preview.conflict_brands || []).map((b: any) => b.id)))
+            setAutoLinkAttrs(new Set((preview.conflict_attributes || []).map((a: any) => a.id)))
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to analyze move')
+            setMoveStep('picking')
+        }
+    }
+
+    // Execute move
+    const executeMove = async () => {
+        if (!moveTarget) return
+        setMoveStep('executing')
+        try {
+            await erpFetch('inventory/categories/move_products/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    product_ids: Array.from(selected),
+                    target_category_id: moveTarget,
+                    reconciliation: {
+                        auto_link_brands: Array.from(autoLinkBrands),
+                        auto_link_attributes: Array.from(autoLinkAttrs),
+                    },
+                }),
+            })
+            toast.success(`Moved ${selected.size} product${selected.size > 1 ? 's' : ''} to "${movePreview?.target_category?.name}"`)
+            setMoveStep('idle')
+            setMovePreview(null)
+            setSelected(new Set())
+            setShowMovePicker(false)
+            loadProducts()
+            router.refresh()
+        } catch (e: any) {
+            toast.error(e?.message || 'Move failed')
+            setMoveStep('preview')
+        }
+    }
+
+    const cancelMove = () => {
+        setMoveStep('idle')
+        setMovePreview(null)
+        setShowMovePicker(false)
+        setMoveTarget(null)
+        setCatSearch('')
+    }
+
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-200">
-            {/* Search — §5 pattern */}
+            {/* Search + Select All */}
             <div className="flex-shrink-0 px-4 py-2.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                <div className="relative">
-                    <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                    <input
-                        value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder={`Search in "${categoryName}"...`}
-                        className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
-                    />
+                <div className="flex items-center gap-2">
+                    {!loading && products.length > 0 && (
+                        <button onClick={toggleAll}
+                            className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all"
+                            style={{
+                                borderColor: selected.size > 0 ? 'var(--app-primary)' : 'var(--app-border)',
+                                background: selected.size === filtered.length && selected.size > 0 ? 'var(--app-primary)' : 'transparent',
+                            }}>
+                            {selected.size === filtered.length && selected.size > 0 && <Check size={10} className="text-white" />}
+                            {selected.size > 0 && selected.size < filtered.length && <div className="w-1.5 h-1.5 rounded-sm bg-app-primary" />}
+                        </button>
+                    )}
+                    <div className="relative flex-1">
+                        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input
+                            value={search} onChange={e => setSearch(e.target.value)}
+                            placeholder={`Search in "${categoryName}"...`}
+                            className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
+                        />
+                    </div>
                 </div>
                 <p className="text-[10px] font-bold text-app-muted-foreground mt-1">
-                    {loading ? 'Loading...' : `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`}
+                    {loading ? 'Loading...' : selected.size > 0
+                        ? `${selected.size} of ${filtered.length} selected`
+                        : `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`}
                 </p>
             </div>
 
-            {/* List */}
+            {/* ── Floating Action Bar (when products selected) ── */}
+            {selected.size > 0 && moveStep === 'idle' && (
+                <div className="flex-shrink-0 px-3 py-2 flex items-center justify-between gap-2 animate-in slide-in-from-top-1 duration-150"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
+                    <span className="text-[11px] font-bold text-app-primary">{selected.size} selected</span>
+                    <button onClick={() => { setShowMovePicker(true); setMoveStep('picking') }}
+                        className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary text-white px-3 py-1.5 rounded-xl hover:brightness-110 transition-all"
+                        style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                        <ArrowRightLeft size={12} /> Move to Category
+                    </button>
+                </div>
+            )}
+
+            {/* ── Category Picker ── */}
+            {moveStep === 'picking' && (
+                <div className="flex-shrink-0 px-3 py-2.5 animate-in slide-in-from-top-2 duration-200"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Move to</p>
+                        <button onClick={cancelMove} className="p-1 rounded-lg hover:bg-app-border/50 text-app-muted-foreground"><X size={12} /></button>
+                    </div>
+                    <div className="relative mb-2">
+                        <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input value={catSearch} onChange={e => setCatSearch(e.target.value)}
+                            placeholder="Search categories..."
+                            className="w-full pl-7 pr-3 py-1 text-[11px] bg-app-background border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground outline-none" />
+                    </div>
+                    <div className="max-h-32 overflow-y-auto custom-scrollbar flex flex-col gap-0.5">
+                        {filteredTargets.length === 0 ? (
+                            <p className="text-[10px] text-app-muted-foreground px-2 py-2">No categories found</p>
+                        ) : filteredTargets.map((cat: any) => (
+                            <button key={cat.id} onClick={() => previewMove(cat.id)}
+                                className="flex items-center gap-2 text-left w-full px-2 py-1.5 rounded-lg text-[11px] font-medium text-app-foreground hover:bg-app-border/30 transition-all">
+                                <Folder size={11} className="text-app-muted-foreground flex-shrink-0" />
+                                <span className="truncate">{cat.full_path || cat.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Reconciliation Preview ── */}
+            {(moveStep === 'preview' || moveStep === 'executing') && movePreview && (
+                <div className="flex-shrink-0 px-3 py-3 animate-in slide-in-from-top-2 duration-200 space-y-2.5"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <ArrowRightLeft size={13} className="text-app-primary" />
+                            <span className="text-[11px] font-bold text-app-foreground">
+                                Moving {movePreview.product_count} → <strong>{movePreview.target_category?.name}</strong>
+                            </span>
+                        </div>
+                        <button onClick={cancelMove} className="p-1 rounded-lg hover:bg-app-border/50 text-app-muted-foreground"><X size={12} /></button>
+                    </div>
+
+                    {!movePreview.has_conflicts ? (
+                        <div className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
+                            style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-success) 15%, transparent)' }}>
+                            <Check size={13} style={{ color: 'var(--app-success)' }} />
+                            <span className="text-[11px] font-bold" style={{ color: 'var(--app-success)' }}>No conflicts — safe to move</span>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-1.5">
+                                <AlertTriangle size={12} style={{ color: 'var(--app-warning)' }} />
+                                <span className="text-[10px] font-bold" style={{ color: 'var(--app-warning)' }}>Conflicts detected — review before moving</span>
+                            </div>
+
+                            {/* Brand conflicts */}
+                            {movePreview.conflict_brands?.length > 0 && (
+                                <div className="rounded-xl px-2.5 py-2 space-y-1.5"
+                                    style={{ background: 'color-mix(in srgb, #8b5cf6 5%, transparent)', border: '1px solid color-mix(in srgb, #8b5cf6 12%, transparent)' }}>
+                                    <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#8b5cf6' }}>
+                                        Brands not in target ({movePreview.conflict_brands.length})
+                                    </p>
+                                    {movePreview.conflict_brands.map((b: any) => (
+                                        <label key={b.id} className="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox"
+                                                checked={autoLinkBrands.has(b.id)}
+                                                onChange={() => {
+                                                    const next = new Set(autoLinkBrands)
+                                                    next.has(b.id) ? next.delete(b.id) : next.add(b.id)
+                                                    setAutoLinkBrands(next)
+                                                }}
+                                                className="w-3.5 h-3.5 rounded accent-[#8b5cf6]" />
+                                            <span className="text-[11px] font-medium text-app-foreground">{b.name}</span>
+                                            <span className="text-[9px] text-app-muted-foreground ml-auto">{b.affected_count} products</span>
+                                        </label>
+                                    ))}
+                                    <p className="text-[9px] text-app-muted-foreground">
+                                        ✓ Checked = auto-link this brand to &ldquo;{movePreview.target_category?.name}&rdquo;
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Attribute conflicts */}
+                            {movePreview.conflict_attributes?.length > 0 && (
+                                <div className="rounded-xl px-2.5 py-2 space-y-1.5"
+                                    style={{ background: 'color-mix(in srgb, var(--app-warning) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning) 12%, transparent)' }}>
+                                    <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>
+                                        Attributes not in target ({movePreview.conflict_attributes.length})
+                                    </p>
+                                    {movePreview.conflict_attributes.map((a: any) => (
+                                        <label key={a.id} className="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox"
+                                                checked={autoLinkAttrs.has(a.id)}
+                                                onChange={() => {
+                                                    const next = new Set(autoLinkAttrs)
+                                                    next.has(a.id) ? next.delete(a.id) : next.add(a.id)
+                                                    setAutoLinkAttrs(next)
+                                                }}
+                                                className="w-3.5 h-3.5 rounded accent-amber-500" />
+                                            <span className="text-[11px] font-medium text-app-foreground">{a.name}</span>
+                                            {a.code && <span className="text-[9px] font-mono text-app-muted-foreground">{a.code}</span>}
+                                        </label>
+                                    ))}
+                                    <p className="text-[9px] text-app-muted-foreground">
+                                        ✓ Checked = auto-link this attribute group to &ldquo;{movePreview.target_category?.name}&rdquo;
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2 pt-1">
+                        <button onClick={cancelMove}
+                            className="flex-1 text-[11px] font-bold py-1.5 rounded-xl border border-app-border text-app-muted-foreground hover:bg-app-border/30 transition-all">
+                            Cancel
+                        </button>
+                        <button onClick={executeMove} disabled={moveStep === 'executing'}
+                            className="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold bg-app-primary text-white py-1.5 rounded-xl hover:brightness-110 transition-all disabled:opacity-50"
+                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            {moveStep === 'executing' ? <Loader2 size={12} className="animate-spin" /> : <ArrowRightLeft size={12} />}
+                            {moveStep === 'executing' ? 'Moving...' : 'Confirm Move'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Product List */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {loading ? (
                     <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin text-app-primary" /></div>
@@ -802,31 +1037,45 @@ function PanelProductsTab({ categoryId, categoryName }: { categoryId: number; ca
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
-                        {filtered.map((p: any) => (
-                            <div key={p.id} className="flex items-center gap-3 px-4 py-2 group transition-all hover:bg-app-surface/50">
-                                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
-                                    <Package size={12} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[12px] font-bold text-app-foreground truncate">{p.name}</p>
-                                    <div className="flex items-center gap-2 text-[10px] text-app-muted-foreground">
-                                        {p.sku && <span className="font-mono font-bold">{p.sku}</span>}
-                                        {p.brand_name && <span>· {p.brand_name}</span>}
-                                        {p.parfum_name && <span>· {p.parfum_name}</span>}
+                        {filtered.map((p: any) => {
+                            const isSelected = selected.has(p.id)
+                            return (
+                                <div key={p.id}
+                                    className="flex items-center gap-2 px-4 py-2 group transition-all cursor-pointer"
+                                    style={{ background: isSelected ? 'color-mix(in srgb, var(--app-primary) 6%, transparent)' : 'transparent' }}
+                                    onClick={() => toggleSelect(p.id)}>
+                                    <button
+                                        className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all"
+                                        style={{
+                                            borderColor: isSelected ? 'var(--app-primary)' : 'var(--app-border)',
+                                            background: isSelected ? 'var(--app-primary)' : 'transparent',
+                                        }}>
+                                        {isSelected && <Check size={10} className="text-white" />}
+                                    </button>
+                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                        <Package size={12} />
                                     </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[12px] font-bold text-app-foreground truncate">{p.name}</p>
+                                        <div className="flex items-center gap-2 text-[10px] text-app-muted-foreground">
+                                            {p.sku && <span className="font-mono font-bold">{p.sku}</span>}
+                                            {p.brand_name && <span>· {p.brand_name}</span>}
+                                        </div>
+                                    </div>
+                                    {p.selling_price_ttc != null && (
+                                        <span className="text-[11px] font-bold text-app-foreground tabular-nums flex-shrink-0">
+                                            {Number(p.selling_price_ttc).toLocaleString()}
+                                        </span>
+                                    )}
+                                    <Link href={`/inventory/products/${p.id}`}
+                                        onClick={e => e.stopPropagation()}
+                                        className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary opacity-0 group-hover:opacity-100 transition-all">
+                                        <ExternalLink size={11} />
+                                    </Link>
                                 </div>
-                                {p.selling_price_ttc != null && (
-                                    <span className="text-[11px] font-bold text-app-foreground tabular-nums flex-shrink-0">
-                                        {Number(p.selling_price_ttc).toLocaleString()}
-                                    </span>
-                                )}
-                                <Link href={`/inventory/products/${p.id}`}
-                                    className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary opacity-0 group-hover:opacity-100 transition-all">
-                                    <ExternalLink size={11} />
-                                </Link>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 )}
             </div>

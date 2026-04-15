@@ -40,7 +40,7 @@ services:
     volumes:
       - dev_pgdata:/var/lib/postgresql/data
     ports:
-      - "5433:5432"   # 5433 on host avoids conflict with any local Postgres
+      - "127.0.0.1:5433:5432"   # Localhost only — never expose DB to internet
     networks:
       - tsf-dev
     healthcheck:
@@ -85,7 +85,7 @@ services:
       - ./erp_backend:/app/erp_backend
       - ./.env:/app/.env:ro
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"   # Localhost only — Nginx proxies to this
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -115,7 +115,7 @@ services:
       - ./public:/app/public
       - ./.env:/app/.env:ro
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"   # Localhost only — Nginx proxies to this
     environment:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true

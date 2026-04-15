@@ -284,3 +284,35 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         received = sum(1 for l in lines if l.qty_received >= l.quantity)
         return round(received / len(lines) * 100)
 
+
+# ── POS Audit & Security ──────────────────────────────────────────
+
+from .models.audit_models import POSAuditRule, POSAuditEvent, SalesAuditLog
+
+
+class POSAuditRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = POSAuditRule
+        fields = '__all__'
+        read_only_fields = ['organization']
+
+
+class POSAuditEventSerializer(serializers.ModelSerializer):
+    user_name = serializers.ReadOnlyField(source='user.username')
+    register_name = serializers.ReadOnlyField(source='register.name')
+    reviewed_by_name = serializers.ReadOnlyField(source='reviewed_by.username')
+
+    class Meta:
+        model = POSAuditEvent
+        fields = '__all__'
+        read_only_fields = ['organization', 'created_at']
+
+
+class SalesAuditLogSerializer(serializers.ModelSerializer):
+    actor_name = serializers.ReadOnlyField()
+
+    class Meta:
+        model = SalesAuditLog
+        fields = '__all__'
+        read_only_fields = ['organization', 'created_at']
+

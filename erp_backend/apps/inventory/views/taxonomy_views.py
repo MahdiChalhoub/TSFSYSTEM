@@ -266,7 +266,9 @@ class CategoryViewSet(TenantModelViewSet):
                 "id": p.id,
                 "sku": p.sku,
                 "name": p.name,
+                "brand_id": p.brand_id,
                 "brand_name": p.brand.name if p.brand else None,
+                "parfum_id": p.parfum_id,
                 "parfum_name": p.parfum.name if p.parfum else None,
                 "unit_code": p.unit.code if p.unit else None,
                 "selling_price_ttc": float(p.selling_price_ttc),
@@ -301,14 +303,118 @@ class CategoryViewSet(TenantModelViewSet):
 
     @action(detail=False, methods=['post'])
     def move_products(self, request):
+        """Smart product move with brand/attribute conflict detection & reconciliation.
+
+        Body:
+            product_ids: list[int]
+            target_category_id: int
+            preview: bool (default False) — if True, returns conflict analysis without moving
+            reconciliation: dict (optional) — decisions for conflicts:
+                auto_link_brands: list[int]   — brand IDs to auto-link to target category
+                auto_link_attributes: list[int] — attribute group IDs to auto-link to target category
+        """
+        from apps.inventory.models import ProductAttribute
+
         organization, err = _get_org_or_400()
         if err: return err
 
         product_ids = request.data.get('product_ids', [])
         target_category_id = request.data.get('target_category_id')
+        preview = request.data.get('preview', False)
+        reconciliation = request.data.get('reconciliation', {})
 
-        Product.objects.filter(id__in=product_ids, organization=organization).update(category_id=target_category_id)
-        return Response({"success": True})
+        if not product_ids or not target_category_id:
+            return Response({"error": "product_ids and target_category_id are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            target_category = Category.objects.get(id=target_category_id, organization=organization)
+        except Category.DoesNotExist:
+            return Response({"error": "Target category not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        products = Product.objects.filter(
+            id__in=product_ids, organization=organization
+        ).select_related('brand', 'parfum')
+
+        if not products.exists():
+            return Response({"error": "No valid products found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ── Conflict Analysis ──
+        # Brands linked to target category (M2M)
+        target_brand_ids = set(target_category.brands.values_list('id', flat=True))
+        # Attribute groups linked to target category (M2M)
+        target_attr_ids = set(target_category.attributes.values_list('id', flat=True))
+
+        # Collect unique brands & attributes from the moving products
+        moving_brand_ids = set(p.brand_id for p in products if p.brand_id)
+        # Get attribute groups linked to the SOURCE category of each product
+        source_cat_ids = set(p.category_id for p in products if p.category_id)
+        source_attr_ids = set()
+        for cat_id in source_cat_ids:
+            try:
+                source_cat = Category.objects.get(id=cat_id, organization=organization)
+                source_attr_ids.update(source_cat.attributes.values_list('id', flat=True))
+            except Category.DoesNotExist:
+                pass
+
+        # Find conflicts
+        brand_conflicts = moving_brand_ids - target_brand_ids
+        attr_conflicts = source_attr_ids - target_attr_ids
+
+        conflict_brands = []
+        if brand_conflicts:
+            for b in Brand.objects.filter(id__in=brand_conflicts, organization=organization):
+                affected = [p.id for p in products if p.brand_id == b.id]
+                conflict_brands.append({
+                    "id": b.id, "name": b.name, "logo": b.logo,
+                    "affected_product_ids": affected,
+                    "affected_count": len(affected),
+                })
+
+        conflict_attrs = []
+        if attr_conflicts:
+            for a in ProductAttribute.objects.filter(id__in=attr_conflicts, organization=organization, parent__isnull=True):
+                conflict_attrs.append({
+                    "id": a.id, "name": a.name, "code": a.code,
+                })
+
+        has_conflicts = bool(conflict_brands or conflict_attrs)
+
+        if preview:
+            return Response({
+                "has_conflicts": has_conflicts,
+                "target_category": {"id": target_category.id, "name": target_category.name},
+                "product_count": products.count(),
+                "conflict_brands": conflict_brands,
+                "conflict_attributes": conflict_attrs,
+                "target_brands": list(target_category.brands.values('id', 'name')),
+                "target_attributes": list(target_category.attributes.filter(parent__isnull=True).values('id', 'name')),
+            })
+
+        # ── Execute Move with Reconciliation ──
+        with transaction.atomic():
+            # 1. Auto-link brands to target category
+            auto_link_brands = reconciliation.get('auto_link_brands', [])
+            if auto_link_brands:
+                brands_to_link = Brand.objects.filter(id__in=auto_link_brands, organization=organization)
+                target_category.brands.add(*brands_to_link)
+
+            # 2. Auto-link attribute groups to target category
+            auto_link_attrs = reconciliation.get('auto_link_attributes', [])
+            if auto_link_attrs:
+                attrs_to_link = ProductAttribute.objects.filter(
+                    id__in=auto_link_attrs, organization=organization, parent__isnull=True
+                )
+                target_category.attributes.add(*attrs_to_link)
+
+            # 3. Move the products
+            products.update(category_id=target_category_id)
+
+        return Response({
+            "success": True,
+            "moved_count": len(product_ids),
+            "brands_linked": len(auto_link_brands),
+            "attributes_linked": len(auto_link_attrs),
+        })
 
 
 # =============================================================================

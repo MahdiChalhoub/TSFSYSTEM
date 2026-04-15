@@ -165,18 +165,46 @@ export async function lockFiscalYear(id: number) {
     }
 }
 
+/**
+ * Year-End Close — the full accounting close sequence:
+ * 1. Verifies all periods are closed
+ * 2. Closes P&L accounts (Revenue & Expense) into Retained Earnings
+ * 3. Generates opening balances for the next fiscal year
+ * 4. Hard-locks the fiscal year (permanent, no reopening)
+ *
+ * This calls ClosingService.close_fiscal_year on the backend.
+ */
 export async function hardLockFiscalYear(id: number) {
     try {
-        await erpFetch(`fiscal-years/${id}/`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ is_hard_locked: true, status: 'CLOSED' })
+        await erpFetch(`fiscal-years/${id}/close/`, {
+            method: 'POST',
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
     } catch (error: unknown) {
-        console.error("Failed to hard lock fiscal year:", error)
+        console.error("Failed to close fiscal year:", error)
         throw error
+    }
+}
+
+export type ClosePreview = {
+    year: { id: number; name: string; start_date: string; end_date: string }
+    periods: { total: number; open: number; closed: number; future: number }
+    journal_entries: { posted: number; draft: number }
+    pnl: { revenue: number; expenses: number; net_income: number }
+    retained_earnings: { code: string; name: string; id: number } | null
+    next_year: { id: number; name: string } | null
+    opening_balances_count: number
+    blockers: string[]
+    can_close: boolean
+}
+
+export async function getClosePreview(yearId: number): Promise<ClosePreview | null> {
+    try {
+        return await erpFetch(`fiscal-years/${yearId}/close-preview/`)
+    } catch (error: unknown) {
+        console.error("Failed to get close preview:", error)
+        return null
     }
 }
 
