@@ -612,6 +612,7 @@ export default function PostingRulesConsole({
                                                 value={currentId}
                                                 onChange={id => setRule(rule.event_code, id)}
                                                 accounts={accounts}
+                                                mode={rule.event_code.startsWith('automation.') ? 'root' : 'posting'}
                                             />
                                         </div>
                                     )

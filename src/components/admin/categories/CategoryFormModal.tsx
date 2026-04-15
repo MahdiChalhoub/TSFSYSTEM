@@ -2,16 +2,16 @@
 
 import { useActionState } from 'react';
 import { createCategory, updateCategory, CategoryState } from '@/app/actions/categories';
-import { X, Save, Loader2, FolderTree, AlertCircle } from 'lucide-react';
+import { X, Save, Loader2, FolderTree, AlertCircle, Hash, Tag, ChevronRight } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { CategoryCascader } from './CategoryCascader';
 
 type CategoryFormModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    category?: Record<string, any>; // If provided, it's edit mode
-    parentId?: number | null; // For adding children directly
-    potentialParents?: Record<string, any>[]; // For generic creation
+    category?: Record<string, any>;
+    parentId?: number | null;
+    potentialParents?: Record<string, any>[];
 };
 
 const initialState: CategoryState = { message: '', errors: {} };
@@ -20,44 +20,30 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
     const [state, formAction] = useActionState(category ? updateCategory.bind(null, category.id) : createCategory, initialState);
     const [pending, setPending] = useState(false);
 
-    // Filter available parents to avoid loops
-    // 1. Cannot be itself
-    // 2. Cannot be one of its own descendants
     const getDescendants = (id: number, allCats: Record<string, any>[]) => {
         const descendants = new Set<number>();
         const stack = [id];
         while (stack.length > 0) {
             const current = stack.pop()!;
             const children = allCats.filter(c => c.parent === current);
-            children.forEach(c => {
-                descendants.add(c.id);
-                stack.push(c.id);
-            });
+            children.forEach(c => { descendants.add(c.id); stack.push(c.id); });
         }
         return descendants;
     };
 
-    // Memos
     const descendants = useMemo(() => {
         if (!category) return new Set();
         return getDescendants(category.id, potentialParents);
     }, [category, potentialParents]);
 
     const availableParents = useMemo(() => {
-        return potentialParents.filter(p =>
-            (!category || p.id !== category.id) &&
-            !descendants.has(p.id)
-        );
+        return potentialParents.filter(p => (!category || p.id !== category.id) && !descendants.has(p.id));
     }, [potentialParents, category, descendants]);
 
     const [isSubCategory, setIsSubCategory] = useState(!!parentId || (category && !!category.parent));
     const [selectedParent, setSelectedParent] = useState<number | string>(parentId || category?.parent || '');
 
-    useEffect(() => {
-        if (state.message === 'success') {
-            onClose();
-        }
-    }, [state, onClose]);
+    useEffect(() => { if (state.message === 'success') onClose(); }, [state, onClose]);
 
     useEffect(() => {
         if (isOpen) {
@@ -68,112 +54,211 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
 
     if (!isOpen) return null;
 
+    const parentName = selectedParent ? potentialParents.find(p => p.id == selectedParent)?.name : null;
+    const parentCode = selectedParent ? potentialParents.find(p => p.id == selectedParent)?.code : null;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
-                        <FolderTree size={20} className="text-emerald-500" />
-                        {category ? 'Edit Category' : 'Create Category'}
-                    </h3>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors">
-                        <X size={18} />
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+            onClick={e => { if (e.target === e.currentTarget) onClose() }}
+        >
+            <div
+                className="w-full max-w-lg mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+            >
+                {/* ── Modal Header — matches design-language §11 ── */}
+                <div
+                    className="px-5 py-3 flex items-center justify-between flex-shrink-0"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))',
+                        borderBottom: '1px solid var(--app-border)',
+                    }}
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div
+                            className="w-8 h-8 rounded-xl flex items-center justify-center"
+                            style={{
+                                background: 'var(--app-primary)',
+                                boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                            }}
+                        >
+                            <FolderTree size={15} className="text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black text-app-foreground">
+                                {category ? 'Edit Category' : 'Create Category'}
+                            </h3>
+                            <p className="text-[10px] font-bold text-app-muted-foreground">
+                                {category ? `Editing #${category.id}` : 'Product Taxonomy'}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"
+                    >
+                        <X size={16} />
                     </button>
                 </div>
 
-                <form action={(formData) => { setPending(true); formAction(formData); setPending(false); }} className="p-6 space-y-4">
+                {/* ── Form Body ── */}
+                <form action={(formData) => { setPending(true); formAction(formData); setPending(false); }}
+                    className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
 
-                    {/* General Error Message */}
+                    {/* Error */}
                     {state.message && state.message !== 'success' && (
-                        <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm flex items-center gap-2 animate-in slide-in-from-top-1">
-                            <AlertCircle size={16} />
+                        <div
+                            className="p-3 rounded-xl flex items-center gap-2 text-[12px] font-bold animate-in slide-in-from-top-1 duration-200"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-error) 8%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)',
+                                color: 'var(--app-error)',
+                            }}
+                        >
+                            <AlertCircle size={14} />
                             {state.message}
                         </div>
                     )}
 
                     {/* Category Type Toggle */}
                     {!parentId && (
-                        <div className="flex p-1 bg-gray-100 rounded-xl mb-4">
+                        <div
+                            className="flex p-1 rounded-xl"
+                            style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid var(--app-border)' }}
+                        >
                             <button
                                 type="button"
                                 onClick={() => setIsSubCategory(false)}
-                                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${!isSubCategory ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                className="flex-1 py-2 text-[12px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                                style={!isSubCategory ? {
+                                    background: 'var(--app-surface)',
+                                    color: 'var(--app-primary)',
+                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                } : {
+                                    color: 'var(--app-muted-foreground)',
+                                }}
                             >
-                                Main Category
+                                <FolderTree size={13} />
+                                Root Category
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setIsSubCategory(true)}
-                                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${isSubCategory ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                className="flex-1 py-2 text-[12px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                                style={isSubCategory ? {
+                                    background: 'var(--app-surface)',
+                                    color: 'var(--app-primary)',
+                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                } : {
+                                    color: 'var(--app-muted-foreground)',
+                                }}
                             >
+                                <ChevronRight size={13} />
                                 Sub-Category
                             </button>
                         </div>
                     )}
 
-                    {/* Parent Selector (Cascading) */}
+                    {/* Parent Selector */}
                     {isSubCategory && (
-                        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-1.5">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground block">Parent Category</label>
                             <CategoryCascader
                                 allCategories={availableParents as any}
                                 selectedId={typeof selectedParent === 'number' ? selectedParent : parseInt(selectedParent as string) || null}
                                 onSelect={(id) => setSelectedParent(id || '')}
                                 excludeId={category?.id}
                             />
-                            {/* Hidden input to submit the value in the form data */}
                             <input type="hidden" name="parentId" value={selectedParent} />
+                            {parentName && (
+                                <div className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: 'var(--app-success)' }}>
+                                    <ChevronRight size={10} />
+                                    Nesting under &ldquo;{parentName}&rdquo;
+                                    {parentCode && <span className="font-mono opacity-60">({parentCode})</span>}
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Category Name</label>
+                    {/* Name + Short Name — §12 inline form */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                        <div>
+                            <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                <Tag size={9} className="inline mr-1" />Category Name
+                            </label>
                             <input
                                 name="name"
                                 defaultValue={category?.name || ''}
                                 placeholder="e.g. Beverages"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
                                 required
+                                className="w-full text-[12px] font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                style={{
+                                    background: 'var(--app-background)',
+                                    border: '1px solid var(--app-border)',
+                                }}
                             />
-                            {state.errors?.name && <p className="text-xs text-red-500">{state.errors.name[0]}</p>}
+                            {state.errors?.name && <p className="text-[10px] font-bold mt-0.5" style={{ color: 'var(--app-error)' }}>{state.errors.name[0]}</p>}
                         </div>
 
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Name</label>
+                        <div>
+                            <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Short Name</label>
                             <input
                                 name="shortName"
                                 defaultValue={category?.short_name || ''}
                                 placeholder="e.g. BEV"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
+                                className="w-full text-[12px] font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                style={{
+                                    background: 'var(--app-background)',
+                                    border: '1px solid var(--app-border)',
+                                }}
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Code (Unique)</label>
+                    {/* Code */}
+                    <div>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                            <Hash size={9} className="inline mr-1" />Code (Unique)
+                        </label>
                         <input
                             name="code"
                             defaultValue={category?.code || ''}
                             placeholder="e.g. 1001 or CAT-BEV"
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-mono"
+                            className="w-full text-[12px] font-mono font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                            style={{
+                                background: 'var(--app-background)',
+                                border: '1px solid var(--app-border)',
+                            }}
                         />
-                        <div className="flex justify-between items-center text-[10px] text-gray-400">
-                            <span>Used for barcode generation.</span>
-                            {selectedParent && potentialParents.find(p => p.id == selectedParent)?.code && (
-                                <span className="text-emerald-600 font-medium">
-                                    Parent Code: {potentialParents.find(p => p.id == selectedParent)?.code}
-                                </span>
-                            )}
-                        </div>
+                        <p className="text-[10px] font-bold text-app-muted-foreground mt-1">
+                            Used for barcode generation and internal reference.
+                        </p>
                     </div>
 
+                    {/* Actions */}
                     <div className="pt-2 flex gap-3">
-                        <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all"
+                            style={{
+                                color: 'var(--app-muted-foreground)',
+                                border: '1px solid var(--app-border)',
+                            }}
+                        >
                             Cancel
                         </button>
-                        <button type="submit" disabled={pending} className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-600/20 flex items-center justify-center gap-2">
-                            {pending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                            <span>Save Category</span>
+                        <button
+                            type="submit"
+                            disabled={pending}
+                            className="flex-1 py-2.5 rounded-xl text-[11px] font-bold bg-app-primary text-white transition-all flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50"
+                            style={{
+                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                            }}
+                        >
+                            {pending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                            {category ? 'Update' : 'Create'}
                         </button>
                     </div>
                 </form>

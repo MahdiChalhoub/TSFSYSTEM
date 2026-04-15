@@ -533,108 +533,181 @@ const CategoryRow = ({
 }
 
 /* ═══════════════════════════════════════════════════════════
- *  MAIN VIEWER (COA-style)
+ *  CATEGORY DETAIL PANEL — V2 Design Language Compliant
+ *  Tabs: Overview · Products · Brands · Attributes
  * ═══════════════════════════════════════════════════════════ */
-/* ═══════════════════════════════════════════════════════════
- *  CATEGORY DETAIL PANEL (split-panel right side)
- * ═══════════════════════════════════════════════════════════ */
-function CategoryDetailPanel({ node, onEdit, onAdd, onDelete }: {
+type PanelTab = 'overview' | 'products' | 'brands' | 'attributes'
+
+function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories }: {
     node: CategoryNode
     onEdit: (n: CategoryNode) => void
     onAdd: (parentId?: number) => void
     onDelete: (n: CategoryNode) => void
+    allCategories: any[]
 }) {
+    const [activeTab, setActiveTab] = useState<PanelTab>('overview')
     const isParent = (node.children?.length ?? 0) > 0
     const productCount = node.product_count ?? 0
     const brandCount = node.brand_count ?? 0
     const childCount = node.children?.length ?? 0
+
+    useEffect(() => { setActiveTab('overview') }, [node.id])
+
+    const tabs: { key: PanelTab; label: string; icon: React.ReactNode; count?: number; color: string }[] = [
+        { key: 'overview', label: 'Overview', icon: <Layers size={12} />, color: 'var(--app-primary)' },
+        { key: 'products', label: 'Products', icon: <Package size={12} />, count: productCount, color: 'var(--app-success, #22c55e)' },
+        { key: 'brands', label: 'Brands', icon: <Paintbrush size={12} />, count: brandCount, color: '#8b5cf6' },
+        { key: 'attributes', label: 'Attributes', icon: <Tag size={12} />, color: 'var(--app-warning, #f59e0b)' },
+    ]
+
     return (
-        <div className="flex flex-col h-full overflow-y-auto custom-scrollbar" style={{ background: 'var(--app-surface)' }}>
-            {/* Panel Header */}
-            <div className="flex-shrink-0 px-5 py-4" style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                            style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
-                            {isParent ? <FolderOpen size={18} /> : <Folder size={18} />}
-                        </div>
-                        <div>
-                            <h2 className="text-[15px] font-black text-app-foreground tracking-tight leading-tight">{node.name}</h2>
-                            {node.short_name && <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest mt-0.5">{node.short_name}</p>}
+        <div className="flex flex-col h-full" style={{ background: 'var(--app-surface)' }}>
+            {/* ── Panel Header — §11 modal header pattern ── */}
+            <div className="flex-shrink-0 px-4 py-3 flex items-center justify-between"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))',
+                    borderBottom: '1px solid var(--app-border)',
+                }}>
+                <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{
+                            background: 'var(--app-primary)',
+                            boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                        }}>
+                        {isParent ? <FolderOpen size={15} className="text-white" /> : <Folder size={15} className="text-white" />}
+                    </div>
+                    <div className="min-w-0">
+                        <h2 className="text-sm font-black text-app-foreground tracking-tight truncate">{node.name}</h2>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            {node.code && (
+                                <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded"
+                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                    {node.code}
+                                </span>
+                            )}
+                            <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                    color: 'var(--app-primary)',
+                                    border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                }}>
+                                {node.parent === null ? 'Root' : 'Child'}
+                            </span>
                         </div>
                     </div>
                 </div>
-                {node.code && (
-                    <div className="mt-3 flex items-center gap-1.5">
-                        <Hash size={10} className="text-app-muted-foreground" />
-                        <span className="font-mono text-[12px] font-bold px-2 py-0.5 rounded-lg"
-                            style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
-                            {node.code}
-                        </span>
-                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ml-1"
-                            style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
-                            {node.parent === null ? 'Root' : 'Child'}
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            {/* Stats Row */}
-            <div className="flex-shrink-0 px-5 py-3" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '8px' }}>
-                    {[
-                        { label: 'Sub-categories', value: childCount, icon: <GitBranch size={12} />, color: 'var(--app-primary)' },
-                        { label: 'Products', value: productCount, icon: <Package size={12} />, color: 'var(--app-success, #22c55e)' },
-                        { label: 'Brands', value: brandCount, icon: <Paintbrush size={12} />, color: '#8b5cf6' },
-                    ].map(s => (
-                        <div key={s.label} className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                            style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                            <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-                                style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>{s.icon}</div>
-                            <div>
-                                <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex-shrink-0 px-5 py-3 flex items-center gap-2 flex-wrap" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                <button onClick={() => onEdit(node)}
-                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-all"
-                    style={{ color: 'var(--app-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
-                    <Pencil size={12} /> Edit
-                </button>
-                <button onClick={() => onAdd(node.id)}
-                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
-                    style={{ background: 'var(--app-primary)', color: '#fff', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                    <Plus size={12} /> Add Child
-                </button>
-                {!isParent && (
-                    <button onClick={() => onDelete(node)}
-                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-all"
-                        style={{ color: 'var(--app-error, #ef4444)', borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 20%, transparent)', background: 'color-mix(in srgb, var(--app-error, #ef4444) 5%, transparent)' }}>
-                        <Trash2 size={12} /> Delete
+                <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => onEdit(node)}
+                        className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"
+                        title="Edit">
+                        <Pencil size={13} />
                     </button>
-                )}
+                    <button onClick={() => onAdd(node.id)}
+                        className="flex items-center gap-1 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-2 py-1.5 rounded-xl transition-all"
+                        style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                        <Plus size={12} />
+                    </button>
+                </div>
             </div>
 
-            {/* Children List */}
+            {/* ── Tab Bar ── */}
+            <div className="flex-shrink-0 flex items-center px-3 overflow-x-auto"
+                style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)' }}>
+                {tabs.map(tab => {
+                    const isActive = activeTab === tab.key
+                    return (
+                        <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2.5 transition-all whitespace-nowrap"
+                            style={{
+                                color: isActive ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
+                                borderBottom: isActive ? `2px solid var(--app-primary)` : '2px solid transparent',
+                                marginBottom: '-1px',
+                            }}
+                        >
+                            {tab.icon}
+                            <span className="hidden sm:inline">{tab.label}</span>
+                            {tab.count !== undefined && tab.count > 0 && (
+                                <span className="text-[9px] font-black px-1 py-0.5 rounded min-w-[16px] text-center"
+                                    style={{
+                                        background: `color-mix(in srgb, ${tab.color} 10%, transparent)`,
+                                        color: tab.color,
+                                    }}>
+                                    {tab.count}
+                                </span>
+                            )}
+                        </button>
+                    )
+                })}
+            </div>
+
+            {/* ── Tab Content ── */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {activeTab === 'overview' && (
+                    <PanelOverviewTab node={node} onAdd={onAdd} onDelete={onDelete} isParent={isParent}
+                        childCount={childCount} productCount={productCount} brandCount={brandCount} />
+                )}
+                {activeTab === 'products' && <PanelProductsTab categoryId={node.id} categoryName={node.name} />}
+                {activeTab === 'brands' && <PanelBrandsTab categoryId={node.id} categoryName={node.name} />}
+                {activeTab === 'attributes' && <PanelAttributesTab categoryId={node.id} categoryName={node.name} />}
+            </div>
+        </div>
+    )
+}
+
+/* ── Overview Tab — §4 KPI pattern ── */
+function PanelOverviewTab({ node, onAdd, onDelete, isParent, childCount, productCount, brandCount }: {
+    node: CategoryNode; onAdd: (pid?: number) => void; onDelete: (n: CategoryNode) => void;
+    isParent: boolean; childCount: number; productCount: number; brandCount: number;
+}) {
+    return (
+        <div className="p-4 space-y-3 animate-in fade-in duration-200">
+            {/* KPI Cards — §4 standard pattern */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '8px' }}>
+                {[
+                    { label: 'Children', value: childCount, icon: <GitBranch size={11} />, color: 'var(--app-primary)' },
+                    { label: 'Products', value: productCount, icon: <Package size={11} />, color: 'var(--app-success, #22c55e)' },
+                    { label: 'Brands', value: brandCount, icon: <Paintbrush size={11} />, color: '#8b5cf6' },
+                ].map(s => (
+                    <div key={s.label}
+                        className="flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all text-left"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                        }}>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>{s.icon}</div>
+                        <div className="min-w-0">
+                            <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                            <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Sub-categories List */}
             {childCount > 0 && (
-                <div className="flex-1 px-5 py-3">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">Sub-categories ({childCount})</p>
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Sub-categories ({childCount})</p>
+                        <button onClick={() => onAdd(node.id)}
+                            className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                            style={{ color: 'var(--app-primary)', background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
+                            <Plus size={10} /> Add
+                        </button>
+                    </div>
                     <div className="flex flex-col gap-1">
                         {node.children!.map(child => (
-                            <div key={child.id} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
-                                style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                            <div key={child.id}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all border-b border-app-border/20"
+                                style={{ background: 'color-mix(in srgb, var(--app-background) 40%, transparent)' }}>
                                 <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
                                     style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
                                     <Folder size={11} />
                                 </div>
                                 <span className="flex-1 text-[12px] font-medium text-app-foreground truncate">{child.name}</span>
-                                {child.product_count != null && child.product_count > 0 && (
+                                {(child.product_count ?? 0) > 0 && (
                                     <span className="text-[10px] font-bold flex items-center gap-0.5"
                                         style={{ color: 'var(--app-success, #22c55e)' }}>
                                         <Box size={9} /> {child.product_count}
@@ -647,12 +720,282 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete }: {
             )}
 
             {childCount === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 text-center">
-                    <Info size={28} className="text-app-muted-foreground mb-2 opacity-30" />
-                    <p className="text-[11px] font-bold text-app-muted-foreground">Leaf category</p>
-                    <p className="text-[10px] text-app-muted-foreground mt-1">No sub-categories. Products can be assigned directly.</p>
+                <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                    <Folder size={28} className="text-app-muted-foreground mb-2 opacity-30" />
+                    <p className="text-[11px] font-bold text-app-muted-foreground">Leaf category — no sub-categories</p>
+                    <p className="text-[10px] text-app-muted-foreground mt-1">Products can be assigned directly to this node.</p>
                 </div>
             )}
+
+            {/* Danger Zone */}
+            {!isParent && (
+                <div className="pt-2 mt-2" style={{ borderTop: '1px solid var(--app-border)' }}>
+                    <button onClick={() => onDelete(node)}
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-all"
+                        style={{
+                            color: 'var(--app-error, #ef4444)',
+                            borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 20%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-error, #ef4444) 5%, transparent)',
+                        }}>
+                        <Trash2 size={12} /> Delete Category
+                    </button>
+                </div>
+            )}
+        </div>
+    )
+}
+
+/* ── Products Tab ── */
+function PanelProductsTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
+    const [products, setProducts] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [search, setSearch] = useState('')
+
+    useEffect(() => {
+        let cancelled = false
+        setLoading(true)
+        erpFetch(`inventory/products/?category=${categoryId}&page_size=200`)
+            .then((data: any) => { if (!cancelled) { setProducts(Array.isArray(data) ? data : data?.results ?? []); setLoading(false) } })
+            .catch(() => { if (!cancelled) { setProducts([]); setLoading(false) } })
+        return () => { cancelled = true }
+    }, [categoryId])
+
+    const filtered = search.trim()
+        ? products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()) || p.sku?.toLowerCase().includes(search.toLowerCase()))
+        : products
+
+    return (
+        <div className="flex flex-col h-full animate-in fade-in duration-200">
+            {/* Search — §5 pattern */}
+            <div className="flex-shrink-0 px-4 py-2.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                <div className="relative">
+                    <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                    <input
+                        value={search} onChange={e => setSearch(e.target.value)}
+                        placeholder={`Search in "${categoryName}"...`}
+                        className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
+                    />
+                </div>
+                <p className="text-[10px] font-bold text-app-muted-foreground mt-1">
+                    {loading ? 'Loading...' : `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`}
+                </p>
+            </div>
+
+            {/* List */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {loading ? (
+                    <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin text-app-primary" /></div>
+                ) : filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <Package size={32} className="text-app-muted-foreground mb-2 opacity-40" />
+                        <p className="text-sm font-bold text-app-muted-foreground">{search ? 'No matching products' : 'No products assigned'}</p>
+                        <p className="text-[11px] text-app-muted-foreground mt-1">Assign products from the Products page.</p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-app-border/30">
+                        {filtered.map((p: any) => (
+                            <div key={p.id} className="flex items-center gap-3 px-4 py-2 group transition-all hover:bg-app-surface/50">
+                                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                    <Package size={12} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[12px] font-bold text-app-foreground truncate">{p.name}</p>
+                                    <div className="flex items-center gap-2 text-[10px] text-app-muted-foreground">
+                                        {p.sku && <span className="font-mono">{p.sku}</span>}
+                                        {p.barcode && <span>· {p.barcode}</span>}
+                                    </div>
+                                </div>
+                                {p.selling_price != null && (
+                                    <span className="text-[11px] font-bold text-app-foreground tabular-nums flex-shrink-0">
+                                        {Number(p.selling_price).toLocaleString()}
+                                    </span>
+                                )}
+                                <Link href={`/inventory/products/${p.id}`}
+                                    className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary opacity-0 group-hover:opacity-100 transition-all">
+                                    <ExternalLink size={11} />
+                                </Link>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+/* ── Brands Tab ── */
+function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
+    const [brands, setBrands] = useState<any[]>([])
+    const [allBrands, setAllBrands] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [linking, setLinking] = useState(false)
+    const [showLink, setShowLink] = useState(false)
+    const router = useRouter()
+
+    const loadBrands = useCallback(() => {
+        setLoading(true)
+        erpFetch('inventory/brands/')
+            .then((data: any) => {
+                const all = Array.isArray(data) ? data : data?.results ?? []
+                setAllBrands(all)
+                setBrands(all.filter((b: any) =>
+                    (b.categories || []).some((c: any) => (typeof c === 'object' ? c.id : c) === categoryId)
+                ))
+                setLoading(false)
+            })
+            .catch(() => setLoading(false))
+    }, [categoryId])
+
+    useEffect(() => { loadBrands() }, [loadBrands])
+
+    const linkedIds = useMemo(() => new Set(brands.map(b => b.id)), [brands])
+    const unlinkedBrands = allBrands.filter(b => !linkedIds.has(b.id))
+
+    const linkBrand = async (brandId: number) => {
+        setLinking(true)
+        try {
+            const brand = allBrands.find(b => b.id === brandId)
+            if (brand) {
+                const ids = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
+                await erpFetch(`inventory/brands/${brandId}/`, { method: 'PATCH', body: JSON.stringify({ category_ids: [...ids, categoryId] }) })
+                toast.success(`Linked "${brand.name}"`)
+                loadBrands(); router.refresh()
+            }
+        } catch (e: any) { toast.error(e?.message || 'Failed') }
+        finally { setLinking(false) }
+    }
+
+    const unlinkBrand = async (brandId: number) => {
+        setLinking(true)
+        try {
+            const brand = allBrands.find(b => b.id === brandId)
+            if (brand) {
+                const ids = (brand.categories || []).map((c: any) => typeof c === 'object' ? c.id : c)
+                await erpFetch(`inventory/brands/${brandId}/`, { method: 'PATCH', body: JSON.stringify({ category_ids: ids.filter((id: number) => id !== categoryId) }) })
+                toast.success(`Unlinked "${brand.name}"`)
+                loadBrands(); router.refresh()
+            }
+        } catch (e: any) { toast.error(e?.message || 'Failed') }
+        finally { setLinking(false) }
+    }
+
+    return (
+        <div className="flex flex-col h-full animate-in fade-in duration-200">
+            <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                <p className="text-[10px] font-bold text-app-muted-foreground">
+                    {loading ? 'Loading...' : `${brands.length} linked`}
+                </p>
+                <button onClick={() => setShowLink(!showLink)}
+                    className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1 rounded-xl hover:bg-app-surface transition-all">
+                    <Link2 size={11} /> {showLink ? 'Hide' : 'Link'}
+                </button>
+            </div>
+
+            {showLink && (
+                <div className="flex-shrink-0 px-4 py-2.5 animate-in slide-in-from-top-2 duration-200"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, #8b5cf6 3%, var(--app-surface))' }}>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
+                        Available ({unlinkedBrands.length})
+                    </p>
+                    {unlinkedBrands.length === 0 ? (
+                        <p className="text-[11px] text-app-muted-foreground">All brands linked.</p>
+                    ) : (
+                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar">
+                            {unlinkedBrands.map(b => (
+                                <button key={b.id} onClick={() => linkBrand(b.id)} disabled={linking}
+                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all hover:brightness-110 disabled:opacity-50"
+                                    style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)', color: '#8b5cf6', border: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)' }}>
+                                    <Plus size={9} />{b.name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {loading ? (
+                    <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: '#8b5cf6' }} /></div>
+                ) : brands.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <Paintbrush size={32} className="text-app-muted-foreground mb-2 opacity-40" />
+                        <p className="text-sm font-bold text-app-muted-foreground">No brands linked</p>
+                        <p className="text-[11px] text-app-muted-foreground mt-1">Click &ldquo;Link&rdquo; to associate brands.</p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-app-border/30">
+                        {brands.map((b: any) => (
+                            <div key={b.id} className="flex items-center gap-3 px-4 py-2 group transition-all hover:bg-app-surface/50">
+                                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                                    <Paintbrush size={12} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[12px] font-bold text-app-foreground truncate">{b.name}</p>
+                                    {b.short_name && <p className="text-[10px] font-bold text-app-muted-foreground">{b.short_name}</p>}
+                                </div>
+                                <button onClick={() => unlinkBrand(b.id)} disabled={linking}
+                                    className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                    <Unlink size={10} />Unlink
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+/* ── Attributes Tab ── */
+function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
+    const [attributes, setAttributes] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        let cancelled = false
+        setLoading(true)
+        erpFetch(`inventory/parfums/by_category/?category_id=${categoryId}`)
+            .then((data: any) => { if (!cancelled) { setAttributes(Array.isArray(data) ? data : data?.results ?? []); setLoading(false) } })
+            .catch(() => { if (!cancelled) { setAttributes([]); setLoading(false) } })
+        return () => { cancelled = true }
+    }, [categoryId])
+
+    return (
+        <div className="flex flex-col h-full animate-in fade-in duration-200">
+            <div className="flex-shrink-0 px-4 py-2.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                <p className="text-[10px] font-bold text-app-muted-foreground">
+                    {loading ? 'Loading...' : `${attributes.length} attribute${attributes.length !== 1 ? 's' : ''}`}
+                </p>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {loading ? (
+                    <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: 'var(--app-warning)' }} /></div>
+                ) : attributes.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <Tag size={32} className="text-app-muted-foreground mb-2 opacity-40" />
+                        <p className="text-sm font-bold text-app-muted-foreground">No attributes found</p>
+                        <p className="text-[11px] text-app-muted-foreground mt-1">Attributes link through products in this category.</p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-app-border/30">
+                        {attributes.map((a: any) => (
+                            <div key={a.id} className="flex items-center gap-3 px-4 py-2 transition-all hover:bg-app-surface/50">
+                                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
+                                    <Tag size={12} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[12px] font-bold text-app-foreground truncate">{a.name}</p>
+                                    {a.code && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{a.code}</p>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
@@ -913,7 +1256,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
 
                 {/* Left: Tree */}
-                <div className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-t-2xl overflow-hidden flex flex-col`}>
+                <div className={`${splitPanel ? 'flex-[5] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col`}>
                     {/* Column Headers */}
                     <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
                         <div className="w-5 flex-shrink-0" />
@@ -969,20 +1312,23 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
 
                 {/* Right: Detail Panel (split mode only) */}
                 {splitPanel && (
-                    <div className="flex-[6] min-w-0 min-h-0 border border-app-border/50 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-2 duration-200">
+                    <div className="flex-[5] min-w-0 min-h-0 border border-app-border/50 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-2 duration-200">
                         {selectedCategory ? (
                             <CategoryDetailPanel
                                 node={selectedCategory}
                                 onEdit={openEditModal}
                                 onAdd={openAddModal}
                                 onDelete={requestDelete}
+                                allCategories={data}
                             />
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full py-20 px-4 text-center"
                                 style={{ background: 'var(--app-surface)' }}>
-                                <LayoutPanelLeft size={36} className="text-app-muted-foreground mb-3 opacity-30" />
+                                <LayoutPanelLeft size={36} className="text-app-muted-foreground mb-3 opacity-40" />
                                 <p className="text-sm font-bold text-app-muted-foreground">Select a category</p>
-                                <p className="text-[11px] text-app-muted-foreground mt-1">Click any row in the tree to view its details here.</p>
+                                <p className="text-[11px] text-app-muted-foreground mt-1">
+                                    Click any row in the tree to view details.
+                                </p>
                             </div>
                         )}
                     </div>

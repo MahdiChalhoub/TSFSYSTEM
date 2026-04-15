@@ -218,14 +218,56 @@ class LedgerCOAMixin:
                         f"Deactivated {stale_deactivated} accounts not in template {template_key}"
                     )
 
-            # Apply Smart Posting Rules (savepoint-protected so a DB error
-            # inside doesn't poison the outer transaction)
+            # ── Auto-sync posting rules from template + auto-detect ──
+            # 1. Legacy JSON config (backward compat)
             try:
                 sid = transaction.savepoint()
                 ConfigurationService.apply_smart_posting_rules(organization)
                 transaction.savepoint_commit(sid)
             except Exception:
                 transaction.savepoint_rollback(sid)
+
+            # 2. V2 PostingRule model — sync from COA template
+            try:
+                sid_tpl = transaction.savepoint()
+                from apps.finance.models import PostingRule
+                from apps.finance.models.coa_template import COATemplate, COATemplatePostingRule
+                tpl = COATemplate.objects.filter(key=template_key).first()
+                if tpl:
+                    org_accts = {a.code: a for a in ChartOfAccount.objects.filter(organization=organization, is_active=True)}
+                    for tpl_rule in COATemplatePostingRule.objects.filter(template=tpl):
+                        acct = org_accts.get(tpl_rule.account_code)
+                        if not acct:
+                            norm = tpl_rule.account_code.lstrip('0').replace('.', '')
+                            for code, a in org_accts.items():
+                                if code.lstrip('0').replace('.', '') == norm:
+                                    acct = a; break
+                        if acct:
+                            PostingRule.objects.update_or_create(
+                                organization=organization, event_code=tpl_rule.event_code,
+                                defaults={'account': acct, 'module': tpl_rule.module or tpl_rule.event_code.split('.', 1)[0],
+                                          'source': 'SEED', 'description': tpl_rule.description, 'is_active': True})
+                transaction.savepoint_commit(sid_tpl)
+            except Exception:
+                transaction.savepoint_rollback(sid_tpl)
+
+            # 3. V2 Auto-detect — fill remaining unmapped events
+            try:
+                sid_ad = transaction.savepoint()
+                from apps.finance.services.auto_detect_engine import AutoDetectEngine
+                results = AutoDetectEngine.detect_all(organization)
+                for event_code, result in results.items():
+                    if not result.get('matched') or result.get('confidence', 0) < 60:
+                        continue
+                    if PostingRule.objects.filter(organization=organization, event_code=event_code).exists():
+                        continue
+                    PostingRule.objects.create(
+                        organization=organization, event_code=event_code,
+                        account_id=result['account_id'], source='AUTO',
+                        is_active=True, description=f"Auto-detected ({result['confidence']}%): {result['strategy']}")
+                transaction.savepoint_commit(sid_ad)
+            except Exception:
+                transaction.savepoint_rollback(sid_ad)
 
             # Mark COA setup as COMPLETED
             try:
@@ -496,19 +538,21 @@ class LedgerCOAMixin:
 
 
     @staticmethod
-    def get_chart_of_accounts(organization, scope='OFFICIAL', include_inactive=False):
+    def get_chart_of_accounts(organization, scope='OFFICIAL', include_inactive=False, site_id=None):
         from apps.finance.models import ChartOfAccount, JournalEntryLine
         qs = ChartOfAccount.objects.filter(organization=organization).order_by('code')
         if not include_inactive:
             qs = qs.filter(is_active=True)
-        
+
         # SQL Aggregation (Massive speed gain over manual mapping)
         balance_qs = JournalEntryLine.objects.filter(
-            organization=organization, 
+            organization=organization,
             journal_entry__status='POSTED'
         )
         if scope == 'OFFICIAL':
             balance_qs = balance_qs.filter(journal_entry__scope='OFFICIAL')
+        if site_id:
+            balance_qs = balance_qs.filter(journal_entry__site_id=site_id)
         
         balance_map = {
             b['account_id']: Decimal(str(b['net'] or '0')) 
@@ -538,15 +582,17 @@ class LedgerCOAMixin:
 
 
     @staticmethod
-    def get_trial_balance(organization, as_of_date=None, scope='INTERNAL'):
+    def get_trial_balance(organization, as_of_date=None, scope='INTERNAL', site_id=None):
         from apps.finance.models import ChartOfAccount, JournalEntryLine
         accounts_qs = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
-        
+
         lines_qs = JournalEntryLine.objects.filter(organization=organization, journal_entry__status='POSTED')
         if as_of_date:
             lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=as_of_date)
         if scope == 'OFFICIAL':
             lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+        if site_id:
+            lines_qs = lines_qs.filter(journal_entry__site_id=site_id)
             
         balance_map = {
             b['account_id']: Decimal(str(b['net'] or '0')) 
@@ -575,8 +621,8 @@ class LedgerCOAMixin:
 
 
     @staticmethod
-    def get_profit_loss(organization, start_date=None, end_date=None, scope='INTERNAL'):
-        accounts = LedgerCOAMixin.get_trial_balance(organization, as_of_date=end_date, scope=scope)
+    def get_profit_loss(organization, start_date=None, end_date=None, scope='INTERNAL', site_id=None):
+        accounts = LedgerCOAMixin.get_trial_balance(organization, as_of_date=end_date, scope=scope, site_id=site_id)
         income_accs = [a for a in accounts if a.type == 'INCOME']
         expense_accs = [a for a in accounts if a.type == 'EXPENSE']
         total_income = abs(sum((a.rollup_balance for a in income_accs if a.parent is None), Decimal('0')))
@@ -585,15 +631,15 @@ class LedgerCOAMixin:
 
 
     @staticmethod
-    def get_balance_sheet(organization, as_of_date=None, scope='INTERNAL'):
-        accounts = LedgerCOAMixin.get_trial_balance(organization, as_of_date=as_of_date, scope=scope)
+    def get_balance_sheet(organization, as_of_date=None, scope='INTERNAL', site_id=None):
+        accounts = LedgerCOAMixin.get_trial_balance(organization, as_of_date=as_of_date, scope=scope, site_id=site_id)
         assets = [a for a in accounts if a.type == 'ASSET']
         liabilities = [a for a in accounts if a.type == 'LIABILITY']
         equity = [a for a in accounts if a.type == 'EQUITY']
         total_assets = sum((a.rollup_balance for a in assets if a.parent is None), Decimal('0'))
         total_liabilities = abs(sum((a.rollup_balance for a in liabilities if a.parent is None), Decimal('0')))
         total_equity = abs(sum((a.rollup_balance for a in equity if a.parent is None), Decimal('0')))
-        cur_earnings = LedgerCOAMixin.get_profit_loss(organization, end_date=as_of_date, scope=scope)['net_income']
+        cur_earnings = LedgerCOAMixin.get_profit_loss(organization, end_date=as_of_date, scope=scope, site_id=site_id)['net_income']
         return {"scope": scope, "assets": total_assets, "liabilities": total_liabilities, "equity": total_equity, "current_earnings": cur_earnings, "total_liabilities_and_equity": total_liabilities + total_equity + cur_earnings, "is_balanced": abs(total_assets - (total_liabilities + total_equity + cur_earnings)) < Decimal('0.01')}
 
 
@@ -616,10 +662,10 @@ class LedgerCOAMixin:
 
 
     @staticmethod
-    def get_account_statement(organization, account_id, start_date=None, end_date=None, scope='INTERNAL'):
+    def get_account_statement(organization, account_id, start_date=None, end_date=None, scope='INTERNAL', site_id=None):
         from apps.finance.models import ChartOfAccount, JournalEntryLine
         account = ChartOfAccount.objects.get(id=account_id, organization=organization)
-        
+
         opening_qs = JournalEntryLine.objects.filter(
             organization=organization,
             account=account,
@@ -629,21 +675,25 @@ class LedgerCOAMixin:
             opening_qs = opening_qs.filter(journal_entry__transaction_date__lt=start_date)
         if scope == 'OFFICIAL':
             opening_qs = opening_qs.filter(journal_entry__scope='OFFICIAL')
-            
+        if site_id:
+            opening_qs = opening_qs.filter(journal_entry__site_id=site_id)
+
         opening_balance = opening_qs.aggregate(net=Sum('debit') - Sum('credit'))['net'] or Decimal('0')
-        
+
         lines_qs = JournalEntryLine.objects.filter(
             organization=organization,
             account=account,
             journal_entry__status='POSTED'
         ).select_related('journal_entry').order_by('journal_entry__transaction_date')
-        
+
         if start_date:
             lines_qs = lines_qs.filter(journal_entry__transaction_date__gte=start_date)
         if end_date:
             lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=end_date)
         if scope == 'OFFICIAL':
             lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+        if site_id:
+            lines_qs = lines_qs.filter(journal_entry__site_id=site_id)
             
         return {
             "account": account,
