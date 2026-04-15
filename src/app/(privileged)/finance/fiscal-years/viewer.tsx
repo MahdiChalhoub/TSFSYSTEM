@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo, useRef, useTransition } from 'react'
 import {
     Calendar, Plus, CheckCircle2, Clock, Lock, Search,
     PlayCircle, ShieldCheck, Trash2, AlertTriangle, TrendingUp, TrendingDown,
@@ -27,7 +27,7 @@ const getStatusStyle = (s: string) => STATUS_STYLE[s] || STATUS_STYLE.OPEN
 export default function FiscalYearsViewer({ initialYears }: { initialYears: Record<string, any>[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [years] = useState(initialYears)
+    const [years, setYears] = useState(initialYears)
     const [expandedYear, setExpandedYear] = useState<number | null>(years[0]?.id ?? null)
     const [focusMode, setFocusMode] = useState(false)
     const [showWizard, setShowWizard] = useState(false)
@@ -39,6 +39,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     const [closeStep, setCloseStep] = useState<'preview' | 'result' | null>(null)
     const [closeResult, setCloseResult] = useState<string | null>(null)
     const [closingYearId, setClosingYearId] = useState<number | null>(null)
+    const pendingPeriodChange = useRef<{ periodId: number; newStatus: string; period: Record<string, any> } | null>(null)
 
     const currentYear = new Date().getFullYear()
     const lastYear = years[0] || null
@@ -99,16 +100,106 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
         })
     }
 
-    const handlePeriodStatus = (periodId: number, status: 'OPEN' | 'CLOSED' | 'FUTURE') => {
+    /** Validate and apply period status change */
+    const handlePeriodStatus = (periodId: number, newStatus: 'OPEN' | 'CLOSED' | 'FUTURE', yearData?: Record<string, any>) => {
+        // Find the year and period
+        const year = yearData || years.find(y => (y.periods || []).some((p: any) => p.id === periodId))
+        if (!year) return
+        const periods = [...(year.periods || [])].sort((a: any, b: any) => (a.start_date || '').localeCompare(b.start_date || ''))
+        const periodIdx = periods.findIndex((p: any) => p.id === periodId)
+        const period = periods[periodIdx]
+        if (!period) return
+
+        // ── Rule 1: Can't set FUTURE if period has transactions ──
+        if (newStatus === 'FUTURE' && (period.journal_entry_count || 0) > 0) {
+            toast.error(`Cannot set ${period.name} to FUTURE — it has ${period.journal_entry_count} journal entries`)
+            return
+        }
+
+        // ── Rule 2: Can't set FUTURE if any later period is OPEN or CLOSED ──
+        if (newStatus === 'FUTURE') {
+            const laterNonFuture = periods.slice(periodIdx + 1).find((p: any) => p.status === 'OPEN' || p.status === 'CLOSED')
+            if (laterNonFuture) {
+                toast.error(`Cannot set ${period.name} to FUTURE — ${laterNonFuture.name} (later period) is ${laterNonFuture.status}`)
+                return
+            }
+        }
+
+        // ── Rule 3: Can't close if previous period is still OPEN ──
+        if (newStatus === 'CLOSED' && periodIdx > 0) {
+            const prevPeriod = periods[periodIdx - 1]
+            if (prevPeriod && prevPeriod.status === 'OPEN') {
+                toast.error(`Cannot close ${period.name} — close ${prevPeriod.name} first (sequential close required)`)
+                return
+            }
+        }
+
+        // ── Warnings that need confirmation ──
+        const txnCount = period.journal_entry_count || 0
+
+        // OPEN → FUTURE: warn — no more posting allowed
+        if (newStatus === 'FUTURE' && period.status === 'OPEN') {
+            setPendingAction({
+                type: 'periodChange', yearId: periodId,
+                title: `Set ${period.name} to Future?`,
+                description: txnCount > 0
+                    ? `This period has ${txnCount} journal entries. Setting to FUTURE will prevent any new transactions from being posted.`
+                    : `This will prevent transactions from being posted to this period until it is reopened.`,
+                variant: 'warning',
+            })
+            pendingPeriodChange.current = { periodId, newStatus, period }
+            return
+        }
+
+        // OPEN → CLOSED: warn about what it means
+        if (newStatus === 'CLOSED' && period.status === 'OPEN') {
+            setPendingAction({
+                type: 'periodChange', yearId: periodId,
+                title: `Close ${period.name}?`,
+                description: txnCount > 0
+                    ? `This period has ${txnCount} journal entries. After closing, no more transactions can be posted to this period's date range (${period.start_date} — ${period.end_date}). Existing entries are preserved.`
+                    : `After closing, no transactions can be posted to this period. You can reopen it later if needed.`,
+                variant: 'warning',
+            })
+            pendingPeriodChange.current = { periodId, newStatus, period }
+            return
+        }
+
+        // All other transitions — apply directly
+        applyPeriodStatus(periodId, newStatus, period)
+    }
+
+    /** Apply period status after validation/confirmation */
+    const applyPeriodStatus = (periodId: number, newStatus: string, period: Record<string, any>) => {
+        setYears(prev => prev.map(y => ({
+            ...y,
+            periods: (y.periods || []).map((p: any) =>
+                p.id === periodId ? { ...p, status: newStatus, is_closed: newStatus === 'CLOSED' } : p
+            ),
+        })))
         startTransition(async () => {
-            try { await updatePeriodStatus(periodId, status); toast.success(`Period ${status.toLowerCase()}`); refreshData() }
-            catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)) }
+            try {
+                await updatePeriodStatus(periodId, newStatus)
+                toast.success(`${period.name} → ${newStatus}`)
+            } catch (err: unknown) {
+                toast.error(err instanceof Error ? err.message : String(err))
+                refreshData()
+            }
         })
     }
 
     const confirmAction = () => {
         if (!pendingAction) return
         const { type, yearId } = pendingAction; setPendingAction(null)
+
+        // Handle period status change confirmation
+        if (type === 'periodChange' && pendingPeriodChange.current) {
+            const { periodId, newStatus, period } = pendingPeriodChange.current
+            pendingPeriodChange.current = null
+            applyPeriodStatus(periodId, newStatus, period)
+            return
+        }
+
         startTransition(async () => {
             try {
                 if (type === 'delete' && yearId) { await deleteFiscalYear(yearId); toast.success('Year deleted') }
@@ -179,6 +270,40 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                     })}
                 </div>
             )}
+
+            {/* ── Current Month Alert ── */}
+            {(() => {
+                const today = new Date()
+                // Find the period that contains today
+                for (const y of years) {
+                    for (const p of (y.periods || [])) {
+                        const start = new Date(p.start_date)
+                        const end = new Date(p.end_date)
+                        if (today >= start && today <= end && p.status !== 'OPEN') {
+                            return (
+                                <div className="flex-shrink-0 flex items-center gap-3 px-4 py-2.5 mb-3 rounded-xl animate-in fade-in"
+                                    style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
+                                    <AlertTriangle size={15} style={{ color: 'var(--app-warning, #f59e0b)', flexShrink: 0 }} />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                            Current period <strong>{p.name}</strong> is <strong>{p.status}</strong> — transactions cannot be posted
+                                        </div>
+                                        <div className="text-[9px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            {start.toLocaleDateString()} — {end.toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => handlePeriodStatus(p.id, 'OPEN', y)} disabled={isPending}
+                                        className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all flex-shrink-0"
+                                        style={{ background: 'var(--app-success, #22c55e)', color: 'white' }}>
+                                        {isPending ? <Loader2 size={11} className="animate-spin" /> : <PlayCircle size={11} />} Open Now
+                                    </button>
+                                </div>
+                            )
+                        }
+                    }
+                }
+                return null
+            })()}
 
             <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                 {focusMode && (
