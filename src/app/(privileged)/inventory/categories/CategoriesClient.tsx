@@ -538,20 +538,22 @@ const CategoryRow = ({
  * ═══════════════════════════════════════════════════════════ */
 type PanelTab = 'overview' | 'products' | 'brands' | 'attributes'
 
-function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories }: {
+function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, initialTab, onClose }: {
     node: CategoryNode
     onEdit: (n: CategoryNode) => void
     onAdd: (parentId?: number) => void
     onDelete: (n: CategoryNode) => void
     allCategories: any[]
+    initialTab?: PanelTab
+    onClose?: () => void
 }) {
-    const [activeTab, setActiveTab] = useState<PanelTab>('overview')
+    const [activeTab, setActiveTab] = useState<PanelTab>(initialTab ?? 'overview')
     const isParent = (node.children?.length ?? 0) > 0
     const productCount = node.product_count ?? 0
     const brandCount = node.brand_count ?? 0
     const childCount = node.children?.length ?? 0
 
-    useEffect(() => { setActiveTab('overview') }, [node.id])
+    useEffect(() => { setActiveTab(initialTab ?? 'overview') }, [node.id, initialTab])
 
     const tabs: { key: PanelTab; label: string; icon: React.ReactNode; count?: number; color: string }[] = [
         { key: 'overview', label: 'Overview', icon: <Layers size={12} />, color: 'var(--app-primary)' },
@@ -607,6 +609,13 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories }: {
                         style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                         <Plus size={12} />
                     </button>
+                    {onClose && (
+                        <button onClick={onClose}
+                            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors ml-1"
+                            title="Close">
+                            <X size={14} />
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -1209,28 +1218,47 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                             )}
 
                             {(moveStep === 'preview' || moveStep === 'executing') && movePreview && (
-                                <div className="space-y-4">
-                                    {/* Move summary */}
-                                    <div className="flex items-center gap-3 p-3 rounded-xl"
-                                        style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 12%, transparent)' }}>
-                                        <div className="flex items-center gap-1.5 text-[12px] text-app-muted-foreground">
-                                            <Folder size={13} /> <span className="font-bold text-app-foreground">{categoryName}</span>
+                                <div className="space-y-3">
+                                    {/* Move summary — clean transfer indicator */}
+                                    <div className="flex items-center gap-2 p-3 rounded-xl"
+                                        style={{
+                                            background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)',
+                                            border: '1px solid var(--app-border)',
+                                        }}>
+                                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)' }}>
+                                                <Folder size={12} className="text-app-muted-foreground" />
+                                            </div>
+                                            <span className="text-[12px] font-bold text-app-foreground truncate">{categoryName}</span>
                                         </div>
-                                        <ArrowRightLeft size={14} className="text-app-primary flex-shrink-0" />
-                                        <div className="flex items-center gap-1.5 text-[12px]">
-                                            <Folder size={13} className="text-app-primary" />
-                                            <span className="font-black text-app-primary">{movePreview.target_category?.name}</span>
+                                        <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                                            style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)' }}>
+                                            <ArrowRightLeft size={11} className="text-app-primary" />
+                                        </div>
+                                        <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
+                                            <span className="text-[12px] font-black text-app-primary truncate">{movePreview.target_category?.name}</span>
+                                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)' }}>
+                                                <Folder size={12} className="text-app-primary" />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* No conflicts */}
+                                    {/* No conflicts — clean success */}
                                     {!movePreview.has_conflicts && (
                                         <div className="flex items-center gap-2.5 p-3 rounded-xl"
-                                            style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-success) 15%, transparent)' }}>
-                                            <Check size={16} style={{ color: 'var(--app-success)' }} />
+                                            style={{
+                                                background: 'color-mix(in srgb, var(--app-success) 6%, transparent)',
+                                                border: '1px solid color-mix(in srgb, var(--app-success) 15%, transparent)',
+                                            }}>
+                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-success) 15%, transparent)' }}>
+                                                <Check size={14} style={{ color: 'var(--app-success)' }} />
+                                            </div>
                                             <div>
-                                                <p className="text-[12px] font-bold" style={{ color: 'var(--app-success)' }}>No conflicts detected</p>
-                                                <p className="text-[11px] text-app-muted-foreground">All brands and attributes are compatible with the target category.</p>
+                                                <p className="text-[12px] font-bold" style={{ color: 'var(--app-success)' }}>Ready to move</p>
+                                                <p className="text-[10px] text-app-muted-foreground">All brands and attributes are compatible.</p>
                                             </div>
                                         </div>
                                     )}
@@ -1238,24 +1266,33 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                     {/* Conflicts */}
                                     {movePreview.has_conflicts && (
                                         <>
-                                            <div className="flex items-center gap-2">
-                                                <AlertTriangle size={14} style={{ color: 'var(--app-warning)' }} />
-                                                <p className="text-[12px] font-bold" style={{ color: 'var(--app-warning)' }}>Conflicts detected — review below</p>
+                                            {/* Warning banner */}
+                                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                                                style={{
+                                                    background: 'color-mix(in srgb, var(--app-warning) 6%, transparent)',
+                                                    border: '1px solid color-mix(in srgb, var(--app-warning) 12%, transparent)',
+                                                }}>
+                                                <AlertTriangle size={13} style={{ color: 'var(--app-warning)' }} />
+                                                <p className="text-[11px] font-bold" style={{ color: 'var(--app-warning)' }}>Resolve conflicts before moving</p>
                                             </div>
 
                                             {/* Brand conflicts */}
                                             {movePreview.conflict_brands?.length > 0 && (
-                                                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)' }}>
-                                                    <div className="px-3 py-2" style={{ background: 'color-mix(in srgb, #8b5cf6 6%, transparent)' }}>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#8b5cf6' }}>
-                                                            <Paintbrush size={10} className="inline mr-1" />
-                                                            Brands not in &ldquo;{movePreview.target_category?.name}&rdquo;
-                                                        </p>
-                                                        <p className="text-[9px] text-app-muted-foreground mt-0.5">
-                                                            Each brand must be linked or reassigned to proceed.
-                                                        </p>
+                                                <div className="rounded-xl overflow-hidden"
+                                                    style={{ border: '1px solid var(--app-border)' }}>
+                                                    <div className="px-3 py-2 flex items-center justify-between"
+                                                        style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Paintbrush size={11} style={{ color: '#8b5cf6' }} />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#8b5cf6' }}>
+                                                                Brand Conflicts
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[9px] font-bold text-app-muted-foreground">
+                                                            {movePreview.conflict_brands.length} to resolve
+                                                        </span>
                                                     </div>
-                                                    <div className="px-3 py-2 space-y-3">
+                                                    <div className="divide-y divide-app-border/30">
                                                         {movePreview.conflict_brands.map((b: any) => {
                                                             const isLinked = autoLinkBrands.has(b.id)
                                                             const isReassigned = b.id in reassignBrands
@@ -1265,50 +1302,46 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                                 : null
 
                                                             return (
-                                                                <div key={b.id} className="rounded-lg p-2.5"
-                                                                    style={{
-                                                                        background: resolved ? 'color-mix(in srgb, var(--app-success) 4%, transparent)' : 'color-mix(in srgb, var(--app-error) 4%, transparent)',
-                                                                        border: `1px solid ${resolved ? 'color-mix(in srgb, var(--app-success) 12%, transparent)' : 'color-mix(in srgb, var(--app-error) 15%, transparent)'}`,
-                                                                    }}>
-                                                                    <div className="flex items-center justify-between mb-1.5">
-                                                                        <div>
+                                                                <div key={b.id} className="px-3 py-2.5">
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <div className="flex items-center gap-2">
                                                                             <span className="text-[12px] font-bold text-app-foreground">{b.name}</span>
-                                                                            <span className="text-[10px] text-app-muted-foreground ml-2">{b.affected_count} product{b.affected_count > 1 ? 's' : ''}</span>
+                                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                                                                                style={{
+                                                                                    background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                                                                                    color: 'var(--app-muted-foreground)',
+                                                                                }}>
+                                                                                {b.affected_count} product{b.affected_count > 1 ? 's' : ''}
+                                                                            </span>
                                                                         </div>
-                                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{
-                                                                            background: isLinked ? 'color-mix(in srgb, var(--app-success) 12%, transparent)'
-                                                                                : isReassigned ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
-                                                                                : 'color-mix(in srgb, var(--app-error) 12%, transparent)',
-                                                                            color: isLinked ? 'var(--app-success)'
-                                                                                : isReassigned ? 'var(--app-primary)'
-                                                                                : 'var(--app-error)',
+                                                                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
+                                                                            background: resolved
+                                                                                ? 'color-mix(in srgb, var(--app-success) 10%, transparent)'
+                                                                                : 'color-mix(in srgb, var(--app-error) 10%, transparent)',
+                                                                            color: resolved ? 'var(--app-success)' : 'var(--app-error)',
                                                                         }}>
                                                                             {isLinked ? '✓ Will link' : isReassigned ? `→ ${reassignedTo}` : '⚠ Unresolved'}
                                                                         </span>
                                                                     </div>
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        {/* Option 1: Link to target */}
+                                                                    <div className="flex items-center gap-2">
                                                                         <button onClick={() => {
                                                                             const next = new Set(autoLinkBrands)
                                                                             if (isLinked) { next.delete(b.id) } else { next.add(b.id) }
                                                                             setAutoLinkBrands(next)
-                                                                            // Remove from reassign if linking
                                                                             if (!isLinked) {
                                                                                 const r = { ...reassignBrands }
                                                                                 delete r[b.id]
                                                                                 setReassignBrands(r)
                                                                             }
                                                                         }}
-                                                                            className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all flex items-center gap-1"
+                                                                            className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1"
                                                                             style={{
-                                                                                background: isLinked ? 'color-mix(in srgb, var(--app-success) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                                                                background: isLinked ? 'color-mix(in srgb, var(--app-success) 12%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
                                                                                 color: isLinked ? 'var(--app-success)' : 'var(--app-muted-foreground)',
-                                                                                border: isLinked ? '1px solid color-mix(in srgb, var(--app-success) 25%, transparent)' : '1px solid transparent',
+                                                                                border: isLinked ? '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
                                                                             }}>
-                                                                            <Link2 size={9} /> Link to category
+                                                                            <Link2 size={10} /> Link to category
                                                                         </button>
-
-                                                                        {/* Option 2: Reassign dropdown */}
                                                                         {movePreview.target_brands?.length > 0 && (
                                                                             <select
                                                                                 value={isReassigned ? String(reassignBrands[b.id]) : ''}
@@ -1316,7 +1349,6 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                                                     const val = e.target.value
                                                                                     if (val) {
                                                                                         setReassignBrands({ ...reassignBrands, [b.id]: Number(val) })
-                                                                                        // Remove from auto-link if reassigning
                                                                                         const next = new Set(autoLinkBrands)
                                                                                         next.delete(b.id)
                                                                                         setAutoLinkBrands(next)
@@ -1326,9 +1358,9 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                                                         setReassignBrands(r)
                                                                                     }
                                                                                 }}
-                                                                                className="text-[10px] font-bold px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-app-foreground outline-none flex-1 min-w-0"
+                                                                                className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-app-background text-app-foreground outline-none flex-1 min-w-0 transition-all"
                                                                                 style={{
-                                                                                    borderColor: isReassigned ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)' : undefined,
+                                                                                    border: isReassigned ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid var(--app-border)',
                                                                                     color: isReassigned ? 'var(--app-primary)' : undefined,
                                                                                 }}>
                                                                                 <option value="">Reassign to...</option>
@@ -1347,36 +1379,51 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
 
                                             {/* Attribute conflicts */}
                                             {movePreview.conflict_attributes?.length > 0 && (
-                                                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, var(--app-warning) 15%, transparent)' }}>
-                                                    <div className="px-3 py-2" style={{ background: 'color-mix(in srgb, var(--app-warning) 6%, transparent)' }}>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>
-                                                            <Tag size={10} className="inline mr-1" />
-                                                            Attributes not in &ldquo;{movePreview.target_category?.name}&rdquo;
-                                                        </p>
+                                                <div className="rounded-xl overflow-hidden"
+                                                    style={{ border: '1px solid var(--app-border)' }}>
+                                                    <div className="px-3 py-2 flex items-center justify-between"
+                                                        style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Tag size={11} style={{ color: 'var(--app-warning)' }} />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>
+                                                                Attribute Conflicts
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[9px] font-bold text-app-muted-foreground">
+                                                            {movePreview.conflict_attributes.length} to resolve
+                                                        </span>
                                                     </div>
-                                                    <div className="px-3 py-2 space-y-2">
-                                                        {movePreview.conflict_attributes.map((a: any) => (
-                                                            <label key={a.id} className="flex items-center gap-2.5 cursor-pointer py-1">
-                                                                <input type="checkbox"
-                                                                    checked={autoLinkAttrs.has(a.id)}
-                                                                    onChange={() => {
+                                                    <div className="divide-y divide-app-border/30">
+                                                        {movePreview.conflict_attributes.map((a: any) => {
+                                                            const linked = autoLinkAttrs.has(a.id)
+                                                            return (
+                                                                <div key={a.id}
+                                                                    className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-all hover:bg-app-border/10"
+                                                                    onClick={() => {
                                                                         const next = new Set(autoLinkAttrs)
                                                                         next.has(a.id) ? next.delete(a.id) : next.add(a.id)
                                                                         setAutoLinkAttrs(next)
-                                                                    }}
-                                                                    className="w-4 h-4 rounded accent-amber-500" />
-                                                                <div className="flex-1">
-                                                                    <span className="text-[12px] font-bold text-app-foreground">{a.name}</span>
-                                                                    {a.code && <span className="text-[10px] font-mono text-app-muted-foreground ml-2">{a.code}</span>}
+                                                                    }}>
+                                                                    <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all"
+                                                                        style={{
+                                                                            background: linked ? 'var(--app-success)' : 'transparent',
+                                                                            border: linked ? '1px solid var(--app-success)' : '1px solid var(--app-border)',
+                                                                        }}>
+                                                                        {linked && <Check size={10} className="text-white" />}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <span className="text-[12px] font-bold text-app-foreground">{a.name}</span>
+                                                                        {a.code && <span className="text-[10px] font-mono text-app-muted-foreground ml-2">{a.code}</span>}
+                                                                    </div>
+                                                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex-shrink-0" style={{
+                                                                        background: linked ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)',
+                                                                        color: linked ? 'var(--app-success)' : 'var(--app-error)',
+                                                                    }}>
+                                                                        {linked ? '✓ Will link' : '⚠ Unresolved'}
+                                                                    </span>
                                                                 </div>
-                                                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{
-                                                                    background: autoLinkAttrs.has(a.id) ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-warning) 10%, transparent)',
-                                                                    color: autoLinkAttrs.has(a.id) ? 'var(--app-success)' : 'var(--app-warning)',
-                                                                }}>
-                                                                    {autoLinkAttrs.has(a.id) ? 'Will link' : 'Unlinked'}
-                                                                </span>
-                                                            </label>
-                                                        ))}
+                                                            )
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}
@@ -1647,11 +1694,15 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [focusMode, setFocusMode] = useState(false)
     const [splitPanel, setSplitPanel] = useState(false)
     const [selectedCategory, setSelectedCategory] = useState<CategoryNode | null>(null)
+    const [panelTab, setPanelTab] = useState<PanelTab>('overview')
     const [expandAll, setExpandAll] = useState<boolean | undefined>(undefined)
     const [expandKey, setExpandKey] = useState(0)
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
     const [productsTarget, setProductsTarget] = useState<CategoryNode | null>(null)
     const [brandsTarget, setBrandsTarget] = useState<CategoryNode | null>(null)
+    // Right sidebar drawer (tree-only mode)
+    const [sidebarNode, setSidebarNode] = useState<CategoryNode | null>(null)
+    const [sidebarTab, setSidebarTab] = useState<PanelTab>('overview')
     const searchRef = useRef<HTMLInputElement>(null)
     const data = initialCategories
 
@@ -1902,8 +1953,8 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         <div className="w-7 flex-shrink-0" />
                         <div className="flex-1 min-w-0">Category</div>
                         <div className="hidden sm:block w-16 flex-shrink-0">Children</div>
-                        {!splitPanel && <div className="hidden sm:block w-20 flex-shrink-0">Brands</div>}
-                        {!splitPanel && <div className="hidden sm:block w-20 flex-shrink-0">Products</div>}
+                        <div className="hidden sm:block w-20 flex-shrink-0">Brands</div>
+                        <div className="hidden sm:block w-20 flex-shrink-0">Products</div>
                         <div className="w-16 flex-shrink-0" />
                     </div>
 
@@ -1912,7 +1963,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         {tree.length > 0 ? (
                             tree.map((node) => (
                                 <div key={`${node.id}-${expandKey}`}
-                                    onClick={splitPanel ? () => setSelectedCategory(node) : undefined}
+                                    onClick={splitPanel ? () => { setSelectedCategory(node); setPanelTab('overview') } : undefined}
                                     className={splitPanel && selectedCategory?.id === node.id ? 'ring-1 ring-inset ring-app-primary/30' : ''}
                                 >
                                     <CategoryRow
@@ -1921,8 +1972,24 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                         onEdit={openEditModal}
                                         onAdd={openAddModal}
                                         onDelete={requestDelete}
-                                        onViewProducts={setProductsTarget}
-                                        onViewBrands={setBrandsTarget}
+                                        onViewProducts={(n) => {
+                                            if (splitPanel) {
+                                                setSelectedCategory(n)
+                                                setPanelTab('products')
+                                            } else {
+                                                setSidebarNode(n)
+                                                setSidebarTab('products')
+                                            }
+                                        }}
+                                        onViewBrands={(n) => {
+                                            if (splitPanel) {
+                                                setSelectedCategory(n)
+                                                setPanelTab('brands')
+                                            } else {
+                                                setSidebarNode(n)
+                                                setSidebarTab('brands')
+                                            }
+                                        }}
                                         searchQuery={searchQuery}
                                         forceExpanded={expandAll}
                                     />
@@ -1959,6 +2026,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                 onAdd={openAddModal}
                                 onDelete={requestDelete}
                                 allCategories={data}
+                                initialTab={panelTab}
                             />
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full py-20 px-4 text-center"
@@ -1973,6 +2041,30 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     </div>
                 )}
             </div>
+
+            {/* ═══════════════ RIGHT SIDEBAR DRAWER (tree-only mode) ═══════════════ */}
+            {sidebarNode && !splitPanel && (
+                <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200"
+                    style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', backdropFilter: 'blur(4px)' }}
+                    onClick={(e) => { if (e.target === e.currentTarget) setSidebarNode(null) }}>
+                    <div className="w-full max-w-lg h-full flex flex-col animate-in slide-in-from-right-4 duration-300"
+                        style={{
+                            background: 'var(--app-surface)',
+                            borderLeft: '1px solid var(--app-border)',
+                            boxShadow: '-8px 0 30px rgba(0,0,0,0.15)',
+                        }}>
+                        <CategoryDetailPanel
+                            node={sidebarNode}
+                            onEdit={openEditModal}
+                            onAdd={openAddModal}
+                            onDelete={requestDelete}
+                            allCategories={data}
+                            initialTab={sidebarTab}
+                            onClose={() => setSidebarNode(null)}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* ── Footer ──────────────────────────────────────── */}
             <div
