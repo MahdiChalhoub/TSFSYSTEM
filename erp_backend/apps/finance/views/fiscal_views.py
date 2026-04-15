@@ -108,8 +108,6 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
         # Blockers
         blockers = []
-        if open_periods > 0:
-            blockers.append(f"{open_periods} periods still open — close them first")
         if draft_je > 0:
             blockers.append(f"{draft_je} draft journal entries — post or delete them")
         if not re_account:

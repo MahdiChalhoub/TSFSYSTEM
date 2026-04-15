@@ -128,12 +128,27 @@ class ClosingService:
             raise ValidationError(f"Fiscal year {fiscal_year.name} is already closed.")
 
         with transaction.atomic():
-            # ── Step 1: Verify all periods are closed ──────────────
+            # ── Step 1: Auto-close all open periods ──────────────
+            # Check for draft JEs first — those must be dealt with manually
+            from apps.finance.models import JournalEntry as JE
+            draft_count = JE.objects.filter(
+                organization=organization,
+                fiscal_year=fiscal_year,
+                status='DRAFT',
+            ).count()
+            if draft_count > 0:
+                raise ValidationError(
+                    f"Cannot close year. {draft_count} draft journal entries remain. "
+                    f"Post or delete them first."
+                )
+
+            # Force-close all unclosed periods
             unclosed = fiscal_year.periods.filter(is_closed=False)
             if unclosed.exists():
-                names = ", ".join([p.name for p in unclosed[:5]])
-                raise ValidationError(
-                    f"Cannot close year. {unclosed.count()} periods still open: {names}"
+                unclosed_count = unclosed.count()
+                unclosed.update(status='CLOSED', is_closed=True, closed_at=timezone.now(), closed_by=user)
+                logger.info(
+                    f"ClosingService: Auto-closed {unclosed_count} periods for {fiscal_year.name}"
                 )
 
             # ── Step 2: Resolve retained earnings account ──────────

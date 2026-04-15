@@ -143,17 +143,10 @@ function BrandsPopup({ category, onClose }: { category: CategoryNode; onClose: (
 
     const loadBrands = useCallback(() => {
         setLoading(true)
-        erpFetch(`inventory/brands/`)
+        erpFetch(`inventory/categories/${category.id}/linked_brands/`)
             .then((data: any) => {
-                const all = Array.isArray(data) ? data : data?.results ?? []
-                setAllBrands(all)
-                // Filter brands that have this category in their M2M categories
-                const linked = all.filter((b: any) =>
-                    (b.categories || []).some((c: any) =>
-                        (typeof c === 'object' ? c.id : c) === category.id
-                    )
-                )
-                setBrands(linked)
+                setAllBrands(Array.isArray(data?.all) ? data.all : [])
+                setBrands(Array.isArray(data?.linked) ? data.linked : [])
                 setLoading(false)
             })
             .catch(() => setLoading(false))
@@ -340,11 +333,11 @@ function BrandsPopup({ category, onClose }: { category: CategoryNode; onClose: (
  * ═══════════════════════════════════════════════════════════ */
 const CategoryRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
-    onViewProducts, onViewBrands,
+    onViewProducts, onViewBrands, onViewAttributes,
 }: {
     node: CategoryNode; level: number; searchQuery: string; forceExpanded?: boolean;
     onEdit: (n: CategoryNode) => void; onAdd: (parentId?: number) => void; onDelete: (n: CategoryNode) => void;
-    onViewProducts: (n: CategoryNode) => void; onViewBrands: (n: CategoryNode) => void;
+    onViewProducts: (n: CategoryNode) => void; onViewBrands: (n: CategoryNode) => void; onViewAttributes: (n: CategoryNode) => void;
 }) => {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
@@ -362,171 +355,178 @@ const CategoryRow = ({
             {/* ── ROW ── */}
             <div
                 className={`
-                    group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-default
-                    border-b border-app-border/30
+                    group flex items-center gap-2.5 transition-all duration-200 cursor-default relative
                     ${level === 0
-                        ? 'hover:bg-app-surface py-2.5 md:py-3'
-                        : 'hover:bg-app-surface/40 py-1.5 md:py-2'
+                        ? 'py-2.5 md:py-3 hover:brightness-105'
+                        : 'py-1.5 md:py-2 hover:brightness-105'
                     }
                 `}
                 style={{
-                    paddingLeft: '12px',
+                    paddingLeft: `${12 + (level > 0 ? level * 18 : 0)}px`,
                     paddingRight: '12px',
                     background: isRoot
-                        ? 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))'
-                        : undefined,
-                    borderLeft: isRoot
-                        ? '3px solid var(--app-primary)'
-                        : undefined,
+                        ? 'linear-gradient(90deg, color-mix(in srgb, var(--app-primary) 6%, var(--app-surface)) 0%, var(--app-surface) 100%)'
+                        : 'transparent',
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
                 }}
             >
-                {/* Indent spacer */}
-                {level > 0 && <div style={{ width: `${level * 20}px` }} className="flex-shrink-0" />}
-                {/* Toggle indicator — no arrows */}
+                {/* Left accent bar for root */}
+                {isRoot && (
+                    <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
+                        style={{ background: 'linear-gradient(180deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 40%, transparent))' }} />
+                )}
+
+                {/* Indent connector line for children */}
+                {level > 0 && (
+                    <div className="absolute top-0 bottom-0" style={{ left: `${8 + (level - 1) * 18}px`, width: '1px', background: 'color-mix(in srgb, var(--app-border) 20%, transparent)' }} />
+                )}
+
+                {/* Toggle */}
                 <button
                     onClick={() => isParent && setIsOpen(!isOpen)}
-                    className={`w-5 h-5 flex items-center justify-center rounded-md transition-all flex-shrink-0 ${isParent ? 'hover:bg-app-border/50 text-app-muted-foreground' : 'text-app-border'}`}
+                    className={`w-5 h-5 flex items-center justify-center rounded-md transition-all flex-shrink-0 ${isParent ? 'hover:bg-app-border/40' : ''}`}
                 >
                     {isParent ? (
-                        <div className={`w-1.5 h-1.5 rounded-sm transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}
-                            style={{ background: isOpen ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
+                        <div className={`w-2 h-2 rounded-sm transition-all duration-200 ${isOpen ? 'rotate-45 scale-110' : ''}`}
+                            style={{ background: isOpen ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-muted-foreground) 60%, transparent)' }} />
                     ) : (
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-primary)', opacity: 0.4 }} />
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-primary) 35%, transparent)' }} />
                     )}
                 </button>
 
                 {/* Icon */}
                 <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
                     style={{
                         background: isRoot
-                            ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
-                            : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
-                        color: isRoot ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                            ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))'
+                            : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                        color: isRoot ? '#fff' : 'var(--app-muted-foreground)',
+                        boxShadow: isRoot ? '0 2px 8px color-mix(in srgb, var(--app-primary) 20%, transparent)' : 'none',
                     }}
                 >
                     {isRoot
-                        ? <Bookmark size={14} strokeWidth={2.5} />
+                        ? <Bookmark size={13} strokeWidth={2.5} />
                         : isParent
-                            ? (isOpen ? <FolderOpen size={14} /> : <Folder size={14} />)
-                            : <Folder size={13} />}
+                            ? (isOpen ? <FolderOpen size={13} /> : <Folder size={13} />)
+                            : <Folder size={12} />}
                 </div>
 
-                {/* Code + Name */}
-                <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
-                    {node.code && (
-                        <span
-                            className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-                            style={{
-                                background: isRoot
-                                    ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)'
-                                    : 'color-mix(in srgb, var(--app-background) 60%, transparent)',
-                                color: isRoot ? 'var(--app-primary)' : 'var(--app-foreground)',
-                            }}
-                        >
-                            {node.code}
-                        </span>
-                    )}
-                    <span className={`truncate text-[13px] ${isRoot ? 'font-bold text-app-foreground' : 'font-medium text-app-foreground'}`}>
-                        {node.name}
+                {/* Name block */}
+                <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                            <span className={`truncate text-[13px] ${isRoot ? 'font-black text-app-foreground' : 'font-semibold text-app-foreground'}`}>
+                                {node.name}
+                            </span>
+                            {isRoot && (
+                                <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-[1px] rounded-full flex-shrink-0"
+                                    style={{
+                                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
+                                        color: '#fff',
+                                    }}>
+                                    ROOT
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            {node.code && (
+                                <span className="font-mono text-[9px] font-bold text-app-muted-foreground">
+                                    {node.code}
+                                </span>
+                            )}
+                            {node.short_name && (
+                                <span className="text-[8px] font-bold text-app-muted-foreground uppercase tracking-wider opacity-60">
+                                    {node.short_name}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Stat Badges ── */}
+                {/* Children */}
+                <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
+                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md tabular-nums"
+                        style={{
+                            background: isParent ? 'color-mix(in srgb, var(--app-foreground) 6%, transparent)' : 'transparent',
+                            color: isParent ? 'var(--app-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)',
+                        }}>
+                        {isParent ? node.children!.length : '–'}
                     </span>
-                    {node.short_name && (
-                        <span className="hidden md:inline text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider bg-app-border/30 px-1.5 py-0.5 rounded flex-shrink-0">
-                            {node.short_name}
-                        </span>
-                    )}
-                    {isRoot && (
-                        <span
-                            className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                color: 'var(--app-primary)',
-                                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
-                            }}
-                        >
-                            Root
-                        </span>
-                    )}
                 </div>
 
-                {/* Children count */}
-                <div className="hidden sm:flex w-16 flex-shrink-0">
-                    <span className="text-[10px] font-bold text-app-muted-foreground">
-                        {isParent ? `${node.children!.length} sub` : 'Leaf'}
-                    </span>
-                </div>
-
-                {/* Brands — clickable badge */}
-                <div className="hidden sm:flex w-20 flex-shrink-0">
+                {/* Brands */}
+                <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
                     <button
                         onClick={() => onViewBrands(node)}
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 transition-all hover:brightness-120"
+                        className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={brandCount > 0 ? {
                             color: '#8b5cf6',
                             background: 'color-mix(in srgb, #8b5cf6 8%, transparent)',
                         } : {
-                            color: 'var(--app-muted-foreground)',
-                            opacity: 0.5,
+                            color: 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)',
                         }}
-                        title={`${brandCount} brand${brandCount !== 1 ? 's' : ''} — click to view`}
+                        title={`${brandCount} brand${brandCount !== 1 ? 's' : ''}`}
                     >
-                        <Paintbrush size={10} />
+                        <Paintbrush size={9} />
                         {brandCount}
                     </button>
                 </div>
 
-                {/* Attributes — badge */}
-                <div className="hidden sm:flex w-16 flex-shrink-0">
-                    <span
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1"
+                {/* Attributes */}
+                <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
+                    <button
+                        onClick={() => onViewAttributes(node)}
+                        className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={attributeCount > 0 ? {
                             color: 'var(--app-warning)',
                             background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)',
                         } : {
-                            color: 'var(--app-muted-foreground)',
-                            opacity: 0.5,
+                            color: 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)',
                         }}
-                        title={`${attributeCount} attribute${attributeCount !== 1 ? 's' : ''} linked`}
+                        title={`${attributeCount} attribute${attributeCount !== 1 ? 's' : ''}`}
                     >
-                        <Tag size={10} />
+                        <Tag size={9} />
                         {attributeCount}
-                    </span>
+                    </button>
                 </div>
 
-                {/* Products — clickable badge */}
-                <div className="hidden sm:flex w-20 flex-shrink-0">
+                {/* Products */}
+                <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
                     <button
                         onClick={() => onViewProducts(node)}
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 transition-all hover:brightness-120"
+                        className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={productCount > 0 ? {
                             color: 'var(--app-success)',
                             background: 'color-mix(in srgb, var(--app-success) 8%, transparent)',
                         } : {
-                            color: 'var(--app-muted-foreground)',
-                            opacity: 0.5,
+                            color: 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)',
                         }}
-                        title={`${productCount} product${productCount !== 1 ? 's' : ''} — click to view`}
+                        title={`${productCount} product${productCount !== 1 ? 's' : ''}`}
                     >
-                        <Box size={10} />
+                        <Box size={9} />
                         {productCount}
                     </button>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => onEdit(node)} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Edit">
-                        <Pencil size={12} />
+                {/* Actions — appear on hover */}
+                <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <button onClick={() => onEdit(node)}
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-all" title="Edit">
+                        <Pencil size={11} />
                     </button>
-                    <button onClick={() => onAdd(node.id)} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-primary transition-colors" title="Add sub-category">
-                        <Plus size={13} />
+                    <button onClick={() => onAdd(node.id)}
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-primary transition-all" title="Add sub-category">
+                        <Plus size={12} />
                     </button>
                     <button
                         onClick={() => { if (isParent) { toast.error('Delete sub-categories first.'); return; } onDelete(node); }}
-                        className="p-1.5 hover:bg-app-border/50 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg transition-all"
                         style={{ color: isParent ? 'var(--app-border)' : 'var(--app-muted-foreground)', cursor: isParent ? 'not-allowed' : 'pointer' }}
                         title={isParent ? 'Delete sub-categories first' : 'Delete'}
                     >
-                        {isParent ? <AlertCircle size={12} /> : <Trash2 size={12} />}
+                        {isParent ? <AlertCircle size={11} /> : <Trash2 size={11} />}
                     </button>
                 </div>
             </div>
@@ -544,6 +544,7 @@ const CategoryRow = ({
                             onDelete={onDelete}
                             onViewProducts={onViewProducts}
                             onViewBrands={onViewBrands}
+                            onViewAttributes={onViewAttributes}
                             searchQuery={searchQuery}
                             forceExpanded={forceExpanded}
                         />
@@ -677,7 +678,9 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, ini
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {activeTab === 'overview' && (
                     <PanelOverviewTab node={node} onAdd={onAdd} onDelete={onDelete} isParent={isParent}
-                        childCount={childCount} productCount={productCount} brandCount={brandCount} />
+                        childCount={childCount} productCount={productCount} brandCount={brandCount}
+                        attributeCount={node.attribute_count ?? 0}
+                        onTabChange={setActiveTab} />
                 )}
                 {activeTab === 'products' && <PanelProductsTab categoryId={node.id} categoryName={node.name} allCategories={allCategories} />}
                 {activeTab === 'brands' && <PanelBrandsTab categoryId={node.id} categoryName={node.name} />}
@@ -688,21 +691,24 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, ini
 }
 
 /* ── Overview Tab — §4 KPI pattern ── */
-function PanelOverviewTab({ node, onAdd, onDelete, isParent, childCount, productCount, brandCount }: {
+function PanelOverviewTab({ node, onAdd, onDelete, isParent, childCount, productCount, brandCount, attributeCount, onTabChange }: {
     node: CategoryNode; onAdd: (pid?: number) => void; onDelete: (n: CategoryNode) => void;
     isParent: boolean; childCount: number; productCount: number; brandCount: number;
+    attributeCount: number; onTabChange: (tab: PanelTab) => void;
 }) {
     return (
         <div className="p-4 space-y-3 animate-in fade-in duration-200">
-            {/* KPI Cards — §4 standard pattern */}
+            {/* KPI Cards — clickable to navigate to corresponding tab */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '8px' }}>
                 {[
-                    { label: 'Children', value: childCount, icon: <GitBranch size={11} />, color: 'var(--app-primary)' },
-                    { label: 'Products', value: productCount, icon: <Package size={11} />, color: 'var(--app-success, #22c55e)' },
-                    { label: 'Brands', value: brandCount, icon: <Paintbrush size={11} />, color: '#8b5cf6' },
+                    { label: 'Children', value: childCount, icon: <GitBranch size={11} />, color: 'var(--app-primary)', tab: null as PanelTab | null },
+                    { label: 'Products', value: productCount, icon: <Package size={11} />, color: 'var(--app-success, #22c55e)', tab: 'products' as PanelTab },
+                    { label: 'Brands', value: brandCount, icon: <Paintbrush size={11} />, color: '#8b5cf6', tab: 'brands' as PanelTab },
+                    { label: 'Attrs', value: attributeCount, icon: <Tag size={11} />, color: 'var(--app-warning, #f59e0b)', tab: 'attributes' as PanelTab },
                 ].map(s => (
-                    <div key={s.label}
-                        className="flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all text-left"
+                    <button key={s.label}
+                        onClick={() => s.tab && onTabChange(s.tab)}
+                        className={`flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all text-left ${s.tab ? 'cursor-pointer hover:brightness-110 hover:scale-[1.02]' : 'cursor-default'}`}
                         style={{
                             background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -713,7 +719,7 @@ function PanelOverviewTab({ node, onAdd, onDelete, isParent, childCount, product
                             <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
                             <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
                         </div>
-                    </div>
+                    </button>
                 ))}
             </div>
 
@@ -1713,15 +1719,13 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
 
     const loadData = useCallback(() => {
         setLoading(true)
-        // Fetch brands linked to this category (M2M) AND all brands for the link palette
-        Promise.all([
-            erpFetch(`inventory/brands/by_category/?category_id=${categoryId}`),
-            erpFetch('inventory/brands/'),
-        ]).then(([linked, all]: any[]) => {
-            setLinkedBrands(Array.isArray(linked) ? linked : linked?.results ?? [])
-            setAllBrands(Array.isArray(all) ? all : all?.results ?? [])
-            setLoading(false)
-        }).catch(() => setLoading(false))
+        // Fetch M2M linked brands AND all available brands from single endpoint
+        erpFetch(`inventory/categories/${categoryId}/linked_brands/`)
+            .then((data: any) => {
+                setLinkedBrands(Array.isArray(data?.linked) ? data.linked : [])
+                setAllBrands(Array.isArray(data?.all) ? data.all : [])
+                setLoading(false)
+            }).catch(() => setLoading(false))
     }, [categoryId])
 
     useEffect(() => { loadData() }, [loadData])
@@ -1842,16 +1846,11 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
     useEffect(() => {
         let cancelled = false
         setLoading(true)
-        // Fetch the full attribute tree, then filter to those linked to this category
-        erpFetch('inventory/product-attributes/tree/')
+        // Fetch attribute groups linked to this category via M2M
+        erpFetch(`inventory/categories/${categoryId}/linked_attributes/`)
             .then((data: any) => {
                 if (!cancelled) {
-                    const tree = Array.isArray(data) ? data : data?.results ?? []
-                    // Filter: only show attribute groups that are linked to this category
-                    const linked = tree.filter((group: any) =>
-                        (group.linked_categories || []).some((c: any) => c.id === categoryId)
-                    )
-                    setAttributes(linked)
+                    setAttributes(Array.isArray(data?.linked) ? data.linked : [])
                     setLoading(false)
                 }
             })
@@ -2187,15 +2186,19 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 {/* Left: Tree */}
                 <div className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
                     {/* Column Headers */}
-                    <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+                    <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)',
+                            borderBottom: '2px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
+                        }}>
                         <div className="w-5 flex-shrink-0" />
                         <div className="w-7 flex-shrink-0" />
                         <div className="flex-1 min-w-0">Category</div>
-                        <div className="hidden sm:block w-16 flex-shrink-0">Children</div>
-                        <div className="hidden sm:block w-20 flex-shrink-0">Brands</div>
-                        <div className="hidden sm:block w-16 flex-shrink-0">Attrs</div>
-                        <div className="hidden sm:block w-20 flex-shrink-0">Products</div>
-                        <div className="w-16 flex-shrink-0" />
+                        <div className="hidden sm:block w-12 flex-shrink-0 text-center">Sub</div>
+                        <div className="hidden sm:block w-14 flex-shrink-0 text-center" style={{ color: '#8b5cf6' }}>Brands</div>
+                        <div className="hidden sm:block w-12 flex-shrink-0 text-center" style={{ color: 'var(--app-warning)' }}>Attrs</div>
+                        <div className="hidden sm:block w-14 flex-shrink-0 text-center" style={{ color: 'var(--app-success)' }}>Products</div>
+                        <div className="w-[68px] flex-shrink-0" />
                     </div>
 
                     {/* Scrollable Body */}
@@ -2228,6 +2231,15 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                             } else {
                                                 setSidebarNode(n)
                                                 setSidebarTab('brands')
+                                            }
+                                        }}
+                                        onViewAttributes={(n) => {
+                                            if (splitPanel) {
+                                                setSelectedCategory(n)
+                                                setPanelTab('attributes')
+                                            } else {
+                                                setSidebarNode(n)
+                                                setSidebarTab('attributes')
                                             }
                                         }}
                                         searchQuery={searchQuery}

@@ -110,19 +110,22 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
         const period = periods[periodIdx]
         if (!period) return
 
-        // ── Rule 1: Can't set FUTURE if period has transactions ──
-        if (newStatus === 'FUTURE' && (period.journal_entry_count || 0) > 0) {
-            toast.error(`Cannot set ${period.name} to FUTURE — it has ${period.journal_entry_count} journal entries`)
+        // ── Rule 1: Can't CLOSE or FUTURE if draft JEs exist ──
+        const draftCount = period.draft_je_count || 0
+        const draftRefs = period.draft_je_refs || []
+        if ((newStatus === 'CLOSED' || newStatus === 'FUTURE') && draftCount > 0) {
+            const refList = draftRefs.length > 0 ? draftRefs.join(', ') : ''
+            toast.error(
+                `Cannot ${newStatus === 'CLOSED' ? 'close' : 'set to future'} ${period.name} — ${draftCount} draft journal ${draftCount === 1 ? 'entry' : 'entries'} must be posted or deleted first${refList ? ': ' + refList : ''}`,
+                { duration: 8000 }
+            )
             return
         }
 
-        // ── Rule 2: Can't set FUTURE if any later period is OPEN or CLOSED ──
-        if (newStatus === 'FUTURE') {
-            const laterNonFuture = periods.slice(periodIdx + 1).find((p: any) => p.status === 'OPEN' || p.status === 'CLOSED')
-            if (laterNonFuture) {
-                toast.error(`Cannot set ${period.name} to FUTURE — ${laterNonFuture.name} (later period) is ${laterNonFuture.status}`)
-                return
-            }
+        // ── Rule 2: Can't set FUTURE if period has posted transactions ──
+        if (newStatus === 'FUTURE' && (period.journal_entry_count || 0) > 0) {
+            toast.error(`Cannot set ${period.name} to FUTURE — it has ${period.journal_entry_count} posted journal entries`)
+            return
         }
 
         // ── Rule 3: Can't close if previous period is still OPEN ──
@@ -592,35 +595,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                             </div>
                                         ))}
 
-                                        {/* Quick fix buttons */}
-                                        {closePreview.periods.open > 0 && (
-                                            <button disabled={isPending} onClick={() => {
-                                                if (!closingYearId) return
-                                                startTransition(async () => {
-                                                    try {
-                                                        // Close all open periods for this year
-                                                        const fy = years.find(y => y.id === closingYearId)
-                                                        const periods = fy?.periods || []
-                                                        for (const p of periods) {
-                                                            if (p.status === 'OPEN' || p.status === 'FUTURE') {
-                                                                await updatePeriodStatus(p.id, 'CLOSED')
-                                                            }
-                                                        }
-                                                        toast.success(`Closed ${closePreview.periods.open + closePreview.periods.future} periods`)
-                                                        // Reload preview
-                                                        const preview = await getClosePreview(closingYearId)
-                                                        if (preview) setClosePreview(preview)
-                                                    } catch (err: unknown) {
-                                                        toast.error(err instanceof Error ? err.message : String(err))
-                                                    }
-                                                })
-                                            }}
-                                                className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold py-1.5 rounded-lg transition-all mt-1"
-                                                style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
-                                                {isPending ? <Loader2 size={11} className="animate-spin" /> : <Lock size={11} />}
-                                                Close All {closePreview.periods.open + closePreview.periods.future} Open Periods Now
-                                            </button>
-                                        )}
+                                        {/* No manual period close needed — Year-End Close auto-closes all periods */}
                                     </div>
                                 )}
 
@@ -695,7 +670,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                         <div className="flex items-start gap-2">
                                             <ArrowRight size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-primary)' }} />
                                             <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
-                                                All Income & Expense accounts will be zeroed out
+                                                {closePreview.periods.open > 0 ? `${closePreview.periods.open} open periods will be auto-closed, then all` : 'All'} Income & Expense accounts will be zeroed out
                                             </span>
                                         </div>
                                         <div className="flex items-start gap-2">

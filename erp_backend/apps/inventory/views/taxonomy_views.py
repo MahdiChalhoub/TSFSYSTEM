@@ -239,6 +239,47 @@ class CategoryViewSet(TenantModelViewSet):
         return Response(data)
 
     @action(detail=True, methods=['get'])
+    def linked_brands(self, request, pk=None):
+        """Return brands linked to this category via M2M, plus all brands for linking palette."""
+        category = self.get_object()
+        organization = category.organization
+
+        linked = Brand.objects.filter(
+            categories=category, organization=organization
+        ).annotate(
+            product_count=Count('products', filter=Q(products__category=category))
+        ).values('id', 'name', 'logo', 'product_count')
+
+        all_brands = Brand.objects.filter(
+            organization=organization
+        ).values('id', 'name').order_by('name')
+
+        return Response({
+            "linked": list(linked),
+            "all": list(all_brands),
+        })
+
+    @action(detail=True, methods=['get'])
+    def linked_attributes(self, request, pk=None):
+        """Return attribute groups linked to this category via M2M."""
+        category = self.get_object()
+        organization = category.organization
+        from apps.inventory.models import ProductAttribute
+
+        linked = ProductAttribute.objects.filter(
+            categories=category, organization=organization, parent__isnull=True
+        ).values('id', 'name', 'code')
+
+        all_attrs = ProductAttribute.objects.filter(
+            organization=organization, parent__isnull=True
+        ).values('id', 'name', 'code').order_by('name')
+
+        return Response({
+            "linked": list(linked),
+            "all": list(all_attrs),
+        })
+
+    @action(detail=True, methods=['get'])
     def explore(self, request, pk=None):
         category = self.get_object()
         organization = category.organization
