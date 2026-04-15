@@ -34,6 +34,7 @@ import importlib
 import apps.finance.services.ledger_coa as _m1; importlib.reload(_m1)
 import apps.finance.services.ledger_core as _m1b; importlib.reload(_m1b)
 import apps.finance.services.ledger_service as _m2; importlib.reload(_m2)
+import apps.finance.services.closing_service as _m3; importlib.reload(_m3)
 
 from erp.models import Organization
 from apps.finance.models import (
@@ -43,6 +44,10 @@ from apps.finance.models import (
 from apps.finance.models.posting_event import PostingEvent
 from apps.finance.services.ledger_service import LedgerService
 from apps.finance.services.closing_service import ClosingService
+
+# Re-import after reload to get fresh code
+LedgerService = _m2.LedgerService
+ClosingService = _m3.ClosingService
 from django.db.models import Count, Q, Sum
 from django.db import transaction
 
@@ -137,10 +142,10 @@ def test_03_fiscal_year():
     from django.db import connection
     with connection.cursor() as c:
         # Find test JE ids
-        c.execute("SELECT id FROM journalentry WHERE organization_id = %s AND description LIKE 'E2E Test:%%'", [str(org.id)])
+        c.execute("SELECT id FROM journalentry WHERE tenant_id = %s AND description LIKE 'E2E Test:%%'", [str(org.id)])
         je_ids = [r[0] for r in c.fetchall()]
         # Find test FY ids
-        c.execute("SELECT id FROM fiscalyear WHERE organization_id = %s AND name LIKE 'TEST_FY%%'", [str(org.id)])
+        c.execute("SELECT id FROM fiscalyear WHERE tenant_id = %s AND name LIKE 'TEST_FY%%'", [str(org.id)])
         fy_ids = [r[0] for r in c.fetchall()]
         # Find closing JE ids for test years
         if fy_ids:
@@ -377,8 +382,11 @@ def test_09_period_close_draft():
         else:
             raise
 
-    # Cleanup — delete draft
-    draft_je.delete()
+    # Cleanup — delete draft via raw SQL (bank_statement_line table may not exist)
+    from django.db import connection as conn
+    with conn.cursor() as c:
+        c.execute("DELETE FROM journalentryline WHERE journal_entry_id = %s", [draft_je.id])
+        c.execute("DELETE FROM journalentry WHERE id = %s", [draft_je.id])
 
 test("09. Period close blocked by draft JEs", test_09_period_close_draft)
 
