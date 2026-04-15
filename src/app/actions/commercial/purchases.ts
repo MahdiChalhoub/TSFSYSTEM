@@ -86,6 +86,32 @@ export async function createPurchaseInvoice(prevState: PurchaseFormState, formDa
     redirect('/purchases');
 }
 
+export async function getProcurementIntelligence() {
+    try {
+        const [dashboard, trend, recent, suppliers] = await Promise.all([
+            erpFetch('analytics/procurement/dashboard/'),
+            erpFetch('analytics/procurement/monthly-trend/'),
+            erpFetch('purchase-orders/?limit=10'),
+            erpFetch('analytics/procurement/spend-by-supplier/?top=5'),
+        ]);
+
+        return {
+            dashboard,
+            trend: trend?.trend || [],
+            recent: Array.isArray(recent) ? recent : (recent?.results || []),
+            suppliers: suppliers?.suppliers || [],
+        };
+    } catch (e) {
+        console.error("Failed to fetch procurement intelligence:", e);
+        return {
+            dashboard: null,
+            trend: [],
+            recent: [],
+            suppliers: [],
+        };
+    }
+}
+
 export async function authorizePurchaseOrder(id: string) {
     try {
         await erpFetch(`purchase/${id}/authorize/`, { method: 'POST' });

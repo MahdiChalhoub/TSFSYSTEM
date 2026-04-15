@@ -133,21 +133,32 @@ test("02. Posting rules auto-synced", test_02_posting_rules)
 # ═══════════════════════════════════════════════════════════════
 
 def test_03_fiscal_year():
-    # Clean up leftover test data — use raw SQL to avoid PROTECT/missing table issues
+    # Clean up leftover test data — pure raw SQL to avoid Django cascade touching missing tables
     from django.db import connection
-    for fy in FiscalYear.objects.filter(organization=org, name__startswith='TEST_FY'):
-        # Unlink JEs from this FY
-        JournalEntry.objects.filter(fiscal_year=fy).update(fiscal_year=None, fiscal_period=None)
-        # Delete JE lines for test JEs
-        for je in JournalEntry.objects.filter(organization=org, description__startswith='E2E Test:'):
-            JournalEntryLine.objects.filter(journal_entry=je).delete()
-            with connection.cursor() as c:
-                c.execute("DELETE FROM journal_entry WHERE id = %s", [je.id])
-        # Delete periods then year
-        FiscalPeriod.objects.filter(fiscal_year=fy).delete()
-        fy.is_hard_locked = False; fy.save(update_fields=['is_hard_locked'])
-        with connection.cursor() as c:
-            c.execute("DELETE FROM fiscal_year WHERE id = %s", [fy.id])
+    with connection.cursor() as c:
+        # Find test JE ids
+        c.execute("SELECT id FROM journalentry WHERE organization_id = %s AND description LIKE 'E2E Test:%%'", [str(org.id)])
+        je_ids = [r[0] for r in c.fetchall()]
+        # Find test FY ids
+        c.execute("SELECT id FROM fiscalyear WHERE organization_id = %s AND name LIKE 'TEST_FY%%'", [str(org.id)])
+        fy_ids = [r[0] for r in c.fetchall()]
+        # Find closing JE ids for test years
+        if fy_ids:
+            placeholders = ','.join(['%s'] * len(fy_ids))
+            c.execute(f"SELECT id FROM journalentry WHERE fiscal_year_id IN ({placeholders})", fy_ids)
+            je_ids.extend([r[0] for r in c.fetchall()])
+        # Delete JE lines then JEs
+        if je_ids:
+            ph = ','.join(['%s'] * len(je_ids))
+            c.execute(f"DELETE FROM journalentryline WHERE journal_entry_id IN ({ph})", je_ids)
+            c.execute(f"DELETE FROM journalentry WHERE id IN ({ph})", je_ids)
+        # Unlink remaining JEs from test FYs
+        if fy_ids:
+            ph = ','.join(['%s'] * len(fy_ids))
+            c.execute(f"UPDATE journalentry SET fiscal_year_id = NULL, fiscal_period_id = NULL WHERE fiscal_year_id IN ({ph})", fy_ids)
+            c.execute(f"DELETE FROM opening_balance WHERE fiscal_year_id IN ({ph})", fy_ids)
+            c.execute(f"DELETE FROM fiscalperiod WHERE fiscal_year_id IN ({ph})", fy_ids)
+            c.execute(f"DELETE FROM fiscalyear WHERE id IN ({ph})", fy_ids)
 
     # Use far-future dates to avoid overlap with existing FY 2026
     from apps.finance.services.fiscal_service import FiscalYearService
@@ -519,9 +530,9 @@ all_je_ids = test_je_ids + closing_je_ids
 if all_je_ids:
     with connection.cursor() as c:
         placeholders = ','.join(['%s'] * len(all_je_ids))
-        c.execute(f"DELETE FROM journal_entry_line WHERE journal_entry_id IN ({placeholders})", all_je_ids)
-        c.execute(f"UPDATE journal_entry SET status='DRAFT' WHERE id IN ({placeholders})", all_je_ids)
-        c.execute(f"DELETE FROM journal_entry WHERE id IN ({placeholders})", all_je_ids)
+        c.execute(f"DELETE FROM journalentryline WHERE journal_entry_id IN ({placeholders})", all_je_ids)
+        c.execute(f"UPDATE journalentry SET status='DRAFT' WHERE id IN ({placeholders})", all_je_ids)
+        c.execute(f"DELETE FROM journalentry WHERE id IN ({placeholders})", all_je_ids)
 print(f"  Cleaned {len(all_je_ids)} test journal entries")
 
 # Delete opening balances for test years
@@ -535,7 +546,7 @@ for fy in FiscalYear.objects.filter(organization=org, name__startswith='TEST_FY'
     FiscalPeriod.objects.filter(fiscal_year=fy).delete()
     fy.is_hard_locked = False; fy.save(update_fields=['is_hard_locked'])
     with connection.cursor() as c:
-        c.execute("DELETE FROM fiscal_year WHERE id = %s", [fy.id])
+        c.execute("DELETE FROM fiscalyear WHERE id = %s", [fy.id])
 print(f"  Cleaned test fiscal years")
 
 # Restore IFRS

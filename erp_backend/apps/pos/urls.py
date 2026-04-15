@@ -17,6 +17,12 @@ from apps.pos.views import (
     POSSettingsViewSet,
     ManagerAddressBookViewSet,
 )
+from .views.procurement_analytics_views import (
+    ProcurementDashboardView, POAgingView, CycleTimesView,
+    SpendBySupplierView, MonthlySpendTrendView,
+    SupplierIntelligenceView, BudgetUtilizationView,
+    RequisitionPipelineView
+)
 
 router = DefaultRouter()
 router.register(r'pos', POSViewSet, basename='pos')
@@ -44,6 +50,14 @@ router.register(r'manager-address-book', ManagerAddressBookViewSet, basename='ma
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('analytics/procurement/dashboard/', ProcurementDashboardView.as_view()),
+    path('analytics/procurement/aging/', POAgingView.as_view()),
+    path('analytics/procurement/cycle-times/', CycleTimesView.as_view()),
+    path('analytics/procurement/spend-by-supplier/', SpendBySupplierView.as_view()),
+    path('analytics/procurement/monthly-trend/', MonthlySpendTrendView.as_view()),
+    path('analytics/procurement/supplier-intelligence/', SupplierIntelligenceView.as_view()),
+    path('analytics/procurement/budget-utilization/', BudgetUtilizationView.as_view()),
+    path('analytics/procurement/requisition-pipeline/', RequisitionPipelineView.as_view()),
 ]
 
 
