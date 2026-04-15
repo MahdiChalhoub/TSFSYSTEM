@@ -8,7 +8,7 @@ from . import views
 router = DefaultRouter()
 
 # Task Management
-router.register(r'categories', views.TaskCategoryViewSet, basename='task-category')
+router.register(r'task-categories', views.TaskCategoryViewSet, basename='task-category')
 router.register(r'templates', views.TaskTemplateViewSet, basename='task-template')
 router.register(r'auto-rules', views.AutoTaskRuleViewSet, basename='auto-task-rule')
 router.register(r'tasks', views.TaskViewSet, basename='task')

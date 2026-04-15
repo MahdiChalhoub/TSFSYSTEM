@@ -7,19 +7,19 @@ import { erpFetch } from '@/lib/erp-api';
 // =============================================================================
 
 export async function getTaskCategories() {
-    return erpFetch('/workspace/categories/');
+    return erpFetch('/workspace/task-categories/');
 }
 
 export async function createTaskCategory(data: Record<string, unknown>) {
-    return erpFetch('/workspace/categories/', { method: 'POST', body: JSON.stringify(data) });
+    return erpFetch('/workspace/task-categories/', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export async function updateTaskCategory(id: number, data: Record<string, unknown>) {
-    return erpFetch(`/workspace/categories/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+    return erpFetch(`/workspace/task-categories/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
 }
 
 export async function deleteTaskCategory(id: number) {
-    return erpFetch(`/workspace/categories/${id}/`, { method: 'DELETE' });
+    return erpFetch(`/workspace/task-categories/${id}/`, { method: 'DELETE' });
 }
 
 // =============================================================================

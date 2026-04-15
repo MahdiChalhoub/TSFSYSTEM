@@ -5,8 +5,8 @@ export const dynamic = 'force-dynamic';
 
 async function getUnitsData() {
     try {
-        const response = await erpFetch('units/');
-        // Handle both array and paginated { results: [...] } responses
+        // Use namespaced path to avoid potential route conflicts
+        const response = await erpFetch('inventory/units/');
         const units = Array.isArray(response) ? response : (response?.results ?? []);
         return units;
     } catch (e) {

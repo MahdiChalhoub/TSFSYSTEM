@@ -21,7 +21,7 @@ export default function CreateCategoriesPage() {
       const formData = new FormData(e.currentTarget)
       const data = Object.fromEntries(formData.entries())
 
-      await erpFetch('workspace/categories/', {
+      await erpFetch('workspace/task-categories/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

@@ -10,7 +10,7 @@ async function getTasks() {
 }
 
 async function getCategories() {
-    try { return await erpFetch('workspace/categories/') } catch { return [] }
+    try { return await erpFetch('workspace/task-categories/') } catch { return [] }
 }
 
 async function getDashboard() {

@@ -137,12 +137,14 @@ export const MENU_ITEMS = [
         module: 'finance',
         stage: 'production',
         children: [
+            { title: 'Chart of Accounts', path: '/finance/chart-of-accounts', icon: BookOpen },
             {
                 title: 'Settings',
                 icon: Settings,
                 children: [
-                    { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
-                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
+                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates', icon: FolderTree },
+                    { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate', icon: Database },
+                    { title: 'Posting Rules', path: '/finance/settings/posting-rules', icon: ListChecks },
                 ]
             },
         ]
@@ -371,9 +373,7 @@ export const MENU_ITEMS = [
                     { title: 'Accounts & Drawers', path: '/finance/accounts' },
                     { title: 'Account Categories', path: '/finance/account-categories' },
                     { title: 'Account Book', path: '/finance/account-book' },
-                    { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
-                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
-                    { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate' },
+
                     { title: 'COA Management', path: '/finance/coa' },
                     { title: 'General Ledger', path: '/finance/ledger' },
                     { title: 'Opening Balances', path: '/finance/ledger/opening' },
@@ -499,7 +499,7 @@ export const MENU_ITEMS = [
                 icon: Bell,
                 children: [
                     { title: 'Financial Events', path: '/finance/events' },
-                    { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
+
                 ]
             },
             {

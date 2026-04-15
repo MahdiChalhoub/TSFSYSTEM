@@ -19,7 +19,7 @@ export type PostingRulesConfig = {
 export type PostingRuleV2 = {
     id: number
     event_code: string
-    account_id: number
+    account: number        // FK id (Django serializer returns 'account' not 'account_id')
     account_code: string
     account_name: string
     module: string

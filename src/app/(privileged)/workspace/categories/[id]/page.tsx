@@ -23,7 +23,7 @@ export default function CategoriesDetailPage() {
   async function loadData() {
     try {
       setLoading(true)
-      const data = await erpFetch(`workspace/categories/${id}/`)
+      const data = await erpFetch(`workspace/task-categories/${id}/`)
       setItem(data)
     } catch (error) {
       console.error('Failed to load categories:', error)
@@ -36,7 +36,7 @@ export default function CategoriesDetailPage() {
     if (!confirm('Are you sure you want to delete this item?')) return
 
     try {
-      await erpFetch(`workspace/categories/${id}/`, {
+      await erpFetch(`workspace/task-categories/${id}/`, {
         method: 'DELETE'
       })
       router.push('/workspace/categories')

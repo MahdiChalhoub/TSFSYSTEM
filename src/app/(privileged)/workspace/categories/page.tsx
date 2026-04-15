@@ -35,7 +35,7 @@ export default function CategoriesListPage() {
   async function loadData() {
     try {
       setLoading(true)
-      const data = await erpFetch('workspace/categories/')
+      const data = await erpFetch('workspace/task-categories/')
       setItems(Array.isArray(data) ? data : (data?.results || []))
     } catch (error) {
       console.error('Failed to load categories:', error)
