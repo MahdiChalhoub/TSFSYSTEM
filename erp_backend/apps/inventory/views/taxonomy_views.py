@@ -278,8 +278,48 @@ class CategoryViewSet(TenantModelViewSet):
                 Qf(name__icontains=search) | Qf(sku__icontains=search)
             )
 
+        # Server-side sorting
+        sort_by = request.query_params.get('sort', 'name')
+        sort_dir = request.query_params.get('sort_dir', 'asc')
+        order_prefix = '' if sort_dir == 'asc' else '-'
+
+        # Annotate stock_on_hand from StockLedger (sum of latest running_on_hand per warehouse)
+        from django.db.models import Sum, Subquery, OuterRef, DecimalField
+        from django.db.models.functions import Coalesce
+        try:
+            from apps.inventory.models import StockLedger
+            # Latest ledger entry per product (across all warehouses, sum of running_on_hand)
+            products_qs = products_qs.annotate(
+                stock_on_hand=Coalesce(
+                    Sum('stock_ledger__running_on_hand',
+                        filter=Qf(
+                            stock_ledger__id__in=Subquery(
+                                StockLedger.objects.filter(
+                                    product=OuterRef(OuterRef('pk')),
+                                    organization=organization,
+                                ).order_by('warehouse', '-created_at').distinct('warehouse').values('id')
+                            )
+                        )),
+                    0,
+                    output_field=DecimalField()
+                )
+            )
+        except Exception:
+            # Graceful fallback if StockLedger is unavailable
+            from django.db.models import Value
+            products_qs = products_qs.annotate(
+                stock_on_hand=Value(0, output_field=DecimalField())
+            )
+
+        if sort_by == 'stock':
+            products_qs = products_qs.order_by(f'{order_prefix}stock_on_hand', 'name')
+        elif sort_by == 'price':
+            products_qs = products_qs.order_by(f'{order_prefix}selling_price_ttc', 'name')
+        else:
+            products_qs = products_qs.order_by(f'{order_prefix}name')
+
         total_count = products_qs.count()
-        products_page = products_qs.order_by('name')[offset:offset + PAGE_SIZE]
+        products_page = products_qs[offset:offset + PAGE_SIZE]
 
         product_data = []
         for p in products_page:
@@ -301,6 +341,7 @@ class CategoryViewSet(TenantModelViewSet):
                 "cost_price": cost,
                 "tva_rate": float(p.tva_rate) if p.tva_rate else 0,
                 "margin_pct": margin_pct,
+                "stock_on_hand": float(p.stock_on_hand) if hasattr(p, 'stock_on_hand') else 0,
                 "image_url": p.image_url if hasattr(p, 'image_url') else None,
                 "status": p.status,
             })

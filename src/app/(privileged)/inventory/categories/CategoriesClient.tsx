@@ -13,6 +13,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
+import { NumericRangeFilter, EMPTY_RANGE, type NumericRange } from '@/components/ui/NumericRangeFilter'
 import { deleteCategory } from '@/app/actions/inventory/categories'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
@@ -379,15 +381,16 @@ const CategoryRow = ({
             >
                 {/* Indent spacer */}
                 {level > 0 && <div style={{ width: `${level * 20}px` }} className="flex-shrink-0" />}
-                {/* Toggle */}
+                {/* Toggle indicator — no arrows */}
                 <button
                     onClick={() => isParent && setIsOpen(!isOpen)}
                     className={`w-5 h-5 flex items-center justify-center rounded-md transition-all flex-shrink-0 ${isParent ? 'hover:bg-app-border/50 text-app-muted-foreground' : 'text-app-border'}`}
                 >
                     {isParent ? (
-                        isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />
+                        <div className={`w-1.5 h-1.5 rounded-sm transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}
+                            style={{ background: isOpen ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
                     ) : (
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-primary)' }} />
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-primary)', opacity: 0.4 }} />
                     )}
                 </button>
 
@@ -767,16 +770,19 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
     const [search, setSearch] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
     const [selected, setSelected] = useState<Set<number>>(new Set())
+    // Sort
+    const [sortBy, setSortBy] = useState<'name' | 'stock' | 'price'>('name')
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+    // Product preview popup
+    const [previewProduct, setPreviewProduct] = useState<any>(null)
     // Filters
-    const [filterBrand, setFilterBrand] = useState<string | null>(null)
-    const [filterStatus, setFilterStatus] = useState<string | null>(null)
-    const [filterType, setFilterType] = useState<string | null>(null)
-    const [filterUnit, setFilterUnit] = useState<string | null>(null)
-    const [filterTva, setFilterTva] = useState<string | null>(null)
-    const [filterMarginMin, setFilterMarginMin] = useState('')
-    const [filterMarginMax, setFilterMarginMax] = useState('')
-    const [filterPriceMin, setFilterPriceMin] = useState('')
-    const [filterPriceMax, setFilterPriceMax] = useState('')
+    const [filterBrand, setFilterBrand] = useState('')
+    const [filterStatus, setFilterStatus] = useState('')
+    const [filterType, setFilterType] = useState('')
+    const [filterUnit, setFilterUnit] = useState('')
+    const [filterTva, setFilterTva] = useState('')
+    const [filterMargin, setFilterMargin] = useState<NumericRange>(EMPTY_RANGE)
+    const [filterPrice, setFilterPrice] = useState<NumericRange>(EMPTY_RANGE)
     const [showFilterPopup, setShowFilterPopup] = useState(false)
     const filterRef = useRef<HTMLDivElement>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -806,6 +812,8 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
         const params = new URLSearchParams()
         if (offset > 0) params.set('offset', String(offset))
         if (debouncedSearch) params.set('search', debouncedSearch)
+        params.set('sort', sortBy)
+        params.set('sort_dir', sortDir)
         const qs = params.toString() ? `?${params.toString()}` : ''
 
         erpFetch(`inventory/categories/${categoryId}/explore/${qs}`)
@@ -827,7 +835,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                 setLoading(false)
                 setLoadingMore(false)
             })
-    }, [categoryId, debouncedSearch])
+    }, [categoryId, debouncedSearch, sortBy, sortDir])
 
     // Reset and load on category/search change
     useEffect(() => {
@@ -880,29 +888,49 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
 
     const activeFilterCount = (filterBrand ? 1 : 0) + (filterStatus ? 1 : 0) + (filterType ? 1 : 0) +
         (filterUnit ? 1 : 0) + (filterTva ? 1 : 0) +
-        (filterMarginMin || filterMarginMax ? 1 : 0) + (filterPriceMin || filterPriceMax ? 1 : 0)
+        (filterMargin.op ? 1 : 0) + (filterPrice.op ? 1 : 0)
 
     const clearAllFilters = () => {
-        setFilterBrand(null); setFilterStatus(null); setFilterType(null)
-        setFilterUnit(null); setFilterTva(null)
-        setFilterMarginMin(''); setFilterMarginMax('')
-        setFilterPriceMin(''); setFilterPriceMax('')
+        setFilterBrand(''); setFilterStatus(''); setFilterType('')
+        setFilterUnit(''); setFilterTva('')
+        setFilterMargin(EMPTY_RANGE); setFilterPrice(EMPTY_RANGE)
+    }
+
+    // Helper: apply NumericRange filter to a value
+    const applyRange = (val: number | null | undefined, range: NumericRange): boolean => {
+        if (!range.op || val === null || val === undefined) return true
+        const a = Number(range.a), b = Number(range.b)
+        switch (range.op) {
+            case 'eq': return val === a
+            case 'gt': return val > a
+            case 'gte': return val >= a
+            case 'lt': return val < a
+            case 'lte': return val <= a
+            case 'between': return val >= a && val <= b
+            default: return true
+        }
     }
 
     // Client-side filters on loaded data (search is server-side)
     const filtered = useMemo(() => {
         let list = products
-        if (filterBrand) list = list.filter(p => p.brand_name === filterBrand)
-        if (filterStatus) list = list.filter(p => p.status === filterStatus)
-        if (filterType) list = list.filter(p => p.product_type === filterType)
-        if (filterUnit) list = list.filter(p => p.unit_code === filterUnit)
-        if (filterTva) list = list.filter(p => String(p.tva_rate) === filterTva)
-        if (filterMarginMin) list = list.filter(p => p.margin_pct !== null && p.margin_pct >= Number(filterMarginMin))
-        if (filterMarginMax) list = list.filter(p => p.margin_pct !== null && p.margin_pct <= Number(filterMarginMax))
-        if (filterPriceMin) list = list.filter(p => p.selling_price_ttc >= Number(filterPriceMin))
-        if (filterPriceMax) list = list.filter(p => p.selling_price_ttc <= Number(filterPriceMax))
+        // SearchableDropdown supports NOT mode (value starts with '!')
+        const matchFilter = (val: string | undefined, filter: string) => {
+            if (!filter) return true
+            const isNot = filter.startsWith('!')
+            const raw = isNot ? filter.slice(1) : filter
+            if (!raw) return true
+            return isNot ? val !== raw : val === raw
+        }
+        if (filterBrand) list = list.filter(p => matchFilter(p.brand_name, filterBrand))
+        if (filterStatus) list = list.filter(p => matchFilter(p.status, filterStatus))
+        if (filterType) list = list.filter(p => matchFilter(p.product_type, filterType))
+        if (filterUnit) list = list.filter(p => matchFilter(p.unit_code, filterUnit))
+        if (filterTva) list = list.filter(p => matchFilter(String(p.tva_rate), filterTva))
+        if (filterMargin.op) list = list.filter(p => applyRange(p.margin_pct, filterMargin))
+        if (filterPrice.op) list = list.filter(p => applyRange(p.selling_price_ttc, filterPrice))
         return list
-    }, [products, filterBrand, filterStatus, filterType, filterUnit, filterTva, filterMarginMin, filterMarginMax, filterPriceMin, filterPriceMax])
+    }, [products, filterBrand, filterStatus, filterType, filterUnit, filterTva, filterMargin, filterPrice])
 
     const toggleSelect = (id: number) => {
         const next = new Set(selected)
@@ -1002,6 +1030,21 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                             placeholder={`Search in "${categoryName}"...`}
                             className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
                     </div>
+                    {/* Sort controls */}
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                        {(['name', 'stock', 'price'] as const).map(s => (
+                            <button key={s}
+                                onClick={() => { if (sortBy === s) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortBy(s); setSortDir('asc') } }}
+                                className="text-[9px] font-bold px-1.5 py-1 rounded-lg transition-all"
+                                style={{
+                                    background: sortBy === s ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
+                                    color: sortBy === s ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                }}>
+                                {s === 'name' ? 'A-Z' : s === 'stock' ? 'Qty' : '₵'}
+                                {sortBy === s && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+                            </button>
+                        ))}
+                    </div>
                     {/* Filter Button */}
                     <div className="relative" ref={filterRef}>
                         <button onClick={() => setShowFilterPopup(!showFilterPopup)}
@@ -1019,16 +1062,16 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                             )}
                         </button>
 
-                        {/* Filter Popup — Comprehensive */}
+                        {/* Filter Popup — Searchable Dropdowns (same as Product Inventory) */}
                         {showFilterPopup && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
-                                style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+                                style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
                                 onClick={e => { if (e.target === e.currentTarget) setShowFilterPopup(false) }}>
-                                <div className="w-full max-w-md mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
-                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+                                <div className="w-full max-w-md mx-4 rounded-2xl animate-in zoom-in-95 duration-200"
+                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
                                     onClick={e => e.stopPropagation()}>
                                     {/* Header */}
-                                    <div className="px-4 py-2.5 flex items-center justify-between flex-shrink-0"
+                                    <div className="px-4 py-2.5 flex items-center justify-between"
                                         style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
                                         <div className="flex items-center gap-2">
                                             <SlidersHorizontal size={13} className="text-app-primary" />
@@ -1049,153 +1092,32 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                         </div>
                                     </div>
 
-                                    {/* Filter Grid */}
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
-                                        {/* Row 1: Type + Brand */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                            {/* Type */}
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                                    <Box size={9} className="inline mr-1" />Type
-                                                </p>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {uniqueTypes.map(t => (
-                                                        <button key={t} onClick={() => setFilterType(filterType === t ? null : t)}
-                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
-                                                            style={{
-                                                                background: filterType === t ? 'color-mix(in srgb, var(--app-primary) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
-                                                                color: filterType === t ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                                                border: filterType === t ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid transparent',
-                                                            }}>
-                                                            {filterType === t && <Check size={8} className="inline mr-0.5" />}{t}
-                                                        </button>
-                                                    ))}
-                                                    {uniqueTypes.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No types</span>}
-                                                </div>
-                                            </div>
+                                    {/* Filter Grid — SearchableDropdowns */}
+                                    <div className="p-3">
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                                            <SearchableDropdown label="Type" value={filterType} onChange={setFilterType}
+                                                options={uniqueTypes.map(t => ({ value: t, label: t }))} placeholder="All Types" />
 
-                                            {/* Brand */}
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                                    <Paintbrush size={9} className="inline mr-1" />Brand
-                                                </p>
-                                                <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto custom-scrollbar">
-                                                    {uniqueBrands.map(b => (
-                                                        <button key={b} onClick={() => setFilterBrand(filterBrand === b ? null : b)}
-                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
-                                                            style={{
-                                                                background: filterBrand === b ? 'color-mix(in srgb, #8b5cf6 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
-                                                                color: filterBrand === b ? '#8b5cf6' : 'var(--app-muted-foreground)',
-                                                                border: filterBrand === b ? '1px solid color-mix(in srgb, #8b5cf6 30%, transparent)' : '1px solid transparent',
-                                                            }}>
-                                                            {filterBrand === b && <Check size={8} className="inline mr-0.5" />}{b}
-                                                        </button>
-                                                    ))}
-                                                    {uniqueBrands.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No brands</span>}
-                                                </div>
-                                            </div>
-                                        </div>
+                                            <SearchableDropdown label="Brand" value={filterBrand} onChange={setFilterBrand}
+                                                options={uniqueBrands.map(b => ({ value: b, label: b }))} placeholder="All Brands" />
 
-                                        {/* Row 2: Status + Unit */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                            {/* Status */}
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                                    <AlertCircle size={9} className="inline mr-1" />Status
-                                                </p>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {uniqueStatuses.map(s => (
-                                                        <button key={s} onClick={() => setFilterStatus(filterStatus === s ? null : s)}
-                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all uppercase"
-                                                            style={{
-                                                                background: filterStatus === s ? 'color-mix(in srgb, var(--app-primary) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
-                                                                color: filterStatus === s ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                                                border: filterStatus === s ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid transparent',
-                                                            }}>
-                                                            {filterStatus === s && <Check size={8} className="inline mr-0.5" />}{s}
-                                                        </button>
-                                                    ))}
-                                                    {uniqueStatuses.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No statuses</span>}
-                                                </div>
-                                            </div>
+                                            <SearchableDropdown label="Status" value={filterStatus} onChange={setFilterStatus}
+                                                options={uniqueStatuses.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} placeholder="All Statuses" />
 
-                                            {/* Unit */}
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                                    <Hash size={9} className="inline mr-1" />Unit
-                                                </p>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {uniqueUnits.map(u => (
-                                                        <button key={u} onClick={() => setFilterUnit(filterUnit === u ? null : u)}
-                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
-                                                            style={{
-                                                                background: filterUnit === u ? 'color-mix(in srgb, var(--app-success) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
-                                                                color: filterUnit === u ? 'var(--app-success)' : 'var(--app-muted-foreground)',
-                                                                border: filterUnit === u ? '1px solid color-mix(in srgb, var(--app-success) 30%, transparent)' : '1px solid transparent',
-                                                            }}>
-                                                            {filterUnit === u && <Check size={8} className="inline mr-0.5" />}{u}
-                                                        </button>
-                                                    ))}
-                                                    {uniqueUnits.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No units</span>}
-                                                </div>
-                                            </div>
-                                        </div>
+                                            <SearchableDropdown label="Unit" value={filterUnit} onChange={setFilterUnit}
+                                                options={uniqueUnits.map(u => ({ value: u, label: u }))} placeholder="All Units" />
 
-                                        {/* Row 3: TVA Rate */}
-                                        <div>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                                TVA Rate %
-                                            </p>
-                                            <div className="flex flex-wrap gap-1">
-                                                {uniqueTvaRates.map(r => (
-                                                    <button key={r} onClick={() => setFilterTva(filterTva === r ? null : r)}
-                                                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
-                                                        style={{
-                                                            background: filterTva === r ? 'color-mix(in srgb, var(--app-warning) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
-                                                            color: filterTva === r ? 'var(--app-warning)' : 'var(--app-muted-foreground)',
-                                                            border: filterTva === r ? '1px solid color-mix(in srgb, var(--app-warning) 30%, transparent)' : '1px solid transparent',
-                                                        }}>
-                                                        {filterTva === r && <Check size={8} className="inline mr-0.5" />}{r}%
-                                                    </button>
-                                                ))}
-                                                {uniqueTvaRates.length === 0 && <span className="text-[10px] text-app-muted-foreground italic">No TVA rates</span>}
-                                            </div>
-                                        </div>
+                                            <SearchableDropdown label="TVA Rate %" value={filterTva} onChange={setFilterTva}
+                                                options={uniqueTvaRates.map(r => ({ value: r, label: `${r}%` }))} placeholder="All Rates" />
 
-                                        {/* Row 4: Margin + Price Range */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                            {/* Margin Range */}
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                                    Margin % Range
-                                                </p>
-                                                <div className="flex items-center gap-1">
-                                                    <input type="number" placeholder="Min" value={filterMarginMin} onChange={e => setFilterMarginMin(e.target.value)}
-                                                        className="w-full text-[11px] px-2 py-1.5 rounded-lg bg-app-background border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary transition-all" />
-                                                    <span className="text-[10px] text-app-muted-foreground flex-shrink-0">—</span>
-                                                    <input type="number" placeholder="Max" value={filterMarginMax} onChange={e => setFilterMarginMax(e.target.value)}
-                                                        className="w-full text-[11px] px-2 py-1.5 rounded-lg bg-app-background border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary transition-all" />
-                                                </div>
-                                            </div>
+                                            <NumericRangeFilter label="Margin %" value={filterMargin} onChange={setFilterMargin} />
 
-                                            {/* Price Range */}
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">
-                                                    Price TTC Range
-                                                </p>
-                                                <div className="flex items-center gap-1">
-                                                    <input type="number" placeholder="Min" value={filterPriceMin} onChange={e => setFilterPriceMin(e.target.value)}
-                                                        className="w-full text-[11px] px-2 py-1.5 rounded-lg bg-app-background border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary transition-all" />
-                                                    <span className="text-[10px] text-app-muted-foreground flex-shrink-0">—</span>
-                                                    <input type="number" placeholder="Max" value={filterPriceMax} onChange={e => setFilterPriceMax(e.target.value)}
-                                                        className="w-full text-[11px] px-2 py-1.5 rounded-lg bg-app-background border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary transition-all" />
-                                                </div>
-                                            </div>
+                                            <NumericRangeFilter label="Price TTC" value={filterPrice} onChange={setFilterPrice} />
                                         </div>
                                     </div>
 
                                     {/* Footer */}
-                                    <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between"
+                                    <div className="px-4 py-2.5 flex items-center justify-between"
                                         style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, var(--app-surface))' }}>
                                         <span className="text-[10px] font-bold text-app-muted-foreground">
                                             {filtered.length} of {totalCount} products
@@ -1273,16 +1195,15 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                 {p.brand_name && <span>· {p.brand_name}</span>}
                                             </div>
                                         </div>
-                                        {p.selling_price_ttc != null && (
-                                            <span className="text-[11px] font-bold text-app-foreground tabular-nums flex-shrink-0">
-                                                {Number(p.selling_price_ttc).toLocaleString()}
-                                            </span>
-                                        )}
-                                        <Link href={`/inventory/products/${p.id}`}
-                                            onClick={e => e.stopPropagation()}
+                                        <span className="text-[11px] font-bold tabular-nums flex-shrink-0"
+                                            style={{ color: (p.stock_on_hand ?? 0) > 0 ? 'var(--app-success)' : 'var(--app-muted-foreground)' }}>
+                                            {Number(p.stock_on_hand ?? 0).toLocaleString()}
+                                        </span>
+                                        <button
+                                            onClick={e => { e.stopPropagation(); setPreviewProduct(p) }}
                                             className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary opacity-0 group-hover:opacity-100 transition-all">
-                                            <ExternalLink size={11} />
-                                        </Link>
+                                            <Info size={11} />
+                                        </button>
                                     </div>
                                 )
                             })}
@@ -1303,6 +1224,65 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                     </>
                 )}
             </div>
+
+            {/* ═══════════════════ PRODUCT PREVIEW POPUP ═══════════════════ */}
+            {previewProduct && (
+                <div className="fixed inset-0 z-[90] flex items-center justify-center animate-in fade-in duration-150"
+                    style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+                    onClick={() => setPreviewProduct(null)}>
+                    <div className="w-full max-w-sm mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+                        onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="px-4 py-3 flex items-center gap-3"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}>
+                                <Package size={16} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-black text-app-foreground truncate">{previewProduct.name}</p>
+                                {previewProduct.sku && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{previewProduct.sku}</p>}
+                            </div>
+                            <button onClick={() => setPreviewProduct(null)}
+                                className="p-1 rounded-lg hover:bg-app-border/50 text-app-muted-foreground hover:text-app-foreground transition-all">
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        {/* Details grid */}
+                        <div className="p-4 space-y-2">
+                            {[
+                                { label: 'Brand', value: previewProduct.brand_name, color: '#8b5cf6' },
+                                { label: 'Type', value: previewProduct.product_type },
+                                { label: 'Status', value: previewProduct.status?.toUpperCase() },
+                                { label: 'Unit', value: previewProduct.unit_code },
+                                { label: 'Stock', value: Number(previewProduct.stock_on_hand ?? 0).toLocaleString(), color: (previewProduct.stock_on_hand ?? 0) > 0 ? 'var(--app-success)' : 'var(--app-error)' },
+                                { label: 'Price TTC', value: `${Number(previewProduct.selling_price_ttc ?? 0).toLocaleString()} CFA` },
+                                { label: 'Price HT', value: `${Number(previewProduct.selling_price_ht ?? 0).toLocaleString()} CFA` },
+                                { label: 'Cost', value: `${Number(previewProduct.cost_price ?? 0).toLocaleString()} CFA` },
+                                { label: 'TVA', value: previewProduct.tva_rate != null ? `${previewProduct.tva_rate}%` : null },
+                                { label: 'Margin', value: previewProduct.margin_pct != null ? `${previewProduct.margin_pct}%` : null, color: (previewProduct.margin_pct ?? 0) > 0 ? 'var(--app-success)' : 'var(--app-error)' },
+                            ].filter(r => r.value).map(r => (
+                                <div key={r.label} className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">{r.label}</span>
+                                    <span className="text-[12px] font-bold" style={{ color: r.color || 'var(--app-foreground)' }}>{r.value}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-4 py-2.5 flex items-center justify-end gap-2"
+                            style={{ borderTop: '1px solid var(--app-border)' }}>
+                            <Link href={`/inventory/products/${previewProduct.id}`}
+                                className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl bg-app-primary text-white hover:brightness-110 transition-all"
+                                style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                <ExternalLink size={11} /> Open Full Page
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ═══════════════════ MOVE MODAL ═══════════════════ */}
             {showMoveModal && (
@@ -2139,7 +2119,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
 
                 {/* Left: Tree */}
-                <div className={`${splitPanel ? 'flex-[5] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col`}>
+                <div className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
                     {/* Column Headers */}
                     <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
                         <div className="w-5 flex-shrink-0" />
@@ -2211,7 +2191,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
 
                 {/* Right: Detail Panel (split mode only) */}
                 {splitPanel && (
-                    <div className="flex-[5] min-w-0 min-h-0 border border-app-border/50 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-2 duration-200">
+                    <div className="flex-[6] min-w-0 min-h-0 border border-app-border/50 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-2 duration-200">
                         {selectedCategory ? (
                             <CategoryDetailPanel
                                 node={selectedCategory}
