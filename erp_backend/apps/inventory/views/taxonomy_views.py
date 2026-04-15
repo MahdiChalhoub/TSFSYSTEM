@@ -1,3 +1,4 @@
+from django.db import transaction
 from erp.models import Organization
 from apps.inventory.models import (
     Brand,
@@ -391,28 +392,66 @@ class CategoryViewSet(TenantModelViewSet):
             })
 
         # ── Execute Move with Reconciliation ──
+        auto_link_brands = reconciliation.get('auto_link_brands', [])
+        reassign_brands = reconciliation.get('reassign_brands', {})  # {old_brand_id: new_brand_id}
+        auto_link_attrs = reconciliation.get('auto_link_attributes', [])
+
+        # Validate: every conflicting brand must be either auto-linked or reassigned
+        if brand_conflicts:
+            resolved_brands = set(int(b) for b in auto_link_brands) | set(int(b) for b in reassign_brands.keys())
+            unresolved = brand_conflicts - resolved_brands
+            if unresolved:
+                unresolved_names = list(Brand.objects.filter(id__in=unresolved).values_list('name', flat=True))
+                return Response({
+                    "error": f"Unresolved brand conflicts: {', '.join(unresolved_names)}. "
+                             f"Each brand must be either linked to the target category or reassigned.",
+                    "unresolved_brands": [{"id": bid, "name": n} for bid, n in
+                                          zip(unresolved, unresolved_names)],
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate: every conflicting attribute must be auto-linked
+        if attr_conflicts:
+            resolved_attrs = set(int(a) for a in auto_link_attrs)
+            unresolved_attrs = attr_conflicts - resolved_attrs
+            if unresolved_attrs:
+                unresolved_names = list(ProductAttribute.objects.filter(id__in=unresolved_attrs).values_list('name', flat=True))
+                return Response({
+                    "error": f"Unresolved attribute conflicts: {', '.join(unresolved_names)}. "
+                             f"Each attribute group must be linked to the target category.",
+                    "unresolved_attributes": [{"id": aid, "name": n} for aid, n in
+                                               zip(unresolved_attrs, unresolved_names)],
+                }, status=status.HTTP_400_BAD_REQUEST)
+
         with transaction.atomic():
             # 1. Auto-link brands to target category
-            auto_link_brands = reconciliation.get('auto_link_brands', [])
             if auto_link_brands:
                 brands_to_link = Brand.objects.filter(id__in=auto_link_brands, organization=organization)
                 target_category.brands.add(*brands_to_link)
 
-            # 2. Auto-link attribute groups to target category
-            auto_link_attrs = reconciliation.get('auto_link_attributes', [])
+            # 2. Reassign product brands
+            for old_id_str, new_id in reassign_brands.items():
+                old_id = int(old_id_str)
+                new_brand = Brand.objects.filter(id=int(new_id), organization=organization).first()
+                if new_brand:
+                    Product.objects.filter(
+                        id__in=product_ids, brand_id=old_id, organization=organization
+                    ).update(brand_id=new_brand.id)
+
+            # 3. Auto-link attribute groups to target category
             if auto_link_attrs:
                 attrs_to_link = ProductAttribute.objects.filter(
                     id__in=auto_link_attrs, organization=organization, parent__isnull=True
                 )
                 target_category.attributes.add(*attrs_to_link)
 
-            # 3. Move the products
+            # 4. Move the products
             products.update(category_id=target_category_id)
 
         return Response({
             "success": True,
             "moved_count": len(product_ids),
             "brands_linked": len(auto_link_brands),
+            "brands_reassigned": len(reassign_brands),
             "attributes_linked": len(auto_link_attrs),
         })
 

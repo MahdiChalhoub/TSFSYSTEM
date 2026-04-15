@@ -799,6 +799,163 @@ class FinanceConnectorService:
             return {'success': False, 'journal_ref': None}
 
     @classmethod
+    def log_delivery_expense(cls, organization, data):
+        """
+        Record a delivery-related expense (e.g., driver commission).
+        Dr 6222 (Commission) / 61 (Logistics)
+          Cr 421 (Personnel) / 401 (Suppliers)
+        """
+        try:
+            from apps.finance.services.ledger_service import LedgerService
+            
+            amount = Decimal(str(data.get('amount', '0'))).quantize(Decimal('0.01'))
+            if amount <= Decimal('0'):
+                return {'success': False, 'error': 'ZERO_AMOUNT'}
+
+            exp_type = data.get('type', 'COMMISSION')
+            
+            # Resolve Expense Account (SYSCOHADA)
+            # 6222 = Commissions
+            # 61x = Transports
+            exp_code = '6222' if exp_type == 'COMMISSION' else '611'
+            exp_id = _resolve_account_id(organization, exp_code)
+            
+            # Resolve Liability Account
+            # 421 = Personnel remunerations dues
+            liab_code = '421'
+            liab_id = _resolve_account_id(organization, liab_code)
+            
+            if not exp_id or not liab_id:
+                # Fallback to general expense if specific codes missing
+                from erp.services import ConfigurationService
+                rules = ConfigurationService.get_posting_rules(organization)
+                exp_id = exp_id or rules.get('expenses', {}).get('general')
+                liab_id = liab_id or _resolve_account_id(organization, '401')
+
+            if not exp_id or not liab_id:
+                return {'success': False, 'error': 'ACCOUNT_RESOLUTION_FAILED'}
+
+            order_ref = data.get('order_ref', '')
+            beneficiary_id = data.get('beneficiary_user_id')
+            
+            journal_ref = f"DELX-{order_ref}-{timezone.now().strftime('%Y%m%d%H%M')}"
+            
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=timezone.now(),
+                description=data.get('description', f"Delivery Expense: {order_ref}"),
+                lines=[
+                    {'account_id': exp_id, 'debit': amount, 'credit': Decimal('0'),
+                     'description': f"Delivery {exp_type} — {order_ref}"},
+                    {'account_id': liab_id, 'debit': Decimal('0'), 'credit': amount,
+                     'description': f"Due to driver — {order_ref}",
+                     'employee_id': beneficiary_id},
+                ],
+                reference=journal_ref,
+                status='POSTED',
+                scope='OFFICIAL',
+                site_id=data.get('site_id'),
+                user=_resolve_user(data.get('user_id')),
+                internal_bypass=True,
+            )
+            
+            return {'success': True, 'journal_ref': journal_ref}
+        except Exception as exc:
+            logger.error(f"[FinanceConnector] log_delivery_expense failed: {exc}", exc_info=True)
+            return {'success': False, 'error': str(exc)}
+
+    @classmethod
+    def get_employee_ledger_history(cls, organization, params):
+        """
+        Retrieve all ledger movements for an employee (e.g. driver commissions, payouts).
+        params: {user_id}
+        """
+        try:
+            from apps.finance.models import JournalEntryLine
+            
+            user_id = params.get('user_id')
+            if not user_id:
+                return {'entries': [], 'balance': '0.00', 'success': False}
+
+            lines = JournalEntryLine.objects.filter(
+                journal_entry__organization=organization,
+                journal_entry__status='POSTED',
+                employee_id=user_id
+            ).select_related('journal_entry').order_by('-journal_entry__transaction_date')
+
+            entries = []
+            total_balance = Decimal('0')
+            for line in lines:
+                # Credit normally represents earnings for employees (liability to them)
+                # So we show it as positive balance
+                amount = line.credit - line.debit
+                total_balance += amount
+                entries.append({
+                    'id': line.id,
+                    'date': line.journal_entry.transaction_date.isoformat(),
+                    'description': line.description or line.journal_entry.description,
+                    'reference': line.journal_entry.reference,
+                    'debit': str(line.debit),
+                    'credit': str(line.credit),
+                    'amount': str(amount),
+                })
+
+            return {
+                'entries': entries,
+                'balance': str(total_balance),
+                'success': True
+            }
+        except Exception as exc:
+            logger.error(f"[FinanceConnector] get_employee_ledger_history failed: {exc}", exc_info=True)
+            return {'entries': [], 'balance': '0.00', 'success': False, 'error': str(exc)}
+
+    @classmethod
+    def log_operational_expense(cls, organization, params):
+        """
+        Log an operational expense linked to a driver (e.g. Fuel, Maintenance).
+        params: {user_id, amount, expense_type, reference, description}
+        """
+        try:
+            from apps.finance.services.posting_rules import PostingRuleService
+            
+            user_id = params.get('user_id')
+            amount = Decimal(str(params.get('amount', '0')))
+            expense_type = params.get('expense_type', 'maintenance')
+            reference = params.get('reference', f'FLEET-{expense_type.upper()}')
+            description = params.get('description', f'Fleet operational expense: {expense_type}')
+            
+            # Map simplified expense type to accounting system role
+            # Defaults to 'office_expense' if specific fleet roles aren't seeded yet
+            system_role = 'fleet_fuel' if expense_type == 'fuel' else 'fleet_maintenance'
+            
+            # 1. Resolve Expense Account
+            expense_account = PostingRuleService.resolve_account_by_role(organization, system_role)
+            if not expense_account:
+                 expense_account = PostingRuleService.resolve_account_by_role(organization, 'utility_expense')
+            
+            # 2. Resolve Liability/Payable Account for Driver
+            liability_account = PostingRuleService.resolve_account_by_role(organization, 'driver_payable')
+            if not liability_account:
+                liability_account = PostingRuleService.resolve_account_by_role(organization, 'salary_liability')
+            
+            if not expense_account or not liability_account:
+                 return {'success': False, 'error': "Accounting configuration for fleet expenses is missing"}
+
+            journal_ref = cls._create_journal_entry(
+                organization=organization,
+                reference=reference,
+                description=description,
+                lines=[
+                    {'account': expense_account, 'debit': amount, 'credit': 0, 'employee_id': user_id},
+                    {'account': liability_account, 'debit': 0, 'credit': amount, 'employee_id': user_id},
+                ]
+            )
+            return {'success': True, 'journal_ref': journal_ref}
+        except Exception as exc:
+            logger.error(f"[FinanceConnector] log_operational_expense failed: {exc}", exc_info=True)
+            return {'success': False, 'error': str(exc)}
+
+    @classmethod
     def post_write_off_entry(cls, organization, data):
         """
         Post a write-off journal entry.

@@ -108,6 +108,21 @@ class QuotationSerializer(serializers.ModelSerializer):
 # ── Deliveries ────────────────────────────────────────────────────
 
 from .delivery_models import DeliveryZone, DeliveryOrder
+from .models.driver_models import Driver
+
+
+class DriverSerializer(serializers.ModelSerializer):
+    user_name = serializers.ReadOnlyField(source='user.username')
+    full_name = serializers.SerializerMethodField()
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Driver
+        fields = '__all__'
+
+    def get_full_name(self, obj):
+        name = f"{obj.user.first_name} {obj.user.last_name}".strip()
+        return name or obj.user.username
 
 
 class DeliveryZoneSerializer(serializers.ModelSerializer):

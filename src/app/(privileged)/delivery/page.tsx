@@ -22,6 +22,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
+import DriverProfileModal from './_components/DriverProfileModal';
+import DriverDashboard from './_components/DriverDashboard';
+import DriverStatement from './_components/DriverStatement';
+import LogExpenseModal from './_components/LogExpenseModal';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -58,6 +62,20 @@ interface OrgUser {
     email: string;
     role: number | null;
     is_driver: boolean;
+    is_active: boolean;
+}
+
+interface DriverProfile {
+    id: number;
+    user: number;
+    user_name: string;
+    full_name: string;
+    status: 'ONLINE' | 'BUSY' | 'OFFLINE';
+    vehicle_type: string;
+    vehicle_license_plate: string;
+    phone_number: string;
+    commission_type: 'FLAT' | 'PERCENT';
+    commission_value: string;
     is_active: boolean;
 }
 
@@ -350,9 +368,21 @@ function ZonesTab({ zones, onReload, loading }: { zones: DeliveryZone[]; onReloa
 // DRIVERS TAB
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function DriversTab({ users, roles, onReload, loading }: { users: OrgUser[]; roles: Role[]; onReload: () => void; loading: boolean }) {
+
+function DriversTab({ users, drivers, roles, onReload, loading }: {
+    users: OrgUser[];
+    drivers: DriverProfile[];
+    roles: Role[];
+    onReload: () => void;
+    loading: boolean
+}) {
     const [search, setSearch] = useState('');
     const [showCreate, setShowCreate] = useState(false);
+    const [selectedUserForProfile, setSelectedUserForProfile] = useState<{ id: number, driver: DriverProfile | null } | null>(null);
+    const [viewingStats, setViewingStats] = useState<{ driver: DriverProfile, stats: any, deliveries: any[] } | null>(null);
+    const [viewingStatement, setViewingStatement] = useState<{ driver: DriverProfile, statement: any } | null>(null);
+    const [loggingExpenseFor, setLoggingExpenseFor] = useState<DriverProfile | null>(null);
+    const [loadingExtra, setLoadingExtra] = useState<number | null>(null);
     const [toggling, setToggling] = useState<number | null>(null);
     const [filter, setFilter] = useState<'all' | 'drivers'>('all');
 
@@ -366,6 +396,9 @@ function DriversTab({ users, roles, onReload, loading }: { users: OrgUser[]; rol
             });
             if (res?.user_id) {
                 toast.success(res.message);
+
+                // If we untagged a driver, maybe we should archive their profile? 
+                // For now, just reload.
                 onReload();
             } else {
                 toast.error(res?.error || 'Toggle failed');
@@ -374,24 +407,48 @@ function DriversTab({ users, roles, onReload, loading }: { users: OrgUser[]; rol
         setToggling(null);
     };
 
+    const handleViewStats = async (driver: DriverProfile) => {
+        setLoadingExtra(driver.id);
+        try {
+            const [stats, deliveries] = await Promise.all([
+                erpFetch(`pos/drivers/${driver.id}/stats/`),
+                erpFetch(`pos/delivery-orders/?driver=${driver.user}&limit=10`)
+            ]);
+            setViewingStats({ driver, stats, deliveries: deliveries?.results || deliveries || [] });
+        } catch { toast.error('Failed to load stats'); }
+        setLoadingExtra(null);
+    };
+
+    const handleViewStatement = async (driver: DriverProfile) => {
+        setLoadingExtra(driver.id);
+        try {
+            const res = await erpFetch(`pos/drivers/${driver.id}/statement/`);
+            setViewingStatement({ driver, statement: res });
+        } catch { toast.error('Failed to load statement'); }
+        setLoadingExtra(null);
+    };
+
+    const getProfile = (userId: number) => drivers.find(d => d.user === userId);
+
     const filtered = users
         .filter(u => filter === 'drivers' ? u.is_driver : true)
         .filter(u => !search || fullName(u).toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
 
     const driverCount = users.filter(u => u.is_driver).length;
+    const onlineCount = drivers.filter(d => d.status === 'ONLINE').length;
 
     return (
         <div className="space-y-4">
             {/* KPIs */}
             <div className="grid grid-cols-3 gap-3">
                 {[
-                    { label: 'Total Users', value: users.length, color: 'text-app-muted-foreground', bg: 'bg-app-surface-2' },
-                    { label: 'Tagged Drivers', value: driverCount, color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { label: 'Non-Drivers', value: users.length - driverCount, color: 'text-blue-600', bg: 'bg-blue-50' },
+                    { label: 'Total Users', value: users.length, color: 'text-app-muted-foreground', bg: 'bg-app-surface-2', icon: User },
+                    { label: 'Tagged Drivers', value: driverCount, color: 'text-amber-600', bg: 'bg-amber-50', icon: Truck },
+                    { label: 'Fleet Online', value: onlineCount, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: Zap },
                 ].map(s => (
                     <div key={s.label} className="bg-app-surface rounded-xl border border-app-border p-3 flex items-center gap-3">
                         <div className={clsx("w-10 h-10 rounded-lg flex items-center justify-center", s.bg)}>
-                            <Truck size={16} className={s.color} />
+                            <s.icon size={16} className={s.color} />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">{s.label}</p>
@@ -428,8 +485,8 @@ function DriversTab({ users, roles, onReload, loading }: { users: OrgUser[]; rol
                 <div className="grid grid-cols-12 gap-4 px-5 py-2.5 bg-app-background border-b border-app-border">
                     <div className="col-span-4 text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">User</div>
                     <div className="col-span-3 text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Email</div>
-                    <div className="col-span-2 text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Status</div>
-                    <div className="col-span-2 text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Driver</div>
+                    <div className="col-span-2 text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Connectivity</div>
+                    <div className="col-span-2 text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Vehicle</div>
                     <div className="col-span-1"></div>
                 </div>
                 {loading ? (
@@ -455,27 +512,82 @@ function DriversTab({ users, roles, onReload, loading }: { users: OrgUser[]; rol
                                 </div>
                                 <div className="col-span-3 text-sm text-app-muted-foreground truncate">{user.email || '—'}</div>
                                 <div className="col-span-2">
-                                    <span className={clsx("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold",
-                                        user.is_active ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500")}>
-                                        {user.is_active ? <CheckCircle2 size={10} /> : <AlertCircle size={10} />}
-                                        {user.is_active ? 'Active' : 'Inactive'}
-                                    </span>
+                                    {user.is_driver ? (() => {
+                                        const p = getProfile(user.id);
+                                        if (!p) return <span className="text-[10px] font-bold text-amber-500 italic">No Profile</span>;
+                                        return (
+                                            <span className={clsx("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black tracking-tighter uppercase",
+                                                p.status === 'ONLINE' ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                                                    : p.status === 'BUSY' ? "bg-amber-50 text-amber-600 border border-amber-100"
+                                                        : "bg-app-surface-2 text-app-muted-foreground")}>
+                                                <div className={clsx("w-1.5 h-1.5 rounded-full animate-pulse",
+                                                    p.status === 'ONLINE' ? "bg-emerald-500" : p.status === 'BUSY' ? "bg-amber-500" : "bg-app-muted-foreground")} />
+                                                {p.status}
+                                            </span>
+                                        );
+                                    })() : (
+                                        <span className={clsx("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold",
+                                            user.is_active ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500")}>
+                                            {user.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="col-span-2">
-                                    {user.is_driver ? (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
-                                            <Truck size={10} /> Driver
-                                        </span>
-                                    ) : <span className="text-app-muted-foreground text-xs">—</span>}
+                                    {user.is_driver ? (() => {
+                                        const p = getProfile(user.id);
+                                        if (!p) return <span className="text-app-muted-foreground text-xs">—</span>;
+                                        return (
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-black text-app-foreground flex items-center gap-1">
+                                                    <Truck size={10} className="text-app-primary" /> {p.vehicle_type}
+                                                </span>
+                                                <span className="text-[9px] font-mono text-app-muted-foreground">{p.vehicle_license_plate}</span>
+                                            </div>
+                                        );
+                                    })() : <span className="text-app-muted-foreground text-xs">—</span>}
                                 </div>
-                                <div className="col-span-1 flex justify-end">
+                                <div className="col-span-1 flex justify-end gap-1">
+                                    {user.is_driver && (
+                                        <button
+                                            onClick={() => setSelectedUserForProfile({ id: user.id, driver: getProfile(user.id) || null })}
+                                            className="w-8 h-8 rounded-lg bg-app-primary/10 flex items-center justify-center text-app-primary hover:bg-app-primary hover:text-white transition-all shadow-sm"
+                                            title="Edit Driver Profile"
+                                        >
+                                            <Edit2 size={14} />
+                                        </button>
+                                    )}
                                     <button onClick={() => handleToggle(user)} disabled={toggling === user.id}
-                                        className={clsx("opacity-0 group-hover:opacity-100 px-3 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all",
+                                        className={clsx("opacity-0 group-hover:opacity-100 w-8 h-8 rounded-lg flex items-center justify-center transition-all",
                                             toggling === user.id && "!opacity-60",
-                                            user.is_driver ? "bg-amber-50 text-amber-600 border border-amber-200" : "bg-app-surface-2 text-app-muted-foreground border border-app-border hover:border-amber-300")}>
-                                        {toggling === user.id ? <Loader2 size={10} className="animate-spin" /> : <Truck size={10} />}
-                                        {user.is_driver ? 'Remove' : 'Tag'}
+                                            user.is_driver ? "bg-rose-50 text-rose-500 border border-rose-100" : "bg-app-surface-2 text-app-muted-foreground border border-app-border hover:border-amber-300")}
+                                        title={user.is_driver ? "Remove Driver Tag" : "Tag as Driver"}
+                                    >
+                                        {toggling === user.id ? <Loader2 size={10} className="animate-spin" /> : user.is_driver ? <X size={14} /> : <Truck size={14} />}
                                     </button>
+                                    {user.is_driver && (() => {
+                                        const p = getProfile(user.id);
+                                        if (!p) return null;
+                                        return (
+                                            <>
+                                                <button
+                                                    onClick={() => handleViewStats(p)}
+                                                    disabled={loadingExtra === p.id}
+                                                    className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                                    title="View Dashboard"
+                                                >
+                                                    {loadingExtra === p.id ? <Loader2 size={12} className="animate-spin" /> : <Eye size={14} />}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleViewStatement(p)}
+                                                    disabled={loadingExtra === p.id}
+                                                    className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                                    title="Financial Statement"
+                                                >
+                                                    {loadingExtra === p.id ? <Loader2 size={12} className="animate-spin" /> : <FileText size={14} />}
+                                                </button>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         ))}
@@ -483,7 +595,85 @@ function DriversTab({ users, roles, onReload, loading }: { users: OrgUser[]; rol
                 )}
             </div>
 
+
             {showCreate && <CreateUserModal roles={roles} onClose={() => setShowCreate(false)} onCreated={() => { onReload(); setShowCreate(false); }} />}
+
+            {selectedUserForProfile && (
+                <DriverProfileModal
+                    userId={selectedUserForProfile.id}
+                    driver={selectedUserForProfile.driver as any}
+                    onClose={() => setSelectedUserForProfile(null)}
+                    onSaved={onReload}
+                />
+            )}
+
+            {/* Performance Dashboard Overlay */}
+            {viewingStats && (
+                <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 lg:p-12 animate-in fade-in duration-300">
+                    <div className="bg-app-surface border border-white/10 rounded-[2.5rem] shadow-2xl w-full max-w-6xl max-h-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-white/[0.02]">
+                            <div>
+                                <h2 className="text-2xl font-black text-white flex items-center gap-3 italic">
+                                    <Truck className="w-8 h-8 text-blue-400" />
+                                    Performance <span className="text-blue-400">Insight</span>
+                                </h2>
+                                <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-1">Real-time driver analytics & tracking</p>
+                            </div>
+                            <button onClick={() => setViewingStats(null)} className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                            <DriverDashboard
+                                driver={viewingStats.driver}
+                                stats={viewingStats.stats}
+                                deliveries={viewingStats.deliveries}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Financial Statement Overlay */}
+            {viewingStatement && (
+                <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 lg:p-12 animate-in fade-in duration-300">
+                    <div className="bg-app-surface border border-white/10 rounded-[2.5rem] shadow-2xl w-full max-w-5xl max-h-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-white/[0.02]">
+                            <div>
+                                <h2 className="text-2xl font-black text-white flex items-center gap-3 italic">
+                                    <FileText className="w-8 h-8 text-emerald-400" />
+                                    Financial <span className="text-emerald-400">Statement</span>
+                                </h2>
+                                <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-1">Verified Ledger History & Payouts</p>
+                            </div>
+                            <button onClick={() => setViewingStatement(null)} className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                            <DriverStatement
+                                entries={viewingStatement.statement?.entries || []}
+                                balance={viewingStatement.statement?.balance || '0.00'}
+                                driverName={viewingStatement.driver.full_name}
+                                onLogExpense={() => setLoggingExpenseFor(viewingStatement.driver)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {loggingExpenseFor && (
+                <LogExpenseModal
+                    driverId={loggingExpenseFor.id}
+                    driverName={loggingExpenseFor.full_name}
+                    onClose={() => setLoggingExpenseFor(null)}
+                    onSaved={() => {
+                        if (viewingStatement?.driver.id === loggingExpenseFor.id) {
+                            handleViewStatement(loggingExpenseFor);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }
@@ -683,20 +873,23 @@ export default function DeliveryPage() {
     // Data
     const [zones, setZones] = useState<DeliveryZone[]>([]);
     const [users, setUsers] = useState<OrgUser[]>([]);
+    const [drivers, setDrivers] = useState<DriverProfile[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [rates, setRates] = useState<ShippingRate[]>([]);
 
     const loadAll = useCallback(async () => {
         setLoading(true);
         try {
-            const [zonesRes, usersRes, rolesRes, ratesRes] = await Promise.all([
+            const [zonesRes, usersRes, driversRes, rolesRes, ratesRes] = await Promise.all([
                 erpFetch('pos/delivery-zones/').catch(() => []),
                 erpFetch('erp/users/').catch(() => []),
+                erpFetch('pos/drivers/').catch(() => []),
                 erpFetch('roles/').catch(() => []),
                 erpFetch('client-portal/shipping-rates/').catch(() => []),
             ]);
             setZones(Array.isArray(zonesRes) ? zonesRes : zonesRes?.results || []);
             setUsers(Array.isArray(usersRes) ? usersRes : usersRes?.results || []);
+            setDrivers(Array.isArray(driversRes) ? driversRes : driversRes?.results || []);
             setRoles(Array.isArray(rolesRes) ? rolesRes : rolesRes?.results || []);
             setRates(Array.isArray(ratesRes) ? ratesRes : ratesRes?.results || []);
         } catch { toast.error('Failed to load delivery data'); }
@@ -763,7 +956,7 @@ export default function DeliveryPage() {
 
             {/* Tab content */}
             {activeTab === 'zones' && <ZonesTab zones={zones} onReload={loadAll} loading={loading} />}
-            {activeTab === 'drivers' && <DriversTab users={users} roles={roles} onReload={loadAll} loading={loading} />}
+            {activeTab === 'drivers' && <DriversTab users={users} drivers={drivers} roles={roles} onReload={loadAll} loading={loading} />}
             {activeTab === 'shipping' && <ShippingTab zones={zones} rates={rates} onReload={loadAll} loading={loading} />}
         </div>
     );

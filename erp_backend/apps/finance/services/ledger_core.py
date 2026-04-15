@@ -48,13 +48,14 @@ class LedgerCoreMixin:
             ).first()
             if not fp:
                 raise ValidationError(f"No fiscal period found for date {transaction_date}")
-            if fp.status == 'CLOSED' or fp.is_closed:
-                raise ValidationError(f"Fiscal period {fp.name} is closed. Cannot post transactions.")
-            if fp.status == 'HARD_LOCKED':
-                raise ValidationError(f"Fiscal period {fp.name} is hard-locked. Cannot post.")
-            if fp.status == 'FUTURE':
-                raise ValidationError(f"Fiscal period {fp.name} is a future period. Cannot post yet.")
-            if fp.status == 'SOFT_LOCKED':
+            if not kwargs.get('internal_bypass'):
+                if fp.status == 'CLOSED' or fp.is_closed:
+                    raise ValidationError(f"Fiscal period {fp.name} is closed. Cannot post transactions.")
+                if fp.status == 'HARD_LOCKED':
+                    raise ValidationError(f"Fiscal period {fp.name} is hard-locked. Cannot post.")
+                if fp.status == 'FUTURE':
+                    raise ValidationError(f"Fiscal period {fp.name} is a future period. Cannot post yet.")
+            if fp.status == 'SOFT_LOCKED' and not kwargs.get('internal_bypass'):
                 # Soft-locked: only supervisors can post
                 is_supervisor = kwargs.get('supervisor_override', False)
                 if user and hasattr(user, 'is_superuser') and user.is_superuser:

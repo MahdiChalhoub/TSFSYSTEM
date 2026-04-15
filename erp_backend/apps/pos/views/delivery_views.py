@@ -1,11 +1,117 @@
 from .base import (
     Response, action, timezone, TenantModelViewSet
 )
-from apps.pos.models import DeliveryZone, DeliveryOrder
-from apps.pos.serializers import DeliveryZoneSerializer, DeliveryOrderSerializer
+from django.db.models import Avg, F
+from apps.pos.models import DeliveryZone, DeliveryOrder, Driver
+from apps.pos.serializers import DeliveryZoneSerializer, DeliveryOrderSerializer, DriverSerializer
 from apps.pos.models.delivery_models import generate_confirmation_code
 from apps.pos.services import sms_service
+from apps.pos.services.delivery_fleet_service import DeliveryFleetService
 from decimal import Decimal
+
+
+class DriverViewSet(TenantModelViewSet):
+    """CRUD for drivers."""
+    queryset = Driver.objects.select_related('user').all()
+    serializer_class = DriverSerializer
+    filterset_fields = ['status', 'is_active']
+    search_fields = ['user__username', 'user__first_name', 'user__last_name', 'phone_number']
+
+    @action(detail=True, methods=['post'])
+    def set_status(self, request, pk=None):
+        """Toggle driver status (ONLINE, BUSY, OFFLINE)."""
+        driver = self.get_object()
+        status = request.data.get('status')
+        if status not in ('ONLINE', 'BUSY', 'OFFLINE'):
+            return Response({'error': 'Invalid status'}, status=400)
+        driver.status = status
+        driver.save(update_fields=['status'])
+        return Response(DriverSerializer(driver).data)
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Returns all ONLINE and active drivers."""
+        drivers = self.get_queryset().filter(status='ONLINE', is_active=True)
+        return Response(DriverSerializer(drivers, many=True).data)
+
+    @action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+        """Get performance statistics for a specific driver."""
+        driver = self.get_object()
+        today = timezone.now().date()
+        
+        deliveries = DeliveryOrder.objects.filter(driver=driver.user)
+        today_deliveries = deliveries.filter(created_at__date=today)
+        
+        # Calculate Average Delivery Time (in minutes)
+        avg_time = deliveries.filter(
+            dispatched_at__isnull=False, 
+            delivered_at__isnull=False
+        ).annotate(
+            duration=F('delivered_at') - F('dispatched_at')
+        ).aggregate(avg_duration=Avg('duration'))['avg_duration']
+        
+        avg_minutes = (avg_time.total_seconds() / 60) if avg_time else 0
+
+        return Response({
+            'total_deliveries': driver.total_deliveries,
+            'today_deliveries': today_deliveries.count(),
+            'avg_delivery_time': round(avg_minutes, 1),
+            'rating': float(driver.rating),
+            'status': driver.status,
+        })
+
+    @action(detail=True, methods=['get'])
+    def statement(self, request, pk=None):
+        """Get financial statement (ledger entries) for a specific driver."""
+        driver = self.get_object()
+        try:
+            from erp.connector_engine import connector_engine
+            # Query Finance for journal lines linked to this driver (employee)
+            result = connector_engine.route_read(
+                target_module='finance',
+                endpoint='get_employee_ledger_history',
+                params={
+                    'organization_id': driver.organization_id,
+                    'user_id': driver.user_id,
+                },
+                organization_id=driver.organization_id,
+                source_module='pos',
+            )
+            return Response(result)
+        except Exception as e:
+            return Response({'error': str(e), 'entries': [], 'balance': '0.00'}, status=500)
+
+    @action(detail=True, methods=['post'])
+    def log_expense(self, request, pk=None):
+        """Manually log an operational expense (fuel, maintenance) for a driver."""
+        driver = self.get_object()
+        amount = request.data.get('amount')
+        expense_type = request.data.get('expense_type', 'maintenance')
+        reference = request.data.get('reference')
+        description = request.data.get('description')
+
+        if not amount:
+            return Response({'error': 'Amount is required'}, status=400)
+
+        try:
+            from erp.connector_engine import connector_engine
+            result = connector_engine.route_write(
+                target_module='finance',
+                endpoint='log_operational_expense',
+                data={
+                    'user_id': driver.user_id,
+                    'amount': amount,
+                    'expense_type': expense_type,
+                    'reference': reference,
+                    'description': description,
+                },
+                organization_id=driver.organization_id,
+                source_module='pos',
+            )
+            return Response(result)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
 
 
 class DeliveryZoneViewSet(TenantModelViewSet):
@@ -66,6 +172,22 @@ class DeliveryOrderViewSet(TenantModelViewSet):
                 except Exception:
                     pass  # never block delivery creation
 
+    def perform_update(self, serializer):
+        """Handle driver status changes on assignment."""
+        old_driver = self.get_object().driver
+        instance = serializer.save()
+        new_driver = instance.driver
+
+        if new_driver and new_driver != old_driver:
+            # New driver assigned — update their profile to BUSY
+            try:
+                driver_profile = Driver.objects.get(user=new_driver)
+                if driver_profile.status == 'ONLINE':
+                    driver_profile.status = 'BUSY'
+                    driver_profile.save(update_fields=['status'])
+            except Driver.DoesNotExist:
+                pass
+
     def get_queryset(self):
         qs = super().get_queryset()
         session_id = self.request.query_params.get('session', '').strip().strip('/')
@@ -96,6 +218,10 @@ class DeliveryOrderViewSet(TenantModelViewSet):
         delivery.status = 'DELIVERED'
         delivery.delivered_at = timezone.now()
         delivery.save(update_fields=['status', 'delivered_at'])
+
+        # Trigger fleet logic (commission, driver status)
+        DeliveryFleetService.on_delivery_completed(delivery, request.user)
+
         return Response(DeliveryOrderSerializer(delivery).data)
 
     @action(detail=True, methods=['post'])
@@ -192,6 +318,10 @@ class DeliveryOrderViewSet(TenantModelViewSet):
             delivery.status = 'DELIVERED'
             delivery.delivered_at = timezone.now()
             delivery.save(update_fields=['status', 'delivered_at'])
+            
+            # Trigger fleet logic
+            DeliveryFleetService.on_delivery_completed(delivery, request.user)
+            
             return Response(DeliveryOrderSerializer(delivery).data)
 
         submitted = str(request.data.get('code', '')).strip()
@@ -204,6 +334,10 @@ class DeliveryOrderViewSet(TenantModelViewSet):
         delivery.status = 'DELIVERED'
         delivery.delivered_at = timezone.now()
         delivery.save(update_fields=['status', 'delivered_at'])
+        
+        # Trigger fleet logic
+        DeliveryFleetService.on_delivery_completed(delivery, request.user)
+        
         return Response(DeliveryOrderSerializer(delivery).data)
 
     @action(detail=True, methods=['post'], permission_classes=[])

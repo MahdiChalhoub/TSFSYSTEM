@@ -133,6 +133,17 @@ class SalesWorkflowService:
                 cls._post_cogs_on_delivery(order, user)
                 # ── Gap 3: deduct reserved stock (release reservation + reduce on_hand) ──
                 cls._deduct_stock(order, user)
+                
+                # ── Delivery Fleet: Trigger commission/fleet logic ──
+                try:
+                    from apps.pos.services.delivery_fleet_service import DeliveryFleetService
+                    for delivery in order.deliveries.filter(status='PENDING'):
+                        delivery.status = 'DELIVERED'
+                        delivery.delivered_at = timezone.now()
+                        delivery.save(update_fields=['status', 'delivered_at'])
+                        DeliveryFleetService.on_delivery_completed(delivery, user)
+                except Exception:
+                    pass
             cls._try_auto_close(order)
         cls._log(order, user, f'DELIVERY_{target}', f"Delivery marked as {target}")
 
