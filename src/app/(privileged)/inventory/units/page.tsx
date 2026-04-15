@@ -5,8 +5,10 @@ export const dynamic = 'force-dynamic';
 
 async function getUnitsData() {
     try {
-        const units = await erpFetch('units/');
-        return Array.isArray(units) ? units : [];
+        const response = await erpFetch('units/');
+        // Handle both array and paginated { results: [...] } responses
+        const units = Array.isArray(response) ? response : (response?.results ?? []);
+        return units;
     } catch (e) {
         console.error("[UNITS PAGE] FAILED:", e);
         return [];

@@ -22,17 +22,16 @@
 
 ## 🟠 HIGH
 
-### [OPEN] Finance Module Not Ready
+### [DONE 2026-04-15] Finance Module — Subscription Ledger Integration (v2.9.0-b003)
 - **Discovered**: 2026-02-09
 - **Impact**: ConnectorEngine finance hooks silently fail, no ledger entries created for plan changes
-- **Files**: `erp_backend/apps/finance/`
-- **Notes**: Plan switch creates SubscriptionPayment records but can't push to finance ledger. CRM Contact balance stays at $0.00.
+- **Fix**: Fixed event name mismatch (subscription:updated vs subscription:renewed), implemented real journal entry handler in finance/events.py, linked SubscriptionPayment.journal_entry_id
 
-### [OPEN] CRM Contact Balance Not Synced
+### [DONE 2026-04-15] CRM Contact Balance Now Synced (v2.9.0-b003)
 - **Discovered**: 2026-02-09
 - **Impact**: CRM contacts show $0.00 balance even after subscription payments
-- **Files**: `erp_backend/erp/models.py` (sync_to_crm_contact), `apps/crm/models.py`
-- **Depends On**: Finance module integration
+- **Fix**: Root cause was missing journal entries (see above). Now that JEs are created with contact_id on AR lines, CRM summary endpoint computes correct balances.
+- **Depends On**: Finance module integration (now complete)
 
 ---
 
@@ -103,6 +102,11 @@
 - Resolved `ProgrammingError` in `/api/inventory/` by applying migration `0053_product_tax_rate_category`.
 - Implemented COA-style glassmorphism footer in `WarehouseClient.tsx` with location and SKU stats.
 - Added dynamic filter/search clear actions to the hierarchy footer.
+
+### [DONE 2026-04-15] POS Register Data Integrity Guards (v2.9.0-b003)
+- Added `get_stock_warehouse` property to POSRegister model (warehouse → branch fallback)
+- Hardened `verify-manager` with optional `register_id` site-scoping
+- Fixed Sidebar favorites React key warning and FavoritesContext stale data sanitization
 
 ### [DONE 2026-02-09] Hydration Mismatch Fixes (v2.7.0-b004, b008)
 - CRM contacts: `toLocaleString` → `toFixed`

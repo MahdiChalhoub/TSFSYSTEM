@@ -259,17 +259,11 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
             <div className="flex-1 min-h-0 rounded-t-2xl overflow-hidden flex flex-col"
                 style={{ background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
 
-                {/* Column Headers */}
-                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
+                {/* Section Header */}
+                <div className="flex-shrink-0 flex items-center justify-between px-4 py-2.5 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
                     style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                    <div className="w-5 flex-shrink-0" />
-                    <div className="w-7 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">Unit</div>
-                    <div className="hidden sm:block w-16 flex-shrink-0">Code</div>
-                    <div className="hidden sm:block w-20 flex-shrink-0">Type</div>
-                    <div className="hidden sm:block w-20 flex-shrink-0">Ratio</div>
-                    <div className="hidden sm:block w-20 flex-shrink-0">Products</div>
-                    <div className="w-20 flex-shrink-0" />
+                    <span>Unit Hierarchies</span>
+                    <span className="tabular-nums normal-case font-bold">{stats.filtered} of {stats.total} units</span>
                 </div>
 
                 {/* Scrollable Body */}

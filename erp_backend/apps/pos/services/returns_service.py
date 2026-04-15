@@ -99,6 +99,7 @@ class ReturnsService:
         """
         from apps.pos.models import SalesReturn, CreditNote
         from erp.services import ConfigurationService
+        from apps.pos.services.forensic_audit_service import ForensicAuditService
 
         InventoryService = connector.require('inventory.services.get_inventory_service', org_id=0, source='pos')
         LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
@@ -271,6 +272,22 @@ class ReturnsService:
 
             except Exception as fne_exc:
                 logger.warning("[FNE] Refund auto-certification error: %s", fne_exc)
+
+            # ── GAP 8: Final Immutable Sales Audit Log ───────────────────────
+            try:
+                ForensicAuditService.log_sales_mutation(
+                    order=order,
+                    action_type='DELIVERY_RETURNED',
+                    summary=f"Sales Return approved: {sales_return.reference or sales_return.id} | Credit Note: {cn_number}",
+                    actor=user,
+                    extra={
+                        "return_id": str(sales_return.id),
+                        "refund_total": str(total_refund + total_tax),
+                        "fne_status": credit_note.fne_status if hasattr(credit_note, 'fne_status') else 'N/A'
+                    }
+                )
+            except Exception:
+                pass
 
             return sales_return
 

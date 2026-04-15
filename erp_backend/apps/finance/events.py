@@ -37,7 +37,8 @@ def handle_event(event_name: str, payload: dict, organization_id: int):
         'contact:created': _on_contact_created,
         'order:completed': _on_order_completed,
         'inventory:adjusted': _on_inventory_adjusted,
-        'subscription:renewed': _on_subscription_renewed,
+        'subscription:updated': _on_subscription_payment,
+        'subscription:renewed': _on_subscription_payment,  # Alias for backwards compat
     }
     
     handler = handlers.get(event_name)
@@ -226,7 +227,153 @@ def _on_inventory_adjusted(payload: dict, organization_id: int):
     # Future: Update inventory asset account values
 
 
-def _on_subscription_renewed(payload: dict, organization_id: int):
-    """React to subscription renewals — record revenue."""
-    logger.info(f"🔄 Finance: Subscription renewal for org {organization_id}")
-    # Future: Create revenue recognition journal entries
+def _on_subscription_payment(payload: dict, organization_id: int):
+    """
+    React to subscription payments (plan switches, renewals, credits).
+    Creates a double-entry journal entry in the SaaS org's ledger.
+
+    Expected payload:
+        payment_id:      SubscriptionPayment record ID
+        type:            'PURCHASE' | 'CREDIT_NOTE'
+        amount:          Decimal string (e.g. '25.00')
+        description:     Human-readable description
+        target_org_id:   The tenant org that triggered the payment
+        target_org_name: Tenant org name (for reference)
+    """
+    from decimal import Decimal as D
+    from erp.models import Organization
+    from erp.services import ConfigurationService
+
+    payment_id = payload.get('payment_id')
+    payment_type = payload.get('type', 'PURCHASE')
+    amount_str = payload.get('amount', '0')
+    description = payload.get('description', 'Subscription payment')
+    target_org_name = payload.get('target_org_name', 'Unknown')
+
+    amount = D(amount_str)
+    if amount <= D('0'):
+        logger.debug("Finance: subscription payment with zero/negative amount — skipping")
+        return {'success': True, 'skipped': True, 'reason': 'zero_amount'}
+
+    # ── Resolve SaaS org ──────────────────────────────────────────
+    try:
+        saas_org = Organization.objects.get(id=organization_id)
+    except Organization.DoesNotExist:
+        logger.error(f"Finance: SaaS org {organization_id} not found for subscription event")
+        return {'success': False, 'error': 'SaaS org not found'}
+
+    # ── Resolve COA accounts from posting rules ───────────────────
+    # We look for 'saas.subscription_revenue' and 'saas.accounts_receivable'
+    # in the posting rules. If not configured, fall back to system_role lookup.
+    from .models import ChartOfAccount
+
+    posting_rules = ConfigurationService.get_posting_rules(saas_org)
+    saas_rules = posting_rules.get('saas', {})
+
+    revenue_id = saas_rules.get('subscription_revenue')
+    receivable_id = saas_rules.get('accounts_receivable')
+
+    # Fallback: resolve by system_role if posting rules not configured
+    if not revenue_id:
+        revenue_acct = ChartOfAccount.objects.filter(
+            organization=saas_org, system_role='REVENUE', is_active=True
+        ).first()
+        revenue_id = revenue_acct.id if revenue_acct else None
+
+    if not receivable_id:
+        receivable_acct = ChartOfAccount.objects.filter(
+            organization=saas_org, system_role='RECEIVABLE', is_active=True
+        ).first()
+        receivable_id = receivable_acct.id if receivable_acct else None
+
+    if not revenue_id or not receivable_id:
+        logger.warning(
+            f"⚠️ Finance: Cannot create journal entry for subscription payment — "
+            f"missing COA accounts. Configure posting rules for "
+            f"'saas.subscription_revenue' and 'saas.accounts_receivable'. "
+            f"(revenue_id={revenue_id}, receivable_id={receivable_id})"
+        )
+        return {'success': False, 'error': 'Missing COA account mapping'}
+
+    # ── Resolve CRM contact for subledger tracking ────────────────
+    contact_id = None
+    try:
+        target_org_id = payload.get('target_org_id')
+        if target_org_id:
+            target_org = Organization.objects.filter(id=target_org_id).select_related('client').first()
+            if target_org and target_org.client:
+                from apps.crm.models import Contact
+                crm_contact = Contact.objects.filter(
+                    organization=saas_org, email=target_org.client.email
+                ).values_list('id', flat=True).first()
+                contact_id = crm_contact
+    except Exception as e:
+        logger.debug(f"Finance: Could not resolve CRM contact for subscription: {e}")
+
+    # ── Build journal entry lines ─────────────────────────────────
+    ref_desc = f"SAAS-SUB: {description} [{target_org_name}]"
+
+    if payment_type == 'PURCHASE':
+        # Dr: Accounts Receivable (asset ↑)
+        # Cr: Subscription Revenue (revenue ↑)
+        lines = [
+            {'account_id': receivable_id, 'debit': amount, 'credit': D('0'),
+             'description': f'AR — {target_org_name}', 'contact_id': contact_id,
+             'partner_type': 'CUSTOMER'},
+            {'account_id': revenue_id, 'debit': D('0'), 'credit': amount,
+             'description': f'Subscription revenue — {target_org_name}'},
+        ]
+    elif payment_type == 'CREDIT_NOTE':
+        # Dr: Subscription Revenue (revenue ↓)
+        # Cr: Accounts Receivable (asset ↓)
+        lines = [
+            {'account_id': revenue_id, 'debit': amount, 'credit': D('0'),
+             'description': f'Credit note — {target_org_name}'},
+            {'account_id': receivable_id, 'debit': D('0'), 'credit': amount,
+             'description': f'AR credit — {target_org_name}', 'contact_id': contact_id,
+             'partner_type': 'CUSTOMER'},
+        ]
+    else:
+        logger.warning(f"Finance: Unknown subscription payment type '{payment_type}'")
+        return {'success': False, 'error': f'Unknown type: {payment_type}'}
+
+    # ── Create and post journal entry ─────────────────────────────
+    try:
+        from .services import LedgerService
+        entry = LedgerService.create_journal_entry(
+            organization=saas_org,
+            transaction_date=timezone.now().date(),
+            description=ref_desc,
+            lines=lines,
+            status='POSTED',
+            scope='OFFICIAL',
+            source_module='saas',
+            source_model='SubscriptionPayment',
+            source_id=payment_id,
+            journal_type='REVENUE',
+            internal_bypass=True,  # System-generated — skip manual posting restrictions
+        )
+
+        # ── Link journal entry back to SubscriptionPayment ────────
+        if payment_id:
+            try:
+                from erp.models_saas import SubscriptionPayment
+                SubscriptionPayment.objects.filter(id=payment_id).update(
+                    journal_entry_id=entry.id
+                )
+            except Exception as e:
+                logger.warning(f"Finance: Could not link journal entry to payment: {e}")
+
+        logger.info(
+            f"✅ Finance: Journal entry {entry.reference} created for "
+            f"subscription {payment_type} ${amount} [{target_org_name}]"
+        )
+        return {
+            'success': True,
+            'journal_entry_id': entry.id,
+            'reference': entry.reference,
+        }
+
+    except Exception as e:
+        logger.error(f"Finance: Failed to create subscription journal entry: {e}")
+        return {'success': False, 'error': str(e)}

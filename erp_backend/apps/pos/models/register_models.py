@@ -95,6 +95,14 @@ class POSRegister(TenantModel):
     def __str__(self):
         return f"{self.name} @ {self.branch.name}"
 
+    @property
+    def get_stock_warehouse(self):
+        """Returns the warehouse for stock deduction.
+        Falls back to branch if no explicit warehouse is set —
+        since branches are Warehouse instances in our schema.
+        """
+        return self.warehouse if self.warehouse_id else self.branch
+
 
 class RegisterPaymentMethod(TenantModel):
     """

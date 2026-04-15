@@ -130,6 +130,23 @@ export const MENU_ITEMS = [
         path: '/dashboard',
         module: 'core'
     },
+    // ── PRODUCTION-READY MODULES ─────────────────────────────────
+    {
+        title: 'Finance',
+        icon: FileText,
+        module: 'finance',
+        stage: 'production',
+        children: [
+            {
+                title: 'Settings',
+                icon: Settings,
+                children: [
+                    { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
+                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
+                ]
+            },
+        ]
+    },
     {
         title: 'Commercial',
         icon: ShoppingBag,

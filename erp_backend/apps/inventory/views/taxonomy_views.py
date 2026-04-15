@@ -39,6 +39,7 @@ from erp.mixins import UDLEViewSetMixin
 class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+    pagination_class = None  # Tree data — must return all units for hierarchy building
     filterset_fields = ['name']
     search_fields = ['name']
 
@@ -93,6 +94,7 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
 class BrandViewSet(TenantModelViewSet):
     queryset = Brand.objects.all()
+    pagination_class = None  # Taxonomy data — return all brands for tree building
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -208,6 +210,7 @@ class BrandViewSet(TenantModelViewSet):
 class CategoryViewSet(TenantModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    pagination_class = None  # Tree data — must return all categories for hierarchy building
 
     @action(detail=False, methods=['get'])
     def with_counts(self, request):
@@ -315,6 +318,7 @@ class CategoryViewSet(TenantModelViewSet):
 class ParfumViewSet(TenantModelViewSet):
     queryset = Parfum.objects.all()
     serializer_class = ParfumSerializer
+    pagination_class = None  # Taxonomy data — return all parfums
 
     @action(detail=False, methods=['get'])
     def by_category(self, request):

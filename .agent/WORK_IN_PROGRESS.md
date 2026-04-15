@@ -98,3 +98,26 @@
 - **Warnings for Next Agent**:
   - ⚠️ All inventory migrations are now up-to-date.
   - ⚠️ Tax policy configuration in warehouses is live but requires products to have a `tax_rate_category` assigned to work correctly with calculations.
+
+---
+
+### Session: 2026-04-15 (v2.9.0-b003)
+- **Agent**: Antigravity
+- **Status**: ✅ DONE
+- **Worked On**: SaaS Billing → Finance Ledger integration, POS register integrity guards, Sidebar favorites bugfixes
+- **Files Modified**:
+  - `erp_backend/apps/finance/events.py` — Implemented `_on_subscription_payment` handler: creates real journal entries for subscription payments. Fixed event name mismatch (`subscription:updated` → now handled).
+  - `erp_backend/erp/views_saas_org_billing.py` — Captured `payment_id` from `SubscriptionPayment.create()` and included in ConnectorEngine event payload.
+  - `erp_backend/apps/pos/models/register_models.py` — Added `get_stock_warehouse` property (warehouse → branch fallback).
+  - `erp_backend/apps/pos/views/register_lobby.py` — Added optional `register_id` site-scoping to `verify-manager` endpoint.
+  - `src/components/admin/Sidebar.tsx` — Fixed React key warning and `toggleFavorite` call signature.
+  - `src/context/FavoritesContext.tsx` — Sanitized all 3 data ingestion paths to strip stale `{icon, color}` keys.
+- **Git Versions**: v2.9.0-b003
+- **Discoveries**:
+  - Billing dispatches `subscription:updated` but finance only listened for `subscription:renewed` — event name mismatch was the root cause of silent failures.
+  - CRM contact $0.00 balance was downstream of missing journal entries, not a sync bug.
+  - `system_role` on ChartOfAccount provides a reliable fallback for COA account resolution when posting rules aren't configured.
+- **Warnings for Next Agent**:
+  - ⚠️ The SaaS org needs posting rules configured for `saas.subscription_revenue` and `saas.accounts_receivable` for optimal journal entry creation. Without them, the handler falls back to `system_role='REVENUE'` and `system_role='RECEIVABLE'`.
+  - ⚠️ No Django migrations needed for any of these changes.
+  - ⚠️ WORKMAP HIGH priority items are now CLEAR — no CRITICAL or HIGH items remain.

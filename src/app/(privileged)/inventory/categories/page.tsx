@@ -5,8 +5,10 @@ export const dynamic = 'force-dynamic';
 
 async function getCategoriesData() {
     try {
-        const categories = await erpFetch('categories/');
-        return Array.isArray(categories) ? categories : [];
+        const response = await erpFetch('categories/');
+        // Handle both array and paginated { results: [...] } responses
+        const categories = Array.isArray(response) ? response : (response?.results ?? []);
+        return categories;
     } catch (e) {
         console.error("[CATEGORIES PAGE] FAILED:", e);
         return [];

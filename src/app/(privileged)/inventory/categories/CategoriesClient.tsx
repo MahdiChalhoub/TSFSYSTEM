@@ -367,19 +367,18 @@ const CategoryRow = ({
                     }
                 `}
                 style={{
-                    paddingLeft: `${12 + level * 20}px`,
+                    paddingLeft: '12px',
                     paddingRight: '12px',
                     background: isRoot
                         ? 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))'
                         : undefined,
                     borderLeft: isRoot
                         ? '3px solid var(--app-primary)'
-                        : level > 0
-                            ? '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)'
-                            : undefined,
-                    marginLeft: level > 0 ? `${12 + (level - 1) * 20 + 10}px` : undefined,
+                        : undefined,
                 }}
             >
+                {/* Indent spacer */}
+                {level > 0 && <div style={{ width: `${level * 20}px` }} className="flex-shrink-0" />}
                 {/* Toggle */}
                 <button
                     onClick={() => isParent && setIsOpen(!isOpen)}

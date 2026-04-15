@@ -616,7 +616,8 @@ class RegisterLobbyMixin:
         """
         Verify a manager's PIN code for overrides (Clear Cart, Price Override, etc).
         Managers are defined as users with is_staff=True or explicit permission.
-        Expects: { pin }
+        Expects: { pin, register_id? }
+        If register_id is provided, scope to managers authorized at the same branch.
         Returns: { valid: True, user: ... }
         """
         org_id = get_current_tenant_id()
@@ -629,7 +630,21 @@ class RegisterLobbyMixin:
 
         # Find any active staff user in this org with a matching PIN
         managers = User.objects.filter(organization_id=org_id, is_active=True, is_staff=True).exclude(pos_pin__isnull=True).exclude(pos_pin='')
-        
+
+        # Optional site-scoping: restrict to managers authorized at the same branch
+        register_id = request.data.get('register_id')
+        if register_id:
+            try:
+                register = POSRegister.objects.get(id=register_id, organization_id=org_id)
+                branch_register_ids = POSRegister.objects.filter(
+                    organization_id=org_id, branch=register.branch
+                ).values_list('id', flat=True)
+                managers = managers.filter(
+                    authorized_registers__id__in=branch_register_ids
+                ).distinct()
+            except POSRegister.DoesNotExist:
+                pass  # Fall back to org-wide if register not found
+
         for manager in managers:
             if manager.check_pos_pin(pin):
                 return Response({

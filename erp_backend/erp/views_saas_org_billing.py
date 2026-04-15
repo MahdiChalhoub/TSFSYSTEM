@@ -215,35 +215,35 @@ class OrgSaasBillingMixin:
         if new_price > old_price:
             # UPGRADE
             diff = new_price - old_price
-            SubscriptionPayment.objects.create(
+            payment = SubscriptionPayment.objects.create(
                 organization=org, plan=new_plan, previous_plan=old_plan,
                 amount=diff, type='PURCHASE', status='COMPLETED',
                 notes=f'Upgrade from "{old_plan_name}" to "{new_plan.name}". Difference: ${diff}/mo.'
             )
-            invoices_created.append({'type': 'PURCHASE', 'amount': str(diff), 'description': f'Upgrade to {new_plan.name}'})
+            invoices_created.append({'payment_id': str(payment.id), 'type': 'PURCHASE', 'amount': str(diff), 'description': f'Upgrade to {new_plan.name}'})
         elif new_price < old_price:
             # DOWNGRADE
             refund = old_price - new_price
-            SubscriptionPayment.objects.create(
+            credit_payment = SubscriptionPayment.objects.create(
                 organization=org, plan=old_plan, previous_plan=old_plan,
                 amount=refund, type='CREDIT_NOTE', status='COMPLETED',
                 notes=f'Credit for downgrade from "{old_plan_name}". Refund: ${refund}/mo.'
             )
-            invoices_created.append({'type': 'CREDIT_NOTE', 'amount': str(refund), 'description': f'Credit for {old_plan_name} downgrade'})
-            SubscriptionPayment.objects.create(
+            invoices_created.append({'payment_id': str(credit_payment.id), 'type': 'CREDIT_NOTE', 'amount': str(refund), 'description': f'Credit for {old_plan_name} downgrade'})
+            new_payment = SubscriptionPayment.objects.create(
                 organization=org, plan=new_plan, previous_plan=old_plan,
                 amount=new_price, type='PURCHASE', status='COMPLETED',
                 notes=f'New subscription: "{new_plan.name}".'
             )
-            invoices_created.append({'type': 'PURCHASE', 'amount': str(new_price), 'description': f'New plan: {new_plan.name}'})
+            invoices_created.append({'payment_id': str(new_payment.id), 'type': 'PURCHASE', 'amount': str(new_price), 'description': f'New plan: {new_plan.name}'})
         else:
             if new_price > Decimal('0.00'):
-                SubscriptionPayment.objects.create(
+                payment = SubscriptionPayment.objects.create(
                     organization=org, plan=new_plan, previous_plan=old_plan,
                     amount=new_price, type='PURCHASE', status='COMPLETED',
                     notes=f'Plan switch to "{new_plan.name}" (same price).'
                 )
-                invoices_created.append({'type': 'PURCHASE', 'amount': str(new_price), 'description': f'Switch to {new_plan.name}'})
+                invoices_created.append({'payment_id': str(payment.id), 'type': 'PURCHASE', 'amount': str(new_price), 'description': f'Switch to {new_plan.name}'})
 
         # ─── 2. Update org plan ──────────────────────────────────────
         org.current_plan = new_plan
@@ -288,6 +288,7 @@ class OrgSaasBillingMixin:
                     source_module='saas',
                     event_name='subscription:updated',
                     payload={
+                        'payment_id': inv['payment_id'],
                         'type': inv['type'],
                         'amount': inv['amount'],
                         'description': inv['description'],

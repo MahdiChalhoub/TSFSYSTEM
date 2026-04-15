@@ -70,6 +70,39 @@ class POSViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'], url_path='fire-event')
+    def fire_event(self, request):
+        """Explicitly fire a security audit event from the POS terminal."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=400)
+        
+        try:
+            organization = Organization.objects.get(id=organization_id)
+            event_type = request.data.get('event_type')
+            event_name = request.data.get('event_name')
+            details = request.data.get('details', {})
+            reference_id = request.data.get('reference_id')
+
+            if not event_type or not event_name:
+                return Response({"error": "event_type and event_name are required"}, status=400)
+
+            event = ForensicAuditService.fire_security_event(
+                organization=organization,
+                user=request.user,
+                event_type=event_type,
+                event_name=event_name,
+                details=details,
+                reference_id=reference_id
+            )
+
+            return Response({
+                "success": True,
+                "event_id": event.id if event else None
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
     @action(detail=True, methods=['post'], url_path='retry-fne')
     def retry_fne(self, request, pk=None):
         """Retry FNE certification for a failed order."""

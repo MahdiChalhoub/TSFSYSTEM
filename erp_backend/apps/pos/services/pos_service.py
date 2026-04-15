@@ -1,102 +1,21 @@
 from .base import Decimal, ValidationError, transaction, timezone, connector
+from .forensic_audit_service import ForensicAuditService
 from apps.pos.models import Order, OrderLine
 from erp.services import ConfigurationService
 
 
 def fire_audit_event(organization, user, event_type, event_name, details, reference_id=None):
     """
-    Create a POSAuditEvent and trigger any configured POSAuditRule actions:
-      - create_task=True  → Creates a URGENT Workspace Task assigned to the manager role
-      - send_notification → Marks notification_pending on the event (picked up by polling)
-    Also fires WorkspaceAutoTaskService auto-task rules.
-    Safe: always wraps in try/except — never blocks a sale.
+    Backward compatibility wrapper for ForensicAuditService.fire_security_event.
     """
-    # POS event type → AutoTaskRule trigger_event mapping
-    EVENT_TO_TRIGGER = {
-        'PRICE_OVERRIDE':         'PRICE_CHANGE',
-        'GLOBAL_DISCOUNT':        'CASHIER_DISCOUNT',
-        'NEGATIVE_STOCK_OVERRIDE': 'NEGATIVE_STOCK',
-        'CREDIT_SALE':            'CREDIT_SALE',
-        'CLEAR_CART':             'CUSTOM',
-        'REMOVE_ITEM':            'CUSTOM',
-        'DECREASE_QTY':           'CUSTOM',
-    }
-    try:
-        from apps.pos.models import POSAuditEvent, POSAuditRule
-        event = POSAuditEvent.objects.create(
-            organization=organization,
-            user=user,
-            event_type=event_type,
-            event_name=event_name,
-            details=details or {},
-            reference_id=reference_id,
-        )
-
-        # ── POSAuditRule → immediate Task ─────────────────────────────────────
-        try:
-            rule = POSAuditRule.objects.filter(
-                organization=organization,
-                event_type=event_type,
-                is_active=True
-            ).first()
-
-            if rule and rule.create_task:
-                try:
-                    from erp.connector_registry import connector
-                    from erp.models import Role
-                    Task = connector.require('workspace.tasks.get_model', org_id=organization.id)
-                    if Task:
-                        manager_role = Role.objects.filter(
-                            organization=organization,
-                            name__icontains='manager'
-                        ).first()
-                        Task.objects.create(
-                            organization=organization,
-                            title=f'⚠️ POS Alert: {event_name}',
-                            description=(
-                                f"Event Type: {event_type}\n"
-                                f"Reference: {reference_id or 'N/A'}\n"
-                                f"Cashier: {user.get_full_name() or user.username if user else 'Unknown'}\n\n"
-                                f"Details: {details}"
-                            ),
-                            priority='URGENT',
-                            status='PENDING',
-                            source='SYSTEM',
-                            assigned_to_group=manager_role,
-                            related_object_type='POSAuditEvent',
-                            related_object_id=event.id,
-                            related_object_label=event_name,
-                        )
-                except Exception:
-                    pass
-
-        except Exception:
-            pass
-
-        # ── AutoTaskRule engine ────────────────────────────────────────────────
-        try:
-            trigger = EVENT_TO_TRIGGER.get(event_type)
-            if trigger:
-                from erp.connector_registry import connector
-                fire_auto_tasks = connector.require('workspace.auto_tasks.fire', org_id=organization.id)
-                if fire_auto_tasks:
-                    fire_auto_tasks(
-                        organization=organization,
-                        event=trigger,
-                        context={
-                            'user': user,
-                            'amount': details.get('total') or details.get('discount_amount') or 0,
-                            'reference': reference_id,
-                            'cashier_id': user.id if user else None,
-                            'extra': details,
-                        }
-                    )
-        except Exception:
-            pass
-
-        return event
-    except Exception:
-        return None
+    return ForensicAuditService.fire_security_event(
+        organization=organization,
+        user=user,
+        event_type=event_type,
+        event_name=event_name,
+        details=details,
+        reference_id=reference_id
+    )
 
 
 class POSService:
@@ -105,21 +24,20 @@ class POSService:
                  contact_id=None, payment_method='CASH', points_redeemed=0,
                  store_change_in_wallet=False, cash_received=0, notes='',
                  global_discount=0, payment_legs=None):
-        
+        """
+        POS Checkout: Order Creation → Inventory Deduction → Accounting Integration.
+        """
         # Gated cross-module imports
         Product = connector.require('inventory.products.get_model', org_id=0, source='pos')
         InventoryService = connector.require('inventory.services.get_inventory_service', org_id=0, source='pos')
         LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
         SequenceService = connector.require('finance.services.get_sequence_service', org_id=0, source='pos')
-        ForensicAuditService = connector.require('finance.services.get_forensic_audit_service', org_id=0, source='pos')
 
         if not Product or not InventoryService:
             raise ValidationError("Inventory module is required for POS checkout.")
         if not LedgerService or not SequenceService:
             raise ValidationError("Finance module is required for POS checkout.")
-        """
-        items: list of {'product_id': id, 'quantity': q, 'unit_price': p}
-        """
+
         with transaction.atomic():
             total_amount = Decimal('0')
             total_tax = Decimal('0')
@@ -347,17 +265,16 @@ class POSService:
 
 
 
-                if is_override and ForensicAuditService:
-                    ForensicAuditService.log_mutation(
-                        organization=organization,
-                        user=user,
-                        model_name="POS_OrderLine",
-                        object_id=order.id,
-                        change_type="PRICE_OVERRIDE",
-                        payload={
-                            "product": product.name,
-                            "base_price": str(base_price),
-                            "sold_price": str(price),
+                if is_override:
+                    ForensicAuditService.log_sales_mutation(
+                        order=order,
+                        action_type="FIELD_CHANGE",
+                        summary=f"Price override for {product.name}: {base_price} → {price}",
+                        actor=user,
+                        diff={
+                            "unit_price": {"before": str(base_price), "after": str(price)}
+                        },
+                        extra={
                             "qty": str(qty)
                         }
                     )
@@ -382,6 +299,30 @@ class POSService:
             order.tax_amount = total_tax
             
             if discount_dec > 0:
+                # ── Security Alert: Discount Policy Violation ──
+                try:
+                    from apps.inventory.services import ConfigurationService
+                    max_discount_pct = ConfigurationService.get_setting(organization, 'maxDiscountPercent', 20)
+                    total_before_discount = total_amount + discount_dec
+                    discount_pct = (discount_dec / total_before_discount * 100) if total_before_discount > 0 else 0
+                    
+                    if discount_pct > Decimal(str(max_discount_pct)):
+                        fire_audit_event(
+                            organization=organization,
+                            user=user,
+                            event_type='DISCOUNT_POLICY_VIOLATION',
+                            event_name=f'High Discount Alert — {discount_pct:.1f}%',
+                            details={
+                                'discount_amount': str(discount_dec),
+                                'total_before_discount': str(total_before_discount),
+                                'discount_percent': float(discount_pct),
+                                'max_allowed_percent': float(max_discount_pct),
+                            },
+                            reference_id=order.ref_code
+                        )
+                except Exception:
+                    pass
+
                 fire_audit_event(
                     organization=organization,
                     user=user,
@@ -389,7 +330,7 @@ class POSService:
                     event_name='Order Global Discount',
                     details={
                         'discount_amount': str(discount_dec),
-                        'total_before_discount': str(total_amount)
+                        'total_before_discount': str(total_amount + discount_dec)
                     },
                     reference_id=order.ref_code
                 )
@@ -791,5 +732,22 @@ class POSService:
                     "[FNE] Auto-certification error for order %s: %s",
                     order.id, fne_exc, exc_info=True
                 )
+
+            # ── GAP 8: Final Immutable Sales Audit Log ───────────────────────
+            try:
+                ForensicAuditService.log_sales_mutation(
+                    order=order,
+                    action_type='ORDER_CONFIRMED',
+                    summary=f"POS Sale completed: {order.invoice_number or order.id}",
+                    actor=user,
+                    extra={
+                        "items_count": len(items),
+                        "total": str(order.total_amount),
+                        "payment_method": payment_method,
+                        "fne_status": order.fne_status
+                    }
+                )
+            except Exception:
+                pass
 
             return order

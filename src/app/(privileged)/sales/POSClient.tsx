@@ -96,7 +96,7 @@ export default function POSClient() {
     useEffect(() => {
         if (!registerConfig) return;
         import('./actions').then(({ getCategories }) =>
-            getCategories().then(cats => { if (Array.isArray(cats)) setCategories(cats); }).catch(() => {})
+            getCategories().then(cats => { if (Array.isArray(cats)) setCategories(cats); }).catch(() => { })
         );
     }, [registerConfig]);
 
@@ -111,11 +111,28 @@ export default function POSClient() {
                     balance: 0, creditLimit: c.credit_limit || 0, currentBalance: 0,
                     loyalty: c.loyalty_points || 0, address: c.address || '', zone: c.zone || '',
                 })));
-            }).catch(() => {})
+            }).catch(() => { })
         );
     }, [registerConfig]);
 
     // ── Handlers ──────────────────────────────────────────────────────
+    const fireSecurityEvent = useCallback(async (type: string, name: string, details: any) => {
+        try {
+            const { erpFetch } = await import('@/lib/erp-api');
+            await erpFetch('pos/fire-event/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    event_type: type,
+                    event_name: name,
+                    details,
+                    reference_id: registerConfig?.sessionId?.toString()
+                })
+            });
+        } catch (e) {
+            console.error('[POS] Failed to fire security event:', e);
+        }
+    }, [registerConfig]);
+
     const handleEnterPOS = useCallback((config: RegisterConfig) => {
         setRegisterConfig(config);
     }, []);
@@ -143,13 +160,34 @@ export default function POSClient() {
     }, []);
 
     const handleUpdateQuantity = useCallback((productId: number, delta: number) => {
-        setCart(prev =>
-            prev.map(item => item.productId === productId
+        setCart(prev => {
+            const item = prev.find(i => i.productId === productId);
+            const newList = prev.map(item => item.productId === productId
                 ? { ...item, quantity: Math.max(0, item.quantity + delta) }
                 : item
-            ).filter(i => i.quantity > 0)
-        );
-    }, []);
+            ).filter(i => i.quantity > 0);
+
+            // Trigger audit if item was completely removed
+            if (item && !newList.find(i => i.productId === productId)) {
+                fireSecurityEvent('REMOVE_ITEM', 'Item Removed from Cart', {
+                    product_id: productId,
+                    product_name: item.name,
+                    qty_before: item.quantity,
+                    total_before: item.price * item.quantity
+                });
+            } else if (item && delta < 0) {
+                // Decrease quantity audit
+                fireSecurityEvent('DECREASE_QTY', 'Item Quantity Decreased', {
+                    product_id: productId,
+                    product_name: item.name,
+                    old_qty: item.quantity,
+                    new_qty: item.quantity + delta
+                });
+            }
+
+            return newList;
+        });
+    }, [fireSecurityEvent]);
 
     const handleUpdatePrice = useCallback((productId: number, price: number) => {
         setCart(prev => prev.map(item => item.productId === productId ? { ...item, price } : item));
@@ -164,6 +202,12 @@ export default function POSClient() {
     }, []);
 
     const handleClearCart = useCallback((_force?: boolean) => {
+        if (cart.length > 0) {
+            fireSecurityEvent('CLEAR_CART', 'Cart Cleared', {
+                items_count: cart.length,
+                total_value: total
+            });
+        }
         setCart([]);
         setDiscount(0);
         setNotes('');
@@ -173,7 +217,7 @@ export default function POSClient() {
         setStoreChangeInWallet(false);
         setSelectedClientId(0);
         setDeliveryZone('');
-    }, []);
+    }, [cart, total, fireSecurityEvent]);
 
     const handleCharge = useCallback(async (skipWarning?: boolean, overrides?: any) => {
         if (!registerConfig) return;
@@ -254,7 +298,7 @@ export default function POSClient() {
                 balance: 0, creditLimit: c.credit_limit || 0, currentBalance: 0,
                 loyalty: c.loyalty_points || 0, address: c.address || '', zone: c.zone || '',
             })));
-        } catch {}
+        } catch { }
     }, []);
 
     const handleSync = useCallback(() => { toast.info('Syncing...'); }, []);
@@ -317,7 +361,7 @@ export default function POSClient() {
         onClearCart: handleClearCart,
         onCreateNewSession: handleCreateNewSession,
         onRemoveSession: handleRemoveSession,
-        onUpdateActiveSession: (_updates: any) => {},
+        onUpdateActiveSession: (_updates: any) => { },
         onToggleFullscreen: () => setIsFullscreen(v => !v),
         onCycleSidebarMode: () => setSidebarMode(v => v === 'hidden' ? 'normal' : v === 'normal' ? 'expanded' : 'hidden'),
         onCharge: handleCharge,
@@ -328,7 +372,7 @@ export default function POSClient() {
         onSetNotes: setNotes,
         onSetPaymentLegs: setPaymentLegs,
         onSearchClients: handleSearchClients,
-        onOpenLayoutSelector: () => {},
+        onOpenLayoutSelector: () => { },
         onLockRegister: handleLockRegister,
         onCloseRegister: handleCloseRegister,
         // Layout
