@@ -240,28 +240,59 @@ class CategoryViewSet(TenantModelViewSet):
 
     @action(detail=True, methods=['get'])
     def linked_brands(self, request, pk=None):
-        """Return brands linked to this category via M2M, plus all brands for linking palette."""
+        """
+        Return brands linked to this category — auto-derived from product data.
+        A brand is 'linked' if ANY product in this category uses that brand.
+        Also includes explicit M2M links (pre-registration).
+        """
         category = self.get_object()
         organization = category.organization
+        from apps.inventory.models import Product
 
-        linked = Brand.objects.filter(
-            categories=category, organization=organization
-        ).annotate(
-            product_count=Count('products', filter=Q(products__category=category))
-        ).values('id', 'name', 'logo', 'product_count')
+        # Auto-derived: distinct brands used by products in this category
+        auto_brand_ids = set(
+            Product.objects.filter(
+                category=category, organization=organization, brand__isnull=False
+            ).values_list('brand_id', flat=True).distinct()
+        )
+
+        # Explicit M2M links (pre-registration)
+        explicit_brand_ids = set(
+            Brand.objects.filter(
+                categories=category, organization=organization
+            ).values_list('id', flat=True)
+        )
+
+        # Union of both
+        all_linked_ids = auto_brand_ids | explicit_brand_ids
+
+        linked = []
+        if all_linked_ids:
+            brands_qs = Brand.objects.filter(
+                id__in=all_linked_ids, organization=organization
+            ).annotate(
+                product_count=Count('products', filter=Q(products__category=category))
+            )
+            for b in brands_qs:
+                source = 'both' if b.id in auto_brand_ids and b.id in explicit_brand_ids \
+                    else 'auto' if b.id in auto_brand_ids else 'explicit'
+                linked.append({
+                    'id': b.id, 'name': b.name, 'logo': b.logo,
+                    'product_count': b.product_count, 'source': source,
+                })
 
         all_brands = Brand.objects.filter(
             organization=organization
         ).values('id', 'name').order_by('name')
 
         return Response({
-            "linked": list(linked),
+            "linked": linked,
             "all": list(all_brands),
         })
 
     @action(detail=True, methods=['post'])
     def link_brand(self, request, pk=None):
-        """Add a brand to this category's M2M brands."""
+        """Pre-register a brand to this category (explicit M2M link)."""
         category = self.get_object()
         brand_id = request.data.get('brand_id')
         try:
@@ -273,39 +304,97 @@ class CategoryViewSet(TenantModelViewSet):
 
     @action(detail=True, methods=['post'])
     def unlink_brand(self, request, pk=None):
-        """Remove a brand from this category's M2M brands."""
+        """
+        Remove a brand from this category. Protected: if products in this
+        category use this brand, return 409 with conflict details.
+        """
         category = self.get_object()
+        organization = category.organization
         brand_id = request.data.get('brand_id')
+        from apps.inventory.models import Product
+
         try:
-            brand = Brand.objects.get(id=brand_id, organization=category.organization)
-            brand.categories.remove(category)
-            return Response({"status": "unlinked", "brand": brand.name})
+            brand = Brand.objects.get(id=brand_id, organization=organization)
         except Brand.DoesNotExist:
             return Response({"error": "Brand not found"}, status=404)
 
+        # Check for product conflicts
+        conflicting = Product.objects.filter(
+            category=category, brand=brand, organization=organization
+        ).select_related('brand').only('id', 'sku', 'name', 'barcode')
+
+        count = conflicting.count()
+        if count > 0:
+            products_preview = list(
+                conflicting[:20].values('id', 'sku', 'name', 'barcode')
+            )
+            return Response({
+                "error": "conflict",
+                "message": f'{count} product{"s" if count != 1 else ""} in this category use brand "{brand.name}". '
+                           f'Reassign them to a different brand before unlinking.',
+                "affected_count": count,
+                "products": products_preview,
+            }, status=409)
+
+        # Safe to unlink — remove explicit M2M
+        brand.categories.remove(category)
+        return Response({"status": "unlinked", "brand": brand.name})
+
     @action(detail=True, methods=['get'])
     def linked_attributes(self, request, pk=None):
-        """Return attribute groups linked to this category via M2M."""
+        """
+        Return attribute groups linked to this category — auto-derived from product data.
+        An attribute group is 'linked' if ANY product in this category uses a child value of that group.
+        Also includes explicit M2M links (pre-registration).
+        """
         category = self.get_object()
         organization = category.organization
-        from apps.inventory.models import ProductAttribute
+        from apps.inventory.models import ProductAttribute, Product
 
-        linked = ProductAttribute.objects.filter(
-            categories=category, organization=organization, parent__isnull=True
-        ).values('id', 'name', 'code')
+        # Auto-derived: attribute groups used by products in this category
+        # Products have attribute_values (leaf nodes) → get their parent (root group) IDs
+        auto_group_ids = set(
+            ProductAttribute.objects.filter(
+                products_with_attribute__category=category,
+                products_with_attribute__organization=organization,
+                parent__isnull=False  # leaf nodes only
+            ).values_list('parent_id', flat=True).distinct()
+        )
+
+        # Explicit M2M links (pre-registration)
+        explicit_group_ids = set(
+            ProductAttribute.objects.filter(
+                categories=category, organization=organization, parent__isnull=True
+            ).values_list('id', flat=True)
+        )
+
+        # Union of both
+        all_linked_ids = auto_group_ids | explicit_group_ids
+
+        linked = []
+        if all_linked_ids:
+            groups_qs = ProductAttribute.objects.filter(
+                id__in=all_linked_ids, organization=organization, parent__isnull=True
+            ).order_by('name')
+            for g in groups_qs:
+                source = 'both' if g.id in auto_group_ids and g.id in explicit_group_ids \
+                    else 'auto' if g.id in auto_group_ids else 'explicit'
+                linked.append({
+                    'id': g.id, 'name': g.name, 'code': g.code, 'source': source,
+                })
 
         all_attrs = ProductAttribute.objects.filter(
             organization=organization, parent__isnull=True
         ).values('id', 'name', 'code').order_by('name')
 
         return Response({
-            "linked": list(linked),
+            "linked": linked,
             "all": list(all_attrs),
         })
 
     @action(detail=True, methods=['post'])
     def link_attribute(self, request, pk=None):
-        """Add an attribute group to this category's M2M attributes."""
+        """Pre-register an attribute group to this category (explicit M2M link)."""
         category = self.get_object()
         from apps.inventory.models import ProductAttribute
         attr_id = request.data.get('attribute_id')
@@ -318,16 +407,59 @@ class CategoryViewSet(TenantModelViewSet):
 
     @action(detail=True, methods=['post'])
     def unlink_attribute(self, request, pk=None):
-        """Remove an attribute group from this category's M2M attributes."""
+        """
+        Remove an attribute group from this category. Protected: if products
+        in this category use values from this group, return 409 with conflict details.
+        Barcode-aware: highlights products with active barcodes (extra severity).
+        """
         category = self.get_object()
-        from apps.inventory.models import ProductAttribute
+        organization = category.organization
+        from apps.inventory.models import ProductAttribute, Product
         attr_id = request.data.get('attribute_id')
+
         try:
-            attr = ProductAttribute.objects.get(id=attr_id, organization=category.organization, parent__isnull=True)
-            category.attributes.remove(attr)
-            return Response({"status": "unlinked", "attribute": attr.name})
+            attr = ProductAttribute.objects.get(id=attr_id, organization=organization, parent__isnull=True)
         except ProductAttribute.DoesNotExist:
             return Response({"error": "Attribute group not found"}, status=404)
+
+        # Find child attribute values of this group
+        child_ids = list(
+            ProductAttribute.objects.filter(parent=attr, organization=organization).values_list('id', flat=True)
+        )
+
+        # Products in this category using any child value
+        conflicting = Product.objects.filter(
+            category=category, organization=organization,
+            attribute_values__id__in=child_ids
+        ).distinct().only('id', 'sku', 'name', 'barcode')
+
+        count = conflicting.count()
+        if count > 0:
+            # Count those with active barcodes (extra severity)
+            barcode_count = conflicting.filter(barcodes__is_active=True).distinct().count()
+            products_preview = list(
+                conflicting[:20].values('id', 'sku', 'name', 'barcode')
+            )
+            # Add has_barcode flag to each preview
+            barcode_product_ids = set(
+                conflicting[:20].filter(barcodes__is_active=True).values_list('id', flat=True)
+            )
+            for p in products_preview:
+                p['has_barcode'] = p['id'] in barcode_product_ids
+
+            return Response({
+                "error": "conflict",
+                "message": f'{count} product{"s" if count != 1 else ""} in this category use attributes from "{attr.name}". '
+                           f'{f"{barcode_count} have active barcodes. " if barcode_count else ""}'
+                           f'Reassign attribute values before unlinking.',
+                "affected_count": count,
+                "barcode_count": barcode_count,
+                "products": products_preview,
+            }, status=409)
+
+        # Safe to unlink — remove explicit M2M
+        category.attributes.remove(attr)
+        return Response({"status": "unlinked", "attribute": attr.name})
 
     @action(detail=True, methods=['get'])
     def explore(self, request, pk=None):

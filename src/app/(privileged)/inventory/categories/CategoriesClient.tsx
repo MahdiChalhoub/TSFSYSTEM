@@ -7,7 +7,7 @@ import {
     Trash2, Layers, Box, GitBranch,
     Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp, Bookmark, AlertCircle, Wrench,
     Package, Paintbrush, Link2, Unlink, Loader2, ExternalLink, LayoutPanelLeft, PanelLeftClose,
-    Hash, Tag, ChevronUp, Info, ArrowRightLeft, Check, AlertTriangle, SlidersHorizontal
+    Hash, Tag, ChevronUp, Info, ArrowRightLeft, Check, AlertTriangle, SlidersHorizontal, Lock as LockIcon
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -796,6 +796,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
     const [filterType, setFilterType] = useState('')
     const [filterUnit, setFilterUnit] = useState('')
     const [filterTva, setFilterTva] = useState('')
+    const [taxGroups, setTaxGroups] = useState<any[]>([])
     const [filterMargin, setFilterMargin] = useState<NumericRange>(EMPTY_RANGE)
     const [filterPrice, setFilterPrice] = useState<NumericRange>(EMPTY_RANGE)
     const [showFilterPopup, setShowFilterPopup] = useState(false)
@@ -885,6 +886,16 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
     const uniqueTypes = useMemo(() => (filterOptions.types || []).map((o: any) => o.value), [filterOptions])
     const uniqueUnits = useMemo(() => (filterOptions.units || []).map((o: any) => o.value), [filterOptions])
     const uniqueTvaRates = useMemo(() => (filterOptions.tva_rates || []).map((o: any) => o.value), [filterOptions])
+
+    // Fetch tax groups from finance module (source of truth)
+    useEffect(() => {
+        erpFetch('finance/tax-groups/')
+            .then((data: any) => {
+                const groups = Array.isArray(data) ? data : data?.results ?? []
+                setTaxGroups(groups)
+            })
+            .catch(() => {})
+    }, [])
 
     const activeFilterCount = (filterBrand ? 1 : 0) + (filterStatus ? 1 : 0) + (filterType ? 1 : 0) +
         (filterUnit ? 1 : 0) + (filterTva ? 1 : 0) +
@@ -1099,19 +1110,22 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                     <div className="p-3">
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                                             <SearchableDropdown label="Type" value={filterType} onChange={setFilterType}
-                                                options={uniqueTypes.map(t => ({ value: t, label: t }))} placeholder="All Types" />
+                                                options={uniqueTypes.map((t: string) => ({ value: t, label: t }))} placeholder="All Types" />
 
                                             <SearchableDropdown label="Brand" value={filterBrand} onChange={setFilterBrand}
-                                                options={uniqueBrands.map(b => ({ value: b, label: b }))} placeholder="All Brands" />
+                                                options={uniqueBrands.map((b: string) => ({ value: b, label: b }))} placeholder="All Brands" />
 
                                             <SearchableDropdown label="Status" value={filterStatus} onChange={setFilterStatus}
-                                                options={uniqueStatuses.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} placeholder="All Statuses" />
+                                                options={uniqueStatuses.map((s: string) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} placeholder="All Statuses" />
 
                                             <SearchableDropdown label="Unit" value={filterUnit} onChange={setFilterUnit}
-                                                options={uniqueUnits.map(u => ({ value: u, label: u }))} placeholder="All Units" />
+                                                options={uniqueUnits.map((u: string) => ({ value: u, label: u }))} placeholder="All Units" />
 
                                             <SearchableDropdown label="TVA Rate %" value={filterTva} onChange={setFilterTva}
-                                                options={uniqueTvaRates.map(r => ({ value: r, label: `${r}%` }))} placeholder="All Rates" />
+                                                options={taxGroups.length > 0
+                                                    ? taxGroups.map((tg: any) => ({ value: String(tg.rate), label: `${tg.name} (${tg.rate}%)` }))
+                                                    : uniqueTvaRates.map((r: any) => ({ value: r, label: `${r}%` }))
+                                                } placeholder="All Rates" />
 
                                             <NumericRangeFilter label="Margin %" value={filterMargin} onChange={setFilterMargin} />
 
@@ -1703,11 +1717,11 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
     const [loading, setLoading] = useState(true)
     const [linking, setLinking] = useState(false)
     const [showLink, setShowLink] = useState(false)
+    const [conflict, setConflict] = useState<any>(null)
     const router = useRouter()
 
     const loadData = useCallback(() => {
         setLoading(true)
-        // Fetch M2M linked brands AND all available brands from single endpoint
         erpFetch(`inventory/categories/${categoryId}/linked_brands/`)
             .then((data: any) => {
                 setLinkedBrands(Array.isArray(data?.linked) ? data.linked : [])
@@ -1728,7 +1742,7 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                 method: 'POST',
                 body: JSON.stringify({ brand_id: brandId }),
             })
-            toast.success('Brand linked')
+            toast.success('Brand pre-registered')
             loadData(); router.refresh()
         } catch (e: any) { toast.error(e?.message || 'Failed to link') }
         finally { setLinking(false) }
@@ -1742,8 +1756,17 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                 body: JSON.stringify({ brand_id: brandId }),
             })
             toast.success('Brand unlinked')
+            setConflict(null)
             loadData(); router.refresh()
-        } catch (e: any) { toast.error(e?.message || 'Failed to unlink') }
+        } catch (e: any) {
+            // Handle 409 conflict — ErpApiError.data carries the full JSON body
+            const conflictData = e?.data || e
+            if (conflictData?.error === 'conflict' && conflictData?.products) {
+                setConflict(conflictData)
+            } else {
+                toast.error(e?.message || 'Failed to unlink')
+            }
+        }
         finally { setLinking(false) }
     }
 
@@ -1754,8 +1777,14 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                     {loading ? 'Loading...' : `${linkedBrands.length} brand${linkedBrands.length !== 1 ? 's' : ''} linked`}
                 </p>
                 <button onClick={() => setShowLink(!showLink)}
-                    className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1 rounded-xl hover:bg-app-surface transition-all">
-                    <Link2 size={11} /> {showLink ? 'Hide' : 'Link'}
+                    className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg transition-all"
+                    style={showLink ? {
+                        background: 'color-mix(in srgb, #8b5cf6 10%, transparent)',
+                        color: '#8b5cf6',
+                    } : {
+                        color: 'var(--app-muted-foreground)',
+                    }}>
+                    <Plus size={11} /> Pre-register
                 </button>
             </div>
 
@@ -1781,6 +1810,34 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                 </div>
             )}
 
+            {/* Conflict Dialog */}
+            {conflict && (
+                <div className="flex-shrink-0 px-4 py-3 animate-in slide-in-from-top-2 duration-200"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle size={14} style={{ color: 'var(--app-error)' }} />
+                        <span className="text-[11px] font-black text-app-error">Cannot Unlink — {conflict.affected_count} product{conflict.affected_count !== 1 ? 's' : ''} affected</span>
+                    </div>
+                    <p className="text-[10px] text-app-muted-foreground mb-2">{conflict.message}</p>
+                    <div className="max-h-32 overflow-y-auto custom-scrollbar space-y-1">
+                        {(conflict.products || []).map((p: any) => (
+                            <div key={p.id} className="flex items-center gap-2 text-[10px] py-1 px-2 rounded-lg"
+                                style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
+                                <span className="font-mono font-bold text-app-muted-foreground">{p.sku}</span>
+                                <span className="font-bold text-app-foreground truncate flex-1">{p.name}</span>
+                            </div>
+                        ))}
+                        {conflict.affected_count > 20 && (
+                            <p className="text-[10px] font-bold text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>
+                        )}
+                    </div>
+                    <button onClick={() => setConflict(null)}
+                        className="mt-2 text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all">
+                        Dismiss
+                    </button>
+                </div>
+            )}
+
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {loading ? (
                     <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: '#8b5cf6' }} /></div>
@@ -1788,7 +1845,9 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <Paintbrush size={32} className="text-app-muted-foreground mb-2 opacity-40" />
                         <p className="text-sm font-bold text-app-muted-foreground">No brands linked</p>
-                        <p className="text-[11px] text-app-muted-foreground mt-1">Click &ldquo;Link&rdquo; to associate brands with this category.</p>
+                        <p className="text-[11px] text-app-muted-foreground mt-1">
+                            Brands appear automatically when products use them.
+                        </p>
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
@@ -1799,16 +1858,38 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                                     <Paintbrush size={12} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[12px] font-bold text-app-foreground truncate">{b.name}</p>
+                                    <div className="flex items-center gap-1.5">
+                                        <p className="text-[12px] font-bold text-app-foreground truncate">{b.name}</p>
+                                        <span className="text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
+                                            style={b.source === 'auto' || b.source === 'both' ? {
+                                                background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
+                                                color: 'var(--app-success)',
+                                            } : {
+                                                background: 'color-mix(in srgb, #8b5cf6 10%, transparent)',
+                                                color: '#8b5cf6',
+                                            }}>
+                                            {b.source === 'auto' ? 'AUTO' : b.source === 'both' ? 'AUTO' : 'PRE-REG'}
+                                        </span>
+                                    </div>
                                     {b.product_count != null && (
-                                        <p className="text-[10px] font-bold text-app-muted-foreground">{b.product_count} products</p>
+                                        <p className="text-[10px] font-bold text-app-muted-foreground">{b.product_count} product{b.product_count !== 1 ? 's' : ''}</p>
                                     )}
                                 </div>
-                                <button onClick={() => unlinkBrand(b.id)} disabled={linking}
-                                    className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
-                                    <Unlink size={10} />Unlink
-                                </button>
+                                {/* Only show unlink for explicit-only links (no products using it) */}
+                                {b.source === 'explicit' && (
+                                    <button onClick={() => unlinkBrand(b.id)} disabled={linking}
+                                        className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                                        style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                        <Unlink size={10} />Unlink
+                                    </button>
+                                )}
+                                {/* Auto-linked brands: show locked indicator */}
+                                {(b.source === 'auto' || b.source === 'both') && (
+                                    <span className="text-[9px] font-bold text-app-muted-foreground opacity-0 group-hover:opacity-70 transition-all flex items-center gap-1"
+                                        title={`${b.product_count} product(s) use this brand — remove them first to unlink`}>
+                                        <LockIcon size={9} /> {b.product_count} using
+                                    </span>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -1825,6 +1906,7 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
     const [loading, setLoading] = useState(true)
     const [linking, setLinking] = useState(false)
     const [showLink, setShowLink] = useState(false)
+    const [conflict, setConflict] = useState<any>(null)
     const router = useRouter()
 
     const loadData = useCallback(() => {
@@ -1849,7 +1931,7 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                 method: 'POST',
                 body: JSON.stringify({ attribute_id: attrId }),
             })
-            toast.success('Attribute linked')
+            toast.success('Attribute pre-registered')
             loadData(); router.refresh()
         } catch (e: any) { toast.error(e?.message || 'Failed to link') }
         finally { setLinking(false) }
@@ -1863,8 +1945,16 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                 body: JSON.stringify({ attribute_id: attrId }),
             })
             toast.success('Attribute unlinked')
+            setConflict(null)
             loadData(); router.refresh()
-        } catch (e: any) { toast.error(e?.message || 'Failed to unlink') }
+        } catch (e: any) {
+            const conflictData = e?.data || e
+            if (conflictData?.error === 'conflict' && conflictData?.products) {
+                setConflict(conflictData)
+            } else {
+                toast.error(e?.message || 'Failed to unlink')
+            }
+        }
         finally { setLinking(false) }
     }
 
@@ -1882,7 +1972,7 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                     } : {
                         color: 'var(--app-muted-foreground)',
                     }}>
-                    <Link2 size={11} /> {showLink ? 'Hide' : 'Link'}
+                    <Plus size={11} /> Pre-register
                 </button>
             </div>
 
@@ -1908,6 +1998,48 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                 </div>
             )}
 
+            {/* Conflict Dialog */}
+            {conflict && (
+                <div className="flex-shrink-0 px-4 py-3 animate-in slide-in-from-top-2 duration-200"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle size={14} style={{ color: 'var(--app-error)' }} />
+                        <span className="text-[11px] font-black text-app-error">
+                            Cannot Unlink — {conflict.affected_count} product{conflict.affected_count !== 1 ? 's' : ''} affected
+                        </span>
+                        {conflict.barcode_count > 0 && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
+                                style={{ background: 'color-mix(in srgb, var(--app-error) 12%, transparent)', color: 'var(--app-error)' }}>
+                                🔒 {conflict.barcode_count} with barcodes
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-[10px] text-app-muted-foreground mb-2">{conflict.message}</p>
+                    <div className="max-h-32 overflow-y-auto custom-scrollbar space-y-1">
+                        {(conflict.products || []).map((p: any) => (
+                            <div key={p.id} className="flex items-center gap-2 text-[10px] py-1 px-2 rounded-lg"
+                                style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
+                                <span className="font-mono font-bold text-app-muted-foreground">{p.sku}</span>
+                                <span className="font-bold text-app-foreground truncate flex-1">{p.name}</span>
+                                {p.has_barcode && (
+                                    <span className="text-[8px] font-black px-1 py-0.5 rounded"
+                                        style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
+                                        BARCODE
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                        {conflict.affected_count > 20 && (
+                            <p className="text-[10px] font-bold text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>
+                        )}
+                    </div>
+                    <button onClick={() => setConflict(null)}
+                        className="mt-2 text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all">
+                        Dismiss
+                    </button>
+                </div>
+            )}
+
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {loading ? (
                     <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: 'var(--app-warning)' }} /></div>
@@ -1916,7 +2048,7 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                         <Tag size={32} className="text-app-muted-foreground mb-2 opacity-40" />
                         <p className="text-sm font-bold text-app-muted-foreground">No attribute groups linked</p>
                         <p className="text-[11px] text-app-muted-foreground mt-1">
-                            Click &ldquo;Link&rdquo; to associate attribute groups with this category.
+                            Attribute groups appear automatically when products use them.
                         </p>
                     </div>
                 ) : (
@@ -1928,14 +2060,36 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                                     <Tag size={12} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[12px] font-bold text-app-foreground truncate">{group.name}</p>
+                                    <div className="flex items-center gap-1.5">
+                                        <p className="text-[12px] font-bold text-app-foreground truncate">{group.name}</p>
+                                        <span className="text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
+                                            style={group.source === 'auto' || group.source === 'both' ? {
+                                                background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
+                                                color: 'var(--app-success)',
+                                            } : {
+                                                background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)',
+                                                color: 'var(--app-warning)',
+                                            }}>
+                                            {group.source === 'auto' ? 'AUTO' : group.source === 'both' ? 'AUTO' : 'PRE-REG'}
+                                        </span>
+                                    </div>
                                     {group.code && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{group.code}</p>}
                                 </div>
-                                <button onClick={() => unlinkAttr(group.id)} disabled={linking}
-                                    className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
-                                    <Unlink size={10} />Unlink
-                                </button>
+                                {/* Only show unlink for explicit-only links (no products using it) */}
+                                {group.source === 'explicit' && (
+                                    <button onClick={() => unlinkAttr(group.id)} disabled={linking}
+                                        className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                                        style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                        <Unlink size={10} />Unlink
+                                    </button>
+                                )}
+                                {/* Auto-linked attrs: show locked indicator */}
+                                {(group.source === 'auto' || group.source === 'both') && (
+                                    <span className="text-[9px] font-bold text-app-muted-foreground opacity-0 group-hover:opacity-70 transition-all flex items-center gap-1"
+                                        title="Products use values from this group — reassign them first to unlink">
+                                        <LockIcon size={9} /> In use
+                                    </span>
+                                )}
                             </div>
                         ))}
                     </div>

@@ -281,7 +281,8 @@ export default function TaxPolicyDashboard() {
     }
 
     return (
-        <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
+        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300 overflow-hidden"
+            style={{ height: 'calc(100dvh - 6rem)' }}>
 
             {/* ── Header ── */}
             {!focusMode ? (

@@ -10,7 +10,8 @@ import { AdminShell } from '@/components/admin/AdminShell';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
 import { CommandPalette } from '@/components/admin/CommandPalette';
-import { DesignSystemProvider } from '@/contexts/DesignSystemContext';
+import { DesignSystemProvider } from '@/contexts/DesignSystemContext'
+import { PeriodWarningBanner } from '@/components/finance/period-warning-banner';
 
 
 import { getSites } from '@/app/actions/sites';
@@ -147,7 +148,9 @@ export default async function AdminLayout({
                         <TopHeader sites={sites} organizations={organizations} currentSlug={currentSlug} user={user} />
 
                         {/* 2. Tab bar (horizontal strip or vertical rail) + main content */}
+                        <PeriodWarningBanner />
                         <AdminShell>{children}</AdminShell>
+
                     </div>
                     <DebugOverlay />
                     <CommandPalette />

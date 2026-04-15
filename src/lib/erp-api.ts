@@ -18,10 +18,12 @@ const debug = (...args: unknown[]) => isDev && console.log(...args);
 /** Custom error class for ERP API errors — used for type-safe catch blocks */
 export class ErpApiError extends Error {
     status: number
-    constructor(message: string, status: number) {
+    data?: Record<string, any>
+    constructor(message: string, status: number, data?: Record<string, any>) {
         super(message)
         this.name = 'ErpApiError'
         this.status = status
+        this.data = data
     }
 }
 
@@ -243,7 +245,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
                     }
                 }
 
-                throw new ErpApiError(message, response.status);
+                throw new ErpApiError(message, response.status, errorData);
             } catch (e) {
                 if (e instanceof ErpApiError) throw e;
                 throw new ErpApiError(errorText || `ERP Backend error: ${response.statusText}`, response.status);

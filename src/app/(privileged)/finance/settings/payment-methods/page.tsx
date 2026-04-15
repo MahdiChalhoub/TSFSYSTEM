@@ -99,7 +99,8 @@ export default function PaymentMethodsPage() {
     const resolveIcon = (iconName: string) => ICON_MAP[iconName] || CreditCard
 
     return (
-        <div className="app-page space-y-6 animate-in fade-in duration-500">
+        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300 overflow-hidden gap-4"
+            style={{ height: 'calc(100dvh - 6rem)' }}>
             {/* ─── Header ─── */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
