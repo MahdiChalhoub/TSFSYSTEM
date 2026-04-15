@@ -538,6 +538,7 @@ all_je_ids = test_je_ids + closing_je_ids
 if all_je_ids:
     with connection.cursor() as c:
         placeholders = ','.join(['%s'] * len(all_je_ids))
+        c.execute(f"UPDATE fiscalyear SET closing_journal_entry_id = NULL WHERE closing_journal_entry_id IN ({placeholders})", all_je_ids)
         c.execute(f"DELETE FROM journalentryline WHERE journal_entry_id IN ({placeholders})", all_je_ids)
         c.execute(f"UPDATE journalentry SET status='DRAFT' WHERE id IN ({placeholders})", all_je_ids)
         c.execute(f"DELETE FROM journalentry WHERE id IN ({placeholders})", all_je_ids)

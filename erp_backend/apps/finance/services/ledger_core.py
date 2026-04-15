@@ -212,8 +212,8 @@ class LedgerCoreMixin:
                 )
             
             # ── Step 7: Post if requested ─────────────────────────────
-            if status == 'POSTED': 
-                LedgerCoreMixin.post_journal_entry(entry, user=user)
+            if status == 'POSTED':
+                LedgerCoreMixin.post_journal_entry(entry, user=user, internal_bypass=kwargs.get('internal_bypass', False))
 
             ForensicAuditService.log_mutation(
                 organization=organization,
@@ -233,7 +233,7 @@ class LedgerCoreMixin:
 
 
     @staticmethod
-    def post_journal_entry(entry, user=None):
+    def post_journal_entry(entry, user=None, **kwargs):
         if entry.status == 'POSTED' and entry.posted_at: return
 
         # ── Migration Freeze Check ─────────────────────────────
@@ -267,7 +267,7 @@ class LedgerCoreMixin:
                 raise ValidationError(f"Cannot post unbalanced journal entry (Dr: {debit}, Cr: {credit})")
 
             # ── Final Period + Account Checks ─────────────────────────
-            if entry.fiscal_period and entry.fiscal_period.is_closed:
+            if entry.fiscal_period and entry.fiscal_period.is_closed and not kwargs.get('internal_bypass'):
                 raise ValidationError(f"Cannot post to closed period {entry.fiscal_period.name}.")
 
             # ── Serializability: Lock accounts in ID order ────────────
