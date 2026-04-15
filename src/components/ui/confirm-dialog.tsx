@@ -26,22 +26,10 @@ interface ConfirmDialogProps {
     loading?: boolean
 }
 
-const variantStyles: Record<Variant, { icon: typeof AlertTriangle; iconClass: string; btnClass: string }> = {
-    danger: {
-        icon: Trash2,
-        iconClass: 'text-red-500 bg-red-50',
-        btnClass: 'bg-red-600 hover:bg-red-500 text-white',
-    },
-    warning: {
-        icon: AlertTriangle,
-        iconClass: 'text-amber-500 bg-amber-50',
-        btnClass: 'bg-amber-600 hover:bg-amber-500 text-white',
-    },
-    info: {
-        icon: Info,
-        iconClass: 'text-blue-500 bg-blue-50',
-        btnClass: 'bg-blue-600 hover:bg-blue-500 text-white',
-    },
+const variantConfig: Record<Variant, { icon: typeof AlertTriangle; color: string }> = {
+    danger:  { icon: Trash2,        color: 'var(--app-error)' },
+    warning: { icon: AlertTriangle, color: 'var(--app-warning)' },
+    info:    { icon: Info,          color: 'var(--app-info)' },
 }
 
 export function ConfirmDialog({
@@ -56,8 +44,8 @@ export function ConfirmDialog({
     loading = false,
 }: ConfirmDialogProps) {
     const [isRunning, setIsRunning] = useState(false)
-    const style = variantStyles[variant]
-    const Icon = style.icon
+    const cfg = variantConfig[variant]
+    const Icon = cfg.icon
 
     const handleConfirm = async () => {
         setIsRunning(true)
@@ -72,15 +60,16 @@ export function ConfirmDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md rounded-2xl">
+            <DialogContent className="sm:max-w-md rounded-2xl" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                 <DialogHeader>
                     <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${style.iconClass}`}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ background: `color-mix(in srgb, ${cfg.color} 10%, transparent)`, color: cfg.color }}>
                             <Icon size={20} />
                         </div>
-                        <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
+                        <DialogTitle className="text-[15px] font-black" style={{ color: 'var(--app-foreground)' }}>{title}</DialogTitle>
                     </div>
-                    <DialogDescription className="mt-2 text-sm text-gray-500 leading-relaxed">
+                    <DialogDescription className="mt-2 text-[12px] font-medium leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
                         {description}
                     </DialogDescription>
                 </DialogHeader>
@@ -89,14 +78,16 @@ export function ConfirmDialog({
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                         disabled={busy}
-                        className="rounded-xl"
+                        className="rounded-xl text-[11px] font-bold"
+                        style={{ borderColor: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}
                     >
                         {cancelText}
                     </Button>
                     <Button
                         onClick={handleConfirm}
                         disabled={busy}
-                        className={`rounded-xl ${style.btnClass}`}
+                        className="rounded-xl text-[11px] font-bold"
+                        style={{ background: cfg.color, color: 'white' }}
                     >
                         {busy ? 'Processing...' : confirmText}
                     </Button>

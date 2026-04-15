@@ -286,39 +286,6 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                 </div>
             )}
 
-            {/* ── Current Month Alert ── */}
-            {(() => {
-                const today = new Date()
-                // Find the period that contains today
-                for (const y of years) {
-                    for (const p of (y.periods || [])) {
-                        const start = new Date(p.start_date)
-                        const end = new Date(p.end_date)
-                        if (today >= start && today <= end && p.status !== 'OPEN') {
-                            return (
-                                <div className="flex-shrink-0 flex items-center gap-3 px-4 py-2.5 mb-3 rounded-xl animate-in fade-in"
-                                    style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
-                                    <AlertTriangle size={15} style={{ color: 'var(--app-warning, #f59e0b)', flexShrink: 0 }} />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>
-                                            Current period <strong>{p.name}</strong> is <strong>{p.status}</strong> — transactions cannot be posted
-                                        </div>
-                                        <div className="text-[9px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            {start.toLocaleDateString()} — {end.toLocaleDateString()}
-                                        </div>
-                                    </div>
-                                    <button onClick={() => handlePeriodStatus(p.id, 'OPEN', y)} disabled={isPending}
-                                        className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all flex-shrink-0"
-                                        style={{ background: 'var(--app-success, #22c55e)', color: 'white' }}>
-                                        {isPending ? <Loader2 size={11} className="animate-spin" /> : <PlayCircle size={11} />} Open Now
-                                    </button>
-                                </div>
-                            )
-                        }
-                    }
-                }
-                return null
-            })()}
 
             <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                 {focusMode && (
