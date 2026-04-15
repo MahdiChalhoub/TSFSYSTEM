@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, DollarSign, FileText, Loader2, Fuel, Tool, CheckCircle2 } from 'lucide-react';
+import { X, DollarSign, FileText, Loader2, Fuel, Wrench, CheckCircle2 } from 'lucide-react';
 import { erpFetch } from '@/lib/erp-api';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -79,7 +79,7 @@ export default function LogExpenseModal({ driverId, driverName, onClose, onSaved
                                         : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10 hover:border-white/10"
                                 )}
                             >
-                                {type === 'fuel' ? <Fuel size={18} /> : type === 'maintenance' ? <Tool size={18} /> : <FileText size={18} />}
+                                {type === 'fuel' ? <Fuel size={18} /> : type === 'maintenance' ? <Wrench size={18} /> : <FileText size={18} />}
                                 <span className="text-[10px] font-bold uppercase tracking-tighter">{type}</span>
                             </button>
                         ))}
