@@ -1736,30 +1736,37 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
     const unlinkedBrands = allBrands.filter(b => !linkedIds.has(b.id))
 
     const linkBrand = async (brandId: number) => {
-        setLinking(true)
+        // Optimistic: immediately show in linked list
+        const brandObj = allBrands.find(b => b.id === brandId)
+        if (brandObj) {
+            setLinkedBrands(prev => [...prev, { ...brandObj, product_count: 0, source: 'explicit' }])
+        }
         try {
             await erpFetch(`inventory/categories/${categoryId}/link_brand/`, {
                 method: 'POST',
                 body: JSON.stringify({ brand_id: brandId }),
             })
             toast.success('Brand pre-registered')
-            loadData(); router.refresh()
-        } catch (e: any) { toast.error(e?.message || 'Failed to link') }
-        finally { setLinking(false) }
+            loadData() // Sync with server
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to link')
+            loadData() // Rollback
+        }
     }
 
     const unlinkBrand = async (brandId: number) => {
         setLinking(true)
+        setConflict(null)
         try {
             await erpFetch(`inventory/categories/${categoryId}/unlink_brand/`, {
                 method: 'POST',
                 body: JSON.stringify({ brand_id: brandId }),
             })
+            // Optimistic: remove from list instantly
+            setLinkedBrands(prev => prev.filter(b => b.id !== brandId))
             toast.success('Brand unlinked')
-            setConflict(null)
-            loadData(); router.refresh()
+            loadData()
         } catch (e: any) {
-            // Handle 409 conflict — ErpApiError.data carries the full JSON body
             const conflictData = e?.data || e
             if (conflictData?.error === 'conflict' && conflictData?.products) {
                 setConflict(conflictData)
@@ -1810,7 +1817,7 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                 </div>
             )}
 
-            {/* Conflict Dialog */}
+            {/* Conflict Dialog — shows affected products when unlinking */}
             {conflict && (
                 <div className="flex-shrink-0 px-4 py-3 animate-in slide-in-from-top-2 duration-200"
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
@@ -1875,21 +1882,12 @@ function PanelBrandsTab({ categoryId, categoryName }: { categoryId: number; cate
                                         <p className="text-[10px] font-bold text-app-muted-foreground">{b.product_count} product{b.product_count !== 1 ? 's' : ''}</p>
                                     )}
                                 </div>
-                                {/* Only show unlink for explicit-only links (no products using it) */}
-                                {b.source === 'explicit' && (
-                                    <button onClick={() => unlinkBrand(b.id)} disabled={linking}
-                                        className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                                        style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
-                                        <Unlink size={10} />Unlink
-                                    </button>
-                                )}
-                                {/* Auto-linked brands: show locked indicator */}
-                                {(b.source === 'auto' || b.source === 'both') && (
-                                    <span className="text-[9px] font-bold text-app-muted-foreground opacity-0 group-hover:opacity-70 transition-all flex items-center gap-1"
-                                        title={`${b.product_count} product(s) use this brand — remove them first to unlink`}>
-                                        <LockIcon size={9} /> {b.product_count} using
-                                    </span>
-                                )}
+                                {/* Unlink available on ALL brands — conflict dialog protects data */}
+                                <button onClick={() => unlinkBrand(b.id)} disabled={linking}
+                                    className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                    <Unlink size={10} />Unlink
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -1925,28 +1923,36 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
     const unlinkedAttrs = allAttrs.filter(a => !linkedIds.has(a.id))
 
     const linkAttr = async (attrId: number) => {
-        setLinking(true)
+        // Optimistic: immediately show in linked list
+        const attrObj = allAttrs.find(a => a.id === attrId)
+        if (attrObj) {
+            setLinkedAttrs(prev => [...prev, { ...attrObj, source: 'explicit' }])
+        }
         try {
             await erpFetch(`inventory/categories/${categoryId}/link_attribute/`, {
                 method: 'POST',
                 body: JSON.stringify({ attribute_id: attrId }),
             })
             toast.success('Attribute pre-registered')
-            loadData(); router.refresh()
-        } catch (e: any) { toast.error(e?.message || 'Failed to link') }
-        finally { setLinking(false) }
+            loadData()
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to link')
+            loadData()
+        }
     }
 
     const unlinkAttr = async (attrId: number) => {
         setLinking(true)
+        setConflict(null)
         try {
             await erpFetch(`inventory/categories/${categoryId}/unlink_attribute/`, {
                 method: 'POST',
                 body: JSON.stringify({ attribute_id: attrId }),
             })
+            // Optimistic: remove from list instantly
+            setLinkedAttrs(prev => prev.filter(a => a.id !== attrId))
             toast.success('Attribute unlinked')
-            setConflict(null)
-            loadData(); router.refresh()
+            loadData()
         } catch (e: any) {
             const conflictData = e?.data || e
             if (conflictData?.error === 'conflict' && conflictData?.products) {
@@ -1998,7 +2004,7 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                 </div>
             )}
 
-            {/* Conflict Dialog */}
+            {/* Conflict Dialog — shows affected products + barcode warnings */}
             {conflict && (
                 <div className="flex-shrink-0 px-4 py-3 animate-in slide-in-from-top-2 duration-200"
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
@@ -2075,21 +2081,12 @@ function PanelAttributesTab({ categoryId, categoryName }: { categoryId: number; 
                                     </div>
                                     {group.code && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{group.code}</p>}
                                 </div>
-                                {/* Only show unlink for explicit-only links (no products using it) */}
-                                {group.source === 'explicit' && (
-                                    <button onClick={() => unlinkAttr(group.id)} disabled={linking}
-                                        className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                                        style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
-                                        <Unlink size={10} />Unlink
-                                    </button>
-                                )}
-                                {/* Auto-linked attrs: show locked indicator */}
-                                {(group.source === 'auto' || group.source === 'both') && (
-                                    <span className="text-[9px] font-bold text-app-muted-foreground opacity-0 group-hover:opacity-70 transition-all flex items-center gap-1"
-                                        title="Products use values from this group — reassign them first to unlink">
-                                        <LockIcon size={9} /> In use
-                                    </span>
-                                )}
+                                {/* Unlink available on ALL attributes — conflict dialog protects data */}
+                                <button onClick={() => unlinkAttr(group.id)} disabled={linking}
+                                    className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                    <Unlink size={10} />Unlink
+                                </button>
                             </div>
                         ))}
                     </div>
