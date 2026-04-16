@@ -321,11 +321,12 @@ function BrandsPopup({ category, onClose }: { category: CategoryNode; onClose: (
  * ═══════════════════════════════════════════════════════════ */
 const CategoryRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
-    onViewProducts, onViewBrands, onViewAttributes,
+    onViewProducts, onViewBrands, onViewAttributes, onSelect,
 }: {
     node: CategoryNode; level: number; searchQuery: string; forceExpanded?: boolean;
     onEdit: (n: CategoryNode) => void; onAdd: (parentId?: number) => void; onDelete: (n: CategoryNode) => void;
     onViewProducts: (n: CategoryNode) => void; onViewBrands: (n: CategoryNode) => void; onViewAttributes: (n: CategoryNode) => void;
+    onSelect?: (n: CategoryNode) => void;
 }) => {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
@@ -350,12 +351,14 @@ const CategoryRow = ({
             {/* ── ROW ── */}
             <div
                 className={`
-                    group flex items-center gap-2.5 transition-all duration-200 cursor-default relative
+                    group flex items-center gap-2.5 transition-all duration-200 relative
+                    ${isParent ? 'cursor-pointer' : 'cursor-default'}
                     ${level === 0
                         ? 'py-2.5 md:py-3 hover:brightness-105'
                         : 'py-1.5 md:py-2 hover:brightness-105'
                     }
                 `}
+                onClick={(e) => { e.stopPropagation(); if (isParent) setIsOpen(!isOpen); onSelect?.(node) }}
                 style={{
                     paddingLeft: `${12 + (level > 0 ? level * 18 : 0)}px`,
                     paddingRight: '12px',
@@ -540,6 +543,7 @@ const CategoryRow = ({
                             onViewProducts={onViewProducts}
                             onViewBrands={onViewBrands}
                             onViewAttributes={onViewAttributes}
+                            onSelect={onSelect}
                             searchQuery={searchQuery}
                             forceExpanded={forceExpanded}
                         />
@@ -569,6 +573,7 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, ini
     const isParent = (node.children?.length ?? 0) > 0
     const productCount = node.product_count ?? 0
     const brandCount = node.brand_count ?? 0
+    const attributeCount = node.attribute_count ?? 0
     const childCount = node.children?.length ?? 0
 
     useEffect(() => { setActiveTab(initialTab ?? 'overview') }, [node.id, initialTab])
@@ -577,7 +582,7 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, ini
         { key: 'overview', label: 'Overview', icon: <Layers size={12} />, color: 'var(--app-primary)' },
         { key: 'products', label: 'Products', icon: <Package size={12} />, count: productCount, color: 'var(--app-success, #22c55e)' },
         { key: 'brands', label: 'Brands', icon: <Paintbrush size={12} />, count: brandCount, color: '#8b5cf6' },
-        { key: 'attributes', label: 'Attributes', icon: <Tag size={12} />, color: 'var(--app-warning, #f59e0b)' },
+        { key: 'attributes', label: 'Attributes', icon: <Tag size={12} />, count: attributeCount, color: 'var(--app-warning, #f59e0b)' },
     ]
 
     return (
@@ -639,7 +644,7 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, ini
 
             {/* ── Tab Bar ── */}
             <div className="flex-shrink-0 flex items-center px-3 overflow-x-auto"
-                style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)' }}>
+                style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {tabs.map(tab => {
                     const isActive = activeTab === tab.key
                     return (
@@ -2480,7 +2485,6 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         {tree.length > 0 ? (
                             tree.map((node) => (
                                 <div key={`${node.id}-${expandKey}`}
-                                    onClick={splitPanel ? () => { setSelectedCategory(node); setPanelTab('overview') } : undefined}
                                     className={splitPanel && selectedCategory?.id === node.id ? 'ring-1 ring-inset ring-app-primary/30' : ''}
                                 >
                                     <CategoryRow
@@ -2489,6 +2493,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                         onEdit={openEditModal}
                                         onAdd={openAddModal}
                                         onDelete={requestDelete}
+                                        onSelect={splitPanel ? (n) => { setSelectedCategory(n); setPanelTab('overview') } : undefined}
                                         onViewProducts={(n) => {
                                             if (splitPanel) {
                                                 setSelectedCategory(n)

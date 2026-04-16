@@ -137,7 +137,7 @@ export async function updatePeriod(periodId: number, data: unknown) {
 
 export async function updatePeriodStatus(periodId: number, newStatus: string) {
     try {
-        await erpFetch(`fiscal-periods/${periodId}/`, {
+        const result = await erpFetch(`fiscal-periods/${periodId}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -145,10 +145,11 @@ export async function updatePeriodStatus(periodId: number, newStatus: string) {
                 is_closed: newStatus === 'CLOSED',
             })
         })
-        try { revalidatePath('/finance/fiscal-years') } catch { /* ignore revalidation errors */ }
+        console.log(`[PERIOD_UPDATE] ${periodId} → ${newStatus}: OK`, result)
+        try { revalidatePath('/finance/fiscal-years') } catch { /* ignore */ }
         return { success: true }
     } catch (error: unknown) {
-        console.error("Failed to update period status:", error)
+        console.error(`[PERIOD_UPDATE] ${periodId} → ${newStatus}: FAILED`, error)
         throw error
     }
 }
