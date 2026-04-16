@@ -178,10 +178,12 @@ export async function lockFiscalYear(id: number) {
  *
  * This calls ClosingService.close_fiscal_year on the backend.
  */
-export async function hardLockFiscalYear(id: number) {
+export async function hardLockFiscalYear(id: number, closeDate?: string) {
     try {
         await erpFetch(`fiscal-years/${id}/close/`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(closeDate ? { close_date: closeDate } : {}),
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }

@@ -46,10 +46,17 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         fiscal_year = self.get_object()
         organization_id = get_current_tenant_id()
         organization = Organization.objects.get(id=organization_id)
-        
+
+        # Optional close_date for partial year close
+        close_date = request.data.get('close_date') if hasattr(request, 'data') else None
+
         try:
-            from apps.finance.services import FiscalYearService
-            FiscalYearService.close_fiscal_year(organization, fiscal_year)
+            from apps.finance.services.closing_service import ClosingService
+            ClosingService.close_fiscal_year(
+                organization, fiscal_year,
+                user=request.user if request.user.is_authenticated else None,
+                close_date=close_date,
+            )
             return Response({"status": "Fiscal Year Closed"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

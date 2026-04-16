@@ -154,11 +154,14 @@ export function GuidedTour({
 
     useEffect(() => {
         if (!isActive) return
-        const timer = setTimeout(positionTooltip, 200)
+        // For action steps that create DOM elements dynamically,
+        // retry positioning multiple times until the element appears
+        const delays = [200, 500, 800, 1200]
+        const timers = delays.map(d => setTimeout(positionTooltip, d))
         window.addEventListener('resize', positionTooltip)
         window.addEventListener('scroll', positionTooltip, true)
         return () => {
-            clearTimeout(timer)
+            timers.forEach(t => clearTimeout(t))
             window.removeEventListener('resize', positionTooltip)
             window.removeEventListener('scroll', positionTooltip, true)
         }
@@ -249,7 +252,7 @@ export function GuidedTour({
     const isClickStep = behavior === 'click'
 
     return (
-        <div className="fixed inset-0 z-[200] animate-in fade-in duration-300" key={`tour-step-${currentStep}`}>
+        <div className="fixed inset-0 z-[10000] animate-in fade-in duration-300" key={`tour-step-${currentStep}`}>
             {/* ── Overlay ── */}
             {isCentered ? (
                 <div
@@ -324,7 +327,7 @@ export function GuidedTour({
                         left: targetRect.left + targetRect.width / 2 - 16,
                         top: targetRect.top + targetRect.height / 2 - 16,
                         width: 32, height: 32,
-                        zIndex: 201,
+                        zIndex: 10001,
                     }}
                 >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center animate-bounce"
@@ -350,7 +353,7 @@ export function GuidedTour({
                     background: 'var(--app-surface)',
                     border: '1px solid var(--app-border)',
                     boxShadow: `0 24px 64px rgba(0,0,0,0.35), 0 0 40px color-mix(in srgb, ${accentColor} 10%, transparent)`,
-                    zIndex: 202,
+                    zIndex: 10002,
                 }}
                 onClick={e => e.stopPropagation()}
             >

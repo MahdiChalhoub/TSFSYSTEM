@@ -31,15 +31,14 @@ import type { TourConfig } from '@/lib/tours/types'
  *  3 = Search bar (info)
  *  4 = Category tree (info)
  *  5 = Expand a category row (ACTION - programmatic)
- *  6 = Click a row to open sidebar (ACTION - programmatic)
- *  7 = Detail overview tab highlight (info)
- *  8 = Switch to Brands tab (ACTION - programmatic)
- *  9 = Switch to Attributes tab (ACTION - programmatic)
- * 10 = Products tab mention (ACTION - programmatic)
- * 11 = Close sidebar (ACTION - programmatic)
- * 12 = Split Panel button (info)
- * 13 = Keyboard shortcuts (centered)
- * 14 = Tour complete (centered)
+ *  6 = Click a row to open sidebar (ACTION - programmatic) → spotlight drawer
+ *  7 = Detail drawer overview tab (info) → spotlight drawer
+ *  8 = Switch to Brands tab (ACTION) → spotlight drawer tab bar
+ *  9 = Switch to Attributes tab (ACTION) → spotlight drawer tab bar
+ * 10 = Products tab mention (ACTION) → spotlight drawer tab bar
+ * 11 = Close sidebar (ACTION) → spotlight split panel button
+ * 12 = Keyboard shortcuts (centered)
+ * 13 = Tour complete (centered)
  */
 
 const categoriesTour: TourConfig = {
@@ -47,7 +46,7 @@ const categoriesTour: TourConfig = {
     title: 'Category Management',
     module: 'inventory',
     description: 'Interactive walkthrough of category creation, brand/attribute linking, and power features.',
-    version: 2,
+    version: 3,
     steps: [
         // 0 — Welcome
         {
@@ -104,9 +103,9 @@ const categoriesTour: TourConfig = {
             placement: 'top',
             behavior: 'action',
         },
-        // 6 — ACTION: Click a row to open sidebar
+        // 6 — ACTION: Click a row to open sidebar → spotlight the drawer
         {
-            target: '[data-tour="category-tree"]',
+            target: '[data-tour="detail-drawer"]',
             title: 'Opening the Detail Panel',
             description: 'We just clicked a category to open its detail sidebar. This panel has 4 tabs: Overview, Products, Brands, and Attributes. Let\'s explore them!',
             icon: createElement(MousePointerClick, { size: 16 }),
@@ -114,46 +113,46 @@ const categoriesTour: TourConfig = {
             placement: 'left',
             behavior: 'action',
         },
-        // 7 — Sidebar overview tab
+        // 7 — Sidebar overview tab → spotlight the drawer
         {
-            target: null,
-            isWelcome: true,
+            target: '[data-tour="detail-drawer"]',
             title: 'The Detail Panel',
             description: 'The detail sidebar shows everything about this category — stats, sub-categories, and metadata. Now let\'s see how to link Brands...',
             icon: createElement(Layers, { size: 16 }),
             color: 'var(--app-info, #3b82f6)',
+            placement: 'left',
         },
-        // 8 — ACTION: Switch to Brands tab
+        // 8 — ACTION: Switch to Brands tab → spotlight the tab bar
         {
-            target: null,
-            isWelcome: true,
+            target: '[data-tour="detail-tabs"]',
             title: 'Step 2: Link Brands 🎨',
             description: 'We just switched to the Brands tab! Here you can link existing brands to this category, or unlink them. This is how you associate brands with your product taxonomy — after creating the category.',
             icon: createElement(Paintbrush, { size: 16 }),
             color: '#8b5cf6',
+            placement: 'left',
             behavior: 'action',
         },
-        // 9 — ACTION: Switch to Attributes tab
+        // 9 — ACTION: Switch to Attributes tab → spotlight the tab bar
         {
-            target: null,
-            isWelcome: true,
+            target: '[data-tour="detail-tabs"]',
             title: 'Step 3: Link Attributes 🏷️',
             description: 'Now we\'re on the Attributes tab! Link product attributes (like size, color, material) to this category. Products in this category will inherit these attribute options.',
             icon: createElement(Tag, { size: 16 }),
             color: 'var(--app-warning, #f59e0b)',
+            placement: 'left',
             behavior: 'action',
         },
-        // 10 — ACTION: Switch to Products tab
+        // 10 — ACTION: Switch to Products tab → spotlight the tab bar
         {
-            target: null,
-            isWelcome: true,
+            target: '[data-tour="detail-tabs"]',
             title: 'Browse Products',
             description: 'The Products tab shows all products in this category with search, filters, sorting, and a smart move tool to reassign products between categories.',
             icon: createElement(Package, { size: 16 }),
             color: 'var(--app-success, #22c55e)',
+            placement: 'left',
             behavior: 'action',
         },
-        // 11 — ACTION: Close sidebar
+        // 11 — ACTION: Close sidebar → spotlight split panel button
         {
             target: '[data-tour="split-panel-btn"]',
             title: 'Split Panel Mode',

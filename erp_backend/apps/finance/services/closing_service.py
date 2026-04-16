@@ -108,28 +108,35 @@ class ClosingService:
         return fiscal_period
 
     @staticmethod
-    def close_fiscal_year(organization, fiscal_year, user=None, retained_earnings_account_id=None):
+    def close_fiscal_year(organization, fiscal_year, user=None, retained_earnings_account_id=None, close_date=None):
         """
         Full year-end close sequence.
 
         Steps:
-          1. Verify all periods are closed
+          1. Verify all periods are closed (or partial close at close_date)
           2. Close P&L accounts into retained earnings
-          3. Generate opening balances for next year
+          3. Generate opening balances for the remainder year (or next year)
           4. Lock fiscal year
-          5. Create audit trail
+          5. Auto-create remainder year if close_date is before fiscal_year.end_date
         """
         from apps.finance.models import (
-            ChartOfAccount, FiscalYear, JournalEntry
+            ChartOfAccount, FiscalYear, JournalEntry, FiscalPeriod
         )
         from apps.finance.services.ledger_core import LedgerCoreMixin
+        from datetime import date as date_cls, timedelta
 
         if fiscal_year.is_closed:
             raise ValidationError(f"Fiscal year {fiscal_year.name} is already closed.")
 
+        # Detect partial close: close_date is before fiscal_year.end_date
+        is_partial = False
+        if close_date:
+            if isinstance(close_date, str):
+                from django.utils.dateparse import parse_date
+                close_date = parse_date(close_date)
+            is_partial = close_date < fiscal_year.end_date
+
         with transaction.atomic():
-            # ── Step 1: Auto-close all open periods ──────────────
-            # Check for draft JEs first — those must be dealt with manually
             from apps.finance.models import JournalEntry as JE
             draft_count = JE.objects.filter(
                 organization=organization,
@@ -142,7 +149,41 @@ class ClosingService:
                     f"Post or delete them first."
                 )
 
-            # Force-close all unclosed periods
+            remainder_start = None
+            remainder_end = None
+
+            if is_partial:
+                # ── PARTIAL CLOSE: Split the year ──
+                # Truncate fiscal_year to close_date
+                # Move/delete periods after close_date
+                remainder_start = close_date + timedelta(days=1)
+                remainder_end = fiscal_year.end_date
+
+                # Delete periods entirely after close_date
+                FiscalPeriod.objects.filter(
+                    fiscal_year=fiscal_year,
+                    start_date__gt=close_date,
+                ).delete()
+
+                # Truncate periods that span close_date
+                spanning = FiscalPeriod.objects.filter(
+                    fiscal_year=fiscal_year,
+                    start_date__lte=close_date,
+                    end_date__gt=close_date,
+                )
+                for p in spanning:
+                    p.end_date = close_date
+                    p.save(update_fields=['end_date'])
+
+                # Truncate fiscal year end_date
+                fiscal_year.end_date = close_date
+                fiscal_year.save(update_fields=['end_date'])
+
+                logger.info(
+                    f"ClosingService: Partial close — truncated {fiscal_year.name} to {close_date}"
+                )
+
+            # Force-close all remaining periods
             unclosed = fiscal_year.periods.filter(is_closed=False)
             if unclosed.exists():
                 unclosed_count = unclosed.count()
@@ -250,11 +291,71 @@ class ClosingService:
                     f"ClosingService: No P&L accounts with balances for {fiscal_year.name}"
                 )
 
-            # ── Step 4: Generate opening balances for next year ────
-            next_year = FiscalYear.objects.filter(
-                organization=organization,
-                start_date__gt=fiscal_year.end_date,
-            ).order_by('start_date').first()
+            # ── Step 4a: Auto-create remainder year if partial close ──
+            if is_partial and remainder_start and remainder_end:
+                # Check if a year already exists in the remainder range
+                existing_in_range = FiscalYear.objects.filter(
+                    organization=organization,
+                    start_date__lte=remainder_end,
+                    end_date__gte=remainder_start,
+                ).first()
+
+                if not existing_in_range:
+                    # Build name like "FY 2026-B (May-Dec)" or "FY 2026 (May-Dec)"
+                    sm = remainder_start.strftime('%b')
+                    em = remainder_end.strftime('%b')
+                    yr = remainder_start.year
+                    base_name = f"FY {yr} ({sm}-{em})"
+                    # Ensure unique name
+                    suffix = ''
+                    counter = 1
+                    while FiscalYear.objects.filter(organization=organization, name=base_name + suffix).exists():
+                        counter += 1
+                        suffix = f' v{counter}'
+
+                    remainder_year = FiscalYear.objects.create(
+                        organization=organization,
+                        name=base_name + suffix,
+                        start_date=remainder_start,
+                        end_date=remainder_end,
+                        is_closed=False,
+                        is_hard_locked=False,
+                    )
+
+                    # Generate monthly periods for the remainder
+                    import calendar
+                    curr = remainder_start
+                    period_count = 1
+                    while curr <= remainder_end:
+                        last_day = calendar.monthrange(curr.year, curr.month)[1]
+                        period_end = date_cls(curr.year, curr.month, last_day)
+                        if period_end > remainder_end:
+                            period_end = remainder_end
+                        FiscalPeriod.objects.create(
+                            organization=organization,
+                            fiscal_year=remainder_year,
+                            name=curr.strftime('%B %Y'),
+                            start_date=curr,
+                            end_date=period_end,
+                            status='OPEN',
+                            is_closed=False,
+                        )
+                        curr = period_end + timedelta(days=1)
+                        period_count += 1
+
+                    logger.info(
+                        f"ClosingService: Auto-created remainder year {remainder_year.name} "
+                        f"({remainder_start} → {remainder_end}) with {period_count - 1} periods"
+                    )
+                    next_year = remainder_year
+                else:
+                    next_year = existing_in_range
+            else:
+                # ── Step 4b: Find existing next year ──
+                next_year = FiscalYear.objects.filter(
+                    organization=organization,
+                    start_date__gt=fiscal_year.end_date,
+                ).order_by('start_date').first()
 
             if next_year:
                 ClosingService.generate_opening_balances(

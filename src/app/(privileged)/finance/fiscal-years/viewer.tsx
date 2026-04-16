@@ -1056,9 +1056,19 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                             if (!closingYearId) return
                                             startTransition(async () => {
                                                 try {
-                                                    await hardLockFiscalYear(closingYearId)
+                                                    // Detect partial close: if today is before the year's end_date
+                                                    const today = new Date()
+                                                    const yearEnd = new Date(closePreview.year.end_date)
+                                                    const isPartial = today < yearEnd
+                                                    const closeDate = isPartial ? today.toISOString().split('T')[0] : undefined
+
+                                                    await hardLockFiscalYear(closingYearId, closeDate)
                                                     setCloseStep('result')
-                                                    setCloseResult('Year-end close completed successfully. P&L accounts closed into Retained Earnings. Opening balances generated for the next year.')
+                                                    setCloseResult(
+                                                        isPartial
+                                                            ? `Partial year-end close complete. P&L closed into Retained Earnings. New fiscal year auto-created for the remaining period.`
+                                                            : `Year-end close completed successfully. P&L accounts closed into Retained Earnings. Opening balances generated for the next year.`
+                                                    )
                                                 } catch (err: unknown) {
                                                     setCloseStep('result')
                                                     setCloseResult(`Error: ${err instanceof Error ? err.message : String(err)}`)

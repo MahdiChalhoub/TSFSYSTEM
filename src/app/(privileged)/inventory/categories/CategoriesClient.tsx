@@ -653,7 +653,7 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, ini
             </div>
 
             {/* ── Tab Bar ── */}
-            <div className="flex-shrink-0 flex items-center px-3 overflow-x-auto"
+            <div data-tour="detail-tabs" className="flex-shrink-0 flex items-center px-3 overflow-x-auto"
                 style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {tabs.map(tab => {
                     const isActive = activeTab === tab.key
@@ -2698,7 +2698,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 <div className="fixed inset-0 z-[100] flex justify-end animate-in fade-in duration-200"
                     style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', backdropFilter: 'blur(4px)' }}
                     onClick={(e) => { if (e.target === e.currentTarget) setSidebarNode(null) }}>
-                    <div className="w-full max-w-lg h-full flex flex-col animate-in slide-in-from-right-4 duration-300 shadow-2xl"
+                    <div data-tour="detail-drawer" className="w-full max-w-lg h-full flex flex-col animate-in slide-in-from-right-4 duration-300 shadow-2xl"
                         style={{ background: 'var(--app-surface)', borderLeft: '1px solid var(--app-border)' }}>
                         <CategoryDetailPanel
                             node={sidebarNode}
