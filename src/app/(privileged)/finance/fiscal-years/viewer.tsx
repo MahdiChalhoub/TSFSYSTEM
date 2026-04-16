@@ -130,6 +130,13 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
         // Find the year and period
         const year = yearData || years.find(y => (y.periods || []).some((p: any) => p.id === periodId))
         if (!year) return
+
+        // Block if year is locked
+        if (year.isHardLocked) {
+            toast.error(`Cannot modify periods — ${year.name} is permanently locked`)
+            return
+        }
+
         const periods = [...(year.periods || [])].sort((a: any, b: any) => (a.start_date || '').localeCompare(b.start_date || ''))
         const periodIdx = periods.findIndex((p: any) => p.id === periodId)
         const period = periods[periodIdx]

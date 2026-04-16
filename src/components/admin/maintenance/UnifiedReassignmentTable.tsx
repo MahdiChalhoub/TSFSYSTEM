@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useTransition, useMemo } from 'react';
-import { Search, ArrowRightLeft, CheckSquare, Square, X, AlertCircle, Layers, ChevronRight, ChevronDown, Package } from 'lucide-react';
+import { useState, useTransition, useMemo, useRef, useEffect } from 'react';
+import {
+    Search, ArrowRightLeft, CheckSquare, Square, X,
+    AlertCircle, Layers, Package, Loader2, FolderOpen
+} from 'lucide-react';
 import { moveProductsGeneric } from '@/app/actions/maintenance';
 import { createGroupFromProducts } from '@/app/actions/product-groups';
 import { CategoryTreeSelector } from '../CategoryTreeSelector';
@@ -21,12 +24,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
     const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
     const [targetId, setTargetId] = useState<number | null>(null);
     const [isPending, startTransition] = useTransition();
-
-    // Convert flat entities to tree for category selector
-    // NOTE: For non-category, we use flat list directly
-    // Ideally we should reuse the buildTree Helper or receive tree from server if possible, 
-    // but here we receive what getMaintenanceEntities returns. 
-    // getMaintenanceEntities returns TREE for category, flat for others.
+    const searchRef = useRef<HTMLInputElement>(null);
 
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,6 +52,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
         startTransition(async () => {
             const result = await moveProductsGeneric(selectedProductIds, targetId, type);
             if (result.success) {
+                toast.success(result.message);
                 setIsMoveModalOpen(false);
                 setSelectedProductIds([]);
                 setTargetId(null);
@@ -66,14 +65,15 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
     // Render Target Selector
     const renderTargetSelector = () => {
         if (type === 'category') {
-            // targetEntities is already tree
             return (
-                <div className="h-64 border rounded-xl overflow-hidden">
-                    {/* Reuse existing component, ensuring types match */}
+                <div
+                    className="h-64 rounded-xl overflow-hidden"
+                    style={{ border: '1px solid var(--app-border)' }}
+                >
                     <CategoryTreeSelector
                         categories={targetEntities as any}
                         selectedIds={targetId ? [targetId] : []}
-                        onChange={(ids) => setTargetId(ids[0] || null)} // Single select
+                        onChange={(ids) => setTargetId(ids[0] || null)}
                         maxHeight="h-full"
                     />
                 </div>
@@ -82,17 +82,38 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
 
         // Generic List Selector for Brand/Unit/etc
         return (
-            <div className="h-64 border rounded-xl overflow-y-auto p-2">
+            <div
+                className="h-64 rounded-xl overflow-y-auto custom-scrollbar p-2 space-y-1"
+                style={{ border: '1px solid var(--app-border)', background: 'var(--app-background)' }}
+            >
                 {targetEntities
-                    .filter(e => e.id !== currentEntityId) // Don't show current bucket
+                    .filter(e => e.id !== currentEntityId)
                     .map(e => (
                         <div
                             key={e.id}
                             onClick={() => setTargetId(e.id)}
-                            className={`p-2 rounded-lg cursor-pointer flex justify-between items-center ${targetId === e.id ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'hover:bg-gray-50'}`}
+                            className="p-2.5 rounded-xl cursor-pointer flex justify-between items-center transition-all"
+                            style={{
+                                background: targetId === e.id
+                                    ? 'color-mix(in srgb, var(--app-primary) 10%, var(--app-surface))'
+                                    : 'transparent',
+                                border: targetId === e.id
+                                    ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)'
+                                    : '1px solid transparent',
+                            }}
                         >
-                            <span>{e.name}</span>
-                            {e.code && <span className="text-xs text-gray-400 bg-gray-100 px-1 rounded">{e.code}</span>}
+                            <span className="text-[12px] font-bold text-app-foreground">{e.name}</span>
+                            {e.code && (
+                                <span
+                                    className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                        color: 'var(--app-muted-foreground)',
+                                    }}
+                                >
+                                    {e.code}
+                                </span>
+                            )}
                         </div>
                     ))}
             </div>
@@ -101,54 +122,105 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
 
     return (
         <div className="flex flex-col h-full">
-            {/* Toolbar */}
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-4 bg-white sticky top-0 z-10">
-                <div className="flex items-center gap-3 flex-1">
-                    <div className="relative flex-1 max-w-md">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            {/* ═══════════ Toolbar ═══════════ */}
+            <div
+                className="flex-shrink-0 px-4 py-3 flex items-center justify-between gap-3"
+                style={{
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                    background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                }}
+            >
+                <div className="flex items-center gap-2.5 flex-1">
+                    {/* Search */}
+                    <div className="relative flex-1 max-w-sm">
+                        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input
+                            ref={searchRef}
                             type="text"
                             placeholder="Search products..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white transition-all outline-none focus:border-emerald-500"
+                            className="w-full pl-8 pr-3 py-1.5 text-[11px] font-bold bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-1 focus:ring-app-primary/10 outline-none transition-all"
                         />
                     </div>
+
+                    {/* Selection pill */}
                     {selectedProductIds.length > 0 && (
-                        <div className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full animate-in fade-in">
+                        <span
+                            className="text-[10px] font-black tabular-nums px-2.5 py-1 rounded-full animate-in fade-in"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                color: 'var(--app-primary)',
+                                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                            }}
+                        >
                             {selectedProductIds.length} selected
-                        </div>
+                        </span>
                     )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {/* Group Button */}
                     <button
                         onClick={() => setIsGroupModalOpen(true)}
                         disabled={selectedProductIds.length === 0}
-                        className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-blue-600 px-4 py-2 rounded-xl font-medium shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{
+                            border: '1px solid var(--app-border)',
+                            color: 'var(--app-muted-foreground)',
+                            background: 'transparent',
+                        }}
                     >
-                        <Layers size={16} />
-                        Group
+                        <Layers size={13} />
+                        <span className="hidden sm:inline">Group</span>
                     </button>
+
+                    {/* Move Button */}
                     <button
                         onClick={() => setIsMoveModalOpen(true)}
                         disabled={selectedProductIds.length === 0}
-                        className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="flex items-center gap-1.5 text-[11px] font-bold text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{
+                            background: 'var(--app-primary)',
+                            boxShadow: selectedProductIds.length > 0
+                                ? '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)'
+                                : 'none',
+                        }}
                     >
-                        <ArrowRightLeft size={16} />
-                        Move Selected
+                        <ArrowRightLeft size={13} />
+                        <span className="hidden sm:inline">Move</span>
                     </button>
-                    <button onClick={toggleSelectAll} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Select All">
-                        {selectedProductIds.length > 0 && selectedProductIds.length === filteredProducts.length ? <CheckSquare size={20} /> : <Square size={20} />}
+
+                    {/* Select All */}
+                    <button
+                        onClick={toggleSelectAll}
+                        className="p-1.5 rounded-xl transition-all"
+                        style={{
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                            color: selectedProductIds.length > 0 && selectedProductIds.length === filteredProducts.length
+                                ? 'var(--app-primary)'
+                                : 'var(--app-muted-foreground)',
+                        }}
+                        title="Select All"
+                    >
+                        {selectedProductIds.length > 0 && selectedProductIds.length === filteredProducts.length
+                            ? <CheckSquare size={15} />
+                            : <Square size={15} />}
                     </button>
                 </div>
             </div>
 
-            {/* List */}
-            <div className="flex-1 overflow-y-auto p-2 bg-gray-50/50">
+            {/* ═══════════ Product List ═══════════ */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar p-3">
                 {filteredProducts.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                        <p>No products found in this {type}.</p>
+                    <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                        <Package size={32} className="text-app-muted-foreground mb-3 opacity-40" />
+                        <p className="text-sm font-bold text-app-muted-foreground">No products found</p>
+                        <p className="text-[11px] text-app-muted-foreground mt-1">
+                            {searchTerm
+                                ? 'Try a different search term.'
+                                : `No products are assigned to this ${type}.`}
+                        </p>
                     </div>
                 ) : (
                     <ProductList
@@ -159,38 +231,106 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
                 )}
             </div>
 
-            {/* Move Modal */}
+            {/* ═══════════ Move Modal ═══════════ */}
             {isMoveModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h3 className="font-bold text-lg">Move {selectedProductIds.length} Products</h3>
-                            <button onClick={() => setIsMoveModalOpen(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+                    onClick={e => { if (e.target === e.currentTarget) setIsMoveModalOpen(false) }}
+                >
+                    <div
+                        className="w-full max-w-lg mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[70vh] flex flex-col"
+                        style={{
+                            background: 'var(--app-surface)',
+                            border: '1px solid var(--app-border)',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                        }}
+                    >
+                        {/* Modal Header */}
+                        <div
+                            className="px-5 py-3 flex items-center justify-between flex-shrink-0"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))',
+                                borderBottom: '1px solid var(--app-border)',
+                            }}
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <div
+                                    className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                    style={{
+                                        background: 'var(--app-primary)',
+                                        boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                    }}
+                                >
+                                    <ArrowRightLeft size={15} className="text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-app-foreground">Move Products</h3>
+                                    <p className="text-[10px] font-bold text-app-muted-foreground">
+                                        {selectedProductIds.length} product{selectedProductIds.length !== 1 ? 's' : ''} selected
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsMoveModalOpen(false)}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"
+                            >
+                                <X size={16} />
+                            </button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Select Destination {type === 'category' ? 'Category' : type.replace(/^./, c => c.toUpperCase())}</label>
-
+                        {/* Modal Body */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-5">
+                            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">
+                                Destination {type === 'category' ? 'Category' : type.replace(/^./, c => c.toUpperCase())}
+                            </label>
                             {renderTargetSelector()}
 
-                            {!targetId && <p className="text-xs text-amber-500 mt-2 flex items-center gap-1"><AlertCircle size={12} /> Please select a destination.</p>}
+                            {!targetId && (
+                                <p className="text-[10px] font-bold mt-2 flex items-center gap-1"
+                                    style={{ color: 'var(--app-warning)' }}>
+                                    <AlertCircle size={11} /> Please select a destination.
+                                </p>
+                            )}
                         </div>
 
-                        <div className="p-4 border-t border-gray-100 flex gap-3 bg-gray-50/50">
-                            <button onClick={() => setIsMoveModalOpen(false)} className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-600 font-medium hover:bg-white">Cancel</button>
+                        {/* Modal Footer */}
+                        <div
+                            className="px-5 py-3 flex gap-2.5 flex-shrink-0"
+                            style={{ borderTop: '1px solid var(--app-border)' }}
+                        >
+                            <button
+                                onClick={() => setIsMoveModalOpen(false)}
+                                className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all"
+                                style={{
+                                    border: '1px solid var(--app-border)',
+                                    color: 'var(--app-muted-foreground)',
+                                    background: 'transparent',
+                                }}
+                            >
+                                Cancel
+                            </button>
                             <button
                                 onClick={handleMove}
                                 disabled={!targetId || isPending}
-                                className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 shadow-md flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 py-2 rounded-xl text-[12px] font-bold text-white flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                style={{
+                                    background: 'var(--app-primary)',
+                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                                }}
                             >
-                                {isPending ? 'Moving...' : 'Confirm Move'}
+                                {isPending ? (
+                                    <><Loader2 size={14} className="animate-spin" /> Moving...</>
+                                ) : (
+                                    'Confirm Move'
+                                )}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Group Modal */}
+            {/* ═══════════ Group Modal ═══════════ */}
             <GroupModal
                 isOpen={isGroupModalOpen}
                 onClose={() => setIsGroupModalOpen(false)}
@@ -204,6 +344,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
     );
 }
 
+/* ═══════════ Group Modal ═══════════ */
 function GroupModal({ isOpen, onClose, productIds, onSuccess }: Record<string, any>) {
     const [groupName, setGroupName] = useState('');
     const [isPending, startTransition] = useTransition();
@@ -215,6 +356,7 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess }: Record<string, a
         startTransition(async () => {
             const result = await createGroupFromProducts(productIds, { name: groupName });
             if (result.success) {
+                toast.success('Group created successfully');
                 onSuccess();
             } else {
                 toast.error(result.message);
@@ -223,37 +365,108 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess }: Record<string, a
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-lg">Create Group</h3>
-                    <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+            onClick={e => { if (e.target === e.currentTarget) onClose() }}
+        >
+            <div
+                className="w-full max-w-md mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col"
+                style={{
+                    background: 'var(--app-surface)',
+                    border: '1px solid var(--app-border)',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                }}
+            >
+                {/* Header */}
+                <div
+                    className="px-5 py-3 flex items-center justify-between flex-shrink-0"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-info) 6%, var(--app-surface))',
+                        borderBottom: '1px solid var(--app-border)',
+                    }}
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div
+                            className="w-8 h-8 rounded-xl flex items-center justify-center"
+                            style={{
+                                background: 'var(--app-info)',
+                                boxShadow: '0 4px 12px color-mix(in srgb, var(--app-info) 30%, transparent)',
+                            }}
+                        >
+                            <Layers size={15} className="text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black text-app-foreground">Create Group</h3>
+                            <p className="text-[10px] font-bold text-app-muted-foreground">
+                                {productIds.length} product{productIds.length !== 1 ? 's' : ''}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"
+                    >
+                        <X size={16} />
+                    </button>
                 </div>
 
-                <p className="text-sm text-gray-500">
-                    Create a new Master Product (Group) for the {productIds.length} selected items.
-                    All items will inherit the Brand and Category of the first item.
-                </p>
+                {/* Body */}
+                <div className="p-5 space-y-4">
+                    <p className="text-[11px] font-bold text-app-muted-foreground">
+                        Create a new Master Product (Group) for the selected items.
+                        All items will inherit the Brand and Category of the first item.
+                    </p>
 
-                <div>
-                    <label className="label">Group Name</label>
-                    <input
-                        className="input-field w-full"
-                        placeholder="e.g. Persil Power Gel"
-                        value={groupName}
-                        onChange={e => setGroupName(e.target.value)}
-                        autoFocus
-                    />
+                    <div>
+                        <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">
+                            Group Name
+                        </label>
+                        <input
+                            className="w-full text-[12px] font-bold px-3 py-2 rounded-xl outline-none transition-all"
+                            style={{
+                                background: 'var(--app-background)',
+                                border: '1px solid var(--app-border)',
+                                color: 'var(--app-foreground)',
+                            }}
+                            placeholder="e.g. Persil Power Gel"
+                            value={groupName}
+                            onChange={e => setGroupName(e.target.value)}
+                            autoFocus
+                        />
+                    </div>
                 </div>
 
-                <div className="flex gap-3 pt-2">
-                    <button onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
+                {/* Footer */}
+                <div
+                    className="px-5 py-3 flex gap-2.5 flex-shrink-0"
+                    style={{ borderTop: '1px solid var(--app-border)' }}
+                >
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all"
+                        style={{
+                            border: '1px solid var(--app-border)',
+                            color: 'var(--app-muted-foreground)',
+                            background: 'transparent',
+                        }}
+                    >
+                        Cancel
+                    </button>
                     <button
                         onClick={handleCreate}
                         disabled={!groupName || isPending}
-                        className="flex-1 btn-primary justify-center"
+                        className="flex-1 py-2 rounded-xl text-[12px] font-bold text-white flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        style={{
+                            background: 'var(--app-info)',
+                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-info) 25%, transparent)',
+                        }}
                     >
-                        {isPending ? 'Creating...' : 'Create Group'}
+                        {isPending ? (
+                            <><Loader2 size={14} className="animate-spin" /> Creating...</>
+                        ) : (
+                            'Create Group'
+                        )}
                     </button>
                 </div>
             </div>
@@ -261,7 +474,7 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess }: Record<string, a
     );
 }
 
-// Sub-component for Grouped List
+/* ═══════════ Product List ═══════════ */
 function ProductList({ products, selectedProductIds, toggleProduct }: Record<string, any>) {
     const grouped = useMemo(() => {
         const groups: Record<string, any> = {};
@@ -280,22 +493,49 @@ function ProductList({ products, selectedProductIds, toggleProduct }: Record<str
         return { groups, loose };
     }, [products]);
 
-    // Calculate totals helper
-    const getStock = (p: Record<string, any>) => p.inventory?.reduce((sum: number, i: Record<string, any>) => sum + Number(i.quantity), 0) || 0;
-
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {/* Render Groups */}
             {Object.values(grouped.groups).map((group: Record<string, any>) => (
-                <div key={group.name} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <div className="bg-gray-50 px-4 py-2 border-b border-gray-100 flex justify-between items-center group-header">
+                <div
+                    key={group.name}
+                    className="rounded-xl overflow-hidden"
+                    style={{
+                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                        background: 'var(--app-surface)',
+                    }}
+                >
+                    {/* Group Header */}
+                    <div
+                        className="px-4 py-2.5 flex justify-between items-center"
+                        style={{
+                            borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-info) 5%, var(--app-surface))',
+                        }}
+                    >
                         <div className="flex items-center gap-2">
-                            <Layers size={16} className="text-emerald-600" />
-                            <span className="font-bold text-gray-800 text-sm">{group.name}</span>
-                            <span className="text-xs text-gray-400 bg-white border px-1.5 rounded-full">{group.items.length} variants</span>
+                            <div
+                                className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-info) 12%, transparent)',
+                                    color: 'var(--app-info)',
+                                }}
+                            >
+                                <Layers size={12} />
+                            </div>
+                            <span className="text-[12px] font-black text-app-foreground">{group.name}</span>
+                            <span
+                                className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                    color: 'var(--app-muted-foreground)',
+                                }}
+                            >
+                                {group.items.length} variants
+                            </span>
                         </div>
                     </div>
-                    <div className="divide-y divide-gray-50">
+                    <div>
                         {group.items.map((product: Record<string, any>) => (
                             <ProductRow
                                 key={product.id}
@@ -312,55 +552,99 @@ function ProductList({ products, selectedProductIds, toggleProduct }: Record<str
             {grouped.loose.length > 0 && (
                 <div className="space-y-1">
                     {Object.keys(grouped.groups).length > 0 && (
-                        <div className="px-2 py-1 text-xs font-bold text-gray-400 uppercase tracking-widest mt-4">Ungrouped Products</div>
+                        <div className="flex items-center gap-1.5 px-2 py-1.5">
+                            <Package size={10} className="text-app-muted-foreground" />
+                            <span className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest">
+                                Ungrouped Products
+                            </span>
+                        </div>
                     )}
-                    {grouped.loose.map((product: Record<string, any>) => (
-                        <div key={product.id} className="bg-white border border-gray-100 rounded-xl shadow-sm">
+                    <div
+                        className="rounded-xl overflow-hidden"
+                        style={{
+                            border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                            background: 'var(--app-surface)',
+                        }}
+                    >
+                        {grouped.loose.map((product: Record<string, any>) => (
                             <ProductRow
+                                key={product.id}
                                 product={product}
                                 isSelected={selectedProductIds.includes(product.id)}
                                 toggle={() => toggleProduct(product.id)}
                             />
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
     );
 }
 
+/* ═══════════ Product Row ═══════════ */
 function ProductRow({ product, isSelected, toggle }: Record<string, any>) {
     const stock = product.inventory?.reduce((acc: number, item: Record<string, any>) => acc + Number(item.quantity), 0) || 0;
 
     return (
         <div
             onClick={toggle}
-            className={`
-                flex items-center gap-4 p-3 cursor-pointer transition-all hover:bg-gray-50
-                ${isSelected ? 'bg-emerald-50/80' : ''}
-            `}
+            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all duration-150 group"
+            style={{
+                background: isSelected
+                    ? 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))'
+                    : 'transparent',
+                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
+            }}
         >
-            <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-emerald-500 border-emerald-600 text-white' : 'border-gray-300 bg-white'}`}>
-                {isSelected && <CheckSquare size={14} />}
+            {/* Checkbox */}
+            <div
+                className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
+                style={{
+                    background: isSelected ? 'var(--app-primary)' : 'transparent',
+                    border: isSelected
+                        ? '1.5px solid var(--app-primary)'
+                        : '1.5px solid color-mix(in srgb, var(--app-border) 70%, transparent)',
+                    color: isSelected ? '#fff' : 'transparent',
+                }}
+            >
+                {isSelected && <CheckSquare size={12} />}
             </div>
 
-            <div className="flex-1 min-w-0 flex justify-between items-center gap-4">
+            {/* Product info */}
+            <div className="flex-1 min-w-0 flex justify-between items-center gap-3">
                 <div className="min-w-0">
-                    <h4 className={`font-semibold text-sm truncate ${isSelected ? 'text-emerald-900' : 'text-gray-700'}`}>{product.name}</h4>
-                    <div className="flex gap-2 text-xs text-gray-500 mt-0.5 items-center">
-                        <span className="font-mono bg-gray-100 px-1.5 rounded text-[10px]">{product.sku}</span>
+                    <h4 className="text-[12px] font-bold text-app-foreground truncate">
+                        {product.name}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <span
+                            className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                color: 'var(--app-muted-foreground)',
+                            }}
+                        >
+                            {product.sku}
+                        </span>
                         {product.country && (
-                            <span className="flex items-center gap-1 text-gray-600">
-                                ΓÇó {product.country.name}
+                            <span className="text-[10px] font-bold text-app-muted-foreground">
+                                · {product.country.name}
                             </span>
                         )}
                     </div>
                 </div>
 
-                <div className="text-right flex-shrink-0">
-                    <span className={`text-sm font-bold ${stock > 0 ? 'text-emerald-700' : 'text-red-400'}`}>
-                        {stock} <span className="text-[10px] font-normal text-gray-500">qty</span>
+                {/* Stock */}
+                <div className="flex-shrink-0 text-right">
+                    <span
+                        className="text-[12px] font-black tabular-nums"
+                        style={{
+                            color: stock > 0 ? 'var(--app-success)' : 'var(--app-error)',
+                        }}
+                    >
+                        {stock}
                     </span>
+                    <span className="text-[9px] font-bold text-app-muted-foreground ml-1">qty</span>
                 </div>
             </div>
         </div>

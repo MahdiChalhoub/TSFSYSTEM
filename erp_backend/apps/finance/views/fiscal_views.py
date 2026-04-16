@@ -320,6 +320,14 @@ class FiscalPeriodViewSet(TenantModelViewSet):
     queryset = FiscalPeriod.objects.all()
     serializer_class = FiscalPeriodSerializer
 
+    def perform_update(self, serializer):
+        """Block status changes if the fiscal year is hard-locked."""
+        period = serializer.instance
+        if period.fiscal_year.is_hard_locked:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Cannot modify periods in a permanently locked fiscal year.")
+        serializer.save()
+
     @action(detail=True, methods=['post'])
     def close(self, request, pk=None):
         period = self.get_object()

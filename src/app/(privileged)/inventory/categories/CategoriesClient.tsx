@@ -7,7 +7,8 @@ import {
     Trash2, Layers, Box, GitBranch,
     Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp, Bookmark, AlertCircle, Wrench,
     Package, Paintbrush, Link2, Unlink, Loader2, ExternalLink, LayoutPanelLeft, PanelLeftClose,
-    Hash, Tag, ChevronUp, Info, ArrowRightLeft, Check, AlertTriangle, SlidersHorizontal, Lock as LockIcon
+    Hash, Tag, ChevronUp, Info, ArrowRightLeft, Check, AlertTriangle, SlidersHorizontal, Lock as LockIcon,
+    Sparkles, MousePointerClick, Keyboard
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -19,6 +20,7 @@ import { deleteCategory } from '@/app/actions/inventory/categories'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
 import { erpFetch } from '@/lib/erp-api'
+import { GuidedTour, TourTriggerButton, useTour, type TourStep } from '@/components/ui/GuidedTour'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
@@ -829,229 +831,6 @@ function PanelOverviewTab({ node, onAdd, onDelete, isParent, childCount, product
                     }}>
                     <Trash2 size={11} /> Delete
                 </button>
-            )}
-        </div>
-    )
-}
-
-
-
-                }}>
-                <div className="p-4">
-                    <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-                            style={{
-                                background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
-                                boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
-                            }}>
-                            {isParent ? <FolderOpen size={18} className="text-white" /> : <Folder size={18} className="text-white" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-black text-app-foreground tracking-tight leading-tight truncate">{node.name}</h3>
-                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                {node.code && (
-                                    <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-lg"
-                                        style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
-                                        {node.code}
-                                    </span>
-                                )}
-                                {node.short_name && (
-                                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg"
-                                        style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
-                                        {node.short_name}
-                                    </span>
-                                )}
-                                <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                                    style={{
-                                        background: isRoot
-                                            ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))'
-                                            : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
-                                        color: isRoot ? '#fff' : 'var(--app-muted-foreground)',
-                                    }}>
-                                    {isRoot ? 'Root' : `Level ${node.level ?? 1}`}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Depth meter */}
-                    <div className="mt-3 flex items-center gap-2">
-                        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Depth</span>
-                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
-                            <div className="h-full rounded-full transition-all duration-500"
-                                style={{
-                                    width: `${Math.min((node.level ?? 0) * 20 + 20, 100)}%`,
-                                    background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 60%, #6366f1))',
-                                }} />
-                        </div>
-                        <span className="text-[10px] font-black tabular-nums" style={{ color: 'var(--app-primary)' }}>{node.level ?? 0}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Stat Ring Grid — clickable ── */}
-            <div>
-                <p className="text-[9px] font-black uppercase tracking-widest mb-2.5" style={{ color: 'var(--app-muted-foreground)' }}>Statistics</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                    {[
-                        { label: 'Sub-Categories', value: childCount, icon: <GitBranch size={14} />, color: 'var(--app-primary)', tab: null as PanelTab | null },
-                        { label: 'Products', value: productCount, icon: <Package size={14} />, color: 'var(--app-success, #22c55e)', tab: 'products' as PanelTab },
-                        { label: 'Brands', value: brandCount, icon: <Paintbrush size={14} />, color: '#8b5cf6', tab: 'brands' as PanelTab },
-                        { label: 'Attributes', value: attributeCount, icon: <Tag size={14} />, color: 'var(--app-warning, #f59e0b)', tab: 'attributes' as PanelTab },
-                    ].map(s => (
-                        <button key={s.label}
-                            onClick={() => s.tab && onTabChange(s.tab)}
-                            className={`relative flex flex-col items-center gap-1.5 px-3 py-3.5 rounded-2xl transition-all text-center group ${s.tab ? 'cursor-pointer hover:scale-[1.03] active:scale-[0.98]' : 'cursor-default'}`}
-                            style={{
-                                background: s.value > 0
-                                    ? `color-mix(in srgb, ${s.color} 5%, var(--app-surface))`
-                                    : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                border: `1px solid ${s.value > 0 ? `color-mix(in srgb, ${s.color} 15%, transparent)` : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
-                            }}>
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                                style={{
-                                    background: `color-mix(in srgb, ${s.color} ${s.value > 0 ? '12' : '6'}%, transparent)`,
-                                    color: s.value > 0 ? s.color : 'var(--app-muted-foreground)',
-                                }}>
-                                {s.icon}
-                            </div>
-                            <div className="text-lg font-black tabular-nums leading-none"
-                                style={{ color: s.value > 0 ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
-                                {s.value}
-                            </div>
-                            <div className="text-[8px] font-bold uppercase tracking-widest leading-none"
-                                style={{ color: 'var(--app-muted-foreground)' }}>
-                                {s.label}
-                            </div>
-                            {s.tab && s.value > 0 && (
-                                <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    style={{ background: s.color }} />
-                            )}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* ── Sub-categories List ── */}
-            {childCount > 0 && (
-                <div>
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
-                            Sub-categories
-                        </p>
-                        <button onClick={() => onAdd(node.id)}
-                            className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all hover:scale-105"
-                            style={{ color: 'var(--app-primary)', background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
-                            <Plus size={10} /> Add
-                        </button>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        {node.children!.map(child => {
-                            const cProducts = child.product_count ?? 0
-                            const cBrands = child.brand_count ?? 0
-                            const hasChildren = (child.children?.length ?? 0) > 0
-                            return (
-                                <div key={child.id}
-                                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all hover:brightness-105 group/child"
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-background) 40%, transparent)',
-                                        borderBottom: '1px solid color-mix(in srgb, var(--app-border) 15%, transparent)',
-                                    }}>
-                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                        style={{
-                                            background: hasChildren
-                                                ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)'
-                                                : 'color-mix(in srgb, var(--app-border) 20%, transparent)',
-                                            color: hasChildren ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                        }}>
-                                        {hasChildren ? <FolderOpen size={11} /> : <Folder size={11} />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-[12px] font-semibold text-app-foreground truncate block">{child.name}</span>
-                                        {child.code && (
-                                            <span className="text-[9px] font-mono font-bold" style={{ color: 'var(--app-muted-foreground)' }}>{child.code}</span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {cBrands > 0 && (
-                                            <span className="text-[9px] font-black flex items-center gap-0.5 tabular-nums" style={{ color: '#8b5cf6' }}>
-                                                <Paintbrush size={8} /> {cBrands}
-                                            </span>
-                                        )}
-                                        {cProducts > 0 && (
-                                            <span className="text-[9px] font-black flex items-center gap-0.5 tabular-nums" style={{ color: 'var(--app-success, #22c55e)' }}>
-                                                <Box size={8} /> {cProducts}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* ── Leaf state ── */}
-            {childCount === 0 && (
-                <div className="rounded-2xl py-6 px-4 text-center"
-                    style={{
-                        background: 'color-mix(in srgb, var(--app-background) 50%, transparent)',
-                        border: '1px dashed color-mix(in srgb, var(--app-border) 40%, transparent)',
-                    }}>
-                    <Folder size={24} className="mx-auto mb-2" style={{ color: 'var(--app-muted-foreground)', opacity: 0.3 }} />
-                    <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Leaf Category</p>
-                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--app-muted-foreground)', opacity: 0.7 }}>
-                        Products can be assigned directly to this node.
-                    </p>
-                    <button onClick={() => onAdd(node.id)}
-                        className="mt-3 flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-xl mx-auto transition-all hover:brightness-110"
-                        style={{
-                            color: 'var(--app-primary)',
-                            background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
-                            border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)',
-                        }}>
-                        <Plus size={10} /> Add Sub-category
-                    </button>
-                </div>
-            )}
-
-            {/* ── Metadata ── */}
-            <div>
-                <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Details</p>
-                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                    {[
-                        { label: 'Type', value: isRoot ? 'Root Category' : 'Sub-category' },
-                        { label: 'Level', value: `Depth ${node.level ?? 0}` },
-                        { label: 'Parfums', value: String(node.parfum_count ?? 0) },
-                        { label: 'Total Reach', value: `${totalItems} items` },
-                    ].map((row, i) => (
-                        <div key={row.label}
-                            className="flex items-center justify-between px-3 py-2 text-[11px]"
-                            style={{
-                                background: i % 2 === 0 ? 'color-mix(in srgb, var(--app-background) 30%, transparent)' : 'transparent',
-                                borderBottom: i < 3 ? '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)' : 'none',
-                            }}>
-                            <span className="font-bold" style={{ color: 'var(--app-muted-foreground)' }}>{row.label}</span>
-                            <span className="font-black text-app-foreground tabular-nums">{row.value}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* ── Danger Zone ── */}
-            {!isParent && (
-                <div className="pt-1">
-                    <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-error, #ef4444)', opacity: 0.7 }}>Danger Zone</p>
-                    <button onClick={() => onDelete(node)}
-                        className="w-full flex items-center justify-center gap-2 text-[11px] font-bold px-3 py-2.5 rounded-xl border transition-all hover:brightness-105"
-                        style={{
-                            color: 'var(--app-error, #ef4444)',
-                            borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 20%, transparent)',
-                            background: 'color-mix(in srgb, var(--app-error, #ef4444) 4%, transparent)',
-                        }}>
-                        <Trash2 size={12} /> Delete Category
-                    </button>
-                </div>
             )}
         </div>
     )
@@ -2602,7 +2381,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                 <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                                     <FolderTree size={20} className="text-white" />
                                 </div>
-                                <div>
+                                <div data-tour="page-title">
                                     <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Categories</h1>
                                     <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                                         {stats.total} Nodes · Hierarchical Tree
@@ -2611,6 +2390,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                             </div>
 
                             <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                                <TourTriggerButton onClick={startTour} />
                                 <Link
                                     href="/inventory/maintenance?tab=category"
                                     className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all"
@@ -2620,6 +2400,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                 </Link>
                                 {/* Split Panel toggle */}
                                 <button
+                                    data-tour="split-panel-btn"
                                     onClick={() => { setSplitPanel(p => !p); if (splitPanel) setSelectedCategory(null) }}
                                     title={splitPanel ? 'Exit split panel' : 'Split panel view'}
                                     className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all"
@@ -2636,6 +2417,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                     <span className="hidden md:inline">{splitPanel ? 'Tree Only' : 'Split Panel'}</span>
                                 </button>
                                 <button
+                                    data-tour="add-category-btn"
                                     onClick={() => openAddModal()}
                                     className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                                     style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
@@ -2651,7 +2433,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         </div>
 
                         {/* KPI Strip — adaptive auto-fit grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+                        <div data-tour="kpi-strip" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                             {[
                                 { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)' },
                                 { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-success)' },
@@ -2680,7 +2462,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         </div>
 
                         {/* Search Bar */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2" data-tour="search-bar">
                             <div className="flex-1 relative">
                                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input
@@ -2739,7 +2521,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
 
                 {/* Left: Tree */}
-                <div className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
+                <div data-tour="category-tree" className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
                     {/* Column Headers */}
                     <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest"
                         style={{
