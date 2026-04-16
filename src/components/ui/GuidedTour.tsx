@@ -1,114 +1,175 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, ChevronRight, ChevronLeft, Sparkles, SkipForward, CheckCircle2 } from 'lucide-react'
-
 /* ═══════════════════════════════════════════════════════════
- *  TYPES
+ *  TSFSYSTEM — GuidedTour — Interactive Tour Renderer
+ *  Part of the platform-wide tour system.
+ *
+ *  Supports 3 step behaviors:
+ *    'info'   → Passive tooltip, user clicks Next
+ *    'click'  → Highlights target, waits for user click  
+ *    'action' → Programmatically performs a UI action via callback
+ *
+ *  Usage:
+ *    import '@/lib/tours/definitions/my-page'
+ *    const { start } = usePageTour('my-page')
+ *    <GuidedTour tourId="my-page" stepActions={{ 3: () => openPanel() }} />
  * ═══════════════════════════════════════════════════════════ */
-export interface TourStep {
-    /** CSS selector for the element to highlight. If null, shows a centered modal. */
-    target: string | null
-    /** Title for this step */
-    title: string
-    /** Description / body text */
-    description: string
-    /** Icon to display (React node) */
-    icon?: React.ReactNode
-    /** Accent color for this step's icon box */
-    color?: string
-    /** Preferred tooltip placement relative to the target */
-    placement?: 'top' | 'bottom' | 'left' | 'right' | 'auto'
-    /** If true, this is a "welcome" step shown as a centered overlay, ignoring target */
-    isWelcome?: boolean
-}
 
-export interface GuidedTourProps {
-    /** Unique key for localStorage persistence (e.g., "categories-tour") */
-    storageKey: string
-    /** Array of tour steps */
-    steps: TourStep[]
-    /** Callback when tour completes or is dismissed */
-    onComplete?: () => void
-    /** If true, the tour auto-starts on first visit (default: true) */
-    autoStart?: boolean
-    /** Delay in ms before auto-starting (default: 800) */
-    autoStartDelay?: number
-}
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { X, ChevronRight, ChevronLeft, Sparkles, SkipForward, CheckCircle2, MousePointerClick } from 'lucide-react'
+import { useTourContext } from '@/lib/tours/context'
+import { getTour } from '@/lib/tours/registry'
+import { markTourCompleted, shouldAutoStart } from '@/lib/tours/storage'
+import type { StepActions } from '@/lib/tours/types'
 
 /* ═══════════════════════════════════════════════════════════
- *  COMPONENT
+ *  MAIN COMPONENT
  * ═══════════════════════════════════════════════════════════ */
 export function GuidedTour({
-    storageKey,
-    steps,
-    onComplete,
+    tourId,
     autoStart = true,
     autoStartDelay = 800,
-}: GuidedTourProps) {
-    const [isActive, setIsActive] = useState(false)
+    stepActions = {},
+    onComplete,
+}: {
+    /** The registered tour ID */
+    tourId: string
+    /** Auto-start on first visit (default: true) */
+    autoStart?: boolean
+    /** Delay before auto-start in ms (default: 800) */
+    autoStartDelay?: number
+    /**
+     * Action callbacks keyed by step index.
+     * For 'action' steps: called when the step activates (performs UI change).
+     * For 'click' steps: called when user clicks the target element.
+     */
+    stepActions?: StepActions
+    /** Callback when tour completes */
+    onComplete?: () => void
+}) {
+    const { activeTourId, startTour, dismissTour } = useTourContext()
     const [currentStep, setCurrentStep] = useState(0)
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
-    const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number; placement: string }>({ top: 0, left: 0, placement: 'bottom' })
+    const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
+    const [actionExecuted, setActionExecuted] = useState(false)
     const tooltipRef = useRef<HTMLDivElement>(null)
-    const rafRef = useRef<number>(0)
+    const clickListenerRef = useRef<(() => void) | null>(null)
 
+    const tourConfig = getTour(tourId)
+    const isActive = activeTourId === tourId
+    const steps = tourConfig?.steps ?? []
     const step = steps[currentStep]
     const isFirst = currentStep === 0
     const isLast = currentStep === steps.length - 1
-    const progress = ((currentStep + 1) / steps.length) * 100
+    const progress = steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0
+    const behavior = step?.behavior || 'info'
 
-    // Check localStorage on mount
+    // Auto-start on first visit
     useEffect(() => {
-        if (!autoStart) return
-        const dismissed = localStorage.getItem(`tour-${storageKey}`)
-        if (dismissed === 'done') return
-        const timer = setTimeout(() => setIsActive(true), autoStartDelay)
+        if (!autoStart || !tourConfig) return
+        if (!shouldAutoStart(tourId, tourConfig.version)) return
+        const timer = setTimeout(() => startTour(tourId), autoStartDelay)
         return () => clearTimeout(timer)
-    }, [storageKey, autoStart, autoStartDelay])
+    }, [tourId, autoStart, autoStartDelay, tourConfig, startTour])
 
-    // Position the highlight and tooltip when step changes
+    // Reset step index when tour activates
+    useEffect(() => {
+        if (isActive) {
+            setCurrentStep(0)
+            setActionExecuted(false)
+        }
+    }, [isActive])
+
+    // Execute action when entering an 'action' step
+    useEffect(() => {
+        if (!isActive || !step || actionExecuted) return
+        if (behavior === 'action' && stepActions[currentStep]) {
+            const timer = setTimeout(async () => {
+                await stepActions[currentStep]()
+                setActionExecuted(true)
+            }, 300) // Small delay to let tooltip render first
+            return () => clearTimeout(timer)
+        }
+    }, [isActive, currentStep, behavior, stepActions, step, actionExecuted])
+
+    // Set up click listener for 'click' behavior steps
+    useEffect(() => {
+        // Clean up previous listener
+        if (clickListenerRef.current) {
+            clickListenerRef.current()
+            clickListenerRef.current = null
+        }
+
+        if (!isActive || !step || behavior !== 'click' || !step.target) return
+
+        const handler = async () => {
+            // Execute the action callback if provided
+            if (stepActions[currentStep]) {
+                await stepActions[currentStep]()
+            }
+            // Auto-advance to next step after a brief delay
+            setTimeout(() => {
+                if (isLast) {
+                    completeTour()
+                } else {
+                    setCurrentStep(s => s + 1)
+                    setActionExecuted(false)
+                }
+            }, step.actionDelay ?? 400)
+        }
+
+        // Wait for element to exist, then attach listener
+        const timer = setTimeout(() => {
+            const el = document.querySelector(step.target!)
+            if (el) {
+                el.addEventListener('click', handler, { once: true })
+                clickListenerRef.current = () => el.removeEventListener('click', handler)
+            }
+        }, 200)
+
+        return () => {
+            clearTimeout(timer)
+            if (clickListenerRef.current) {
+                clickListenerRef.current()
+                clickListenerRef.current = null
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isActive, currentStep, behavior])
+
+    // Position highlight + tooltip
     const positionTooltip = useCallback(() => {
         if (!step || step.isWelcome || !step.target) {
             setTargetRect(null)
             return
         }
         const el = document.querySelector(step.target)
-        if (!el) {
-            setTargetRect(null)
-            return
-        }
+        if (!el) { setTargetRect(null); return }
         const rect = el.getBoundingClientRect()
         setTargetRect(rect)
-
-        // Scroll element into view if needed
-        if (rect.top < 0 || rect.bottom > window.innerHeight) {
+        if (rect.top < 80 || rect.bottom > window.innerHeight - 20) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }
     }, [step])
 
     useEffect(() => {
         if (!isActive) return
-        // Small delay to let DOM settle
-        const timer = setTimeout(positionTooltip, 100)
+        const timer = setTimeout(positionTooltip, 200)
         window.addEventListener('resize', positionTooltip)
         window.addEventListener('scroll', positionTooltip, true)
         return () => {
             clearTimeout(timer)
             window.removeEventListener('resize', positionTooltip)
             window.removeEventListener('scroll', positionTooltip, true)
-            cancelAnimationFrame(rafRef.current)
         }
-    }, [isActive, currentStep, positionTooltip])
+    }, [isActive, currentStep, positionTooltip, actionExecuted])
 
-    // Calculate tooltip position after targetRect updates
+    // Calculate tooltip position
     useEffect(() => {
         if (!targetRect || !tooltipRef.current) return
-        const tooltip = tooltipRef.current
-        const tw = tooltip.offsetWidth || 340
-        const th = tooltip.offsetHeight || 200
-        const pad = 16
-        const gap = 12
+        const tw = tooltipRef.current.offsetWidth || 360
+        const th = tooltipRef.current.offsetHeight || 200
+        const pad = 16, gap = 14
 
         let placement = step?.placement || 'auto'
         if (placement === 'auto') {
@@ -126,118 +187,154 @@ export function GuidedTour({
         let top = 0, left = 0
         switch (placement) {
             case 'bottom':
-                top = targetRect.bottom + gap
-                left = targetRect.left + targetRect.width / 2 - tw / 2
-                break
+                top = targetRect.bottom + gap; left = targetRect.left + targetRect.width / 2 - tw / 2; break
             case 'top':
-                top = targetRect.top - th - gap
-                left = targetRect.left + targetRect.width / 2 - tw / 2
-                break
+                top = targetRect.top - th - gap; left = targetRect.left + targetRect.width / 2 - tw / 2; break
             case 'right':
-                top = targetRect.top + targetRect.height / 2 - th / 2
-                left = targetRect.right + gap
-                break
+                top = targetRect.top + targetRect.height / 2 - th / 2; left = targetRect.right + gap; break
             case 'left':
-                top = targetRect.top + targetRect.height / 2 - th / 2
-                left = targetRect.left - tw - gap
-                break
+                top = targetRect.top + targetRect.height / 2 - th / 2; left = targetRect.left - tw - gap; break
         }
-
-        // Clamp to viewport
         left = Math.max(pad, Math.min(left, window.innerWidth - tw - pad))
         top = Math.max(pad, Math.min(top, window.innerHeight - th - pad))
-
-        setTooltipPos({ top, left, placement })
+        setTooltipPos({ top, left })
     }, [targetRect, step])
 
     // Actions
-    const dismiss = useCallback(() => {
-        localStorage.setItem(`tour-${storageKey}`, 'done')
-        setIsActive(false)
+    const completeTour = useCallback(() => {
+        if (tourConfig) markTourCompleted(tourId, tourConfig.version)
+        // Clean up click listener
+        if (clickListenerRef.current) {
+            clickListenerRef.current()
+            clickListenerRef.current = null
+        }
+        dismissTour()
         setCurrentStep(0)
+        setActionExecuted(false)
         onComplete?.()
-    }, [storageKey, onComplete])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tourId, tourConfig, dismissTour, onComplete])
 
     const next = useCallback(() => {
-        if (isLast) { dismiss(); return }
+        if (isLast) { completeTour(); return }
         setCurrentStep(s => s + 1)
-    }, [isLast, dismiss])
+        setActionExecuted(false)
+    }, [isLast, completeTour])
 
     const prev = useCallback(() => {
-        if (!isFirst) setCurrentStep(s => s - 1)
+        if (!isFirst) {
+            setCurrentStep(s => s - 1)
+            setActionExecuted(false)
+        }
     }, [isFirst])
 
     // Keyboard
     useEffect(() => {
         if (!isActive) return
         const handler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') dismiss()
-            if (e.key === 'ArrowRight' || e.key === 'Enter') next()
-            if (e.key === 'ArrowLeft') prev()
+            if (e.key === 'Escape') completeTour()
+            if (behavior !== 'click') {
+                if (e.key === 'ArrowRight' || e.key === 'Enter') next()
+                if (e.key === 'ArrowLeft') prev()
+            }
         }
         window.addEventListener('keydown', handler)
         return () => window.removeEventListener('keydown', handler)
-    }, [isActive, next, prev, dismiss])
+    }, [isActive, next, prev, completeTour, behavior])
 
-    if (!isActive || !step) return null
+    if (!isActive || !step || steps.length === 0) return null
 
     const isCentered = step.isWelcome || !step.target || !targetRect
     const accentColor = step.color || 'var(--app-primary)'
+    const isClickStep = behavior === 'click'
 
     return (
-        <div className="fixed inset-0 z-[200] animate-in fade-in duration-300">
-            {/* ── Overlay with spotlight cutout ── */}
+        <div className="fixed inset-0 z-[200] animate-in fade-in duration-300" key={`tour-step-${currentStep}`}>
+            {/* ── Overlay ── */}
             {isCentered ? (
                 <div
                     className="absolute inset-0"
                     style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
-                    onClick={dismiss}
+                    onClick={completeTour}
                 />
             ) : (
                 <>
-                    {/* SVG mask for spotlight effect */}
-                    <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
                         <defs>
-                            <mask id="tour-spotlight-mask">
+                            <mask id={`tour-mask-${tourId}-${currentStep}`}>
                                 <rect x="0" y="0" width="100%" height="100%" fill="white" />
                                 {targetRect && (
                                     <rect
-                                        x={targetRect.left - 6}
-                                        y={targetRect.top - 6}
-                                        width={targetRect.width + 12}
-                                        height={targetRect.height + 12}
-                                        rx="12"
-                                        fill="black"
+                                        x={targetRect.left - 8} y={targetRect.top - 8}
+                                        width={targetRect.width + 16} height={targetRect.height + 16}
+                                        rx="14" fill="black"
                                     />
                                 )}
                             </mask>
                         </defs>
-                        <rect
-                            x="0" y="0" width="100%" height="100%"
-                            fill="rgba(0,0,0,0.55)"
-                            mask="url(#tour-spotlight-mask)"
-                            style={{ backdropFilter: 'blur(2px)' }}
+                        <rect x="0" y="0" width="100%" height="100%"
+                            fill="rgba(0,0,0,0.5)"
+                            mask={`url(#tour-mask-${tourId}-${currentStep})`}
                         />
                     </svg>
 
-                    {/* Spotlight ring glow */}
+                    {/* Spotlight ring */}
                     {targetRect && (
                         <div
-                            className="absolute rounded-xl pointer-events-none animate-pulse"
+                            className="absolute rounded-2xl pointer-events-none"
                             style={{
-                                left: targetRect.left - 6,
-                                top: targetRect.top - 6,
-                                width: targetRect.width + 12,
-                                height: targetRect.height + 12,
-                                boxShadow: `0 0 0 3px ${accentColor}, 0 0 20px color-mix(in srgb, ${accentColor} 40%, transparent)`,
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                left: targetRect.left - 8, top: targetRect.top - 8,
+                                width: targetRect.width + 16, height: targetRect.height + 16,
+                                boxShadow: isClickStep
+                                    ? `0 0 0 3px ${accentColor}, 0 0 0 6px color-mix(in srgb, ${accentColor} 20%, transparent), 0 0 30px color-mix(in srgb, ${accentColor} 40%, transparent)`
+                                    : `0 0 0 3px ${accentColor}, 0 0 24px color-mix(in srgb, ${accentColor} 30%, transparent)`,
+                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                animation: isClickStep ? 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' : undefined,
                             }}
                         />
                     )}
 
-                    {/* Click-through blocker (prevents interaction outside spotlight) */}
-                    <div className="absolute inset-0" onClick={dismiss} />
+                    {/* Click-through: for 'click' steps, make the target clickable */}
+                    {isClickStep && targetRect && (
+                        <>
+                            {/* Block clicks everywhere EXCEPT the target */}
+                            <div className="absolute inset-0" style={{ pointerEvents: 'auto' }} onClick={(e) => e.stopPropagation()} />
+                            {/* Hole over target: allow clicks through */}
+                            <div
+                                className="absolute"
+                                style={{
+                                    left: targetRect.left - 8, top: targetRect.top - 8,
+                                    width: targetRect.width + 16, height: targetRect.height + 16,
+                                    pointerEvents: 'none',
+                                }}
+                            />
+                        </>
+                    )}
+
+                    {/* For non-click steps, block all interaction */}
+                    {!isClickStep && <div className="absolute inset-0" onClick={completeTour} />}
                 </>
+            )}
+
+            {/* ── Click pulse indicator for 'click' steps ── */}
+            {isClickStep && targetRect && (
+                <div
+                    className="absolute pointer-events-none flex items-center justify-center"
+                    style={{
+                        left: targetRect.left + targetRect.width / 2 - 16,
+                        top: targetRect.top + targetRect.height / 2 - 16,
+                        width: 32, height: 32,
+                        zIndex: 201,
+                    }}
+                >
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center animate-bounce"
+                        style={{
+                            background: accentColor,
+                            boxShadow: `0 4px 16px color-mix(in srgb, ${accentColor} 50%, transparent)`,
+                        }}>
+                        <MousePointerClick size={14} className="text-white" />
+                    </div>
+                </div>
             )}
 
             {/* ── Tooltip Card ── */}
@@ -245,14 +342,15 @@ export function GuidedTour({
                 ref={tooltipRef}
                 className={`
                     ${isCentered ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : 'fixed'}
-                    w-[340px] max-w-[calc(100vw-32px)] rounded-2xl overflow-hidden
+                    w-[370px] max-w-[calc(100vw-32px)] rounded-2xl overflow-hidden
                     animate-in zoom-in-95 fade-in slide-in-from-bottom-2 duration-300
                 `}
                 style={{
                     ...(!isCentered ? { top: tooltipPos.top, left: tooltipPos.left } : {}),
                     background: 'var(--app-surface)',
                     border: '1px solid var(--app-border)',
-                    boxShadow: `0 20px 60px rgba(0,0,0,0.3), 0 0 40px color-mix(in srgb, ${accentColor} 10%, transparent)`,
+                    boxShadow: `0 24px 64px rgba(0,0,0,0.35), 0 0 40px color-mix(in srgb, ${accentColor} 10%, transparent)`,
+                    zIndex: 202,
                 }}
                 onClick={e => e.stopPropagation()}
             >
@@ -262,48 +360,69 @@ export function GuidedTour({
                         className="h-full transition-all duration-500 ease-out"
                         style={{
                             width: `${progress}%`,
-                            background: `linear-gradient(90deg, ${accentColor}, color-mix(in srgb, ${accentColor} 70%, #6366f1))`,
+                            background: `linear-gradient(90deg, ${accentColor}, color-mix(in srgb, ${accentColor} 60%, #818cf8))`,
                         }}
                     />
                 </div>
 
                 {/* Header */}
-                <div className="px-4 pt-3 pb-2 flex items-start gap-3">
+                <div className="px-4 pt-3.5 pb-1 flex items-start gap-3">
                     <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
                         style={{
-                            background: `color-mix(in srgb, ${accentColor} 12%, transparent)`,
+                            background: `linear-gradient(135deg, color-mix(in srgb, ${accentColor} 15%, transparent), color-mix(in srgb, ${accentColor} 8%, transparent))`,
                             color: accentColor,
+                            border: `1px solid color-mix(in srgb, ${accentColor} 20%, transparent)`,
                         }}
                     >
-                        {step.icon || <Sparkles size={16} />}
+                        {step.icon || <Sparkles size={18} />}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                            <h3 className="text-sm font-black text-app-foreground tracking-tight leading-tight">
+                            <h3 className="text-[14px] font-black text-app-foreground tracking-tight leading-tight">
                                 {step.title}
                             </h3>
                             <button
-                                onClick={dismiss}
+                                onClick={completeTour}
                                 className="w-6 h-6 rounded-lg flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all flex-shrink-0"
+                                title="Close tour (Esc)"
                             >
-                                <X size={12} />
+                                <X size={13} />
                             </button>
                         </div>
-                        <span
-                            className="text-[9px] font-bold uppercase tracking-widest"
-                            style={{ color: accentColor }}
-                        >
-                            Step {currentStep + 1} of {steps.length}
-                        </span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                                Step {currentStep + 1} of {steps.length}
+                            </span>
+                            {isClickStep && (
+                                <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md animate-pulse"
+                                    style={{
+                                        background: `color-mix(in srgb, ${accentColor} 12%, transparent)`,
+                                        color: accentColor,
+                                    }}>
+                                    ⬆ Click to continue
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Body */}
-                <div className="px-4 pb-3">
-                    <p className="text-[12px] leading-relaxed font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                <div className="px-4 pt-1 pb-3">
+                    <p className="text-[12px] leading-[1.65] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
                         {step.description}
                     </p>
+                    {step.actionHint && (
+                        <div className="mt-2 flex items-center gap-2 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"
+                            style={{
+                                background: `color-mix(in srgb, ${accentColor} 6%, transparent)`,
+                                color: accentColor,
+                                border: `1px solid color-mix(in srgb, ${accentColor} 15%, transparent)`,
+                            }}>
+                            <MousePointerClick size={12} />
+                            {step.actionHint}
+                        </div>
+                    )}
                 </div>
 
                 {/* Navigation */}
@@ -315,14 +434,13 @@ export function GuidedTour({
                     }}
                 >
                     {/* Step dots */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                         {steps.map((_, i) => (
-                            <button
+                            <div
                                 key={i}
-                                onClick={() => setCurrentStep(i)}
                                 className="transition-all duration-300"
                                 style={{
-                                    width: i === currentStep ? 16 : 6,
+                                    width: i === currentStep ? 18 : 6,
                                     height: 6,
                                     borderRadius: 3,
                                     background: i === currentStep
@@ -340,43 +458,38 @@ export function GuidedTour({
                         {!isFirst && (
                             <button
                                 onClick={prev}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded-lg transition-all"
+                                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-app-border/30"
                                 style={{ color: 'var(--app-muted-foreground)' }}
                             >
-                                <ChevronLeft size={12} />
-                                Back
+                                <ChevronLeft size={12} /> Back
                             </button>
                         )}
                         {isFirst && (
                             <button
-                                onClick={dismiss}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded-lg transition-all"
+                                onClick={completeTour}
+                                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-app-border/30"
                                 style={{ color: 'var(--app-muted-foreground)' }}
                             >
-                                <SkipForward size={10} />
-                                Skip Tour
+                                <SkipForward size={10} /> Skip
                             </button>
                         )}
-                        <button
-                            onClick={next}
-                            className="flex items-center gap-1 text-[10px] font-bold px-3 py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-                            style={{
-                                background: accentColor,
-                                boxShadow: `0 2px 8px color-mix(in srgb, ${accentColor} 30%, transparent)`,
-                            }}
-                        >
-                            {isLast ? (
-                                <>
-                                    <CheckCircle2 size={12} />
-                                    Finish
-                                </>
-                            ) : (
-                                <>
-                                    Next
-                                    <ChevronRight size={12} />
-                                </>
-                            )}
-                        </button>
+                        {/* For 'click' steps, hide Next (user must click target). For others, show Next/Finish */}
+                        {!isClickStep && (
+                            <button
+                                onClick={next}
+                                className="flex items-center gap-1 text-[10px] font-bold px-3.5 py-1.5 rounded-lg text-white transition-all hover:brightness-110"
+                                style={{
+                                    background: accentColor,
+                                    boxShadow: `0 2px 8px color-mix(in srgb, ${accentColor} 30%, transparent)`,
+                                }}
+                            >
+                                {isLast ? (
+                                    <><CheckCircle2 size={12} /> Got it!</>
+                                ) : (
+                                    <>Next <ChevronRight size={12} /></>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -385,15 +498,9 @@ export function GuidedTour({
 }
 
 /* ═══════════════════════════════════════════════════════════
- *  TOUR TRIGGER BUTTON — reusable "?" or info icon button
+ *  TOUR TRIGGER BUTTON — reusable sparkle button
  * ═══════════════════════════════════════════════════════════ */
-export function TourTriggerButton({
-    onClick,
-    label = 'Tour',
-}: {
-    onClick: () => void
-    label?: string
-}) {
+export function TourTriggerButton({ onClick, label = 'Tour' }: { onClick: () => void; label?: string }) {
     return (
         <button
             onClick={onClick}
@@ -404,22 +511,4 @@ export function TourTriggerButton({
             <span className="hidden md:inline">{label}</span>
         </button>
     )
-}
-
-/* ═══════════════════════════════════════════════════════════
- *  HOOK — for manual tour control
- * ═══════════════════════════════════════════════════════════ */
-export function useTour(storageKey: string) {
-    const [forceStart, setForceStart] = useState(0)
-
-    const startTour = useCallback(() => {
-        localStorage.removeItem(`tour-${storageKey}`)
-        setForceStart(k => k + 1)
-    }, [storageKey])
-
-    const resetTour = useCallback(() => {
-        localStorage.removeItem(`tour-${storageKey}`)
-    }, [storageKey])
-
-    return { forceStart, startTour, resetTour }
 }

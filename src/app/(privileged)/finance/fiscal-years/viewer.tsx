@@ -251,38 +251,94 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     }
 
     const openWizard = () => {
-        // Find the latest year by end_date to suggest next start
-        const sorted = [...years].sort((a, b) => (b.endDate || '').localeCompare(a.endDate || ''))
-        const latest = sorted[0]
+        const sorted = [...years].sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''))
+        const today = new Date()
 
-        if (latest) {
-            const lastEnd = new Date(latest.endDate)
-            const ns = new Date(lastEnd); ns.setDate(ns.getDate() + 1)
+        // ── Step 1: Check if today has NO open period ──
+        // This catches: locked year covering today, gap between years, partial close
+        let todayHasOpenPeriod = false
+        let todayCoveredByLockedYear = false
 
-            // Detect partial year: if the closed year ends mid-calendar-year,
-            // suggest remainder of that calendar year
-            const calYearEnd = new Date(ns.getFullYear(), 11, 31) // Dec 31
-            const isPartialRemainder = latest.isHardLocked && ns.getFullYear() === lastEnd.getFullYear() && lastEnd.getMonth() < 11
-
-            let ne: Date
-            let name: string
-            if (isPartialRemainder) {
-                // Suggest remainder: e.g., "FY 2026-B (Jul-Dec)"
-                ne = calYearEnd
-                const startMonth = ns.toLocaleDateString('en', { month: 'short' })
-                name = `FY ${ns.getFullYear()}-B (${startMonth}-Dec)`
-            } else {
-                // Normal: next full year
-                ne = new Date(ns); ne.setFullYear(ne.getFullYear() + 1); ne.setDate(ne.getDate() - 1)
-                name = `FY ${ns.getFullYear()}`
+        for (const y of sorted) {
+            for (const p of (y.periods || [])) {
+                const s = new Date(p.start_date), e = new Date(p.end_date)
+                if (today >= s && today <= e) {
+                    if ((p.status || 'OPEN') === 'OPEN' && !y.isHardLocked) {
+                        todayHasOpenPeriod = true
+                    }
+                    if (y.isHardLocked) {
+                        todayCoveredByLockedYear = true
+                    }
+                }
             }
+        }
+
+        // Find the right gap to fill
+        let gapStart: Date | null = null
+        let gapEnd: Date | null = null
+
+        if (!todayHasOpenPeriod) {
+            // Find the locked year that covers today or the last locked year before today
+            for (const y of sorted) {
+                if (!y.isHardLocked) continue
+                const yEnd = new Date(y.endDate)
+                const yStart = new Date(y.startDate)
+
+                // This locked year covers today or ends before today
+                if (yEnd >= today || yStart <= today) {
+                    // Gap starts the day after the last closed period in this year, or today
+                    const closedPeriods = (y.periods || [])
+                        .filter((p: any) => p.status === 'CLOSED' || y.isHardLocked)
+                        .sort((a: any, b: any) => (b.end_date || '').localeCompare(a.end_date || ''))
+
+                    // Find the first day that needs coverage
+                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1) // Start of current month
+                    gapStart = firstDay
+
+                    // Gap ends at the end of the locked year, or Dec 31
+                    gapEnd = yEnd.getMonth() === 11 && yEnd.getDate() === 31
+                        ? yEnd
+                        : new Date(yEnd.getFullYear(), 11, 31)
+
+                    // Don't overlap with existing unlocked years
+                    for (const otherY of sorted) {
+                        if (otherY.isHardLocked || otherY.id === y.id) continue
+                        const otherStart = new Date(otherY.startDate)
+                        if (otherStart > gapStart && otherStart <= gapEnd) {
+                            gapEnd = new Date(otherStart.getTime() - 86400000) // Day before next year
+                        }
+                    }
+                    break
+                }
+            }
+        }
+
+        if (gapStart && gapEnd) {
+            // Suggest filling the gap
+            const startMonth = gapStart.toLocaleDateString('en', { month: 'short' })
+            const endMonth = gapEnd.toLocaleDateString('en', { month: 'short' })
+            const name = gapStart.getFullYear() === gapEnd.getFullYear()
+                ? `FY ${gapStart.getFullYear()} (${startMonth}-${endMonth})`
+                : `FY ${gapStart.getFullYear()}-${gapEnd.getFullYear()}`
 
             setWizardData(p => ({
-                ...p,
-                name,
-                startDate: ns.toISOString().split('T')[0],
-                endDate: ne.toISOString().split('T')[0],
+                ...p, name,
+                startDate: gapStart!.toISOString().split('T')[0],
+                endDate: gapEnd!.toISOString().split('T')[0],
             }))
+        } else {
+            // ── Step 2: No gap — suggest next year after the latest ──
+            const latest = [...years].sort((a, b) => (b.endDate || '').localeCompare(a.endDate || ''))[0]
+            if (latest) {
+                const ns = new Date(latest.endDate); ns.setDate(ns.getDate() + 1)
+                const ne = new Date(ns); ne.setFullYear(ne.getFullYear() + 1); ne.setDate(ne.getDate() - 1)
+                setWizardData(p => ({
+                    ...p,
+                    name: `FY ${ns.getFullYear()}`,
+                    startDate: ns.toISOString().split('T')[0],
+                    endDate: ne.toISOString().split('T')[0],
+                }))
+            }
         }
         setShowWizard(true)
     }

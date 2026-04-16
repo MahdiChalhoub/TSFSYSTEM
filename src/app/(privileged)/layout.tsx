@@ -12,6 +12,7 @@ import DebugOverlay from '@/components/dev/DebugOverlay';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { DesignSystemProvider } from '@/contexts/DesignSystemContext'
 import { PeriodWarningBanner } from '@/components/finance/period-warning-banner';
+import { TourProvider } from '@/lib/tours/context';
 
 
 import { getSites } from '@/app/actions/sites';
@@ -131,6 +132,7 @@ export default async function AdminLayout({
             initialTabLayout={tabLayout || 'horizontal'}
         >
         <FavoritesProvider>
+          <TourProvider>
             <DevProvider>
                 <div className="flex h-screen overflow-hidden font-sans" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
                     {/* Left Panel: Sidebar Tree */}
@@ -156,6 +158,7 @@ export default async function AdminLayout({
                     <CommandPalette />
                 </div>
             </DevProvider>
+          </TourProvider>
         </FavoritesProvider>
         </AdminProvider>
         </DesignSystemProvider>

@@ -20,7 +20,9 @@ import { deleteCategory } from '@/app/actions/inventory/categories'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
 import { erpFetch } from '@/lib/erp-api'
-import { GuidedTour, TourTriggerButton, useTour, type TourStep } from '@/components/ui/GuidedTour'
+import { GuidedTour, TourTriggerButton } from '@/components/ui/GuidedTour'
+import { usePageTour } from '@/lib/tours/useTour'
+import '@/lib/tours/definitions/inventory-categories'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
@@ -2278,6 +2280,9 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const searchRef = useRef<HTMLInputElement>(null)
     const data = initialCategories
 
+    // ── Tour system ── 
+    const { start: startTour } = usePageTour('inventory-categories')
+
     // Keyboard shortcuts: Cmd+K (search), Ctrl+Q (focus mode)
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
@@ -2312,6 +2317,17 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             stats: { total: data.length, filtered: filtered.length, roots: builtTree.length, leafCount, totalProducts, totalBrands }
         }
     }, [data, searchQuery])
+
+    // Interactive tour step actions (must be after tree is defined)
+    const tourStepActions = useMemo(() => ({
+        5: () => { setExpandAll(true); setExpandKey(k => k + 1) },
+        6: () => { const n = tree[0]; if (n) { setSidebarNode(n); setSidebarTab('overview') } },
+        8: () => { setSidebarTab('brands') },
+        9: () => { setSidebarTab('attributes') },
+        10: () => { setSidebarTab('products') },
+        11: () => { setSidebarNode(null) },
+    }), [tree])
+
 
     // Actions
     const openAddModal = useCallback((parentId?: number) => { setModalState({ open: true, parentId }) }, [])
@@ -2508,6 +2524,9 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 parentId={modalState.parentId}
                 potentialParents={data}
             />
+
+            {/* ── Guided Tour (interactive) ── */}
+            <GuidedTour tourId="inventory-categories" stepActions={tourStepActions} />
 
             {productsTarget && (
                 <ProductsPopup category={productsTarget} onClose={() => setProductsTarget(null)} />

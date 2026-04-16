@@ -11,6 +11,18 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = FiscalYear.objects.all()
     serializer_class = FiscalYearSerializer
 
+    def perform_destroy(self, instance):
+        """Clean up related data before deleting a fiscal year."""
+        if instance.is_hard_locked:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Cannot delete a permanently locked fiscal year.")
+        # Clean up opening balances, journal entries, and periods
+        from apps.finance.models import OpeningBalance, JournalEntry
+        OpeningBalance.objects.filter(fiscal_year=instance).delete()
+        JournalEntry.objects.filter(fiscal_year=instance).update(fiscal_year=None, fiscal_period=None)
+        instance.periods.all().delete()
+        instance.delete()
+
     def create(self, request, *args, **kwargs):
         organization_id = get_current_tenant_id()
         if not organization_id:
