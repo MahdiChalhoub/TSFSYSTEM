@@ -1,32 +1,21 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
-import { AlertTriangle, PlayCircle, Loader2, Send } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { AlertTriangle, PlayCircle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-/**
- * Global sticky banner — shows when the current fiscal period is not OPEN.
- * One button: "Open" if user has permission, "Request" if not.
- * Disappears after action without page refresh.
- */
 export function PeriodWarningBanner() {
     const [warning, setWarning] = useState<{
         periodId: number; periodName: string; status: string
         startDate: string; endDate: string
     } | null>(null)
-    const [isPending, startTransition] = useTransition()
-    const [done, setDone] = useState(false)
+    const [loading, setLoading] = useState(false)
 
-    useEffect(() => {
-        checkCurrentPeriod()
-    }, [])
-
-    async function checkCurrentPeriod() {
+    const checkPeriod = useCallback(async () => {
         try {
             const { erpFetch } = await import('@/lib/erp-api')
             const data = await erpFetch('fiscal-years/', { cache: 'no-store' })
             const years = Array.isArray(data) ? data : (data?.results || [])
-
             const today = new Date()
             for (const y of years) {
                 for (const p of (y.periods || [])) {
@@ -35,60 +24,65 @@ export function PeriodWarningBanner() {
                     if (today >= start && today <= end) {
                         const status = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
                         if (status !== 'OPEN') {
-                            setWarning({
-                                periodId: p.id, periodName: p.name, status,
-                                startDate: start.toLocaleDateString(),
-                                endDate: end.toLocaleDateString(),
-                            })
+                            setWarning({ periodId: p.id, periodName: p.name, status, startDate: start.toLocaleDateString(), endDate: end.toLocaleDateString() })
+                        } else {
+                            setWarning(null)
                         }
                         return
                     }
                 }
             }
-        } catch {
-            // Silent
+            setWarning(null)
+        } catch { /* silent */ }
+    }, [])
+
+    useEffect(() => { checkPeriod() }, [checkPeriod])
+    useEffect(() => { const i = setInterval(checkPeriod, 30000); return () => clearInterval(i) }, [checkPeriod])
+
+    async function handleOpen() {
+        if (!warning || loading) return
+        const w = { ...warning }
+        setLoading(true)
+        try {
+            const { erpFetch } = await import('@/lib/erp-api')
+            // Direct API call — no server action, no routing issues
+            await erpFetch(`fiscal-periods/${w.periodId}/`, {
+                method: 'PATCH',
+                body: JSON.stringify({ status: 'OPEN', is_closed: false }),
+            })
+            toast.success(`${w.periodName} opened`)
+            setWarning(null)
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err)
+            if (msg.includes('403') || msg.includes('permission') || msg.includes('Forbidden')) {
+                // No permission — send task request
+                try {
+                    const { erpFetch: fetch2 } = await import('@/lib/erp-api')
+                    await fetch2('tasks/', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            title: `Open fiscal period: ${w.periodName}`,
+                            description: `Period "${w.periodName}" (${w.startDate} — ${w.endDate}) is ${w.status}. Transactions blocked.`,
+                            priority: 'HIGH', category: 'FINANCE',
+                        }),
+                    })
+                    toast.success('Request sent to finance manager')
+                    setWarning(null)
+                } catch {
+                    toast.info(`Please ask your finance manager to open ${w.periodName}`)
+                    setWarning(null)
+                }
+            } else {
+                toast.error(`Failed to open period: ${msg}`)
+                // Re-check to see if it actually opened
+                await checkPeriod()
+            }
+        } finally {
+            setLoading(false)
         }
     }
 
-    function handleAction() {
-        if (!warning) return
-        startTransition(async () => {
-            // Try to open directly first
-            try {
-                const { updatePeriodStatus } = await import('@/app/actions/finance/fiscal-year')
-                await updatePeriodStatus(warning.periodId, 'OPEN')
-                toast.success(`${warning.periodName} opened`)
-                setDone(true)
-                setWarning(null)
-                return
-            } catch (err: unknown) {
-                const msg = err instanceof Error ? err.message : String(err)
-                // If permission denied, send a request instead
-                if (msg.includes('403') || msg.includes('permission') || msg.includes('forbidden') || msg.includes('Forbidden')) {
-                    try {
-                        const { erpFetch } = await import('@/lib/erp-api')
-                        await erpFetch('tasks/', {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                title: `Open fiscal period: ${warning.periodName}`,
-                                description: `Period "${warning.periodName}" (${warning.startDate} — ${warning.endDate}) is ${warning.status}. Transactions are blocked. Requested by user.`,
-                                priority: 'HIGH',
-                                category: 'FINANCE',
-                            }),
-                        })
-                        toast.success('Request sent to finance manager')
-                    } catch {
-                        toast.info(`Please ask your finance manager to open ${warning.periodName}`)
-                    }
-                    setDone(true)
-                    return
-                }
-                toast.error(msg)
-            }
-        })
-    }
-
-    if (!warning || done) return null
+    if (!warning) return null
 
     return (
         <div className="flex items-center gap-3 px-4 py-1.5 text-[11px]"
@@ -103,10 +97,10 @@ export function PeriodWarningBanner() {
             <span className="font-medium hidden sm:inline" style={{ color: 'var(--app-muted-foreground)' }}>
                 {warning.startDate} — {warning.endDate}
             </span>
-            <button onClick={handleAction} disabled={isPending}
-                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all flex-shrink-0"
+            <button onClick={handleOpen} disabled={loading}
+                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all flex-shrink-0 disabled:opacity-50"
                 style={{ background: 'var(--app-primary)', color: 'white' }}>
-                {isPending ? <Loader2 size={10} className="animate-spin" /> : <PlayCircle size={10} />} Open Period
+                {loading ? <Loader2 size={10} className="animate-spin" /> : <PlayCircle size={10} />} Open Period
             </button>
         </div>
     )

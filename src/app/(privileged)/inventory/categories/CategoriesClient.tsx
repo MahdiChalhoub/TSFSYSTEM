@@ -329,9 +329,16 @@ const CategoryRow = ({
 }) => {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
+    const prevForceExpanded = useRef(forceExpanded)
 
     useEffect(() => { if (searchQuery) setIsOpen(true) }, [searchQuery])
-    useEffect(() => { if (forceExpanded !== undefined) setIsOpen(forceExpanded) }, [forceExpanded])
+    // Only react to intentional expand-all / collapse-all toggles, not selection re-renders
+    useEffect(() => {
+        if (forceExpanded !== undefined && forceExpanded !== prevForceExpanded.current) {
+            setIsOpen(forceExpanded)
+        }
+        prevForceExpanded.current = forceExpanded
+    }, [forceExpanded])
 
     const isRoot = level === 0
     const productCount = node.product_count ?? 0
@@ -371,7 +378,7 @@ const CategoryRow = ({
 
                 {/* Toggle */}
                 <button
-                    onClick={() => isParent && setIsOpen(!isOpen)}
+                    onClick={(e) => { e.stopPropagation(); isParent && setIsOpen(!isOpen) }}
                     className={`w-5 h-5 flex items-center justify-center rounded-md transition-all flex-shrink-0 ${isParent ? 'hover:bg-app-border/40' : ''}`}
                 >
                     {isParent ? (
@@ -447,7 +454,7 @@ const CategoryRow = ({
                 {/* Brands */}
                 <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
                     <button
-                        onClick={() => onViewBrands(node)}
+                        onClick={(e) => { e.stopPropagation(); onViewBrands(node) }}
                         className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={brandCount > 0 ? {
                             color: '#8b5cf6',
@@ -465,7 +472,7 @@ const CategoryRow = ({
                 {/* Attributes */}
                 <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
                     <button
-                        onClick={() => onViewAttributes(node)}
+                        onClick={(e) => { e.stopPropagation(); onViewAttributes(node) }}
                         className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={attributeCount > 0 ? {
                             color: 'var(--app-warning)',
@@ -483,7 +490,7 @@ const CategoryRow = ({
                 {/* Products */}
                 <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
                     <button
-                        onClick={() => onViewProducts(node)}
+                        onClick={(e) => { e.stopPropagation(); onViewProducts(node) }}
                         className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={productCount > 0 ? {
                             color: 'var(--app-success)',
@@ -500,16 +507,16 @@ const CategoryRow = ({
 
                 {/* Actions — appear on hover */}
                 <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200">
-                    <button onClick={() => onEdit(node)}
+                    <button onClick={(e) => { e.stopPropagation(); onEdit(node) }}
                         className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-all" title="Edit">
                         <Pencil size={11} />
                     </button>
-                    <button onClick={() => onAdd(node.id)}
+                    <button onClick={(e) => { e.stopPropagation(); onAdd(node.id) }}
                         className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-primary transition-all" title="Add sub-category">
                         <Plus size={12} />
                     </button>
                     <button
-                        onClick={() => { if (isParent) { toast.error('Delete sub-categories first.'); return; } onDelete(node); }}
+                        onClick={(e) => { e.stopPropagation(); if (isParent) { toast.error('Delete sub-categories first.'); return; } onDelete(node); }}
                         className="p-1.5 hover:bg-app-border/40 rounded-lg transition-all"
                         style={{ color: isParent ? 'var(--app-border)' : 'var(--app-muted-foreground)', cursor: isParent ? 'not-allowed' : 'pointer' }}
                         title={isParent ? 'Delete sub-categories first' : 'Delete'}

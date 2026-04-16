@@ -56,6 +56,7 @@ import {
     Percent,
     PanelLeft,
     Rows3,
+    Heart,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -820,6 +821,21 @@ export const MENU_ITEMS = [
         ]
     },
     { title: 'Marketplace', icon: ShoppingBag, path: '/marketplace', module: 'core' },
+    {
+        title: 'Store',
+        icon: Store,
+        module: 'ecommerce',
+        children: [
+            { title: 'Storefront Home', path: '/store', icon: Globe },
+            { title: 'Catalog', path: '/store/catalog', icon: Tag },
+            { title: 'Cart', path: '/store/cart', icon: ShoppingCart },
+            { title: 'Checkout', path: '/store/checkout', icon: CreditCard },
+            { title: 'Account', path: '/store/account', icon: UserCheck },
+            { title: 'Wishlist', path: '/store/wishlist', icon: Heart },
+            { title: 'Login', path: '/store/login' },
+            { title: 'Register', path: '/store/register' },
+        ]
+    },
     { title: 'Platform Dashboard', icon: LayoutDashboard, path: '/platform-dashboard', module: 'core' },
     { title: 'AI Agents', icon: Bot, path: '/agents', module: 'core' },
     { title: 'Delivery', icon: Truck, path: '/delivery', module: 'core' },

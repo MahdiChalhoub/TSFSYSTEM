@@ -145,7 +145,7 @@ export async function updatePeriodStatus(periodId: number, newStatus: string) {
                 is_closed: newStatus === 'CLOSED',
             })
         })
-        revalidatePath('/finance/fiscal-years')
+        try { revalidatePath('/finance/fiscal-years') } catch { /* ignore revalidation errors */ }
         return { success: true }
     } catch (error: unknown) {
         console.error("Failed to update period status:", error)
