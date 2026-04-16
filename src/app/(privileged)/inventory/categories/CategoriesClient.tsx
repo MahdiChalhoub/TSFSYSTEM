@@ -358,7 +358,7 @@ const CategoryRow = ({
                         : 'py-1.5 md:py-2 hover:brightness-105'
                     }
                 `}
-                onClick={(e) => { e.stopPropagation(); if (isParent) setIsOpen(!isOpen); onSelect?.(node) }}
+                onClick={(e) => { e.stopPropagation(); onSelect?.(node) }}
                 style={{
                     paddingLeft: `${12 + (level > 0 ? level * 18 : 0)}px`,
                     paddingRight: '12px',
@@ -411,8 +411,7 @@ const CategoryRow = ({
                 </div>
 
                 {/* Name block */}
-                <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <div className="min-w-0">
+                    <div className="min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); onSelect?.(node) }}>
                         <div className="flex items-center gap-1.5">
                             <span className={`truncate text-[13px] ${isRoot ? 'font-black text-app-foreground' : 'font-semibold text-app-foreground'}`}>
                                 {node.name}
@@ -440,7 +439,6 @@ const CategoryRow = ({
                             )}
                         </div>
                     </div>
-                </div>
 
                 {/* ── Stat Badges ── */}
                 {/* Children */}
@@ -560,7 +558,7 @@ const CategoryRow = ({
  * ═══════════════════════════════════════════════════════════ */
 type PanelTab = 'overview' | 'products' | 'brands' | 'attributes'
 
-function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, initialTab, onClose }: {
+function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, initialTab, onClose, onPin }: {
     node: CategoryNode
     onEdit: (n: CategoryNode) => void
     onAdd: (parentId?: number) => void
@@ -568,6 +566,7 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, ini
     allCategories: any[]
     initialTab?: PanelTab
     onClose?: () => void
+    onPin?: (n: CategoryNode) => void
 }) {
     const [activeTab, setActiveTab] = useState<PanelTab>(initialTab ?? 'overview')
     const isParent = (node.children?.length ?? 0) > 0
@@ -622,6 +621,13 @@ function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, ini
                     </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                    {onPin && (
+                        <button onClick={() => onPin(node)}
+                            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-primary transition-colors"
+                            title="Pin to split view">
+                            <Bookmark size={14} />
+                        </button>
+                    )}
                     <button onClick={() => onEdit(node)}
                         className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"
                         title="Edit">
@@ -2289,156 +2295,88 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 {focusMode ? (
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--app-primary)' }}>
-                                <FolderTree size={14} style={{ color: '#fff' }} />
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center transition-transform hover:scale-105" 
+                                style={{ background: 'var(--app-primary)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                <FolderTree size={16} style={{ color: '#fff' }} strokeWidth={2.5} />
                             </div>
-                            <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Categories</span>
-                            <span className="text-[10px] font-bold text-app-muted-foreground">{stats.filtered}/{stats.total}</span>
+                            <span className="text-sm font-black text-app-foreground hidden sm:inline tracking-tight">Categories</span>
+                            <span className="text-[11px] font-black tabular-nums" style={{ color: 'var(--app-primary)' }}>{stats.filtered}/{stats.total}</span>
                         </div>
 
                         <div className="flex-1 relative">
-                            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground opacity-40" />
                             <input
                                 ref={searchRef}
                                 type="text"
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                placeholder="Search..."
-                                className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
+                                placeholder="Fast search..."
+                                className="w-full pl-9 pr-3 py-2 text-[12px] bg-app-surface border border-app-border rounded-xl text-app-foreground placeholder:text-app-muted-foreground/50 focus:border-app-primary outline-none transition-all shadow-sm"
                             />
                         </div>
 
                         <button onClick={() => openAddModal()}
-                            className="flex items-center gap-1 text-[10px] font-bold bg-app-primary text-white px-2 py-1.5 rounded-lg transition-all flex-shrink-0">
-                            <Plus size={12} /><span className="hidden sm:inline">New</span>
+                            className="flex items-center gap-1.5 text-[11px] font-black bg-app-primary hover:brightness-110 text-white px-4 py-2 rounded-xl transition-all shadow-md">
+                            <Plus size={14} strokeWidth={3} />
+                            <span className="hidden sm:inline">New</span>
                         </button>
 
                         <button onClick={() => setFocusMode(false)} title="Exit focus mode"
-                            className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
-                            <Minimize2 size={13} />
+                            className="p-2 rounded-xl border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all">
+                            <Minimize2 size={14} />
                         </button>
                     </div>
                 ) : (
-                    <>
-                        {/* Action Row */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                                    <FolderTree size={20} className="text-white" />
-                                </div>
-                                <div>
-                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Categories</h1>
-                                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                                        {stats.total} Nodes · Hierarchical Tree
-                                    </p>
-                                </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform hover:scale-105" 
+                                style={{ background: 'var(--app-primary)', boxShadow: '0 8px 20px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                                <FolderTree size={24} className="text-white" strokeWidth={2} />
                             </div>
-
-                            <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
-                                <Link
-                                    href="/inventory/maintenance?tab=category"
-                                    className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all"
-                                >
-                                    <Wrench size={13} />
-                                    <span className="hidden md:inline">Cleanup</span>
-                                </Link>
-                                {/* Split Panel toggle */}
-                                <button
-                                    onClick={() => { setSplitPanel(p => !p); setSelectedCategory(null) }}
-                                    title={splitPanel ? 'Exit split panel' : 'Split panel view'}
-                                    className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all"
-                                    style={splitPanel ? {
-                                        background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                        color: 'var(--app-primary)',
-                                        borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)',
-                                    } : {
-                                        color: 'var(--app-muted-foreground)',
-                                        borderColor: 'var(--app-border)',
-                                    }}
-                                >
-                                    {splitPanel ? <PanelLeftClose size={13} /> : <LayoutPanelLeft size={13} />}
-                                    <span className="hidden md:inline">{splitPanel ? 'Tree Only' : 'Split Panel'}</span>
-                                </button>
-                                <button
-                                    onClick={() => openAddModal()}
-                                    className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
-                                    style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
-                                >
-                                    <Plus size={14} />
-                                    <span className="hidden sm:inline">New Category</span>
-                                </button>
-                                <button onClick={() => setFocusMode(true)} title="Focus mode (Ctrl+Q)"
-                                    className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
-                                    <Maximize2 size={13} />
-                                </button>
+                            <div>
+                                <h1 className="text-xl md:text-2xl font-black text-app-foreground tracking-tight leading-none">Categories</h1>
+                                <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-[0.2em] mt-2 opacity-60">
+                                    {stats.total} Nodes · Inventory Matrix
+                                </p>
                             </div>
                         </div>
 
-                        {/* KPI Strip — adaptive auto-fit grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
-                            {[
-                                { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)' },
-                                { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-success)' },
-                                { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: '#8b5cf6' },
-                                { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-info)' },
-                                { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: 'var(--app-warning)' },
-                                { label: 'Showing', value: stats.filtered, icon: <Search size={11} />, color: 'var(--app-muted-foreground)' },
-                            ].map(s => (
-                                <div key={s.label}
-                                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all text-left"
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                                    }}
-                                >
-                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                        style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
-                                        {s.icon}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                        <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Search Bar */}
-                        <div className="flex items-center gap-2">
-                            <div className="flex-1 relative">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                                <input
-                                    ref={searchRef}
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                    placeholder="Search by name, code, or short name... (Ctrl+K)"
-                                    className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
-                                />
-                            </div>
-
+                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                            <Link href="/inventory/maintenance?tab=category"
+                                className="flex items-center gap-2 text-[11px] font-black text-app-muted-foreground hover:text-app-foreground border border-app-border px-4 py-2 rounded-xl hover:bg-app-surface transition-all shadow-sm">
+                                <Wrench size={14} />
+                                <span className="hidden md:inline">Maintenance</span>
+                            </Link>
+                            
                             <button
-                                onClick={() => { setExpandAll(prev => !prev); setExpandKey(k => k + 1) }}
-                                className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-2 rounded-xl border transition-all flex-shrink-0"
-                                style={{
-                                    background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)',
+                                onClick={() => { setSplitPanel(p => !p); setSelectedCategory(p ? null : selectedCategory) }}
+                                className="flex items-center gap-2 text-[11px] font-black px-4 py-2 rounded-xl border transition-all shadow-sm"
+                                style={splitPanel ? {
+                                    background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
                                     color: 'var(--app-primary)',
-                                    borderColor: 'color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                    borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                } : {
+                                    color: 'var(--app-muted-foreground)',
+                                    borderColor: 'var(--app-border)',
                                 }}
                             >
-                                {expandAll ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
-                                <span className="hidden sm:inline">{expandAll ? 'Collapse' : 'Expand'}</span>
+                                {splitPanel ? <PanelLeftClose size={14} /> : <LayoutPanelLeft size={14} />}
+                                <span className="hidden md:inline">{splitPanel ? 'Close Split' : 'Split Panel'}</span>
                             </button>
 
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')}
-                                    className="text-[11px] font-bold px-2 py-2 rounded-xl border transition-all flex-shrink-0"
-                                    style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 20%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
-                                    <X size={13} />
-                                </button>
-                            )}
+                            <button onClick={() => openAddModal()}
+                                className="flex items-center gap-2 text-[11px] font-black bg-app-primary hover:brightness-110 text-white px-5 py-2 rounded-xl transition-all shadow-lg"
+                                style={{ boxShadow: '0 4px 15px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                                <Plus size={16} strokeWidth={3} />
+                                <span className="hidden sm:inline">New Category</span>
+                            </button>
+                            
+                            <button onClick={() => setFocusMode(true)} title="Focus mode (Ctrl+Q)"
+                                className="p-2 rounded-xl border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all shadow-sm">
+                                <Maximize2 size={14} />
+                            </button>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
 
@@ -2462,8 +2400,60 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             {/* ═══════════════ TREE TABLE (with optional split panel) ═══════════════ */}
             <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
 
-                {/* Left: Tree */}
-                <div className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
+                {/* Left: Tree (Main focus) */}
+                <div className={`${splitPanel ? 'flex-[7.5] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/20 border border-app-border/40 rounded-3xl overflow-hidden flex flex-col transition-all duration-300 shadow-sm backdrop-blur-sm sm:mx-1`}>
+                    
+                    {/* Integrated Header: Stats + Search */}
+                    <div className="p-4 flex flex-col gap-5 border-b border-app-border/30 bg-app-surface/40">
+                        {/* KPI Strip — Premium Apple-Minimalist Cards */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                            {[
+                                { label: 'Total Nodes', value: stats.total, icon: <Layers size={12} />, color: 'var(--app-primary)' },
+                                { label: 'Root Level', value: stats.roots, icon: <FolderTree size={12} />, color: 'var(--app-success)' },
+                                { label: 'Leaf Category', value: stats.leafCount, icon: <GitBranch size={12} />, color: '#8b5cf6' },
+                                { label: 'Products', value: stats.totalProducts, icon: <Package size={12} />, color: 'var(--app-info)' },
+                                { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={12} />, color: 'var(--app-warning)' },
+                                { label: 'Displaying', value: stats.filtered, icon: <Search size={12} />, color: 'var(--app-muted-foreground)' },
+                            ].map(s => (
+                                <div key={s.label}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all text-left bg-app-surface border border-app-border/60 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                                >
+                                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                                        style={{ background: `color-mix(in srgb, ${s.color} 12%, transparent)`, color: s.color }}>
+                                        {s.icon}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground opacity-60 mb-1">{s.label}</div>
+                                        <div className="text-base font-black text-app-foreground tabular-nums leading-none">{s.value}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Search + Bulk Actions Row */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 relative group">
+                                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground group-focus-within:text-app-primary transition-colors opacity-40" />
+                                <input
+                                    ref={searchRef}
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    placeholder="Search by name, code, or brand..."
+                                    className="w-full pl-11 pr-4 py-2.5 text-[13px] bg-app-surface border border-app-border rounded-xl text-app-foreground placeholder:text-app-muted-foreground/40 focus:border-app-primary focus:ring-4 focus:ring-app-primary/5 outline-none transition-all shadow-inner"
+                                />
+                            </div>
+
+                            <button
+                                onClick={() => { setExpandAll(prev => !prev); setExpandKey(k => k + 1) }}
+                                className="flex items-center gap-2 text-[11px] font-black px-4 py-2.5 rounded-xl border border-app-border hover:bg-app-surface transition-all active:scale-95 shadow-sm"
+                                style={{ color: 'var(--app-primary)', background: 'var(--app-surface)' }}
+                            >
+                                {expandAll ? <ChevronsDownUp size={14} /> : <ChevronsUpDown size={14} />}
+                                <span className="hidden sm:inline">{expandAll ? 'Collapse All' : 'Expand All'}</span>
+                            </button>
+                        </div>
+                    </div>
                     {/* Column Headers */}
                     <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest"
                         style={{
@@ -2485,7 +2475,10 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         {tree.length > 0 ? (
                             tree.map((node) => (
                                 <div key={`${node.id}-${expandKey}`}
-                                    className={splitPanel && selectedCategory?.id === node.id ? 'ring-1 ring-inset ring-app-primary/30' : ''}
+                                    className={`
+                                        rounded-xl transition-all duration-300
+                                        ${(splitPanel ? selectedCategory?.id === node.id : sidebarNode?.id === node.id) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}
+                                    `}
                                 >
                                     <CategoryRow
                                         node={node}
@@ -2493,7 +2486,15 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                         onEdit={openEditModal}
                                         onAdd={openAddModal}
                                         onDelete={requestDelete}
-                                        onSelect={splitPanel ? (n) => { setSelectedCategory(n); setPanelTab('overview') } : undefined}
+                                        onSelect={(n) => {
+                                            if (splitPanel) {
+                                                setSelectedCategory(n)
+                                                // Don't auto-switch tabs to keep context
+                                            } else {
+                                                setSidebarNode(n)
+                                                setSidebarTab('overview')
+                                            }
+                                        }}
                                         onViewProducts={(n) => {
                                             if (splitPanel) {
                                                 setSelectedCategory(n)
@@ -2547,9 +2548,9 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     </div>
                 </div>
 
-                {/* Right: Detail Panel (split mode only) */}
+                {/* Right: Side Panel (Split Mode) */}
                 {splitPanel && (
-                    <div className="flex-[6] min-w-0 min-h-0 border border-app-border/50 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-2 duration-200">
+                    <div className="flex-[2.5] min-w-[320px] max-w-sm min-h-0 border border-app-border/50 rounded-3xl overflow-hidden animate-in fade-in slide-in-from-right-4 duration-500 shadow-2xl relative bg-app-surface">
                         {selectedCategory ? (
                             <CategoryDetailPanel
                                 node={selectedCategory}
@@ -2558,14 +2559,16 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                 onDelete={requestDelete}
                                 allCategories={data}
                                 initialTab={panelTab}
+                                onClose={() => setSelectedCategory(null)}
+                                onPin={() => setSplitPanel(false)} // Toggle back to drawer
                             />
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full py-20 px-4 text-center"
                                 style={{ background: 'var(--app-surface)' }}>
                                 <LayoutPanelLeft size={36} className="text-app-muted-foreground mb-3 opacity-40" />
                                 <p className="text-sm font-bold text-app-muted-foreground">Select a category</p>
-                                <p className="text-[11px] text-app-muted-foreground mt-1">
-                                    Click any row in the tree to view details.
+                                <p className="text-[11px] text-app-muted-foreground mt-1 text-center">
+                                    Click any row to view details in split view.
                                 </p>
                             </div>
                         )}
@@ -2573,17 +2576,13 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 )}
             </div>
 
-            {/* ═══════════════ RIGHT SIDEBAR DRAWER (tree-only mode) ═══════════════ */}
+            {/* ═══════════════ MODAL DRAWER (Standard Mode) ═══════════════ */}
             {sidebarNode && !splitPanel && (
-                <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200"
+                <div className="fixed inset-0 z-[100] flex justify-end animate-in fade-in duration-200"
                     style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', backdropFilter: 'blur(4px)' }}
                     onClick={(e) => { if (e.target === e.currentTarget) setSidebarNode(null) }}>
-                    <div className="w-full max-w-lg h-full flex flex-col animate-in slide-in-from-right-4 duration-300"
-                        style={{
-                            background: 'var(--app-surface)',
-                            borderLeft: '1px solid var(--app-border)',
-                            boxShadow: '-8px 0 30px rgba(0,0,0,0.15)',
-                        }}>
+                    <div className="w-full max-w-lg h-full flex flex-col animate-in slide-in-from-right-4 duration-300 shadow-2xl"
+                        style={{ background: 'var(--app-surface)', borderLeft: '1px solid var(--app-border)' }}>
                         <CategoryDetailPanel
                             node={sidebarNode}
                             onEdit={openEditModal}
@@ -2592,6 +2591,13 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                             allCategories={data}
                             initialTab={sidebarTab}
                             onClose={() => setSidebarNode(null)}
+                            onPin={(node) => {
+                                setSelectedCategory(node)
+                                setPanelTab(sidebarTab)
+                                setSplitPanel(true)
+                                setSidebarNode(null)
+                                toast.success('Workspace Split')
+                            }}
                         />
                     </div>
                 </div>

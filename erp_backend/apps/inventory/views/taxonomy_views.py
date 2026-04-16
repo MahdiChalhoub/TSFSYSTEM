@@ -218,22 +218,54 @@ class CategoryViewSet(TenantModelViewSet):
         organization, err = _get_org_or_400()
         if err: return err
 
-        categories = Category.objects.filter(
-            organization=organization
-        ).annotate(
-            annotated_product_count=Count('products', distinct=True),
-            annotated_brand_count=Count('brands', distinct=True),
-            annotated_parfum_count=Count('parfums', distinct=True),
-            annotated_attribute_count=Count('attributes', distinct=True)
-        )
+        # 1. Fetch all categories for this org
+        categories = list(Category.objects.filter(organization=organization))
+        
+        # 2. Bulk fetch derived counts from products to avoid N+1
+        # We need unique brand/parfum counts per category including explicit M2M links
+        from django.db.models import Count
+        products_data = Product.objects.filter(
+            organization=organization, category__isnull=False
+        ).values('category_id', 'brand_id', 'parfum_id')
+        
+        # Aggregators
+        derived_brands = {}   # {cat_id: set(brand_ids)}
+        derived_parfums = {}  # {cat_id: set(parfum_ids)}
+        prod_counts = {}      # {cat_id: count}
+        
+        for p in products_data:
+            c_id = p['category_id']
+            prod_counts[c_id] = prod_counts.get(c_id, 0) + 1
+            if p['brand_id']:
+                derived_brands.setdefault(c_id, set()).add(p['brand_id'])
+            if p['parfum_id']:
+                derived_parfums.setdefault(c_id, set()).add(p['parfum_id'])
+                
+        # 3. Bulk fetch explicit M2M links
+        explicit_brands = {}
+        for bid, cid in Brand.categories.through.objects.filter(category__organization=organization).values_list('brand_id', 'category_id'):
+            explicit_brands.setdefault(cid, set()).add(bid)
+            
+        explicit_parfums = {}
+        for pid, cid in Parfum.categories.through.objects.filter(category__organization=organization).values_list('parfum_id', 'category_id'):
+            explicit_parfums.setdefault(cid, set()).add(pid)
 
+        # 4. Construct response data
         data = []
         for cat in categories:
             cat_data = CategorySerializer(cat).data
-            cat_data["product_count"] = cat.annotated_product_count
-            cat_data["brand_count"] = cat.annotated_brand_count
-            cat_data["parfum_count"] = cat.annotated_parfum_count
-            cat_data["attribute_count"] = cat.annotated_attribute_count
+            
+            # Combine sets for union count
+            all_brands = derived_brands.get(cat.id, set()) | explicit_brands.get(cat.id, set())
+            all_parfums = derived_parfums.get(cat.id, set()) | explicit_parfums.get(cat.id, set())
+            
+            cat_data["product_count"] = prod_counts.get(cat.id, 0)
+            cat_data["brand_count"] = len(all_brands)
+            cat_data["parfum_count"] = len(all_parfums)
+            
+            # Attribute count - fallback to explicit M2M if product-level attributes are complex
+            cat_data["attribute_count"] = cat.attributes.count() if hasattr(cat, 'attributes') else 0
+            
             data.append(cat_data)
 
         return Response(data)

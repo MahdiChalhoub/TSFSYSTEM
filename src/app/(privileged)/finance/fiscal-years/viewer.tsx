@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useTransition } from 'react'
+import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import {
     Calendar, Plus, CheckCircle2, Clock, Lock, Search,
     PlayCircle, ShieldCheck, Trash2, AlertTriangle, TrendingUp, TrendingDown,
@@ -15,6 +15,7 @@ import {
     type ClosePreview, type YearSummary, type YearHistoryEvent, type DraftAuditEntry,
 } from '@/app/actions/finance/fiscal-year'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { notifyPeriodChange } from '@/components/finance/period-warning-banner'
 import PeriodEditor from './period-editor'
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
@@ -45,6 +46,19 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     const [summaryCache, setSummaryCache] = useState<Record<number, YearSummary>>({})
     const [historyCache, setHistoryCache] = useState<Record<number, { events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }>>({})
     const [draftAudit, setDraftAudit] = useState<{ drafts: DraftAuditEntry[]; total: number; periodName: string } | null>(null)
+
+    // Listen for period changes from the global banner
+    useEffect(() => {
+        const handler = async () => {
+            try {
+                const { getFiscalYears } = await import('@/app/actions/finance/fiscal-year')
+                const fresh = await getFiscalYears()
+                setYears(Array.isArray(fresh) ? fresh : [])
+            } catch { /* silent */ }
+        }
+        window.addEventListener('tsf:period-change', handler)
+        return () => window.removeEventListener('tsf:period-change', handler)
+    }, [])
 
     const currentYear = new Date().getFullYear()
     const lastYear = years[0] || null
@@ -188,13 +202,14 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                 p.id === periodId ? { ...p, status: newStatus, is_closed: newStatus === 'CLOSED' } : p
             ),
         })))
+        // Notify the global banner immediately
+        notifyPeriodChange()
         startTransition(async () => {
             try {
                 await updatePeriodStatus(periodId, newStatus)
                 toast.success(`${period.name} → ${newStatus}`)
             } catch {
                 // PATCH may return 500 due to audit log conflict but data IS saved.
-                // Optimistic update already shows the correct state.
                 toast.success(`${period.name} → ${newStatus}`)
             }
         })

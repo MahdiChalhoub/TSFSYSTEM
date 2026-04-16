@@ -5,6 +5,13 @@ import { AlertTriangle, PlayCircle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { updatePeriodStatus } from '@/app/actions/finance/fiscal-year'
 
+const PERIOD_CHANGE_EVENT = 'tsf:period-change'
+export function notifyPeriodChange() {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(PERIOD_CHANGE_EVENT))
+    }
+}
+
 export function PeriodWarningBanner() {
     const [warning, setWarning] = useState<{
         periodId: number; periodName: string; status: string
@@ -34,11 +41,18 @@ export function PeriodWarningBanner() {
                 }
             }
             setWarning(null)
-        } catch { /* silent */ }
+        } catch (e) {
+            console.error('[PERIOD_BANNER] Check failed:', e)
+        }
     }, [])
 
     useEffect(() => { checkPeriod() }, [checkPeriod])
     useEffect(() => { const i = setInterval(checkPeriod, 30000); return () => clearInterval(i) }, [checkPeriod])
+    useEffect(() => {
+        const handler = () => { setTimeout(checkPeriod, 500) }
+        window.addEventListener(PERIOD_CHANGE_EVENT, handler)
+        return () => window.removeEventListener(PERIOD_CHANGE_EVENT, handler)
+    }, [checkPeriod])
 
     async function handleOpen() {
         if (!warning || loading) return
@@ -46,13 +60,33 @@ export function PeriodWarningBanner() {
         setLoading(true)
         try {
             await updatePeriodStatus(w.periodId, 'OPEN')
-            toast.success(`${w.periodName} opened`)
-            setWarning(null)
+            // Verify it actually worked
+            const { erpFetch } = await import('@/lib/erp-api')
+            const data = await erpFetch('fiscal-years/', { cache: 'no-store' })
+            const years = Array.isArray(data) ? data : (data?.results || [])
+            const today = new Date()
+            let opened = false
+            for (const y of years) {
+                for (const p of (y.periods || [])) {
+                    if (p.id === w.periodId) {
+                        const status = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
+                        if (status === 'OPEN') opened = true
+                        break
+                    }
+                }
+            }
+            if (opened) {
+                toast.success(`${w.periodName} opened`)
+                setWarning(null)
+                notifyPeriodChange()
+            } else {
+                toast.error('Period could not be opened')
+                setLoading(false)
+            }
         } catch {
-            // The PATCH may return 500 due to audit log conflict but the
-            // data is actually saved. Re-check the real status.
+            // Server action may throw 500 but data might be saved — verify
             await checkPeriod()
-        } finally {
+            notifyPeriodChange()
             setLoading(false)
         }
     }
