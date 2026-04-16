@@ -30,7 +30,9 @@ class FiscalYearService:
             )
             
             frequency = data.get('frequency', 'MONTHLY')
-            
+            initial_status = data.get('period_status', 'OPEN')
+            include_audit = bool(data.get('include_audit', False))
+
             curr = start_date
             if isinstance(curr, str):
                 from django.utils.dateparse import parse_date
@@ -41,25 +43,45 @@ class FiscalYearService:
 
             period_count = 1
             while curr <= end_date:
-                last_day_of_month = calendar.monthrange(curr.year, curr.month)[1]
-                period_end = date(curr.year, curr.month, last_day_of_month)
-                
+                if frequency == 'QUARTERLY':
+                    # End of quarter: month 3, 6, 9, or 12 (last day)
+                    quarter_end_month = ((curr.month - 1) // 3 + 1) * 3
+                    last_day = calendar.monthrange(curr.year, quarter_end_month)[1]
+                    period_end = date(curr.year, quarter_end_month, last_day)
+                    period_name = f"Q{(quarter_end_month // 3)}-{curr.year}"
+                else:
+                    last_day_of_month = calendar.monthrange(curr.year, curr.month)[1]
+                    period_end = date(curr.year, curr.month, last_day_of_month)
+                    period_name = curr.strftime('%B %Y')
+
                 if period_end > end_date:
                     period_end = end_date
-                
-                period_name = f"P{str(period_count).zfill(2)}-{curr.year}"
-                
+
                 FiscalPeriod.objects.create(
                     organization=organization,
                     fiscal_year=fiscal_year,
                     name=period_name,
                     start_date=curr,
-                    end_date=period_end
+                    end_date=period_end,
+                    status=initial_status,
+                    is_closed=False,
                 )
-                
+
                 curr = period_end + timedelta(days=1)
                 period_count += 1
-                
+
+            # Optional 13th adjustment/audit period — same end_date, zero-day window
+            if include_audit:
+                FiscalPeriod.objects.create(
+                    organization=organization,
+                    fiscal_year=fiscal_year,
+                    name=f"Audit {end_date.year}",
+                    start_date=end_date,
+                    end_date=end_date,
+                    status=initial_status,
+                    is_closed=False,
+                )
+
             return fiscal_year
 
     @staticmethod

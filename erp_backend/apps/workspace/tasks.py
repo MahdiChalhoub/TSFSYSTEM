@@ -10,8 +10,10 @@ Add to celery beat schedule:
         'schedule': crontab(minute='*/15'),
     },
 """
+import calendar
 import logging
 from celery import shared_task
+from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
 
@@ -41,15 +43,32 @@ def fire_recurring_auto_tasks():
             if not _is_due(rule, now):
                 continue
 
-            # Fire the rule
+            # ── Atomic claim to prevent double-firing ───────────────────
+            # If another worker/beat tick already advanced last_fired_at
+            # past the previous snapshot, UPDATE matches 0 rows → skip.
+            prev = rule.last_fired_at
+            claimed = AutoTaskRule.objects.filter(
+                pk=rule.pk
+            ).filter(
+                Q(last_fired_at=prev) if prev is not None else Q(last_fired_at__isnull=True)
+            ).update(last_fired_at=now)
+
+            if not claimed:
+                continue  # Lost the race — another worker took it
+
+            # We own this firing. Create the task(s).
             created = _create_recurring_task(rule, now)
             if created:
-                rule.last_fired_at = now
-                rule.save(update_fields=['last_fired_at'])
                 total_fired += 1
+            else:
+                # Task creation failed/skipped: roll back the claim so
+                # the next tick can retry.
+                AutoTaskRule.objects.filter(pk=rule.pk).update(last_fired_at=prev)
 
         except Exception as e:
-            logger.error(f"Error firing recurring rule {rule.code or rule.id}: {e}")
+            logger.exception(
+                "Error firing recurring rule %s: %s", rule.code or rule.id, e
+            )
             continue
 
     if total_fired > 0:
@@ -59,23 +78,69 @@ def fire_recurring_auto_tasks():
 
 
 def _is_due(rule, now):
-    """Check if a recurring rule is due to fire."""
-    if not rule.recurrence_interval:
+    """
+    Check if a recurring rule is due to fire at `now`.
+
+    Honors:
+      recurrence_interval   — DAILY / WEEKLY / MONTHLY / QUARTERLY
+      recurrence_time       — time-of-day gate (e.g. fire only at/after 08:00)
+      recurrence_day_of_week — 0=Mon .. 6=Sun (WEEKLY only)
+      recurrence_day_of_month — 1..28 (MONTHLY only)
+      last_fired_at         — dedup: do not fire twice in the same window
+
+    The scheduler (Celery Beat) ticks every 15 min; this function decides
+    whether *this tick* is inside the rule's target window and the rule
+    hasn't already fired in that window.
+    """
+    interval = rule.recurrence_interval
+    if not interval:
         return False
 
-    last = rule.last_fired_at
-    if not last:
-        return True  # Never fired before
+    # ── Time-of-day gate ────────────────────────────────────────────
+    # If recurrence_time is set, only fire at/after that time on the target day.
+    target_time = rule.recurrence_time
+    if target_time is not None:
+        if now.time() < target_time:
+            return False
 
-    interval = rule.recurrence_interval
+    last = rule.last_fired_at
+
     if interval == 'DAILY':
-        return (now - last) >= timedelta(hours=20)  # ~daily with buffer
-    elif interval == 'WEEKLY':
-        return (now - last) >= timedelta(days=6)
-    elif interval == 'MONTHLY':
-        return (now - last) >= timedelta(days=27)
-    elif interval == 'QUARTERLY':
-        return (now - last) >= timedelta(days=85)
+        # Already fired today? (compare local-ish date)
+        if last and last.date() == now.date():
+            return False
+        return True
+
+    if interval == 'WEEKLY':
+        # weekday(): Monday=0 .. Sunday=6 — matches our convention.
+        dow = rule.recurrence_day_of_week
+        if dow is not None and now.weekday() != dow:
+            return False
+        # Dedup: haven't fired in the last 6 days.
+        if last and (now - last) < timedelta(days=6):
+            return False
+        return True
+
+    if interval == 'MONTHLY':
+        dom = rule.recurrence_day_of_month
+        if dom is not None:
+            # Clamp day-of-month to this month's last day (handles Feb, 30-day months).
+            import calendar
+            last_day = calendar.monthrange(now.year, now.month)[1]
+            effective_dom = min(dom, last_day)
+            if now.day != effective_dom:
+                return False
+        if last and (last.year, last.month) == (now.year, now.month):
+            return False
+        return True
+
+    if interval == 'QUARTERLY':
+        current_quarter = (now.month - 1) // 3
+        if last:
+            last_quarter = (last.month - 1) // 3
+            if (last.year, last_quarter) == (now.year, current_quarter):
+                return False
+        return True
 
     return False
 
@@ -307,89 +372,118 @@ def send_task_notification_async(task_id: int):
         except Exception as e:
             logger.error(f"Failed to send email to {target_email}: {e}")
 
-    # ── 2. WhatsApp Notification ──
+    # ── 2. WhatsApp Notification (dispatched async) ──
     if target_phone:
         whatsapp_msg = (
             f"🔔 *System Alert: {task.title}* ({task.organization.name})\n"
             f"Status: {task.priority}\n\n"
             f"{task.description}"
         )
-        
+
         from erp.services import ConfigurationService
         wa_config = ConfigurationService.get_setting(task.organization, 'whatsapp_integration', {})
         provider = wa_config.get('provider')
         is_active = wa_config.get('is_active', False)
-        
+
         if is_active and provider:
-            import requests
-            
-            # Override the 'to_number' variable with target_phone instead of user.whatsapp_number
             to_number = target_phone.strip()
             if not to_number.startswith('+'):
                 to_number = f"+{to_number}"
-                
-            try:
-                if provider == 'TWILIO':
-                    account_sid = wa_config.get('account_sid')
-                    auth_token = wa_config.get('auth_token')
-                    from_number = wa_config.get('from_number')
-                    
-                    if account_sid and auth_token and from_number:
-                        url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
-                        payload = {
-                            "From": from_number if from_number.startswith('whatsapp:') else f"whatsapp:{from_number}",
-                            "To": target_whatsapp_group if target_whatsapp_group else f"whatsapp:{to_number}",
-                            "Body": whatsapp_msg
-                        }
-                        res = requests.post(url, data=payload, auth=(account_sid, auth_token), timeout=5)
-                        res.raise_for_status()
-                        messages_sent.append('whatsapp_twilio')
-                        
-                elif provider == 'MESSAGEBIRD':
-                    api_key = wa_config.get('api_key')
-                    channel_id = wa_config.get('channel_id')
-                    
-                    if api_key and channel_id:
-                        url = "https://conversations.messagebird.com/v1/send"
-                        headers = {
-                            "Authorization": f"AccessKey {api_key}",
-                            "Content-Type": "application/json"
-                        }
-                        payload = {
-                            "to": target_whatsapp_group if target_whatsapp_group else to_number,
-                            "type": "text",
-                            "content": {"text": whatsapp_msg},
-                            "channelId": channel_id
-                        }
-                        res = requests.post(url, json=payload, headers=headers, timeout=5)
-                        res.raise_for_status()
-                        messages_sent.append('whatsapp_messagebird')
-                        
-                elif provider == 'META':
-                    access_token = wa_config.get('access_token')
-                    phone_number_id = wa_config.get('phone_number_id')
-                    
-                    if access_token and phone_number_id:
-                        url = f"https://graph.facebook.com/v18.0/{phone_number_id}/messages"
-                        headers = {
-                            "Authorization": f"Bearer {access_token}",
-                            "Content-Type": "application/json"
-                        }
-                        payload = {
-                            "messaging_product": "whatsapp",
-                            "to": target_whatsapp_group if target_whatsapp_group else to_number.replace('+', ''),  # Group ID or single number
-                            "type": "text",
-                            "text": {"body": whatsapp_msg}
-                        }
-                        res = requests.post(url, json=payload, headers=headers, timeout=5)
-                        res.raise_for_status()
-                        messages_sent.append('whatsapp_meta')
-
-            except Exception as e:
-                logger.error(f"WhatsApp dispatch failed via {provider}: {e}")
+            # Enqueue — don't block this worker on an external HTTP call.
+            dispatch_whatsapp_async.delay(
+                task.organization_id, provider, dict(wa_config),
+                to_number, target_whatsapp_group, whatsapp_msg,
+            )
+            messages_sent.append(f'whatsapp_{provider.lower()}_queued')
         else:
-            # If no actual provider is configured, do not crash, just log locally
-            logger.info(f"📲 [WhatsApp Traced (No Provider)] To: {target_whatsapp_group or target_phone} | Msg: {whatsapp_msg[:50]}...")
+            logger.info(
+                "📲 [WhatsApp Traced (No Provider)] To: %s | Msg: %s",
+                target_whatsapp_group or target_phone, whatsapp_msg[:50],
+            )
             messages_sent.append('whatsapp_mock')
 
     return {'status': 'success', 'channels': messages_sent}
+
+
+@shared_task(
+    name='apps.workspace.tasks.dispatch_whatsapp_async',
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,         # 1s, 2s, 4s, 8s, ...
+    retry_backoff_max=300,      # cap at 5 min
+    retry_jitter=True,
+    max_retries=5,
+)
+def dispatch_whatsapp_async(self, organization_id, provider, wa_config,
+                            to_number, group_id, message):
+    """
+    Send a single WhatsApp message via the configured provider.
+
+    Runs in its own Celery task so:
+    - a slow/failing provider cannot block the task-notification worker
+    - retries are isolated per message with exponential backoff
+    - a bad config for one org never starves other orgs' notifications
+    """
+    import requests
+
+    target = group_id if group_id else to_number
+
+    if provider == 'TWILIO':
+        account_sid = wa_config.get('account_sid')
+        auth_token = wa_config.get('auth_token')
+        from_number = wa_config.get('from_number')
+        if not (account_sid and auth_token and from_number):
+            logger.warning("Twilio config incomplete for org %s", organization_id)
+            return {'status': 'skipped', 'reason': 'incomplete_config'}
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+        payload = {
+            'From': from_number if from_number.startswith('whatsapp:') else f'whatsapp:{from_number}',
+            'To': group_id if group_id else f'whatsapp:{to_number}',
+            'Body': message,
+        }
+        res = requests.post(url, data=payload, auth=(account_sid, auth_token), timeout=5)
+        res.raise_for_status()
+        return {'status': 'sent', 'provider': 'TWILIO', 'to': target}
+
+    if provider == 'MESSAGEBIRD':
+        api_key = wa_config.get('api_key')
+        channel_id = wa_config.get('channel_id')
+        if not (api_key and channel_id):
+            logger.warning("MessageBird config incomplete for org %s", organization_id)
+            return {'status': 'skipped', 'reason': 'incomplete_config'}
+        res = requests.post(
+            'https://conversations.messagebird.com/v1/send',
+            json={
+                'to': target,
+                'type': 'text',
+                'content': {'text': message},
+                'channelId': channel_id,
+            },
+            headers={'Authorization': f'AccessKey {api_key}', 'Content-Type': 'application/json'},
+            timeout=5,
+        )
+        res.raise_for_status()
+        return {'status': 'sent', 'provider': 'MESSAGEBIRD', 'to': target}
+
+    if provider == 'META':
+        access_token = wa_config.get('access_token')
+        phone_number_id = wa_config.get('phone_number_id')
+        if not (access_token and phone_number_id):
+            logger.warning("Meta WhatsApp config incomplete for org %s", organization_id)
+            return {'status': 'skipped', 'reason': 'incomplete_config'}
+        res = requests.post(
+            f'https://graph.facebook.com/v18.0/{phone_number_id}/messages',
+            json={
+                'messaging_product': 'whatsapp',
+                'to': group_id if group_id else to_number.replace('+', ''),
+                'type': 'text',
+                'text': {'body': message},
+            },
+            headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'},
+            timeout=5,
+        )
+        res.raise_for_status()
+        return {'status': 'sent', 'provider': 'META', 'to': target}
+
+    logger.warning("Unknown WhatsApp provider %r for org %s", provider, organization_id)
+    return {'status': 'skipped', 'reason': 'unknown_provider'}

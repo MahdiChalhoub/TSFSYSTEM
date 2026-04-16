@@ -58,21 +58,8 @@ export type FiscalYearConfig = {
     includeAuditPeriod?: boolean
 }
 
-export async function createFiscalYear(config: FiscalYearConfig) {
+export async function createFiscalYear(config: FiscalYearConfig): Promise<{ success: boolean; id?: number; error?: string }> {
     try {
-        const payload = {
-            name: config.name,
-            start_date: config.startDate.toISOString().split('T')[0],
-            end_date: config.endDate.toISOString().split('T')[0],
-            frequency: config.frequency,
-            organization: 1, // Will be overridden by TenantMiddleware/View logic usually, but good to inspect view
-            // The view likely expects these for the service logic if it uses one, or just model fields.
-            // If the view creates periods, it needs 'frequency' in the request.data if it's not a model field.
-        }
-
-        // Wait, check if 'frequency' is a model field. If not, it might be extra data for the serializer/view.
-        // And 'defaultPeriodStatus' -> likely need to check how backend handles period creation.
-
         const result = await erpFetch('fiscal-years/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -81,15 +68,16 @@ export async function createFiscalYear(config: FiscalYearConfig) {
                 start_date: config.startDate instanceof Date ? config.startDate.toISOString().split('T')[0] : config.startDate,
                 end_date: config.endDate instanceof Date ? config.endDate.toISOString().split('T')[0] : config.endDate,
                 frequency: config.frequency,
-                period_status: config.defaultPeriodStatus, // Mapping defaultPeriodStatus
-                include_audit: config.includeAuditPeriod // Mapping includeAuditPeriod
+                period_status: config.defaultPeriodStatus,
+                include_audit: config.includeAuditPeriod,
             })
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true, id: result.id }
     } catch (error: unknown) {
         console.error("Failed to create fiscal year:", error)
-        throw error
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
     }
 }
 

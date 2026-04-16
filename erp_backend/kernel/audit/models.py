@@ -65,9 +65,7 @@ class AuditLog(TenantOwnedModel):
     severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default='INFO')
 
     class Meta:
-        app_label = 'kernel_audit'
-        managed = False
-        db_table = 'kernel_audit_auditlog'
+        app_label = 'erp'
         ordering = ['-timestamp']
         indexes = [
             models.Index(fields=['organization', 'timestamp']),
@@ -112,9 +110,7 @@ class AuditTrail(TenantOwnedModel):
     field_type = models.CharField(max_length=50, blank=True)  # CharField, DecimalField, etc.
 
     class Meta:
-        app_label = 'kernel_audit'
-        managed = False
-        db_table = 'kernel_audit_audittrail'
+        app_label = 'erp'
         ordering = ['field_name']
         indexes = [
             models.Index(fields=['organization', 'model_name', 'object_id']),

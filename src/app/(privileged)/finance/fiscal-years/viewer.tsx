@@ -115,13 +115,15 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     const handleCreateYear = async (e: React.FormEvent) => {
         e.preventDefault()
         startTransition(async () => {
-            try {
-                await createFiscalYear({
-                    name: wizardData.name, startDate: new Date(wizardData.startDate), endDate: new Date(wizardData.endDate),
-                    frequency: wizardData.frequency, defaultPeriodStatus: wizardData.defaultPeriodStatus, includeAuditPeriod: wizardData.includeAuditPeriod,
-                })
+            const res = await createFiscalYear({
+                name: wizardData.name, startDate: new Date(wizardData.startDate), endDate: new Date(wizardData.endDate),
+                frequency: wizardData.frequency, defaultPeriodStatus: wizardData.defaultPeriodStatus, includeAuditPeriod: wizardData.includeAuditPeriod,
+            })
+            if (res.success) {
                 toast.success(`Created ${wizardData.name}`); setShowWizard(false); refreshData()
-            } catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)) }
+            } else {
+                toast.error(res.error || 'Failed to create fiscal year')
+            }
         })
     }
 
@@ -517,13 +519,17 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                                     <Lock size={11} /> Soft Close
                                                 </button>
                                             )}
-                                            {yearStatus === 'OPEN' && (
-                                                <button onClick={() => { setClosingYearId(year.id); startTransition(async () => { const p = await getClosePreview(year.id); if (p) { setClosePreview(p); setCloseStep('preview') } else toast.error('Failed') }) }}
-                                                    disabled={isPending} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
-                                                    style={{ color: 'var(--app-error, #ef4444)', borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>
-                                                    {isPending && closingYearId === year.id ? <Loader2 size={11} className="animate-spin" /> : <ShieldCheck size={11} />} Year-End Close
-                                                </button>
-                                            )}
+                                            {yearStatus === 'OPEN' && (() => {
+                                                const isPartial = new Date() < new Date(year.endDate || year.end_date)
+                                                return (
+                                                    <button onClick={() => { setClosingYearId(year.id); startTransition(async () => { const p = await getClosePreview(year.id); if (p) { setClosePreview(p); setCloseStep('preview') } else toast.error('Failed') }) }}
+                                                        disabled={isPending} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
+                                                        title={isPartial ? 'Year not finished yet — will perform partial close and auto-create remainder year' : 'Close fiscal year and post P&L to Retained Earnings'}
+                                                        style={{ color: isPartial ? 'var(--app-warning, #f59e0b)' : 'var(--app-error, #ef4444)', borderColor: isPartial ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' : 'color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>
+                                                        {isPending && closingYearId === year.id ? <Loader2 size={11} className="animate-spin" /> : <ShieldCheck size={11} />} {isPartial ? 'Partial Close' : 'Year-End Close'}
+                                                    </button>
+                                                )
+                                            })()}
                                             {year.isHardLocked && (
                                                 <span className="flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded"
                                                     style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', color: 'var(--app-error, #ef4444)' }}>
@@ -757,29 +763,69 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                         className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none" required />
                                 </div>
                             </div>
-                            <div className="rounded-xl p-4" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 15%, transparent)' }}>
-                                <div className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-info, #3b82f6)' }}>Period Strategy</div>
-                                <div className="flex gap-3 mb-3">
-                                    {(['MONTHLY', 'QUARTERLY'] as const).map(f => (
-                                        <label key={f} className="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" name="freq" checked={wizardData.frequency === f} onChange={() => setWizardData({ ...wizardData, frequency: f })} className="accent-[var(--app-primary)]" />
-                                            <span className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>{f === 'MONTHLY' ? 'Monthly (12)' : 'Quarterly (4)'}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                                <div className="mb-3">
-                                    <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Initial Status</label>
-                                    <select value={wizardData.defaultPeriodStatus} onChange={e => setWizardData({ ...wizardData, defaultPeriodStatus: e.target.value as any })}
-                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[11px] font-medium text-app-foreground outline-none">
-                                        <option value="OPEN">OPEN — Active immediately</option>
-                                        <option value="FUTURE">FUTURE — Locked until needed</option>
-                                    </select>
-                                </div>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" checked={wizardData.includeAuditPeriod} onChange={e => setWizardData({ ...wizardData, includeAuditPeriod: e.target.checked })} className="accent-[var(--app-primary)] rounded" />
-                                    <span className="text-[10px] font-bold" style={{ color: 'var(--app-foreground)' }}>Include Audit Period (13th Month)</span>
-                                </label>
-                            </div>
+                            {(() => {
+                                const sd = new Date(wizardData.startDate)
+                                const ed = new Date(wizardData.endDate)
+                                const validDates = !isNaN(sd.getTime()) && !isNaN(ed.getTime()) && ed >= sd
+                                let monthsSpan = 0
+                                if (validDates) {
+                                    monthsSpan = (ed.getFullYear() - sd.getFullYear()) * 12 + (ed.getMonth() - sd.getMonth()) + 1
+                                }
+                                const isPartial = validDates && (sd.getMonth() !== 0 || sd.getDate() !== 1 || monthsSpan !== 12)
+                                const baseCount = wizardData.frequency === 'MONTHLY' ? monthsSpan : Math.ceil(monthsSpan / 3)
+                                const totalCount = baseCount + (wizardData.includeAuditPeriod ? 1 : 0)
+                                return (
+                                    <>
+                                        {isPartial && (
+                                            <div className="rounded-xl p-3 flex items-start gap-2"
+                                                style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                                                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                                <div>
+                                                    <div className="text-[11px] font-black uppercase tracking-wider" style={{ color: 'var(--app-warning, #f59e0b)' }}>Partial Fiscal Year</div>
+                                                    <div className="text-[10px] font-medium mt-0.5" style={{ color: 'var(--app-foreground)' }}>
+                                                        Spans {monthsSpan} month{monthsSpan === 1 ? '' : 's'} ({sd.toLocaleDateString('en', { month: 'short', day: 'numeric' })} → {ed.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}). A standard fiscal year is 12 calendar months starting Jan 1.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="rounded-xl p-4" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 15%, transparent)' }}>
+                                            <div className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-info, #3b82f6)' }}>Period Strategy</div>
+                                            <div className="flex gap-3 mb-3">
+                                                {(['MONTHLY', 'QUARTERLY'] as const).map(f => {
+                                                    const c = f === 'MONTHLY' ? monthsSpan : Math.ceil(monthsSpan / 3)
+                                                    return (
+                                                        <label key={f} className="flex items-center gap-2 cursor-pointer">
+                                                            <input type="radio" name="freq" checked={wizardData.frequency === f} onChange={() => setWizardData({ ...wizardData, frequency: f })} className="accent-[var(--app-primary)]" />
+                                                            <span className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>{f === 'MONTHLY' ? `Monthly (${c || 12})` : `Quarterly (${c || 4})`}</span>
+                                                        </label>
+                                                    )
+                                                })}
+                                            </div>
+                                            <div className="mb-3">
+                                                <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Initial Status</label>
+                                                <select value={wizardData.defaultPeriodStatus} onChange={e => setWizardData({ ...wizardData, defaultPeriodStatus: e.target.value as any })}
+                                                    className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[11px] font-medium text-app-foreground outline-none">
+                                                    <option value="OPEN">OPEN — Active immediately</option>
+                                                    <option value="FUTURE">FUTURE — Locked until needed</option>
+                                                </select>
+                                            </div>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox" checked={wizardData.includeAuditPeriod} onChange={e => setWizardData({ ...wizardData, includeAuditPeriod: e.target.checked })} className="accent-[var(--app-primary)] rounded" />
+                                                <span className="text-[10px] font-bold" style={{ color: 'var(--app-foreground)' }}>Include Audit Period (+1 adjustment period)</span>
+                                            </label>
+                                            {validDates && (
+                                                <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)' }}>
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Will generate</span>
+                                                    <span className="text-[12px] font-black" style={{ color: 'var(--app-info, #3b82f6)' }}>
+                                                        {totalCount} period{totalCount === 1 ? '' : 's'}
+                                                        {wizardData.includeAuditPeriod && <span className="text-[10px] font-bold ml-1" style={{ color: 'var(--app-muted-foreground)' }}>({baseCount} + 1 audit)</span>}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )
+                            })()}
                             <div className="flex gap-2 pt-1">
                                 <button type="button" onClick={() => setShowWizard(false)} className="flex-1 py-2 text-[11px] font-bold rounded-xl border transition-all" style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>Cancel</button>
                                 <button type="submit" disabled={isPending} className="flex-1 py-2 text-[11px] font-bold rounded-xl transition-all disabled:opacity-50" style={{ background: 'var(--app-primary)', color: 'white' }}>
@@ -875,7 +921,13 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                 </div>
                                 <div>
                                     <h2 className="text-[14px] font-black" style={{ color: 'var(--app-foreground)' }}>
-                                        {closeStep === 'preview' ? 'Year-End Close' : 'Close Complete'}
+                                        {closeStep === 'preview'
+                                            ? ((() => {
+                                                const today = new Date()
+                                                const yearEnd = new Date(closePreview.year.end_date)
+                                                return today < yearEnd ? 'Partial Year-End Close' : 'Year-End Close'
+                                            })())
+                                            : 'Close Complete'}
                                     </h2>
                                     <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                         {closePreview.year.name} · {closePreview.year.start_date} — {closePreview.year.end_date}

@@ -52,6 +52,70 @@ class AutoTaskRuleViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSe
     serializer_class = AutoTaskRuleSerializer
     permission_classes = [IsAuthenticated]
 
+    @action(detail=False, methods=['get'], url_path='health')
+    def health(self, request):
+        """
+        Operational summary of all auto-task rules for the current tenant.
+
+        For each rule, returns:
+          - id, code, name, module, trigger_event, rule_type, is_active
+          - last_fired_at, tasks_fired_last_7d, tasks_fired_last_30d
+          - is_stale: True if RECURRING and last_fired_at older than 2× interval
+
+        Used by the workspace admin to spot silently broken rules.
+        """
+        from datetime import timedelta
+        now = timezone.now()
+        week_ago = now - timedelta(days=7)
+        month_ago = now - timedelta(days=30)
+
+        qs = self.get_queryset().annotate(
+            fired_7d=Count(
+                'generated_tasks',
+                filter=Q(generated_tasks__created_at__gte=week_ago),
+            ),
+            fired_30d=Count(
+                'generated_tasks',
+                filter=Q(generated_tasks__created_at__gte=month_ago),
+            ),
+        ).order_by('module', 'code')
+
+        interval_days = {'DAILY': 1, 'WEEKLY': 7, 'MONTHLY': 30, 'QUARTERLY': 91}
+
+        def is_stale(rule):
+            if rule.rule_type != 'RECURRING' or not rule.is_active:
+                return False
+            if not rule.last_fired_at:
+                return True  # never fired but active and recurring
+            days = interval_days.get(rule.recurrence_interval, 0)
+            if days == 0:
+                return False
+            return (now - rule.last_fired_at) > timedelta(days=days * 2)
+
+        rows = [{
+            'id': r.id,
+            'code': r.code,
+            'name': r.name,
+            'module': r.module,
+            'trigger_event': r.trigger_event,
+            'rule_type': r.rule_type,
+            'is_active': r.is_active,
+            'recurrence_interval': r.recurrence_interval,
+            'last_fired_at': r.last_fired_at,
+            'tasks_fired_last_7d': r.fired_7d,
+            'tasks_fired_last_30d': r.fired_30d,
+            'is_stale': is_stale(r),
+        } for r in qs]
+
+        return Response({
+            'generated_at': now,
+            'total_rules': len(rows),
+            'active_rules': sum(1 for r in rows if r['is_active']),
+            'stale_rules': sum(1 for r in rows if r['is_stale']),
+            'fired_last_7d': sum(r['tasks_fired_last_7d'] for r in rows),
+            'rules': rows,
+        })
+
 
 class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
     queryset = Task.objects.select_related('category', 'assigned_by', 'assigned_to', 'template').all()

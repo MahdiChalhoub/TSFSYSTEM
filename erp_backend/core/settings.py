@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     
     # Local
     'erp',
-    'kernel.audit',
 ]
 
 # Auto-discover modules in 'apps' directory
@@ -294,6 +293,15 @@ CELERY_BEAT_SCHEDULE = {
     'send-daily-digest': {
         'task': 'erp.tasks.send_daily_digest',
         'schedule': crontab(minute=0, hour=8),       # Daily 08:00
+    },
+    # ── Workspace auto-task engine ──────────────────────────────
+    'fire-recurring-auto-tasks': {
+        'task': 'apps.workspace.tasks.fire_recurring_auto_tasks',
+        'schedule': crontab(minute='*/15'),          # Every 15 min
+    },
+    'check-stale-orders': {
+        'task': 'apps.workspace.tasks.check_stale_orders',
+        'schedule': crontab(minute=0, hour='*/4'),   # Every 4 hours
     },
 }
 

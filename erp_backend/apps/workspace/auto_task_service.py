@@ -41,7 +41,12 @@ def fire_auto_tasks(organization, trigger_event, context: dict):
     try:
         return _fire_auto_tasks_inner(organization, trigger_event, context)
     except Exception as e:
-        logger.error(f"Auto-task error [{trigger_event}]: {e}")
+        org_repr = getattr(organization, 'id', organization)
+        ctx_keys = sorted((context or {}).keys())
+        logger.exception(
+            "Auto-task error [trigger=%s org=%s ctx_keys=%s]: %s",
+            trigger_event, org_repr, ctx_keys, e,
+        )
         return []  # Never crash the caller
 
 

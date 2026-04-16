@@ -21,8 +21,13 @@ class ApprovalMode(models.TextChoices):
     POST = 'POST', 'Post-action (audit only)'
 
 
-class AuditLog(models.Model):
-    """Records data mutations with before/after JSON snapshots."""
+class LegacyAuditLog(models.Model):
+    """Records data mutations with before/after JSON snapshots.
+
+    NOTE: Renamed from AuditLog to avoid app-registry collision with
+    kernel.audit.models.AuditLog (both forced into app_label='erp').
+    Imports across erp/* alias this back to `AuditLog` for compatibility.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     timestamp = models.DateTimeField(auto_now_add=True)
     actor = models.ForeignKey(
@@ -134,7 +139,7 @@ class ApprovalRequest(models.Model):
         null=True, blank=True, related_name='requests'
     )
     audit_log = models.ForeignKey(
-        AuditLog, on_delete=models.SET_NULL,
+        LegacyAuditLog, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='approval_requests'
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
@@ -194,7 +199,7 @@ class TaskQueue(models.Model):
         null=True, blank=True, related_name='tasks'
     )
     source_audit_log = models.ForeignKey(
-        AuditLog, on_delete=models.SET_NULL,
+        LegacyAuditLog, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='tasks'
     )
     organization = models.ForeignKey(
@@ -233,3 +238,9 @@ class ForensicAuditLog(models.Model):
         db_table = 'forensicauditlog'
         ordering = ['-timestamp']
         managed = False
+
+
+# Backward-compat alias — the legacy class was renamed to LegacyAuditLog
+# to avoid app-registry collision with kernel.audit.models.AuditLog.
+# Existing imports `from .models_audit import AuditLog` continue to work.
+AuditLog = LegacyAuditLog

@@ -285,12 +285,47 @@ class AutoTaskRule(TenantModel):
         help_text='Recurrence schedule for RECURRING rules'
     )
     stale_threshold_days = models.IntegerField(
-        default=0,
+        default=3,
         help_text='Days before an item is considered stale (for stale-order rules)'
     )
     is_system_default = models.BooleanField(
         default=False,
         help_text='True for platform-seeded rules (not user-created)'
+    )
+
+    # ── Assignment & broadcast ─────────────────────────────────────────
+    assign_to_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='auto_task_rules_assigned',
+        help_text='Assign generated task to this specific user (overrides role)'
+    )
+    broadcast_to_role = models.BooleanField(
+        default=False,
+        help_text='If True, create a task for EVERY user in the assigned role'
+    )
+
+    # ── Fine-grained recurrence ────────────────────────────────────────
+    recurrence_time = models.TimeField(
+        null=True, blank=True,
+        help_text='What time of day to fire (e.g. 08:00)'
+    )
+    recurrence_day_of_week = models.IntegerField(
+        null=True, blank=True,
+        help_text='0=Monday, 6=Sunday (for WEEKLY rules)'
+    )
+    recurrence_day_of_month = models.IntegerField(
+        null=True, blank=True,
+        help_text='1-28 (for MONTHLY rules). Use 28 for end-of-month.'
+    )
+    last_fired_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Timestamp of last firing — used by recurring scheduler'
+    )
+
+    # ── Chain scheduling ───────────────────────────────────────────────
+    chain_delay_minutes = models.IntegerField(
+        default=0,
+        help_text='Wait X minutes after parent task completes before creating this task'
     )
 
     class Meta:
@@ -301,6 +336,11 @@ class AutoTaskRule(TenantModel):
                 name='unique_auto_task_rule_code_per_org',
                 condition=models.Q(code__isnull=False),
             )
+        ]
+        indexes = [
+            models.Index(fields=['module', 'is_active'], name='workspace_a_module_0a58d8_idx'),
+            models.Index(fields=['rule_type', 'is_active'], name='workspace_a_rule_ty_5b215a_idx'),
+            models.Index(fields=['trigger_event'], name='workspace_a_trigger_f667c0_idx'),
         ]
 
     def __str__(self):
