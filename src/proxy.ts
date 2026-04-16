@@ -48,11 +48,13 @@ export default async function middleware(req: NextRequest) {
     // sometimes ignore the matcher. This guard ensures static files are NEVER
     // intercepted by the middleware.
     if (
+        url.pathname.includes('/_next/') || 
         url.pathname.startsWith('/_next/') ||
         url.pathname.startsWith('/_static/') ||
         url.pathname.startsWith('/favicon') ||
         url.pathname === '/sw.js' ||
-        url.pathname === '/manifest.json'
+        url.pathname === '/manifest.json' ||
+        /\.(.*)$/.test(url.pathname) // Any file with an extension
     ) {
         return NextResponse.next();
     }
@@ -258,6 +260,7 @@ export default async function middleware(req: NextRequest) {
     // console.log(`[Middleware DEBUG] path: ${url.pathname}, isPublic: ${isPublicRoute}, hasToken: ${hasAuthToken}`);
 
     if (!hasAuthToken && !isPublicRoute) {
+        console.warn(`[Middleware] Unauthorized access to ${url.pathname} from ${hostname}. Redirecting to /login.`);
         const loginUrl = url.clone();
         loginUrl.hostname = hostname;
         loginUrl.port = "";
