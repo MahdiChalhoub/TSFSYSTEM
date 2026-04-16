@@ -892,6 +892,40 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                             /* ── Preview Report ── */
                             <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
 
+                                {/* Partial Close Banner */}
+                                {(() => {
+                                    const today = new Date()
+                                    const yearEnd = new Date(closePreview.year.end_date)
+                                    const isPartial = today < yearEnd
+                                    if (!isPartial) return null
+                                    const remainderStart = new Date(today); remainderStart.setDate(remainderStart.getDate() + 1)
+                                    const sm = remainderStart.toLocaleDateString('en', { month: 'short' })
+                                    const em = yearEnd.toLocaleDateString('en', { month: 'short' })
+                                    const todayStr = today.toISOString().split('T')[0]
+                                    return (
+                                        <div className="rounded-xl p-3 space-y-2"
+                                            style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                                            <div className="flex items-center gap-2">
+                                                <AlertTriangle size={14} style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                                <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: 'var(--app-warning, #f59e0b)' }}>Partial Year Close</span>
+                                            </div>
+                                            <div className="text-[11px] font-medium leading-relaxed" style={{ color: 'var(--app-foreground)' }}>
+                                                Today ({todayStr}) is before the year end ({closePreview.year.end_date}). The year will be split:
+                                            </div>
+                                            <div className="space-y-1 pl-2">
+                                                <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
+                                                    <Lock size={10} style={{ color: 'var(--app-error, #ef4444)' }} />
+                                                    <span><strong>{closePreview.year.name}</strong> truncated to {closePreview.year.start_date} — {todayStr} and locked</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
+                                                    <Plus size={10} style={{ color: 'var(--app-success, #22c55e)' }} />
+                                                    <span>New year <strong>FY {remainderStart.getFullYear()} ({sm}-{em})</strong> auto-created with open monthly periods</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })()}
+
                                 {/* Blockers */}
                                 {closePreview.blockers.length > 0 && (
                                     <div className="rounded-xl p-3 space-y-2"
@@ -991,21 +1025,36 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                                 <strong>{closePreview.retained_earnings ? `${closePreview.retained_earnings.code} — ${closePreview.retained_earnings.name}` : 'Retained Earnings (not found!)'}</strong>
                                             </span>
                                         </div>
-                                        {closePreview.next_year ? (
-                                            <div className="flex items-start gap-2">
-                                                <ArrowRight size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-primary)' }} />
-                                                <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
-                                                    {closePreview.opening_balances_count} opening balances generated for <strong>{closePreview.next_year.name}</strong>
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-start gap-2">
-                                                <AlertTriangle size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                                <span className="text-[11px] font-medium" style={{ color: 'var(--app-warning, #f59e0b)' }}>
-                                                    No next fiscal year found — opening balances will NOT be generated. Create the next year first.
-                                                </span>
-                                            </div>
-                                        )}
+                                        {(() => {
+                                            const today = new Date()
+                                            const yearEnd = new Date(closePreview.year.end_date)
+                                            const isPartial = today < yearEnd
+                                            if (isPartial) {
+                                                return (
+                                                    <div className="flex items-start gap-2">
+                                                        <ArrowRight size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-primary)' }} />
+                                                        <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
+                                                            Remainder fiscal year auto-created with monthly open periods, opening balances carried forward
+                                                        </span>
+                                                    </div>
+                                                )
+                                            }
+                                            return closePreview.next_year ? (
+                                                <div className="flex items-start gap-2">
+                                                    <ArrowRight size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-primary)' }} />
+                                                    <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
+                                                        {closePreview.opening_balances_count} opening balances generated for <strong>{closePreview.next_year.name}</strong>
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-start gap-2">
+                                                    <AlertTriangle size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                                    <span className="text-[11px] font-medium" style={{ color: 'var(--app-warning, #f59e0b)' }}>
+                                                        No next fiscal year found — opening balances will NOT be generated. Create the next year first.
+                                                    </span>
+                                                </div>
+                                            )
+                                        })()}
                                         <div className="flex items-start gap-2">
                                             <Lock size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-error, #ef4444)' }} />
                                             <span className="text-[11px] font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
@@ -1077,7 +1126,11 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                         }}
                                         className="flex-1 py-2.5 text-[11px] font-bold rounded-xl transition-all disabled:opacity-40 flex items-center justify-center gap-1.5"
                                         style={{ background: closePreview.can_close ? 'var(--app-error, #ef4444)' : 'var(--app-muted)', color: 'white' }}>
-                                        {isPending ? <><Loader2 size={12} className="animate-spin" /> Closing...</> : <><ShieldCheck size={12} /> Execute Year-End Close</>}
+                                        {isPending ? <><Loader2 size={12} className="animate-spin" /> Closing...</> : <><ShieldCheck size={12} /> {(() => {
+                                            const today = new Date()
+                                            const yearEnd = new Date(closePreview.year.end_date)
+                                            return today < yearEnd ? 'Execute Partial Close & Split Year' : 'Execute Year-End Close'
+                                        })()}</>}
                                     </button>
                                 </div>
                             </div>
@@ -1098,48 +1151,27 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                     </p>
                                 </div>
 
-                                {!closeResult?.startsWith('Error') && (
-                                    <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Summary</div>
-                                        <div className="space-y-1.5 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
-                                            <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> P&L closed into Retained Earnings</div>
-                                            <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> Net {closePreview.pnl.net_income >= 0 ? 'income' : 'loss'}: {closePreview.pnl.net_income.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                                            {closePreview.next_year && (
-                                                <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> Opening balances → {closePreview.next_year.name}</div>
-                                            )}
-                                            <div className="flex items-center gap-2"><Lock size={11} style={{ color: 'var(--app-error, #ef4444)' }} /> {closePreview.year.name} permanently locked</div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Partial year: suggest creating remainder */}
                                 {!closeResult?.startsWith('Error') && (() => {
-                                    const endDate = new Date(closePreview.year.end_date)
-                                    const isPartial = endDate.getMonth() < 11 // Not December
-                                    if (!isPartial || closePreview.next_year) return null
-                                    const nextStart = new Date(endDate); nextStart.setDate(nextStart.getDate() + 1)
-                                    const calEnd = new Date(nextStart.getFullYear(), 11, 31)
-                                    const startLabel = nextStart.toLocaleDateString('en', { month: 'short' })
+                                    const today = new Date()
+                                    const yearEnd = new Date(closePreview.year.end_date)
+                                    const wasPartial = today < yearEnd
+                                    const remainderStart = new Date(today); remainderStart.setDate(remainderStart.getDate() + 1)
+                                    const sm = remainderStart.toLocaleDateString('en', { month: 'short' })
+                                    const em = yearEnd.toLocaleDateString('en', { month: 'short' })
+                                    const remainderName = `FY ${remainderStart.getFullYear()} (${sm}-${em})`
                                     return (
-                                        <div className="rounded-xl p-3" style={{ background: 'color-mix(in srgb, var(--app-info) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
-                                            <div className="text-[11px] font-bold mb-2" style={{ color: 'var(--app-foreground)' }}>
-                                                This was a partial year ({closePreview.year.start_date} — {closePreview.year.end_date}).
-                                                Create a remainder year for {startLabel} — Dec {calEnd.getFullYear()}?
+                                        <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                                            <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Summary</div>
+                                            <div className="space-y-1.5 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
+                                                <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> P&L closed into Retained Earnings</div>
+                                                <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> Net {closePreview.pnl.net_income >= 0 ? 'income' : 'loss'}: {closePreview.pnl.net_income.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                {wasPartial ? (
+                                                    <div className="flex items-center gap-2"><Plus size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> Remainder year <strong>{remainderName}</strong> auto-created with opening balances</div>
+                                                ) : closePreview.next_year && (
+                                                    <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> Opening balances → {closePreview.next_year.name}</div>
+                                                )}
+                                                <div className="flex items-center gap-2"><Lock size={11} style={{ color: 'var(--app-error, #ef4444)' }} /> {closePreview.year.name} permanently locked</div>
                                             </div>
-                                            <button onClick={() => {
-                                                setCloseStep(null); setClosePreview(null); setCloseResult(null)
-                                                setWizardData(prev => ({
-                                                    ...prev,
-                                                    name: `FY ${nextStart.getFullYear()}-B (${startLabel}-Dec)`,
-                                                    startDate: nextStart.toISOString().split('T')[0],
-                                                    endDate: calEnd.toISOString().split('T')[0],
-                                                }))
-                                                setShowWizard(true)
-                                            }}
-                                                className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all"
-                                                style={{ background: 'var(--app-primary)', color: 'white' }}>
-                                                <Plus size={11} /> Create Remainder Year
-                                            </button>
                                         </div>
                                     )
                                 })()}

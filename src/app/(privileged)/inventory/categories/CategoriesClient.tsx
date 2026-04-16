@@ -356,13 +356,20 @@ const CategoryRow = ({
             <div
                 className={`
                     group flex items-center gap-2.5 transition-all duration-200 relative
-                    ${isParent ? 'cursor-pointer' : 'cursor-default'}
+                    cursor-pointer
                     ${level === 0
                         ? 'py-2.5 md:py-3 hover:brightness-105'
                         : 'py-1.5 md:py-2 hover:brightness-105'
                     }
                 `}
-                onClick={(e) => { e.stopPropagation(); onSelect?.(node) }}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    if (isParent) { setIsOpen(o => !o) } else { onSelect?.(node) }
+                }}
+                onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    onSelect?.(node)
+                }}
                 style={{
                     paddingLeft: `${12 + (level > 0 ? level * 18 : 0)}px`,
                     paddingRight: '12px',
@@ -415,7 +422,10 @@ const CategoryRow = ({
                 </div>
 
                 {/* Name block */}
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); onSelect?.(node) }}>
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={(e) => {
+                        e.stopPropagation()
+                        if (isParent) { setIsOpen(o => !o) } else { onSelect?.(node) }
+                    }}>
                         <div className="flex items-center gap-1.5">
                             <span className={`truncate text-[13px] ${isRoot ? 'font-black text-app-foreground' : 'font-semibold text-app-foreground'}`}>
                                 {node.name}

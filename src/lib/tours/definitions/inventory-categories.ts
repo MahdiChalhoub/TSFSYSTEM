@@ -88,7 +88,7 @@ const categoriesTour: TourConfig = {
         {
             target: '[data-tour="category-tree"]',
             title: 'The Category Tree',
-            description: 'Your hierarchical product taxonomy. Each row shows sub-categories, brands, attributes, and products. Click the arrow to expand, or click a row to see its details.',
+            description: 'Your hierarchical product taxonomy. Single-click any parent row to expand or collapse it. Double-click to open its detail panel. Leaf categories open the panel on single-click.',
             icon: createElement(FolderTree, { size: 16 }),
             color: 'var(--app-success, #22c55e)',
             placement: 'top',
@@ -97,7 +97,7 @@ const categoriesTour: TourConfig = {
         {
             target: '[data-tour="category-tree"]',
             title: 'Expanding the Tree',
-            description: 'Watch! We just expanded the first parent category to reveal its children. Click the arrow ▶ on any row to expand or collapse its sub-categories.',
+            description: 'Watch! We just expanded all categories. Click any parent row to toggle its children. The Expand/Collapse button at the top toggles the entire tree at once.',
             icon: createElement(ChevronRight, { size: 16 }),
             color: 'var(--app-primary)',
             placement: 'top',
@@ -107,7 +107,7 @@ const categoriesTour: TourConfig = {
         {
             target: '[data-tour="detail-drawer"]',
             title: 'Opening the Detail Panel',
-            description: 'We just clicked a category to open its detail sidebar. This panel has 4 tabs: Overview, Products, Brands, and Attributes. Let\'s explore them!',
+            description: 'We opened the detail sidebar! Double-click any parent row — or single-click a leaf — to open this panel. It has 4 tabs: Overview, Products, Brands, and Attributes.',
             icon: createElement(MousePointerClick, { size: 16 }),
             color: '#8b5cf6',
             placement: 'left',

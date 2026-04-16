@@ -1,8 +1,9 @@
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
- *  TSFSYSTEM — GuidedTour — Interactive Tour Renderer
- *  Part of the platform-wide tour system.
+ *  TSFSYSTEM — GuidedTour — Lightweight Tour Renderer
+ *  Performance-first: uses CSS box-shadow spotlight instead
+ *  of SVG masks. No backdrop-filter blur. GPU-composited.
  *
  *  Supports 3 step behaviors:
  *    'info'   → Passive tooltip, user clicks Next
@@ -32,19 +33,10 @@ export function GuidedTour({
     stepActions = {},
     onComplete,
 }: {
-    /** The registered tour ID */
     tourId: string
-    /** Auto-start on first visit (default: true) */
     autoStart?: boolean
-    /** Delay before auto-start in ms (default: 800) */
     autoStartDelay?: number
-    /**
-     * Action callbacks keyed by step index.
-     * For 'action' steps: called when the step activates (performs UI change).
-     * For 'click' steps: called when user clicks the target element.
-     */
     stepActions?: StepActions
-    /** Callback when tour completes */
     onComplete?: () => void
 }) {
     const { activeTourId, startTour, dismissTour } = useTourContext()
@@ -87,14 +79,13 @@ export function GuidedTour({
             const timer = setTimeout(async () => {
                 await stepActions[currentStep]()
                 setActionExecuted(true)
-            }, 300) // Small delay to let tooltip render first
+            }, 250)
             return () => clearTimeout(timer)
         }
     }, [isActive, currentStep, behavior, stepActions, step, actionExecuted])
 
     // Set up click listener for 'click' behavior steps
     useEffect(() => {
-        // Clean up previous listener
         if (clickListenerRef.current) {
             clickListenerRef.current()
             clickListenerRef.current = null
@@ -103,11 +94,9 @@ export function GuidedTour({
         if (!isActive || !step || behavior !== 'click' || !step.target) return
 
         const handler = async () => {
-            // Execute the action callback if provided
             if (stepActions[currentStep]) {
                 await stepActions[currentStep]()
             }
-            // Auto-advance to next step after a brief delay
             setTimeout(() => {
                 if (isLast) {
                     completeTour()
@@ -118,7 +107,6 @@ export function GuidedTour({
             }, step.actionDelay ?? 400)
         }
 
-        // Wait for element to exist, then attach listener
         const timer = setTimeout(() => {
             const el = document.querySelector(step.target!)
             if (el) {
@@ -137,7 +125,7 @@ export function GuidedTour({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive, currentStep, behavior])
 
-    // Position highlight + tooltip
+    // Position highlight + tooltip — with retry for dynamically created elements
     const positionTooltip = useCallback(() => {
         if (!step || step.isWelcome || !step.target) {
             setTargetRect(null)
@@ -154,14 +142,13 @@ export function GuidedTour({
 
     useEffect(() => {
         if (!isActive) return
-        // For action steps that create DOM elements dynamically,
-        // retry positioning multiple times until the element appears
-        const delays = [200, 500, 800, 1200]
-        const timers = delays.map(d => setTimeout(positionTooltip, d))
+        // Retry a few times for dynamically-created elements
+        const t1 = setTimeout(positionTooltip, 150)
+        const t2 = setTimeout(positionTooltip, 600)
         window.addEventListener('resize', positionTooltip)
         window.addEventListener('scroll', positionTooltip, true)
         return () => {
-            timers.forEach(t => clearTimeout(t))
+            clearTimeout(t1); clearTimeout(t2)
             window.removeEventListener('resize', positionTooltip)
             window.removeEventListener('scroll', positionTooltip, true)
         }
@@ -206,7 +193,6 @@ export function GuidedTour({
     // Actions
     const completeTour = useCallback(() => {
         if (tourConfig) markTourCompleted(tourId, tourConfig.version)
-        // Clean up click listener
         if (clickListenerRef.current) {
             clickListenerRef.current()
             clickListenerRef.current = null
@@ -251,91 +237,84 @@ export function GuidedTour({
     const accentColor = step.color || 'var(--app-primary)'
     const isClickStep = behavior === 'click'
 
+    /* ─── Spotlight geometry (for box-shadow approach) ─── */
+    const spotlightStyle = targetRect ? {
+        position: 'fixed' as const,
+        left: targetRect.left - 8,
+        top: targetRect.top - 8,
+        width: targetRect.width + 16,
+        height: targetRect.height + 16,
+        borderRadius: 14,
+        // The magic: a huge box-shadow acts as the overlay dimming
+        boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)',
+        transition: 'left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease',
+        pointerEvents: 'none' as const,
+        zIndex: 10000,
+    } : null
+
     return (
-        <div className="fixed inset-0 z-[10000] animate-in fade-in duration-300" key={`tour-step-${currentStep}`}>
+        <div className="fixed inset-0 z-[10000]" style={{ opacity: 1 }}>
             {/* ── Overlay ── */}
             {isCentered ? (
+                /* Centered modal: simple dark overlay, NO blur */
                 <div
                     className="absolute inset-0"
-                    style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+                    style={{ background: 'rgba(0,0,0,0.5)' }}
                     onClick={completeTour}
                 />
             ) : (
                 <>
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                        <defs>
-                            <mask id={`tour-mask-${tourId}-${currentStep}`}>
-                                <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                                {targetRect && (
-                                    <rect
-                                        x={targetRect.left - 8} y={targetRect.top - 8}
-                                        width={targetRect.width + 16} height={targetRect.height + 16}
-                                        rx="14" fill="black"
-                                    />
-                                )}
-                            </mask>
-                        </defs>
-                        <rect x="0" y="0" width="100%" height="100%"
-                            fill="rgba(0,0,0,0.5)"
-                            mask={`url(#tour-mask-${tourId}-${currentStep})`}
-                        />
-                    </svg>
+                    {/* Spotlight overlay via box-shadow — single div, GPU-composited */}
+                    {spotlightStyle && <div style={spotlightStyle} />}
 
-                    {/* Spotlight ring */}
+                    {/* Accent ring around target */}
                     {targetRect && (
                         <div
-                            className="absolute rounded-2xl pointer-events-none"
+                            className="pointer-events-none"
                             style={{
+                                position: 'fixed',
                                 left: targetRect.left - 8, top: targetRect.top - 8,
                                 width: targetRect.width + 16, height: targetRect.height + 16,
-                                boxShadow: isClickStep
-                                    ? `0 0 0 3px ${accentColor}, 0 0 0 6px color-mix(in srgb, ${accentColor} 20%, transparent), 0 0 30px color-mix(in srgb, ${accentColor} 40%, transparent)`
-                                    : `0 0 0 3px ${accentColor}, 0 0 24px color-mix(in srgb, ${accentColor} 30%, transparent)`,
-                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                animation: isClickStep ? 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' : undefined,
+                                borderRadius: 14,
+                                border: `2px solid ${accentColor}`,
+                                boxShadow: `0 0 16px color-mix(in srgb, ${accentColor} 25%, transparent)`,
+                                transition: 'left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease',
+                                zIndex: 10000,
                             }}
                         />
                     )}
 
                     {/* Click-through: for 'click' steps, make the target clickable */}
                     {isClickStep && targetRect && (
-                        <>
-                            {/* Block clicks everywhere EXCEPT the target */}
-                            <div className="absolute inset-0" style={{ pointerEvents: 'auto' }} onClick={(e) => e.stopPropagation()} />
-                            {/* Hole over target: allow clicks through */}
-                            <div
-                                className="absolute"
-                                style={{
-                                    left: targetRect.left - 8, top: targetRect.top - 8,
-                                    width: targetRect.width + 16, height: targetRect.height + 16,
-                                    pointerEvents: 'none',
-                                }}
-                            />
-                        </>
+                        <div className="absolute inset-0" style={{ pointerEvents: 'auto', zIndex: 9999 }} onClick={e => e.stopPropagation()} />
                     )}
 
                     {/* For non-click steps, block all interaction */}
-                    {!isClickStep && <div className="absolute inset-0" onClick={completeTour} />}
+                    {!isClickStep && (
+                        <div className="absolute inset-0" style={{ zIndex: 9999 }} onClick={completeTour} />
+                    )}
                 </>
             )}
 
             {/* ── Click pulse indicator for 'click' steps ── */}
             {isClickStep && targetRect && (
                 <div
-                    className="absolute pointer-events-none flex items-center justify-center"
+                    className="pointer-events-none flex items-center justify-center"
                     style={{
-                        left: targetRect.left + targetRect.width / 2 - 16,
-                        top: targetRect.top + targetRect.height / 2 - 16,
-                        width: 32, height: 32,
+                        position: 'fixed',
+                        left: targetRect.left + targetRect.width / 2 - 14,
+                        top: targetRect.top + targetRect.height / 2 - 14,
+                        width: 28, height: 28,
                         zIndex: 10001,
                     }}
                 >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center animate-bounce"
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center"
                         style={{
                             background: accentColor,
-                            boxShadow: `0 4px 16px color-mix(in srgb, ${accentColor} 50%, transparent)`,
+                            boxShadow: `0 2px 10px color-mix(in srgb, ${accentColor} 40%, transparent)`,
+                            animation: 'bounce 1s infinite',
                         }}>
-                        <MousePointerClick size={14} className="text-white" />
+                        <MousePointerClick size={12} className="text-white" />
                     </div>
                 </div>
             )}
@@ -343,66 +322,87 @@ export function GuidedTour({
             {/* ── Tooltip Card ── */}
             <div
                 ref={tooltipRef}
-                className={`
-                    ${isCentered ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : 'fixed'}
-                    w-[370px] max-w-[calc(100vw-32px)] rounded-2xl overflow-hidden
-                    animate-in zoom-in-95 fade-in slide-in-from-bottom-2 duration-300
-                `}
+                className={isCentered ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : 'fixed'}
                 style={{
                     ...(!isCentered ? { top: tooltipPos.top, left: tooltipPos.left } : {}),
+                    width: 360,
+                    maxWidth: 'calc(100vw - 32px)',
+                    borderRadius: 16,
+                    overflow: 'hidden',
                     background: 'var(--app-surface)',
                     border: '1px solid var(--app-border)',
-                    boxShadow: `0 24px 64px rgba(0,0,0,0.35), 0 0 40px color-mix(in srgb, ${accentColor} 10%, transparent)`,
+                    boxShadow: `0 16px 48px rgba(0,0,0,0.25)`,
                     zIndex: 10002,
+                    transition: !isCentered ? 'top 0.3s ease, left 0.3s ease' : undefined,
                 }}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Progress bar */}
-                <div className="h-1 w-full" style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                <div style={{ height: 3, width: '100%', background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                     <div
-                        className="h-full transition-all duration-500 ease-out"
                         style={{
+                            height: '100%',
                             width: `${progress}%`,
-                            background: `linear-gradient(90deg, ${accentColor}, color-mix(in srgb, ${accentColor} 60%, #818cf8))`,
+                            background: accentColor,
+                            transition: 'width 0.4s ease',
                         }}
                     />
                 </div>
 
                 {/* Header */}
-                <div className="px-4 pt-3.5 pb-1 flex items-start gap-3">
+                <div style={{ padding: '12px 16px 4px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                     <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
                         style={{
-                            background: `linear-gradient(135deg, color-mix(in srgb, ${accentColor} 15%, transparent), color-mix(in srgb, ${accentColor} 8%, transparent))`,
+                            width: 36, height: 36, borderRadius: 10,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0, marginTop: 2,
+                            background: `color-mix(in srgb, ${accentColor} 12%, transparent)`,
                             color: accentColor,
-                            border: `1px solid color-mix(in srgb, ${accentColor} 20%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${accentColor} 18%, transparent)`,
                         }}
                     >
-                        {step.icon || <Sparkles size={18} />}
+                        {step.icon || <Sparkles size={16} />}
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                            <h3 className="text-[14px] font-black text-app-foreground tracking-tight leading-tight">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                            <h3 style={{
+                                fontSize: 14, fontWeight: 900,
+                                color: 'var(--app-foreground)',
+                                letterSpacing: '-0.01em',
+                                lineHeight: 1.25, margin: 0,
+                            }}>
                                 {step.title}
                             </h3>
                             <button
                                 onClick={completeTour}
-                                className="w-6 h-6 rounded-lg flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all flex-shrink-0"
+                                style={{
+                                    width: 24, height: 24, borderRadius: 8,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: 'var(--app-muted-foreground)',
+                                    background: 'transparent', border: 'none', cursor: 'pointer',
+                                    flexShrink: 0,
+                                }}
                                 title="Close tour (Esc)"
                             >
                                 <X size={13} />
                             </button>
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                            <span style={{
+                                fontSize: 9, fontWeight: 700,
+                                textTransform: 'uppercase', letterSpacing: '0.08em',
+                                color: accentColor,
+                            }}>
                                 Step {currentStep + 1} of {steps.length}
                             </span>
                             {isClickStep && (
-                                <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md animate-pulse"
-                                    style={{
-                                        background: `color-mix(in srgb, ${accentColor} 12%, transparent)`,
-                                        color: accentColor,
-                                    }}>
+                                <span style={{
+                                    fontSize: 8, fontWeight: 900,
+                                    textTransform: 'uppercase', letterSpacing: '0.08em',
+                                    padding: '2px 6px', borderRadius: 6,
+                                    background: `color-mix(in srgb, ${accentColor} 10%, transparent)`,
+                                    color: accentColor,
+                                }}>
                                     ⬆ Click to continue
                                 </span>
                             )}
@@ -411,58 +411,65 @@ export function GuidedTour({
                 </div>
 
                 {/* Body */}
-                <div className="px-4 pt-1 pb-3">
-                    <p className="text-[12px] leading-[1.65] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                <div style={{ padding: '4px 16px 12px' }}>
+                    <p style={{
+                        fontSize: 12, lineHeight: 1.6, fontWeight: 500,
+                        color: 'var(--app-muted-foreground)', margin: 0,
+                    }}>
                         {step.description}
                     </p>
                     {step.actionHint && (
-                        <div className="mt-2 flex items-center gap-2 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"
-                            style={{
-                                background: `color-mix(in srgb, ${accentColor} 6%, transparent)`,
-                                color: accentColor,
-                                border: `1px solid color-mix(in srgb, ${accentColor} 15%, transparent)`,
-                            }}>
-                            <MousePointerClick size={12} />
+                        <div style={{
+                            marginTop: 8, display: 'flex', alignItems: 'center', gap: 8,
+                            fontSize: 11, fontWeight: 700, padding: '6px 10px', borderRadius: 8,
+                            background: `color-mix(in srgb, ${accentColor} 6%, transparent)`,
+                            color: accentColor,
+                            border: `1px solid color-mix(in srgb, ${accentColor} 12%, transparent)`,
+                        }}>
+                            <MousePointerClick size={11} />
                             {step.actionHint}
                         </div>
                     )}
                 </div>
 
                 {/* Navigation */}
-                <div
-                    className="px-4 py-2.5 flex items-center justify-between"
-                    style={{
-                        background: 'color-mix(in srgb, var(--app-background) 50%, transparent)',
-                        borderTop: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
-                    }}
-                >
+                <div style={{
+                    padding: '8px 16px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'color-mix(in srgb, var(--app-background) 50%, transparent)',
+                    borderTop: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
+                }}>
                     {/* Step dots */}
-                    <div className="flex items-center gap-1">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                         {steps.map((_, i) => (
                             <div
                                 key={i}
-                                className="transition-all duration-300"
                                 style={{
-                                    width: i === currentStep ? 18 : 6,
-                                    height: 6,
+                                    width: i === currentStep ? 16 : 5,
+                                    height: 5,
                                     borderRadius: 3,
                                     background: i === currentStep
                                         ? accentColor
                                         : i < currentStep
-                                            ? `color-mix(in srgb, ${accentColor} 40%, transparent)`
-                                            : 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                            ? `color-mix(in srgb, ${accentColor} 35%, transparent)`
+                                            : 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                    transition: 'width 0.25s ease, background 0.25s ease',
                                 }}
                             />
                         ))}
                     </div>
 
                     {/* Buttons */}
-                    <div className="flex items-center gap-1.5">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {!isFirst && (
                             <button
                                 onClick={prev}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-app-border/30"
-                                style={{ color: 'var(--app-muted-foreground)' }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 4,
+                                    fontSize: 10, fontWeight: 700, padding: '5px 10px', borderRadius: 8,
+                                    color: 'var(--app-muted-foreground)',
+                                    background: 'transparent', border: 'none', cursor: 'pointer',
+                                }}
                             >
                                 <ChevronLeft size={12} /> Back
                             </button>
@@ -470,20 +477,24 @@ export function GuidedTour({
                         {isFirst && (
                             <button
                                 onClick={completeTour}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-app-border/30"
-                                style={{ color: 'var(--app-muted-foreground)' }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 4,
+                                    fontSize: 10, fontWeight: 700, padding: '5px 10px', borderRadius: 8,
+                                    color: 'var(--app-muted-foreground)',
+                                    background: 'transparent', border: 'none', cursor: 'pointer',
+                                }}
                             >
                                 <SkipForward size={10} /> Skip
                             </button>
                         )}
-                        {/* For 'click' steps, hide Next (user must click target). For others, show Next/Finish */}
                         {!isClickStep && (
                             <button
                                 onClick={next}
-                                className="flex items-center gap-1 text-[10px] font-bold px-3.5 py-1.5 rounded-lg text-white transition-all hover:brightness-110"
                                 style={{
-                                    background: accentColor,
-                                    boxShadow: `0 2px 8px color-mix(in srgb, ${accentColor} 30%, transparent)`,
+                                    display: 'flex', alignItems: 'center', gap: 4,
+                                    fontSize: 10, fontWeight: 700, padding: '5px 14px', borderRadius: 8,
+                                    color: '#fff', cursor: 'pointer',
+                                    background: accentColor, border: 'none',
                                 }}
                             >
                                 {isLast ? (

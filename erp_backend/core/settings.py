@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     
     # Local
     'erp',
+    'kernel.audit',
 ]
 
 # Auto-discover modules in 'apps' directory
