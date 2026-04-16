@@ -104,7 +104,13 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
         return result
     }, [years, searchQuery, statusFilter])
 
-    const refreshData = () => { window.location.reload() }
+    const refreshData = async () => {
+        try {
+            const { getFiscalYears } = await import('@/app/actions/finance/fiscal-year')
+            const fresh = await getFiscalYears()
+            setYears(Array.isArray(fresh) ? fresh : [])
+        } catch { /* silent */ }
+    }
 
     const handleCreateYear = async (e: React.FormEvent) => {
         e.preventDefault()

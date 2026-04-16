@@ -48,7 +48,7 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
     // ─── AUTH & TENANT INJECTION ───
     const headers = new Headers();
     // Copy select headers to avoid corruption of multipart boundaries
-    const headersToCopy = ['content-type', 'content-length', 'accept', 'authorization'];
+    const headersToCopy = ['content-type', 'content-length', 'accept', 'authorization', 'x-tenant-id', 'x-tenant-slug', 'x-scope'];
     headersToCopy.forEach(h => {
         const val = req.headers.get(h);
         if (val) headers.set(h, val);
@@ -97,7 +97,7 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
         headers.set('X-Scope', scope.toUpperCase());
     }
 
-    // console.log(`[ERP_PROXY] ${req.method} ${targetUrl} | Tenant: ${tenantSlug || 'None'} | Auth: ${headers.has('Authorization') ? 'Present' : 'Missing'}`);
+    console.log(`[ERP_PROXY] ${req.method} ${targetUrl} | Tenant: ${tenantSlug || 'None'} | Auth: ${headers.has('Authorization') ? 'Present' : 'Missing'}`);
 
     try {
         const response = await fetch(targetUrl, {
@@ -109,7 +109,7 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
             duplex: 'half',
         });
 
-        // Use streaming response for efficiency
+        console.log(`[ERP_PROXY] Response: ${response.status} from ${apiPath}`);
         return new NextResponse(response.body, {
             status: response.status,
             headers: response.headers,
