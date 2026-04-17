@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Plus, Search, Filter, Play, CheckCircle2, XCircle, MessageSquare, ChevronDown, ChevronRight, Clock, AlertTriangle, ArrowUpDown, Calendar, Star } from 'lucide-react';
+import { useState, useTransition, useRef, useEffect } from 'react';
+import {
+    Plus, Search, Play, CheckCircle2, XCircle, Clock, AlertTriangle,
+    Calendar, Star, ClipboardList, Loader2, X, Maximize2, Minimize2,
+} from 'lucide-react';
 
 interface Task {
     id: number;
@@ -21,27 +24,21 @@ interface Task {
     created_at: string;
 }
 
+interface Dashboard {
+    total_assigned?: number;
+    pending?: number;
+    in_progress?: number;
+    completed?: number;
+    overdue?: number;
+    assigned_by_me?: number;
+}
+
 interface Props {
     tasks: Task[];
     categories: { id: number; name: string; color: string }[];
     users: { id: number; email: string; username: string }[];
+    dashboard: Dashboard;
 }
-
-const PRIORITY_COLORS: Record<string, string> = {
-    URGENT: 'bg-red-100 text-red-700 border-red-200',
-    HIGH: 'bg-orange-100 text-orange-700 border-orange-200',
-    MEDIUM: 'bg-sky-100 text-sky-700 border-sky-200',
-    LOW: 'bg-app-surface-2 text-app-muted-foreground border-app-border',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-    PENDING: 'bg-amber-50 text-amber-700',
-    IN_PROGRESS: 'bg-sky-50 text-sky-700',
-    AWAITING_RESPONSE: 'bg-purple-50 text-purple-700',
-    COMPLETED: 'bg-emerald-50 text-emerald-700',
-    CANCELLED: 'bg-app-surface text-app-muted-foreground',
-    OVERDUE: 'bg-red-50 text-red-700',
-};
 
 const STATUS_ICONS: Record<string, any> = {
     PENDING: Clock,
@@ -51,13 +48,38 @@ const STATUS_ICONS: Record<string, any> = {
     OVERDUE: AlertTriangle,
 };
 
-export default function TasksClient({ tasks: initialTasks, categories, users }: Props) {
+const STATUS_COLOR: Record<string, string> = {
+    PENDING: 'var(--app-warning, #f59e0b)',
+    IN_PROGRESS: 'var(--app-info, #3b82f6)',
+    AWAITING_RESPONSE: '#8b5cf6',
+    COMPLETED: 'var(--app-success, #22c55e)',
+    CANCELLED: 'var(--app-muted-foreground)',
+    OVERDUE: 'var(--app-error, #ef4444)',
+};
+
+const PRIORITY_COLOR: Record<string, string> = {
+    URGENT: 'var(--app-error, #ef4444)',
+    HIGH: 'var(--app-warning, #f59e0b)',
+    MEDIUM: 'var(--app-info, #3b82f6)',
+    LOW: 'var(--app-muted-foreground)',
+};
+
+const inputCls =
+    'w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/20 transition-all';
+
+const labelCls = 'text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block';
+
+type StatusFilter = 'ALL' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'OVERDUE';
+
+export default function TasksClient({ tasks: initialTasks, categories, users, dashboard }: Props) {
     const [tasks, setTasks] = useState(initialTasks);
     const [search, setSearch] = useState('');
-    const [filterStatus, setFilterStatus] = useState('ALL');
+    const [activeFilter, setActiveFilter] = useState<StatusFilter | null>(null);
     const [filterPriority, setFilterPriority] = useState('ALL');
     const [showCreate, setShowCreate] = useState(false);
     const [isPending, startTransition] = useTransition();
+    const [focusMode, setFocusMode] = useState(false);
+    const searchRef = useRef<HTMLInputElement>(null);
 
     // Form state
     const [newTitle, setNewTitle] = useState('');
@@ -68,9 +90,18 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
     const [newDueDate, setNewDueDate] = useState('');
     const [newPoints, setNewPoints] = useState('1');
 
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus(); }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(prev => !prev); }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, []);
+
     const filtered = tasks.filter(t => {
         if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
-        if (filterStatus !== 'ALL' && t.status !== filterStatus) return false;
+        if (activeFilter && activeFilter !== 'ALL' && t.status !== activeFilter) return false;
         if (filterPriority !== 'ALL' && t.priority !== filterPriority) return false;
         return true;
     });
@@ -92,7 +123,8 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
         if (result?.id) {
             setTasks(prev => [result, ...prev]);
             setShowCreate(false);
-            setNewTitle(''); setNewDescription(''); setNewPriority('MEDIUM'); setNewCategory(''); setNewAssignee(''); setNewDueDate(''); setNewPoints('1');
+            setNewTitle(''); setNewDescription(''); setNewPriority('MEDIUM');
+            setNewCategory(''); setNewAssignee(''); setNewDueDate(''); setNewPoints('1');
         }
     }
 
@@ -102,172 +134,377 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
         await fn(taskId);
         setTasks(prev => prev.map(t => t.id === taskId ? {
             ...t,
-            status: action === 'start' ? 'IN_PROGRESS' : action === 'complete' ? 'COMPLETED' : 'CANCELLED'
+            status: action === 'start' ? 'IN_PROGRESS' : action === 'complete' ? 'COMPLETED' : 'CANCELLED',
         } : t));
     }
 
-    return (
-        <div className="space-y-6">
-            {/* Toolbar */}
-            <div className="flex flex-wrap items-center gap-4 bg-app-surface p-4 rounded-3xl shadow-lg shadow-gray-100 border border-gray-50">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                    <input
-                        type="text" placeholder="Search tasks..."
-                        value={search} onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-app-surface rounded-2xl border border-app-border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
-                    />
-                </div>
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                    className="px-4 py-2.5 bg-app-surface rounded-2xl border border-app-border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200">
-                    <option value="ALL">All Status</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="OVERDUE">Overdue</option>
-                    <option value="CANCELLED">Cancelled</option>
-                </select>
-                <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
-                    className="px-4 py-2.5 bg-app-surface rounded-2xl border border-app-border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200">
-                    <option value="ALL">All Priority</option>
-                    <option value="URGENT">Urgent</option>
-                    <option value="HIGH">High</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="LOW">Low</option>
-                </select>
-                <button onClick={() => setShowCreate(true)}
-                    className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-sky-500 text-white text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2">
-                    <Plus size={16} /> New Task
-                </button>
-            </div>
+    const kpis: { label: string; value: number; color: string; icon: React.ReactNode; filterKey: StatusFilter | null }[] = [
+        { label: 'Assigned',    value: dashboard?.total_assigned ?? 0, color: 'var(--app-primary)',          icon: <ClipboardList size={14} />, filterKey: 'ALL' },
+        { label: 'Pending',     value: dashboard?.pending ?? 0,        color: 'var(--app-warning, #f59e0b)', icon: <Clock size={14} />,         filterKey: 'PENDING' },
+        { label: 'In Progress', value: dashboard?.in_progress ?? 0,    color: 'var(--app-info, #3b82f6)',    icon: <Play size={14} />,          filterKey: 'IN_PROGRESS' },
+        { label: 'Done',        value: dashboard?.completed ?? 0,      color: 'var(--app-success, #22c55e)', icon: <CheckCircle2 size={14} />,  filterKey: 'COMPLETED' },
+        { label: 'Overdue',     value: dashboard?.overdue ?? 0,        color: 'var(--app-error, #ef4444)',   icon: <AlertTriangle size={14} />, filterKey: 'OVERDUE' },
+    ];
 
-            {/* Create Task Form */}
-            {showCreate && (
-                <div className="bg-app-surface p-8 rounded-3xl shadow-2xl shadow-indigo-100 border border-indigo-50 space-y-4 animate-in slide-in-from-top duration-300">
-                    <h3 className="text-lg font-bold text-app-foreground">Create New Task</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input placeholder="Task title *" value={newTitle} onChange={e => setNewTitle(e.target.value)}
-                            className="col-span-full px-4 py-3 bg-app-surface rounded-2xl border border-app-border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                        <textarea placeholder="Description" value={newDescription} onChange={e => setNewDescription(e.target.value)} rows={3}
-                            className="col-span-full px-4 py-3 bg-app-surface rounded-2xl border border-app-border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none" />
-                        <select value={newPriority} onChange={e => setNewPriority(e.target.value)}
-                            className="px-4 py-3 bg-app-surface rounded-2xl border border-app-border text-sm">
-                            <option value="LOW">Low Priority</option>
-                            <option value="MEDIUM">Medium Priority</option>
-                            <option value="HIGH">High Priority</option>
-                            <option value="URGENT">🔴 Urgent</option>
-                        </select>
-                        <select value={newCategory} onChange={e => setNewCategory(e.target.value)}
-                            className="px-4 py-3 bg-app-surface rounded-2xl border border-app-border text-sm">
-                            <option value="">No Category</option>
-                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                        <select value={newAssignee} onChange={e => setNewAssignee(e.target.value)}
-                            className="px-4 py-3 bg-app-surface rounded-2xl border border-app-border text-sm">
-                            <option value="">Assign to...</option>
-                            {users.map((u: any) => <option key={u.id} value={u.id}>{u.email || u.username}</option>)}
-                        </select>
-                        <input type="datetime-local" value={newDueDate} onChange={e => setNewDueDate(e.target.value)}
-                            className="px-4 py-3 bg-app-surface rounded-2xl border border-app-border text-sm" />
-                        <input type="number" min="1" placeholder="Points" value={newPoints} onChange={e => setNewPoints(e.target.value)}
-                            className="px-4 py-3 bg-app-surface rounded-2xl border border-app-border text-sm" />
+    return (
+        <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
+            {/* ── Header ────────────────────────────────────────────── */}
+            {focusMode ? (
+                <div className="flex items-center gap-2 flex-shrink-0 mb-3">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
+                            <ClipboardList size={14} className="text-white" />
+                        </div>
+                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Task Board</span>
+                        <span className="text-[10px] font-bold text-app-muted-foreground">{filtered.length}/{tasks.length}</span>
                     </div>
-                    <div className="flex gap-3 justify-end">
-                        <button onClick={() => setShowCreate(false)} className="px-6 py-2 text-sm text-app-muted-foreground hover:text-app-foreground font-medium">Cancel</button>
-                        <button onClick={() => startTransition(handleCreate)}
-                            className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-2xl hover:bg-indigo-700 transition-all">
-                            {isPending ? 'Creating...' : 'Create Task'}
+                    <div className="flex-1 relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input
+                            ref={searchRef}
+                            type="text"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Search… (Ctrl+K)"
+                            className="w-full pl-9 pr-3 py-1.5 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                        />
+                    </div>
+                    <button onClick={() => setFocusMode(false)} className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
+                        <Minimize2 size={13} />
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2 flex-shrink-0 mb-3">
+                    <div className="page-header-icon bg-app-primary"
+                         style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                        <ClipboardList size={20} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Task Board</h1>
+                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                            {dashboard?.total_assigned ?? 0} Tasks · {dashboard?.pending ?? 0} Pending · {dashboard?.overdue ?? 0} Overdue
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            onClick={() => setShowCreate(true)}
+                            className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                        >
+                            <Plus size={14} />
+                            <span className="hidden sm:inline">New Task</span>
+                        </button>
+                        <button
+                            onClick={() => setFocusMode(true)}
+                            className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                            title="Focus Mode (Ctrl+Q)"
+                        >
+                            <Maximize2 size={13} />
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* Tasks List */}
-            <div className="space-y-3">
-                {filtered.length === 0 ? (
-                    <div className="text-center py-20 bg-app-surface rounded-3xl border border-gray-50">
-                        <ClipboardList size={48} className="mx-auto text-app-faint mb-4" />
-                        <p className="text-app-muted-foreground font-medium text-lg">No tasks found</p>
-                        <p className="text-app-faint text-sm mt-1">Create a new task or adjust your filters</p>
+            {!focusMode && (
+                <>
+                    {/* ── KPI Strip (filter-toggle) ────────────────────── */}
+                    <div
+                        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}
+                        className="flex-shrink-0 mb-3"
+                    >
+                        {kpis.map(k => {
+                            const isActive = !!k.filterKey && activeFilter === k.filterKey;
+                            return (
+                                <button
+                                    key={k.label}
+                                    onClick={() => {
+                                        if (!k.filterKey) return;
+                                        setActiveFilter(prev => prev === k.filterKey ? null : k.filterKey);
+                                    }}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left cursor-pointer ${isActive ? 'ring-2 shadow-md scale-[1.02]' : ''}`}
+                                    style={{
+                                        background: isActive
+                                            ? `color-mix(in srgb, ${k.color} 15%, var(--app-surface))`
+                                            : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                        border: `1px solid color-mix(in srgb, ${isActive ? k.color : 'var(--app-border)'} 50%, transparent)`,
+                                    }}
+                                >
+                                    <div
+                                        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style={{ background: `color-mix(in srgb, ${k.color} 10%, transparent)`, color: k.color }}
+                                    >
+                                        {k.icon}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
+                                        <div className="text-sm font-black text-app-foreground tabular-nums">{k.value}</div>
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
-                ) : filtered.map(task => {
-                    const StatusIcon = STATUS_ICONS[task.status] || Clock;
-                    return (
-                        <div key={task.id}
-                            className="group bg-app-surface rounded-2xl border border-gray-50 p-5 hover:shadow-lg hover:shadow-gray-100 transition-all duration-300 flex items-center gap-4">
-                            {/* Status Icon */}
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[task.status] || 'bg-app-surface'}`}>
-                                <StatusIcon size={18} />
-                            </div>
 
-                            {/* Main Content */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="font-bold text-app-foreground truncate">{task.title}</h3>
-                                    {task.subtask_count > 0 && (
-                                        <span className="text-xs text-app-muted-foreground bg-app-surface px-2 py-0.5 rounded-full">{task.subtask_count} sub</span>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-3 text-xs text-app-muted-foreground">
-                                    {task.category_name && (
-                                        <span className="bg-app-surface px-2 py-0.5 rounded-full">{task.category_name}</span>
-                                    )}
-                                    {task.assigned_to_name && (
-                                        <span className="flex items-center gap-1">👤 {task.assigned_to_name}</span>
-                                    )}
-                                    {task.related_object_label && (
-                                        <span className="text-indigo-400">🔗 {task.related_object_label}</span>
-                                    )}
-                                    {task.due_date && (
-                                        <span className={`flex items-center gap-1 ${task.is_overdue ? 'text-red-500 font-bold' : ''}`}>
-                                            <Calendar size={12} />
-                                            {new Date(task.due_date).toLocaleDateString()}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Points */}
-                            <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-3 py-1.5 rounded-xl shrink-0">
-                                <Star size={14} /> <span className="text-sm font-bold">{task.points}</span>
-                            </div>
-
-                            {/* Priority Badge */}
-                            <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border shrink-0 ${PRIORITY_COLORS[task.priority] || ''}`}>
-                                {task.priority}
+                    {activeFilter && activeFilter !== 'ALL' && (
+                        <div className="flex items-center gap-2 flex-shrink-0 mb-3">
+                            <span
+                                className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                    color: 'var(--app-primary)',
+                                    border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                }}
+                            >
+                                Status: {activeFilter}
+                                <button onClick={() => setActiveFilter(null)} className="hover:opacity-70">✕</button>
                             </span>
-
-                            {/* Actions */}
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                {task.status === 'PENDING' && (
-                                    <button onClick={() => startTransition(() => handleAction(task.id, 'start'))}
-                                        className="p-2 rounded-xl bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors" title="Start">
-                                        <Play size={14} />
-                                    </button>
-                                )}
-                                {(task.status === 'PENDING' || task.status === 'IN_PROGRESS') && (
-                                    <button onClick={() => startTransition(() => handleAction(task.id, 'complete'))}
-                                        className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="Complete">
-                                        <CheckCircle2 size={14} />
-                                    </button>
-                                )}
-                                {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && (
-                                    <button onClick={() => startTransition(() => handleAction(task.id, 'cancel'))}
-                                        className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors" title="Cancel">
-                                        <XCircle size={14} />
-                                    </button>
-                                )}
-                            </div>
                         </div>
-                    );
-                })}
+                    )}
+
+                    {/* ── Search + Priority Filter ─────────────────────── */}
+                    <div className="flex items-center gap-2 flex-shrink-0 mb-3">
+                        <div className="flex-1 relative">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                            <input
+                                ref={searchRef}
+                                type="text"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                placeholder="Search tasks… (Ctrl+K)"
+                                className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                            />
+                        </div>
+                        <select
+                            value={filterPriority}
+                            onChange={e => setFilterPriority(e.target.value)}
+                            className="text-[12px] font-bold px-3 py-2 bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/10"
+                        >
+                            <option value="ALL">All Priority</option>
+                            <option value="URGENT">Urgent</option>
+                            <option value="HIGH">High</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="LOW">Low</option>
+                        </select>
+                    </div>
+                </>
+            )}
+
+            {/* ── Inline Create Form ───────────────────────────────── */}
+            {showCreate && (
+                <div
+                    className="flex-shrink-0 mb-3 p-4 border rounded-2xl animate-in slide-in-from-top-2 duration-200"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))',
+                        borderColor: 'var(--app-border)',
+                        borderLeft: '3px solid var(--app-primary)',
+                    }}
+                >
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">New Task</h3>
+                        <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-app-border/50 rounded-lg transition-colors">
+                            <X size={14} className="text-app-muted-foreground" />
+                        </button>
+                    </div>
+                    <form
+                        onSubmit={e => { e.preventDefault(); startTransition(handleCreate); }}
+                        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', alignItems: 'end' }}
+                    >
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <label className={labelCls}>Title *</label>
+                            <input
+                                className={inputCls}
+                                placeholder="Task title"
+                                value={newTitle}
+                                onChange={e => setNewTitle(e.target.value)}
+                            />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <label className={labelCls}>Description</label>
+                            <textarea
+                                className={`${inputCls} resize-none`}
+                                rows={2}
+                                placeholder="Description"
+                                value={newDescription}
+                                onChange={e => setNewDescription(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelCls}>Priority</label>
+                            <select className={inputCls} value={newPriority} onChange={e => setNewPriority(e.target.value)}>
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="HIGH">High</option>
+                                <option value="URGENT">Urgent</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelCls}>Category</label>
+                            <select className={inputCls} value={newCategory} onChange={e => setNewCategory(e.target.value)}>
+                                <option value="">No category</option>
+                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelCls}>Assignee</label>
+                            <select className={inputCls} value={newAssignee} onChange={e => setNewAssignee(e.target.value)}>
+                                <option value="">Unassigned</option>
+                                {users.map((u: any) => <option key={u.id} value={u.id}>{u.email || u.username}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelCls}>Due</label>
+                            <input type="datetime-local" className={inputCls} value={newDueDate} onChange={e => setNewDueDate(e.target.value)} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>Points</label>
+                            <input type="number" min={1} className={inputCls} value={newPoints} onChange={e => setNewPoints(e.target.value)} />
+                        </div>
+                        <div className="flex gap-2 justify-end" style={{ gridColumn: '1 / -1' }}>
+                            <button
+                                type="button"
+                                onClick={() => setShowCreate(false)}
+                                className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isPending}
+                                className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                            >
+                                {isPending ? 'Creating…' : 'Create'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* ── Task List Container ─────────────────────────────── */}
+            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
+                    {filtered.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <ClipboardList size={36} className="text-app-muted-foreground mb-3 opacity-40" />
+                            <p className="text-sm font-bold text-app-muted-foreground">No tasks found</p>
+                            <p className="text-[11px] text-app-muted-foreground mt-1">
+                                Create a new task or adjust your filters.
+                            </p>
+                        </div>
+                    ) : (
+                        filtered.map(task => {
+                            const StatusIcon = STATUS_ICONS[task.status] ?? Clock;
+                            const statusColor = STATUS_COLOR[task.status] ?? 'var(--app-muted-foreground)';
+                            const priorityColor = PRIORITY_COLOR[task.priority] ?? 'var(--app-muted-foreground)';
+                            return (
+                                <div
+                                    key={task.id}
+                                    className="group flex items-center gap-2 md:gap-3 transition-all duration-150 border-b border-app-border/30 hover:bg-app-surface/60 py-2 md:py-2.5"
+                                    style={{
+                                        paddingLeft: '12px',
+                                        paddingRight: '12px',
+                                        borderLeft: `3px solid ${statusColor}`,
+                                    }}
+                                >
+                                    <div
+                                        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style={{ background: `color-mix(in srgb, ${statusColor} 10%, transparent)`, color: statusColor }}
+                                    >
+                                        <StatusIcon size={13} />
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="truncate text-[13px] font-bold text-app-foreground">{task.title}</span>
+                                            {task.subtask_count > 0 && (
+                                                <span
+                                                    className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                                    style={{
+                                                        background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                                                        color: 'var(--app-muted-foreground)',
+                                                    }}
+                                                >
+                                                    {task.subtask_count} sub
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[11px] font-medium text-app-muted-foreground truncate">
+                                            {task.category_name && <span>{task.category_name}</span>}
+                                            {task.assigned_to_name && <span>· {task.assigned_to_name}</span>}
+                                            {task.related_object_label && <span style={{ color: 'var(--app-primary)' }}>· {task.related_object_label}</span>}
+                                            {task.due_date && (
+                                                <span
+                                                    className="flex items-center gap-0.5"
+                                                    style={task.is_overdue ? { color: 'var(--app-error, #ef4444)', fontWeight: 700 } : undefined}
+                                                >
+                                                    <Calendar size={10} /> {new Date(task.due_date).toLocaleDateString()}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        className="hidden md:flex items-center gap-1 flex-shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded"
+                                        style={{
+                                            color: 'var(--app-warning, #f59e0b)',
+                                            background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)',
+                                        }}
+                                    >
+                                        <Star size={10} /> {task.points}
+                                    </div>
+
+                                    <span
+                                        className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                        style={{
+                                            background: `color-mix(in srgb, ${priorityColor} 10%, transparent)`,
+                                            color: priorityColor,
+                                            border: `1px solid color-mix(in srgb, ${priorityColor} 25%, transparent)`,
+                                        }}
+                                    >
+                                        {task.priority}
+                                    </span>
+
+                                    <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {task.status === 'PENDING' && (
+                                            <button
+                                                onClick={() => startTransition(() => handleAction(task.id, 'start'))}
+                                                className="p-1.5 hover:bg-app-border/50 rounded-lg transition-colors"
+                                                title="Start"
+                                                style={{ color: 'var(--app-info, #3b82f6)' }}
+                                            >
+                                                <Play size={12} />
+                                            </button>
+                                        )}
+                                        {(task.status === 'PENDING' || task.status === 'IN_PROGRESS') && (
+                                            <button
+                                                onClick={() => startTransition(() => handleAction(task.id, 'complete'))}
+                                                className="p-1.5 hover:bg-app-border/50 rounded-lg transition-colors"
+                                                title="Complete"
+                                                style={{ color: 'var(--app-success, #22c55e)' }}
+                                            >
+                                                <CheckCircle2 size={12} />
+                                            </button>
+                                        )}
+                                        {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && (
+                                            <button
+                                                onClick={() => startTransition(() => handleAction(task.id, 'cancel'))}
+                                                className="p-1.5 hover:bg-app-border/50 rounded-lg transition-colors"
+                                                title="Cancel"
+                                                style={{ color: 'var(--app-error, #ef4444)' }}
+                                            >
+                                                <XCircle size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
             </div>
 
-            <p className="text-center text-xs text-app-faint font-medium">{filtered.length} of {tasks.length} tasks</p>
+            <p className="flex-shrink-0 text-center text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest mt-2">
+                {filtered.length} / {tasks.length} Tasks
+            </p>
         </div>
     );
-}
-
-function ClipboardList(props: any) {
-    return <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M12 11h4" /><path d="M12 16h4" /><path d="M8 11h.01" /><path d="M8 16h.01" /></svg>;
 }

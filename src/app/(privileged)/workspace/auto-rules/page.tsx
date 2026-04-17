@@ -6,13 +6,12 @@ import { TypicalListView, type ColumnDef } from '@/components/common/TypicalList
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { erpFetch } from '@/lib/erp-api'
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Plus, Zap } from 'lucide-react'
 
 type AutoRules = Record<string, any>
 
 const ALL_COLUMNS: ColumnDef<AutoRules>[] = [
-  { key: 'id', label: 'ID', sortable: true }
+  { key: 'id', label: 'ID', sortable: true },
 ]
 
 export default function AutoRulesListPage() {
@@ -28,9 +27,7 @@ export default function AutoRulesListPage() {
     sortDir: 'asc',
   })
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     try {
@@ -49,7 +46,29 @@ export default function AutoRulesListPage() {
   )
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300">
+      {/* ── Header ────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 flex-shrink-0 mb-3">
+        <div className="page-header-icon bg-app-primary"
+             style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+          <Zap size={20} className="text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Auto Rules</h1>
+          <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+            {items.length} Records · Raw auto-rule list
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/workspace/auto-rules/new')}
+          className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all flex-shrink-0"
+          style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+        >
+          <Plus size={14} />
+          <span className="hidden sm:inline">Create</span>
+        </button>
+      </div>
+
       <TypicalListView<AutoRules>
         title="Auto Rules"
         data={filtered}
@@ -58,27 +77,18 @@ export default function AutoRulesListPage() {
         columns={ALL_COLUMNS}
         visibleColumns={settings.visibleColumns}
         onToggleColumn={settings.toggleColumn}
-        className="rounded-[32px] border-0 shadow-sm overflow-hidden"
         pageSize={settings.pageSize}
         onPageSizeChange={settings.setPageSize}
         sortKey={settings.sortKey}
         sortDir={settings.sortDir}
         onSort={k => settings.setSort(k)}
-        headerExtra={
-          <Button
-            onClick={() => router.push('/workspace/auto-rules/new')}
-            className="h-9 px-4 bg-app-primary text-app-foreground hover:bg-app-primary rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
-          >
-            <Plus size={14} className="mr-2" /> Create New
-          </Button>
-        }
         actions={{
           onView: (r) => router.push(`/workspace/auto-rules/${r.id}`),
           onEdit: (r) => router.push(`/workspace/auto-rules/${r.id}/edit`),
         }}
       >
         <TypicalFilter
-          search={{ placeholder: 'Search...', value: search, onChange: setSearch }}
+          search={{ placeholder: 'Search… (Ctrl+K)', value: search, onChange: setSearch }}
         />
       </TypicalListView>
     </div>

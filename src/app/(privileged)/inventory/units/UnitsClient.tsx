@@ -1,19 +1,28 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildTree } from '@/lib/utils/tree'
 import { UnitTree } from '@/components/admin/UnitTree'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
 import { UnitFormModal } from '@/components/admin/UnitFormModal'
 import { BalanceBarcodeConfigModal } from '@/components/admin/BalanceBarcodeConfigModal'
+import { getUnitProducts } from '@/app/actions/inventory/units'
 import {
     Search, Plus, Layers, Package, Ruler, ArrowRightLeft,
-    Wrench, Scale, Hash, X, Pencil, Trash2, ChevronRight,
-    Bookmark, Info, ArrowUpDown
+    Wrench, Scale, Hash, X, Pencil, ChevronRight,
+    Bookmark, Info, ArrowUpDown, ShoppingCart, Loader2
 } from 'lucide-react'
 import { MasterDataPage } from '@/components/templates/MasterDataPage'
+
+/* ═══════════════════════════════════════════════════════════
+ *  TAB DEFINITIONS
+ * ═══════════════════════════════════════════════════════════ */
+const TABS = [
+    { id: 'overview', label: 'Overview', icon: <Info size={12} /> },
+    { id: 'products', label: 'Products', icon: <ShoppingCart size={12} /> },
+] as const
 
 /* ═══════════════════════════════════════════════════════════
  *  UNIT DETAIL PANEL — shown in drawer / split / pinned
@@ -21,7 +30,7 @@ import { MasterDataPage } from '@/components/templates/MasterDataPage'
 function UnitDetailPanel({
     unit,
     allUnits,
-    tab,
+    tab: initialTab,
     onClose,
     onPin,
     onEdit,
@@ -33,9 +42,33 @@ function UnitDetailPanel({
     onPin: () => void
     onEdit: (u: any) => void
 }) {
+    const [activeTab, setActiveTab] = useState(initialTab || 'overview')
+    const [products, setProducts] = useState<any[]>([])
+    const [loadingProducts, setLoadingProducts] = useState(false)
+    const [productsLoaded, setProductsLoaded] = useState(false)
+
     const isBase = !unit.base_unit
     const children = allUnits.filter(u => u.base_unit === unit.id)
     const parent = allUnits.find(u => u.id === unit.base_unit)
+
+    // Lazy load products when tab activates
+    useEffect(() => {
+        if (activeTab === 'products' && !productsLoaded) {
+            setLoadingProducts(true)
+            getUnitProducts(unit.id).then(data => {
+                setProducts(data)
+                setProductsLoaded(true)
+                setLoadingProducts(false)
+            }).catch(() => setLoadingProducts(false))
+        }
+    }, [activeTab, unit.id, productsLoaded])
+
+    // Reset when unit changes
+    useEffect(() => {
+        setProductsLoaded(false)
+        setProducts([])
+        setActiveTab('overview')
+    }, [unit.id])
 
     return (
         <div className="flex flex-col h-full" data-tour="detail-drawer">
@@ -74,96 +107,186 @@ function UnitDetailPanel({
                 </div>
             </div>
 
-            {/* Content */}
+            {/* Tab Bar */}
+            <div data-tour="detail-tabs" className="flex-shrink-0 flex items-center gap-1 px-4 py-2"
+                style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}>
+                {TABS.map(t => (
+                    <button key={t.id} onClick={() => setActiveTab(t.id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
+                        style={activeTab === t.id ? {
+                            background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                            color: 'var(--app-primary)',
+                            border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                        } : {
+                            color: 'var(--app-muted-foreground)',
+                            border: '1px solid transparent',
+                        }}>
+                        {t.icon}
+                        <span>{t.label}</span>
+                        {t.id === 'products' && (unit.product_count > 0) && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full ml-0.5"
+                                style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                {unit.product_count}
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {/* Tab Content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-2">
-                    {[
-                        { label: 'Code', value: unit.code || '—', icon: <Hash size={11} />, color: 'var(--app-primary)' },
-                        { label: 'Short Name', value: unit.short_name || '—', icon: <Info size={11} />, color: 'var(--app-info)' },
-                        { label: 'Products', value: unit.product_count || 0, icon: <Package size={11} />, color: 'var(--app-success)' },
-                        { label: 'Type', value: unit.type || 'Standard', icon: <Ruler size={11} />, color: '#8b5cf6' },
-                    ].map(s => (
-                        <div key={s.label} className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-                            style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
-                                {s.icon}
-                            </div>
-                            <div className="min-w-0">
-                                <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                <div className="text-[12px] font-black text-app-foreground truncate">{s.value}</div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
 
-                {/* Conversion Info */}
-                {parent && (
-                    <div className="rounded-xl overflow-hidden"
-                        style={{ border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
-                        <div className="flex items-center gap-2 px-4 py-2.5"
-                            style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-info) 15%, transparent)' }}>
-                            <ArrowUpDown size={12} style={{ color: 'var(--app-info)' }} />
-                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-info)' }}>Conversion</span>
-                        </div>
-                        <div className="px-4 py-3" style={{ background: 'var(--app-surface)' }}>
-                            <div className="flex items-center gap-2 text-[12px] font-bold text-app-foreground">
-                                <span className="font-black">1</span>
-                                <span>{unit.name}</span>
-                                <ChevronRight size={12} className="text-app-muted-foreground" />
-                                <span className="font-black">{unit.conversion_factor || 1}</span>
-                                <span>{parent.name}</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Derived Units */}
-                {children.length > 0 && (
-                    <div className="rounded-xl overflow-hidden"
-                        style={{ border: '1px solid color-mix(in srgb, #8b5cf6 20%, transparent)' }}>
-                        <div className="flex items-center justify-between px-4 py-2.5"
-                            style={{ background: 'color-mix(in srgb, #8b5cf6 5%, transparent)', borderBottom: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)' }}>
-                            <div className="flex items-center gap-2">
-                                <Package size={12} style={{ color: '#8b5cf6' }} />
-                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#8b5cf6' }}>
-                                    Derived Units
-                                </span>
-                            </div>
-                            <span className="text-[10px] font-bold" style={{ color: '#8b5cf6' }}>{children.length}</span>
-                        </div>
-                        <div className="divide-y divide-app-border/30" style={{ background: 'var(--app-surface)' }}>
-                            {children.map(child => (
-                                <div key={child.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-app-background/50 transition-all">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black"
-                                            style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)', color: '#8b5cf6' }}>
-                                            {child.short_name?.substring(0, 2) || child.name?.substring(0, 2)}
-                                        </div>
-                                        <div>
-                                            <span className="text-[12px] font-bold text-app-foreground">{child.name}</span>
-                                            {child.code && <span className="text-[9px] font-mono text-app-muted-foreground ml-1.5">{child.code}</span>}
-                                        </div>
+                {/* ── OVERVIEW TAB ── */}
+                {activeTab === 'overview' && (
+                    <>
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 gap-2">
+                            {[
+                                { label: 'Code', value: unit.code || '—', icon: <Hash size={11} />, color: 'var(--app-primary)' },
+                                { label: 'Short Name', value: unit.short_name || '—', icon: <Info size={11} />, color: 'var(--app-info)' },
+                                { label: 'Products', value: unit.product_count || 0, icon: <Package size={11} />, color: 'var(--app-success)' },
+                                { label: 'Type', value: unit.type || 'Standard', icon: <Ruler size={11} />, color: '#8b5cf6' },
+                            ].map(s => (
+                                <div key={s.label} className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+                                    style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
+                                        {s.icon}
                                     </div>
-                                    <span className="text-[11px] font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        ×{child.conversion_factor || 1}
-                                    </span>
+                                    <div className="min-w-0">
+                                        <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                        <div className="text-[12px] font-black text-app-foreground truncate">{s.value}</div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
+
+                        {/* Conversion Info */}
+                        {parent && (
+                            <div className="rounded-xl overflow-hidden"
+                                style={{ border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+                                <div className="flex items-center gap-2 px-4 py-2.5"
+                                    style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-info) 15%, transparent)' }}>
+                                    <ArrowUpDown size={12} style={{ color: 'var(--app-info)' }} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-info)' }}>Conversion</span>
+                                </div>
+                                <div className="px-4 py-3" style={{ background: 'var(--app-surface)' }}>
+                                    <div className="flex items-center gap-2 text-[12px] font-bold text-app-foreground">
+                                        <span className="font-black">1</span>
+                                        <span>{unit.name}</span>
+                                        <ChevronRight size={12} className="text-app-muted-foreground" />
+                                        <span className="font-black">{unit.conversion_factor || 1}</span>
+                                        <span>{parent.name}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Derived Units */}
+                        {children.length > 0 && (
+                            <div className="rounded-xl overflow-hidden"
+                                style={{ border: '1px solid color-mix(in srgb, #8b5cf6 20%, transparent)' }}>
+                                <div className="flex items-center justify-between px-4 py-2.5"
+                                    style={{ background: 'color-mix(in srgb, #8b5cf6 5%, transparent)', borderBottom: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)' }}>
+                                    <div className="flex items-center gap-2">
+                                        <Package size={12} style={{ color: '#8b5cf6' }} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#8b5cf6' }}>
+                                            Derived Units
+                                        </span>
+                                    </div>
+                                    <span className="text-[10px] font-bold" style={{ color: '#8b5cf6' }}>{children.length}</span>
+                                </div>
+                                <div className="divide-y divide-app-border/30" style={{ background: 'var(--app-surface)' }}>
+                                    {children.map(child => (
+                                        <div key={child.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-app-background/50 transition-all">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black"
+                                                    style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)', color: '#8b5cf6' }}>
+                                                    {child.short_name?.substring(0, 2) || child.name?.substring(0, 2)}
+                                                </div>
+                                                <div>
+                                                    <span className="text-[12px] font-bold text-app-foreground">{child.name}</span>
+                                                    {child.code && <span className="text-[9px] font-mono text-app-muted-foreground ml-1.5">{child.code}</span>}
+                                                </div>
+                                            </div>
+                                            <span className="text-[11px] font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                ×{child.conversion_factor || 1}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Scale / Balance */}
+                        {unit.needs_balance && (
+                            <div className="flex items-center gap-2 px-4 py-3 rounded-xl"
+                                style={{ background: 'color-mix(in srgb, var(--app-warning) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)' }}>
+                                <Scale size={14} style={{ color: 'var(--app-warning)' }} />
+                                <span className="text-[11px] font-bold" style={{ color: 'var(--app-warning)' }}>
+                                    This unit requires a weighing scale at POS
+                                </span>
+                            </div>
+                        )}
+                    </>
                 )}
 
-                {/* Scale / Balance */}
-                {unit.needs_balance && (
-                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl"
-                        style={{ background: 'color-mix(in srgb, var(--app-warning) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)' }}>
-                        <Scale size={14} style={{ color: 'var(--app-warning)' }} />
-                        <span className="text-[11px] font-bold" style={{ color: 'var(--app-warning)' }}>
-                            This unit requires a weighing scale at POS
-                        </span>
-                    </div>
+                {/* ── PRODUCTS TAB ── */}
+                {activeTab === 'products' && (
+                    <>
+                        {loadingProducts ? (
+                            <div className="flex flex-col items-center justify-center py-16">
+                                <Loader2 size={24} className="animate-spin text-app-primary mb-3" />
+                                <p className="text-[12px] font-bold text-app-muted-foreground">Loading products...</p>
+                            </div>
+                        ) : products.length > 0 ? (
+                            <div className="rounded-xl overflow-hidden"
+                                style={{ border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                                <div className="flex items-center justify-between px-4 py-2.5"
+                                    style={{ background: 'color-mix(in srgb, var(--app-success) 5%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-success) 15%, transparent)' }}>
+                                    <div className="flex items-center gap-2">
+                                        <ShoppingCart size={12} style={{ color: 'var(--app-success)' }} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success)' }}>
+                                            Products Using This Unit
+                                        </span>
+                                    </div>
+                                    <span className="text-[10px] font-bold" style={{ color: 'var(--app-success)' }}>{products.length}</span>
+                                </div>
+                                <div className="divide-y divide-app-border/30" style={{ background: 'var(--app-surface)' }}>
+                                    {products.map((p: any) => (
+                                        <div key={p.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-app-background/50 transition-all">
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)' }}>
+                                                    <ShoppingCart size={11} />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="text-[12px] font-bold text-app-foreground truncate">{p.name}</div>
+                                                    <div className="text-[10px] text-app-muted-foreground font-mono">{p.sku}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right flex-shrink-0 ml-2">
+                                                <div className="text-[11px] font-black tabular-nums text-app-foreground">
+                                                    {Number(p.selling_price_ttc || 0).toLocaleString()} <span className="text-[9px] text-app-muted-foreground">TTC</span>
+                                                </div>
+                                                {p.brand_name && (
+                                                    <div className="text-[9px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                        {p.brand_name}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <ShoppingCart size={28} className="text-app-muted-foreground mb-3 opacity-40" />
+                                <p className="text-sm font-bold text-app-muted-foreground">No products</p>
+                                <p className="text-[11px] text-app-muted-foreground mt-1">No products are currently using this unit.</p>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

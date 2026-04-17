@@ -239,6 +239,19 @@ class ChartOfAccount(TenantModel):
                     from django.core.exceptions import ValidationError
                     raise ValidationError("Chart of Accounts structure is locked. Cannot move accounts across the hierarchy after setup is completed.")
 
+            # ── Invariant: cannot deactivate an account with a non-zero balance ──
+            # Reclass the balance to another account first (manual JE).
+            if original and original.is_active and not self.is_active:
+                from decimal import Decimal
+                if abs(self.balance_official or Decimal('0.00')) > Decimal('0.005') or \
+                   abs(self.balance or Decimal('0.00')) > Decimal('0.005'):
+                    from django.core.exceptions import ValidationError
+                    raise ValidationError(
+                        f"Cannot deactivate account {self.code} - {self.name}: "
+                        f"balance is {self.balance_official} (official) / {self.balance} (internal). "
+                        f"Reclass the balance to another account first."
+                    )
+
         # ── Auto-resolve normal_balance from type ──────────────────
         if not self.normal_balance and self.type:
             self.normal_balance = NORMAL_BALANCE_MAP.get(self.type)

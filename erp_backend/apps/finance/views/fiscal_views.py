@@ -96,12 +96,12 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
               transaction_date__date__lte=fiscal_year.end_date)
         ).count()
 
-        # P&L summary — include inactive accounts (historic balances must close)
+        # P&L summary
         income_accounts = ChartOfAccount.objects.filter(
-            organization=organization, type='INCOME',
+            organization=organization, type='INCOME', is_active=True,
         )
         expense_accounts = ChartOfAccount.objects.filter(
-            organization=organization, type='EXPENSE',
+            organization=organization, type='EXPENSE', is_active=True,
         )
 
         total_revenue = abs(income_accounts.aggregate(s=Sum('balance_official'))['s'] or Decimal(0))
@@ -125,6 +125,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # Balance sheet accounts for opening balances preview
         bs_accounts = ChartOfAccount.objects.filter(
             organization=organization, type__in=['ASSET', 'LIABILITY', 'EQUITY'],
+            is_active=True,
         ).exclude(balance_official=Decimal(0)).order_by('type', 'code')
         bs_accounts_count = bs_accounts.count()
 

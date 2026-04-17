@@ -245,12 +245,11 @@ class ClosingService:
                 re_account = rule.account
 
             # ── Step 3: Close P&L into retained earnings ───────────
-            # NOTE: do NOT filter by is_active — accounts deactivated later
-            # may still hold non-zero historic balances that must be closed.
             from django.db.models import Q
             pnl_accounts = ChartOfAccount.objects.filter(
                 organization=organization,
                 type__in=['INCOME', 'EXPENSE'],
+                is_active=True,
             )
 
             closing_lines = []
@@ -420,10 +419,10 @@ class ClosingService:
         """
         from apps.finance.models import ChartOfAccount, OpeningBalance
 
-        # Include inactive accounts — historic non-zero balances must be carried.
         bs_accounts = ChartOfAccount.objects.filter(
             organization=organization,
             type__in=['ASSET', 'LIABILITY', 'EQUITY'],
+            is_active=True,
         )
 
         created = 0
