@@ -951,9 +951,12 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                     const yearEnd = new Date(closePreview.year.end_date)
                                     const isPartial = today < yearEnd
                                     if (!isPartial) return null
-                                    const remainderStart = new Date(today); remainderStart.setDate(remainderStart.getDate() + 1)
+                                    // Closed year ends YESTERDAY; remainder starts TODAY (so today stays postable)
+                                    const lastClosedDay = new Date(today); lastClosedDay.setDate(lastClosedDay.getDate() - 1)
+                                    const remainderStart = today
                                     const sm = remainderStart.toLocaleDateString('en', { month: 'short' })
                                     const em = yearEnd.toLocaleDateString('en', { month: 'short' })
+                                    const lastClosedStr = lastClosedDay.toISOString().split('T')[0]
                                     const todayStr = today.toISOString().split('T')[0]
                                     return (
                                         <div className="rounded-xl p-3 space-y-2"
@@ -968,11 +971,11 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                             <div className="space-y-1 pl-2">
                                                 <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
                                                     <Lock size={10} style={{ color: 'var(--app-error, #ef4444)' }} />
-                                                    <span><strong>{closePreview.year.name}</strong> truncated to {closePreview.year.start_date} — {todayStr} and locked</span>
+                                                    <span><strong>{closePreview.year.name}</strong> truncated to {closePreview.year.start_date} — {lastClosedStr} and locked</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
                                                     <Plus size={10} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                                    <span>New year <strong>FY {remainderStart.getFullYear()} ({sm}-{em})</strong> auto-created with open monthly periods</span>
+                                                    <span>New year <strong>FY {remainderStart.getFullYear()} ({sm}-{em})</strong> auto-created from {todayStr}, posting stays open today</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1189,7 +1192,14 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                             if (!closingYearId) return
                                             startTransition(async () => {
                                                 try {
-                                                    const closeDate = isPartial ? new Date().toISOString().split('T')[0] : undefined
+                                                    // close_date = last day of the closed year. Pass YESTERDAY so today
+                                                    // falls into the remainder year and users can keep posting today.
+                                                    let closeDate: string | undefined
+                                                    if (isPartial) {
+                                                        const d = new Date()
+                                                        d.setDate(d.getDate() - 1)
+                                                        closeDate = d.toISOString().split('T')[0]
+                                                    }
 
                                                     await hardLockFiscalYear(closingYearId, closeDate)
                                                     setCloseStep('result')

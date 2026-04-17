@@ -1,96 +1,281 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView'
-import { TypicalFilter } from '@/components/common/TypicalFilter'
-import { useListViewSettings } from '@/hooks/useListViewSettings'
-import { erpFetch } from '@/lib/erp-api'
-import { Plus, Zap } from 'lucide-react'
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { erpFetch } from '@/lib/erp-api';
+import {
+    Plus, Zap, Search, Loader2, Maximize2, Minimize2, Edit3, Eye,
+    CheckCircle2, XCircle, Repeat,
+} from 'lucide-react';
 
-type AutoRules = Record<string, any>
-
-const ALL_COLUMNS: ColumnDef<AutoRules>[] = [
-  { key: 'id', label: 'ID', sortable: true },
-]
+type AutoRule = Record<string, any>;
 
 export default function AutoRulesListPage() {
-  const router = useRouter()
-  const [items, setItems] = useState<AutoRules[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+    const router = useRouter();
+    const [items, setItems] = useState<AutoRule[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [focusMode, setFocusMode] = useState(false);
+    const searchRef = useRef<HTMLInputElement>(null);
 
-  const settings = useListViewSettings('workspace_auto-rules', {
-    columns: ALL_COLUMNS.map(c => c.key),
-    pageSize: 20,
-    sortKey: 'id',
-    sortDir: 'asc',
-  })
+    useEffect(() => {
+        (async () => {
+            setLoading(true);
+            try {
+                const data = await erpFetch('workspace/auto-rules/');
+                setItems(Array.isArray(data) ? data : (data?.results || []));
+            } catch { setItems([]); }
+            setLoading(false);
+        })();
+    }, []);
 
-  useEffect(() => { loadData() }, [])
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus(); }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(prev => !prev); }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, []);
 
-  async function loadData() {
-    try {
-      setLoading(true)
-      const data = await erpFetch('workspace/auto-rules/')
-      setItems(Array.isArray(data) ? data : (data?.results || []))
-    } catch (error) {
-      console.error('Failed to load auto-rules:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+    const filtered = useMemo(() => {
+        if (!search) return items;
+        const q = search.toLowerCase();
+        return items.filter(r => JSON.stringify(r).toLowerCase().includes(q));
+    }, [items, search]);
 
-  const filtered = items.filter(item =>
-    search ? JSON.stringify(item).toLowerCase().includes(search.toLowerCase()) : true
-  )
+    const stats = useMemo(() => {
+        const total = items.length;
+        const active = items.filter((r: any) => r.is_active).length;
+        const inactive = total - active;
+        const recurring = items.filter((r: any) => r.rule_type === 'RECURRING').length;
+        return { total, active, inactive, recurring };
+    }, [items]);
 
-  return (
-    <div className="flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300">
-      {/* ── Header ────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 flex-shrink-0 mb-3">
-        <div className="page-header-icon bg-app-primary"
-             style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-          <Zap size={20} className="text-white" />
+    const kpis: { label: string; value: number; color: string; icon: React.ReactNode }[] = [
+        { label: 'Total',     value: stats.total,     color: 'var(--app-primary)',          icon: <Zap size={14} /> },
+        { label: 'Active',    value: stats.active,    color: 'var(--app-success, #22c55e)', icon: <CheckCircle2 size={14} /> },
+        { label: 'Inactive',  value: stats.inactive,  color: 'var(--app-muted-foreground)', icon: <XCircle size={14} /> },
+        { label: 'Recurring', value: stats.recurring, color: 'var(--app-warning, #f59e0b)', icon: <Repeat size={14} /> },
+    ];
+
+    return (
+        <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
+            {/* ── Header ────────────────────────────────────────────── */}
+            {focusMode ? (
+                <div className="flex items-center gap-2 flex-shrink-0 mb-3">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
+                            <Zap size={14} className="text-white" />
+                        </div>
+                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Auto Rules</span>
+                        <span className="text-[10px] font-bold text-app-muted-foreground">{filtered.length}/{items.length}</span>
+                    </div>
+                    <div className="flex-1 relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input
+                            ref={searchRef}
+                            type="text"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Search… (Ctrl+K)"
+                            className="w-full pl-9 pr-3 py-1.5 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                        />
+                    </div>
+                    <button onClick={() => setFocusMode(false)} className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
+                        <Minimize2 size={13} />
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2 flex-shrink-0 mb-3">
+                    <div className="page-header-icon bg-app-primary"
+                         style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                        <Zap size={20} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Auto Rules</h1>
+                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                            {items.length} Records · Raw auto-rule list
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            onClick={() => router.push('/workspace/auto-rules/new')}
+                            className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                        >
+                            <Plus size={14} />
+                            <span className="hidden sm:inline">Create</span>
+                        </button>
+                        <button
+                            onClick={() => setFocusMode(true)}
+                            className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                            title="Focus Mode (Ctrl+Q)"
+                        >
+                            <Maximize2 size={13} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {!focusMode && (
+                <>
+                    {/* ── KPI Strip ──────────────────────────────────── */}
+                    <div
+                        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}
+                        className="flex-shrink-0 mb-3"
+                    >
+                        {kpis.map(k => (
+                            <div
+                                key={k.label}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                }}
+                            >
+                                <div
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ background: `color-mix(in srgb, ${k.color} 10%, transparent)`, color: k.color }}
+                                >
+                                    {k.icon}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {k.label}
+                                    </div>
+                                    <div className="text-sm font-black text-app-foreground tabular-nums">{k.value}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* ── Search ──────────────────────────────────────── */}
+                    <div className="flex items-center gap-2 flex-shrink-0 mb-3">
+                        <div className="flex-1 relative">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                            <input
+                                ref={searchRef}
+                                type="text"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                placeholder="Search auto-rules… (Ctrl+K)"
+                                className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* ── Table Container ─────────────────────────────────── */}
+            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
+                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+                    <div className="w-7 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">Name</div>
+                    <div className="hidden md:block w-32 flex-shrink-0">Trigger</div>
+                    <div className="hidden lg:block w-24 flex-shrink-0">Module</div>
+                    <div className="w-20 text-center flex-shrink-0">Status</div>
+                    <div className="w-16 flex-shrink-0" />
+                </div>
+
+                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
+                    {loading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <Loader2 size={24} className="animate-spin text-app-primary" />
+                        </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <Zap size={36} className="text-app-muted-foreground mb-3 opacity-40" />
+                            <p className="text-sm font-bold text-app-muted-foreground">No auto-rules found</p>
+                            <p className="text-[11px] text-app-muted-foreground mt-1">
+                                {search ? 'Try adjusting your search.' : 'Create your first rule to get started.'}
+                            </p>
+                        </div>
+                    ) : (
+                        filtered.map((r: any) => (
+                            <div
+                                key={r.id}
+                                className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer border-b border-app-border/30 hover:bg-app-surface/40 py-2 md:py-2.5"
+                                style={{
+                                    paddingLeft: '12px',
+                                    paddingRight: '12px',
+                                    borderLeft: '3px solid var(--app-primary)',
+                                }}
+                                onClick={() => router.push(`/workspace/auto-rules/${r.id}`)}
+                            >
+                                <div
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                                        color: 'var(--app-primary)',
+                                    }}
+                                >
+                                    <Zap size={13} />
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="truncate text-[13px] font-bold text-app-foreground">
+                                        {r.name || `Rule #${r.id}`}
+                                    </div>
+                                    <div className="truncate text-[11px] font-medium text-app-muted-foreground">
+                                        {r.code ? `${r.code} · ` : ''}#{r.id}
+                                    </div>
+                                </div>
+
+                                <div className="hidden md:block w-32 flex-shrink-0 text-[11px] font-medium text-app-muted-foreground truncate">
+                                    {r.trigger_event || '—'}
+                                </div>
+
+                                <div className="hidden lg:block w-24 flex-shrink-0 text-[11px] font-medium text-app-muted-foreground capitalize">
+                                    {r.module || '—'}
+                                </div>
+
+                                <div className="w-20 flex justify-center flex-shrink-0">
+                                    {r.is_active ? (
+                                        <span
+                                            className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                            style={{
+                                                background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                                color: 'var(--app-success, #22c55e)',
+                                                border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)',
+                                            }}
+                                        >
+                                            Active
+                                        </span>
+                                    ) : (
+                                        <span
+                                            className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                            style={{
+                                                background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                                color: 'var(--app-muted-foreground)',
+                                            }}
+                                        >
+                                            Off
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-0.5 flex-shrink-0 w-16 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={e => { e.stopPropagation(); router.push(`/workspace/auto-rules/${r.id}`); }}
+                                        className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"
+                                        title="View"
+                                    >
+                                        <Eye size={12} />
+                                    </button>
+                                    <button
+                                        onClick={e => { e.stopPropagation(); router.push(`/workspace/auto-rules/${r.id}/edit`); }}
+                                        className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"
+                                        title="Edit"
+                                    >
+                                        <Edit3 size={12} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Auto Rules</h1>
-          <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-            {items.length} Records · Raw auto-rule list
-          </p>
-        </div>
-        <button
-          onClick={() => router.push('/workspace/auto-rules/new')}
-          className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all flex-shrink-0"
-          style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
-        >
-          <Plus size={14} />
-          <span className="hidden sm:inline">Create</span>
-        </button>
-      </div>
-
-      <TypicalListView<AutoRules>
-        title="Auto Rules"
-        data={filtered}
-        loading={loading}
-        getRowId={r => r.id}
-        columns={ALL_COLUMNS}
-        visibleColumns={settings.visibleColumns}
-        onToggleColumn={settings.toggleColumn}
-        pageSize={settings.pageSize}
-        onPageSizeChange={settings.setPageSize}
-        sortKey={settings.sortKey}
-        sortDir={settings.sortDir}
-        onSort={k => settings.setSort(k)}
-        actions={{
-          onView: (r) => router.push(`/workspace/auto-rules/${r.id}`),
-          onEdit: (r) => router.push(`/workspace/auto-rules/${r.id}/edit`),
-        }}
-      >
-        <TypicalFilter
-          search={{ placeholder: 'Search… (Ctrl+K)', value: search, onChange: setSearch }}
-        />
-      </TypicalListView>
-    </div>
-  )
+    );
 }

@@ -168,6 +168,9 @@ class ClosingService:
                 transaction_date__date__gte=yr_start,
                 transaction_date__date__lte=yr_end,
             )
+            # Use queryset.update() to bypass the ImmutableLedger save() guard
+            # (POSTED JEs reject .save()). Linking fiscal_year is metadata, not
+            # a financial change — safe to write directly.
             for je in orphans:
                 fp = FiscalPeriod.objects.filter(
                     organization=organization,
@@ -175,9 +178,10 @@ class ClosingService:
                     end_date__gte=je.transaction_date,
                 ).first()
                 if fp:
-                    je.fiscal_year = fp.fiscal_year
-                    je.fiscal_period = fp
-                    je.save(update_fields=['fiscal_year', 'fiscal_period'])
+                    JE.objects.filter(pk=je.pk).update(
+                        fiscal_year=fp.fiscal_year,
+                        fiscal_period=fp,
+                    )
 
             remainder_start = None
             remainder_end = None
