@@ -41,6 +41,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     const [closeStep, setCloseStep] = useState<'preview' | 'result' | null>(null)
     const [closeResult, setCloseResult] = useState<string | null>(null)
     const [closingYearId, setClosingYearId] = useState<number | null>(null)
+    const [closeConfirmText, setCloseConfirmText] = useState('')
     const pendingPeriodChange = useRef<{ periodId: number; newStatus: string; period: Record<string, any> } | null>(null)
     const [yearTab, setYearTab] = useState<Record<number, 'periods' | 'summary' | 'history'>>({})
     const [summaryCache, setSummaryCache] = useState<Record<number, YearSummary>>({})
@@ -934,7 +935,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                     </p>
                                 </div>
                             </div>
-                            <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseResult(null) }}
+                            <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseResult(null); setCloseConfirmText('') }}
                                 className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--app-muted-foreground)' }}>
                                 <X size={16} />
                             </button>
@@ -1145,26 +1146,54 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                     </div>
                                 )}
 
+                                {/* Typed-confirmation gate (required for partial close) */}
+                                {(() => {
+                                    const today = new Date()
+                                    const yearEnd = new Date(closePreview.year.end_date)
+                                    const isPartial = today < yearEnd
+                                    if (!isPartial) return null
+                                    return (
+                                        <div className="rounded-xl p-3 space-y-2"
+                                            style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)' }}>
+                                            <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-error, #ef4444)' }}>Confirm Permanent Action</div>
+                                            <div className="text-[10px] font-medium" style={{ color: 'var(--app-foreground)' }}>
+                                                This locks <strong>{closePreview.year.name}</strong> permanently and splits the year. To proceed, type the year name below.
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={closeConfirmText}
+                                                onChange={e => setCloseConfirmText(e.target.value)}
+                                                placeholder={closePreview.year.name}
+                                                className="w-full px-3 py-2 text-[11px] font-mono rounded-lg outline-none"
+                                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
+                                            />
+                                        </div>
+                                    )
+                                })()}
+
                                 {/* Actions */}
                                 <div className="flex gap-2 pt-1">
-                                    <button onClick={() => { setCloseStep(null); setClosePreview(null) }}
+                                    <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseConfirmText('') }}
                                         className="flex-1 py-2.5 text-[11px] font-bold rounded-xl border transition-all"
                                         style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                                         Cancel
                                     </button>
-                                    <button disabled={!closePreview.can_close || isPending}
+                                    {(() => {
+                                        const today = new Date()
+                                        const yearEnd = new Date(closePreview.year.end_date)
+                                        const isPartial = today < yearEnd
+                                        const confirmed = !isPartial || closeConfirmText.trim() === closePreview.year.name
+                                        return (
+                                    <button disabled={!closePreview.can_close || isPending || !confirmed}
                                         onClick={() => {
                                             if (!closingYearId) return
                                             startTransition(async () => {
                                                 try {
-                                                    // Detect partial close: if today is before the year's end_date
-                                                    const today = new Date()
-                                                    const yearEnd = new Date(closePreview.year.end_date)
-                                                    const isPartial = today < yearEnd
-                                                    const closeDate = isPartial ? today.toISOString().split('T')[0] : undefined
+                                                    const closeDate = isPartial ? new Date().toISOString().split('T')[0] : undefined
 
                                                     await hardLockFiscalYear(closingYearId, closeDate)
                                                     setCloseStep('result')
+                                                    setCloseConfirmText('')
                                                     setCloseResult(
                                                         isPartial
                                                             ? `Partial year-end close complete. P&L closed into Retained Earnings. New fiscal year auto-created for the remaining period.`
@@ -1178,12 +1207,10 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                         }}
                                         className="flex-1 py-2.5 text-[11px] font-bold rounded-xl transition-all disabled:opacity-40 flex items-center justify-center gap-1.5"
                                         style={{ background: closePreview.can_close ? 'var(--app-error, #ef4444)' : 'var(--app-muted)', color: 'white' }}>
-                                        {isPending ? <><Loader2 size={12} className="animate-spin" /> Closing...</> : <><ShieldCheck size={12} /> {(() => {
-                                            const today = new Date()
-                                            const yearEnd = new Date(closePreview.year.end_date)
-                                            return today < yearEnd ? 'Execute Partial Close & Split Year' : 'Execute Year-End Close'
-                                        })()}</>}
+                                        {isPending ? <><Loader2 size={12} className="animate-spin" /> Closing...</> : <><ShieldCheck size={12} /> {isPartial ? 'Execute Partial Close & Split Year' : 'Execute Year-End Close'}</>}
                                     </button>
+                                        )
+                                    })()}
                                 </div>
                             </div>
                         ) : closeStep === 'result' ? (
@@ -1228,7 +1255,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                     )
                                 })()}
 
-                                <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseResult(null); refreshData() }}
+                                <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseResult(null); setCloseConfirmText(''); refreshData() }}
                                     className="w-full py-2.5 text-[11px] font-bold rounded-xl transition-all"
                                     style={{ background: 'var(--app-primary)', color: 'white' }}>
                                     Done

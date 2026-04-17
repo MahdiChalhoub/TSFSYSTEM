@@ -138,16 +138,46 @@ class ClosingService:
 
         with transaction.atomic():
             from apps.finance.models import JournalEntry as JE
+            from django.db.models import Q
+            # Match drafts by fiscal_year FK OR by transaction_date within range
+            # (catches orphan JEs created before fiscal_year was assigned).
+            yr_start = fiscal_year.start_date
+            yr_end = close_date if is_partial else fiscal_year.end_date
             draft_count = JE.objects.filter(
                 organization=organization,
-                fiscal_year=fiscal_year,
                 status='DRAFT',
+            ).filter(
+                Q(fiscal_year=fiscal_year) |
+                Q(fiscal_year__isnull=True,
+                  transaction_date__date__gte=yr_start,
+                  transaction_date__date__lte=yr_end)
             ).count()
             if draft_count > 0:
                 raise ValidationError(
-                    f"Cannot close year. {draft_count} draft journal entries remain. "
-                    f"Post or delete them first."
+                    f"Cannot close year. {draft_count} draft journal entries remain "
+                    f"(includes orphan JEs by date). Post or delete them first."
                 )
+
+            # Backfill orphan JEs (NULL fiscal_year_id) into this year — these
+            # were created before fiscal_year linkage existed and would otherwise
+            # be invisible to balance / audit queries.
+            from apps.finance.models import FiscalPeriod
+            orphans = JE.objects.filter(
+                organization=organization,
+                fiscal_year__isnull=True,
+                transaction_date__date__gte=yr_start,
+                transaction_date__date__lte=yr_end,
+            )
+            for je in orphans:
+                fp = FiscalPeriod.objects.filter(
+                    organization=organization,
+                    start_date__lte=je.transaction_date,
+                    end_date__gte=je.transaction_date,
+                ).first()
+                if fp:
+                    je.fiscal_year = fp.fiscal_year
+                    je.fiscal_period = fp
+                    je.save(update_fields=['fiscal_year', 'fiscal_period'])
 
             remainder_start = None
             remainder_end = None
@@ -193,34 +223,34 @@ class ClosingService:
                 )
 
             # ── Step 2: Resolve retained earnings account ──────────
+            # Source of truth: PostingRule for 'equity.retained_earnings.transfer'.
+            # An explicit override on the call wins (used by the close modal).
             if retained_earnings_account_id:
                 re_account = ChartOfAccount.objects.get(
                     id=retained_earnings_account_id, organization=organization
                 )
             else:
-                # Auto-find retained earnings (common codes across standards)
-                re_account = ChartOfAccount.objects.filter(
+                from apps.finance.models.posting_rule import PostingRule
+                rule = PostingRule.objects.filter(
                     organization=organization,
-                    type='EQUITY',
+                    event_code='equity.retained_earnings.transfer',
                     is_active=True,
-                ).filter(
-                    models.Q(code__in=['3200', '3300', '3400', '3500']) |
-                    models.Q(name__icontains='retained') |
-                    models.Q(name__icontains='report')  # French: "Report à nouveau"
-                ).first()
-
-                if not re_account:
+                ).select_related('account').first()
+                if not rule:
                     raise ValidationError(
-                        "Cannot find retained earnings account. "
-                        "Please specify retained_earnings_account_id."
+                        "No posting rule for 'equity.retained_earnings.transfer'. "
+                        "Configure it under Finance → Posting Rules, or pass "
+                        "retained_earnings_account_id explicitly."
                     )
+                re_account = rule.account
 
             # ── Step 3: Close P&L into retained earnings ───────────
+            # NOTE: do NOT filter by is_active — accounts deactivated later
+            # may still hold non-zero historic balances that must be closed.
             from django.db.models import Q
             pnl_accounts = ChartOfAccount.objects.filter(
                 organization=organization,
                 type__in=['INCOME', 'EXPENSE'],
-                is_active=True,
             )
 
             closing_lines = []
@@ -390,10 +420,10 @@ class ClosingService:
         """
         from apps.finance.models import ChartOfAccount, OpeningBalance
 
+        # Include inactive accounts — historic non-zero balances must be carried.
         bs_accounts = ChartOfAccount.objects.filter(
             organization=organization,
             type__in=['ASSET', 'LIABILITY', 'EQUITY'],
-            is_active=True,
         )
 
         created = 0

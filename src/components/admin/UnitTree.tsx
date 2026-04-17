@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Package } from 'lucide-react';
 import { UnitFormModal } from './UnitFormModal';
 import { deleteUnit } from '@/app/actions/inventory';
@@ -19,18 +19,33 @@ type UnitNode = {
     needs_balance?: boolean;
 };
 
-export function UnitTree({ units, potentialParents = [] }: { units: UnitNode[], potentialParents?: Record<string, any>[] }) {
+export function UnitTree({ units, potentialParents = [], forceExpanded, expandKey, onSelect }: {
+    units: UnitNode[],
+    potentialParents?: Record<string, any>[],
+    forceExpanded?: boolean,
+    expandKey?: number,
+    onSelect?: (unit: UnitNode) => void,
+}) {
     return (
         <div className="space-y-2">
             {units.map((unit) => (
-                <UnitTreeNode key={unit.id} unit={unit} level={0} potentialParents={potentialParents} />
+                <UnitTreeNode key={unit.id} unit={unit} level={0} potentialParents={potentialParents}
+                    forceExpanded={forceExpanded} expandKey={expandKey} onSelect={onSelect} />
             ))}
         </div>
     );
 }
 
-function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level: number; potentialParents: Record<string, any>[] }) {
+function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey, onSelect }: {
+    unit: UnitNode; level: number; potentialParents: Record<string, any>[];
+    forceExpanded?: boolean; expandKey?: number; onSelect?: (unit: UnitNode) => void;
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
+
+    // Respond to global expand/collapse
+    useEffect(() => {
+        if (forceExpanded !== undefined) setIsExpanded(forceExpanded);
+    }, [forceExpanded, expandKey]);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isAddChildOpen, setIsAddChildOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<UnitNode | null>(null);
@@ -49,7 +64,7 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
     return (
         <div className="select-none">
             <div
-                className="group flex items-center justify-between p-3 rounded-xl border transition-all duration-200"
+                className="group flex items-center justify-between p-3 rounded-xl border transition-all duration-200 cursor-pointer"
                 style={{
                     background: level === 0 ? 'var(--app-surface)' : 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
                     borderColor: 'var(--app-border)',
@@ -57,6 +72,8 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
                     marginTop: level > 0 ? '0.375rem' : 0,
                     marginBottom: level === 0 ? '0.375rem' : 0,
                 }}
+                onClick={() => { if (hasChildren) setIsExpanded(prev => !prev); else onSelect?.(unit); }}
+                onDoubleClick={() => onSelect?.(unit)}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--app-primary)'; e.currentTarget.style.boxShadow = '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.style.boxShadow = 'none'; }}
             >
@@ -151,7 +168,8 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
             {isExpanded && hasChildren && (
                 <div className="ml-5 pl-3" style={{ borderLeft: '2px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
                     {unit.children!.map((child) => (
-                        <UnitTreeNode key={child.id} unit={child} level={level + 1} potentialParents={potentialParents} />
+                        <UnitTreeNode key={child.id} unit={child} level={level + 1} potentialParents={potentialParents}
+                        forceExpanded={forceExpanded} expandKey={expandKey} onSelect={onSelect} />
                     ))}
                 </div>
             )}

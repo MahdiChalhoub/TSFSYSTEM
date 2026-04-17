@@ -77,34 +77,45 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         closed_periods = periods.filter(status='CLOSED').count()
         future_periods = periods.filter(status='FUTURE').count()
 
-        draft_je = JournalEntry.objects.filter(
-            organization=organization, fiscal_year=fiscal_year, status='DRAFT'
-        ).count()
+        # Drafts: match by FK OR by transaction_date in range (catches orphans)
+        draft_qs = JournalEntry.objects.filter(
+            organization=organization, status='DRAFT',
+        ).filter(
+            Q(fiscal_year=fiscal_year) |
+            Q(fiscal_year__isnull=True,
+              transaction_date__date__gte=fiscal_year.start_date,
+              transaction_date__date__lte=fiscal_year.end_date)
+        )
+        draft_je = draft_qs.count()
         posted_je = JournalEntry.objects.filter(
-            organization=organization, fiscal_year=fiscal_year, status='POSTED'
+            organization=organization, status='POSTED',
+        ).filter(
+            Q(fiscal_year=fiscal_year) |
+            Q(fiscal_year__isnull=True,
+              transaction_date__date__gte=fiscal_year.start_date,
+              transaction_date__date__lte=fiscal_year.end_date)
         ).count()
 
-        # P&L summary
+        # P&L summary — include inactive accounts (historic balances must close)
         income_accounts = ChartOfAccount.objects.filter(
-            organization=organization, type='INCOME', is_active=True
+            organization=organization, type='INCOME',
         )
         expense_accounts = ChartOfAccount.objects.filter(
-            organization=organization, type='EXPENSE', is_active=True
+            organization=organization, type='EXPENSE',
         )
 
         total_revenue = abs(income_accounts.aggregate(s=Sum('balance_official'))['s'] or Decimal(0))
         total_expenses = expense_accounts.aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
         net_income = total_revenue - total_expenses
 
-        # Retained earnings account
-        from django.db.models import Q as DQ
-        re_account = ChartOfAccount.objects.filter(
-            organization=organization, type='EQUITY', is_active=True
-        ).filter(
-            DQ(system_role='RETAINED_EARNINGS') |
-            DQ(name__icontains='retained') |
-            DQ(name__icontains='report')
-        ).first()
+        # Retained earnings — read from PostingRule (source of truth)
+        from apps.finance.models.posting_rule import PostingRule
+        re_rule = PostingRule.objects.filter(
+            organization=organization,
+            event_code='equity.retained_earnings.transfer',
+            is_active=True,
+        ).select_related('account').first()
+        re_account = re_rule.account if re_rule else None
 
         # Next year
         next_year = FiscalYear.objects.filter(
@@ -114,7 +125,6 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # Balance sheet accounts for opening balances preview
         bs_accounts = ChartOfAccount.objects.filter(
             organization=organization, type__in=['ASSET', 'LIABILITY', 'EQUITY'],
-            is_active=True
         ).exclude(balance_official=Decimal(0)).order_by('type', 'code')
         bs_accounts_count = bs_accounts.count()
 
