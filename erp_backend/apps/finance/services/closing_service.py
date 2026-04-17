@@ -61,12 +61,8 @@ class ClosingService:
             BalanceService.refresh_snapshots(organization, fiscal_period, scope='OFFICIAL')
             BalanceService.refresh_snapshots(organization, fiscal_period, scope='INTERNAL')
 
-            # Close the period
-            fiscal_period.status = 'CLOSED'
-            fiscal_period.is_closed = True
-            fiscal_period.closed_at = timezone.now()
-            fiscal_period.closed_by = user
-            fiscal_period.save()
+            # Close the period (canonical transition)
+            fiscal_period.transition_to('CLOSED', user=user)
 
             logger.info(
                 f"ClosingService: Period {fiscal_period.name} closed by "
@@ -96,11 +92,7 @@ class ClosingService:
         if user and not user.is_superuser:
             raise ValidationError("Only superusers can reopen fiscal periods.")
 
-        fiscal_period.status = 'OPEN'
-        fiscal_period.is_closed = False
-        fiscal_period.closed_at = None
-        fiscal_period.closed_by = None
-        fiscal_period.save()
+        fiscal_period.transition_to('OPEN', user=user)
         logger.info(
             f"ClosingService: Period {fiscal_period.name} reopened by "
             f"{user.username if user else 'system'}"
@@ -400,13 +392,10 @@ class ClosingService:
                     f"Opening balances not generated. Create next year first."
                 )
 
-            # ── Step 5: Lock fiscal year ───────────────────────────
-            fiscal_year.is_closed = True
-            fiscal_year.is_hard_locked = True
-            fiscal_year.status = 'CLOSED'
-            fiscal_year.closed_at = timezone.now()
-            fiscal_year.closed_by = user
-            fiscal_year.save()
+            # ── Step 5: Mark fiscal year CLOSED ────────────────────
+            # Hard-lock (FINALIZED) is a separate explicit step via the
+            # `/lock/` endpoint — close and finalize are deliberately distinct.
+            fiscal_year.transition_to('CLOSED', user=user)
 
             logger.info(
                 f"ClosingService: Fiscal year {fiscal_year.name} closed by "

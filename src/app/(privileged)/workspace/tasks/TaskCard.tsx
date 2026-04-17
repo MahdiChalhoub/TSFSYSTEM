@@ -1,20 +1,42 @@
 'use client';
 
 import { Clock, Calendar, Star, User, FolderKanban } from 'lucide-react';
-import type { Task } from './types';
-import { STATUS_ICONS, STATUS_COLOR, PRIORITY_COLOR } from './types';
+import type { Task, UserItem } from './types';
+import { STATUS_ICONS, STATUS_COLOR, PRIORITY_COLOR, getUserName } from './types';
 
 interface TaskCardProps {
     task: Task;
+    users: UserItem[];
     onEdit: (task: Task) => void;
     onQuickComplete: (taskId: number, currentStatus: string, e: React.MouseEvent) => void;
 }
 
-export default function TaskCard({ task: t, onEdit, onQuickComplete }: TaskCardProps) {
+/** Smart relative date formatting */
+function formatDueDate(dateStr: string): string {
+    const due = new Date(dateStr);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+    const diffMs = dueDay.getTime() - today.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays < -1) return `Overdue by ${Math.abs(diffDays)} days`;
+    if (diffDays === -1) return 'Overdue by 1 day';
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays <= 7) return `In ${diffDays} days`;
+    return due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: due.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
+export default function TaskCard({ task: t, users, onEdit, onQuickComplete }: TaskCardProps) {
     const StatusIcon = STATUS_ICONS[t.status] ?? Clock;
     const statusColor = STATUS_COLOR[t.status] ?? 'var(--app-muted-foreground)';
     const priorityColor = PRIORITY_COLOR[t.priority] ?? 'var(--app-muted-foreground)';
     const isCompleted = t.status === 'COMPLETED';
+
+    // Resolve assigned user from users array
+    const assignedUser = t.assigned_to ? users.find(u => u.id === t.assigned_to) : null;
+    const assignedName = assignedUser ? getUserName(assignedUser) : t.assigned_to_name;
 
     return (
         <div onClick={() => onEdit(t)}
@@ -75,12 +97,12 @@ export default function TaskCard({ task: t, onEdit, onQuickComplete }: TaskCardP
                     {t.due_date && (
                         <span className="flex items-center gap-1"
                               style={t.is_overdue ? { color: 'var(--app-error)', fontWeight: 700 } : undefined}>
-                            <Calendar size={10} /> Due {new Date(t.due_date).toLocaleDateString()}
+                            <Calendar size={10} /> {formatDueDate(t.due_date)}
                         </span>
                     )}
-                    {t.assigned_to_name && (
+                    {assignedName && (
                         <span className="flex items-center gap-1">
-                            <User size={10} /> {t.assigned_to_name}
+                            <User size={10} /> {assignedName}
                         </span>
                     )}
                     {t.points > 0 && (

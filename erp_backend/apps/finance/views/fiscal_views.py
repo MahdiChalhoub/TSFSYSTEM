@@ -1,3 +1,4 @@
+from rest_framework import permissions as drf_permissions
 from .base import (
     transaction, viewsets, status, Response, action,
     TenantModelViewSet, UDLEViewSetMixin, get_current_tenant_id,
@@ -6,22 +7,61 @@ from .base import (
 from apps.finance.models import FiscalYear, FiscalPeriod
 from apps.finance.serializers import FiscalYearSerializer, FiscalPeriodSerializer
 from apps.finance.services import LedgerService
+from kernel.rbac.permissions import check_permission
+
+
+class FiscalActionPermission(drf_permissions.BasePermission):
+    """
+    Per-action RBAC for fiscal viewsets. Reads `action_permission_map` from the
+    viewset: {action_name: 'module.perm_code' or (code1, code2, ...)}. Missing
+    entries default to `default_permission` or deny.
+    """
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        action_name = getattr(view, 'action', None)
+        perm_map = getattr(view, 'action_permission_map', {}) or {}
+        default = getattr(view, 'default_permission', None)
+        codes = perm_map.get(action_name, default)
+        if codes is None:
+            return True  # action not in map and no default — allow (read-safe)
+        if isinstance(codes, str):
+            codes = (codes,)
+        return all(check_permission(request.user, c) for c in codes)
+
 
 class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = FiscalYear.objects.all()
     serializer_class = FiscalYearSerializer
+    permission_classes = [FiscalActionPermission]
+    default_permission = 'finance.view_fiscal_years'
+    action_permission_map = {
+        'list': 'finance.view_fiscal_years',
+        'retrieve': 'finance.view_fiscal_years',
+        'create': 'finance.manage_fiscal_years',
+        'update': 'finance.manage_fiscal_years',
+        'partial_update': 'finance.manage_fiscal_years',
+        'destroy': 'finance.manage_fiscal_years',
+        'close': 'finance.close_fiscal_year',
+        'close_preview': 'finance.view_fiscal_years',
+        'lock': 'finance.close_fiscal_year',
+        'summary': 'finance.view_fiscal_years',
+        'year_history': 'finance.view_fiscal_years',
+        'draft_audit': 'finance.view_fiscal_years',
+        'current': 'finance.view_fiscal_years',
+    }
 
     def perform_destroy(self, instance):
         """Clean up related data before deleting a fiscal year."""
         if instance.is_hard_locked:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Cannot delete a permanently locked fiscal year.")
-        # Clean up opening balances, journal entries, and periods
         from apps.finance.models import OpeningBalance, JournalEntry
-        OpeningBalance.objects.filter(fiscal_year=instance).delete()
-        JournalEntry.objects.filter(fiscal_year=instance).update(fiscal_year=None, fiscal_period=None)
-        instance.periods.all().delete()
-        instance.delete()
+        with transaction.atomic():
+            OpeningBalance.objects.filter(fiscal_year=instance).delete()
+            JournalEntry.objects.filter(fiscal_year=instance).update(fiscal_year=None, fiscal_period=None)
+            instance.periods.all().delete()
+            instance.delete()
 
     def create(self, request, *args, **kwargs):
         organization_id = get_current_tenant_id()
@@ -161,11 +201,13 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
     @action(detail=True, methods=['post'])
     def lock(self, request, pk=None):
         fiscal_year = self.get_object()
-        if not fiscal_year.is_closed:
+        if fiscal_year.status != 'CLOSED':
             return Response({"error": "Year must be closed before locking"}, status=status.HTTP_400_BAD_REQUEST)
-
-        fiscal_year.is_hard_locked = True
-        fiscal_year.save()
+        user = request.user if request.user.is_authenticated else None
+        try:
+            fiscal_year.transition_to('FINALIZED', user=user)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"status": "Fiscal Year Locked"})
 
     @action(detail=True, methods=['get'], url_path='summary')
@@ -311,19 +353,39 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # Sort by date
         events.sort(key=lambda e: e.get('date', ''))
 
-        # JE count by month
-        je_by_month = list(
+        # JE count by month — portable (no TO_CHAR)
+        from django.db.models.functions import TruncMonth
+        je_by_month_rows = (
             JournalEntry.objects.filter(organization=org, fiscal_year=fiscal_year, status='POSTED')
-            .extra(select={'month': "TO_CHAR(transaction_date, 'YYYY-MM')"})
-            .values('month')
+            .annotate(month_dt=TruncMonth('transaction_date'))
+            .values('month_dt')
             .annotate(count=Count('id'))
-            .order_by('month')
+            .order_by('month_dt')
         )
+        je_by_month = [
+            {'month': row['month_dt'].strftime('%Y-%m') if row['month_dt'] else None, 'count': row['count']}
+            for row in je_by_month_rows
+        ]
 
         return Response({
             'events': events,
             'je_by_month': je_by_month,
         })
+
+    @action(detail=False, methods=['get'], url_path='current')
+    def current(self, request):
+        """Return the fiscal year whose [start_date, end_date] contains today."""
+        from django.utils import timezone as tz
+        today = tz.localdate()
+        organization_id = get_current_tenant_id()
+        fy = FiscalYear.objects.filter(
+            organization_id=organization_id,
+            start_date__lte=today,
+            end_date__gte=today,
+        ).order_by('start_date').first()
+        if not fy:
+            return Response({'detail': 'No fiscal year covers today.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(self.get_serializer(fy).data)
 
     @action(detail=True, methods=['get'], url_path='draft-audit')
     def draft_audit(self, request, pk=None):
@@ -342,12 +404,17 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         else:
             qs = qs.filter(fiscal_year=fiscal_year)
 
-        drafts = qs.order_by('transaction_date')[:50]
-        data = [{
-            'id': je.id, 'reference': je.reference,
-            'date': str(je.transaction_date), 'description': je.description,
-            'total_debit': float(je.total_debit or 0), 'total_credit': float(je.total_credit or 0),
-        } for je in drafts]
+        # Only expose JE references to users who can read journal entries.
+        # Everyone with view_fiscal_years gets the count (it's a blocker indicator).
+        if check_permission(request.user, 'finance.view_journal'):
+            drafts = qs.order_by('transaction_date')[:50]
+            data = [{
+                'id': je.id, 'reference': je.reference,
+                'date': str(je.transaction_date), 'description': je.description,
+                'total_debit': float(je.total_debit or 0), 'total_credit': float(je.total_credit or 0),
+            } for je in drafts]
+        else:
+            data = []
 
         return Response({'drafts': data, 'total': qs.count()})
 
@@ -355,6 +422,20 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
 class FiscalPeriodViewSet(TenantModelViewSet):
     queryset = FiscalPeriod.objects.all()
     serializer_class = FiscalPeriodSerializer
+    permission_classes = [FiscalActionPermission]
+    default_permission = 'finance.view_fiscal_years'
+    action_permission_map = {
+        'list': 'finance.view_fiscal_years',
+        'retrieve': 'finance.view_fiscal_years',
+        'create': 'finance.manage_fiscal_years',
+        'update': 'finance.manage_fiscal_years',
+        'partial_update': 'finance.manage_fiscal_years',
+        'destroy': 'finance.manage_fiscal_years',
+        'close': 'finance.close_fiscal_year',
+        'soft_lock': 'finance.close_fiscal_year',
+        'hard_lock': 'finance.close_fiscal_year',
+        'reopen': 'finance.manage_fiscal_years',
+    }
 
     def perform_update(self, serializer):
         """Block status changes if the fiscal year is hard-locked."""
@@ -373,9 +454,44 @@ class FiscalPeriodViewSet(TenantModelViewSet):
         try:
             # Validate control accounts
             LedgerService.validate_closure(organization, fiscal_period=period)
-            
-            period.is_closed = True
-            period.save()
+            user = request.user if request.user.is_authenticated else None
+            period.transition_to('CLOSED', user=user)
             return Response({"status": "Period Closed"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'], url_path='soft-lock')
+    def soft_lock(self, request, pk=None):
+        """Soft-lock a period: only supervisors can post afterwards."""
+        period = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+        try:
+            from apps.finance.services.closing_service import ClosingService
+            ClosingService.soft_lock_period(period.organization, period, user=user)
+            return Response({"status": "Period Soft-Locked"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'], url_path='hard-lock')
+    def hard_lock(self, request, pk=None):
+        """Hard-lock a period: no posting allowed at all."""
+        period = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+        try:
+            from apps.finance.services.closing_service import ClosingService
+            ClosingService.hard_lock_period(period.organization, period, user=user)
+            return Response({"status": "Period Hard-Locked"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def reopen(self, request, pk=None):
+        """Reopen a closed/locked period (superuser-only, enforced in service)."""
+        period = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+        try:
+            from apps.finance.services.closing_service import ClosingService
+            ClosingService.reopen_period(period.organization, period, user=user)
+            return Response({"status": "Period Reopened"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

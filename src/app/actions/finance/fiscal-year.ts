@@ -12,39 +12,72 @@ const PeriodUpdateSchema = z.object({
     status: z.enum(['OPEN', 'CLOSED', 'LOCKED']).optional(),
 }).passthrough()
 
-export async function getFiscalYears() {
+export type FiscalYearDTO = {
+    id: number
+    name: string
+    startDate: string
+    endDate: string
+    status: 'OPEN' | 'CLOSED' | 'FINALIZED'
+    isClosed: boolean
+    isHardLocked: boolean
+    closedAt: string | null
+    // raw passthrough for fields the UI hasn't migrated yet
+    [key: string]: unknown
+}
+
+/**
+ * Single source of truth for converting a raw backend FiscalYear payload
+ * into the camelCase shape the frontend uses. Keeps every caller consistent.
+ */
+function normalizeFiscalYear(year: Record<string, any>): FiscalYearDTO {
+    const status: FiscalYearDTO['status'] =
+        year.status ?? (year.is_hard_locked ? 'FINALIZED' : year.is_closed ? 'CLOSED' : 'OPEN')
+    return {
+        ...year,
+        id: year.id,
+        name: year.name,
+        startDate: year.start_date,
+        endDate: year.end_date,
+        status,
+        isClosed: status !== 'OPEN',
+        isHardLocked: status === 'FINALIZED',
+        closedAt: year.closed_at ?? null,
+    }
+}
+
+export async function getFiscalYears(): Promise<FiscalYearDTO[]> {
     try {
         const data = await erpFetch('fiscal-years/')
         const years = Array.isArray(data) ? data : (data?.results || [])
-        return years.map((year: Record<string, any>) => ({
-            ...year,
-            startDate: year.start_date,
-            endDate: year.end_date,
-            isHardLocked: year.is_hard_locked,
-            status: year.status || (year.is_hard_locked ? 'FINALIZED' : year.is_closed ? 'CLOSED' : 'OPEN'),
-        }))
+        return years.map(normalizeFiscalYear)
     } catch (error) {
         console.error("Failed to fetch fiscal years:", error)
         return []
     }
 }
 
-export async function getLatestFiscalYear() {
+export async function getLatestFiscalYear(): Promise<FiscalYearDTO | null> {
     try {
         const raw = await erpFetch('fiscal-years/?limit=1&ordering=-end_date')
         const years = Array.isArray(raw) ? raw : (raw?.results || [])
         const year = years[0] || null
-        if (year) {
-            return {
-                ...year,
-                startDate: year.start_date,
-                endDate: year.end_date,
-                isHardLocked: year.is_hard_locked,
-            }
-        }
-        return null
+        return year ? normalizeFiscalYear(year) : null
     } catch (error) {
         console.error("Failed to fetch latest fiscal year:", error)
+        return null
+    }
+}
+
+/**
+ * Returns the fiscal year covering today (today ∈ [start_date, end_date]),
+ * or null if no year covers today. Use this — not getLatestFiscalYear — when
+ * resolving the "active" year for posting.
+ */
+export async function getCurrentFiscalYear(): Promise<FiscalYearDTO | null> {
+    try {
+        const raw = await erpFetch('fiscal-years/current/')
+        return raw ? normalizeFiscalYear(raw) : null
+    } catch {
         return null
     }
 }

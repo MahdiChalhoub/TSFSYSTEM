@@ -400,7 +400,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                             ) : (
                                 <>
                                     {activeTasks.map(t => (
-                                        <TaskCard key={t.id} task={t}
+                                        <TaskCard key={t.id} task={t} users={users}
                                                   onEdit={setEditingTask}
                                                   onQuickComplete={handleQuickComplete} />
                                     ))}
@@ -424,7 +424,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                             {showCompletedTasks && (
                                                 <div className="space-y-2">
                                                     {completedTasks.map(t => (
-                                                        <TaskCard key={t.id} task={t}
+                                                        <TaskCard key={t.id} task={t} users={users}
                                                                   onEdit={setEditingTask}
                                                                   onQuickComplete={handleQuickComplete} />
                                                     ))}

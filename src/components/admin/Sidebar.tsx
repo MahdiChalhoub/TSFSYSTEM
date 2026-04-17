@@ -377,8 +377,7 @@ export const MENU_ITEMS = [
 
                     { title: 'COA Management', path: '/finance/coa' },
                     { title: 'General Ledger', path: '/finance/ledger' },
-                    { title: 'Opening Balances', path: '/finance/ledger/opening' },
-                    { title: 'Opening Balance List', path: '/finance/ledger/opening/list' },
+                    { title: 'Opening Balances', path: '/finance/opening-balances' },
                     { title: 'CSV Import', path: '/finance/ledger/import' },
                     { title: 'Journal Entries', path: '/finance/journal' },
                     { title: 'Sequences', path: '/finance/sequences' },

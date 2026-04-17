@@ -40,7 +40,7 @@ export default async function OpeningBalancesListPage() {
                                             <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase">Locked</span>
                                         </div>
                                         <p className="text-xs text-app-muted-foreground flex items-center gap-1 mt-0.5">
-                                            <Calendar size={12} /> {entry.transactionDate.toLocaleDateString('en-GB')}
+                                            <Calendar size={12} /> {(entry.transactionDate || entry.transaction_date) ? new Date(entry.transactionDate || entry.transaction_date).toLocaleDateString('en-GB') : '—'}
                                         </p>
                                     </div>
                                 </div>

@@ -547,7 +547,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
                                         {/* ── Periods Tab ── */}
                                         {activeTab === 'periods' && (
-                                            <div className="p-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '8px' }}>
+                                            <div className="p-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: '8px' }}>
                                                 {periods.map((p: Record<string, any>, pidx: number) => {
                                                     const pStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
                                                     const ps = getStatusStyle(pStatus)

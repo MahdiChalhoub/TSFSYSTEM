@@ -9,14 +9,16 @@ class FiscalYearService:
         from apps.finance.models import FiscalYear, FiscalPeriod
         
         with transaction.atomic():
-            # Check for overlapping years
             start_date = data['start_date']
             end_date = data['end_date']
-            
-            if FiscalYear.objects.filter(
+
+            # select_for_update locks existing rows in this org so two concurrent
+            # creates serialize — prevents a race where both pass the overlap
+            # check and then both insert overlapping years.
+            if FiscalYear.objects.select_for_update().filter(
                 organization=organization,
                 start_date__lte=end_date,
-                end_date__gte=start_date
+                end_date__gte=start_date,
             ).exists():
                 raise ValidationError("Fiscal year overlaps with an existing one.")
 
