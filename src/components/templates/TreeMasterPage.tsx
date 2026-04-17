@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { TourTriggerButton } from '@/components/ui/GuidedTour'
+import { usePageTour } from '@/lib/tours/useTour'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
@@ -38,6 +40,7 @@ export interface TreeMasterConfig {
     columnHeaders?: ColumnHeader[]
     footerLeft?: ReactNode
     contentHeader?: string
+    tourId?: string  // If set, renders a Tour button in the header
 }
 
 export interface TreeMasterRenderProps {
@@ -84,6 +87,9 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     const [sidebarNode, setSidebarNode] = useState<any | null>(null)
     const [sidebarTab, setSidebarTab] = useState('overview')
     const searchRef = useRef<HTMLInputElement>(null)
+
+    // Tour support
+    const tourHook = config.tourId ? usePageTour(config.tourId) : null
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -189,6 +195,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                     <Plus size={14} /><span className="hidden sm:inline">{config.primaryAction.label}</span>
                                 </button>
+                                {tourHook && <TourTriggerButton onClick={tourHook.start} />}
                                 <button onClick={() => setFocusMode(true)} title="Focus mode (Ctrl+Q)"
                                     className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                     <Maximize2 size={13} />

@@ -56,10 +56,47 @@ export async function deleteUnit(id: string | number) {
  */
 export async function getUnitProducts(unitId: number | string) {
  try {
- const data = await erpFetch(`/products/?unit=${unitId}`)
+ const data = await erpFetch(`/units/${unitId}/products/`)
  return Array.isArray(data) ? data : data?.results || []
  } catch (e) {
  console.error("Failed to fetch products for unit:", e)
+ return []
+ }
+}
+
+/**
+ * Fetch products with search/filter/sort/pagination
+ */
+export async function getUnitProductsAdvanced(unitId: number | string, params: {
+ search?: string; category?: string; brand?: string; status?: string;
+ sort?: string; page?: number; page_size?: number;
+} = {}) {
+ try {
+ const qs = new URLSearchParams()
+ if (params.search) qs.set('search', params.search)
+ if (params.category) qs.set('category', params.category)
+ if (params.brand) qs.set('brand', params.brand)
+ if (params.status) qs.set('status', params.status)
+ if (params.sort) qs.set('sort', params.sort)
+ if (params.page) qs.set('page', String(params.page))
+ if (params.page_size) qs.set('page_size', String(params.page_size))
+ const data = await erpFetch(`/units/${unitId}/products/?${qs.toString()}`)
+ return data
+ } catch (e) {
+ console.error("Failed to fetch products for unit:", e)
+ return { results: [], count: 0, page: 1, page_size: 50 }
+ }
+}
+
+/**
+ * Fetch packaging levels linked to a unit
+ */
+export async function getUnitPackaging(unitId: number | string) {
+ try {
+ const data = await erpFetch(`/units/${unitId}/linked_packaging/`)
+ return Array.isArray(data) ? data : []
+ } catch (e) {
+ console.error("Failed to fetch packaging for unit:", e)
  return []
  }
 }

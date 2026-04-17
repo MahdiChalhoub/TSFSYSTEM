@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import models, transaction
 from erp.models import Organization
 from apps.inventory.models import (
     Brand,
@@ -87,6 +87,104 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 queue.append((child, depth + 1))
 
         return Response(tree)
+
+    @action(detail=True, methods=['get'])
+    def linked_packaging(self, request, pk=None):
+        """Return all ProductPackaging records that use this unit."""
+        organization, err = _get_org_or_400()
+        if err:
+            return err
+        try:
+            unit = Unit.objects.get(id=pk, organization=organization)
+        except Unit.DoesNotExist:
+            return Response({"error": "Unit not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        from apps.inventory.models import ProductPackaging
+        packagings = ProductPackaging.objects.filter(
+            unit=unit, organization=organization
+        ).select_related('product', 'unit')
+
+        data = []
+        for pkg in packagings:
+            data.append({
+                'id': pkg.id,
+                'name': pkg.name or pkg.display_name,
+                'sku': pkg.sku,
+                'barcode': pkg.barcode,
+                'ratio': float(pkg.ratio),
+                'level': pkg.level,
+                'is_default_sale': pkg.is_default_sale,
+                'is_default_purchase': pkg.is_default_purchase,
+                'selling_price': float(pkg.effective_selling_price),
+                'product_id': pkg.product_id,
+                'product_name': pkg.product.name if pkg.product else None,
+                'product_sku': pkg.product.sku if pkg.product else None,
+            })
+        return Response(data)
+
+    @action(detail=True, methods=['get'])
+    def products(self, request, pk=None):
+        """Return products that use this unit, with optional search/filter/sort."""
+        organization, err = _get_org_or_400()
+        if err:
+            return err
+        try:
+            unit = Unit.objects.get(id=pk, organization=organization)
+        except Unit.DoesNotExist:
+            return Response({"error": "Unit not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        products = Product.objects.filter(unit=unit, organization=organization)
+
+        # Search
+        q = request.query_params.get('search', '').strip()
+        if q:
+            products = products.filter(
+                models.Q(name__icontains=q) | models.Q(sku__icontains=q) | models.Q(barcode__icontains=q)
+            )
+
+        # Filters
+        category_id = request.query_params.get('category')
+        if category_id:
+            products = products.filter(category_id=category_id)
+        brand_id = request.query_params.get('brand')
+        if brand_id:
+            products = products.filter(brand_id=brand_id)
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            products = products.filter(status=status_filter)
+
+        # Sort
+        sort = request.query_params.get('sort', 'name')
+        sort_map = {
+            'name': 'name', '-name': '-name',
+            'price': 'selling_price_ttc', '-price': '-selling_price_ttc',
+            'sku': 'sku', '-sku': '-sku',
+            'created': '-created_at',
+        }
+        products = products.order_by(sort_map.get(sort, 'name'))
+
+        # Pagination
+        page_size = int(request.query_params.get('page_size', 50))
+        page = int(request.query_params.get('page', 1))
+        total = products.count()
+        products = products[(page - 1) * page_size:page * page_size]
+
+        data = []
+        for p in products.select_related('category', 'brand', 'unit'):
+            data.append({
+                'id': p.id,
+                'name': p.name,
+                'sku': p.sku,
+                'barcode': p.barcode,
+                'selling_price_ttc': float(p.selling_price_ttc or 0),
+                'selling_price_ht': float(p.selling_price_ht or 0),
+                'cost_price': float(p.cost_price or 0),
+                'status': p.status,
+                'category_name': p.category.name if p.category else None,
+                'brand_name': p.brand.name if p.brand else None,
+                'unit_name': p.unit.name if p.unit else None,
+            })
+        return Response({'results': data, 'count': total, 'page': page, 'page_size': page_size})
 
 
 # =============================================================================
