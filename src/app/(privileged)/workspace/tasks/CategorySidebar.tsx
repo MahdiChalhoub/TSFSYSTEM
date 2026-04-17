@@ -165,13 +165,35 @@ export default function CategorySidebar({
 
                 {categories.length === 0 && (
                     <div className="px-4 py-8 text-center">
-                        <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>No categories yet.</p>
+                        <div className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center"
+                             style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
+                            <FolderKanban size={18} style={{ color: 'var(--app-primary)' }} />
+                        </div>
+                        <p className="text-[11px] font-bold mb-1" style={{ color: 'var(--app-muted-foreground)' }}>No categories yet</p>
+                        <p className="text-[10px] mb-3" style={{ color: 'var(--app-muted-foreground)' }}>
+                            Create categories to organize your tasks
+                        </p>
                         <button onClick={onManageCategories}
-                                className="mt-1 text-[11px] font-bold" style={{ color: 'var(--app-primary)' }}>
-                            Create one →
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold text-white rounded-xl transition-all"
+                                style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            <Edit2 size={12} /> Create Categories
                         </button>
                     </div>
                 )}
+            </div>
+
+            {/* Persistent footer button */}
+            <div className="px-3 py-3 border-t" style={{ borderColor: 'var(--app-border)' }}>
+                <button onClick={onManageCategories}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[11px] font-bold rounded-xl border transition-all hover:brightness-95"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                            borderColor: 'color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                            color: 'var(--app-primary)',
+                        }}>
+                    <Edit2 size={13} />
+                    Manage Categories
+                </button>
             </div>
         </div>
     );

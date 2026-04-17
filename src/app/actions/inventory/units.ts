@@ -7,14 +7,14 @@ import { revalidatePath } from 'next/cache'
  * Fetch all units
  */
 export async function getUnits() {
- return await erpFetch('/inventory/units/')
+ return await erpFetch('/units/')
 }
 
 /**
  * Create a new unit
  */
 export async function createUnit(data: any) {
- const result = await erpFetch('/inventory/units/', {
+ const result = await erpFetch('/units/', {
  method: 'POST',
  headers: {
  'Content-Type': 'application/json'
@@ -29,7 +29,7 @@ export async function createUnit(data: any) {
  * Update an existing unit
  */
 export async function updateUnit(id: string | number, data: any) {
- const result = await erpFetch(`/inventory/units/${id}/`, {
+ const result = await erpFetch(`/units/${id}/`, {
  method: 'PATCH',
  headers: {
  'Content-Type': 'application/json'
@@ -44,7 +44,7 @@ export async function updateUnit(id: string | number, data: any) {
  * Delete a unit
  */
 export async function deleteUnit(id: string | number) {
- const result = await erpFetch(`/inventory/units/${id}/`, {
+ const result = await erpFetch(`/units/${id}/`, {
  method: 'DELETE'
  })
  revalidatePath('/inventory/units')
@@ -56,7 +56,7 @@ export async function deleteUnit(id: string | number) {
  */
 export async function getUnitProducts(unitId: number | string) {
  try {
- const data = await erpFetch(`/inventory/products/?unit=${unitId}`)
+ const data = await erpFetch(`/products/?unit=${unitId}`)
  return Array.isArray(data) ? data : data?.results || []
  } catch (e) {
  console.error("Failed to fetch products for unit:", e)

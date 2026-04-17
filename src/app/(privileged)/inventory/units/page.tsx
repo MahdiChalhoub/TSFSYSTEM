@@ -5,8 +5,8 @@ export const dynamic = 'force-dynamic';
 
 async function getUnitsData() {
     try {
-        // Use namespaced path to avoid potential route conflicts
-        const response = await erpFetch('inventory/units/');
+        // Use flat mount path — namespaced 'inventory/units/' returns 404 on some deployments
+        const response = await erpFetch('units/');
         const units = Array.isArray(response) ? response : (response?.results ?? []);
         return units;
     } catch (e) {

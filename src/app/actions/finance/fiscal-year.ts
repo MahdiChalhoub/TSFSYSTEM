@@ -213,6 +213,7 @@ export type YearSummary = {
     closing_entry: { reference: string; date: string; description: string; lines: { code: string; name: string; debit: number; credit: number }[] } | null
     opening_balances: { code: string; name: string; type: string; debit: number; credit: number }[]
     opening_balances_target: string | null
+    opening_balances_received: { code: string; name: string; type: string; debit: number; credit: number }[]
     periods: { name: string; status: string; start_date: string; end_date: string; journal_entries: number }[]
 }
 

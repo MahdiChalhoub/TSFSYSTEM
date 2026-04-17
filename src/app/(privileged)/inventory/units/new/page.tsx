@@ -21,7 +21,7 @@ export default function CreateUnitsPage() {
       const formData = new FormData(e.currentTarget)
       const data = Object.fromEntries(formData.entries())
 
-      await erpFetch('inventory/units/', {
+      await erpFetch('units/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

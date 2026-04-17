@@ -640,7 +640,25 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                                             </div>
                                                         </div>
                                                     )}
-                                                    {/* Opening Balances */}
+                                                    {/* Opening Balances Received (from prior year) */}
+                                                    {s.opening_balances_received && s.opening_balances_received.length > 0 && (
+                                                        <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                                            <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-success, #22c55e)' }}>
+                                                                Opening Balances ← Carried In ({s.opening_balances_received.length} accounts)
+                                                            </div>
+                                                            <div className="max-h-[120px] overflow-y-auto custom-scrollbar space-y-0.5">
+                                                                {s.opening_balances_received.map((ob, i) => (
+                                                                    <div key={i} className="flex items-center justify-between text-[10px] py-0.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                                                                        <span className="font-medium truncate" style={{ color: 'var(--app-foreground)' }}>{ob.code} — {ob.name}</span>
+                                                                        <span className="font-bold tabular-nums flex-shrink-0 ml-2" style={{ color: 'var(--app-foreground)' }}>
+                                                                            {ob.debit > 0 ? `DR ${ob.debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : `CR ${ob.credit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {/* Opening Balances Sent (to next year) */}
                                                     {s.opening_balances.length > 0 && (
                                                         <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                                                             <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>

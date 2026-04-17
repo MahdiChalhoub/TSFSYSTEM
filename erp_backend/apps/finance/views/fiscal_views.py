@@ -214,7 +214,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 'lines': [{'code': l.account.code, 'name': l.account.name, 'debit': float(l.debit), 'credit': float(l.credit)} for l in closing_lines],
             }
 
-        # Opening balances generated for next year
+        # Opening balances generated for next year (what THIS year sends out)
         from apps.finance.models import FiscalYear as FY
         next_fy = FY.objects.filter(organization=org, start_date__gt=fiscal_year.end_date).order_by('start_date').first()
         opening_bals = []
@@ -222,6 +222,11 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             obs = OpeningBalance.objects.filter(organization=org, fiscal_year=next_fy).select_related('account').order_by('account__type', 'account__code')
             opening_bals = [{'code': ob.account.code, 'name': ob.account.name, 'type': ob.account.type,
                              'debit': float(ob.debit_amount), 'credit': float(ob.credit_amount)} for ob in obs]
+
+        # Opening balances received from prior year (what THIS year carries in)
+        obs_in = OpeningBalance.objects.filter(organization=org, fiscal_year=fiscal_year).select_related('account').order_by('account__type', 'account__code')
+        opening_bals_received = [{'code': ob.account.code, 'name': ob.account.name, 'type': ob.account.type,
+                                  'debit': float(ob.debit_amount), 'credit': float(ob.credit_amount)} for ob in obs_in]
 
         # Period breakdown
         period_data = []
@@ -249,6 +254,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'closing_entry': closing_je,
             'opening_balances': opening_bals,
             'opening_balances_target': next_fy.name if next_fy else None,
+            'opening_balances_received': opening_bals_received,
             'periods': period_data,
         })
 

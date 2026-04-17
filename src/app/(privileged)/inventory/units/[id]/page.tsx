@@ -23,7 +23,7 @@ export default function UnitsDetailPage() {
   async function loadData() {
     try {
       setLoading(true)
-      const data = await erpFetch(`inventory/units/${id}/`)
+      const data = await erpFetch(`units/${id}/`)
       setItem(data)
     } catch (error) {
       console.error('Failed to load units:', error)
@@ -36,7 +36,7 @@ export default function UnitsDetailPage() {
     if (!confirm('Are you sure you want to delete this item?')) return
 
     try {
-      await erpFetch(`inventory/units/${id}/`, {
+      await erpFetch(`units/${id}/`, {
         method: 'DELETE'
       })
       router.push('/inventory/units')
