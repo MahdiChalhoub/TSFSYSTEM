@@ -203,7 +203,7 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
         search = request.query_params.get('search', '').strip()
 
         products_qs = Product.objects.filter(
-            unit=unit, organization=organization, is_active=True
+            unit=unit, organization=organization
         ).select_related('brand', 'category', 'unit')
 
         # Server-side search
@@ -280,7 +280,7 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # Build filter options from ALL products using this unit (not just the page)
         filter_options = {}
         if offset == 0:
-            all_prods = Product.objects.filter(unit=unit, organization=organization, is_active=True)
+            all_prods = Product.objects.filter(unit=unit, organization=organization)
             filter_options = {
                 "brands": sorted(
                     [{"value": n, "label": n} for n in all_prods.exclude(brand__isnull=True).values_list('brand__name', flat=True).distinct() if n],

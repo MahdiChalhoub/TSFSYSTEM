@@ -148,7 +148,7 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
                 if (!append && data?.filter_options) setFilterOptions(data.filter_options)
                 setLoading(false); setLoadingMore(false)
             })
-            .catch(() => { if (!append) setProducts([]); setLoading(false); setLoadingMore(false) })
+            .catch((err) => { console.error('[EntityProductsTab] explore failed:', exploreEndpoint, err); if (!append) setProducts([]); setLoading(false); setLoadingMore(false) })
     }, [exploreEndpoint, debouncedSearch, sortBy, sortDir])
 
     // Reset when entity or search changes
