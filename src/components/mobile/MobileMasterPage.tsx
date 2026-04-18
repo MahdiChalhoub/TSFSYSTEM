@@ -80,9 +80,8 @@ export function MobileMasterPage({ config, children, sheet, modals }: Props) {
             {/* ─── STICKY TOP + SEARCH STACK ─── */}
             <div className="flex-shrink-0 sticky top-0 z-30"
                 style={{
-                    background: 'color-mix(in srgb, var(--app-bg) 85%, transparent)',
-                    backdropFilter: 'blur(12px)',
-                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                    background: 'var(--app-bg)',
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
                 }}>
                 {/* Top bar */}
                 <motion.div
@@ -197,8 +196,8 @@ export function MobileMasterPage({ config, children, sheet, modals }: Props) {
                 {/* Search bar — sticks when KPI rail scrolls out of its parent sticky ancestor */}
                 <div className="sticky top-0 z-20 px-3 pt-2 pb-2"
                     style={{
-                        background: 'color-mix(in srgb, var(--app-bg) 92%, transparent)',
-                        backdropFilter: 'blur(8px)',
+                        background: 'var(--app-bg)',
+                        borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
                     }}>
                     <div className="flex items-center gap-2">
                         <div className="flex-1 relative">
