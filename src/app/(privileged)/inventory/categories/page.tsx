@@ -1,5 +1,5 @@
 import { erpFetch } from "@/lib/erp-api";
-import { CategoriesClient } from "./CategoriesClient";
+import { CategoriesGateway } from "./CategoriesGateway";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,5 +19,5 @@ async function getCategoriesData() {
 
 export default async function CategoriesPage() {
     const flatCategories = await getCategoriesData();
-    return <CategoriesClient initialCategories={flatCategories} />;
+    return <CategoriesGateway initialCategories={flatCategories} />;
 }
