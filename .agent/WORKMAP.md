@@ -58,11 +58,15 @@
   - **Pass 2**: extracted 4 new tab components (`ModulesTab`, `UsersTab`, `SitesTab`, `UsageTab`) and a `useOrganizationDetail` hook that owns all data + mutation logic. page.tsx is now 239 lines of pure orchestration (header, tab-bar, tab wiring, dialog wiring). 592 → 239 lines.
 - **Follow-up**: Not smoke-tested in a browser (no dev server in this env). Next agent should verify tab switching, dialog flows, plan switch race-condition retry, CRM profile direct-link. `_components/OrgDialogs.tsx` at 353 lines is over the 300-line limit; candidate for splitting into one file per dialog later.
 
-### [OPEN] Module Dependency Resolution UI (plan written)
+### [DONE 2026-04-18] Module Dependency Resolution UI
 - **Discovered**: 2026-02-05 (promoted to MEDIUM 2026-04-18)
-- **Impact**: Admins can't see which modules depend on each other before disabling. Dep data lives per-manifest but has no visualization.
+- **Impact**: Admins couldn't see which modules depend on each other before disabling. Dep data lives per-manifest but had no visualization.
 - **Plan**: `task and plan/kernel_module_dep_graph_ui_001.md`
-- **Estimated effort**: 1–2 days. Additive, low risk.
+- **Fix**:
+  - Backend: new `@action(detail=False, methods=['get'], url_path='dependency-graph')` on `SaaSModuleViewSet` at `erp_backend/erp/views_saas_modules.py`. Reads `SystemModule.manifest.dependencies`, annotates with total install counts (and optionally per-org install status if `?organization_id=` is passed), flags `missing_dependencies` (references to codes not present in the registry).
+  - Frontend: new page `/modules/dependencies` at `src/app/(privileged)/(saas)/modules/dependencies/page.tsx` (239 lines, under code-quality limit). Shows each module as a card with its direct Depends-on list and reverse Required-by list (computed client-side from edges). Click a code chip or "Focus" to highlight the node's full transitive-dependency + dependents subgraph (deps shown blue, dependents shown amber, unrelated dimmed).
+  - Added "Dependencies" button to the existing modules page header linking to the new page.
+- **Not implemented**: Interactive positional graph (react-flow / cytoscape). Plan suggested this; deferred to keep the implementation additive and zero-new-dependency. The card-and-chip view is functional and can be upgraded later.
 
 ### [DONE 2026-04-18] PWA Icon Missing
 - **Discovered**: 2026-02-09

@@ -5,6 +5,7 @@ from rest_framework import permissions
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.conf import settings
 from django.db import models as models
+from django.db.models import Count
 from .models import SystemModule, Organization, OrganizationModule, SystemUpdate
 from .module_manager import ModuleManager
 from .kernel_manager import KernelManager
@@ -130,6 +131,64 @@ class SaaSModuleViewSet(viewsets.ViewSet):
             'message': f'Module {m.name} updated'
         })
 
+
+    @action(detail=False, methods=['get'], url_path='dependency-graph')
+    def dependency_graph(self, request):
+        """
+        Returns the module dependency graph as nodes + edges.
+
+        Sources the graph from `SystemModule.manifest.dependencies`.
+        Edge direction: from=dependent module, to=dependency (i.e. 'pos' → 'inventory').
+
+        Optional query param: ?organization_id=<uuid> adds per-org install status
+        to each node. Without it, nodes only include total-installs counts.
+        """
+        org_id = request.query_params.get('organization_id')
+        installed_codes: set = set()
+        if org_id:
+            installed_codes = set(OrganizationModule.objects.filter(
+                organization_id=org_id, is_enabled=True,
+            ).values_list('module_name', flat=True))
+
+        install_counts = {
+            row['module_name']: row['count']
+            for row in OrganizationModule.objects.filter(is_enabled=True)
+            .values('module_name').annotate(count=Count('id'))
+        }
+
+        nodes = []
+        edges = []
+        modules = SystemModule.objects.all().order_by('name')
+        known_codes = set()
+        for m in modules:
+            code = m.manifest.get('code', m.name)
+            known_codes.add(code)
+
+        for m in modules:
+            code = m.manifest.get('code', m.name)
+            deps = m.manifest.get('dependencies', []) or []
+            nodes.append({
+                'code': code,
+                'name': m.manifest.get('name', m.name),
+                'description': m.description or m.manifest.get('description', ''),
+                'is_core': bool(
+                    m.manifest.get('is_core', False)
+                    or m.manifest.get('required', False)
+                    or code in ('core', 'coreplatform')
+                ),
+                'total_installs': install_counts.get(m.name, 0),
+                'installed_for_org': (code in installed_codes) if org_id else None,
+                'dependencies': deps,
+                'missing_dependencies': [d for d in deps if d not in known_codes],
+            })
+            for dep in deps:
+                edges.append({'from': code, 'to': dep})
+
+        return Response({
+            'nodes': nodes,
+            'edges': edges,
+            'organization_id': org_id,
+        })
 
     @action(detail=False, methods=['post'])
     def sync_global(self, request):

@@ -101,6 +101,25 @@
 
 ---
 
+### Session: 2026-04-18 (part 4 — Module Dependency Graph UI)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE
+- **Worked On**: Implemented WORKMAP item "Module Dependency Resolution UI" per `task and plan/kernel_module_dep_graph_ui_001.md`.
+- **Files Modified**:
+  - `erp_backend/erp/views_saas_modules.py` — added `@action(..., url_path='dependency-graph')` on `SaaSModuleViewSet`. Returns `{nodes, edges, organization_id}`. Each node includes `total_installs`, `installed_for_org` (when `?organization_id=` is passed), and `missing_dependencies`. Added `from django.db.models import Count` import.
+  - `src/app/actions/saas/modules.ts` — added `getModuleDependencyGraph(organizationId?)` server action.
+  - `src/app/(privileged)/(saas)/modules/dependencies/page.tsx` — NEW (239 lines). Cards-with-chips view. Click a dep chip or "Focus" to highlight transitive deps + dependents; unrelated modules dim. No new npm dependency.
+  - `src/app/(privileged)/(saas)/modules/page.tsx` — added "Dependencies" button in header linking to the new page.
+- **Discoveries**:
+  - `SystemModule.manifest` is a JSONField with `dependencies` as a list of module codes. `OrganizationModule.module_name` → `SystemModule.name` is the installed-module link.
+  - No react-flow / cytoscape / dagre in `package.json`. Scoped the implementation to a card-based layout that works today without adding a dep.
+- **Warnings for Next Agent**:
+  - ⚠️ **No browser smoke-test** (no dev server available in this env). Before deploying, load `/modules/dependencies` and verify: (a) nodes render, (b) Focus highlights the right subgraph, (c) missing-deps warning shows up for any module whose manifest references a code that's not in `SystemModule`, (d) clicking a dep chip focuses that module's card.
+  - ⚠️ The "interactive positional graph" from the plan (react-flow) was **not** implemented. The card-based view is a functional-but-simpler alternative. If visual graph layout is needed, install `@xyflow/react` and add a graph renderer on the same `/modules/dependencies` route.
+  - ⚠️ The endpoint requires `IsAdminUser` (SaaS admin). Non-admins hitting it get 403. Matches existing `SaaSModuleViewSet` permissions.
+
+---
+
 ### Session: 2026-04-18 (part 3 — refactor completed under limit)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE

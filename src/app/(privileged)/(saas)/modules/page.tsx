@@ -16,7 +16,7 @@ import {
 } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Box, RefreshCw, Zap, ShieldCheck, Info, Trash2, XCircle, UploadCloud, History as HistoryIcon, RotateCcw } from "lucide-react"
+import { Box, RefreshCw, Zap, ShieldCheck, Info, Trash2, XCircle, UploadCloud, History as HistoryIcon, RotateCcw, Network } from "lucide-react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -187,6 +187,13 @@ export default function SaaSModulesPage() {
                     {lastSynced && <p className="text-emerald-600/50 text-[10px] font-mono mt-2 uppercase tracking-widest">Last Synced: {lastSynced}</p>}
                 </div>
                 <div className="flex flex-wrap gap-2 md:gap-4 w-full sm:w-auto">
+                    <Button
+                        onClick={() => router.push('/modules/dependencies')}
+                        className="flex-1 sm:flex-none bg-app-surface hover:bg-app-surface-2 text-app-foreground border border-app-border px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all text-xs md:text-sm"
+                    >
+                        <Network size={18} />
+                        Dependencies
+                    </Button>
                     <Button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={syncing}

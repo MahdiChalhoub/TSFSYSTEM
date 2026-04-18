@@ -12,6 +12,16 @@ export async function getSaaSModules() {
     }
 }
 
+export async function getModuleDependencyGraph(organizationId?: string) {
+    try {
+        const q = organizationId ? `?organization_id=${encodeURIComponent(organizationId)}` : ''
+        return await erpFetch(`saas/modules/dependency-graph/${q}`)
+    } catch (e) {
+        console.error('Failed to fetch module dependency graph:', e)
+        return { nodes: [], edges: [], organization_id: organizationId ?? null }
+    }
+}
+
 export async function getDynamicSidebar() {
     try {
         return await erpFetch('saas/modules/sidebar/')
