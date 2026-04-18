@@ -41,6 +41,7 @@ export interface TreeMasterConfig {
     footerLeft?: ReactNode
     contentHeader?: string
     tourId?: string  // If set, renders a Tour button in the header
+    treeTourId?: string  // Custom data-tour for the tree container (default: 'tree-container')
 }
 
 export interface TreeMasterRenderProps {
@@ -57,6 +58,8 @@ export interface TreeMasterRenderProps {
     setSidebarTab: (t: string) => void
     panelTab: string
     setPanelTab: (t: string) => void
+    setExpandAll: (v: boolean | undefined | ((prev: boolean | undefined) => boolean | undefined)) => void
+    setExpandKey: (v: number | ((prev: number) => number)) => void
 }
 
 interface TreeMasterPageProps {
@@ -107,6 +110,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
         sidebarNode, setSidebarNode,
         sidebarTab, setSidebarTab,
         panelTab, setPanelTab,
+        setExpandAll, setExpandKey,
     }
 
     return (
@@ -190,7 +194,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     {splitPanel ? <PanelLeftClose size={13} /> : <LayoutPanelLeft size={13} />}
                                     <span className="hidden md:inline">{splitPanel ? 'Tree Only' : 'Split Panel'}</span>
                                 </button>
-                                <button data-tour="add-btn" onClick={() => config.primaryAction.onClick()}
+                                <button data-tour={config.primaryAction.dataTour || 'add-btn'} onClick={() => config.primaryAction.onClick()}
                                     className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                                     style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                     <Plus size={14} /><span className="hidden sm:inline">{config.primaryAction.label}</span>
@@ -255,7 +259,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
             <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
 
                 {/* Left: Tree */}
-                <div data-tour="tree-container" className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
+                <div data-tour={config.treeTourId || 'tree-container'} className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
                     {/* Column Headers */}
                     {config.columnHeaders && (
                         <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest"

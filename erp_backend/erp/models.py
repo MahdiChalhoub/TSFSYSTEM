@@ -476,6 +476,10 @@ class User(AbstractUser):
     scope_pin_internal = models.CharField(max_length=128, null=True, blank=True,
         help_text='Hashed PIN required to access Internal scope. Null = free access.')
 
+    # POS Cashier PIN — for POS login and user switching
+    pos_pin = models.CharField(max_length=128, null=True, blank=True,
+        help_text='Hashed 4-6 digit PIN for POS cashier login and user switching')
+
     # Manager Override PIN — for authorizing sensitive POS operations
     override_pin = models.CharField(max_length=128, null=True, blank=True,
         help_text='Hashed PIN for manager-level overrides (void, refund, discount override)')
@@ -483,6 +487,18 @@ class User(AbstractUser):
     # 2FA (Advanced Security)
     two_factor_secret = models.CharField(max_length=32, null=True, blank=True)
     is_2fa_enabled = models.BooleanField(default=False)
+
+    def set_pos_pin(self, raw_pin: str | None):
+        """Set or clear the POS cashier PIN."""
+        from django.contrib.auth.hashers import make_password
+        self.pos_pin = make_password(raw_pin) if raw_pin else None
+
+    def check_pos_pin(self, raw_pin: str) -> bool:
+        """Verify a POS cashier PIN. Returns False if no PIN is set."""
+        from django.contrib.auth.hashers import check_password
+        if not self.pos_pin:
+            return False
+        return check_password(raw_pin, self.pos_pin)
 
     def set_scope_pin(self, scope: str, raw_pin: str | None):
         """Set or clear a scope PIN. scope must be 'official' or 'internal'."""

@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useCallback, useTransition } from 'react'
+import { useState, useMemo, useCallback, useTransition, useRef } from 'react'
 import {
     FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search
 } from 'lucide-react'
@@ -58,6 +58,23 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         })
     }
 
+    // Ref to access render props from tour step actions
+    const renderPropsRef = useRef<any>(null)
+
+    // Interactive tour step actions (programmatic UI interactions during tour)
+    const tourStepActions = useMemo(() => ({
+        5: () => { renderPropsRef.current?.setExpandAll(true); renderPropsRef.current?.setExpandKey((k: number) => k + 1) },
+        6: () => {
+            const tree = buildTree(data)
+            const n = tree[0]
+            if (n) { renderPropsRef.current?.setSidebarNode(n); renderPropsRef.current?.setSidebarTab('overview') }
+        },
+        8: () => { renderPropsRef.current?.setSidebarTab('brands') },
+        9: () => { renderPropsRef.current?.setSidebarTab('attributes') },
+        10: () => { renderPropsRef.current?.setSidebarTab('products') },
+        11: () => { renderPropsRef.current?.setSidebarNode(null) },
+    }), [data])
+
     return (
         <TreeMasterPage
             config={{
@@ -66,6 +83,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 icon: <FolderTree size={20} />,
                 iconColor: 'var(--app-primary)',
                 tourId: 'inventory-categories',
+                treeTourId: 'category-tree',
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
                 primaryAction: {
                     label: 'New Category',
@@ -112,7 +130,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         parentId={modalState.parentId}
                         potentialParents={data}
                     />
-                    <GuidedTour tourId="inventory-categories" />
+                    <GuidedTour tourId="inventory-categories" stepActions={tourStepActions} />
                     <ConfirmDialog
                         open={deleteTarget !== null}
                         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
@@ -138,7 +156,8 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             )}
         >
             {(renderProps) => {
-                const { searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar, selectedNode, setSelectedNode, sidebarNode, setSidebarNode, sidebarTab, setSidebarTab, panelTab, setPanelTab } = renderProps
+                const { searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar, selectedNode, setSelectedNode, sidebarNode, setSidebarNode, sidebarTab, setSidebarTab, panelTab, setPanelTab, setExpandAll, setExpandKey } = renderProps
+                renderPropsRef.current = renderProps
 
                 // Build tree with search filter
                 const filtered = searchQuery.trim()

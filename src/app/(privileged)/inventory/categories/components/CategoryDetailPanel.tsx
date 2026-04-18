@@ -78,7 +78,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
             </div>
 
             {/* Tab Strip */}
-            <div className="flex-shrink-0 flex items-center px-1 py-1"
+            <div data-tour="detail-tabs" className="flex-shrink-0 flex items-center px-1 py-1"
                 style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                 {tabs.map(t => (
                     <button key={t.key} onClick={() => setTab(t.key)}

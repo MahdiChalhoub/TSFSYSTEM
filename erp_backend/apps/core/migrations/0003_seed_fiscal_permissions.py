@@ -14,8 +14,16 @@ FISCAL_PERMISSIONS = [
 ]
 
 
+def _import_models():
+    # KernelPermission / Role are declared with Meta.app_label='apps_core' but
+    # have no migration of their own (table created out-of-band). Use direct
+    # imports — apps.get_model() can't see them in the migration historical state.
+    from kernel.rbac.models import KernelPermission, Role
+    return KernelPermission, Role
+
+
 def seed(apps, schema_editor):
-    KernelPermission = apps.get_model('apps_core', 'KernelPermission')
+    KernelPermission, _ = _import_models()
     for code, name, desc, dangerous in FISCAL_PERMISSIONS:
         KernelPermission.objects.update_or_create(
             code=code,
@@ -27,21 +35,17 @@ def seed(apps, schema_editor):
 
 
 def unseed(apps, schema_editor):
-    KernelPermission = apps.get_model('apps_core', 'KernelPermission')
+    KernelPermission, _ = _import_models()
     KernelPermission.objects.filter(code__in=[p[0] for p in FISCAL_PERMISSIONS]).delete()
 
 
 def assign_to_existing_roles(apps, schema_editor):
     """
-    Backfill the new fiscal permissions onto existing system roles per the
-    seed_roles convention:
-      - System Administrator → all 4
-      - Finance Manager      → all 4
-      - Accountant           → only non-dangerous (view_*)
+    Backfill onto existing system roles per the seed_roles convention:
+      System Administrator + Finance Manager → all 4
+      Accountant → only non-dangerous (view_*)
     """
-    KernelPermission = apps.get_model('apps_core', 'KernelPermission')
-    Role = apps.get_model('apps_core', 'Role')
-
+    KernelPermission, Role = _import_models()
     perms_all = list(KernelPermission.objects.filter(
         code__in=[p[0] for p in FISCAL_PERMISSIONS]
     ))
@@ -54,8 +58,7 @@ def assign_to_existing_roles(apps, schema_editor):
 
 
 def unassign_from_existing_roles(apps, schema_editor):
-    KernelPermission = apps.get_model('apps_core', 'KernelPermission')
-    Role = apps.get_model('apps_core', 'Role')
+    KernelPermission, Role = _import_models()
     perms = list(KernelPermission.objects.filter(
         code__in=[p[0] for p in FISCAL_PERMISSIONS]
     ))

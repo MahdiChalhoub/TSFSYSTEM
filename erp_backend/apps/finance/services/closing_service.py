@@ -248,19 +248,24 @@ class ClosingService:
                 is_active=True,
             )
 
-            # Close P&L into retained earnings — once per scope. INTERNAL is
-            # the management source-of-truth book; OFFICIAL is the declared
-            # regulatory book. Each carries its own P&L and must be closed
-            # independently. The OFFICIAL closing JE is the audit-trail anchor
-            # stored on FiscalYear.closing_journal_entry.
-            scope_field_map = (('OFFICIAL', 'balance_official'), ('INTERNAL', 'balance'))
+            # Close P&L into retained earnings — once per scope.
+            # Option A — OFFICIAL ⊂ INTERNAL:
+            #   - OFFICIAL closing JE (scope='OFFICIAL') zeros `balance_official`
+            #     and is also visible in the INTERNAL view (no scope filter).
+            #   - INTERNAL closing JE (scope='INTERNAL') must therefore zero
+            #     ONLY the internal-only delta (`balance - balance_official`),
+            #     otherwise the OFFICIAL portion gets double-closed in INTERNAL view.
+            scope_amount_fn = (
+                ('OFFICIAL', lambda a: a.balance_official or Decimal('0.00')),
+                ('INTERNAL', lambda a: (a.balance or Decimal('0.00')) - (a.balance_official or Decimal('0.00'))),
+            )
 
-            for scope, field in scope_field_map:
+            for scope, amount_fn in scope_amount_fn:
                 closing_lines = []
                 total_pnl = Decimal('0.00')
 
                 for acc in pnl_accounts:
-                    bal = getattr(acc, field, Decimal('0.00')) or Decimal('0.00')
+                    bal = amount_fn(acc)
                     if bal == Decimal('0.00'):
                         continue
                     if bal > Decimal('0.00'):
@@ -415,11 +420,13 @@ class ClosingService:
         balances of the old year. Only for Balance Sheet accounts (ASSET,
         LIABILITY, EQUITY). P&L accounts start at zero.
 
-        Generates opening balances for BOTH scopes:
-          - OFFICIAL (regulatory / declared book) reads `balance_official`
-          - INTERNAL (management / source-of-truth book) reads `balance`
-        Each scope is independent: a balance of zero in one scope still
-        produces an OB row in the other scope if non-zero there.
+        Generates opening balances for BOTH scopes (Option A — OFFICIAL ⊂ INTERNAL):
+          - OFFICIAL OB amount = `balance_official` (the declared / regulatory subset)
+          - INTERNAL OB amount = `balance - balance_official` (the internal-only delta)
+
+        At read time, the INTERNAL view sums BOTH rows (because INTERNAL includes
+        all scopes, mirroring `balance_service._refresh_period`). Storing the
+        delta on the INTERNAL row prevents double-counting the official portion.
         """
         from apps.finance.models import ChartOfAccount, OpeningBalance
 
@@ -429,14 +436,17 @@ class ClosingService:
             is_active=True,
         )
 
-        # (scope, account-attr) — both books carry forward independently.
-        scope_field_map = (('OFFICIAL', 'balance_official'), ('INTERNAL', 'balance'))
-
         created = 0
         with transaction.atomic():
             for acc in bs_accounts:
-                for scope, field in scope_field_map:
-                    net = getattr(acc, field, Decimal('0.00')) or Decimal('0.00')
+                official = acc.balance_official or Decimal('0.00')
+                internal_total = acc.balance or Decimal('0.00')
+                # Option A: INTERNAL row = delta only (internal-exclusive activity)
+                amounts_by_scope = (
+                    ('OFFICIAL', official),
+                    ('INTERNAL', internal_total - official),
+                )
+                for scope, net in amounts_by_scope:
                     if net == Decimal('0.00'):
                         continue
                     if net > Decimal('0.00'):
