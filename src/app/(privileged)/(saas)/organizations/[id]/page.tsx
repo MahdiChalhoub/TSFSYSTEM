@@ -814,7 +814,14 @@ export default function OrganizationDetailPage() {
                                     <Button
                                         variant="outline"
                                         className="w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl font-bold"
-                                        onClick={() => router.push(`/crm/contacts?search=${encodeURIComponent(billing.client.email)}`)}
+                                        onClick={() => {
+                                            const crmId = (billing.client as any).crm_contact_id
+                                            if (crmId) {
+                                                router.push(`/crm/contacts/${crmId}`)
+                                            } else {
+                                                router.push(`/crm/contacts?search=${encodeURIComponent(billing.client.email)}`)
+                                            }
+                                        }}
                                     >
                                         <Users size={14} className="mr-2" /> View CRM Profile
                                     </Button>
@@ -1344,20 +1351,31 @@ export default function OrganizationDetailPage() {
                             onClick={async () => {
                                 if (!planSwitchTarget) return
                                 setSwitching(true)
+                                const prevHistoryLen = billing?.history?.length ?? 0
                                 try {
                                     const result = await changeOrgPlan(orgId, planSwitchTarget.id)
                                     toast.success(result.message || `Switched to ${planSwitchTarget.name}`)
                                     if (result.modules_disabled?.length > 0) {
                                         toast.info(`Disabled modules: ${result.modules_disabled.join(', ')}`)
                                     }
-                                    // Refresh usage + billing data
-                                    const [newUsage, newBilling] = await Promise.all([
-                                        getOrgUsage(orgId),
-                                        getOrgBilling(orgId),
-                                    ])
+                                    // Refetch usage synchronously (plan fields are committed in the same txn).
+                                    const newUsage = await getOrgUsage(orgId)
                                     setUsage(newUsage)
-                                    setBilling(newBilling?.history ? newBilling : { history: Array.isArray(newBilling) ? newBilling : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
+                                    // Billing depends on the journal-entry handler that runs off the
+                                    // subscription event — it may not be committed yet. Retry once if
+                                    // history hasn't grown.
+                                    const normalizeBilling = (b: unknown) =>
+                                        (b as SaasBillingData)?.history
+                                            ? (b as SaasBillingData)
+                                            : { history: Array.isArray(b) ? (b as unknown[]) : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null }
+                                    let newBilling = normalizeBilling(await getOrgBilling(orgId))
+                                    if (newBilling.history.length <= prevHistoryLen) {
+                                        await new Promise(r => setTimeout(r, 600))
+                                        newBilling = normalizeBilling(await getOrgBilling(orgId))
+                                    }
+                                    setBilling(newBilling)
                                     setPlanSwitchTarget(null)
+                                    router.refresh()
                                 } catch (err: unknown) {
                                     toast.error((err instanceof Error ? err.message : String(err)) || 'Failed to change plan')
                                 } finally {
