@@ -17,9 +17,10 @@ import type { MasterPageConfig } from '@/components/templates/master-page-config
 // Re-export for callers; kept as aliases to the shared types.
 export type { KPI as MobileKPI, ActionButton as MobileAction } from '@/components/templates/master-page-config'
 
-export interface MobileMasterConfig extends MasterPageConfig {
-    onRefresh?: () => void | Promise<void>
-}
+// MobileMasterConfig is currently just the shared base — kept as a
+// distinct name so mobile-specific fields can be added without a
+// breaking callsite rename.
+export type MobileMasterConfig = MasterPageConfig
 
 export interface MobileMasterRenderProps {
     searchQuery: string

@@ -41,4 +41,9 @@ export interface MasterPageConfig {
     primaryAction: PrimaryAction
     secondaryActions?: ActionButton[]
     footerLeft?: ReactNode
+    /**
+     * Optional refresh handler. Mobile shell binds it to pull-to-refresh;
+     * desktop shell renders a refresh button in the header.
+     */
+    onRefresh?: () => void | Promise<void>
 }

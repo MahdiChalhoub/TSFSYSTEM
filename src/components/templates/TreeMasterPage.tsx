@@ -5,7 +5,7 @@ import { useState, useMemo, useRef, useEffect, ReactNode } from 'react'
 import {
     Search, Plus, Layers,
     Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp,
-    X, LayoutPanelLeft, PanelLeftClose, Bookmark
+    X, LayoutPanelLeft, PanelLeftClose, Bookmark, RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -76,7 +76,14 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     const [expandKey, setExpandKey] = useState(0)
     const [sidebarNode, setSidebarNode] = useState<any | null>(null)
     const [sidebarTab, setSidebarTab] = useState('overview')
+    const [refreshing, setRefreshing] = useState(false)
     const searchRef = useRef<HTMLInputElement>(null)
+
+    const handleRefresh = async () => {
+        if (!config.onRefresh || refreshing) return
+        setRefreshing(true)
+        try { await config.onRefresh() } finally { setRefreshing(false) }
+    }
 
     // Tour support
     const tourHook = config.tourId ? usePageTour(config.tourId) : null
@@ -187,6 +194,12 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     <Plus size={14} /><span className="hidden sm:inline">{config.primaryAction.label}</span>
                                 </button>
                                 {tourHook && <TourTriggerButton onClick={tourHook.start} />}
+                                {config.onRefresh && (
+                                    <button onClick={handleRefresh} disabled={refreshing} title="Refresh"
+                                        className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all disabled:opacity-60">
+                                        <RefreshCw size={13} style={{ animation: refreshing ? 'spin 0.9s linear infinite' : undefined }} />
+                                    </button>
+                                )}
                                 <button onClick={() => setFocusMode(true)} title="Focus mode (Ctrl+Q)"
                                     className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                     <Maximize2 size={13} />
@@ -316,7 +329,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
             {/* ═══════════════ MODAL DRAWER ═══════════════ */}
             {sidebarNode && !splitPanel && !pinnedSidebar && (
                 <div className="fixed inset-0 z-[100] flex justify-end animate-in fade-in duration-200"
-                    style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', backdropFilter: 'blur(4px)' }}
+                    style={{ background: 'rgba(0, 0, 0, 0.55)', backdropFilter: 'blur(4px)' }}
                     onClick={(e) => { if (e.target === e.currentTarget) setSidebarNode(null) }}>
                     <div data-tour="detail-drawer" className="w-full max-w-lg h-full flex flex-col animate-in slide-in-from-right-4 duration-300 shadow-2xl"
                         style={{ background: 'var(--app-surface)', borderLeft: '1px solid var(--app-border)' }}>

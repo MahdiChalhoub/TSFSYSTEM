@@ -173,6 +173,11 @@
   }
 }
 
+/* Shared utility keyframes */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Global Base Styles */
 @layer base {
   body {
