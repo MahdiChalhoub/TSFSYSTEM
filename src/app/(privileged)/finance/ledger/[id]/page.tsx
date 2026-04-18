@@ -50,7 +50,7 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
                     </div>
                     <div className="text-right">
                         <div className="text-sm text-app-muted-foreground font-bold uppercase tracking-widest mb-1">Transaction Date</div>
-                        <div className="text-xl font-bold text-app-foreground">{entry.transactionDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                        <div className="text-xl font-bold text-app-foreground">{(entry.transactionDate || entry.transaction_date) ? new Date(entry.transactionDate || entry.transaction_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</div>
                     </div>
                 </div>
 

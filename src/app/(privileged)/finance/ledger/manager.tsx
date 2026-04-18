@@ -451,7 +451,7 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
         title="Delete Journal Entry?"
         description={`This will permanently delete journal entry JV #${showSingleDelete} and all its lines. This action cannot be undone.`}
         confirmText="Delete"
-        variant="destructive"
+        variant="danger"
       />
       <ConfirmDialog
         open={showBulkDelete}
@@ -460,7 +460,7 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
         title={`Delete ${selectedIds.size} Journal ${selectedIds.size === 1 ? 'Entry' : 'Entries'}?`}
         description={`This will permanently delete the selected entries and all their lines. POSTED entries will be skipped. This action cannot be undone.`}
         confirmText="Delete All"
-        variant="destructive"
+        variant="danger"
       />
     </div>
   )

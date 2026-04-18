@@ -107,7 +107,7 @@ export function LedgerEntryActions({ entryId, status, isLocked, onDeleted }: Led
                 title="Delete Journal Entry?"
                 description={`This will permanently delete journal entry JV #${entryId} and all its lines. This action cannot be undone.`}
                 confirmText="Delete"
-                variant="destructive"
+                variant="danger"
             />
         </div>
     )
