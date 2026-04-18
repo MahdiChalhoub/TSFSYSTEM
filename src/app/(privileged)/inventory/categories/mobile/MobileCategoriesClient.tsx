@@ -4,7 +4,7 @@
 import { useState, useMemo, useCallback, useTransition } from 'react'
 import {
     FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
-    Eye, Pencil, Trash2, Move, Copy, Package, Tag,
+    Eye, Pencil, Trash2, Move, Copy, Package, Tag, CornerDownRight,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -17,6 +17,7 @@ import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { MobileCategoryRow } from './MobileCategoryRow'
 import { MobileMoveDialog } from './MobileMoveDialog'
+import { MobileBreadcrumb } from './MobileBreadcrumb'
 import { CategoryDetailPanel } from '../components/CategoryDetailPanel'
 import type { CategoryNode, PanelTab } from '../components/types'
 
@@ -29,8 +30,48 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
     const [sheetTab, setSheetTab] = useState<PanelTab>('overview')
     const [actionNode, setActionNode] = useState<CategoryNode | null>(null)
     const [moveNode, setMoveNode] = useState<CategoryNode | null>(null)
+    const [scopeId, setScopeId] = useState<number | null>(null)
 
     const data = initialCategories
+
+    // Index for O(1) lookups
+    const byId = useMemo(() => {
+        const m = new Map<number, any>()
+        for (const c of data) m.set(c.id, c)
+        return m
+    }, [data])
+
+    // Breadcrumb: path from root to the scoped node
+    const breadcrumbPath = useMemo(() => {
+        if (scopeId == null) return []
+        const path: any[] = []
+        let cur = byId.get(scopeId)
+        while (cur) {
+            path.unshift(cur)
+            cur = cur.parent != null ? byId.get(cur.parent) : null
+        }
+        return path
+    }, [scopeId, byId])
+
+    // Descendants of scopeId (inclusive)
+    const scopedData = useMemo(() => {
+        if (scopeId == null) return data
+        const included = new Set<number>([scopeId])
+        let grew = true
+        while (grew) {
+            grew = false
+            for (const c of data) {
+                if (c.parent != null && included.has(c.parent) && !included.has(c.id)) {
+                    included.add(c.id); grew = true
+                }
+            }
+        }
+        return data.filter(c => included.has(c.id)).map(c => {
+            // the scope root should render as a root — strip its parent for buildTree
+            if (c.id === scopeId) return { ...c, parent: null }
+            return c
+        })
+    }, [data, scopeId])
 
     const stats = useMemo(() => {
         const tree = buildTree(data)
@@ -51,13 +92,20 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
 
     const openActionMenu = useCallback((n: CategoryNode) => setActionNode(n), [])
 
+    const drillInto = useCallback((n: CategoryNode | null) => {
+        setScopeId(n?.id ?? null)
+    }, [])
+
     const actionItems = useMemo(() => {
         if (!actionNode) return []
         const isParent = !!(actionNode.children && actionNode.children.length > 0)
+        const childCountInData = data.filter((c: any) => c.parent === actionNode.id).length
+        const hasSubtree = childCountInData > 0
         return [
-            { key: 'view', label: 'View details', hint: 'Open detail sheet', icon: <Eye size={16} />, onClick: () => openSheet(actionNode, 'overview') },
-            { key: 'products', label: 'View products', hint: `${actionNode.product_count ?? 0} products`, icon: <Package size={16} />, onClick: () => openSheet(actionNode, 'products') },
-            { key: 'attrs', label: 'View attributes', hint: `${actionNode.attribute_count ?? 0} attributes`, icon: <Tag size={16} />, onClick: () => openSheet(actionNode, 'attributes') },
+            { key: 'view', label: 'Overview', hint: 'Details', icon: <Eye size={16} />, variant: 'grid', onClick: () => openSheet(actionNode, 'overview') },
+            { key: 'products', label: 'Products', hint: `${actionNode.product_count ?? 0}`, icon: <Package size={16} />, variant: 'grid', onClick: () => openSheet(actionNode, 'products') },
+            { key: 'attrs', label: 'Attributes', hint: `${actionNode.attribute_count ?? 0}`, icon: <Tag size={16} />, variant: 'grid', onClick: () => openSheet(actionNode, 'attributes') },
+            ...(hasSubtree ? [{ key: 'drill', label: 'Drill in', hint: `${childCountInData} children`, icon: <CornerDownRight size={16} />, variant: 'grid' as const, onClick: () => drillInto(actionNode) }] : []),
             { key: 'add', label: 'Add sub-category', icon: <Plus size={16} />, onClick: () => openAddModal(actionNode.id) },
             { key: 'edit', label: 'Edit', icon: <Pencil size={16} />, onClick: () => openEditModal(actionNode) },
             { key: 'move', label: 'Move to…', hint: 'Change parent', icon: <Move size={16} />, onClick: () => setMoveNode(actionNode) },
@@ -69,7 +117,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
             } },
             { key: 'delete', label: isParent ? 'Delete (locked)' : 'Delete', hint: isParent ? 'Delete sub-categories first' : undefined, icon: <Trash2 size={16} />, destructive: true, disabled: isParent, onClick: () => requestDelete(actionNode) },
         ]
-    }, [actionNode, openSheet, openAddModal, openEditModal, requestDelete])
+    }, [actionNode, openSheet, openAddModal, openEditModal, requestDelete, drillInto, data])
 
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
@@ -88,8 +136,12 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
     return (
         <MobileMasterPage
             config={{
-                title: 'Categories',
-                subtitle: `${data.length} Nodes · Tree`,
+                title: scopeId != null
+                    ? (byId.get(scopeId)?.name ?? 'Categories')
+                    : 'Categories',
+                subtitle: scopeId != null
+                    ? `Scoped · ${scopedData.length} nodes`
+                    : `${data.length} Nodes · Tree`,
                 icon: <FolderTree size={20} />,
                 iconColor: 'var(--app-primary)',
                 searchPlaceholder: 'Search categories…',
@@ -168,14 +220,15 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                 </MobileBottomSheet>
             }>
             {({ searchQuery, expandAll, expandKey }) => {
+                const source = scopedData
                 const filtered = searchQuery.trim()
-                    ? data.filter((a: any) => {
+                    ? source.filter((a: any) => {
                         const q = searchQuery.toLowerCase()
                         return a.name?.toLowerCase().includes(q)
                             || a.code?.toLowerCase().includes(q)
                             || a.short_name?.toLowerCase().includes(q)
                     })
-                    : data
+                    : source
 
                 const tree = buildTree(filtered)
 
@@ -200,21 +253,32 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                     )
                 }
 
-                return tree.map((node: CategoryNode) => (
-                    <MobileCategoryRow
-                        key={`${node.id}-${expandKey}`}
-                        node={node}
-                        level={0}
-                        searchQuery={searchQuery}
-                        forceExpanded={expandAll}
-                        selected={sheetNode?.id === node.id}
-                        onOpenSheet={openSheet}
-                        onEdit={openEditModal}
-                        onAdd={openAddModal}
-                        onDelete={requestDelete}
-                        onLongPress={openActionMenu}
-                    />
-                ))
+                return (
+                    <>
+                        {breadcrumbPath.length > 0 && (
+                            <MobileBreadcrumb
+                                path={breadcrumbPath}
+                                onNavigate={(n) => drillInto(n)}
+                            />
+                        )}
+                        {tree.map((node: CategoryNode) => (
+                            <MobileCategoryRow
+                                key={`${node.id}-${expandKey}-${scopeId ?? 'all'}`}
+                                node={node}
+                                level={0}
+                                searchQuery={searchQuery}
+                                forceExpanded={expandAll}
+                                selected={sheetNode?.id === node.id}
+                                onOpenSheet={openSheet}
+                                onEdit={openEditModal}
+                                onAdd={openAddModal}
+                                onDelete={requestDelete}
+                                onLongPress={openActionMenu}
+                                onDrillIn={drillInto}
+                            />
+                        ))}
+                    </>
+                )
             }}
         </MobileMasterPage>
     )
