@@ -1,86 +1,114 @@
-# Kernel — Kernel Update Rollback (001) — PLACEHOLDER
+# Kernel — Update Rollback (001)
 
-> ⚠️ **This is a placeholder, not a full plan.** WORKMAP 🟢 LOW. Needs dedicated
-> research session before implementation. See "Why deferred" below.
+_Rewritten 2026-04-18 from placeholder to concrete plan after code audit. Phase 0 (DB snapshot guard rail) can ship without staging. Phase 1 (user-facing rollback UI) needs a staging env._
 
 ## Goal
 
-When a kernel update is applied (via `views_packages.py` / kernel update
-flow) and something goes wrong, provide a rollback path that restores the
-previous kernel state including any schema changes.
+When a kernel update or module upgrade leaves the system broken, provide a safe path to restore the previous state — **both code and database** — without requiring a DBA's manual intervention.
 
-## Why deferred
+## Current state (audited)
 
-Rollback of code is trivial (git revert, redeploy). Rollback of a kernel
-update that includes **Django migrations** is not. Forward migrations can
-include:
+**Good news**: file-level backups already exist.
 
-- Column drops (data lost; rollback requires backup restore).
-- Data backfills (rollback requires inverse logic or snapshot).
-- Irreversible transformations (enum consolidation, encoding changes).
+| Flow | File:line | What gets backed up |
+|---|---|---|
+| Kernel update | `erp/kernel_manager.py:115-126` | `erp/`, `lib/`, `apps_core/` → `BASE_DIR/backups/kernel_{version}_{timestamp}/` before deploy. |
+| Kernel update rollback on error | `erp/kernel_manager.py:144-151` | Auto-restores the three dirs from backup if `apply_update` raises. |
+| Module upgrade | `erp/module_manager.py:200-203` | Current module dir → timestamped backup before swap. Rollback exists at `erp/module_manager.py:456-503`. |
 
-Django's `migrate <app> <previous_migration>` only works for migrations that
-define a clean `backward` path. Most real-world migrations don't.
+**Bad news**: no **database** snapshot exists anywhere, and no user-facing rollback UI.
 
-A partial solution (rollback code only, not data) risks putting the code
-in a state that doesn't match the schema — often worse than forward failure.
+| Gap | Impact |
+|---|---|
+| No DB snapshot before `apply_update` | Code rolls back, DB does not. Any DB-schema change slipped into a kernel update becomes un-rollbackable. |
+| No DB snapshot before `upgrade()` — **which DOES run migrations** (`erp/module_manager.py:230`) | Module upgrades that include schema migrations can't be cleanly undone. `_restore_from_backup` (line 456) only touches the filesystem. |
+| No UI for rollback | Operators must SSH, find the right `backups/` dir, and manually copy back. |
+| No list of applied updates / rollback targets in the UI | SaaS admin page shows pending updates but not applied-with-rollback-available. |
 
-## Research questions (before writing a real plan)
+DB is PostgreSQL per `core/settings.py` (`django.db.backends.postgresql`). `pg_dump` is the right snapshot tool.
 
-1. What does the current kernel update flow look like end-to-end?
-   ([`views_packages.py`](../erp_backend/erp/views_packages.py) is the
-   starting point.)
-2. Does kernel update include DB migrations today, or only code?
-3. Is there a DB snapshot / backup step before applying a kernel update?
-   (If yes, rollback = restore snapshot. If no, we need to add one first.)
-4. How are tenant-specific configs affected by kernel updates?
-5. What's the SLA for rollback? If acceptable window is hours not minutes,
-   a backup-restore flow works. If must be seconds, need an online
-   rollback mechanism.
+## Design — Phase 0: pre-update DB snapshot (safe to ship now)
 
-## Proposed approach (tentative)
+Strictly additive guard rail. Does not change any existing update behaviour — only creates a `.sql.gz` alongside the existing file backup.
 
-- **Phase 0** — guard rail: before every kernel update, automatic DB
-  snapshot (pg_dump for PostgreSQL). Tag snapshot with pre-update kernel
-  version. Even without rollback tooling, this unblocks manual recovery.
-- **Phase 1** — UI to "revert to snapshot N" that:
-  - Puts the system in maintenance mode.
-  - Restores the snapshot.
-  - Rolls code back to the kernel version tagged on the snapshot.
+### Backend changes
+- NEW: `erp_backend/kernel/backup/db_snapshot.py`
+  - `snapshot_database(label: str) -> Path` — runs `pg_dump` against the configured `DATABASES['default']` using env-vars, writes `BASE_DIR/backups/db_{label}_{timestamp}.sql.gz`, returns the path. Logs size + duration. Non-fatal on failure (returns `None`).
+  - `restore_database(snapshot_path: Path) -> None` — for Phase 1 (not wired in Phase 0).
+- EDIT: `erp/kernel_manager.py` — inside `apply_update` (just before the `transaction.atomic()` block at line 121), call `db_snapshot.snapshot_database(f'kernel_pre_{update.version}')`. Log the returned path to the `SystemUpdate.metadata['db_snapshot']` field so it's queryable later.
+- EDIT: `erp/module_manager.py` — inside `upgrade()` (just before filesystem swap at line 200), call `db_snapshot.snapshot_database(f'module_{code}_pre_{version}')`. Store on the `SystemModule.metadata['db_snapshot']` field.
+- Retention: a cron'd command `python manage.py prune_kernel_backups --keep 10` that removes all but the 10 newest `db_*.sql.gz` files (and the corresponding filesystem `kernel_*`/`module_*` backup dirs). Default: off; enable by setting `KERNEL_BACKUP_RETAIN_COUNT` in `kernel.config`.
+
+### Configuration
+- `KERNEL_DB_SNAPSHOT_ENABLED` in `kernel.config`, default `true`. Kill switch if `pg_dump` misbehaves.
+- Snapshot location: `BASE_DIR/backups/` (same dir as existing file backups). Document storage growth expectations in `DEPLOY.md`.
+- Snapshots contain tenant data — confirm they live inside the project's existing backup retention / secrets handling (not pushed to git; `.gitignore` already covers `backups/` implicitly via `*.bak` / tmp rules — **verify and extend if needed**).
+
+### Risk
+- **Low.** `pg_dump` is a read-only operation against a transactional DB; it cannot break the live system.
+- Fails gracefully (non-fatal) if `pg_dump` isn't installed or credentials are wrong.
+
+### Deliverables for Phase 0
+- Working `snapshot_database` helper + kernel / module integration + retention command.
+- Snapshot path written onto `SystemUpdate.metadata` and `SystemModule.metadata`.
+- Unit test: mock `subprocess.run`, assert `pg_dump` invoked with correct args.
+- Doc update in `DEPLOY.md` covering `pg_dump` prerequisite and retention config.
+
+## Design — Phase 1: operator rollback UI (needs staging)
+
+- SaaS admin page at `/saas/kernel/rollback` lists applied updates with rollback-available flags (have both file and DB snapshots).
+- "Rollback" button triggers a `KernelManager.rollback_update(update_id)`:
+  - Enters maintenance mode (middleware flag `KERNEL_MAINTENANCE_MODE=true`, all non-admin requests return 503).
+  - Restores filesystem from the `backups/kernel_*/` dir.
+  - Restores DB from `backups/db_kernel_pre_*.sql.gz` via `pg_restore`.
+  - Marks the `SystemUpdate` row `is_applied=false`.
   - Exits maintenance mode.
-- **Phase 2** (stretch) — forward-only rollback via compensating migrations
-  generated per-update. Large undertaking, only if Phase 1 proves
-  insufficient.
+  - SIGHUPs gunicorn workers (uses the same reload mechanism from the Hot-Reload plan).
+- Module rollback counterpart triggered from the existing module list page.
 
-## Files that will eventually change (sketch)
+### Risk
+- **High.** A buggy restore destroys tenant data.
+- **Prerequisite**: staging environment with realistic data volume; rehearsal drill of rollback on a seeded staging DB before enabling in production.
 
-- `erp_backend/erp/views_packages.py` — snapshot before apply, register
-  rollback target.
-- New: `erp_backend/kernel/updates/rollback.py` — rollback orchestration.
-- New: `erp_backend/kernel/updates/snapshots.py` — snapshot storage.
-- Frontend: rollback UI under kernel management page.
+## Files that will change
 
-## Blast radius
+### Phase 0 (safe, can ship now)
+- NEW: `erp_backend/kernel/backup/__init__.py`
+- NEW: `erp_backend/kernel/backup/db_snapshot.py`
+- NEW: `erp_backend/kernel/management/commands/prune_kernel_backups.py`
+- EDIT: `erp_backend/erp/kernel_manager.py` (+2 lines)
+- EDIT: `erp_backend/erp/module_manager.py` (+2 lines)
+- EDIT: `erp_backend/kernel/config/__init__.py` (add two defaults)
+- EDIT: `DEPLOY.md` (prerequisite + retention)
 
-- Affects every tenant during rollback window.
-- Data-loss risk if snapshot strategy is wrong.
-- Correctly implemented: full restore to last-known-good state with
-  bounded downtime (snapshot restore time — minutes for small DBs,
-  hours for large).
+### Phase 1 (needs staging)
+- NEW: `erp_backend/erp/views_saas_rollback.py`
+- NEW: `src/app/(privileged)/(saas)/kernel/rollback/page.tsx`
+- NEW: `src/app/actions/saas/rollback.ts`
+- EDIT: `erp_backend/erp/urls.py`
+- EDIT: Sidebar link in Kernel section.
+
+## Tests
+
+### Phase 0
+- Unit: `snapshot_database` happy path (mocked `pg_dump`), missing-binary path, credentials-from-env path.
+- Unit: `prune_kernel_backups` with `--keep 3`, assert only 3 newest kept.
+- Integration (dev stack OK): call `snapshot_database` against the dev Postgres, assert file created + non-empty.
+
+### Phase 1 (staging only)
+- Apply a kernel update with a DB migration on staging, trigger rollback, verify DB + code reverted, verify app functional after gunicorn SIGHUP.
 
 ## Risk / rollback
 
-**High.** Bugs in rollback tooling destroy tenant data. Must be tested
-against a production-scale snapshot before shipping.
-
-## Estimated effort
-
-- Research + snapshot groundwork (Phase 0): 2 days.
-- Rollback UI + orchestration (Phase 1): 3–5 days.
-- Phase 2: 1+ week.
+- Phase 0: low. Rollback = delete the `backup/db_snapshot.py` import call sites, set `KERNEL_DB_SNAPSHOT_ENABLED=false`.
+- Phase 1: high. See above — needs staging.
 
 ## Blockers
 
-- Need staging environment with production-scale data volume.
-- Need decision on snapshot storage (local disk, S3, tenant-specific).
-- Need agreement on rollback SLA (seconds vs. minutes vs. hours).
+- **Phase 0**: needs confirmation that `pg_dump` is available on the production deployment's Docker image. `Dockerfile.backend.prod` should include `postgresql-client`. Verify and patch if absent.
+- **Phase 1**: staging environment with production-scale data + operator drill.
+
+## Estimated effort
+
+- Phase 0 (incl. tests + doc): **1 day**.
+- Phase 1 (incl. staging validation): **3–5 days** in a dedicated session.

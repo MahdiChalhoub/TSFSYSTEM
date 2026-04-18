@@ -8,10 +8,9 @@
  *  Hides on scroll-down, reveals on scroll-up.
  * ═══════════════════════════════════════════════════════════ */
 
-import { useEffect, useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Menu, Search, Bell } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
 
 interface Props {
@@ -41,21 +40,6 @@ function resolveTitle(pathname: string): string {
 export function MobileTopHeader({ user, onMenuPress, onSearchPress, onAvatarPress }: Props) {
     const pathname = usePathname() || ''
     const title = useMemo(() => resolveTitle(pathname), [pathname])
-    const [visible, setVisible] = useState(true)
-    const lastScroll = useMemo(() => ({ y: 0 }), [])
-
-    useEffect(() => {
-        const onScroll = () => {
-            const y = window.scrollY
-            const dy = y - lastScroll.y
-            if (Math.abs(dy) < 6) return
-            if (y < 30) { setVisible(true); lastScroll.y = y; return }
-            setVisible(dy < 0)
-            lastScroll.y = y
-        }
-        window.addEventListener('scroll', onScroll, { passive: true })
-        return () => window.removeEventListener('scroll', onScroll)
-    }, [lastScroll])
 
     const initials = (user?.username || user?.email || '?')
         .split(/[^a-zA-Z0-9]/)
@@ -65,14 +49,8 @@ export function MobileTopHeader({ user, onMenuPress, onSearchPress, onAvatarPres
         .join('') || '?'
 
     return (
-        <AnimatePresence initial={false}>
-            {visible && (
-                <motion.header
-                    initial={{ y: -56, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -56, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="fixed top-0 left-0 right-0 z-[45] flex items-center gap-1 px-2"
+        <header
+            className="fixed top-0 left-0 right-0 z-[45] flex items-center gap-1 px-2"
                     style={{
                         height: 48,
                         paddingTop: 'env(safe-area-inset-top, 0)',
@@ -125,9 +103,7 @@ export function MobileTopHeader({ user, onMenuPress, onSearchPress, onAvatarPres
                         }}>
                         {initials}
                     </button>
-                </motion.header>
-            )}
-        </AnimatePresence>
+        </header>
     )
 }
 

@@ -114,6 +114,15 @@ class KernelManager:
         # We backup the current erp/ and other core dirs
         backup_dir = os.path.join(settings.BASE_DIR, 'backups', f"kernel_{KernelManager.get_current_version()}_{timezone.now().strftime('%Y%m%d%H%M%S')}")
         os.makedirs(backup_dir, exist_ok=True)
+
+        # [HARDENING] DB snapshot alongside the filesystem backup. Non-fatal.
+        try:
+            from kernel.backup import snapshot_database
+            db_snapshot_path = snapshot_database(f"kernel_pre_{update.version}")
+            if db_snapshot_path:
+                update.metadata = {**(update.metadata or {}), 'db_snapshot': str(db_snapshot_path)}
+        except Exception as _snap_err:
+            print(f"⚠️  DB snapshot skipped: {_snap_err}")
         
         core_dirs = ['erp', 'lib', 'apps_core'] # Dirs that are part of the kernel
         

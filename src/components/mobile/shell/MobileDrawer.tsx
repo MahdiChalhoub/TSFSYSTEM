@@ -7,7 +7,7 @@
  *  expandable; leaf items navigate via Next Link.
  * ═══════════════════════════════════════════════════════════ */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { X, Search, LogOut, ChevronRight, ChevronDown } from 'lucide-react'
@@ -36,6 +36,19 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
     const router = useRouter()
     const [q, setQ] = useState('')
     const [expanded, setExpanded] = useState<Set<string>>(new Set())
+
+    // Pre-expand the module matching the current route when the drawer opens
+    useEffect(() => {
+        if (!open) return
+        const active = MENU_ITEMS.find(m => {
+            if (m.path && pathname.startsWith(m.path)) return true
+            return (m.children || []).some((c: any) => {
+                if (c.path && pathname.startsWith(c.path)) return true
+                return (c.children || []).some((l: any) => l.path && pathname.startsWith(l.path))
+            })
+        })
+        if (active) setExpanded(prev => new Set(prev).add(active.title))
+    }, [open, pathname])
 
     const searchResults = useMemo(() => {
         if (!q.trim()) return []
@@ -217,7 +230,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                                     : <ChevronRight size={15} style={{ color: 'var(--app-muted-foreground)' }} />}
                                             </button>
                                             {isExpanded && (
-                                                <div className="pl-3 animate-in fade-in duration-150">
+                                                <div className="pl-3 pb-1 animate-in fade-in duration-150">
                                                     {(module.children || []).map(child => {
                                                         const ChildIcon = child.icon
                                                         if (child.path) {
@@ -230,6 +243,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                                                     style={{
                                                                         minHeight: 40,
                                                                         color: childActive ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                                                        background: childActive ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent',
                                                                     }}>
                                                                     {ChildIcon && <ChildIcon size={14} />}
                                                                     <span className="font-bold truncate" style={{ fontSize: 'var(--tp-md)' }}>
@@ -238,21 +252,41 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                                                 </button>
                                                             )
                                                         }
-                                                        // Nested group (rare) — render leaves only
-                                                        return (child.children || []).map(leaf => leaf.path && (
-                                                            <button
-                                                                key={leaf.path}
-                                                                onClick={() => go(leaf.path)}
-                                                                className="w-full flex items-center gap-3 px-5 py-1.5 rounded-lg active:bg-app-primary/10 transition-colors text-left"
-                                                                style={{
-                                                                    minHeight: 36,
-                                                                    color: pathname.startsWith(leaf.path) ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                                                }}>
-                                                                <span className="font-bold truncate" style={{ fontSize: 'var(--tp-sm)' }}>
-                                                                    {leaf.title}
-                                                                </span>
-                                                            </button>
-                                                        ))
+                                                        // Nested group — render as a subgroup with label + indented leaves
+                                                        const leafs = (child.children || []).filter(l => l.path)
+                                                        if (leafs.length === 0) return null
+                                                        return (
+                                                            <div key={child.title} className="mt-1 mb-0.5">
+                                                                <div className="flex items-center gap-2 px-3 pt-1.5 pb-0.5"
+                                                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                                                    {ChildIcon && <ChildIcon size={11} style={{ opacity: 0.6 }} />}
+                                                                    <span className="font-black uppercase tracking-widest"
+                                                                        style={{ fontSize: 'var(--tp-xxs)', opacity: 0.7 }}>
+                                                                        {child.title}
+                                                                    </span>
+                                                                </div>
+                                                                {leafs.map(leaf => {
+                                                                    const LeafIcon = leaf.icon
+                                                                    const active = pathname.startsWith(leaf.path)
+                                                                    return (
+                                                                        <button
+                                                                            key={leaf.path}
+                                                                            onClick={() => go(leaf.path)}
+                                                                            className="w-full flex items-center gap-3 px-5 py-1.5 rounded-lg active:bg-app-primary/10 transition-colors text-left"
+                                                                            style={{
+                                                                                minHeight: 36,
+                                                                                color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                                                                background: active ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent',
+                                                                            }}>
+                                                                            {LeafIcon && <LeafIcon size={12} />}
+                                                                            <span className="font-bold truncate" style={{ fontSize: 'var(--tp-sm)' }}>
+                                                                                {leaf.title}
+                                                                            </span>
+                                                                        </button>
+                                                                    )
+                                                                })}
+                                                            </div>
+                                                        )
                                                     })}
                                                 </div>
                                             )}

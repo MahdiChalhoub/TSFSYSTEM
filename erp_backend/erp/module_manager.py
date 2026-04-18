@@ -201,6 +201,17 @@ class ModuleManager:
                 print(f"📦 Backing up {module_name} v{old_version}...")
                 os.makedirs(os.path.dirname(backup_path), exist_ok=True)
                 shutil.move(target_path, backup_path) # Move out of the way
+
+            # [HARDENING] DB snapshot — module upgrade runs migrations below, so
+            # capture a pre-upgrade snapshot alongside the filesystem backup.
+            # Non-fatal.
+            try:
+                from kernel.backup import snapshot_database
+                _db_snap = snapshot_database(f"module_{module_name}_pre_{new_version}")
+                if _db_snap:
+                    print(f"💾 DB snapshot: {_db_snap}")
+            except Exception as _snap_err:
+                print(f"⚠️  DB snapshot skipped: {_snap_err}")
             
             # b. Move staging to target
             print(f"🚚 Swapping files for {module_name} v{new_version}...")
