@@ -9,9 +9,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # System dependencies
+# postgresql-client provides pg_dump, used by kernel.backup.snapshot_database
+# for pre-update DB snapshots (Phase 0 of the kernel rollback plan).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
+    postgresql-client \
     libjpeg-dev \
     zlib1g-dev \
     curl \

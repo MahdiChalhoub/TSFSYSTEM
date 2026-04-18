@@ -101,6 +101,33 @@
 
 ---
 
+### Session: 2026-04-18 (part 6 — research + Phase 0 DB snapshot guard rail)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE
+- **Worked On**: Replaced the placeholder plans for Module Hot-Reload (C) and Kernel Rollback (D) with concrete plans grounded in a full code audit of the update + module-install flows. Shipped Phase 0 of the Rollback plan (pre-update DB snapshot guard rail) as strictly-additive code.
+- **Files Modified**:
+  - `task and plan/kernel_module_hot_reload_001.md` — rewritten. Real file:line citations for `INSTALLED_APPS`, URL registration, Celery autodiscovery, gunicorn SIGHUP support. Phase 1 design (SIGHUP trigger on module mutation + `reload_celery` mgmt command) concrete enough to implement once staging is available.
+  - `task and plan/kernel_rollback_001.md` — rewritten. Code audit revealed filesystem-level backup and rollback already exist (`kernel_manager.py:115-151`, `module_manager.py:200-203, 456-503`). The real gap is DB snapshots — `apply_update` runs no migrations but `module_manager.upgrade` does (`module_manager.py:230`). Phase 0 (DB snapshot) is safe to ship today; Phase 1 (operator rollback UI) needs staging.
+  - `erp_backend/kernel/backup/__init__.py` — NEW.
+  - `erp_backend/kernel/backup/db_snapshot.py` — NEW (125 lines). `snapshot_database(label)` runs `pg_dump | gzip` to `BASE_DIR/backups/db_{label}_{ts}.sql.gz`. Returns `None` (non-fatal) when `pg_dump` missing, feature disabled, non-Postgres DB, or dump fails.
+  - `erp_backend/kernel/backup/tests/test_db_snapshot.py` — NEW. Unit tests mock `subprocess.run` + `shutil.which`; cover feature-flag off, missing binary, non-Postgres, non-zero exit, success, path-safe label sanitisation.
+  - `erp_backend/erp/kernel_manager.py` — call `snapshot_database(f"kernel_pre_{version}")` before the filesystem backup block. Snapshot path written to `SystemUpdate.metadata['db_snapshot']`.
+  - `erp_backend/erp/module_manager.py` — call `snapshot_database(f"module_{name}_pre_{version}")` inside `upgrade()` before the filesystem swap. Non-fatal.
+  - `Dockerfile.backend.prod` — add `postgresql-client` to `apt-get install` line so `pg_dump` is available in production. Comment explains why.
+- **Discoveries**:
+  - `KernelManager.apply_update` runs **zero** migrations (kernel_manager.py:88-153). Kernel updates are code-only. Line 142 literally says "SYSTEM RESTART RECOMMENDED".
+  - `ModuleManager.upgrade` **does** run `call_command('migrate', no_input=True)` at line 230 — and treats failure as non-fatal. That's the real risk surface for schema rollback.
+  - Filesystem backup + rollback already exists for both flows. The placeholder plan I wrote earlier this session overstated the gap; the rewritten plan is accurate.
+  - `libpq-dev` was in the prod Dockerfile but `postgresql-client` was not. Without it `pg_dump` isn't available in the production container.
+- **Warnings for Next Agent**:
+  - ⚠️ Phase 0 code was NOT run in a dev container — static syntax check + mocked unit tests only. Before deploying, (a) rebuild the backend Docker image to pull in `postgresql-client`, (b) trigger a kernel update or module upgrade on the dev stack, (c) verify a `db_*.sql.gz` lands in `erp_backend/backups/`.
+  - ⚠️ The feature flag default is ON (`KERNEL_DB_SNAPSHOT_ENABLED=true`). If `pg_dump` invocation spams error logs in a dev env without Postgres, flip it to false via `kernel.config.set_config('KERNEL_DB_SNAPSHOT_ENABLED', False)`.
+  - ⚠️ Snapshots accumulate in `erp_backend/backups/` — no retention command shipped yet. Follow-up `prune_kernel_backups` mgmt command is documented in the Rollback plan but NOT implemented.
+  - ⚠️ `.gitignore` was updated by another process/hand to exclude `*.sql` (the snapshot files are `.sql.gz` so they're safe from that rule, but keep an eye on it). The `backups/` directory should never be committed — verify on the next commit.
+  - ⚠️ Hot-Reload plan (C Phase 1) and Rollback UI plan (D Phase 1) remain **explicitly blocked on staging env**. Do NOT start either without the prerequisites documented at the bottom of each plan.
+
+---
+
 ### Session: 2026-04-18 (part 5 — OrgDialogs split)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE

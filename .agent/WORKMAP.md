@@ -78,17 +78,18 @@
 
 ## 🟢 LOW
 
-### [OPEN] Module Hot-Reload — placeholder plan written 2026-04-18
+### [OPEN — Phase 1 blocked on staging env] Module Hot-Reload
 - **Discovered**: 2026-02-05
-- **Impact**: Modules require server restart after installation
-- **Plan**: `task and plan/kernel_module_hot_reload_001.md` (placeholder — needs research session before implementation)
-- **Notes**: Deferred backlog item from engine.md. Research questions documented in the plan. Blast radius is high; needs staging env before implementation.
+- **Impact**: After `ModuleManager.upgrade/install_for_all/revoke_all`, gunicorn + Celery don't see the change until manually restarted.
+- **Plan**: `task and plan/kernel_module_hot_reload_001.md` — **rewritten 2026-04-18** from placeholder to concrete plan. Code audit shows gunicorn already supports SIGHUP and `graceful_timeout=30s`; `INSTALLED_APPS` is static at startup and URL patterns are not dynamically re-registered.
+- **Next step**: Phase 1 = SIGHUP trigger on module mutation + separate `reload_celery` command. **Blocked** on staging environment + operator sign-off on 10 s worker-recycle window per module change.
 
-### [OPEN] Kernel Rollback Functionality — placeholder plan written 2026-04-18
+### [PHASE 0 DONE 2026-04-18 — Phase 1 blocked on staging] Kernel Rollback Functionality
 - **Discovered**: 2026-02-05
-- **Impact**: No way to rollback kernel updates (especially ones that include migrations)
-- **Plan**: `task and plan/kernel_rollback_001.md` (placeholder — needs research session before implementation)
-- **Notes**: Deferred backlog item from engine.md. Needs decision on snapshot strategy + rollback SLA before implementation.
+- **Impact**: `KernelManager.apply_update` and `ModuleManager.upgrade` back up the filesystem but not the DB. Any migration in an update becomes un-rollbackable.
+- **Plan**: `task and plan/kernel_rollback_001.md` — **rewritten 2026-04-18** with real file:line audit. Filesystem-level rollback already exists at `kernel_manager.py:144-151` and `module_manager.py:456-503`.
+- **Fix (Phase 0, this session)**: pre-operation `pg_dump` via new `kernel.backup.snapshot_database(label)` helper, wired into both `apply_update` and `upgrade`. Strictly additive — fails soft when `pg_dump` is missing or disabled via `KERNEL_DB_SNAPSHOT_ENABLED` flag. Snapshot path recorded in `SystemUpdate.metadata.db_snapshot`. `postgresql-client` added to `Dockerfile.backend.prod` so `pg_dump` is available in production.
+- **Next step**: Phase 1 = operator rollback UI (`/saas/kernel/rollback` page) + `pg_restore` orchestration. **Blocked** on staging environment with production-scale data for rehearsal drill.
 
 ---
 
