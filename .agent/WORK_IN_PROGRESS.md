@@ -101,6 +101,22 @@
 
 ---
 
+### Session: 2026-04-18 (part 5 — OrgDialogs split)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE
+- **Worked On**: Split `_components/OrgDialogs.tsx` (353 lines, over the 300-line limit) into five single-dialog files under a new `dialogs/` subdirectory. `OrgDialogs.tsx` becomes a 6-line barrel re-export so no importer needs updating.
+- **Files Modified**:
+  - NEW: `_components/dialogs/CreateUserDialog.tsx` (69 lines)
+  - NEW: `_components/dialogs/ResetPasswordDialog.tsx` (51 lines)
+  - NEW: `_components/dialogs/CreateSiteDialog.tsx` (66 lines)
+  - NEW: `_components/dialogs/PlanSwitchDialog.tsx` (85 lines)
+  - NEW: `_components/dialogs/ClientAssignDialog.tsx` (113 lines)
+  - `_components/OrgDialogs.tsx` — replaced with a barrel re-export (6 lines).
+- **Warnings for Next Agent**:
+  - ⚠️ Not browser-smoke-tested (no dev server). Brace/paren balance verified on every split file. Next agent should visually exercise all 5 dialogs from the org detail page before deploying.
+
+---
+
 ### Session: 2026-04-18 (part 4 — Module Dependency Graph UI)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE
