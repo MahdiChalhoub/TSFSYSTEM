@@ -186,6 +186,182 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
             })
         return Response({'results': data, 'count': total, 'page': page, 'page_size': page_size})
 
+    @action(detail=True, methods=['get'])
+    def explore(self, request, pk=None):
+        """Rich product listing for a unit — pagination, search, sort, stock, filter_options.
+        Mirrors CategoryViewSet.explore for EntityProductsTab compatibility."""
+        organization, err = _get_org_or_400()
+        if err:
+            return err
+        try:
+            unit = Unit.objects.get(id=pk, organization=organization)
+        except Unit.DoesNotExist:
+            return Response({"error": "Unit not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        PAGE_SIZE = 50
+        offset = int(request.query_params.get('offset', 0))
+        search = request.query_params.get('search', '').strip()
+
+        products_qs = Product.objects.filter(
+            unit=unit, organization=organization, is_active=True
+        ).select_related('brand', 'category', 'unit')
+
+        # Server-side search
+        if search:
+            from django.db.models import Q as Qf
+            products_qs = products_qs.filter(
+                Qf(name__icontains=search) | Qf(sku__icontains=search) | Qf(barcode__icontains=search)
+            )
+
+        # Server-side sorting
+        sort_by = request.query_params.get('sort', 'name')
+        sort_dir = request.query_params.get('sort_dir', 'asc')
+        order_prefix = '' if sort_dir == 'asc' else '-'
+
+        # Annotate stock_on_hand from StockLedger
+        from django.db.models import Sum, Subquery, OuterRef, DecimalField, Value
+        from django.db.models.functions import Coalesce
+        try:
+            from apps.inventory.models import StockLedger
+            products_qs = products_qs.annotate(
+                stock_on_hand=Coalesce(
+                    Sum('stock_ledger__running_on_hand',
+                        filter=Q(
+                            stock_ledger__id__in=Subquery(
+                                StockLedger.objects.filter(
+                                    product=OuterRef(OuterRef('pk')),
+                                    organization=organization,
+                                ).order_by('warehouse', '-created_at').distinct('warehouse').values('id')
+                            )
+                        )),
+                    0,
+                    output_field=DecimalField()
+                )
+            )
+        except Exception:
+            products_qs = products_qs.annotate(
+                stock_on_hand=Value(0, output_field=DecimalField())
+            )
+
+        if sort_by == 'stock':
+            products_qs = products_qs.order_by(f'{order_prefix}stock_on_hand', 'name')
+        elif sort_by == 'price':
+            products_qs = products_qs.order_by(f'{order_prefix}selling_price_ttc', 'name')
+        else:
+            products_qs = products_qs.order_by(f'{order_prefix}name')
+
+        total_count = products_qs.count()
+        products_page = products_qs[offset:offset + PAGE_SIZE]
+
+        product_data = []
+        for p in products_page:
+            sell_ht = float(p.selling_price_ht) if p.selling_price_ht else 0
+            cost = float(p.cost_price) if p.cost_price else 0
+            margin_pct = round(((sell_ht - cost) / cost * 100), 1) if cost > 0 else None
+            product_data.append({
+                "id": p.id,
+                "sku": p.sku,
+                "name": p.name,
+                "product_type": p.product_type,
+                "brand_id": p.brand_id,
+                "brand_name": p.brand.name if p.brand else None,
+                "category_id": p.category_id,
+                "category_name": p.category.name if p.category else None,
+                "unit_code": p.unit.code if p.unit else None,
+                "selling_price_ttc": float(p.selling_price_ttc or 0),
+                "selling_price_ht": sell_ht,
+                "cost_price": cost,
+                "tva_rate": float(p.tva_rate) if p.tva_rate else 0,
+                "margin_pct": margin_pct,
+                "stock_on_hand": float(p.stock_on_hand) if hasattr(p, 'stock_on_hand') else 0,
+                "status": p.status,
+            })
+
+        # Build filter options from ALL products using this unit (not just the page)
+        filter_options = {}
+        if offset == 0:
+            all_prods = Product.objects.filter(unit=unit, organization=organization, is_active=True)
+            filter_options = {
+                "brands": sorted(
+                    [{"value": n, "label": n} for n in all_prods.exclude(brand__isnull=True).values_list('brand__name', flat=True).distinct() if n],
+                    key=lambda x: x["label"]
+                ),
+                "categories": sorted(
+                    [{"value": n, "label": n} for n in all_prods.exclude(category__isnull=True).values_list('category__name', flat=True).distinct() if n],
+                    key=lambda x: x["label"]
+                ),
+                "statuses": sorted(
+                    [{"value": s, "label": s.capitalize()} for s in all_prods.values_list('status', flat=True).distinct() if s]
+                ),
+                "types": sorted(
+                    [{"value": t, "label": t} for t in all_prods.values_list('product_type', flat=True).distinct() if t],
+                    key=lambda x: x["label"]
+                ),
+                "tva_rates": sorted(
+                    [{"value": str(r), "label": f"{r}%"} for r in all_prods.values_list('tva_rate', flat=True).distinct() if r is not None],
+                    key=lambda x: float(x["value"])
+                ),
+            }
+
+        return Response({
+            "products": product_data,
+            "total_count": total_count,
+            "has_more": (offset + PAGE_SIZE) < total_count,
+            "next_offset": offset + PAGE_SIZE if (offset + PAGE_SIZE) < total_count else None,
+            "filter_options": filter_options,
+        })
+
+    @action(detail=False, methods=['post'])
+    def move_products(self, request):
+        """Bulk reassign products to a different unit.
+
+        Body:
+            product_ids: list[int]
+            target_unit_id: int
+            preview: bool (default False) — if True, returns analysis without moving
+        """
+        organization, err = _get_org_or_400()
+        if err:
+            return err
+
+        product_ids = request.data.get('product_ids', [])
+        target_unit_id = request.data.get('target_unit_id')
+        preview = request.data.get('preview', False)
+
+        if not product_ids or not target_unit_id:
+            return Response(
+                {"error": "product_ids and target_unit_id are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            target_unit = Unit.objects.get(id=target_unit_id, organization=organization)
+        except Unit.DoesNotExist:
+            return Response({"error": "Target unit not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        products = Product.objects.filter(
+            id__in=product_ids, organization=organization
+        )
+
+        if not products.exists():
+            return Response({"error": "No valid products found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if preview:
+            return Response({
+                "has_conflicts": False,
+                "target_unit": {"id": target_unit.id, "name": target_unit.name},
+                "product_count": products.count(),
+            })
+
+        with transaction.atomic():
+            moved = products.update(unit=target_unit)
+
+        return Response({
+            "success": True,
+            "moved_count": moved,
+            "target_unit": {"id": target_unit.id, "name": target_unit.name},
+        })
+
 
 # =============================================================================
 # BRAND

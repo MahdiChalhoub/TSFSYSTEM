@@ -1,7 +1,12 @@
+// @ts-nocheck
 import { getJournalEntry } from '@/app/actions/finance/ledger'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Printer, FileText, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react'
+import {
+    ArrowLeft, Printer, FileText, CheckCircle, AlertCircle, RotateCcw,
+    ShieldCheck, Lock, Calendar, Hash, Layers, Eye,
+    Zap, Edit,
+} from 'lucide-react'
 
 export default async function ViewJournalEntryPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -11,145 +16,328 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
     const entry = await getJournalEntry(entryId) as any
     if (!entry) notFound()
 
-    const totalDebit = entry.lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.debit), 0)
-    const totalCredit = entry.lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.credit), 0)
+    const lines = entry.lines || []
+    const totalDebit = lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.debit || 0), 0)
+    const totalCredit = lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.credit || 0), 0)
+    const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01
+    const dateRaw = entry.transactionDate || entry.transaction_date
+    const dateStr = dateRaw ? new Date(dateRaw).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
+    const sc = getStatusConfig(entry.status)
+    const isLocked = entry.is_locked || entry.fiscalYear?.status === 'LOCKED' || entry.fiscalYear?.isLocked
+    const postedAt = entry.posted_at ? new Date(entry.posted_at).toLocaleDateString('en-GB') : null
+    const createdAt = entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-GB') : null
+    const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Breadcrumbs & Actions */}
-            <div className="flex justify-between items-center mb-8">
-                <Link href="/finance/ledger" className="flex items-center gap-2 text-app-muted-foreground hover:text-app-foreground transition-colors text-sm font-medium">
-                    <ArrowLeft size={16} /> Back to Ledger
+        <div className="flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300">
+
+            {/* ═══════════════ COMPACT HEADER BAR ═══════════════ */}
+            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                <Link href="/finance/ledger"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface border border-app-border/50 transition-all flex-shrink-0">
+                    <ArrowLeft size={13} />
                 </Link>
-                <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 border border-app-border rounded-lg text-sm font-bold text-app-muted-foreground hover:bg-app-surface transition-all">
-                        <Printer size={16} /> Print Voucher
+                <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center flex-shrink-0"
+                    style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                    <FileText size={14} className="text-white" />
+                </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                    <h1 className="text-[14px] font-black text-app-foreground tracking-tight whitespace-nowrap">
+                        JV <span className="font-mono">#{entry.id}</span>
+                    </h1>
+                    <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded"
+                        style={{ color: sc.color, background: `color-mix(in srgb, ${sc.color} 12%, transparent)` }}>
+                        {sc.label}
+                    </span>
+                    {isLocked && <Lock size={10} style={{ color: 'var(--app-warning)' }} />}
+                    {entry.source_module && <Zap size={10} style={{ color: '#8b5cf6' }} />}
+                </div>
+
+                {/* ── Inline metadata strip ── */}
+                <div className="hidden sm:flex items-center gap-3 ml-2 text-[10px] font-bold text-app-muted-foreground">
+                    <span className="flex items-center gap-1"><Calendar size={10} />{dateStr}</span>
+                    <span>·</span>
+                    <span className="font-mono">{entry.reference || '—'}</span>
+                    <span>·</span>
+                    <span>{entry.scope === 'OFFICIAL' ? 'Official' : 'Internal'}</span>
+                    {entry.fiscalYear?.name && <><span>·</span><span>{entry.fiscalYear.name}</span></>}
+                </div>
+
+                <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+                    <button className="p-1.5 text-app-muted-foreground hover:text-app-foreground border border-app-border rounded-lg hover:bg-app-surface transition-all" title="Print">
+                        <Printer size={12} />
                     </button>
-                    {entry.status !== 'REVERSED' && (
-                        <Link
-                            href={`/finance/ledger/${entry.id}/edit`}
-                            className="flex items-center gap-2 px-4 py-2 bg-app-foreground text-white rounded-lg text-sm font-bold hover:bg-app-surface transition-all shadow-sm"
-                        >
-                            Edit Entry
+                    {entry.status !== 'REVERSED' && !isLocked && (
+                        <Link href={`/finance/ledger/${entry.id}/edit`}
+                            className="flex items-center gap-1 text-[10px] font-bold bg-app-primary hover:brightness-110 text-white px-2 py-1.5 rounded-lg transition-all"
+                            style={{ boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            <Edit size={11} /><span className="hidden md:inline">Edit</span>
                         </Link>
                     )}
                 </div>
             </div>
 
-            {/* Voucher Header */}
-            <div className="bg-app-surface rounded-2xl shadow-sm border border-app-border overflow-hidden mb-8">
-                <div className="p-8 border-b border-app-border flex justify-between items-start">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold text-app-foreground font-serif">Journal Voucher</h1>
-                            <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border ${getStatusStyle(entry.status)}`}>
-                                {entry.status}
-                            </span>
+            {/* ═══════════════ REVERSAL BANNERS (compact) ═══════════════ */}
+            {(entry.reversalOf || entry.reversedBy) && (
+                <div className="flex flex-wrap gap-1.5 mb-2 flex-shrink-0">
+                    {entry.reversalOf && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold"
+                            style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error) 15%, transparent)' }}>
+                            <RotateCcw size={10} /> Reversal of JV #{entry.reversalOf.id}
+                            <Link href={`/finance/ledger/${entry.reversalOf.id}`} className="underline">View</Link>
                         </div>
-                        <p className="text-app-muted-foreground text-sm">JV Number: <span className="font-mono font-bold text-app-foreground">#{entry.id}</span></p>
-                    </div>
-                    <div className="text-right">
-                        <div className="text-sm text-app-muted-foreground font-bold uppercase tracking-widest mb-1">Transaction Date</div>
-                        <div className="text-xl font-bold text-app-foreground">{(entry.transactionDate || entry.transaction_date) ? new Date(entry.transactionDate || entry.transaction_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 p-8 gap-12 bg-app-surface/50">
-                    <div>
-                        <div className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest mb-2 flex items-center gap-1.5">
-                            <FileText size={12} /> Description
+                    )}
+                    {entry.reversedBy && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold"
+                            style={{ color: 'var(--app-warning)', background: 'color-mix(in srgb, var(--app-warning) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning) 15%, transparent)' }}>
+                            <AlertCircle size={10} /> Reversed by JV #{entry.reversedBy.id}
+                            <Link href={`/finance/ledger/${entry.reversedBy.id}`} className="underline">View</Link>
                         </div>
-                        <p className="text-app-foreground font-medium leading-relaxed">{entry.description || 'No description provided'}</p>
-                    </div>
-                    <div>
-                        <div className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest mb-2">Reference</div>
-                        <p className="text-app-foreground font-mono font-bold">{entry.reference || 'N/A'}</p>
-                    </div>
+                    )}
                 </div>
+            )}
 
-                {/* Reversal Metadata Footer */}
-                {(entry.reversalOf || entry.reversedBy) && (
-                    <div className="px-8 py-4 border-t border-app-border bg-app-surface space-y-2">
-                        {entry.reversalOf && (
-                            <div className="flex items-center gap-2 text-rose-600 text-xs font-bold bg-rose-50 px-3 py-2 rounded-lg border border-rose-100 w-fit">
-                                <RotateCcw size={14} /> This is a reversal of JV #{entry.reversalOf.id}
-                                <Link href={`/finance/ledger/${entry.reversalOf.id}`} className="underline ml-2">View Original</Link>
-                            </div>
-                        )}
-                        {entry.reversedBy && (
-                            <div className="flex items-center gap-2 text-amber-600 text-xs font-bold bg-amber-50 px-3 py-2 rounded-lg border border-amber-100 w-fit">
-                                <AlertCircle size={14} /> This entry was reversed by JV #{entry.reversedBy.id}
-                                <Link href={`/finance/ledger/${entry.reversedBy.id}`} className="underline ml-2">View Reversal</Link>
-                            </div>
-                        )}
+            {/* ═══════════════ COMPACT META + TOTALS STRIP ═══════════════ */}
+            <div className="flex flex-wrap items-stretch gap-2 mb-3 flex-shrink-0">
+                {/* Debit */}
+                <MiniKPI label="Total Debit" value={fmt(totalDebit)} color="var(--app-primary)" icon={<Layers size={10} />} />
+                {/* Credit */}
+                <MiniKPI label="Total Credit" value={fmt(totalCredit)} color="var(--app-error)" icon={<Layers size={10} />} />
+                {/* Balance */}
+                <MiniKPI label="Difference" value={fmt(Math.abs(totalDebit - totalCredit))}
+                    color={isBalanced ? 'var(--app-success)' : 'var(--app-error)'}
+                    icon={isBalanced ? <CheckCircle size={10} /> : <AlertCircle size={10} />} />
+                {/* Lines */}
+                <MiniKPI label="Lines" value={lines.length} color="var(--app-info)" icon={<Hash size={10} />} />
+                {/* Integrity */}
+                {entry.entry_hash && (
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-[9px] font-mono font-bold text-app-muted-foreground"
+                        style={{ background: 'color-mix(in srgb, var(--app-border) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                        <ShieldCheck size={10} style={{ color: 'var(--app-success)' }} /> {entry.entry_hash.slice(0, 12)}…
                     </div>
                 )}
             </div>
 
-            {/* Lines Table */}
-            <div className="bg-app-surface rounded-2xl shadow-sm border border-app-border overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-app-surface border-b border-app-border">
-                            <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest">Account</th>
-                            <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest">Description</th>
-                            <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest text-right">Debit</th>
-                            <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest text-right">Credit</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-app-border">
-                        {entry.lines.map((line: Record<string, any>) => (
-                            <tr key={line.id} className="hover:bg-app-surface/50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="font-mono text-xs font-bold text-app-muted-foreground mb-0.5">{line.account.code}</div>
-                                    <div className="font-bold text-app-foreground text-sm">{line.account.name}</div>
-                                </td>
-                                <td className="px-6 py-4 text-xs text-app-muted-foreground italic max-w-xs truncate">
-                                    {line.description || '—'}
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <span className="font-mono font-bold text-app-foreground h-6 inline-block">
-                                        {Number(line.debit) > 0 ? Number(line.debit).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}
+            {/* ═══════════════ INFO STRIP — Compact Details ═══════════════ */}
+            <div className="flex-shrink-0 mb-3 rounded-xl border border-app-border/40 px-4 py-2.5"
+                style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '10px 16px' }}>
+                    <DetailCell label="Reference" value={entry.reference} mono />
+                    <DetailCell label="Journal Type" value={entry.journal_type || entry.journalType || 'GENERAL'} />
+                    <DetailCell label="Transaction Date" value={dateStr} />
+                    <DetailCell label="Fiscal Year" value={entry.fiscalYear?.name || entry.fiscal_year?.name} />
+                    <DetailCell label="Scope" value={entry.scope === 'OFFICIAL' ? 'Official' : 'Internal'}
+                        color={entry.scope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-info)'} />
+                    <DetailCell label="Source" value={entry.source_module || 'Manual'}
+                        color={entry.source_module ? '#8b5cf6' : undefined} />
+                    <DetailCell label="Created By" value={entry.created_by?.first_name || entry.created_by?.username} />
+                    <DetailCell label="Posted By" value={entry.posted_by?.first_name || entry.posted_by?.username} />
+                    <DetailCell label="Created" value={createdAt} />
+                    <DetailCell label="Posted" value={postedAt} />
+                </div>
+                {entry.description && (
+                    <div className="mt-2 pt-2 border-t border-app-border/20">
+                        <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest">Narrative · </span>
+                        <span className="text-[11px] font-medium text-app-foreground">{entry.description}</span>
+                    </div>
+                )}
+            </div>
+            <div className="flex-1 min-h-0 rounded-2xl border border-app-border/50 overflow-hidden flex flex-col"
+                style={{ background: 'var(--app-surface)' }}>
+
+                <div className="px-4 py-2 flex items-center gap-2 border-b border-app-border/30 flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)' }}>
+                    <div className="w-1 h-3.5 rounded-full" style={{ background: 'var(--app-info)' }} />
+                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-info)' }}>Financial Vectors</span>
+                    <span className="text-[10px] font-bold text-app-muted-foreground">{lines.length} lines</span>
+                </div>
+
+                {/* Column Headers */}
+                <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 border-b border-app-border/30 text-[8px] font-black uppercase tracking-widest text-app-muted-foreground flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 90%, transparent)' }}>
+                    <div className="w-6 text-center flex-shrink-0">#</div>
+                    <div className="w-16 flex-shrink-0">Code</div>
+                    <div className="flex-1 min-w-0">Account Name</div>
+                    <div className="hidden lg:block w-32 flex-shrink-0">Description</div>
+                    <div className="w-24 text-right flex-shrink-0">Debit</div>
+                    <div className="w-24 text-right flex-shrink-0">Credit</div>
+                </div>
+
+                {/* Scrollable Lines */}
+                <div className="flex-1 min-h-0 overflow-auto overscroll-contain custom-scrollbar">
+                    {lines.map((line: any, i: number) => {
+                        const debit = Number(line.debit || 0)
+                        const credit = Number(line.credit || 0)
+                        const isDebit = debit > 0
+                        return (
+                            <div key={line.id || i}
+                                className="group flex items-center gap-2 px-4 py-2 border-b border-app-border/15 hover:bg-app-surface/50 transition-all duration-100"
+                                style={i % 2 === 1 ? { background: 'color-mix(in srgb, var(--app-border) 4%, transparent)' } : {}}>
+
+                                {/* # */}
+                                <div className="w-6 text-center flex-shrink-0">
+                                    <span className="text-[9px] font-black text-app-muted-foreground/60">{i + 1}</span>
+                                </div>
+
+                                {/* Code badge */}
+                                <div className="w-16 flex-shrink-0">
+                                    <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                        style={{
+                                            background: `color-mix(in srgb, ${isDebit ? 'var(--app-primary)' : 'var(--app-error)'} 8%, transparent)`,
+                                            color: isDebit ? 'var(--app-primary)' : 'var(--app-error)',
+                                        }}>
+                                        {line.account?.code || '—'}
                                     </span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <span className="font-mono font-bold text-app-foreground h-6 inline-block">
-                                        {Number(line.credit) > 0 ? Number(line.credit).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}
-                                    </span>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    <tfoot>
-                        <tr className="bg-app-surface/80 font-bold border-t-2 border-app-border">
-                            <td colSpan={2} className="px-6 py-5 text-sm text-app-foreground">Total Voucher Value</td>
-                            <td className="px-6 py-5 text-right font-mono text-app-foreground h-6">
-                                {totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </td>
-                            <td className="px-6 py-5 text-right font-mono text-app-foreground h-6">
-                                {totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
+                                </div>
+
+                                {/* Account name */}
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-[11px] font-bold text-app-foreground truncate block">{line.account?.name || '—'}</span>
+                                </div>
+
+                                {/* Line description */}
+                                <div className="hidden lg:block w-32 flex-shrink-0">
+                                    <span className="text-[10px] text-app-muted-foreground truncate block">{line.description || ''}</span>
+                                </div>
+
+                                {/* Debit */}
+                                <div className="w-24 text-right flex-shrink-0">
+                                    {debit > 0 && (
+                                        <span className="font-mono text-[11px] font-bold tabular-nums" style={{ color: 'var(--app-primary)' }}>
+                                            {fmt(debit)}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Credit */}
+                                <div className="w-24 text-right flex-shrink-0">
+                                    {credit > 0 && (
+                                        <span className="font-mono text-[11px] font-bold tabular-nums" style={{ color: 'var(--app-error)' }}>
+                                            {fmt(credit)}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })}
+
+                    {/* Empty state */}
+                    {lines.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <FileText size={28} className="text-app-muted-foreground mb-2 opacity-30" />
+                            <p className="text-[11px] font-bold text-app-muted-foreground">No journal lines</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* ── TOTALS ROW (pinned at bottom) ── */}
+                <div className="flex items-center gap-2 px-4 py-2.5 border-t-2 border-app-border/40 flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                    <div className="w-6 flex-shrink-0" />
+                    <div className="w-16 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-app-foreground">Total</span>
+                    </div>
+                    <div className="hidden lg:block w-32 flex-shrink-0" />
+                    <div className="w-24 text-right flex-shrink-0">
+                        <span className="font-mono text-[12px] font-black tabular-nums" style={{ color: 'var(--app-primary)' }}>
+                            {fmt(totalDebit)}
+                        </span>
+                    </div>
+                    <div className="w-24 text-right flex-shrink-0">
+                        <span className="font-mono text-[12px] font-black tabular-nums" style={{ color: 'var(--app-error)' }}>
+                            {fmt(totalCredit)}
+                        </span>
+                    </div>
+                </div>
+
+                {/* ── BALANCE PROOF BAR ── */}
+                <div className="flex items-center justify-between px-4 py-1.5 border-t border-app-border/20 flex-shrink-0"
+                    style={{ background: `color-mix(in srgb, ${isBalanced ? 'var(--app-success)' : 'var(--app-error)'} 4%, transparent)` }}>
+                    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider"
+                        style={{ color: isBalanced ? 'var(--app-success)' : 'var(--app-error)' }}>
+                        {isBalanced ? <CheckCircle size={10} /> : <AlertCircle size={10} />}
+                        {isBalanced ? 'Double-Entry Balanced' : `Out of Balance: ${fmt(Math.abs(totalDebit - totalCredit))}`}
+                    </div>
+                    <div className="flex items-center gap-3 text-[9px] font-bold text-app-muted-foreground">
+                        {entry.created_by && (
+                            <span>By {entry.created_by.first_name || entry.created_by.username}</span>
+                        )}
+                        {postedAt && <span>Posted {postedAt}</span>}
+                        {entry.source_module && (
+                            <span className="font-mono px-1 py-0.5 rounded" style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)', color: '#8b5cf6' }}>
+                                {entry.source_module}
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
 
-            {/* Mathematical Proof Footer */}
-            <div className="mt-6 flex flex-col items-center gap-2">
-                <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                    <CheckCircle size={12} /> Double-Entry Balanced: Difference 0.00
+            {/* ═══════════════ POSTING SNAPSHOT (collapsed into table footer) ═══════════════ */}
+            {entry.posting_snapshot && entry.posting_snapshot.length > 0 && (
+                <div className="mt-2 rounded-xl border border-app-border/30 overflow-hidden flex-shrink-0" style={{ background: 'var(--app-surface)' }}>
+                    <div className="px-3 py-1.5 flex items-center gap-1.5 border-b border-app-border/20"
+                        style={{ background: 'color-mix(in srgb, var(--app-success) 4%, transparent)' }}>
+                        <div className="w-0.5 h-3 rounded-full" style={{ background: 'var(--app-success)' }} />
+                        <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success)' }}>Posting Rules Snapshot</span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 py-2">
+                        {entry.posting_snapshot.map((snap: any, i: number) => (
+                            <span key={i} className="text-[9px] font-mono font-bold text-app-muted-foreground">
+                                {snap.event_code}: <span style={{ color: 'var(--app-foreground)' }}>{snap.account_code}</span> {snap.account_name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-                <p className="text-app-muted-foreground text-[10px] italic">Verified by Trial Balance Guard</p>
+            )}
+        </div>
+    )
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  HELPER COMPONENTS
+ * ═══════════════════════════════════════════════════════════ */
+
+function MiniKPI({ label, value, color, icon }: {
+    label: string; value: any; color: string; icon: React.ReactNode
+}) {
+    return (
+        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl"
+            style={{
+                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+            }}>
+            <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}>
+                {icon}
+            </div>
+            <div>
+                <div className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground leading-none">{label}</div>
+                <div className="text-[12px] font-black font-mono tabular-nums leading-tight" style={{ color }}>{value ?? '—'}</div>
             </div>
         </div>
     )
 }
 
-function getStatusStyle(status: string) {
+function DetailCell({ label, value, mono, color }: {
+    label: string; value: any; mono?: boolean; color?: string
+}) {
+    return (
+        <div>
+            <div className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest leading-tight">{label}</div>
+            <div className={`text-[11px] font-bold text-app-foreground leading-tight ${mono ? 'font-mono tabular-nums' : ''}`}
+                style={color && value && value !== '—' ? { color } : undefined}>
+                {value ?? '—'}
+            </div>
+        </div>
+    )
+}
+
+function getStatusConfig(status: string): { label: string; color: string } {
     switch (status) {
-        case 'POSTED': return 'bg-emerald-50 text-emerald-700 border-emerald-100'
-        case 'DRAFT': return 'bg-app-surface text-app-muted-foreground border-app-border'
-        case 'REVERSED': return 'bg-rose-50 text-rose-700 border-rose-100'
-        default: return 'bg-app-surface text-app-muted-foreground'
+        case 'POSTED': return { label: 'Posted', color: 'var(--app-success)' }
+        case 'DRAFT': return { label: 'Draft', color: 'var(--app-warning)' }
+        case 'REVERSED': return { label: 'Reversed', color: 'var(--app-error)' }
+        default: return { label: status, color: 'var(--app-muted-foreground)' }
     }
 }

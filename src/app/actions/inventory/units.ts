@@ -100,3 +100,24 @@ export async function getUnitPackaging(unitId: number | string) {
  return []
  }
 }
+
+/**
+ * Move products to a different unit
+ */
+export async function moveUnitProducts(
+  productIds: number[],
+  targetUnitId: number,
+  preview = false
+) {
+  const result = await erpFetch('/units/move_products/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      product_ids: productIds,
+      target_unit_id: targetUnitId,
+      preview,
+    }),
+  })
+  if (!preview) revalidatePath('/inventory/units')
+  return result
+}

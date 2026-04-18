@@ -10,18 +10,17 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import {
-    ArrowLeft, Users, MapPin, FileText, HardDrive, Package,
-    Loader2, Crown, Layers, Activity,
-    CreditCard, TrendingUp, Plus, KeyRound, Paintbrush,
-    Building2, Power,
-    Puzzle,
+    ArrowLeft, Users, Loader2, Layers, Activity,
+    CreditCard, TrendingUp, Paintbrush, Building2, Puzzle,
 } from "lucide-react"
 import { BrandingTab } from "./_components/BrandingTab"
 import { BillingTab } from "./_components/BillingTab"
 import { AddonsTab } from "./_components/AddonsTab"
 import { OverviewTab } from "./_components/OverviewTab"
-import { UsageMeter } from "./_components/UsageMeter"
-import { ModuleCard } from "./_components/ModuleCard"
+import { ModulesTab } from "./_components/ModulesTab"
+import { UsersTab } from "./_components/UsersTab"
+import { SitesTab } from "./_components/SitesTab"
+import { UsageTab } from "./_components/UsageTab"
 import { CreateUserDialog, ResetPasswordDialog, CreateSiteDialog, PlanSwitchDialog, ClientAssignDialog } from "./_components/OrgDialogs"
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
@@ -148,8 +147,6 @@ export default function OrganizationDetailPage() {
         { key: 'branding', label: 'Branding', icon: Paintbrush },
     ]
 
-    const coreModules = modules.filter(m => m.is_core)
-    const businessModules = modules.filter(m => !m.is_core)
     const activeModules = modules.filter(m => m.status === 'INSTALLED').length
 
     return (
@@ -215,192 +212,35 @@ export default function OrganizationDetailPage() {
 
             {/* ─── Modules Tab ──────────────────────────────────────────── */}
             {activeTab === 'modules' && (
-                <div className="space-y-8">
-                    {coreModules.length > 0 && (
-                        <div>
-                            <h3 className="text-xs font-black uppercase tracking-widest text-indigo-500 mb-4 flex items-center gap-2">
-                                <Crown size={14} /> Core Infrastructure
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {coreModules.map(m => <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} onFeatureToggle={handleFeatureToggle} />)}
-                            </div>
-                        </div>
-                    )}
-                    <div>
-                        <h3 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2">
-                            <Package size={14} /> Business Modules
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {businessModules.map(m => <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} onFeatureToggle={handleFeatureToggle} />)}
-                        </div>
-                    </div>
-                </div>
+                <ModulesTab
+                    modules={modules}
+                    toggling={toggling}
+                    onToggle={handleToggle}
+                    onFeatureToggle={handleFeatureToggle}
+                />
             )}
 
             {/* ─── Users Tab ────────────────────────────────────────────── */}
             {activeTab === 'users' && (
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-bold text-app-foreground">Organization Users</h3>
-                            <p className="text-sm text-app-muted-foreground">{users.length} user{users.length !== 1 ? 's' : ''} in this organization</p>
-                        </div>
-                        <Button onClick={() => setShowCreateUser(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md">
-                            <Plus size={16} className="mr-2" /> Create User
-                        </Button>
-                    </div>
-
-                    {users.length === 0 ? (
-                        <Card className="border-app-border shadow-sm">
-                            <CardContent className="py-12 text-center text-app-muted-foreground italic">No users found for this organization.</CardContent>
-                        </Card>
-                    ) : (
-                        <div className="space-y-2">
-                            {users.map(user => (
-                                <div key={user.id} className="flex items-center justify-between p-4 bg-app-surface rounded-2xl border border-app-border hover:border-app-border shadow-sm transition-all">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black ${user.is_superuser
-                                            ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                            : 'bg-app-surface text-app-muted-foreground border border-app-border'
-                                            }`}>
-                                            {user.username.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-bold text-app-foreground text-sm">{user.username}</span>
-                                                {user.is_superuser && (
-                                                    <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 text-[9px] font-black">SUPER</Badge>
-                                                )}
-                                                {user.is_staff && !user.is_superuser && (
-                                                    <Badge className="bg-blue-50 text-blue-600 border-blue-100 text-[9px] font-black">STAFF</Badge>
-                                                )}
-                                                {!user.is_active && (
-                                                    <Badge className="bg-red-50 text-red-500 border-red-100 text-[9px]">Inactive</Badge>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-app-muted-foreground">{user.email || 'No email'} {user.role ? `· ${user.role}` : ''}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] text-app-muted-foreground">
-                                            {user.date_joined ? new Date(user.date_joined).toLocaleDateString() : ''}
-                                        </span>
-                                        <Button variant="outline" size="sm" onClick={() => { setResetTarget(user); setNewPassword('') }}
-                                            className="rounded-xl border-app-border text-app-muted-foreground hover:text-app-foreground text-xs font-bold">
-                                            <KeyRound size={12} className="mr-1" /> Reset
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                <UsersTab
+                    users={users}
+                    onCreateUser={() => setShowCreateUser(true)}
+                    onResetPassword={(user) => setResetTarget(user)}
+                />
             )}
 
             {/* ─── Sites Tab ────────────────────────────────────────────── */}
             {activeTab === 'sites' && (
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-bold text-app-foreground">Organization Sites</h3>
-                            <p className="text-sm text-app-muted-foreground">{sites.length} site{sites.length !== 1 ? 's' : ''} — branches, warehouses, locations</p>
-                        </div>
-                        <Button onClick={() => setShowCreateSite(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md">
-                            <Plus size={16} className="mr-2" /> Add Site
-                        </Button>
-                    </div>
-
-                    {sites.length === 0 ? (
-                        <Card className="border-app-border shadow-sm">
-                            <CardContent className="py-12 text-center text-app-muted-foreground italic">No sites found. Create the first site for this organization.</CardContent>
-                        </Card>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {sites.map(site => (
-                                <div key={site.id} className={`p-5 rounded-2xl border transition-all ${site.is_active
-                                    ? 'bg-app-surface border-app-border hover:border-indigo-200 shadow-sm'
-                                    : 'bg-app-surface border-app-border opacity-60'
-                                    }`}>
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${site.is_active
-                                                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                                : 'bg-app-surface-2 text-app-muted-foreground border border-app-border'
-                                                }`}>
-                                                <Building2 size={18} />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-app-foreground text-sm">{site.name}</span>
-                                                    {site.code && (
-                                                        <span className="text-[9px] font-mono text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">{site.code}</span>
-                                                    )}
-                                                    <Badge className={site.is_active
-                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100 text-[9px]"
-                                                        : "bg-red-50 text-red-500 border-red-100 text-[9px]"
-                                                    }>
-                                                        {site.is_active ? 'Active' : 'Inactive'}
-                                                    </Badge>
-                                                </div>
-                                                <div className="flex items-center gap-3 mt-1">
-                                                    {site.city && <span className="text-xs text-app-muted-foreground flex items-center gap-1"><MapPin size={10} />{site.city}</span>}
-                                                    {site.phone && <span className="text-xs text-app-muted-foreground">{site.phone}</span>}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button onClick={() => handleToggleSite(site.id)} className="transition-transform hover:scale-110">
-                                            <Power size={18} className={site.is_active ? 'text-emerald-500' : 'text-app-faint'} />
-                                        </button>
-                                    </div>
-                                    {(site.address || site.vat_number) && (
-                                        <div className="mt-3 pt-3 border-t border-app-border flex justify-between text-xs text-app-muted-foreground">
-                                            {site.address && <span>{site.address}</span>}
-                                            {site.vat_number && <span>VAT: {site.vat_number}</span>}
-                                        </div>
-                                    )}
-                                    <div className="mt-2 text-[10px] text-app-faint">
-                                        Created: {site.created_at ? new Date(site.created_at).toLocaleDateString() : 'N/A'}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                <SitesTab
+                    sites={sites}
+                    onCreateSite={() => setShowCreateSite(true)}
+                    onToggleSite={handleToggleSite}
+                />
             )}
 
             {/* ─── Usage Tab ────────────────────────────────────────────── */}
             {activeTab === 'usage' && (
-                <div className="space-y-6">
-                    <Card className="border-app-border shadow-sm">
-                        <CardHeader>
-                            <CardTitle className="text-lg font-bold">Detailed Usage Metrics</CardTitle>
-                            <CardDescription>Real-time resource consumption for this organization</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {usage ? (
-                                <>
-                                    <UsageMeter label="Users" icon={Users} current={usage.users.current} limit={usage.users.limit} percent={usage.users.percent} />
-                                    <UsageMeter label="Sites / Locations" icon={MapPin} current={usage.sites.current} limit={usage.sites.limit} percent={usage.sites.percent} />
-                                    <UsageMeter label="Data Storage" icon={HardDrive} current={usage.storage.current_mb} limit={usage.storage.limit_mb} percent={usage.storage.percent} unit=" MB" />
-                                    <UsageMeter label="Invoices This Month" icon={FileText} current={usage.invoices.current} limit={usage.invoices.limit} percent={usage.invoices.percent} />
-                                    <div className="p-5 bg-app-surface rounded-2xl border border-app-border mt-6">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Active Modules</p>
-                                                <p className="text-2xl font-black text-app-foreground mt-1">
-                                                    {usage.modules.current} <span className="text-sm font-medium text-app-muted-foreground">/ {usage.modules.total_available} available</span>
-                                                </p>
-                                            </div>
-                                            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setActiveTab('modules')}>Manage</Button>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="py-12 text-center text-app-muted-foreground italic">Usage data unavailable</div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+                <UsageTab usage={usage} onManageModules={() => setActiveTab('modules')} />
             )}
 
             {/* ─── Billing Tab ──────────────────────────────────────────── */}

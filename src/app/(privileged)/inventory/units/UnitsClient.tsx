@@ -12,12 +12,13 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { deleteUnit, getUnitProducts, getUnitProductsAdvanced, getUnitPackaging } from '@/app/actions/inventory/units'
+import { deleteUnit, getUnitPackaging } from '@/app/actions/inventory/units'
 import { buildTree } from '@/lib/utils/tree'
 import { UnitFormModal } from '@/components/admin/UnitFormModal'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
 import { BalanceBarcodeConfigModal } from '@/components/admin/BalanceBarcodeConfigModal'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
+import { EntityProductsTab } from '@/components/templates/EntityProductsTab'
 
 /* ═══════════════════════════════════════════════════════════
  *  UNIT ROW — matches CategoryRow design exactly
@@ -132,13 +133,6 @@ type PanelTab = 'overview' | 'products' | 'packages' | 'calculator'
 
 function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, onClose, onPin }: any) {
     const [activeTab, setActiveTab] = useState<PanelTab>((initialTab as PanelTab) ?? 'overview')
-    // Products state
-    const [products, setProducts] = useState<any[]>([])
-    const [prodSearch, setProdSearch] = useState('')
-    const [prodSort, setProdSort] = useState('name')
-    const [prodLoading, setProdLoading] = useState(false)
-    const [prodLoaded, setProdLoaded] = useState(false)
-    const [prodTotal, setProdTotal] = useState(0)
     // Packages state
     const [packages, setPackages] = useState<any[]>([])
     const [pkgLoading, setPkgLoading] = useState(false)
@@ -151,27 +145,7 @@ function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, 
     const childCount = children.length
 
     useEffect(() => { setActiveTab((initialTab as PanelTab) ?? 'overview') }, [node.id, initialTab])
-    useEffect(() => { setProdLoaded(false); setProducts([]); setPkgLoaded(false); setPackages([]) }, [node.id])
-
-    // Load products
-    useEffect(() => {
-        if (activeTab === 'products' && !prodLoaded) {
-            setProdLoading(true)
-            getUnitProductsAdvanced(node.id, { search: prodSearch, sort: prodSort, page_size: 100 })
-                .then((data: any) => { setProducts(data?.results || []); setProdTotal(data?.count || 0); setProdLoaded(true); setProdLoading(false) })
-                .catch(() => setProdLoading(false))
-        }
-    }, [activeTab, node.id, prodLoaded])
-
-    // Reload products on search/sort change
-    useEffect(() => {
-        if (activeTab === 'products' && prodLoaded) {
-            setProdLoading(true)
-            getUnitProductsAdvanced(node.id, { search: prodSearch, sort: prodSort, page_size: 100 })
-                .then((data: any) => { setProducts(data?.results || []); setProdTotal(data?.count || 0); setProdLoading(false) })
-                .catch(() => setProdLoading(false))
-        }
-    }, [prodSearch, prodSort])
+    useEffect(() => { setPkgLoaded(false); setPackages([]) }, [node.id])
 
     // Load packages
     useEffect(() => {
@@ -331,64 +305,19 @@ function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, 
                     </div>
                 )}
 
-                {/* ─── PRODUCTS TAB (with search, sort, filters) ─── */}
+                {/* ─── PRODUCTS TAB — EntityProductsTab template ─── */}
                 {activeTab === 'products' && (
-                    <div className="p-3 space-y-2 animate-in fade-in duration-150">
-                        {/* Search + Sort bar */}
-                        <div className="flex items-center gap-2">
-                            <div className="flex-1 relative">
-                                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                                <input type="text" value={prodSearch} onChange={e => { setProdSearch(e.target.value); setProdLoaded(false) }}
-                                    placeholder="Search products..."
-                                    className="w-full pl-8 pr-3 py-1.5 text-[11px] bg-app-background/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all" />
-                            </div>
-                            <select value={prodSort} onChange={e => { setProdSort(e.target.value); setProdLoaded(false) }}
-                                className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-app-background/50 border border-app-border/50 text-app-foreground outline-none">
-                                <option value="name">A→Z</option>
-                                <option value="-name">Z→A</option>
-                                <option value="price">Price ↑</option>
-                                <option value="-price">Price ↓</option>
-                                <option value="created">Recent</option>
-                            </select>
-                        </div>
-                        {/* Results count */}
-                        <div className="flex items-center justify-between px-1">
-                            <span className="text-[9px] font-bold text-app-muted-foreground">{prodTotal} product{prodTotal !== 1 ? 's' : ''}</span>
-                            {prodSearch && <button onClick={() => { setProdSearch(''); setProdLoaded(false) }} className="text-[9px] font-bold text-app-info hover:underline">Clear search</button>}
-                        </div>
-                        {/* Products list */}
-                        {prodLoading ? (
-                            <div className="flex items-center justify-center py-12"><Loader2 size={20} className="animate-spin text-app-primary" /></div>
-                        ) : products.length > 0 ? (
-                            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                                <div className="divide-y divide-app-border/30">
-                                    {products.map((p: any) => (
-                                        <div key={p.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-app-background/50 transition-all group">
-                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}><Package size={11} /></div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-[12px] font-bold text-app-foreground truncate">{p.name}</div>
-                                                <div className="flex items-center gap-2 text-[9px] text-app-muted-foreground">
-                                                    {p.sku && <span className="font-mono">{p.sku}</span>}
-                                                    {p.category_name && <span>• {p.category_name}</span>}
-                                                    {p.brand_name && <span>• {p.brand_name}</span>}
-                                                </div>
-                                            </div>
-                                            <div className="text-right flex-shrink-0">
-                                                <div className="text-[11px] font-black tabular-nums text-app-foreground">{Number(p.selling_price_ttc || 0).toLocaleString()}</div>
-                                                <div className="text-[8px] font-bold text-app-muted-foreground">FCFA TTC</div>
-                                            </div>
-                                            <Link href={`/inventory/products/${p.id}`} className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary opacity-0 group-hover:opacity-100 transition-all"><ExternalLink size={11} /></Link>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <Package size={28} className="text-app-muted-foreground mb-2 opacity-40" />
-                                <p className="text-[12px] font-bold text-app-muted-foreground">{prodSearch ? 'No matching products' : 'No products'}</p>
-                            </div>
-                        )}
-                    </div>
+                    <EntityProductsTab config={{
+                        entityType: 'unit',
+                        entityId: node.id,
+                        entityName: node.name,
+                        exploreEndpoint: `units/${node.id}/explore/`,
+                        moveEndpoint: 'units/move_products/',
+                        moveTargetKey: 'target_unit_id',
+                        moveTargets: allUnits.filter((u: any) => u.id !== node.id),
+                        moveLabel: 'Move to Unit',
+                        moveIcon: <Ruler size={12} />,
+                    }} />
                 )}
 
                 {/* ─── PACKAGES TAB (like Brands in Categories) ─── */}
