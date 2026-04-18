@@ -49,12 +49,14 @@
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
 - **Fix**: Backend already resolves `crm_contact_id` in the billing endpoint (`views_saas_org_billing.py:344-365`). Frontend button now uses it when present (`/crm/contacts/${crm_contact_id}`) with email-search fallback when the contact isn't resolvable.
 
-### [IN PROGRESS 2026-04-18] Refactor `organizations/[id]/page.tsx` — 1503 → 592 lines
+### [DONE 2026-04-18] Refactor `organizations/[id]/page.tsx` — 1503 → 239 lines
 - **Discovered**: 2026-04-18
-- **Impact**: Violates `code-quality.md` rule (hard limit 300 lines, mandatory refactor over 400). Any further edits should split first.
-- **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
-- **Progress 2026-04-18**: Wired up existing `_components/` (Overview, Billing, Addons tabs + OrgDialogs dialog set + UsageMeter/ModuleCard helpers). Pruned orphan state + handlers + dead imports. File now 592 lines, still over the 300-line limit. Commit `3040002a` (bundled with unrelated mobile commit — see WIP).
-- **Remaining**: Extract Modules/Users/Sites/Usage tabs into new `_components/` files + extract orchestration into a `useOrganizationDetail` hook. Full plan: `task and plan/saas_org_page_refactor_002.md`.
+- **Impact**: Violated `code-quality.md` rule (hard limit 300 lines, mandatory refactor over 400).
+- **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx` + new component & hook files.
+- **Fix**: Completed in two passes on 2026-04-18.
+  - **Pass 1** (commit `3040002a`, bundled with unrelated mobile work): wired up existing `_components/` (Overview, Billing, Addons tabs + OrgDialogs dialog set + UsageMeter/ModuleCard helpers). Pruned orphan state + handlers + dead imports. 1503 → 592 lines.
+  - **Pass 2**: extracted 4 new tab components (`ModulesTab`, `UsersTab`, `SitesTab`, `UsageTab`) and a `useOrganizationDetail` hook that owns all data + mutation logic. page.tsx is now 239 lines of pure orchestration (header, tab-bar, tab wiring, dialog wiring). 592 → 239 lines.
+- **Follow-up**: Not smoke-tested in a browser (no dev server in this env). Next agent should verify tab switching, dialog flows, plan switch race-condition retry, CRM profile direct-link. `_components/OrgDialogs.tsx` at 353 lines is over the 300-line limit; candidate for splitting into one file per dialog later.
 
 ### [OPEN] Module Dependency Resolution UI (plan written)
 - **Discovered**: 2026-02-05 (promoted to MEDIUM 2026-04-18)

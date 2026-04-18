@@ -101,6 +101,28 @@
 
 ---
 
+### Session: 2026-04-18 (part 3 — refactor completed under limit)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE
+- **Worked On**: Finished the SaaS org detail page refactor per `task and plan/saas_org_page_refactor_002.md`. page.tsx is now **239 lines** (under the 300-line code-quality limit).
+- **Files Modified**:
+  - `src/app/(privileged)/(saas)/organizations/[id]/page.tsx` — reduced from 592 → 239 lines. Pure orchestration: header, tab-bar, 8 tab wirings, 5 dialog wirings.
+  - `src/app/(privileged)/(saas)/organizations/[id]/_components/ModulesTab.tsx` — NEW (41 lines).
+  - `src/app/(privileged)/(saas)/organizations/[id]/_components/UsersTab.tsx` — NEW (75 lines).
+  - `src/app/(privileged)/(saas)/organizations/[id]/_components/SitesTab.tsx` — NEW (86 lines).
+  - `src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx` — NEW (49 lines).
+  - `src/app/(privileged)/(saas)/organizations/[id]/_hooks/useOrganizationDetail.ts` — NEW (254 lines). Owns all data + mutation logic (load, refreshXxx, toggleModule/Feature/Site, switchPlan with retry-on-stale-billing, createUser/Site, resetPassword, purchase/cancel addons, toggleEncryption, searchClients, assign/unassign/createAndAssignClient, updateSettings).
+- **Discoveries**:
+  - Dialog handler closures in the page were duplicating the same refresh patterns that the tab extractions already needed. Moving them into the hook (as `assignClient`, `switchPlan`, etc.) eliminated ~200 lines of near-duplicate closures.
+  - `_components/OrgDialogs.tsx` is 353 lines — slightly over the 300-line limit. Not touched in this session. Candidate for splitting to one file per dialog.
+- **Warnings for Next Agent**:
+  - ⚠️ **No browser smoke-test**. Brace/paren balance checks passed, no dangling references detected, but regression risk exists on dialog round-trips, tab switching, state sync after mutations. Before deploying, spin up the dev stack and exercise the smoke-test checklist from `task and plan/saas_org_page_refactor_002.md`.
+  - ⚠️ `OrgDialogs.tsx` is 353 lines — over the 300-line limit. Flag for a future split (one file per dialog, or group by related pairs).
+  - ⚠️ `useOrganizationDetail.ts` is 254 lines. Under the limit but close; if it grows, split into `useOrgData` + `useOrgActions`.
+  - ⚠️ All tab components and the hook use `@ts-nocheck`. Type-tightening is tempting but out of scope; track separately.
+
+---
+
 ### Session: 2026-04-18 (part 2 — partial refactor + plans for LOW items)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE
