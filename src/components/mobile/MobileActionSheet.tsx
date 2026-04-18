@@ -49,7 +49,7 @@ export function MobileActionSheet({ open, onClose, title, subtitle, items }: Pro
                         onClick={onClose}
                         className="fixed inset-0 z-[70]"
                         style={{
-                            background: 'color-mix(in srgb, var(--app-bg, #000) 55%, transparent)',
+                            background: 'rgba(0, 0, 0, 0.45)',
                             backdropFilter: 'blur(3px)',
                         }}
                     />

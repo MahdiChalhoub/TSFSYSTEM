@@ -12,20 +12,12 @@ import { useState, useRef, useEffect, useCallback, ReactNode } from 'react'
 import { Search, Plus, X, ChevronsUpDown, ChevronsDownUp, MoreHorizontal, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import type { MasterPageConfig } from '@/components/templates/master-page-config'
 
-export interface MobileKPI { label: string; value: number | string; icon: ReactNode; color: string }
-export interface MobileAction { label: string; icon: ReactNode; onClick?: () => void; href?: string }
+// Re-export for callers; kept as aliases to the shared types.
+export type { KPI as MobileKPI, ActionButton as MobileAction } from '@/components/templates/master-page-config'
 
-export interface MobileMasterConfig {
-    title: string
-    subtitle: string
-    icon: ReactNode
-    iconColor: string
-    kpis: MobileKPI[]
-    searchPlaceholder?: string
-    primaryAction: { label: string; icon: ReactNode; onClick: () => void }
-    secondaryActions?: MobileAction[]
-    footerLeft?: ReactNode
+export interface MobileMasterConfig extends MasterPageConfig {
     onRefresh?: () => void | Promise<void>
 }
 

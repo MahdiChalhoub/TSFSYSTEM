@@ -90,3 +90,6 @@ erp_backend/list_all_migrations.py
 *.sql
 erp_backend/media/
 *.pdf
+
+# Superpowers brainstorm session artifacts
+.superpowers/

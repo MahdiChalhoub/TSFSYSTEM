@@ -80,7 +80,7 @@ export function MobileBottomSheet({ open, onClose, children, initialSnap = 'peek
                         onClick={onClose}
                         className="fixed inset-0 z-[60]"
                         style={{
-                            background: 'color-mix(in srgb, var(--app-bg, #000) 55%, transparent)',
+                            background: 'rgba(0, 0, 0, 0.45)',
                             backdropFilter: 'blur(3px)',
                         }}
                     />

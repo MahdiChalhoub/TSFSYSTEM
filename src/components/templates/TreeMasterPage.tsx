@@ -11,34 +11,21 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { TourTriggerButton } from '@/components/ui/GuidedTour'
 import { usePageTour } from '@/lib/tours/useTour'
+import type { MasterPageConfig } from '@/components/templates/master-page-config'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
  * ═══════════════════════════════════════════════════════════ */
-export interface KPI {
-    label: string; value: number | string; icon: ReactNode; color: string
-}
 
-export interface ActionButton {
-    label: string; icon: ReactNode; onClick?: () => void; href?: string
-    active?: boolean; activeColor?: string; dataTour?: string
-}
+// Re-exported for backward compatibility — definitions live in master-page-config.ts
+export type { KPI, ActionButton } from '@/components/templates/master-page-config'
 
 export interface ColumnHeader {
     label: string; width: string; color?: string; hideOnMobile?: boolean
 }
 
-export interface TreeMasterConfig {
-    title: string
-    subtitle: string
-    icon: ReactNode
-    iconColor: string
-    kpis: KPI[]
-    searchPlaceholder?: string
-    primaryAction: { label: string; icon: ReactNode; onClick: () => void; dataTour?: string }
-    secondaryActions?: ActionButton[]
+export interface TreeMasterConfig extends MasterPageConfig {
     columnHeaders?: ColumnHeader[]
-    footerLeft?: ReactNode
     contentHeader?: string
     tourId?: string  // If set, renders a Tour button in the header
     treeTourId?: string  // Custom data-tour for the tree container (default: 'tree-container')

@@ -73,7 +73,7 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[80]"
-                        style={{ background: 'color-mix(in srgb, var(--app-bg, #000) 65%, transparent)', backdropFilter: 'blur(4px)' }}
+                        style={{ background: 'rgba(0, 0, 0, 0.55)', backdropFilter: 'blur(4px)' }}
                         onClick={onClose}
                     />
                     <motion.div
