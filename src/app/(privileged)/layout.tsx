@@ -1,17 +1,12 @@
-import { Suspense } from 'react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import '../globals.css';
 import { AdminProvider } from '@/context/AdminContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
-import { Sidebar } from '@/components/admin/Sidebar';
-import { TopHeader } from '@/components/admin/TopHeader';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { LayoutShellGateway } from '@/components/admin/LayoutShellGateway';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { DesignSystemProvider } from '@/contexts/DesignSystemContext'
-import { PeriodWarningBanner } from '@/components/finance/period-warning-banner';
 import { TourProvider } from '@/lib/tours/context';
 
 
@@ -134,29 +129,20 @@ export default async function AdminLayout({
         <FavoritesProvider>
           <TourProvider>
             <DevProvider>
-                <div className="flex h-screen overflow-hidden font-sans" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
-                    {/* Left Panel: Sidebar Tree */}
-                    <Sidebar
-                        isSaas={isSaas}
-                        isSuperuser={user?.is_superuser || false}
-                        dualViewEnabled={(user?.is_superuser) || (financialSettings?.dualView || false)}
-                        initialModuleCodes={installedModuleCodes}
-                        initialDynamicItems={dynamicSidebarItems}
-                    />
-
-                    {/* Right Panel: Content */}
-                    <div className="flex-1 flex flex-col min-w-0">
-                        {/* 1. Global Header */}
-                        <TopHeader sites={sites} organizations={organizations} currentSlug={currentSlug} user={user} />
-
-                        {/* 2. Tab bar (horizontal strip or vertical rail) + main content */}
-                        <PeriodWarningBanner />
-                        <AdminShell>{children}</AdminShell>
-
-                    </div>
-                    <DebugOverlay />
-                    <CommandPalette />
-                </div>
+                <LayoutShellGateway
+                    user={user}
+                    isSaas={isSaas}
+                    currentSlug={currentSlug}
+                    sites={sites}
+                    organizations={organizations}
+                    installedModuleCodes={installedModuleCodes}
+                    dynamicSidebarItems={dynamicSidebarItems}
+                    financialSettings={financialSettings}
+                >
+                    {children}
+                </LayoutShellGateway>
+                <DebugOverlay />
+                <CommandPalette />
             </DevProvider>
           </TourProvider>
         </FavoritesProvider>
