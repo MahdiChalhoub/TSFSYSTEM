@@ -49,11 +49,18 @@
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
 - **Fix**: Backend already resolves `crm_contact_id` in the billing endpoint (`views_saas_org_billing.py:344-365`). Frontend button now uses it when present (`/crm/contacts/${crm_contact_id}`) with email-search fallback when the contact isn't resolvable.
 
-### [OPEN] Refactor `organizations/[id]/page.tsx` — 1503 lines
+### [IN PROGRESS 2026-04-18] Refactor `organizations/[id]/page.tsx` — 1503 → 592 lines
 - **Discovered**: 2026-04-18
 - **Impact**: Violates `code-quality.md` rule (hard limit 300 lines, mandatory refactor over 400). Any further edits should split first.
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
-- **Notes**: Existing `_components/OrgDialogs.tsx` already contains `PlanSwitchDialog`, `ClientAssignDialog`, `CreateUserDialog`, etc., but the page still has inline duplicates of `PlanSwitchDialog` and `ClientAssignDialog`. Refactor should: (1) replace inline dialogs with the `_components` versions, (2) extract tabs into separate files (`OverviewTab`, `ModulesTab`, `UsageTab`, `BillingTab`, `UsersTab`, `SitesTab`, `AddonsTab`), (3) extract the load/toggle/refetch orchestration into a `useOrganizationDetail` hook.
+- **Progress 2026-04-18**: Wired up existing `_components/` (Overview, Billing, Addons tabs + OrgDialogs dialog set + UsageMeter/ModuleCard helpers). Pruned orphan state + handlers + dead imports. File now 592 lines, still over the 300-line limit. Commit `3040002a` (bundled with unrelated mobile commit — see WIP).
+- **Remaining**: Extract Modules/Users/Sites/Usage tabs into new `_components/` files + extract orchestration into a `useOrganizationDetail` hook. Full plan: `task and plan/saas_org_page_refactor_002.md`.
+
+### [OPEN] Module Dependency Resolution UI (plan written)
+- **Discovered**: 2026-02-05 (promoted to MEDIUM 2026-04-18)
+- **Impact**: Admins can't see which modules depend on each other before disabling. Dep data lives per-manifest but has no visualization.
+- **Plan**: `task and plan/kernel_module_dep_graph_ui_001.md`
+- **Estimated effort**: 1–2 days. Additive, low risk.
 
 ### [DONE 2026-04-18] PWA Icon Missing
 - **Discovered**: 2026-02-09
@@ -65,20 +72,17 @@
 
 ## 🟢 LOW
 
-### [OPEN] Module Hot-Reload
+### [OPEN] Module Hot-Reload — placeholder plan written 2026-04-18
 - **Discovered**: 2026-02-05
 - **Impact**: Modules require server restart after installation
-- **Notes**: Deferred backlog item from engine.md
+- **Plan**: `task and plan/kernel_module_hot_reload_001.md` (placeholder — needs research session before implementation)
+- **Notes**: Deferred backlog item from engine.md. Research questions documented in the plan. Blast radius is high; needs staging env before implementation.
 
-### [OPEN] Kernel Rollback Functionality
+### [OPEN] Kernel Rollback Functionality — placeholder plan written 2026-04-18
 - **Discovered**: 2026-02-05
-- **Impact**: No way to rollback kernel updates
-- **Notes**: Deferred backlog item from engine.md
-
-### [OPEN] Module Dependency Resolution UI
-- **Discovered**: 2026-02-05
-- **Impact**: No visual dependency graph between modules
-- **Notes**: Deferred backlog item from engine.md
+- **Impact**: No way to rollback kernel updates (especially ones that include migrations)
+- **Plan**: `task and plan/kernel_rollback_001.md` (placeholder — needs research session before implementation)
+- **Notes**: Deferred backlog item from engine.md. Needs decision on snapshot strategy + rollback SLA before implementation.
 
 ---
 

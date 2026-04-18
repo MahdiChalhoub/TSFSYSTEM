@@ -101,6 +101,31 @@
 
 ---
 
+### Session: 2026-04-18 (part 2 — partial refactor + plans for LOW items)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE
+- **Worked On**: Partial refactor of `organizations/[id]/page.tsx` (1503 → 592 lines). Wrote continuation plan + plans for three deferred WORKMAP LOW items.
+- **Files Modified**:
+  - `src/app/(privileged)/(saas)/organizations/[id]/page.tsx` — wired up existing `_components/` exports (OverviewTab, BillingTab, AddonsTab, OrgDialogs × 5, UsageMeter, ModuleCard); pruned orphan state/handlers/imports.
+  - `task and plan/saas_org_page_refactor_002.md` — NEW. Continuation plan to extract remaining Modules/Users/Sites/Usage tabs + hook, targeting <300 lines.
+  - `task and plan/kernel_module_dep_graph_ui_001.md` — NEW. Full plan for dep graph UI (WORKMAP LOW). 1–2 days, low risk.
+  - `task and plan/kernel_module_hot_reload_001.md` — NEW. Placeholder plan with research questions. High risk, needs staging env.
+  - `task and plan/kernel_rollback_001.md` — NEW. Placeholder plan with research questions. High risk, needs snapshot strategy decision.
+  - `.agent/WORKMAP.md` — marked refactor as IN PROGRESS with progress note; promoted Dep Graph UI to MEDIUM; linked plans to the two remaining LOW items.
+- **Git Versions**: None (see warning below about the refactor commit).
+- **Discoveries**:
+  - The extracted components under `_components/` (BillingTab, AddonsTab, OverviewTab, OrgDialogs with 5 dialogs, UsageMeter, ModuleCard) were already present but unused — page.tsx had inline duplicates. Refactor was mostly wiring, not rebuilding.
+  - The refactor used a Python script via `Bash` (not `Edit`) to surgically replace long JSX line ranges — safer than trying to match 200+-line strings exactly.
+  - Module dependencies are declared per-manifest: `erp_backend/apps/*/manifest.json` with a `dependencies` array. Core modules and most individual modules have no deps; `ecommerce`, `mcp`, `pos`, `client_portal`, `supplier_portal`, `workspace` have real graphs.
+- **Warnings for Next Agent**:
+  - ⚠️ **History is messy.** Commit `3040002a feat(mobile): add long-press action menu + move-to-parent dialog` bundles my page.tsx refactor with unrelated mobile work from a parallel process. The mobile process committed between my commits (check reflog: `cc603ade` and `3040002a` are mobile commits from outside this session). Don't be confused by the mismatched commit subject; the refactor IS in that commit. A follow-up split via interactive rebase would clean this up if desired.
+  - ⚠️ `page.tsx` is still 592 lines (over 300-line limit). Continuation plan is `task and plan/saas_org_page_refactor_002.md` — 3–5 hours to finish. Smoke-test checklist included in the plan.
+  - ⚠️ The Modules / Users / Sites / Usage tabs are still inline in page.tsx. They use imported `UsageMeter` and `ModuleCard` helpers, which works but means the page.tsx file still holds their JSX bodies.
+  - ⚠️ I did not browser-smoke-test the refactor (no dev server available in this env). Brace/paren balance check passed and orphan-reference check is clean, but regressions are possible on tab switching, dialog interactions, or state sync after mutations. Next agent should spin up the dev stack and verify before deploying.
+  - ⚠️ The Hot-Reload and Kernel Rollback plans are **placeholders with research questions**, not implementation plans. Treat them as prompts for a dedicated planning session.
+
+---
+
 ### Session: 2026-04-18 (rules + WORKMAP MEDIUM items)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE
