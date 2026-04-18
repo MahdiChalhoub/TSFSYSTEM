@@ -45,7 +45,7 @@ export function MobileOverviewTab({
                 {node.code && (
                     <span className="font-mono font-black rounded-lg px-2.5 py-1"
                         style={{
-                            fontSize: 12,
+                            fontSize: 'var(--tp-md)',
                             background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                             color: 'var(--app-primary)',
                         }}>
@@ -55,7 +55,7 @@ export function MobileOverviewTab({
                 {node.short_name && (
                     <span className="font-black uppercase tracking-wider rounded-lg px-2.5 py-1"
                         style={{
-                            fontSize: 11,
+                            fontSize: 'var(--tp-sm)',
                             background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
                             color: 'var(--app-muted-foreground)',
                         }}>
@@ -64,7 +64,7 @@ export function MobileOverviewTab({
                 )}
                 <span className="font-black uppercase tracking-widest rounded-full px-2.5 py-1"
                     style={{
-                        fontSize: 10,
+                        fontSize: 'var(--tp-xs)',
                         background: isRoot
                             ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))'
                             : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
@@ -73,7 +73,7 @@ export function MobileOverviewTab({
                     {isRoot ? 'Root' : `Level ${node.level ?? 1}`}
                 </span>
                 {(node.parfum_count ?? 0) > 0 && (
-                    <span className="ml-auto tabular-nums font-bold" style={{ fontSize: 12, color: 'var(--app-muted-foreground)' }}>
+                    <span className="ml-auto tabular-nums font-bold" style={{ fontSize: 'var(--tp-md)', color: 'var(--app-muted-foreground)' }}>
                         {node.parfum_count} parfums
                     </span>
                 )}
@@ -110,11 +110,11 @@ export function MobileOverviewTab({
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="font-black tabular-nums leading-none"
-                                    style={{ fontSize: 20, color: hot ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
+                                    style={{ fontSize: 'var(--tp-stat)', color: hot ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
                                     {s.value}
                                 </div>
                                 <div className="font-bold uppercase tracking-widest mt-0.5"
-                                    style={{ fontSize: 10, color: 'var(--app-muted-foreground)' }}>
+                                    style={{ fontSize: 'var(--tp-xs)', color: 'var(--app-muted-foreground)' }}>
                                     {s.label}
                                 </div>
                             </div>
@@ -132,13 +132,13 @@ export function MobileOverviewTab({
                 <div>
                     <div className="flex items-center justify-between mb-1.5 px-1">
                         <p className="font-black uppercase tracking-widest"
-                            style={{ fontSize: 11, color: 'var(--app-muted-foreground)' }}>
+                            style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-muted-foreground)' }}>
                             Sub-categories
                         </p>
                         <button onClick={() => onAdd(node.id)}
                             className="flex items-center gap-1 font-bold px-2.5 py-1 rounded-lg active:scale-95 transition-all"
                             style={{
-                                fontSize: 12,
+                                fontSize: 'var(--tp-md)',
                                 color: 'var(--app-primary)',
                                 background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                             }}>
@@ -160,18 +160,18 @@ export function MobileOverviewTab({
                                         minHeight: 48,
                                     }}>
                                     <Folder size={14} style={{ color: 'var(--app-muted-foreground)', flexShrink: 0 }} />
-                                    <span className="flex-1 font-bold text-app-foreground truncate" style={{ fontSize: 13 }}>
+                                    <span className="flex-1 font-bold text-app-foreground truncate" style={{ fontSize: 'var(--tp-lg)' }}>
                                         {child.name}
                                     </span>
                                     {cb > 0 && (
                                         <span className="font-black tabular-nums px-1.5 py-0.5 rounded-md"
-                                            style={{ fontSize: 11, color: '#8b5cf6', background: 'color-mix(in srgb, #8b5cf6 10%, transparent)' }}>
+                                            style={{ fontSize: 'var(--tp-sm)', color: '#8b5cf6', background: 'color-mix(in srgb, #8b5cf6 10%, transparent)' }}>
                                             {cb}b
                                         </span>
                                     )}
                                     {cp > 0 && (
                                         <span className="font-black tabular-nums px-1.5 py-0.5 rounded-md"
-                                            style={{ fontSize: 11, color: 'var(--app-success, #10b981)', background: 'color-mix(in srgb, var(--app-success, #10b981) 10%, transparent)' }}>
+                                            style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-success, #10b981)', background: 'color-mix(in srgb, var(--app-success, #10b981) 10%, transparent)' }}>
                                             {cp}p
                                         </span>
                                     )}
@@ -190,13 +190,13 @@ export function MobileOverviewTab({
                         background: 'color-mix(in srgb, var(--app-bg) 40%, transparent)',
                         border: '1px dashed color-mix(in srgb, var(--app-border) 50%, transparent)',
                     }}>
-                    <p className="font-bold mb-2" style={{ fontSize: 12, color: 'var(--app-muted-foreground)' }}>
+                    <p className="font-bold mb-2" style={{ fontSize: 'var(--tp-md)', color: 'var(--app-muted-foreground)' }}>
                         Leaf · no sub-categories
                     </p>
                     <button onClick={() => onAdd(node.id)}
                         className="inline-flex items-center gap-1.5 font-black px-4 py-2 rounded-xl active:scale-95 transition-all"
                         style={{
-                            fontSize: 13,
+                            fontSize: 'var(--tp-lg)',
                             color: '#fff',
                             background: 'var(--app-primary)',
                             boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
@@ -211,7 +211,7 @@ export function MobileOverviewTab({
                 <button onClick={() => onDelete(node)}
                     className="w-full flex items-center justify-center gap-2 font-black px-3 py-3 rounded-xl active:scale-[0.98] transition-all"
                     style={{
-                        fontSize: 13,
+                        fontSize: 'var(--tp-lg)',
                         color: 'var(--app-error, #ef4444)',
                         borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)',
                         border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)',

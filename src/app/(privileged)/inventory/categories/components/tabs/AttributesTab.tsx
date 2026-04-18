@@ -81,11 +81,11 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-200">
             <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                <p className="text-[10px] font-bold text-app-muted-foreground">
+                <p className="text-tp-xs font-bold text-app-muted-foreground">
                     {loading ? 'Loading...' : `${linkedAttrs.length} attribute group${linkedAttrs.length !== 1 ? 's' : ''} linked`}
                 </p>
                 <button onClick={() => setShowLink(!showLink)}
-                    className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg transition-all"
+                    className="flex items-center gap-1 text-tp-xxs font-black uppercase tracking-widest px-2 py-1 rounded-lg transition-all"
                     style={showLink ? { background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' } : { color: 'var(--app-muted-foreground)' }}>
                     <Plus size={11} /> Pre-register
                 </button>
@@ -94,14 +94,14 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
             {showLink && (
                 <div className="flex-shrink-0 px-4 py-2.5 animate-in slide-in-from-top-2 duration-200"
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-warning) 3%, var(--app-surface))' }}>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">Available ({unlinkedAttrs.length})</p>
+                    <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">Available ({unlinkedAttrs.length})</p>
                     {unlinkedAttrs.length === 0 ? (
-                        <p className="text-[11px] text-app-muted-foreground">All attribute groups are already linked.</p>
+                        <p className="text-tp-sm text-app-muted-foreground">All attribute groups are already linked.</p>
                     ) : (
                         <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar">
                             {unlinkedAttrs.map(a => (
                                 <button key={a.id} onClick={() => linkAttr(a.id)} disabled={linking}
-                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all hover:brightness-110 disabled:opacity-50"
+                                    className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all hover:brightness-110 disabled:opacity-50"
                                     style={{ background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 15%, transparent)' }}>
                                     <Plus size={9} />{a.name}
                                 </button>
@@ -117,24 +117,24 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
                     <div className="flex items-center gap-2 mb-2">
                         <ShieldAlert size={14} style={{ color: 'var(--app-error)' }} />
-                        <span className="text-[11px] font-black" style={{ color: 'var(--app-error)' }}>
+                        <span className="text-tp-sm font-black" style={{ color: 'var(--app-error)' }}>
                             ⚠ Unlink "{unlinkTarget.name}"?
                         </span>
                     </div>
-                    <p className="text-[10px] text-app-muted-foreground mb-2">
+                    <p className="text-tp-xs text-app-muted-foreground mb-2">
                         This attribute group is <strong>actively used by products</strong> in this category.
                         Unlinking may affect product barcodes and attribute values. Products with attribute-based
                         barcodes will need manual reassignment.
                     </p>
                     <div className="flex items-center gap-2">
                         <button onClick={() => executeUnlink(unlinkTarget.id)} disabled={linking}
-                            className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                            className="flex items-center gap-1 text-tp-xxs font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-50"
                             style={{ background: 'var(--app-error)', color: 'white' }}>
                             <AlertTriangle size={10} />
                             {linking ? 'Checking...' : 'Proceed with Unlink'}
                         </button>
                         <button onClick={() => setUnlinkTarget(null)}
-                            className="text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all px-2 py-1">
+                            className="text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground transition-all px-2 py-1">
                             Cancel
                         </button>
                     </div>
@@ -147,37 +147,37 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
                     <div className="flex items-center gap-2 mb-2">
                         <AlertTriangle size={14} style={{ color: 'var(--app-error)' }} />
-                        <span className="text-[11px] font-black text-app-error">Cannot Unlink — {conflict.affected_count} product{conflict.affected_count !== 1 ? 's' : ''} affected</span>
+                        <span className="text-tp-sm font-black text-app-error">Cannot Unlink — {conflict.affected_count} product{conflict.affected_count !== 1 ? 's' : ''} affected</span>
                         {conflict.barcode_count > 0 && (
-                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-error) 12%, transparent)', color: 'var(--app-error)' }}>🔒 {conflict.barcode_count} with barcodes</span>
+                            <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-error) 12%, transparent)', color: 'var(--app-error)' }}>🔒 {conflict.barcode_count} with barcodes</span>
                         )}
                     </div>
-                    <p className="text-[10px] text-app-muted-foreground mb-2">
+                    <p className="text-tp-xs text-app-muted-foreground mb-2">
                         {conflict.message}
                     </p>
 
                     {/* Product list with per-product edit access */}
                     <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
                         {(conflict.products || []).map((p: any) => (
-                            <div key={p.id} className="flex items-center gap-2 text-[10px] py-1.5 px-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
+                            <div key={p.id} className="flex items-center gap-2 text-tp-xs py-1.5 px-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
                                 <span className="font-mono font-bold text-app-muted-foreground flex-shrink-0">{p.sku}</span>
                                 <span className="font-bold text-app-foreground truncate flex-1">{p.name}</span>
                                 {p.has_barcode && (
-                                    <span className="text-[8px] font-black px-1 py-0.5 rounded flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>BARCODE</span>
+                                    <span className="text-tp-xxs font-black px-1 py-0.5 rounded flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>BARCODE</span>
                                 )}
                                 <button onClick={() => window.open(`/inventory/products/${p.id}`, '_blank')}
-                                    className="flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded transition-all flex-shrink-0" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                    className="flex items-center gap-1 text-tp-xxs font-black px-2 py-0.5 rounded transition-all flex-shrink-0" style={{ background: 'var(--app-primary)', color: 'white' }}>
                                     <Pencil size={9} /> Edit
                                 </button>
                             </div>
                         ))}
-                        {conflict.affected_count > 20 && <p className="text-[10px] font-bold text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>}
+                        {conflict.affected_count > 20 && <p className="text-tp-xs font-bold text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>}
                     </div>
                     <div className="flex items-center gap-3 mt-2">
-                        <button onClick={() => { setConflict(null); loadData(); router.refresh() }} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                        <button onClick={() => { setConflict(null); loadData(); router.refresh() }} className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all" style={{ background: 'var(--app-primary)', color: 'white' }}>
                             <ArrowRightLeft size={10} /> Refresh & Retry
                         </button>
-                        <button onClick={() => setConflict(null)} className="text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all">Dismiss</button>
+                        <button onClick={() => setConflict(null)} className="text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground transition-all">Dismiss</button>
                     </div>
                 </div>
             )}
@@ -189,7 +189,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <Tag size={32} className="text-app-muted-foreground mb-2 opacity-40" />
                         <p className="text-sm font-bold text-app-muted-foreground">No attribute groups linked</p>
-                        <p className="text-[11px] text-app-muted-foreground mt-1">Attribute groups appear automatically when products use them.</p>
+                        <p className="text-tp-sm text-app-muted-foreground mt-1">Attribute groups appear automatically when products use them.</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
@@ -198,23 +198,23 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                                 <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}><Tag size={12} /></div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                        <p className="text-[12px] font-bold text-app-foreground truncate">{group.name}</p>
-                                        <span className="text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
+                                        <p className="text-tp-md font-bold text-app-foreground truncate">{group.name}</p>
+                                        <span className="text-tp-xxs font-black px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
                                             style={group.source === 'auto' || group.source === 'both' ? { background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' } : { background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
                                             {group.source === 'auto' ? 'AUTO' : group.source === 'both' ? 'AUTO' : 'PRE-REG'}
                                         </span>
                                         {/* Danger indicator for auto-linked attributes */}
                                         {(group.source === 'auto' || group.source === 'both') && (
-                                            <span className="text-[8px] font-black px-1 py-0.5 rounded flex-shrink-0"
+                                            <span className="text-tp-xxs font-black px-1 py-0.5 rounded flex-shrink-0"
                                                 style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)' }}>
                                                 IN USE
                                             </span>
                                         )}
                                     </div>
-                                    {group.code && <p className="text-[10px] font-mono font-bold text-app-muted-foreground">{group.code}</p>}
+                                    {group.code && <p className="text-tp-xs font-mono font-bold text-app-muted-foreground">{group.code}</p>}
                                 </div>
                                 <button onClick={() => requestUnlink(group)} disabled={linking}
-                                    className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                                    className="flex items-center gap-1 text-tp-xxs font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
                                     style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
                                     <Unlink size={10} />Unlink
                                 </button>

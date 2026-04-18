@@ -247,7 +247,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                             <p className="text-sm font-bold text-app-muted-foreground mb-1">
                                 {searchQuery ? 'No matching categories' : 'No categories yet'}
                             </p>
-                            <p className="text-[12px] text-app-muted-foreground mb-5 max-w-xs">
+                            <p className="text-tp-md text-app-muted-foreground mb-5 max-w-xs">
                                 {searchQuery ? 'Try a different search term.' : 'Tap + to create your first category.'}
                             </p>
                             {!searchQuery && (
@@ -269,7 +269,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                                     background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
                                     border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
                                 }}>
-                                <span className="text-[12px] font-bold text-app-foreground truncate">
+                                <span className="text-tp-md font-bold text-app-foreground truncate">
                                     <span className="font-black tabular-nums" style={{ color: 'var(--app-info, #3b82f6)' }}>
                                         {filtered.length}
                                     </span>

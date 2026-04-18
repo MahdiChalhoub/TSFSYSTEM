@@ -53,10 +53,10 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
                     <Bookmark size={14} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-[14px] font-black text-app-foreground truncate">{node.name}</h3>
+                    <h3 className="text-tp-xl font-black text-app-foreground truncate">{node.name}</h3>
                     <div className="flex items-center gap-1.5">
-                        {node.code && <span className="text-[10px] font-mono font-bold text-app-primary">{node.code}</span>}
-                        {node.short_name && <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">{node.short_name}</span>}
+                        {node.code && <span className="text-tp-xs font-mono font-bold text-app-primary">{node.code}</span>}
+                        {node.short_name && <span className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider">{node.short_name}</span>}
                     </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
@@ -82,7 +82,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
                 style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                 {tabs.map(t => (
                     <button key={t.key} onClick={() => setTab(t.key)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all relative"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-tp-xs font-bold transition-all relative"
                         style={tab === t.key ? {
                             background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                             color: 'var(--app-primary)',
@@ -91,7 +91,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
                         }}>
                         {t.icon} {t.label}
                         {t.count != null && t.count > 0 && (
-                            <span className="ml-0.5 text-[8px] font-black px-1 py-[1px] rounded-full min-w-[16px] text-center"
+                            <span className="ml-0.5 text-tp-xxs font-black px-1 py-[1px] rounded-full min-w-[16px] text-center"
                                 style={{
                                     background: tab === t.key
                                         ? `color-mix(in srgb, ${t.color || 'var(--app-primary)'} 15%, transparent)`

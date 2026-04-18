@@ -70,7 +70,7 @@ export function MobileCategoryRow({
                 className="flex items-center gap-1 px-2 rounded-lg font-black tabular-nums active:scale-95 transition-all"
                 style={{
                     height: 28,
-                    fontSize: 12,
+                    fontSize: 'var(--tp-md)',
                     minWidth: 44,
                     color: enabled ? color : 'color-mix(in srgb, var(--app-muted-foreground) 45%, transparent)',
                     background: enabled
@@ -123,7 +123,7 @@ export function MobileCategoryRow({
 
                 {/* Deep-level continuation glyph */}
                 {deepCap && (
-                    <div className="absolute text-[10px] font-black text-app-muted-foreground/50"
+                    <div className="absolute text-tp-xs font-black text-app-muted-foreground/50"
                         style={{ left: indentPx, top: 10 }}>
                         └─
                     </div>
@@ -172,13 +172,13 @@ export function MobileCategoryRow({
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                             <span className="truncate font-black text-app-foreground"
-                                style={{ fontSize: 15, fontWeight: isRoot ? 900 : 700, lineHeight: 1.15 }}>
+                                style={{ fontSize: 'var(--tp-xl)', fontWeight: isRoot ? 900 : 700, lineHeight: 1.15 }}>
                                 {node.name}
                             </span>
                             {isRoot && (
                                 <span className="flex-shrink-0 font-black uppercase tracking-widest rounded-full"
                                     style={{
-                                        fontSize: 8, padding: '2px 6px',
+                                        fontSize: 'var(--tp-xxs)', padding: '2px 6px',
                                         background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
                                         color: '#fff',
                                     }}>ROOT</span>
@@ -187,13 +187,13 @@ export function MobileCategoryRow({
                         {(node.code || node.short_name) && (
                             <div className="flex items-center gap-2 mt-0.5">
                                 {node.code && (
-                                    <span className="font-mono font-bold text-app-muted-foreground" style={{ fontSize: 11 }}>
+                                    <span className="font-mono font-bold text-app-muted-foreground" style={{ fontSize: 'var(--tp-sm)' }}>
                                         {node.code}
                                     </span>
                                 )}
                                 {node.short_name && (
                                     <span className="font-bold uppercase tracking-wider text-app-muted-foreground"
-                                        style={{ fontSize: 10, opacity: 0.7 }}>
+                                        style={{ fontSize: 'var(--tp-xs)', opacity: 0.7 }}>
                                         {node.short_name}
                                     </span>
                                 )}
@@ -214,7 +214,7 @@ export function MobileCategoryRow({
                         {isParent && (
                             <div className="flex items-center gap-1 px-2 rounded-lg font-black tabular-nums"
                                 style={{
-                                    height: 28, fontSize: 12, minWidth: 44,
+                                    height: 28, fontSize: 'var(--tp-md)', minWidth: 44,
                                     color: 'var(--app-muted-foreground)',
                                     background: 'color-mix(in srgb, var(--app-border) 20%, transparent)',
                                 }}>

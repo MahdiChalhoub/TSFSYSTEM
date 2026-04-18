@@ -98,8 +98,8 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                                 <ArrowLeft size={18} />
                             </button>
                             <div className="flex-1 min-w-0">
-                                <div className="text-[13px] font-black text-app-foreground truncate">Move "{node.name}"</div>
-                                <div className="text-[11px] font-bold text-app-muted-foreground">Pick a new parent</div>
+                                <div className="text-tp-lg font-black text-app-foreground truncate">Move "{node.name}"</div>
+                                <div className="text-tp-sm font-bold text-app-muted-foreground">Pick a new parent</div>
                             </div>
                             <button onClick={onClose} className="p-2 rounded-lg active:scale-95 transition-transform"
                                 style={{ color: 'var(--app-muted-foreground)' }}>
@@ -116,7 +116,7 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                                     value={q}
                                     onChange={e => setQ(e.target.value)}
                                     placeholder="Search destination…"
-                                    className="w-full pl-9 pr-3 text-[14px] bg-app-surface/50 border border-app-border/60 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-primary/40 outline-none"
+                                    className="w-full pl-9 pr-3 text-tp-xl bg-app-surface/50 border border-app-border/60 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-primary/40 outline-none"
                                     style={{ height: 42 }}
                                 />
                             </div>
@@ -143,14 +143,14 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                                     <FolderTree size={16} />
                                 </div>
                                 <div className="flex-1 text-left min-w-0">
-                                    <div className="text-[14px] font-black text-app-foreground">Make Root</div>
-                                    <div className="text-[11px] font-bold text-app-muted-foreground">No parent · top-level category</div>
+                                    <div className="text-tp-xl font-black text-app-foreground">Make Root</div>
+                                    <div className="text-tp-sm font-bold text-app-muted-foreground">No parent · top-level category</div>
                                 </div>
                                 {node.parent === null && <Check size={16} style={{ color: 'var(--app-primary)' }} />}
                             </button>
 
                             {matches.length === 0 ? (
-                                <div className="text-center py-10 text-[12px] font-bold text-app-muted-foreground">
+                                <div className="text-center py-10 text-tp-md font-bold text-app-muted-foreground">
                                     No matching categories
                                 </div>
                             ) : matches.map(c => {
@@ -177,13 +177,13 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                                             <FolderTree size={14} />
                                         </div>
                                         <div className="flex-1 text-left min-w-0">
-                                            <div className="text-[13px] font-bold text-app-foreground truncate">{c.name}</div>
+                                            <div className="text-tp-lg font-bold text-app-foreground truncate">{c.name}</div>
                                             {c.code && (
-                                                <div className="text-[10px] font-mono font-bold text-app-muted-foreground truncate">{c.code}</div>
+                                                <div className="text-tp-xs font-mono font-bold text-app-muted-foreground truncate">{c.code}</div>
                                             )}
                                         </div>
                                         {isCurrent && (
-                                            <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                                            <span className="text-tp-xxs font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
                                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
                                                 Current
                                             </span>

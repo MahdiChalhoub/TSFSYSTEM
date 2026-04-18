@@ -75,8 +75,8 @@ export function MobileActionSheet({ open, onClose, title, subtitle, items }: Pro
                         {/* Header */}
                         {(title || subtitle) && (
                             <div className="flex-shrink-0 px-4 pt-1 pb-3 border-b" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
-                                {title && <div className="text-[15px] font-black text-app-foreground truncate leading-tight">{title}</div>}
-                                {subtitle && <div className="text-[11px] font-bold text-app-muted-foreground truncate mt-0.5">{subtitle}</div>}
+                                {title && <div className="text-tp-xl font-black text-app-foreground truncate leading-tight">{title}</div>}
+                                {subtitle && <div className="text-tp-sm font-bold text-app-muted-foreground truncate mt-0.5">{subtitle}</div>}
                             </div>
                         )}
 
@@ -105,8 +105,8 @@ export function MobileActionSheet({ open, onClose, title, subtitle, items }: Pro
                                                     }}>{it.icon}</span>
                                             )}
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[12px] font-black text-app-foreground leading-tight truncate">{it.label}</div>
-                                                {it.hint && <div className="text-[10px] font-bold text-app-muted-foreground truncate">{it.hint}</div>}
+                                                <div className="text-tp-md font-black text-app-foreground leading-tight truncate">{it.label}</div>
+                                                {it.hint && <div className="text-tp-xs font-bold text-app-muted-foreground truncate">{it.hint}</div>}
                                             </div>
                                         </button>
                                     ))}
@@ -136,8 +136,8 @@ export function MobileActionSheet({ open, onClose, title, subtitle, items }: Pro
                                                     }}>{it.icon}</span>
                                             )}
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[13px] font-bold truncate leading-tight">{it.label}</div>
-                                                {it.hint && <div className="text-[11px] font-medium text-app-muted-foreground truncate leading-tight">{it.hint}</div>}
+                                                <div className="text-tp-lg font-bold truncate leading-tight">{it.label}</div>
+                                                {it.hint && <div className="text-tp-sm font-medium text-app-muted-foreground truncate leading-tight">{it.hint}</div>}
                                             </div>
                                         </button>
                                     ))}
@@ -168,8 +168,8 @@ export function MobileActionSheet({ open, onClose, title, subtitle, items }: Pro
                                             }}>{it.icon}</span>
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-[13px] font-black truncate leading-tight">{it.label}</div>
-                                        {it.hint && <div className="text-[11px] font-medium truncate leading-tight" style={{ color: 'color-mix(in srgb, var(--app-error, #ef4444) 75%, transparent)' }}>{it.hint}</div>}
+                                        <div className="text-tp-lg font-black truncate leading-tight">{it.label}</div>
+                                        {it.hint && <div className="text-tp-sm font-medium truncate leading-tight" style={{ color: 'color-mix(in srgb, var(--app-error, #ef4444) 75%, transparent)' }}>{it.hint}</div>}
                                     </div>
                                 </button>
                             ))}
@@ -179,7 +179,7 @@ export function MobileActionSheet({ open, onClose, title, subtitle, items }: Pro
                         <div className="flex-shrink-0 p-2.5 border-t" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 55%, transparent)', background: 'var(--app-surface)' }}>
                             <button
                                 onClick={onClose}
-                                className="w-full py-2.5 rounded-2xl text-[13px] font-black active:scale-[0.98] transition-all"
+                                className="w-full py-2.5 rounded-2xl text-tp-lg font-black active:scale-[0.98] transition-all"
                                 style={{
                                     background: 'color-mix(in srgb, var(--app-border) 35%, transparent)',
                                     color: 'var(--app-muted-foreground)',

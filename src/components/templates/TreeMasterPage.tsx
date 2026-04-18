@@ -126,16 +126,16 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: config.iconColor }}>
                                 <span className="text-white [&>svg]:w-[14px] [&>svg]:h-[14px]">{config.icon}</span>
                             </div>
-                            <span className="text-[12px] font-black text-app-foreground hidden sm:inline">{config.title}</span>
+                            <span className="text-tp-md font-black text-app-foreground hidden sm:inline">{config.title}</span>
                         </div>
                         <div className="flex-1 relative">
                             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                                 placeholder="Search..."
-                                className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
+                                className="w-full pl-8 pr-3 py-1.5 text-tp-md bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
                         </div>
                         <button onClick={() => config.primaryAction.onClick()}
-                            className="flex items-center gap-1 text-[10px] font-bold bg-app-primary text-white px-2 py-1.5 rounded-lg transition-all flex-shrink-0">
+                            className="flex items-center gap-1 text-tp-xs font-bold bg-app-primary text-white px-2 py-1.5 rounded-lg transition-all flex-shrink-0">
                             {config.primaryAction.icon}<span className="hidden sm:inline">New</span>
                         </button>
                         <button onClick={() => setFocusMode(false)} title="Exit focus mode"
@@ -153,7 +153,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 </div>
                                 <div data-tour="page-title">
                                     <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{config.title}</h1>
-                                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                    <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-widest">
                                         {config.subtitle}
                                     </p>
                                 </div>
@@ -162,12 +162,12 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 {config.secondaryActions?.map((action, i) => (
                                     action.href ? (
                                         <Link key={i} href={action.href}
-                                            className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                                            className="flex items-center gap-1.5 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                             {action.icon}<span className="hidden md:inline">{action.label}</span>
                                         </Link>
                                     ) : (
                                         <button key={i} onClick={action.onClick}
-                                            className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all"
+                                            className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all"
                                             style={action.active ? {
                                                 background: `color-mix(in srgb, ${action.activeColor || 'var(--app-primary)'} 10%, transparent)`,
                                                 color: action.activeColor || 'var(--app-primary)',
@@ -185,7 +185,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     data-tour="split-panel-btn"
                                     onClick={() => { setSplitPanel(p => !p); if (splitPanel) setSelectedNode(null) }}
                                     title={splitPanel ? 'Exit split panel' : 'Split panel view'}
-                                    className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all"
+                                    className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all"
                                     style={splitPanel ? {
                                         background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                                         color: 'var(--app-primary)',
@@ -195,13 +195,13 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     <span className="hidden md:inline">{splitPanel ? 'Tree Only' : 'Split Panel'}</span>
                                 </button>
                                 <button data-tour={config.primaryAction.dataTour || 'add-btn'} onClick={() => config.primaryAction.onClick()}
-                                    className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                                    className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                                     style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                     <Plus size={14} /><span className="hidden sm:inline">{config.primaryAction.label}</span>
                                 </button>
                                 {tourHook && <TourTriggerButton onClick={tourHook.start} />}
                                 <button onClick={() => setFocusMode(true)} title="Focus mode (Ctrl+Q)"
-                                    className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                                    className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                     <Maximize2 size={13} />
                                 </button>
                             </div>
@@ -218,7 +218,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                         {s.icon}
                                     </div>
                                     <div className="min-w-0">
-                                        <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                        <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
                                         <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
                                     </div>
                                 </div>
@@ -231,18 +231,18 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                                     placeholder={config.searchPlaceholder || 'Search...'}
-                                    className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
+                                    className="w-full pl-9 pr-3 py-2 text-tp-md md:text-tp-lg bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
                             </div>
                             <button
                                 onClick={() => { setExpandAll(prev => !prev); setExpandKey(k => k + 1) }}
-                                className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-2 rounded-xl border transition-all flex-shrink-0"
+                                className="flex items-center gap-1 text-tp-sm font-bold px-2.5 py-2 rounded-xl border transition-all flex-shrink-0"
                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', color: 'var(--app-primary)', borderColor: 'color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
                                 {expandAll ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
                                 <span className="hidden sm:inline">{expandAll ? 'Collapse' : 'Expand'}</span>
                             </button>
                             {searchQuery && (
                                 <button onClick={() => setSearchQuery('')}
-                                    className="text-[11px] font-bold px-2 py-2 rounded-xl border transition-all flex-shrink-0"
+                                    className="text-tp-sm font-bold px-2 py-2 rounded-xl border transition-all flex-shrink-0"
                                     style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 20%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
                                     <X size={13} />
                                 </button>
@@ -262,7 +262,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                 <div data-tour={config.treeTourId || 'tree-container'} className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
                     {/* Column Headers */}
                     {config.columnHeaders && (
-                        <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest"
+                        <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-tp-xxs font-black text-app-muted-foreground uppercase tracking-widest"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '2px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                             <div className="w-5 flex-shrink-0" />
                             <div className="w-7 flex-shrink-0" />
@@ -299,7 +299,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                             <div className="flex flex-col items-center justify-center h-full py-20 px-4 text-center" style={{ background: 'var(--app-surface)' }}>
                                 <LayoutPanelLeft size={36} className="text-app-muted-foreground mb-3 opacity-40" />
                                 <p className="text-sm font-bold text-app-muted-foreground">Select an item</p>
-                                <p className="text-[11px] text-app-muted-foreground mt-1">Click any row to view details in split view.</p>
+                                <p className="text-tp-sm text-app-muted-foreground mt-1">Click any row to view details in split view.</p>
                             </div>
                         )}
                     </div>
@@ -320,7 +320,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                         <div className="flex flex-col items-center justify-center h-full py-20 px-4 text-center">
                             <LayoutPanelLeft size={36} className="text-app-muted-foreground mb-3 opacity-40" />
                             <p className="text-sm font-bold text-app-muted-foreground">Select an item</p>
-                            <p className="text-[11px] text-app-muted-foreground mt-1">Click any row to view details here.</p>
+                            <p className="text-tp-sm text-app-muted-foreground mt-1">Click any row to view details here.</p>
                         </div>
                     )}
                 </div>
@@ -349,7 +349,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
             )}
 
             {/* ── Footer ── */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-[11px] font-bold rounded-b-2xl animate-in slide-in-from-bottom-2 duration-300"
+            <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold rounded-b-2xl animate-in slide-in-from-bottom-2 duration-300"
                 style={{
                     background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',

@@ -139,6 +139,40 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Typography Tokens — one semantic scale, two resolutions.
+   Desktop values are the default; mobile overrides ship via
+   the max-width media query below. Components reference the
+   --tp-* vars only — never hardcoded px.
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --tp-xxs: 9px;    /* root badges, smallest meta */
+  --tp-xs:  10px;   /* uppercase tiny labels, secondary counts */
+  --tp-sm:  11px;   /* labels, compact meta */
+  --tp-md:  12px;   /* body-compact, chip counts */
+  --tp-lg:  13px;   /* body, row names */
+  --tp-xl:  14px;   /* primary body, inputs */
+  --tp-2xl: 16px;   /* section headers */
+  --tp-3xl: 18px;   /* page titles */
+  --tp-stat: 18px;  /* stat values, tabular */
+  --tp-hero: 22px;  /* large display */
+}
+
+@media (max-width: 767px) {
+  :root {
+    --tp-xxs: 10px;
+    --tp-xs:  11px;
+    --tp-sm:  12px;
+    --tp-md:  13px;
+    --tp-lg:  14px;
+    --tp-xl:  15px;
+    --tp-2xl: 17px;
+    --tp-3xl: 20px;
+    --tp-stat: 20px;
+    --tp-hero: 24px;
+  }
+}
+
 /* Global Base Styles */
 @layer base {
   body {
@@ -162,6 +196,17 @@
 }
 
 @theme inline {
+  /* Typography tokens exposed as Tailwind text-tp-* utilities */
+  --text-tp-xxs: var(--tp-xxs);
+  --text-tp-xs: var(--tp-xs);
+  --text-tp-sm: var(--tp-sm);
+  --text-tp-md: var(--tp-md);
+  --text-tp-lg: var(--tp-lg);
+  --text-tp-xl: var(--tp-xl);
+  --text-tp-2xl: var(--tp-2xl);
+  --text-tp-3xl: var(--tp-3xl);
+  --text-tp-stat: var(--tp-stat);
+  --text-tp-hero: var(--tp-hero);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

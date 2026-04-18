@@ -62,17 +62,17 @@ export function MobileCategoryDetailSheet({
                     <Bookmark size={16} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-app-foreground truncate leading-tight" style={{ fontSize: 16 }}>
+                    <h3 className="font-black text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
                         {node.name}
                     </h3>
                     <div className="flex items-center gap-1.5 mt-0.5">
                         {node.code && (
-                            <span className="font-mono font-bold" style={{ fontSize: 11, color: 'var(--app-primary)' }}>
+                            <span className="font-mono font-bold" style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-primary)' }}>
                                 {node.code}
                             </span>
                         )}
                         {node.short_name && (
-                            <span className="font-bold uppercase tracking-wider text-app-muted-foreground" style={{ fontSize: 10 }}>
+                            <span className="font-bold uppercase tracking-wider text-app-muted-foreground" style={{ fontSize: 'var(--tp-xs)' }}>
                                 · {node.short_name}
                             </span>
                         )}
@@ -114,7 +114,7 @@ export function MobileCategoryDetailSheet({
                             onClick={() => setTab(t.key)}
                             className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl font-black transition-all active:scale-95"
                             style={{
-                                minHeight: 38, fontSize: 12,
+                                minHeight: 38, fontSize: 'var(--tp-md)',
                                 background: active
                                     ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
                                     : 'color-mix(in srgb, var(--app-border) 20%, transparent)',
@@ -128,7 +128,7 @@ export function MobileCategoryDetailSheet({
                             {t.count != null && t.count > 0 && (
                                 <span className="font-black tabular-nums rounded-full px-1.5 py-0.5"
                                     style={{
-                                        fontSize: 10, minWidth: 18, textAlign: 'center',
+                                        fontSize: 'var(--tp-xs)', minWidth: 18, textAlign: 'center',
                                         background: active
                                             ? `color-mix(in srgb, ${t.color || 'var(--app-primary)'} 18%, transparent)`
                                             : 'color-mix(in srgb, var(--app-border) 40%, transparent)',

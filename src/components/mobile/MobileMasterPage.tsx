@@ -152,7 +152,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                     </motion.div>
                     <div className="flex-1 min-w-0">
                         <motion.h1
-                            animate={{ fontSize: collapsed ? 14 : 18 }}
+                            animate={{ fontSize: collapsed ? 'var(--tp-xl)' : 'var(--tp-3xl)' }}
                             transition={{ duration: 0.18 }}
                             className="font-black text-app-foreground tracking-tight truncate leading-tight">
                             {config.title}
@@ -164,7 +164,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                                     animate={{ opacity: 1, height: 'auto' }}
                                     exit={{ opacity: 0, height: 0 }}
                                     transition={{ duration: 0.15 }}
-                                    className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">
+                                    className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-widest truncate">
                                     {config.subtitle}
                                 </motion.p>
                             )}
@@ -172,7 +172,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                     </div>
 
                     <button onClick={config.primaryAction.onClick}
-                        className="flex items-center gap-1 font-bold bg-app-primary text-white px-3 py-2 rounded-xl text-[12px] active:scale-95 transition-transform"
+                        className="flex items-center gap-1 font-bold bg-app-primary text-white px-3 py-2 rounded-xl text-tp-md active:scale-95 transition-transform"
                         style={{ boxShadow: '0 2px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)', minHeight: 36 }}>
                         {config.primaryAction.icon}
                         <span className="sr-only">{config.primaryAction.label}</span>
@@ -192,7 +192,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }}>
                                         {config.secondaryActions.map((a, i) => {
                                             const content = (
-                                                <div className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-bold text-app-foreground hover:bg-app-primary/10 active:bg-app-primary/15 transition-colors">
+                                                <div className="flex items-center gap-2.5 px-3.5 py-2.5 text-tp-lg font-bold text-app-foreground hover:bg-app-primary/10 active:bg-app-primary/15 transition-colors">
                                                     <span className="text-app-muted-foreground flex-shrink-0">{a.icon}</span>
                                                     {a.label}
                                                 </div>
@@ -274,8 +274,8 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                                     {k.icon}
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[9px] font-bold uppercase tracking-wider text-app-muted-foreground truncate">{k.label}</div>
-                                    <div className="text-[15px] font-black text-app-foreground tabular-nums leading-tight">{k.value}</div>
+                                    <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground truncate">{k.label}</div>
+                                    <div className="text-tp-xl font-black text-app-foreground tabular-nums leading-tight">{k.value}</div>
                                 </div>
                             </div>
                         ))}
@@ -296,7 +296,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 placeholder={config.searchPlaceholder || 'Search…'}
-                                className="w-full pl-9 pr-3 text-[14px] bg-app-surface/50 border border-app-border/60 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-primary/40 outline-none transition-all"
+                                className="w-full pl-9 pr-3 text-tp-xl bg-app-surface/50 border border-app-border/60 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-primary/40 outline-none transition-all"
                                 style={{ height: 40 }}
                             />
                         </div>
@@ -333,7 +333,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-3 text-[11px] font-bold text-app-muted-foreground flex items-center justify-between">
+                <div className="px-4 py-3 text-tp-sm font-bold text-app-muted-foreground flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-wrap">
                         {config.footerLeft}
                     </div>

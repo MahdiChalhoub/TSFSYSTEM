@@ -22,18 +22,18 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
             {/* ── Quick Info Strip ── */}
             <div className="flex items-center gap-2 flex-wrap">
                 {node.code && (
-                    <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-lg"
+                    <span className="font-mono text-tp-xs font-bold px-2 py-0.5 rounded-lg"
                         style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
                         {node.code}
                     </span>
                 )}
                 {node.short_name && (
-                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg"
+                    <span className="text-tp-xxs font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg"
                         style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
                         {node.short_name}
                     </span>
                 )}
-                <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                <span className="text-tp-xxs font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
                     style={{
                         background: isRoot
                             ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))'
@@ -43,7 +43,7 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
                     {isRoot ? 'Root' : `Level ${node.level ?? 1}`}
                 </span>
                 {(node.parfum_count ?? 0) > 0 && (
-                    <span className="text-[9px] font-bold tabular-nums ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
+                    <span className="text-tp-xxs font-bold tabular-nums ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
                         {node.parfum_count} parfums
                     </span>
                 )}
@@ -78,7 +78,7 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
                                 style={{ color: s.value > 0 ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
                                 {s.value}
                             </div>
-                            <div className="text-[8px] font-bold uppercase tracking-widest leading-none"
+                            <div className="text-tp-xxs font-bold uppercase tracking-widest leading-none"
                                 style={{ color: 'var(--app-muted-foreground)' }}>
                                 {s.label}
                             </div>
@@ -91,9 +91,9 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
             {childCount > 0 && (
                 <div>
                     <div className="flex items-center justify-between mb-1">
-                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Sub-categories</p>
+                        <p className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Sub-categories</p>
                         <button onClick={() => onAdd(node.id)}
-                            className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
+                            className="flex items-center gap-1 text-tp-xs font-bold px-2 py-0.5 rounded-lg transition-all"
                             style={{ color: 'var(--app-primary)', background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
                             <Plus size={9} /> Add
                         </button>
@@ -107,9 +107,9 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
                                     className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:brightness-105 transition-all"
                                     style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 12%, transparent)' }}>
                                     <Folder size={10} style={{ color: 'var(--app-muted-foreground)', flexShrink: 0 }} />
-                                    <span className="flex-1 text-[11px] font-semibold text-app-foreground truncate">{child.name}</span>
-                                    {cb > 0 && <span className="text-[9px] font-black tabular-nums" style={{ color: '#8b5cf6' }}>{cb}b</span>}
-                                    {cp > 0 && <span className="text-[9px] font-black tabular-nums" style={{ color: 'var(--app-success, #22c55e)' }}>{cp}p</span>}
+                                    <span className="flex-1 text-tp-sm font-semibold text-app-foreground truncate">{child.name}</span>
+                                    {cb > 0 && <span className="text-tp-xxs font-black tabular-nums" style={{ color: '#8b5cf6' }}>{cb}b</span>}
+                                    {cp > 0 && <span className="text-tp-xxs font-black tabular-nums" style={{ color: 'var(--app-success, #22c55e)' }}>{cp}p</span>}
                                 </div>
                             )
                         })}
@@ -121,9 +121,9 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
             {childCount === 0 && (
                 <div className="rounded-xl py-3 px-3 text-center"
                     style={{ background: 'color-mix(in srgb, var(--app-background) 40%, transparent)', border: '1px dashed color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
-                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Leaf — no sub-categories</p>
+                    <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Leaf — no sub-categories</p>
                     <button onClick={() => onAdd(node.id)}
-                        className="mt-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg mx-auto flex items-center gap-1 transition-all"
+                        className="mt-1.5 text-tp-xs font-bold px-2.5 py-1 rounded-lg mx-auto flex items-center gap-1 transition-all"
                         style={{ color: 'var(--app-primary)', background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
                         <Plus size={9} /> Add Sub-category
                     </button>
@@ -133,7 +133,7 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
             {/* ── Delete ── */}
             {!isParent && (
                 <button onClick={() => onDelete(node)}
-                    className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-3 py-2 rounded-xl border transition-all hover:brightness-105"
+                    className="w-full flex items-center justify-center gap-1.5 text-tp-xs font-bold px-3 py-2 rounded-xl border transition-all hover:brightness-105"
                     style={{
                         color: 'var(--app-error, #ef4444)',
                         borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 20%, transparent)',

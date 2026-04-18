@@ -117,11 +117,11 @@ export const CategoryRow = ({
                         if (isParent) { setIsOpen(o => !o) } else { onSelect?.(node) }
                     }}>
                         <div className="flex items-center gap-1.5">
-                            <span className={`truncate text-[13px] ${isRoot ? 'font-black text-app-foreground' : 'font-semibold text-app-foreground'}`}>
+                            <span className={`truncate text-tp-lg ${isRoot ? 'font-black text-app-foreground' : 'font-semibold text-app-foreground'}`}>
                                 {node.name}
                             </span>
                             {isRoot && (
-                                <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-[1px] rounded-full flex-shrink-0"
+                                <span className="text-tp-xxs font-black uppercase tracking-widest px-1.5 py-[1px] rounded-full flex-shrink-0"
                                     style={{
                                         background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
                                         color: '#fff',
@@ -132,12 +132,12 @@ export const CategoryRow = ({
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
                             {node.code && (
-                                <span className="font-mono text-[9px] font-bold text-app-muted-foreground">
+                                <span className="font-mono text-tp-xxs font-bold text-app-muted-foreground">
                                     {node.code}
                                 </span>
                             )}
                             {node.short_name && (
-                                <span className="text-[8px] font-bold text-app-muted-foreground uppercase tracking-wider opacity-60">
+                                <span className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider opacity-60">
                                     {node.short_name}
                                 </span>
                             )}
@@ -147,7 +147,7 @@ export const CategoryRow = ({
                 {/* ── Stat Badges ── */}
                 {/* Children */}
                 <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md tabular-nums"
+                    <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded-md tabular-nums"
                         style={{
                             background: isParent ? 'color-mix(in srgb, var(--app-foreground) 6%, transparent)' : 'transparent',
                             color: isParent ? 'var(--app-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)',
@@ -160,7 +160,7 @@ export const CategoryRow = ({
                 <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
                     <button
                         onClick={(e) => { e.stopPropagation(); onViewBrands(node) }}
-                        className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
+                        className="text-tp-xxs font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={brandCount > 0 ? {
                             color: '#8b5cf6',
                             background: 'color-mix(in srgb, #8b5cf6 8%, transparent)',
@@ -178,7 +178,7 @@ export const CategoryRow = ({
                 <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
                     <button
                         onClick={(e) => { e.stopPropagation(); onViewAttributes(node) }}
-                        className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
+                        className="text-tp-xxs font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={attributeCount > 0 ? {
                             color: 'var(--app-warning)',
                             background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)',
@@ -196,7 +196,7 @@ export const CategoryRow = ({
                 <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
                     <button
                         onClick={(e) => { e.stopPropagation(); onViewProducts(node) }}
-                        className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
+                        className="text-tp-xxs font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums transition-all hover:scale-105"
                         style={productCount > 0 ? {
                             color: 'var(--app-success)',
                             background: 'color-mix(in srgb, var(--app-success) 8%, transparent)',
