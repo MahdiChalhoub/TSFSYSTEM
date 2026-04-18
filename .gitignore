@@ -60,7 +60,7 @@ venv/
 .venv/
 
 # local development
-.agent/
+# .agent/ is versioned governance (rules, WORKMAP, WIP log) — keep tracked.
 .gemini/
 # Engine Guard Scripts are essential
 !scripts/

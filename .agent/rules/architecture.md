@@ -86,3 +86,9 @@ When starting or ending a session:
 2. **Read** `.agent/WORKMAP.md` — see pending tasks
 3. **Update** both files at session end
 4. **Never delete** completed items from WORKMAP — mark as DONE with date
+
+## 8. Kernel OS v2.0 Primitives
+
+The kernel at `erp_backend/kernel/` implements these architecture rules in code via `TenantOwnedModel`, `AuditLogMixin`, `emit_event`, `get_config`, and `@require_permission`. New models and flows should use these primitives.
+
+See [`kernel-os-v2.md`](kernel-os-v2.md) for the full contract and a compatibility table between legacy and OS v2.0 patterns.
