@@ -7,15 +7,17 @@
  * Uses the universal DajingoListView table template.
  */
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAdmin } from '@/context/AdminContext'
 import { useCurrency } from '@/lib/utils/currency'
-import { getLedgerEntries } from '@/app/actions/finance/ledger'
+import { getLedgerEntries, deleteJournalEntry, bulkDeleteJournalEntries } from '@/app/actions/finance/ledger'
 import { getListViewPolicy } from '@/app/actions/listview-policies'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import Link from 'next/link'
 import {
-  Search, FileText, Layers, Eye, Edit,
+  Search, FileText, Layers, Eye, Edit, Trash2,
   X, Maximize2, Minimize2,
   SlidersHorizontal, RefreshCcw,
   ShieldCheck, Clock, Zap, Lock, Unlock, RotateCcw,
@@ -138,6 +140,9 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
 
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [isPending, startTransition] = useTransition()
+  const [showBulkDelete, setShowBulkDelete] = useState(false)
+  const [showSingleDelete, setShowSingleDelete] = useState<number | null>(null)
   const toggleSelect = (id: number | string) => {
     const next = new Set(selectedIds)
     if (next.has(id as number)) next.delete(id as number); else next.add(id as number)
@@ -232,6 +237,50 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
     else setSelectedIds(new Set(paginated.map(e => e.id)))
   }
 
+  // ── Delete handlers ──
+  const handleSingleDelete = async (id: number) => {
+    startTransition(async () => {
+      try {
+        await deleteJournalEntry(id)
+        toast.success('Journal entry deleted')
+        setItems(prev => prev.filter(e => e.id !== id))
+        setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n })
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : String(err))
+      }
+    })
+    setShowSingleDelete(null)
+  }
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds)
+    // Only delete non-POSTED entries
+    const deletable = ids.filter(id => {
+      const entry = items.find(e => e.id === id)
+      return entry && entry.status !== 'POSTED'
+    })
+    if (deletable.length === 0) {
+      toast.error('No deletable entries selected (POSTED entries cannot be deleted)')
+      setShowBulkDelete(false)
+      return
+    }
+    startTransition(async () => {
+      try {
+        const results = await bulkDeleteJournalEntries(deletable)
+        const succeeded = results.filter(r => r.success).length
+        const failed = results.filter(r => !r.success)
+        if (succeeded > 0) toast.success(`${succeeded} entr${succeeded === 1 ? 'y' : 'ies'} deleted`)
+        if (failed.length > 0) toast.error(`${failed.length} entr${failed.length === 1 ? 'y' : 'ies'} failed to delete`)
+        const deletedIds = new Set(results.filter(r => r.success).map(r => r.id))
+        setItems(prev => prev.filter(e => !deletedIds.has(e.id)))
+        setSelectedIds(new Set())
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : String(err))
+      }
+    })
+    setShowBulkDelete(false)
+  }
+
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-300 transition-all">
       <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
@@ -277,6 +326,14 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
                 </div>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                {selectedIds.size > 0 && (
+                  <button onClick={() => setShowBulkDelete(true)}
+                    disabled={isPending}
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-white bg-rose-500 hover:bg-rose-600 px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50">
+                    <Trash2 size={13} />
+                    <span>Delete {selectedIds.size}</span>
+                  </button>
+                )}
                 <Link href="/finance/ledger/opening"
                   className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                   <BookOpen size={13} /><span className="hidden md:inline">Opening Balances</span>
@@ -355,13 +412,16 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
           </div>
         )}
         renderColumnCell={(key, entry) => renderLedgerCell(key, entry, fmt)}
-        renderExpanded={entry => <LedgerExpandedRow entry={entry} fmt={fmt} onView={(id) => router.push(`/finance/ledger/${id}`)} />}
+        renderExpanded={entry => <LedgerExpandedRow entry={entry} fmt={fmt} onView={(id) => router.push(`/finance/ledger/${id}`)} onDeleted={fetchData} />}
         onView={entry => router.push(`/finance/ledger/${entry.id}`)}
         menuActions={entry => {
           const isLocked = entry.fiscalYear?.status === 'LOCKED' || entry.fiscalYear?.isLocked
           const actions = []
           if (entry.status !== 'REVERSED' && !isLocked) {
             actions.push({ label: 'Edit Entry', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/finance/ledger/${entry.id}/edit` } })
+          }
+          if (entry.status !== 'POSTED' && !isLocked) {
+            actions.push({ label: 'Delete Entry', icon: <Trash2 size={12} className="text-rose-500" />, onClick: () => setShowSingleDelete(entry.id), variant: 'destructive' as const })
           }
           return actions
         }}
@@ -382,12 +442,32 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
           onPageSizeChange: n => { setPageSize(n); setCurrentPage(1) },
         }}
       />
+
+      {/* ── Confirm Dialogs ── */}
+      <ConfirmDialog
+        open={showSingleDelete !== null}
+        onOpenChange={(open) => { if (!open) setShowSingleDelete(null) }}
+        onConfirm={() => showSingleDelete !== null && handleSingleDelete(showSingleDelete)}
+        title="Delete Journal Entry?"
+        description={`This will permanently delete journal entry JV #${showSingleDelete} and all its lines. This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+      />
+      <ConfirmDialog
+        open={showBulkDelete}
+        onOpenChange={setShowBulkDelete}
+        onConfirm={handleBulkDelete}
+        title={`Delete ${selectedIds.size} Journal ${selectedIds.size === 1 ? 'Entry' : 'Entries'}?`}
+        description={`This will permanently delete the selected entries and all their lines. POSTED entries will be skipped. This action cannot be undone.`}
+        confirmText="Delete All"
+        variant="destructive"
+      />
     </div>
   )
 }
 
 /* ── Ledger Expanded Row ── */
-function LedgerExpandedRow({ entry, fmt, onView }: { entry: JournalEntry; fmt: (n: number) => string; onView: (id: number) => void }) {
+function LedgerExpandedRow({ entry, fmt, onView, onDeleted }: { entry: JournalEntry; fmt: (n: number) => string; onView: (id: number) => void; onDeleted?: () => void }) {
   const sc = STATUS_CONFIG[entry.status] || { label: entry.status, color: 'var(--app-muted-foreground)' }
   const lines = entry.lines || []
   const totalDebit = lines.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0)
@@ -408,7 +488,7 @@ function LedgerExpandedRow({ entry, fmt, onView }: { entry: JournalEntry; fmt: (
             <Edit size={11} /> Edit
           </button>
         )}
-        <LedgerEntryActions entryId={entry.id} status={entry.status} isLocked={isLocked} />
+        <LedgerEntryActions entryId={entry.id} status={entry.status} isLocked={isLocked} onDeleted={onDeleted} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">

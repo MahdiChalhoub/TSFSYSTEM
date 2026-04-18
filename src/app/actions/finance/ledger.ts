@@ -157,6 +157,35 @@ export async function reverseJournalEntry(id: number) {
 
 export const voidJournalEntry = reverseJournalEntry;
 
+export async function deleteJournalEntry(id: number) {
+    try {
+        await erpFetch(`journal/${id}/`, {
+            method: 'DELETE',
+        })
+        revalidatePath('/finance/ledger')
+        revalidatePath('/finance/chart-of-accounts')
+        return { success: true }
+    } catch (error: unknown) {
+        console.error("Failed to delete journal entry:", error)
+        throw error
+    }
+}
+
+export async function bulkDeleteJournalEntries(ids: number[]) {
+    const results: { id: number; success: boolean; error?: string }[] = []
+    for (const id of ids) {
+        try {
+            await erpFetch(`journal/${id}/`, { method: 'DELETE' })
+            results.push({ id, success: true })
+        } catch (error: unknown) {
+            results.push({ id, success: false, error: error instanceof Error ? error.message : String(error) })
+        }
+    }
+    revalidatePath('/finance/ledger')
+    revalidatePath('/finance/chart-of-accounts')
+    return results
+}
+
 export async function recalculateAccountBalances() {
     try {
         await erpFetch('journal/recalculate_balances/', {
