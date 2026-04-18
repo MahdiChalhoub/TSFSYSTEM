@@ -114,8 +114,7 @@ class TestJournalEntryCreation(LedgerTestBase):
 
     def test_entry_in_closed_period_raises_error(self):
         """Cannot create entries in a closed fiscal period."""
-        self.fiscal_period.is_closed = True
-        self.fiscal_period.save()
+        self.fiscal_period.transition_to('CLOSED', user=self.user)
         try:
             with self.assertRaises(ValidationError) as ctx:
                 LedgerService.create_journal_entry(
@@ -130,13 +129,13 @@ class TestJournalEntryCreation(LedgerTestBase):
                 )
             self.assertIn('closed', str(ctx.exception).lower())
         finally:
-            self.fiscal_period.is_closed = False
-            self.fiscal_period.save()
+            self.fiscal_period.transition_to('OPEN', user=self.user)
 
     def test_entry_in_hard_locked_year_raises_error(self):
         """Cannot create entries in a hard-locked fiscal year."""
-        self.fiscal_year.is_hard_locked = True
-        self.fiscal_year.save()
+        # FINALIZED is the source-of-truth status for a hard-locked year.
+        self.fiscal_year.transition_to('CLOSED', user=self.user)
+        self.fiscal_year.transition_to('FINALIZED', user=self.user)
         try:
             with self.assertRaises(ValidationError) as ctx:
                 LedgerService.create_journal_entry(

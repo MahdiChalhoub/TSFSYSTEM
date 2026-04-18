@@ -29,6 +29,15 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
     const data = initialCategories
 
+    // Compute stats for KPIs
+    const stats = useMemo(() => {
+        const tree = buildTree(data)
+        const leafCount = data.filter((d: any) => !data.some((c: any) => c.parent === d.id)).length
+        const totalProducts = data.reduce((sum: number, d: any) => sum + (d.product_count || 0), 0)
+        const totalBrands = data.reduce((sum: number, d: any) => sum + (d.brand_count || 0), 0)
+        return { total: data.length, roots: tree.length, leafCount, totalProducts, totalBrands }
+    }, [data])
+
     // Actions
     const openAddModal = useCallback((parentId?: number) => { setModalState({ open: true, parentId }) }, [])
     const openEditModal = useCallback((cat: CategoryNode) => { setModalState({ open: true, category: cat }) }, [])
@@ -78,8 +87,21 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true },
                     { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
                 ],
-                kpis: [],  // Populated dynamically via useMemo below
-                footerLeft: <></>,
+                kpis: [
+                    { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)' },
+                    { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-success)' },
+                    { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: '#8b5cf6' },
+                    { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-info)' },
+                    { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: 'var(--app-warning)' },
+                    { label: 'Showing', value: stats.total, icon: <Search size={11} />, color: 'var(--app-muted-foreground)' },
+                ],
+                footerLeft: (
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <span>{stats.total} total categories</span>
+                        <span style={{ color: 'var(--app-border)' }}>·</span>
+                        <span>{stats.totalProducts.toLocaleString()} linked products</span>
+                    </div>
+                ),
             }}
             modals={
                 <>

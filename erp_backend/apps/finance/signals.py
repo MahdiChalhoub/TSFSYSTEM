@@ -102,7 +102,7 @@ def handle_invoice_gl_posting(sender, instance, **kwargs):
         return
 
     try:
-        from apps.finance.models import JournalEntry, JournalEntryLine, ChartOfAccount
+        from apps.finance.models import ChartOfAccount
 
         # Find AR and Revenue accounts
         ar_account = ChartOfAccount.objects.filter(
@@ -121,35 +121,32 @@ def handle_invoice_gl_posting(sender, instance, **kwargs):
             )
             return
 
-        # Create journal entry
+        # Create journal entry via canonical service (auto-links fiscal year/period)
         from django.utils import timezone
-        je = JournalEntry.objects.create(
+        from apps.finance.services.ledger_core import LedgerCoreMixin
+        je = LedgerCoreMixin.create_journal_entry(
             organization=instance.organization,
-            reference=f"INV-{instance.invoice_number or instance.id}",
-            description=f"Invoice {instance.invoice_number} to {instance.contact_name or 'N/A'}",
             transaction_date=timezone.now(),
+            description=f"Invoice {instance.invoice_number} to {instance.contact_name or 'N/A'}",
+            reference=f"INV-{instance.invoice_number or instance.id}",
+            lines=[
+                {
+                    'account_id': ar_account.id,
+                    'debit': instance.total_amount, 'credit': 0,
+                    'description': f"AR: Invoice {instance.invoice_number}",
+                    'contact_id': instance.contact_id,
+                },
+                {
+                    'account_id': revenue_account.id,
+                    'debit': 0, 'credit': instance.total_amount,
+                    'description': f"Revenue: Invoice {instance.invoice_number}",
+                },
+            ],
             status='POSTED',
             scope=instance.scope,
-        )
-
-        # Debit AR
-        JournalEntryLine.objects.create(
-            organization=instance.organization,
-            journal_entry=je,
-            account=ar_account,
-            debit=instance.total_amount,
-            credit=0,
-            description=f"AR: Invoice {instance.invoice_number}",
-            contact=instance.contact,
-        )
-        # Credit Revenue
-        JournalEntryLine.objects.create(
-            organization=instance.organization,
-            journal_entry=je,
-            account=revenue_account,
-            debit=0,
-            credit=instance.total_amount,
-            description=f"Revenue: Invoice {instance.invoice_number}",
+            source_module='finance',
+            source_model='Invoice',
+            source_id=instance.id,
         )
 
         # Link JE back to invoice

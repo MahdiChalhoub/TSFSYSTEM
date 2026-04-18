@@ -40,7 +40,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
         try {
             await erpFetch(`inventory/categories/${categoryId}/link_brand/`, { method: 'POST', body: JSON.stringify({ brand_id: brandId }) })
             toast.success('Brand pre-registered')
-            loadData()
+            loadData(); router.refresh()
         } catch (e: any) { toast.error(e?.message || 'Failed to link'); loadData() }
     }
 
@@ -49,7 +49,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
         try {
             await erpFetch(`inventory/categories/${categoryId}/unlink_brand/`, { method: 'POST', body: JSON.stringify({ brand_id: brandId }) })
             setLinkedBrands(prev => prev.filter(b => b.id !== brandId))
-            toast.success('Brand unlinked'); loadData()
+            toast.success('Brand unlinked'); loadData(); router.refresh()
         } catch (e: any) {
             const cd = e?.data || e
             if (cd?.error === 'conflict' && cd?.products) setConflict({ ...cd, _brandId: brandId })
@@ -112,7 +112,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                             if (!newBrandId) { toast.error('Select a target brand'); return }
                             setLinking(true); let ok = 0
                             for (const p of conflict.products || []) { try { await erpFetch(`inventory/products/${p.id}/`, { method: 'PATCH', body: JSON.stringify({ brand: newBrandId }) }); ok++ } catch {} }
-                            toast.success(`${ok} product${ok !== 1 ? 's' : ''} reassigned`); setConflict(null); setLinking(false); loadData()
+                            toast.success(`${ok} product${ok !== 1 ? 's' : ''} reassigned`); setConflict(null); setLinking(false); loadData(); router.refresh()
                         }} disabled={linking} className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg transition-all disabled:opacity-50" style={{ background: 'var(--app-primary)', color: 'white' }}>
                             {linking ? 'Working...' : 'Reassign All'}
                         </button>

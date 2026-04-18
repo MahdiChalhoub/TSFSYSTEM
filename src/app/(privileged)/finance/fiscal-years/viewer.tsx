@@ -5,6 +5,7 @@ import {
     Calendar, Plus, CheckCircle2, Clock, Lock, Search,
     PlayCircle, ShieldCheck, Trash2, AlertTriangle, TrendingUp, TrendingDown,
     Maximize2, Minimize2, X, Loader2, ChevronDown, ChevronRight, ArrowRight,
+    LockKeyhole, RotateCcw,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -12,6 +13,7 @@ import {
     deleteFiscalYear, updatePeriodStatus, closeFiscalYear,
     hardLockFiscalYear, createFiscalYear, getClosePreview,
     getYearSummary, getYearHistory, getDraftAudit,
+    closePeriod as closePeriodAction, softLockPeriod, hardLockPeriod, reopenPeriod,
     type ClosePreview, type YearSummary, type YearHistoryEvent, type DraftAuditEntry,
 } from '@/app/actions/finance/fiscal-year'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -129,6 +131,23 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     }
 
     /** Validate and apply period status change */
+    const handlePeriodAction = (periodId: number, action: 'close' | 'softLock' | 'hardLock' | 'reopen', periodName: string) => {
+        startTransition(async () => {
+            const fn = action === 'close' ? closePeriodAction
+                     : action === 'softLock' ? softLockPeriod
+                     : action === 'hardLock' ? hardLockPeriod
+                     : reopenPeriod
+            const result = await fn(periodId)
+            if (result.success) {
+                toast.success(`${periodName}: ${action}`)
+                notifyPeriodChange()
+                refreshData()
+            } else {
+                toast.error(result.error || `Failed to ${action} ${periodName}`)
+            }
+        })
+    }
+
     const handlePeriodStatus = (periodId: number, newStatus: 'OPEN' | 'CLOSED' | 'FUTURE', yearData?: Record<string, any>) => {
         // Find the year and period
         const year = yearData || years.find(y => (y.periods || []).some((p: any) => p.id === periodId))
@@ -562,10 +581,15 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                                                 <div className="text-[8px] font-bold mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{p.journal_entry_count} JEs</div>
                                                             )}
                                                             {!year.isHardLocked && (
-                                                                <div className="flex items-center justify-center gap-1 mt-1.5">
+                                                                <div className="flex items-center justify-center gap-1 mt-1.5 flex-wrap">
                                                                     <button onClick={() => handlePeriodStatus(p.id, 'OPEN')} title="Open" disabled={isPending || pStatus === 'OPEN'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'OPEN' ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}><PlayCircle size={13} /></button>
-                                                                    <button onClick={() => handlePeriodStatus(p.id, 'CLOSED')} title="Close" disabled={isPending || pStatus === 'CLOSED'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'CLOSED' ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}><Lock size={13} /></button>
+                                                                    <button onClick={() => handlePeriodAction(p.id, 'softLock', p.name)} title="Soft-lock (supervisors only)" disabled={isPending || pStatus === 'SOFT_LOCKED'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'SOFT_LOCKED' ? 'var(--app-warning, #f59e0b)' : 'var(--app-muted-foreground)' }}><ShieldCheck size={13} /></button>
+                                                                    <button onClick={() => handlePeriodAction(p.id, 'hardLock', p.name)} title="Hard-lock (no posting)" disabled={isPending || pStatus === 'HARD_LOCKED'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'HARD_LOCKED' ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}><LockKeyhole size={13} /></button>
+                                                                    <button onClick={() => handlePeriodAction(p.id, 'close', p.name)} title="Close" disabled={isPending || pStatus === 'CLOSED'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'CLOSED' ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}><Lock size={13} /></button>
                                                                     <button onClick={() => handlePeriodStatus(p.id, 'FUTURE')} title="Future" disabled={isPending || pStatus === 'FUTURE'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'FUTURE' ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }}><Clock size={13} /></button>
+                                                                    {(pStatus === 'CLOSED' || pStatus === 'HARD_LOCKED' || pStatus === 'SOFT_LOCKED') && (
+                                                                        <button onClick={() => handlePeriodAction(p.id, 'reopen', p.name)} title="Reopen (superuser only)" disabled={isPending} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: 'var(--app-muted-foreground)' }}><RotateCcw size={13} /></button>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>

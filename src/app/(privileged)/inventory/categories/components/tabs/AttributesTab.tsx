@@ -39,7 +39,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
         if (attrObj) setLinkedAttrs(prev => [...prev, { ...attrObj, source: 'explicit' }])
         try {
             await erpFetch(`inventory/categories/${categoryId}/link_attribute/`, { method: 'POST', body: JSON.stringify({ attribute_id: attrId }) })
-            toast.success('Attribute pre-registered'); loadData()
+            toast.success('Attribute pre-registered'); loadData(); router.refresh()
         } catch (e: any) { toast.error(e?.message || 'Failed to link'); loadData() }
     }
 
@@ -48,7 +48,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
         try {
             await erpFetch(`inventory/categories/${categoryId}/unlink_attribute/`, { method: 'POST', body: JSON.stringify({ attribute_id: attrId }) })
             setLinkedAttrs(prev => prev.filter(a => a.id !== attrId))
-            toast.success('Attribute unlinked'); loadData()
+            toast.success('Attribute unlinked'); loadData(); router.refresh()
         } catch (e: any) {
             const cd = e?.data || e
             if (cd?.error === 'conflict' && cd?.products) setConflict(cd)
@@ -116,7 +116,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                         {conflict.affected_count > 20 && <p className="text-[10px] font-bold text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>}
                     </div>
                     <div className="flex items-center gap-3 mt-2">
-                        <button onClick={() => { setConflict(null); loadData() }} className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all" style={{ background: 'var(--app-primary)', color: 'white' }}>Refresh & Retry</button>
+                        <button onClick={() => { setConflict(null); loadData(); router.refresh() }} className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all" style={{ background: 'var(--app-primary)', color: 'white' }}>Refresh & Retry</button>
                         <button onClick={() => setConflict(null)} className="text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all">Dismiss</button>
                     </div>
                 </div>

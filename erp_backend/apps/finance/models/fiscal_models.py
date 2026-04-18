@@ -28,8 +28,14 @@ class FiscalYear(TenantModel):
     closing_journal_entry = models.ForeignKey(
         'finance.JournalEntry', on_delete=models.PROTECT, null=True, blank=True,
         related_name='closed_fiscal_year',
-        help_text='The year-end closing JE that transfers P&L into retained earnings. '
-                  'PROTECT prevents accidental deletion that would break the audit trail.'
+        help_text='OFFICIAL-scope year-end closing JE (audit-trail anchor). '
+                  'PROTECT prevents accidental deletion.'
+    )
+    internal_closing_journal_entry = models.ForeignKey(
+        'finance.JournalEntry', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='internal_closed_fiscal_year',
+        help_text='INTERNAL-scope year-end closing JE (management book). '
+                  'PROTECT prevents accidental deletion.'
     )
 
     class Meta:
@@ -123,15 +129,26 @@ class FiscalPeriod(TenantModel):
     def __str__(self):
         return f"{self.name} ({self.fiscal_year.name})"
 
-    @property
-    def is_posting_allowed(self):
-        """OPEN → yes, SOFT_LOCKED → supervisor only, everything else → no."""
+    def can_post(self, role='user'):
+        """
+        Single source of truth for "can this role post to this period?".
+          - role='user'       → only when OPEN
+          - role='supervisor' → OPEN or SOFT_LOCKED
+        Other statuses (HARD_LOCKED, CLOSED, FUTURE) reject everyone.
+        """
+        if role == 'supervisor':
+            return self.status in ('OPEN', 'SOFT_LOCKED')
         return self.status == 'OPEN'
 
     @property
+    def is_posting_allowed(self):
+        """Back-compat shim — prefer can_post('user')."""
+        return self.can_post('user')
+
+    @property
     def is_supervisor_posting_allowed(self):
-        """OPEN or SOFT_LOCKED → yes for supervisors."""
-        return self.status in ('OPEN', 'SOFT_LOCKED')
+        """Back-compat shim — prefer can_post('supervisor')."""
+        return self.can_post('supervisor')
 
     def clean(self):
         super().clean()

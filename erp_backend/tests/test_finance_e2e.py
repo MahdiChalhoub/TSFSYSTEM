@@ -441,11 +441,9 @@ def test_12_year_end_close():
     if not fy:
         raise Exception("TEST_FY not found")
 
-    # Close all open periods first
-    for p in FiscalPeriod.objects.filter(fiscal_year=fy, is_closed=False):
-        p.status = 'CLOSED'
-        p.is_closed = True
-        p.save()
+    # Close all open periods first (canonical transition — save() auto-syncs flags)
+    for p in FiscalPeriod.objects.filter(fiscal_year=fy).exclude(status='CLOSED'):
+        p.transition_to('CLOSED')
 
     # Create next year for opening balances
     FiscalYear.objects.filter(organization=org, name='TEST_FY 2031').delete()

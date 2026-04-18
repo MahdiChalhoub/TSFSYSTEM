@@ -140,36 +140,35 @@ class DirectExpenseViewSet(LifecycleViewSetMixin, TenantModelViewSet):
                     status='COMPLETED',
                 )
 
-                # 2. Create journal entry
-                je = JournalEntry.objects.create(
+                # 2. Create journal entry via canonical service — auto-assigns
+                # fiscal_year/period by transaction_date (prevents orphans).
+                from apps.finance.services.ledger_core import LedgerCoreMixin
+                lines = []
+                if expense.expense_coa:
+                    lines.append({
+                        'account_id': expense.expense_coa_id,
+                        'debit': expense.amount, 'credit': 0,
+                        'description': expense.name,
+                    })
+                if expense.source_account and expense.source_account.ledger_account_id:
+                    lines.append({
+                        'account_id': expense.source_account.ledger_account_id,
+                        'debit': 0, 'credit': expense.amount,
+                        'description': expense.name,
+                    })
+                je = LedgerCoreMixin.create_journal_entry(
                     organization=expense.organization,
                     transaction_date=expense.date,
                     description=f"Direct Expense: {expense.name}",
                     reference=expense.reference,
-                    scope=expense.scope,
+                    lines=lines,
                     status='POSTED',
-                    created_by=request.user if request.user.is_authenticated else None,
-                    posted_by=request.user if request.user.is_authenticated else None,
+                    scope=expense.scope,
+                    user=request.user if request.user.is_authenticated else None,
+                    source_module='finance',
+                    source_model='DirectExpense',
+                    source_id=expense.id,
                 )
-                
-                if expense.expense_coa:
-                    JournalEntryLine.objects.create(
-                        organization=expense.organization,
-                        journal_entry=je,
-                        account=expense.expense_coa,
-                        debit=expense.amount,
-                        credit=0,
-                        description=expense.name,
-                    )
-                if expense.source_account and expense.source_account.ledger_account:
-                    JournalEntryLine.objects.create(
-                        organization=expense.organization,
-                        journal_entry=je,
-                        account=expense.source_account.ledger_account,
-                        debit=0,
-                        credit=expense.amount,
-                        description=expense.name,
-                    )
 
                 expense.financial_event = event
                 expense.journal_entry = je

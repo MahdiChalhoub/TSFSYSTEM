@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
     Search, Package, Loader2, ExternalLink, X, Info, ArrowRightLeft,
     Check, AlertTriangle, SlidersHorizontal, Paintbrush, Tag, Link2,
@@ -236,8 +237,8 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                             )}
                         </button>
 
-                        {showFilterPopup && (
-                            <div className="fixed inset-0 z-[60] flex items-center justify-center animate-in fade-in duration-200"
+                        {showFilterPopup && createPortal(
+                            <div className="fixed inset-0 z-[200] flex items-center justify-center animate-in fade-in duration-200"
                                 style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
                                 onClick={e => { if (e.target === e.currentTarget) setShowFilterPopup(false) }}>
                                 <div className="w-full max-w-md mx-4 rounded-2xl animate-in zoom-in-95 duration-200"
@@ -276,7 +277,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        , document.body)}
                     </div>
                 </div>
                 <p className="text-[10px] font-bold text-app-muted-foreground mt-1">
@@ -358,8 +359,8 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
             </div>
 
             {/* Product Preview Popup */}
-            {previewProduct && (
-                <div className="fixed inset-0 z-[90] flex items-center justify-center animate-in fade-in duration-150"
+            {previewProduct && createPortal(
+                <div className="fixed inset-0 z-[200] flex items-center justify-center animate-in fade-in duration-150"
                     style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
                     onClick={() => setPreviewProduct(null)}>
                     <div className="w-full max-w-sm mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
@@ -405,11 +406,11 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                         </div>
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             {/* Move Modal */}
-            {showMoveModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center"
+            {showMoveModal && createPortal(
+                <div className="fixed inset-0 z-[200] flex items-center justify-center"
                     style={{ background: 'color-mix(in srgb, var(--app-background) 80%, transparent)', backdropFilter: 'blur(8px)' }}
                     onClick={closeMoveModal}>
                     <div className="w-full max-w-lg mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
@@ -626,7 +627,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                         })()}
                     </div>
                 </div>
-            )}
+            , document.body)}
         </div>
     )
 }

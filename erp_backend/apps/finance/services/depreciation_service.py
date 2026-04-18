@@ -111,7 +111,7 @@ class DepreciationService:
         Returns:
             Dict with posting details
         """
-        from apps.finance.models import AmortizationSchedule, JournalEntry, JournalEntryLine
+        from apps.finance.models import AmortizationSchedule
 
         # Get period date (last day of month)
         period_date = date(year, month, 1) + relativedelta(day=31)
@@ -152,35 +152,31 @@ class DepreciationService:
         if not self.asset.accumulated_depreciation_coa:
             raise ValueError("Asset must have accumulated depreciation account")
 
-        # Create journal entry
+        # Create journal entry via canonical service (auto-links fiscal year/period).
+        from apps.finance.services.ledger_core import LedgerCoreMixin
         with transaction.atomic():
-            entry = JournalEntry.objects.create(
+            entry = LedgerCoreMixin.create_journal_entry(
                 organization=self.asset.organization,
                 transaction_date=period_date,
                 description=f"Depreciation - {self.asset.name} ({period_date.strftime('%B %Y')})",
                 reference=f"DEP-{self.asset.id}-{year}-{month:02d}",
+                lines=[
+                    {
+                        'account_id': self.asset.depreciation_expense_coa_id,
+                        'debit': schedule_entry.amount, 'credit': Decimal('0.00'),
+                        'description': f"Depreciation expense - {self.asset.name}",
+                    },
+                    {
+                        'account_id': self.asset.accumulated_depreciation_coa_id,
+                        'debit': Decimal('0.00'), 'credit': schedule_entry.amount,
+                        'description': f"Accumulated depreciation - {self.asset.name}",
+                    },
+                ],
                 status='POSTED',
-                entry_type='DEPRECIATION',
-            )
-
-            # Debit: Depreciation Expense
-            JournalEntryLine.objects.create(
-                organization=self.asset.organization,
-                entry=entry,
-                account=self.asset.depreciation_expense_coa,
-                description=f"Depreciation expense - {self.asset.name}",
-                debit=schedule_entry.amount,
-                credit=Decimal('0.00'),
-            )
-
-            # Credit: Accumulated Depreciation
-            JournalEntryLine.objects.create(
-                organization=self.asset.organization,
-                entry=entry,
-                account=self.asset.accumulated_depreciation_coa,
-                description=f"Accumulated depreciation - {self.asset.name}",
-                debit=Decimal('0.00'),
-                credit=schedule_entry.amount,
+                journal_type='DEPRECIATION',
+                source_module='finance',
+                source_model='Asset',
+                source_id=self.asset.id,
             )
 
             # Update schedule entry
@@ -307,94 +303,69 @@ class DepreciationService:
         Returns:
             Dict with disposal details
         """
-        from apps.finance.models import JournalEntry, JournalEntryLine
+        from apps.finance.models import ChartOfAccount
+        from apps.finance.services.ledger_core import LedgerCoreMixin
 
         disposal_amount = Decimal(str(disposal_amount))
-
-        # Calculate gain/loss on disposal
         gain_loss = disposal_amount - self.asset.book_value
 
         with transaction.atomic():
-            # Create disposal journal entry
-            entry = JournalEntry.objects.create(
+            lines = []
+            if disposal_amount > 0:
+                lines.append({
+                    'account_id': disposal_account.id,
+                    'debit': disposal_amount, 'credit': Decimal('0.00'),
+                    'description': f"Proceeds from disposal - {self.asset.name}",
+                })
+            if self.asset.accumulated_depreciation > 0:
+                lines.append({
+                    'account_id': self.asset.accumulated_depreciation_coa_id,
+                    'debit': self.asset.accumulated_depreciation, 'credit': Decimal('0.00'),
+                    'description': f"Remove accumulated depreciation - {self.asset.name}",
+                })
+            lines.append({
+                'account_id': self.asset.asset_coa_id,
+                'debit': Decimal('0.00'), 'credit': self.asset.purchase_value,
+                'description': f"Remove asset - {self.asset.name}",
+            })
+
+            if gain_loss != 0:
+                if gain_loss > 0:
+                    gl_account = ChartOfAccount.objects.filter(
+                        organization=self.asset.organization,
+                        code__startswith='8', name__icontains='gain',
+                    ).first()
+                    if gl_account:
+                        lines.append({
+                            'account_id': gl_account.id,
+                            'debit': Decimal('0.00'), 'credit': abs(gain_loss),
+                            'description': f"Gain on disposal - {self.asset.name}",
+                        })
+                else:
+                    gl_account = ChartOfAccount.objects.filter(
+                        organization=self.asset.organization,
+                        code__startswith='6', name__icontains='loss',
+                    ).first()
+                    if gl_account:
+                        lines.append({
+                            'account_id': gl_account.id,
+                            'debit': abs(gain_loss), 'credit': Decimal('0.00'),
+                            'description': f"Loss on disposal - {self.asset.name}",
+                        })
+
+            entry = LedgerCoreMixin.create_journal_entry(
                 organization=self.asset.organization,
                 transaction_date=disposal_date,
                 description=f"Asset disposal - {self.asset.name}",
                 reference=f"DISP-{self.asset.id}",
+                lines=lines,
                 status='POSTED',
-                entry_type='ASSET_DISPOSAL',
+                journal_type='ASSET_DISPOSAL',
+                source_module='finance',
+                source_model='Asset',
+                source_id=self.asset.id,
             )
 
-            # Debit: Bank/Cash (disposal proceeds)
-            if disposal_amount > 0:
-                JournalEntryLine.objects.create(
-                    organization=self.asset.organization,
-                    entry=entry,
-                    account=disposal_account,
-                    description=f"Proceeds from disposal - {self.asset.name}",
-                    debit=disposal_amount,
-                    credit=Decimal('0.00'),
-                )
-
-            # Debit: Accumulated Depreciation (remove accumulated)
-            if self.asset.accumulated_depreciation > 0:
-                JournalEntryLine.objects.create(
-                    organization=self.asset.organization,
-                    entry=entry,
-                    account=self.asset.accumulated_depreciation_coa,
-                    description=f"Remove accumulated depreciation - {self.asset.name}",
-                    debit=self.asset.accumulated_depreciation,
-                    credit=Decimal('0.00'),
-                )
-
-            # Credit: Asset Account (remove asset)
-            JournalEntryLine.objects.create(
-                organization=self.asset.organization,
-                entry=entry,
-                account=self.asset.asset_coa,
-                description=f"Remove asset - {self.asset.name}",
-                debit=Decimal('0.00'),
-                credit=self.asset.purchase_value,
-            )
-
-            # Gain or Loss account
-            if gain_loss != 0:
-                # Get gain/loss account (should be setup in COA)
-                from apps.finance.models import ChartOfAccount
-                if gain_loss > 0:
-                    # Gain: Credit income account
-                    gain_loss_account = ChartOfAccount.objects.filter(
-                        organization=self.asset.organization,
-                        code__startswith='8',  # Income
-                        name__icontains='gain'
-                    ).first()
-                    if gain_loss_account:
-                        JournalEntryLine.objects.create(
-                            organization=self.asset.organization,
-                            entry=entry,
-                            account=gain_loss_account,
-                            description=f"Gain on disposal - {self.asset.name}",
-                            debit=Decimal('0.00'),
-                            credit=abs(gain_loss),
-                        )
-                else:
-                    # Loss: Debit expense account
-                    gain_loss_account = ChartOfAccount.objects.filter(
-                        organization=self.asset.organization,
-                        code__startswith='6',  # Expense
-                        name__icontains='loss'
-                    ).first()
-                    if gain_loss_account:
-                        JournalEntryLine.objects.create(
-                            organization=self.asset.organization,
-                            entry=entry,
-                            account=gain_loss_account,
-                            description=f"Loss on disposal - {self.asset.name}",
-                            debit=abs(gain_loss),
-                            credit=Decimal('0.00'),
-                        )
-
-            # Update asset status
             self.asset.status = 'DISPOSED'
             self.asset.save(update_fields=['status'])
 

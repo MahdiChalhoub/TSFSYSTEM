@@ -43,6 +43,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         'partial_update': 'finance.manage_fiscal_years',
         'destroy': 'finance.manage_fiscal_years',
         'close': 'finance.close_fiscal_year',
+        'finalize': 'finance.close_fiscal_year',
         'close_preview': 'finance.view_fiscal_years',
         'lock': 'finance.close_fiscal_year',
         'summary': 'finance.view_fiscal_years',
@@ -110,6 +111,16 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             return Response({"status": "Fiscal Year Closed"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def finalize(self, request, pk=None):
+        """
+        Year-end finalize — alias for `close` that makes intent explicit:
+        runs the full SAP-style sequence (P&L → retained earnings, opening
+        balances for next year, both scopes). Frontend should prefer this
+        endpoint for year-end close; `/close/` is retained for backwards compat.
+        """
+        return self.close(request, pk=pk)
 
     @action(detail=True, methods=['get'], url_path='close-preview')
     def close_preview(self, request, pk=None):

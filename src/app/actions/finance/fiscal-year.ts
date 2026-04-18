@@ -56,6 +56,7 @@ export async function getFiscalYears(): Promise<FiscalYearDTO[]> {
     }
 }
 
+/** @deprecated Picks the year with the latest end_date, which may not cover today. Use {@link getCurrentFiscalYear} for "active" year resolution. */
 export async function getLatestFiscalYear(): Promise<FiscalYearDTO | null> {
     try {
         const raw = await erpFetch('fiscal-years/?limit=1&ordering=-end_date')
@@ -156,6 +157,50 @@ export async function updatePeriod(periodId: number, data: unknown) {
     }
 }
 
+export async function closePeriod(periodId: number) {
+    try {
+        await erpFetch(`fiscal-periods/${periodId}/close/`, { method: 'POST' })
+        revalidatePath('/finance/fiscal-years')
+        return { success: true }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
+export async function softLockPeriod(periodId: number) {
+    try {
+        await erpFetch(`fiscal-periods/${periodId}/soft-lock/`, { method: 'POST' })
+        revalidatePath('/finance/fiscal-years')
+        return { success: true }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
+export async function hardLockPeriod(periodId: number) {
+    try {
+        await erpFetch(`fiscal-periods/${periodId}/hard-lock/`, { method: 'POST' })
+        revalidatePath('/finance/fiscal-years')
+        return { success: true }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
+export async function reopenPeriod(periodId: number) {
+    try {
+        await erpFetch(`fiscal-periods/${periodId}/reopen/`, { method: 'POST' })
+        revalidatePath('/finance/fiscal-years')
+        return { success: true }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
 export async function updatePeriodStatus(periodId: number, newStatus: string) {
     try {
         const result = await erpFetch(`fiscal-periods/${periodId}/`, {
@@ -201,7 +246,8 @@ export async function lockFiscalYear(id: number) {
  */
 export async function hardLockFiscalYear(id: number, closeDate?: string) {
     try {
-        await erpFetch(`fiscal-years/${id}/close/`, {
+        // Uses /finalize/ — explicit alias for year-end close.
+        await erpFetch(`fiscal-years/${id}/finalize/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(closeDate ? { close_date: closeDate } : {}),

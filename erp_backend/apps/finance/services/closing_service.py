@@ -315,11 +315,11 @@ class ClosingService:
                     internal_bypass=True,
                 )
 
-                # Anchor the OFFICIAL closing JE on the fiscal year for the
-                # audit trail. INTERNAL closing JE exists but isn't FK-tracked
-                # (queryable by source_module + source_id + scope).
+                # Anchor each scope's closing JE on its own FK for the audit trail.
                 if scope == 'OFFICIAL':
                     fiscal_year.closing_journal_entry = closing_entry
+                elif scope == 'INTERNAL':
+                    fiscal_year.internal_closing_journal_entry = closing_entry
 
             # ── Step 4a: Auto-create remainder year if partial close ──
             if is_partial and remainder_start and remainder_end:
