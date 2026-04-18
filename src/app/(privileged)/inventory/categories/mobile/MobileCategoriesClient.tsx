@@ -18,7 +18,7 @@ import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { MobileCategoryRow } from './MobileCategoryRow'
 import { MobileMoveDialog } from './MobileMoveDialog'
 import { MobileBreadcrumb } from './MobileBreadcrumb'
-import { CategoryDetailPanel } from '../components/CategoryDetailPanel'
+import { MobileCategoryDetailSheet } from './MobileCategoryDetailSheet'
 import type { CategoryNode, PanelTab } from '../components/types'
 
 export function MobileCategoriesClient({ initialCategories }: { initialCategories: any[] }) {
@@ -168,7 +168,14 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                         <span>{stats.totalProducts.toLocaleString()} products</span>
                     </>
                 ),
+                onRefresh: async () => {
+                    router.refresh()
+                    await new Promise(r => setTimeout(r, 600))
+                },
             }}
+            belowTopBar={breadcrumbPath.length > 0 ? (
+                <MobileBreadcrumb path={breadcrumbPath} onNavigate={(n) => drillInto(n)} />
+            ) : undefined}
             modals={
                 <>
                     <CategoryFormModal
@@ -207,13 +214,14 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                     onClose={() => setSheetNode(null)}
                     initialSnap="peek">
                     {sheetNode && (
-                        <CategoryDetailPanel
+                        <MobileCategoryDetailSheet
                             node={sheetNode}
+                            allCategories={data}
+                            initialTab={sheetTab}
                             onEdit={(n) => { setSheetNode(null); openEditModal(n) }}
                             onAdd={(pid) => { setSheetNode(null); openAddModal(pid) }}
                             onDelete={(n) => { setSheetNode(null); requestDelete(n) }}
-                            allCategories={data}
-                            initialTab={sheetTab}
+                            onOpenChild={(child) => { setSheetNode(child); setSheetTab('overview') }}
                             onClose={() => setSheetNode(null)}
                         />
                     )}
@@ -255,12 +263,6 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
 
                 return (
                     <>
-                        {breadcrumbPath.length > 0 && (
-                            <MobileBreadcrumb
-                                path={breadcrumbPath}
-                                onNavigate={(n) => drillInto(n)}
-                            />
-                        )}
                         {searchQuery.trim() && (
                             <div className="mb-2 px-3 py-2 flex items-center justify-between rounded-xl"
                                 style={{
