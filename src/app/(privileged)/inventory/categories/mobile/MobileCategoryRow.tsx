@@ -36,7 +36,8 @@ export function MobileCategoryRow({
     onOpenSheet, onEdit, onAdd, onDelete, onLongPress, onDrillIn, selected,
 }: Props) {
     const isParent = node.children && node.children.length > 0
-    const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
+    // Mobile: default open only at level 0 (keeps the first screen less dense)
+    const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 1)
     const prevForce = useRef(forceExpanded)
     const rowRef = useRef<HTMLDivElement>(null)
     const { isLongPressing } = useRowGestures(rowRef, {

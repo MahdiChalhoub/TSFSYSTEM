@@ -261,6 +261,22 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                                 onNavigate={(n) => drillInto(n)}
                             />
                         )}
+                        {searchQuery.trim() && (
+                            <div className="mb-2 px-3 py-2 flex items-center justify-between rounded-xl"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
+                                }}>
+                                <span className="text-[12px] font-bold text-app-foreground truncate">
+                                    <span className="font-black tabular-nums" style={{ color: 'var(--app-info, #3b82f6)' }}>
+                                        {filtered.length}
+                                    </span>
+                                    <span className="text-app-muted-foreground"> of {source.length} · matches "</span>
+                                    <span className="font-black text-app-foreground">{searchQuery}</span>
+                                    <span className="text-app-muted-foreground">"</span>
+                                </span>
+                            </div>
+                        )}
                         {tree.map((node: CategoryNode) => (
                             <MobileCategoryRow
                                 key={`${node.id}-${expandKey}-${scopeId ?? 'all'}`}

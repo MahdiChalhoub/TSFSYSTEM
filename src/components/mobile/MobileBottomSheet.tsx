@@ -102,11 +102,14 @@ export function MobileBottomSheet({ open, onClose, children, initialSnap = 'peek
                             borderTop: '1px solid var(--app-border)',
                             touchAction: 'none',
                         }}>
-                        {/* Drag handle */}
-                        <div className="flex-shrink-0 flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing"
-                            style={{ touchAction: 'none' }}>
+                        {/* Drag handle — tap toggles peek↔expanded */}
+                        <button
+                            onClick={() => setSnap(snap === 'expanded' ? 'peek' : 'expanded')}
+                            className="flex-shrink-0 flex flex-col items-center justify-center pt-2 pb-1 active:opacity-70 transition-opacity"
+                            style={{ touchAction: 'none', minHeight: 28 }}
+                            aria-label={snap === 'expanded' ? 'Collapse to peek' : 'Expand sheet'}>
                             <div style={{ width: 40, height: 4, borderRadius: 999, background: 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }} />
-                        </div>
+                        </button>
                         {/* Content — pointerEvents auto inside; outer is draggable */}
                         <div className="flex-1 min-h-0 flex flex-col overflow-hidden" style={{ touchAction: 'auto' }}>
                             {children}
