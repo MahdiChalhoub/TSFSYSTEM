@@ -7,6 +7,7 @@ import {
     Bookmark, AlertCircle, Package, Paintbrush, Tag, Box,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useRowGestures } from '@/hooks/use-row-gestures'
 import type { CategoryNode, PanelTab } from '../components/types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -25,16 +26,22 @@ interface Props {
     onEdit: (n: CategoryNode) => void
     onAdd: (parentId?: number) => void
     onDelete: (n: CategoryNode) => void
+    onLongPress?: (n: CategoryNode) => void
+    onDrillIn?: (n: CategoryNode) => void
     selected?: boolean
 }
 
 export function MobileCategoryRow({
     node, level, searchQuery, forceExpanded,
-    onOpenSheet, onEdit, onAdd, onDelete, selected,
+    onOpenSheet, onEdit, onAdd, onDelete, onLongPress, onDrillIn, selected,
 }: Props) {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
     const prevForce = useRef(forceExpanded)
+    const rowRef = useRef<HTMLDivElement>(null)
+    const { isLongPressing } = useRowGestures(rowRef, {
+        onLongPress: () => onLongPress?.(node),
+    })
 
     useEffect(() => { if (searchQuery) setIsOpen(true) }, [searchQuery])
     useEffect(() => {
@@ -81,7 +88,9 @@ export function MobileCategoryRow({
     return (
         <div>
             <div
+                ref={rowRef}
                 onClick={() => {
+                    if (isLongPressing) return  // swallow tap right after long-press
                     if (isParent) setIsOpen(o => !o)
                     else onOpenSheet(node, 'overview')
                 }}
@@ -89,15 +98,20 @@ export function MobileCategoryRow({
                 style={{
                     minHeight: isRoot ? 80 : 70,
                     padding: '10px 10px 10px ' + (indentPx + (deepCap ? 16 : 0)) + 'px',
-                    background: selected
-                        ? 'color-mix(in srgb, var(--app-primary) 7%, var(--app-surface))'
-                        : isRoot
-                            ? 'linear-gradient(90deg, color-mix(in srgb, var(--app-primary) 5%, var(--app-surface)) 0%, var(--app-surface) 100%)'
-                            : 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
-                    border: selected
+                    background: isLongPressing
+                        ? 'color-mix(in srgb, var(--app-primary) 12%, var(--app-surface))'
+                        : selected
+                            ? 'color-mix(in srgb, var(--app-primary) 7%, var(--app-surface))'
+                            : isRoot
+                                ? 'linear-gradient(90deg, color-mix(in srgb, var(--app-primary) 5%, var(--app-surface)) 0%, var(--app-surface) 100%)'
+                                : 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                    border: (isLongPressing || selected)
                         ? '1px solid color-mix(in srgb, var(--app-primary) 45%, transparent)'
                         : '1px solid color-mix(in srgb, var(--app-border) 45%, transparent)',
                     boxShadow: isRoot ? '0 2px 8px color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'none',
+                    transform: isLongPressing ? 'scale(0.985)' : undefined,
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
                 }}>
 
                 {/* Left accent for root */}
@@ -268,6 +282,8 @@ export function MobileCategoryRow({
                             onEdit={onEdit}
                             onAdd={onAdd}
                             onDelete={onDelete}
+                            onLongPress={onLongPress}
+                            onDrillIn={onDrillIn}
                             selected={selected && node.id === child.id}
                         />
                     ))}

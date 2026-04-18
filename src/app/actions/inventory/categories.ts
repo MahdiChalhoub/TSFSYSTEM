@@ -77,6 +77,23 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
  }
 }
 
+export async function reparentCategory(id: number, newParentId: number | null) {
+ try {
+ if (newParentId === id) {
+ return { success: false, message: 'Category cannot be its own parent' };
+ }
+ await erpFetch(`inventory/categories/${id}/`, {
+ method: 'PATCH',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ parent: newParentId })
+ });
+ revalidatePath('/inventory/categories');
+ return { success: true };
+ } catch (e: any) {
+ return { success: false, message: e?.message || 'Failed to move category' };
+ }
+}
+
 export async function deleteCategory(id: number) {
  try {
  await erpFetch(`inventory/categories/${id}/`, {

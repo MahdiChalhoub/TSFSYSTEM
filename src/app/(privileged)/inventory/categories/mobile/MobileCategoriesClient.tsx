@@ -4,6 +4,7 @@
 import { useState, useMemo, useCallback, useTransition } from 'react'
 import {
     FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
+    Eye, Pencil, Trash2, Move, Copy, Package, Tag,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -13,7 +14,9 @@ import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
 import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
+import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { MobileCategoryRow } from './MobileCategoryRow'
+import { MobileMoveDialog } from './MobileMoveDialog'
 import { CategoryDetailPanel } from '../components/CategoryDetailPanel'
 import type { CategoryNode, PanelTab } from '../components/types'
 
@@ -24,6 +27,8 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
     const [sheetNode, setSheetNode] = useState<CategoryNode | null>(null)
     const [sheetTab, setSheetTab] = useState<PanelTab>('overview')
+    const [actionNode, setActionNode] = useState<CategoryNode | null>(null)
+    const [moveNode, setMoveNode] = useState<CategoryNode | null>(null)
 
     const data = initialCategories
 
@@ -43,6 +48,28 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
     const openSheet = useCallback((n: CategoryNode, tab: PanelTab = 'overview') => {
         setSheetNode(n); setSheetTab(tab)
     }, [])
+
+    const openActionMenu = useCallback((n: CategoryNode) => setActionNode(n), [])
+
+    const actionItems = useMemo(() => {
+        if (!actionNode) return []
+        const isParent = !!(actionNode.children && actionNode.children.length > 0)
+        return [
+            { key: 'view', label: 'View details', hint: 'Open detail sheet', icon: <Eye size={16} />, onClick: () => openSheet(actionNode, 'overview') },
+            { key: 'products', label: 'View products', hint: `${actionNode.product_count ?? 0} products`, icon: <Package size={16} />, onClick: () => openSheet(actionNode, 'products') },
+            { key: 'attrs', label: 'View attributes', hint: `${actionNode.attribute_count ?? 0} attributes`, icon: <Tag size={16} />, onClick: () => openSheet(actionNode, 'attributes') },
+            { key: 'add', label: 'Add sub-category', icon: <Plus size={16} />, onClick: () => openAddModal(actionNode.id) },
+            { key: 'edit', label: 'Edit', icon: <Pencil size={16} />, onClick: () => openEditModal(actionNode) },
+            { key: 'move', label: 'Move to…', hint: 'Change parent', icon: <Move size={16} />, onClick: () => setMoveNode(actionNode) },
+            { key: 'copy', label: 'Copy ID', hint: `#${actionNode.id}`, icon: <Copy size={16} />, onClick: () => {
+                try {
+                    navigator.clipboard?.writeText(String(actionNode.id))
+                    toast.success('ID copied')
+                } catch { toast.error('Copy failed') }
+            } },
+            { key: 'delete', label: isParent ? 'Delete (locked)' : 'Delete', hint: isParent ? 'Delete sub-categories first' : undefined, icon: <Trash2 size={16} />, destructive: true, disabled: isParent, onClick: () => requestDelete(actionNode) },
+        ]
+    }, [actionNode, openSheet, openAddModal, openEditModal, requestDelete])
 
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
@@ -107,6 +134,18 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                         description="This permanently removes the category."
                         confirmText="Delete"
                         variant="danger"
+                    />
+                    <MobileActionSheet
+                        open={actionNode !== null}
+                        onClose={() => setActionNode(null)}
+                        title={actionNode?.name}
+                        subtitle={actionNode ? `${actionNode.code || '—'} · Long-press menu` : undefined}
+                        items={actionItems}
+                    />
+                    <MobileMoveDialog
+                        node={moveNode}
+                        allCategories={data}
+                        onClose={() => setMoveNode(null)}
                     />
                 </>
             }
@@ -173,6 +212,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                         onEdit={openEditModal}
                         onAdd={openAddModal}
                         onDelete={requestDelete}
+                        onLongPress={openActionMenu}
                     />
                 ))
             }}
