@@ -37,22 +37,29 @@
 
 ## 🟡 MEDIUM
 
-### [OPEN] Plan Switch UI Refresh
+### [DONE 2026-04-18] Plan Switch UI Refresh
 - **Discovered**: 2026-02-09
 - **Impact**: After confirming plan switch, usage/billing data may not visually update without page refresh
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
-- **Notes**: The state refresh logic works but may have race conditions with large data loads
+- **Fix**: Plan switch handler refetches sequentially (usage then billing), retries billing once after 600 ms if history count hasn't grown (handles async journal-entry event handler), and calls `router.refresh()` to invalidate server-cached data.
 
-### [OPEN] Direct CRM Profile Link
+### [DONE 2026-04-18] Direct CRM Profile Link
 - **Discovered**: 2026-02-09
 - **Impact**: "View CRM Profile" button navigates to search instead of direct contact record
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
-- **Notes**: Needs CRM Contact ID stored on SaaSClient or Organization model
+- **Fix**: Backend already resolves `crm_contact_id` in the billing endpoint (`views_saas_org_billing.py:344-365`). Frontend button now uses it when present (`/crm/contacts/${crm_contact_id}`) with email-search fallback when the contact isn't resolvable.
 
-### [OPEN] PWA Icon Missing
+### [OPEN] Refactor `organizations/[id]/page.tsx` — 1503 lines
+- **Discovered**: 2026-04-18
+- **Impact**: Violates `code-quality.md` rule (hard limit 300 lines, mandatory refactor over 400). Any further edits should split first.
+- **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
+- **Notes**: Existing `_components/OrgDialogs.tsx` already contains `PlanSwitchDialog`, `ClientAssignDialog`, `CreateUserDialog`, etc., but the page still has inline duplicates of `PlanSwitchDialog` and `ClientAssignDialog`. Refactor should: (1) replace inline dialogs with the `_components` versions, (2) extract tabs into separate files (`OverviewTab`, `ModulesTab`, `UsageTab`, `BillingTab`, `UsersTab`, `SitesTab`, `AddonsTab`), (3) extract the load/toggle/refetch orchestration into a `useOrganizationDetail` hook.
+
+### [DONE 2026-04-18] PWA Icon Missing
 - **Discovered**: 2026-02-09
 - **Impact**: Console warning about missing manifest icon at `/icons/icon-192.png`
 - **Files**: `public/icons/`, `public/manifest.json`
+- **Fix**: Stale item — both `icon-192.png` (597 B) and `icon-512.png` (1.9 KB) are present in `public/icons/` and referenced from `manifest.json`. No code change required; WORKMAP entry was out of date.
 
 ---
 

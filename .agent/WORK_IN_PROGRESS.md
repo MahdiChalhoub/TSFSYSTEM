@@ -101,6 +101,27 @@
 
 ---
 
+### Session: 2026-04-18 (rules + WORKMAP MEDIUM items)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE
+- **Worked On**: Reconciled Kernel OS v2.0 primitives with legacy `.agent/rules`; cleared three WORKMAP MEDIUM items (PWA icon, Plan Switch UI refresh race, Direct CRM Profile link).
+- **Files Modified**:
+  - `.agent/rules/kernel-os-v2.md` — NEW. Documents `TenantOwnedModel`, `AuditLogMixin`/`AuditableModel`, `emit_event`, `get_config`, `@require_permission`, and a compatibility table between legacy and OS v2.0 patterns.
+  - `.agent/rules/architecture.md` — added section 8 pointing at `kernel-os-v2.md`.
+  - `src/app/(privileged)/(saas)/organizations/[id]/page.tsx` — Plan switch handler now refetches sequentially (usage → billing), retries billing once with a 600ms delay if history hasn't grown (handles async journal-entry event), and calls `router.refresh()`. CRM Profile button now uses `billing.client.crm_contact_id` when present (direct link to `/crm/contacts/${id}`) with search fallback.
+- **Discoveries**:
+  - The billing endpoint at `erp_backend/erp/views_saas_org_billing.py:344-365` already resolves `crm_contact_id` by looking up the CRM Contact in the SaaS org by email. The frontend simply wasn't using it.
+  - Icons at `public/icons/icon-192.png` (597 B) and `icon-512.png` (1.9 KB) already exist; the WORKMAP PWA entry was stale.
+  - `TenantOwnedModel` stores its FK as `tenant_id` (db column) but the Python attribute is `organization` — the naming convention bridges the legacy "organization" rule and the kernel's "tenant" vocabulary.
+  - `AuditLogMixin` in real code is an alias for `AuditableModel` (`kernel/audit/mixins.py:147`).
+  - `src/app/(privileged)/(saas)/organizations/[id]/page.tsx` is 1503 lines (code-quality.md limit is 300). NOT refactored in this session — flagged for a dedicated plan.
+- **Warnings for Next Agent**:
+  - ⚠️ The 1503-line `organizations/[id]/page.tsx` is far over the 300-line limit. Needs a dedicated refactor plan — extract dialogs into `_components/` (some already live in `OrgDialogs.tsx` but the inline PlanSwitchDialog / ClientAssignDialog duplicates are still in the page).
+  - ⚠️ The plan-switch retry uses a fixed 600 ms delay. If event processing is slower on a loaded system, billing may still look stale after the retry. A better long-term fix is for the backend to return a post-commit `billing_preview` in the `changeOrgPlan` response.
+  - ⚠️ `crm_contact_id` lookup in the billing endpoint is by email — if the SaaSClient's email changes without running `sync_to_crm_contact`, the link will break silently.
+
+---
+
 ### Session: 2026-04-15 (v2.9.0-b003)
 - **Agent**: Antigravity
 - **Status**: ✅ DONE
