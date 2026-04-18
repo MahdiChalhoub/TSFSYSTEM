@@ -248,73 +248,78 @@ class ClosingService:
                 is_active=True,
             )
 
-            closing_lines = []
-            total_pnl = Decimal('0.00')
+            # Close P&L into retained earnings — once per scope. INTERNAL is
+            # the management source-of-truth book; OFFICIAL is the declared
+            # regulatory book. Each carries its own P&L and must be closed
+            # independently. The OFFICIAL closing JE is the audit-trail anchor
+            # stored on FiscalYear.closing_journal_entry.
+            scope_field_map = (('OFFICIAL', 'balance_official'), ('INTERNAL', 'balance'))
 
-            for acc in pnl_accounts:
-                # Use the official balance for year-end close
-                if acc.balance_official == Decimal('0.00'):
+            for scope, field in scope_field_map:
+                closing_lines = []
+                total_pnl = Decimal('0.00')
+
+                for acc in pnl_accounts:
+                    bal = getattr(acc, field, Decimal('0.00')) or Decimal('0.00')
+                    if bal == Decimal('0.00'):
+                        continue
+                    if bal > Decimal('0.00'):
+                        closing_lines.append({
+                            'account_id': acc.id,
+                            'debit': Decimal('0.00'),
+                            'credit': bal,
+                            'description': f"Year-end close ({scope}): {acc.code} - {acc.name}",
+                        })
+                    else:
+                        closing_lines.append({
+                            'account_id': acc.id,
+                            'debit': abs(bal),
+                            'credit': Decimal('0.00'),
+                            'description': f"Year-end close ({scope}): {acc.code} - {acc.name}",
+                        })
+                    total_pnl += bal
+
+                if not closing_lines:
+                    logger.info(
+                        f"ClosingService: No {scope} P&L balances to close for {fiscal_year.name}"
+                    )
                     continue
 
-                # Reverse the balance: if income has CREDIT balance, debit it to zero
-                if acc.balance_official > Decimal('0.00'):
-                    closing_lines.append({
-                        'account_id': acc.id,
-                        'debit': Decimal('0.00'),
-                        'credit': acc.balance_official,
-                        'description': f"Year-end close: {acc.code} - {acc.name}",
-                    })
-                else:
-                    closing_lines.append({
-                        'account_id': acc.id,
-                        'debit': abs(acc.balance_official),
-                        'credit': Decimal('0.00'),
-                        'description': f"Year-end close: {acc.code} - {acc.name}",
-                    })
-
-                total_pnl += acc.balance_official
-
-            if closing_lines:
-                # Add the retained earnings counterpart line
                 if total_pnl > Decimal('0.00'):
                     closing_lines.append({
                         'account_id': re_account.id,
                         'debit': total_pnl,
                         'credit': Decimal('0.00'),
-                        'description': f"Year-end close: Net income to {re_account.code}",
+                        'description': f"Year-end close ({scope}): Net income to {re_account.code}",
                     })
                 elif total_pnl < Decimal('0.00'):
                     closing_lines.append({
                         'account_id': re_account.id,
                         'debit': Decimal('0.00'),
                         'credit': abs(total_pnl),
-                        'description': f"Year-end close: Net loss to {re_account.code}",
+                        'description': f"Year-end close ({scope}): Net loss to {re_account.code}",
                     })
-
-                # Create the closing journal entry
-                # Use the last period (or adjustment period) for dating
-                last_period = fiscal_year.periods.order_by('-end_date').first()
 
                 closing_entry = LedgerCoreMixin.create_journal_entry(
                     organization=organization,
                     transaction_date=fiscal_year.end_date,
-                    description=f"Year-End Close: {fiscal_year.name}",
+                    description=f"Year-End Close ({scope}): {fiscal_year.name}",
                     lines=closing_lines,
                     status='POSTED',
-                    scope='OFFICIAL',
+                    scope=scope,
                     user=user,
                     journal_type='CLOSING',
                     source_module='finance',
                     source_model='FiscalYear',
                     source_id=fiscal_year.id,
-                    internal_bypass=True,  # Allow posting to system accounts
+                    internal_bypass=True,
                 )
 
-                fiscal_year.closing_journal_entry = closing_entry
-            else:
-                logger.info(
-                    f"ClosingService: No P&L accounts with balances for {fiscal_year.name}"
-                )
+                # Anchor the OFFICIAL closing JE on the fiscal year for the
+                # audit trail. INTERNAL closing JE exists but isn't FK-tracked
+                # (queryable by source_module + source_id + scope).
+                if scope == 'OFFICIAL':
+                    fiscal_year.closing_journal_entry = closing_entry
 
             # ── Step 4a: Auto-create remainder year if partial close ──
             if is_partial and remainder_start and remainder_end:
@@ -409,6 +414,12 @@ class ClosingService:
         Generate OpeningBalance records for the new year from the closing
         balances of the old year. Only for Balance Sheet accounts (ASSET,
         LIABILITY, EQUITY). P&L accounts start at zero.
+
+        Generates opening balances for BOTH scopes:
+          - OFFICIAL (regulatory / declared book) reads `balance_official`
+          - INTERNAL (management / source-of-truth book) reads `balance`
+        Each scope is independent: a balance of zero in one scope still
+        produces an OB row in the other scope if non-zero there.
         """
         from apps.finance.models import ChartOfAccount, OpeningBalance
 
@@ -418,38 +429,38 @@ class ClosingService:
             is_active=True,
         )
 
+        # (scope, account-attr) — both books carry forward independently.
+        scope_field_map = (('OFFICIAL', 'balance_official'), ('INTERNAL', 'balance'))
+
         created = 0
         with transaction.atomic():
             for acc in bs_accounts:
-                if acc.balance_official == Decimal('0.00'):
-                    continue
+                for scope, field in scope_field_map:
+                    net = getattr(acc, field, Decimal('0.00')) or Decimal('0.00')
+                    if net == Decimal('0.00'):
+                        continue
+                    if net > Decimal('0.00'):
+                        debit_amt, credit_amt = net, Decimal('0.00')
+                    else:
+                        debit_amt, credit_amt = Decimal('0.00'), abs(net)
 
-                # Determine debit/credit from net balance
-                net = acc.balance_official
-                if net > Decimal('0.00'):
-                    debit_amt = net
-                    credit_amt = Decimal('0.00')
-                else:
-                    debit_amt = Decimal('0.00')
-                    credit_amt = abs(net)
-
-                OpeningBalance.objects.update_or_create(
-                    organization=organization,
-                    account=acc,
-                    fiscal_year=to_year,
-                    scope='OFFICIAL',
-                    defaults={
-                        'debit_amount': debit_amt,
-                        'credit_amount': credit_amt,
-                        'source': 'TRANSFER',
-                        'created_by': user,
-                        'notes': f"Carried forward from {from_year.name}",
-                    }
-                )
-                created += 1
+                    OpeningBalance.objects.update_or_create(
+                        organization=organization,
+                        account=acc,
+                        fiscal_year=to_year,
+                        scope=scope,
+                        defaults={
+                            'debit_amount': debit_amt,
+                            'credit_amount': credit_amt,
+                            'source': 'TRANSFER',
+                            'created_by': user,
+                            'notes': f"Carried forward from {from_year.name} ({scope})",
+                        }
+                    )
+                    created += 1
 
         logger.info(
             f"ClosingService: Generated {created} opening balances "
-            f"for {to_year.name} from {from_year.name}"
+            f"(both scopes) for {to_year.name} from {from_year.name}"
         )
         return created

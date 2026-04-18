@@ -1,0 +1,137 @@
+// @ts-nocheck
+'use client'
+
+import { useState } from 'react'
+import { X, Pencil, Pin, Bookmark, Package, Paintbrush, Tag } from 'lucide-react'
+import type { CategoryNode, PanelTab } from './types'
+import { OverviewTab } from './tabs/OverviewTab'
+import { ProductsTab } from './tabs/ProductsTab'
+import { BrandsTab } from './tabs/BrandsTab'
+import { AttributesTab } from './tabs/AttributesTab'
+
+/* ═══════════════════════════════════════════════════════════
+ *  CategoryDetailPanel — tabbed detail view used by
+ *  split-panel, pinned sidebar, and modal drawer
+ * ═══════════════════════════════════════════════════════════ */
+export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategories, initialTab, onClose, onPin }: {
+    node: CategoryNode
+    onEdit: (n: CategoryNode) => void
+    onAdd: (parentId?: number) => void
+    onDelete: (n: CategoryNode) => void
+    allCategories: any[]
+    initialTab?: PanelTab
+    onClose: () => void
+    onPin?: (n: CategoryNode) => void
+}) {
+    const [tab, setTab] = useState<PanelTab>(initialTab || 'overview')
+    const isParent = node.children && node.children.length > 0
+    const childCount = node.children?.length ?? 0
+    const productCount = node.product_count ?? 0
+    const brandCount = node.brand_count ?? 0
+    const attributeCount = node.attribute_count ?? 0
+
+    const tabs: { key: PanelTab; label: string; icon: any; count?: number; color?: string }[] = [
+        { key: 'overview', label: 'Overview', icon: <Bookmark size={12} /> },
+        { key: 'products', label: 'Products', icon: <Package size={12} />, count: productCount, color: 'var(--app-success)' },
+        { key: 'brands', label: 'Brands', icon: <Paintbrush size={12} />, count: brandCount, color: '#8b5cf6' },
+        { key: 'attributes', label: 'Attrs', icon: <Tag size={12} />, count: attributeCount, color: 'var(--app-warning)' },
+    ]
+
+    return (
+        <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex-shrink-0 px-4 py-3 flex items-center gap-2"
+                style={{
+                    background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 8%, var(--app-surface)), var(--app-surface))',
+                    borderBottom: '1px solid var(--app-border)',
+                }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
+                        boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                    }}>
+                    <Bookmark size={14} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-[14px] font-black text-app-foreground truncate">{node.name}</h3>
+                    <div className="flex items-center gap-1.5">
+                        {node.code && <span className="text-[10px] font-mono font-bold text-app-primary">{node.code}</span>}
+                        {node.short_name && <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">{node.short_name}</span>}
+                    </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => onEdit(node)}
+                        className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/40 transition-all" title="Edit">
+                        <Pencil size={13} />
+                    </button>
+                    {onPin && (
+                        <button onClick={() => onPin(node)}
+                            className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-primary hover:bg-app-primary/10 transition-all" title="Pin sidebar">
+                            <Pin size={13} />
+                        </button>
+                    )}
+                    <button onClick={onClose}
+                        className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/40 transition-all" title="Close">
+                        <X size={14} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Tab Strip */}
+            <div className="flex-shrink-0 flex items-center px-1 py-1"
+                style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
+                {tabs.map(t => (
+                    <button key={t.key} onClick={() => setTab(t.key)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all relative"
+                        style={tab === t.key ? {
+                            background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                            color: 'var(--app-primary)',
+                        } : {
+                            color: 'var(--app-muted-foreground)',
+                        }}>
+                        {t.icon} {t.label}
+                        {t.count != null && t.count > 0 && (
+                            <span className="ml-0.5 text-[8px] font-black px-1 py-[1px] rounded-full min-w-[16px] text-center"
+                                style={{
+                                    background: tab === t.key
+                                        ? `color-mix(in srgb, ${t.color || 'var(--app-primary)'} 15%, transparent)`
+                                        : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                    color: tab === t.key ? (t.color || 'var(--app-primary)') : 'var(--app-muted-foreground)',
+                                }}>
+                                {t.count}
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+                {tab === 'overview' && (
+                    <div className="h-full overflow-y-auto custom-scrollbar">
+                        <OverviewTab
+                            node={node}
+                            onAdd={onAdd}
+                            onDelete={onDelete}
+                            isParent={!!isParent}
+                            childCount={childCount}
+                            productCount={productCount}
+                            brandCount={brandCount}
+                            attributeCount={attributeCount}
+                            onTabChange={setTab}
+                        />
+                    </div>
+                )}
+                {tab === 'products' && (
+                    <ProductsTab categoryId={node.id} categoryName={node.name} allCategories={allCategories} />
+                )}
+                {tab === 'brands' && (
+                    <BrandsTab categoryId={node.id} categoryName={node.name} />
+                )}
+                {tab === 'attributes' && (
+                    <AttributesTab categoryId={node.id} categoryName={node.name} />
+                )}
+            </div>
+        </div>
+    )
+}

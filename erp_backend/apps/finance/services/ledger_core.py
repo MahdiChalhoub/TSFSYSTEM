@@ -41,13 +41,24 @@ class LedgerCoreMixin:
 
         with transaction.atomic():
             # ── Step 1: Fiscal Period Enforcement ──────────────────────
-            fp = FiscalPeriod.objects.filter(
+            # Resolve the period containing this transaction_date. If two
+            # periods overlap on this date, refuse to silently pick one —
+            # ambiguity must be fixed at the fiscal-year level, not papered
+            # over here. (See audit Q7.)
+            matching_periods = list(FiscalPeriod.objects.filter(
                 organization=organization,
                 start_date__lte=transaction_date,
-                end_date__gte=transaction_date
-            ).first()
-            if not fp:
+                end_date__gte=transaction_date,
+            ).select_related('fiscal_year')[:2])
+            if not matching_periods:
                 raise ValidationError(f"No fiscal period found for date {transaction_date}")
+            if len(matching_periods) > 1:
+                raise ValidationError(
+                    f"Date {transaction_date} falls in multiple overlapping fiscal periods "
+                    f"({', '.join(p.name for p in matching_periods)}). "
+                    f"Resolve the period overlap before posting."
+                )
+            fp = matching_periods[0]
             if not kwargs.get('internal_bypass'):
                 if fp.status == 'CLOSED' or fp.is_closed:
                     raise ValidationError(f"Fiscal period {fp.name} is closed. Cannot post transactions.")

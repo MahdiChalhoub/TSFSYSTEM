@@ -6,7 +6,7 @@ from .returns_serializers import (
     PurchaseReturnSerializer, PurchaseReturnLineSerializer
 )
 from .quotation_serializers import QuotationSerializer, QuotationLineSerializer
-from .delivery_serializers import DeliveryZoneSerializer, DeliveryOrderSerializer
+from .delivery_serializers import DriverSerializer, DeliveryZoneSerializer, DeliveryOrderSerializer
 from .discount_serializers import DiscountRuleSerializer, DiscountUsageLogSerializer
 from .consignment_serializers import ConsignmentSettlementSerializer, ConsignmentSettlementLineSerializer
 from .sourcing_serializers import ProductSupplierSerializer, SupplierPriceHistorySerializer
@@ -20,7 +20,7 @@ __all__ = [
     'CreditNoteSerializer',
     'PurchaseReturnSerializer', 'PurchaseReturnLineSerializer',
     'QuotationSerializer', 'QuotationLineSerializer',
-    'DeliveryZoneSerializer', 'DeliveryOrderSerializer',
+    'DriverSerializer', 'DeliveryZoneSerializer', 'DeliveryOrderSerializer',
     'DiscountRuleSerializer', 'DiscountUsageLogSerializer',
     'ConsignmentSettlementSerializer', 'ConsignmentSettlementLineSerializer',
     'ProductSupplierSerializer', 'SupplierPriceHistorySerializer',

@@ -52,7 +52,17 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
     }
 
     def perform_destroy(self, instance):
-        """Clean up related data before deleting a fiscal year."""
+        """
+        Clean up related data before deleting a fiscal year.
+
+        JournalEntries are deliberately NOT destroyed — they are immutable
+        financial records. They are detached (fiscal_year=NULL, fiscal_period=NULL)
+        and survive as orphans, recoverable later via close_fiscal_year's
+        date-based backfill. This preserves the audit trail.
+
+        Order matters: detach JEs first (PROTECT FK), delete OpeningBalances
+        explicitly, then cascade-delete periods (CASCADE FK from FiscalYear).
+        """
         if instance.is_hard_locked:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Cannot delete a permanently locked fiscal year.")
