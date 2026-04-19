@@ -124,7 +124,8 @@ export async function closeFiscalYear(id: number) {
         return { success: true }
     } catch (error: unknown) {
         console.error("Failed to close fiscal year:", error)
-        throw error
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
     }
 }
 
@@ -227,11 +228,11 @@ export async function lockFiscalYear(id: number) {
         await erpFetch(`fiscal-years/${id}/lock/`, {
             method: 'POST'
         })
-        revalidatePath('/finance/fiscal-years')
+        revalidatePath('/finance/finance/fiscal-years')
         return { success: true }
     } catch (error: unknown) {
-        console.error("Failed to lock fiscal year:", error)
-        throw error
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
     }
 }
 
@@ -255,8 +256,8 @@ export async function hardLockFiscalYear(id: number, closeDate?: string) {
         revalidatePath('/finance/fiscal-years')
         return { success: true }
     } catch (error: unknown) {
-        console.error("Failed to close fiscal year:", error)
-        throw error
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
     }
 }
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server'
 
 import { erpFetch } from "@/lib/erp-api"
@@ -9,7 +8,7 @@ export async function getOrganization(id: string) {
         const result = await erpFetch(`organizations/${id}/`)
 
         return result
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error(`[SaaS Detail] Error fetching org ${id}:`, error?.message || error)
         return null
     }

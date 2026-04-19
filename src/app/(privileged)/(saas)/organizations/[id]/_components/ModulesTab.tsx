@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { Crown, Package } from 'lucide-react'

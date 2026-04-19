@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useEffect, useState } from "react"
@@ -41,7 +40,7 @@ export default function OrganizationsPage() {
 
     // Apply filters
     const filteredOrgs = orgs.filter(o => {
-        if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !o.slug.toLowerCase().includes(search.toLowerCase())) return false
+        if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !(o.slug || '').toLowerCase().includes(search.toLowerCase())) return false
         if (filterPlan !== 'all' && (o.current_plan_name || 'Free Tier') !== filterPlan) return false
         if (filterType !== 'all' && (o.business_type_name || '') !== filterType) return false
         if (filterCountry !== 'all' && !(o.country || '').toLowerCase().includes(filterCountry.toLowerCase())) return false
@@ -96,7 +95,7 @@ export default function OrganizationsPage() {
         }
     }
 
-    async function handleDelete(org: Record<string, any>) {
+    async function handleDelete(org: any) {
         if (org.slug === 'saas') {
             return toast.error("Cannot delete the master SaaS organization.")
         }
@@ -115,7 +114,7 @@ export default function OrganizationsPage() {
     }
 
     // Parse error messages from backend JSON responses
-    function tryParseError(e: Record<string, any>): string {
+    function tryParseError(e: any): string {
         try {
             if (e?.message) {
                 const parsed = JSON.parse((e instanceof Error ? e.message : String(e)))
@@ -156,7 +155,7 @@ export default function OrganizationsPage() {
     const [loadingModules, setLoadingModules] = useState(false)
     const [modulesOpen, setModulesOpen] = useState(false)
 
-    async function handleOpenModules(org: Record<string, any>) {
+    async function handleOpenModules(org: any) {
         setSelectedOrg(org)
         setModulesOpen(true)
         setLoadingModules(true)
@@ -176,15 +175,16 @@ export default function OrganizationsPage() {
     }
 
     async function handleModuleToggle(moduleCode: string, currentStatus: string) {
+        if (!selectedOrg) return;
         const action = currentStatus === 'INSTALLED' ? 'disable' : 'enable'
         try {
-            const result = await toggleOrgModule(selectedOrg.id, moduleCode, action)
+            const result = await toggleOrgModule(String(selectedOrg.id), moduleCode, action)
             if (result?.error) {
                 toast.error(result.error)
             } else {
                 toast.success(`Module ${action}d`)
             }
-            const data = await getOrgModules(selectedOrg.id)
+            const data = await getOrgModules(String(selectedOrg.id))
             setOrgModules(data)
         } catch (e: unknown) {
             toast.error((e instanceof Error ? e.message : String(e)) || "Failed to toggle module")
@@ -431,7 +431,7 @@ export default function OrganizationsPage() {
                                                 ? 'bg-app-surface hover:bg-orange-50 text-app-muted-foreground hover:text-orange-600 hover:border-orange-200'
                                                 : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200'
                                             }`}
-                                        onClick={() => handleToggle(org.id, org.is_active, org.slug)}
+                                        onClick={() => handleToggle(String(org.id), Boolean(org.is_active), org.slug || '')}
                                         disabled={isSaasOrg}
                                     >
                                         <Power size={16} className="mr-2" />
@@ -533,9 +533,9 @@ export default function OrganizationsPage() {
                                                                 : (m.active_features || []).filter((c: string) => c !== f.code)
 
                                                             try {
-                                                                await updateOrgModuleFeatures(selectedOrg.id, m.code, newFeatures)
+                                                                await updateOrgModuleFeatures(String(selectedOrg!.id), m.code, newFeatures)
                                                                 toast.success("Feature updated")
-                                                                const data = await getOrgModules(selectedOrg.id)
+                                                                const data = await getOrgModules(String(selectedOrg!.id))
                                                                 setOrgModules(data)
                                                             } catch {
                                                                 toast.error("Failed to update feature")

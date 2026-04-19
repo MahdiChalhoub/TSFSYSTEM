@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useEffect, useState, useRef } from "react"
@@ -233,7 +232,7 @@ export default function SystemUpdatesPage() {
                                             {update.is_applied && (
                                                 <div className="flex items-center gap-2 text-emerald-600/70">
                                                     <CheckCircle2 size={10} className="md:w-3 md:h-3" />
-                                                    INSTALLED: {format(new Date(update.applied_at), 'MMM dd, yyyy HH:mm')}
+                                                    INSTALLED: {update.applied_at ? format(new Date(update.applied_at), 'MMM dd, yyyy HH:mm') : ''}
                                                 </div>
                                             )}
                                         </div>

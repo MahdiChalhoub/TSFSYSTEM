@@ -264,9 +264,26 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
         startTransition(async () => {
             try {
-                if (type === 'delete' && yearId) { await deleteFiscalYear(yearId); toast.success('Year deleted') }
-                if (type === 'close' && yearId) { await closeFiscalYear(yearId); toast.success('Year soft-closed') }
-                if (type === 'hardLock' && yearId) { await hardLockFiscalYear(yearId); toast.success('Year-end close complete — P&L closed, opening balances generated') }
+                if (type === 'delete' && yearId) { 
+                    await deleteFiscalYear(yearId); 
+                    toast.success('Year deleted') 
+                }
+                if (type === 'close' && yearId) { 
+                    const res = await closeFiscalYear(yearId); 
+                    if (res?.success === false) {
+                        toast.error(res.error || 'Failed to soft close year')
+                        return
+                    }
+                    toast.success('Year soft-closed') 
+                }
+                if (type === 'hardLock' && yearId) { 
+                    const res = await hardLockFiscalYear(yearId); 
+                    if (res?.success === false) {
+                        toast.error(res.error || 'Failed to year-end close')
+                        return
+                    }
+                    toast.success('Year-end close complete — P&L closed, opening balances generated') 
+                }
                 refreshData()
             } catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)) }
         })

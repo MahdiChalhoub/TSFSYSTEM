@@ -1,5 +1,5 @@
-// @ts-nocheck
 'use client';
+import { toast } from 'sonner';
 
 import { useState, useEffect, useTransition, useRef, useCallback } from 'react';
 import { getPurchaseAnalyticsConfig, savePurchaseAnalyticsConfig, getConfigHistory } from '@/app/actions/settings/purchase-analytics-config';
@@ -279,71 +279,6 @@ export default function PurchaseAnalyticsSettingsPage() {
     };
 
     // Auto-optimization suggestions — delegated to _lib/validation
-    const suggestions = config ? computeSuggestions(config, val, valWeight) : [];
-    const [showSuggestions, setShowSuggestions] = useState(false);
-
-    // Changelog generator
-    const generateChangelog = () => {
-        if (!config || !originalConfig) return '';
-        const changes: string[] = [];
-        Object.keys(config).forEach(k => {
-            if (k.startsWith('_')) return;
-            const oldVal = (originalConfig as any)[k];
-            const newVal = (config as any)[k];
-            if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-                changes.push(`- **${k.replace(/_/g, ' ')}**: ${JSON.stringify(oldVal)} → ${JSON.stringify(newVal)}`);
-            }
-        });
-        if (changes.length === 0) return 'No unsaved changes.';
-        return `## Purchase Analytics Config Changes\n\n${changes.join('\n')}\n\n_Generated ${new Date().toLocaleString()}_`;
-    };
-
-    // Auto-save draft state (useEffect relocated below `hasChanges` definition to avoid TDZ)
-    const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
-
-    // Restore draft on mount
-    useEffect(() => {
-        const draft = localStorage.getItem('pa_draft_autosave');
-        if (draft && config) {
-            try {
-                const parsed = JSON.parse(draft);
-                if (JSON.stringify(parsed) !== JSON.stringify(config)) {
-                    setDraftSavedAt('restored');
-                }
-            } catch {}
-        }
-    }, []);
-
-    // Field validation rules
-    // Field validation — imported from _lib/validation
-    const statusDot = (status: 'ok' | 'warn' | 'error' | null) => {
-        if (!status) return null;
-        const colors = { ok: 'bg-emerald-500', warn: 'bg-amber-500', error: 'bg-red-500' };
-        return <span className={`inline-block w-1.5 h-1.5 rounded-full ${colors[status]}`} />;
-    };
-
-    // Diff viewer
-    const [showDiff, setShowDiff] = useState(false);
-    const diffEntries = (() => {
-        if (!config || !originalConfig) return [];
-        return Object.keys(config)
-            .filter(k => !k.startsWith('_'))
-            .map(k => ({
-                field: k,
-                oldVal: (originalConfig as any)[k],
-                newVal: (config as any)[k],
-                changed: JSON.stringify((originalConfig as any)[k]) !== JSON.stringify((config as any)[k]),
-            }))
-            .filter(e => e.changed);
-    })();
-
-    // Default value hints — DEFAULTS imported from _lib/constants
-    const defaultHint = (field: string, currentVal: any) => {
-        const def = DEFAULTS[field];
-        if (def === undefined || JSON.stringify(def) === JSON.stringify(currentVal)) return null;
-        return <span className="text-[8px] text-app-muted-foreground/50 ml-1">(default: {String(def)})</span>;
-    };
-
     const handleUndo = () => {
         if (undoStack.length === 0) return;
         const last = undoStack[undoStack.length - 1];
@@ -410,6 +345,71 @@ export default function PurchaseAnalyticsSettingsPage() {
     // Ghost default: shows global value when field is overridden
     const globalVal = (key: string) => (config as any)?.[key];
     const globalWeight = (key: string) => (config?.financial_score_weights as any)?.[key];
+    const suggestions = config ? computeSuggestions(config, val, valWeight) : [];
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
+    // Changelog generator
+    const generateChangelog = () => {
+        if (!config || !originalConfig) return '';
+        const changes: string[] = [];
+        Object.keys(config).forEach(k => {
+            if (k.startsWith('_')) return;
+            const oldVal = (originalConfig as any)[k];
+            const newVal = (config as any)[k];
+            if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+                changes.push(`- **${k.replace(/_/g, ' ')}**: ${JSON.stringify(oldVal)} → ${JSON.stringify(newVal)}`);
+            }
+        });
+        if (changes.length === 0) return 'No unsaved changes.';
+        return `## Purchase Analytics Config Changes\n\n${changes.join('\n')}\n\n_Generated ${new Date().toLocaleString()}_`;
+    };
+
+    // Auto-save draft state (useEffect relocated below `hasChanges` definition to avoid TDZ)
+    const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+
+    // Restore draft on mount
+    useEffect(() => {
+        const draft = localStorage.getItem('pa_draft_autosave');
+        if (draft && config) {
+            try {
+                const parsed = JSON.parse(draft);
+                if (JSON.stringify(parsed) !== JSON.stringify(config)) {
+                    setDraftSavedAt('restored');
+                }
+            } catch {}
+        }
+    }, []);
+
+    // Field validation rules
+    // Field validation — imported from _lib/validation
+    const statusDot = (status: 'ok' | 'warn' | 'error' | null) => {
+        if (!status) return null;
+        const colors = { ok: 'bg-emerald-500', warn: 'bg-amber-500', error: 'bg-red-500' };
+        return <span className={`inline-block w-1.5 h-1.5 rounded-full ${colors[status]}`} />;
+    };
+
+    // Diff viewer
+    const [showDiff, setShowDiff] = useState(false);
+    const diffEntries = (() => {
+        if (!config || !originalConfig) return [];
+        return Object.keys(config)
+            .filter(k => !k.startsWith('_'))
+            .map(k => ({
+                field: k,
+                oldVal: (originalConfig as any)[k],
+                newVal: (config as any)[k],
+                changed: JSON.stringify((originalConfig as any)[k]) !== JSON.stringify((config as any)[k]),
+            }))
+            .filter(e => e.changed);
+    })();
+
+    // Default value hints — DEFAULTS imported from _lib/constants
+    const defaultHint = (field: string, currentVal: any) => {
+        const def = DEFAULTS[field];
+        if (def === undefined || JSON.stringify(def) === JSON.stringify(currentVal)) return null;
+        return <span className="text-[8px] text-app-muted-foreground/50 ml-1">(default: {String(def)})</span>;
+    };
+
 
     // Human-readable default label for select-type fields
     // Label helpers — imported from _lib/constants
@@ -1414,7 +1414,7 @@ export default function PurchaseAnalyticsSettingsPage() {
                                             className={toggleBtn(active)}
                                             onClick={() => {
                                                 const next = active
-                                                    ? excludes.filter(t => t !== type)
+                                                    ? excludes.filter((t: string) => t !== type)
                                                     : [...excludes, type];
                                                 update('sales_avg_exclude_types', next);
                                             }}

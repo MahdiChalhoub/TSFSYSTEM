@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 import { Loader2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { Plus, Building2, MapPin, Power } from 'lucide-react'
@@ -64,7 +63,7 @@ export function SitesTab({ sites, onCreateSite, onToggleSite }: SitesTabProps) {
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={() => onToggleSite(site.id)} className="transition-transform hover:scale-110">
+                                <button onClick={() => onToggleSite(String(site.id))} className="transition-transform hover:scale-110">
                                     <Power size={18} className={site.is_active ? 'text-emerald-500' : 'text-app-faint'} />
                                 </button>
                             </div>

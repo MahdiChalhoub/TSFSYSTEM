@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { Users, MapPin, FileText, HardDrive, AlertTriangle, Activity, ChevronRight, ShieldCheck, ShieldOff, UserCircle, Loader2 } from 'lucide-react'

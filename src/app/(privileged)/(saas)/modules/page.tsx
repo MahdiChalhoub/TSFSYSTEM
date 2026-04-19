@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useEffect, useState, useRef } from "react"
@@ -448,8 +447,8 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        getModuleBackups(moduleCode).then((data: Record<string, any>[]) => {
-            setBackups(data)
+        getModuleBackups(moduleCode).then((data: any[]) => {
+            setBackups(data as SaasBackup[])
             setLoading(false)
         }).catch(() => setLoading(false))
     }, [moduleCode])

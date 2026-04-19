@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getPaymentTerms } from "@/app/actions/commercial/payment-terms";
 import PaymentTermsClient from "./client";
 import { CreditCard } from "lucide-react";

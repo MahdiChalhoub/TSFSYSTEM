@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useEffect, useState } from "react"
@@ -153,7 +152,7 @@ export default function SubscriptionPage() {
                                                         className="w-full"
                                                         variant={plan?.id === p.id ? "outline" : "default"}
                                                         disabled={plan?.id === p.id || upgrading}
-                                                        onClick={() => handleUpgrade(p.id)}
+                                                        onClick={() => handleUpgrade(String(p.id))}
                                                     >
                                                         {upgrading ? "Processing..." : plan?.id === p.id ? "Current Plan" : "Select"}
                                                     </Button>

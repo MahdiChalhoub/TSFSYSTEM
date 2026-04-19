@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -25,7 +24,7 @@ const EMPTY_BILLING: SaasBillingData = {
 const normalizeBilling = (b: unknown): SaasBillingData =>
     (b as SaasBillingData)?.history
         ? (b as SaasBillingData)
-        : { ...EMPTY_BILLING, history: Array.isArray(b) ? (b as unknown[]) : [] }
+        : { ...EMPTY_BILLING, history: Array.isArray(b) ? (b as any[]) : [] }
 
 export function useOrganizationDetail(orgId: string) {
     const router = useRouter()
@@ -127,7 +126,7 @@ export function useOrganizationDetail(orgId: string) {
         setSwitching(true)
         const prevHistoryLen = billing?.history?.length ?? 0
         try {
-            const result = await changeOrgPlan(orgId, plan.id)
+            const result = await changeOrgPlan(orgId, String(plan.id))
             toast.success(result.message || `Switched to ${plan.name}`)
             if (result.modules_disabled?.length > 0) {
                 toast.info(`Disabled modules: ${result.modules_disabled.join(', ')}`)
@@ -190,10 +189,10 @@ export function useOrganizationDetail(orgId: string) {
         finally { setCancellingAddon(null) }
     }
 
-    async function toggleEncryption() {
+    async function toggleEncryption(action: 'activate' | 'deactivate' = 'activate') {
         setTogglingEncryption(true)
         try {
-            const result = await toggleOrgEncryption(orgId)
+            const result = await toggleOrgEncryption(orgId, action)
             toast.success(result.message || 'Encryption toggled')
             setEncryptionStatus(await getOrgEncryptionStatus(orgId))
         } catch (e: unknown) { toast.error(errMsg(e, 'Failed to toggle encryption')) }

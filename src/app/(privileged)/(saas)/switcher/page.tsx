@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useEffect, useState } from "react"
@@ -58,7 +57,7 @@ export default function SwitcherPage() {
                         <Card
                             key={org.id}
                             className="hover:border-emerald-500/30 transition-all cursor-pointer group"
-                            onClick={() => handleSwitch(org.slug)}
+                            onClick={() => handleSwitch(org.slug || '')}
                         >
                             <CardHeader>
                                 <div className="flex justify-between items-start">

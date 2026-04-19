@@ -153,7 +153,7 @@ async function apiCall<T>(
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('[API Error]', {
+    console.warn('[API Error]', {
       endpoint,
       status: response.status,
       error: error.substring(0, 200)
@@ -190,8 +190,8 @@ export async function getThemes(tenantSlug?: string): Promise<ThemesListResponse
       }
     }
   } catch (error) {
-    console.error('[Theme Action] Failed to fetch themes:', error)
-    console.error('[Theme Action] API_BASE:', API_BASE)
+    console.warn('[Theme Action] Failed to fetch themes:', error)
+    console.warn('[Theme Action] API_BASE:', API_BASE)
     // Return empty data instead of throwing
     return {
       system: [],

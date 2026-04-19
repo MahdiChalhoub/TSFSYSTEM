@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { Users, MapPin, HardDrive, FileText } from 'lucide-react'

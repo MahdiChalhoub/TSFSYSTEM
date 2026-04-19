@@ -1,0 +1,55 @@
+src/app/(privileged)/(saas)/modules/page.tsx(451,24): error TS2345: Argument of type 'Record<string, any>[]' is not assignable to parameter of type 'SetStateAction<SaasBackup[]>'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(61,50): error TS18048: 'usage.users' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(61,62): error TS2339: Property 'current' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(61,78): error TS18048: 'usage.users' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(61,90): error TS2339: Property 'limit' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(61,106): error TS18048: 'usage.users' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(61,118): error TS2339: Property 'percent' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(63,56): error TS18048: 'usage.storage' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(63,70): error TS2339: Property 'current_mb' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(63,89): error TS18048: 'usage.storage' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(63,103): error TS2339: Property 'limit_mb' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(63,122): error TS18048: 'usage.storage' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx(63,136): error TS2339: Property 'percent' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/SitesTab.tsx(66,69): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(25,77): error TS18048: 'usage.users' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(25,89): error TS2339: Property 'current' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(25,105): error TS18048: 'usage.users' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(25,117): error TS2339: Property 'limit' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(25,133): error TS18048: 'usage.users' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(25,145): error TS2339: Property 'percent' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(27,88): error TS18048: 'usage.storage' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(27,102): error TS2339: Property 'current_mb' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(27,121): error TS18048: 'usage.storage' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(27,135): error TS2339: Property 'limit_mb' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(27,154): error TS18048: 'usage.storage' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx(27,168): error TS2339: Property 'percent' does not exist on type 'number'.
+src/app/(privileged)/(saas)/organizations/[id]/_hooks/useOrganizationDetail.ts(27,31): error TS2322: Type 'unknown[]' is not assignable to type 'Record<string, any>[]'.
+src/app/(privileged)/(saas)/organizations/[id]/_hooks/useOrganizationDetail.ts(129,55): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/organizations/[id]/_hooks/useOrganizationDetail.ts(195,34): error TS2554: Expected 2 arguments, but got 1.
+src/app/(privileged)/(saas)/organizations/[id]/actions.ts(12,73): error TS2339: Property 'message' does not exist on type '{}'.
+src/app/(privileged)/(saas)/organizations/page.tsx(43,80): error TS18048: 'o.slug' is possibly 'undefined'.
+src/app/(privileged)/(saas)/organizations/page.tsx(93,39): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Record<string, any>'.
+src/app/(privileged)/(saas)/organizations/page.tsx(111,39): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Record<string, any>'.
+src/app/(privileged)/(saas)/organizations/page.tsx(146,39): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Record<string, any>'.
+src/app/(privileged)/(saas)/organizations/page.tsx(159,24): error TS2345: Argument of type 'Record<string, any>' is not assignable to parameter of type 'SetStateAction<SaasOrganization | null>'.
+src/app/(privileged)/(saas)/organizations/page.tsx(180,50): error TS18047: 'selectedOrg' is possibly 'null'.
+src/app/(privileged)/(saas)/organizations/page.tsx(180,50): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/organizations/page.tsx(186,46): error TS18047: 'selectedOrg' is possibly 'null'.
+src/app/(privileged)/(saas)/organizations/page.tsx(186,46): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/organizations/page.tsx(433,69): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/organizations/page.tsx(535,95): error TS18047: 'selectedOrg' is possibly 'null'.
+src/app/(privileged)/(saas)/organizations/page.tsx(535,95): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/organizations/page.tsx(537,98): error TS18047: 'selectedOrg' is possibly 'null'.
+src/app/(privileged)/(saas)/organizations/page.tsx(537,98): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/subscription-plans/[id]/page.tsx(106,21): error TS2345: Argument of type '(p: Record<string, any>) => { is_public: any; }' is not assignable to parameter of type 'SetStateAction<SaasPlan | null>'.
+src/app/(privileged)/(saas)/subscription-plans/page.tsx(631,43): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/subscription/page.tsx(155,86): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/switcher/page.tsx(60,57): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+src/app/(privileged)/(saas)/updates/page.tsx(235,81): error TS2769: No overload matches this call.
+src/app/(privileged)/settings/purchase-analytics/page.tsx(134,9): error TS2304: Cannot find name 'toast'.
+src/app/(privileged)/settings/purchase-analytics/page.tsx(281,61): error TS2448: Block-scoped variable 'val' used before its declaration.
+src/app/(privileged)/settings/purchase-analytics/page.tsx(281,61): error TS2454: Variable 'val' is used before being assigned.
+src/app/(privileged)/settings/purchase-analytics/page.tsx(281,66): error TS2448: Block-scoped variable 'valWeight' used before its declaration.
+src/app/(privileged)/settings/purchase-analytics/page.tsx(281,66): error TS2454: Variable 'valWeight' is used before being assigned.
+src/app/(privileged)/settings/purchase-analytics/page.tsx(1416,71): error TS7006: Parameter 't' implicitly has an 'any' type.
