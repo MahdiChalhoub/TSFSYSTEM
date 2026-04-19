@@ -10,6 +10,7 @@
 
 import { useMemo } from 'react'
 import { Menu, Search, Bell } from 'lucide-react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
 
@@ -83,12 +84,13 @@ export function MobileTopHeader({ user, onMenuPress, onSearchPress, onAvatarPres
                         <Search size={18} strokeWidth={2.2} />
                     </button>
 
-                    <button
+                    <Link
+                        href="/settings/notifications"
                         aria-label="Notifications"
                         className="flex items-center justify-center rounded-xl active:scale-90 transition-transform"
                         style={{ width: 40, height: 40, color: 'var(--app-muted-foreground)' }}>
                         <Bell size={18} strokeWidth={2.2} />
-                    </button>
+                    </Link>
 
                     <button
                         onClick={onAvatarPress}

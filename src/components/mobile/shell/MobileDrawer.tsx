@@ -10,10 +10,11 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { X, Search, LogOut, ChevronRight, ChevronDown } from 'lucide-react'
+import { X, Search, LogOut, ChevronRight, ChevronDown, Sun, Moon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
 import { TenantSwitcher } from '@/components/admin/TenantSwitcher'
+import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { logoutAction } from '@/app/actions/auth'
 
 interface Props {
@@ -37,6 +38,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
     const router = useRouter()
     const [q, setQ] = useState('')
     const [expanded, setExpanded] = useState<Set<string>>(new Set())
+    const { isDark, toggleColorMode } = useAppTheme()
 
     // Pre-expand the module matching the current route when the drawer opens
     useEffect(() => {
@@ -308,15 +310,28 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                             )}
                         </div>
 
-                        {/* Footer: logout + safe-area padding */}
-                        <div className="flex-shrink-0 px-3 py-2 border-t"
+                        {/* Footer: theme toggle + logout + safe-area padding */}
+                        <div className="flex-shrink-0 px-3 py-2 border-t flex items-center gap-2"
                             style={{
                                 borderColor: 'color-mix(in srgb, var(--app-border) 55%, transparent)',
                                 paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0))',
                             }}>
                             <button
+                                onClick={toggleColorMode}
+                                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl active:scale-[0.98] transition-transform font-black"
+                                style={{
+                                    fontSize: 'var(--tp-md)',
+                                    color: 'var(--app-foreground)',
+                                    background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                    minWidth: 48,
+                                }}
+                                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+                                {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                            </button>
+                            <button
                                 onClick={handleLogout}
-                                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl active:scale-[0.98] transition-transform font-black"
+                                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl active:scale-[0.98] transition-transform font-black"
                                 style={{
                                     fontSize: 'var(--tp-md)',
                                     color: 'var(--app-error, #ef4444)',
