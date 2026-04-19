@@ -11,11 +11,12 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { X, Search, LogOut, ChevronRight, ChevronDown, Sun, Moon } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, PanInfo } from 'framer-motion'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
 import { TenantSwitcher } from '@/components/admin/TenantSwitcher'
 import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { logoutAction } from '@/app/actions/auth'
+import { useBackHandler, useEscapeKey } from '@/hooks/use-back-handler'
 
 interface Props {
     open: boolean
@@ -39,6 +40,16 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
     const [q, setQ] = useState('')
     const [expanded, setExpanded] = useState<Set<string>>(new Set())
     const { isDark, toggleColorMode } = useAppTheme()
+
+    useBackHandler(open, onClose, 'mobile-drawer')
+    useEscapeKey(open, onClose)
+
+    const handleDragEnd = (_: any, info: PanInfo) => {
+        // Swipe left past threshold (or with velocity) to dismiss
+        if (info.offset.x < -80 || info.velocity.x < -500) {
+            onClose()
+        }
+    }
 
     // Pre-expand the module matching the current route when the drawer opens
     useEffect(() => {
@@ -110,6 +121,13 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                         animate={{ x: 0 }}
                         exit={{ x: '-100%' }}
                         transition={{ type: 'spring', stiffness: 420, damping: 40 }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={{ left: 0.25, right: 0 }}
+                        onDragEnd={handleDragEnd}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Main navigation"
                         className="fixed top-0 left-0 bottom-0 z-[81] flex flex-col"
                         style={{
                             width: 'min(88vw, 340px)',

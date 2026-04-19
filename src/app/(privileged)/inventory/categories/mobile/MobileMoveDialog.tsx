@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { reparentCategory } from '@/app/actions/inventory/categories'
+import { useBackHandler, useEscapeKey } from '@/hooks/use-back-handler'
 import type { CategoryNode } from '../components/types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -41,6 +42,9 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
     const router = useRouter()
 
     const blocked = useMemo(() => node ? collectDescendantIds(node.id, allCategories) : new Set<number>(), [node, allCategories])
+
+    useBackHandler(node !== null, onClose, 'mobile-move-dialog')
+    useEscapeKey(node !== null, onClose)
 
     const matches = useMemo(() => {
         if (!node) return []

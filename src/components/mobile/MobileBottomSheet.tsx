@@ -9,6 +9,7 @@
 
 import { useEffect, useState, ReactNode } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
+import { useBackHandler, useEscapeKey } from '@/hooks/use-back-handler'
 
 type Snap = 'peek' | 'expanded' | 'closed'
 
@@ -34,6 +35,9 @@ export function MobileBottomSheet({ open, onClose, children, initialSnap = 'peek
         if (open) setSnap(initialSnap)
         else setSnap('closed')
     }, [open, initialSnap])
+
+    useBackHandler(open, onClose, 'mobile-bottom-sheet')
+    useEscapeKey(open, onClose)
 
     // Snap-point y-offsets (distance sheet top is from viewport top)
     const yFor = (s: Snap) => {

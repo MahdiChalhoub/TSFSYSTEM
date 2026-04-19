@@ -11,6 +11,7 @@
 
 import { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useBackHandler, useEscapeKey } from '@/hooks/use-back-handler'
 
 export interface ActionItem {
     key: string
@@ -36,6 +37,9 @@ export function MobileActionSheet({ open, onClose, title, subtitle, items }: Pro
     const gridItems = items.filter(i => i.variant === 'grid')
     const listItems = items.filter(i => i.variant !== 'grid' && !i.destructive)
     const destructiveItems = items.filter(i => i.destructive)
+
+    useBackHandler(open, onClose, 'mobile-action-sheet')
+    useEscapeKey(open, onClose)
 
     return (
         <AnimatePresence>

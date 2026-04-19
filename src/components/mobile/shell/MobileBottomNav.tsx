@@ -108,6 +108,8 @@ function TabButton({ item, active, onTap, onLongPress }: {
             <Link
                 href={item.path}
                 className={wrapperClass}
+                aria-current={active ? 'page' : undefined}
+                aria-label={item.label}
                 onClick={(e) => { if (isLongPressing) { e.preventDefault(); return } haptic(); onTap() }}>
                 {content}
             </Link>
@@ -154,6 +156,7 @@ export function MobileBottomNav({ items = DEFAULT_ITEMS, onMorePress }: Props) {
     return (
         <>
             <nav
+                aria-label="Primary"
                 className="fixed left-0 right-0 bottom-0 z-40 flex items-stretch"
                 style={{
                     background: 'color-mix(in srgb, var(--app-surface) 95%, transparent)',
