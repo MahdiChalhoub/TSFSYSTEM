@@ -12,7 +12,7 @@ import { useState, useMemo, useCallback } from 'react'
 import {
     Library, Globe, Landmark, BookOpen, FileText, Flag, MapPin, Layers,
     Scale, Building2, CheckCircle2, Download, Hash, ChevronRight, Monitor,
-    ArrowRightLeft, GitMerge, Zap, ListChecks,
+    ArrowRightLeft, GitMerge, Zap, ListChecks, ChevronDown,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -258,9 +258,12 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                                     }}>
                                     <GitMerge size={10} /> {tpl.posting_rule_count} rules
                                 </span>
-                                <button
+                                <div
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={(e) => { e.stopPropagation(); setImportTarget(tpl) }}
-                                    className="ml-auto flex items-center gap-1 font-black rounded-lg px-3 py-1 active:scale-95 transition-transform"
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); setImportTarget(tpl) } }}
+                                    className="ml-auto flex items-center gap-1 font-black rounded-lg px-3 py-1 active:scale-95 transition-transform cursor-pointer"
                                     style={{
                                         fontSize: 'var(--tp-xs)',
                                         color: '#fff',
@@ -268,7 +271,7 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                                         boxShadow: `0 2px 8px color-mix(in srgb, ${accent} 30%, transparent)`,
                                     }}>
                                     <Download size={11} /> Import
-                                </button>
+                                </div>
                             </div>
                         </button>
                     )
@@ -278,11 +281,104 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
     )
 }
 
-/* Detail sheet — show top-level sections of the template */
+/* Recursive account row — expandable when node has children */
+function AccountTreeRow({ node, level, accent, defaultOpen }: {
+    node: any
+    level: number
+    accent: string
+    defaultOpen?: boolean
+}) {
+    const hasChildren = Array.isArray(node.children) && node.children.length > 0
+    const [open, setOpen] = useState(!!defaultOpen)
+
+    return (
+        <div>
+            <div
+                onClick={() => hasChildren && setOpen(o => !o)}
+                className={`flex items-center gap-2 px-2 rounded-lg transition-colors ${hasChildren ? 'cursor-pointer active:bg-app-primary/10' : ''}`}
+                style={{
+                    minHeight: 40,
+                    paddingLeft: 8 + level * 14,
+                    paddingRight: 8,
+                    borderTop: level === 0 ? undefined : '1px dashed color-mix(in srgb, var(--app-border) 20%, transparent)',
+                }}>
+                {/* Chevron */}
+                {hasChildren ? (
+                    <span
+                        className="flex items-center justify-center flex-shrink-0 rounded"
+                        style={{
+                            width: 22, height: 22,
+                            background: open
+                                ? `color-mix(in srgb, ${accent} 14%, transparent)`
+                                : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                            color: open ? accent : 'var(--app-muted-foreground)',
+                            transition: 'transform 150ms, background 150ms',
+                            transform: open ? 'rotate(90deg)' : 'none',
+                        }}>
+                        <ChevronRight size={13} />
+                    </span>
+                ) : (
+                    <span className="flex-shrink-0" style={{
+                        width: 6, height: 6, borderRadius: 999,
+                        marginLeft: 8,
+                        background: `color-mix(in srgb, ${accent} 35%, transparent)`,
+                    }} />
+                )}
+                {/* Code */}
+                <span className="font-mono font-black tabular-nums flex-shrink-0"
+                    style={{
+                        fontSize: 'var(--tp-md)',
+                        color: accent,
+                        minWidth: 46,
+                    }}>
+                    {node.code}
+                </span>
+                {/* Name */}
+                <span className={`flex-1 truncate ${level === 0 ? 'font-black' : 'font-bold'} text-app-foreground`}
+                    style={{ fontSize: 'var(--tp-md)' }}>
+                    {node.name}
+                </span>
+                {/* Type badge (only root) */}
+                {level === 0 && node.type && (
+                    <span className="font-black uppercase tracking-widest text-app-muted-foreground flex-shrink-0"
+                        style={{ fontSize: 'var(--tp-xxs)' }}>
+                        {node.type}
+                    </span>
+                )}
+                {/* Leaf child count hint */}
+                {hasChildren && (
+                    <span className="font-black tabular-nums flex-shrink-0 rounded-full px-1.5 py-0.5"
+                        style={{
+                            fontSize: 'var(--tp-xxs)',
+                            background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                            color: 'var(--app-muted-foreground)',
+                            minWidth: 22, textAlign: 'center',
+                        }}>
+                        {node.children.length}
+                    </span>
+                )}
+            </div>
+            {hasChildren && open && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                    {node.children.map((child: any, i: number) => (
+                        <AccountTreeRow
+                            key={`${child.code}-${i}`}
+                            node={child}
+                            level={level + 1}
+                            accent={accent}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+/* Detail sheet — show account tree of the template (expandable) */
 function TemplateDetail({ template, full, onImport, onClose }: any) {
     const Icon = resolveIcon(template.icon)
     const accent = ACCENT_MAP[template.key] || template.accent_color || 'var(--app-primary)'
-    const topLevelSections = (full?.accounts || []).slice(0, 20)
+    const roots = full?.accounts || []
 
     return (
         <div className="flex flex-col h-full">
@@ -360,44 +456,32 @@ function TemplateDetail({ template, full, onImport, onClose }: any) {
                     </div>
                 </div>
 
-                {/* Top-level preview */}
-                {topLevelSections.length > 0 && (
+                {/* Account tree — expandable */}
+                {roots.length > 0 && (
                     <div>
-                        <div className="font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 px-1"
-                            style={{ fontSize: 'var(--tp-xs)' }}>
-                            Account Structure
+                        <div className="flex items-center justify-between mb-1.5 px-1">
+                            <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                                style={{ fontSize: 'var(--tp-xs)' }}>
+                                Account Structure
+                            </div>
+                            <div className="font-bold text-app-muted-foreground tabular-nums"
+                                style={{ fontSize: 'var(--tp-xxs)' }}>
+                                {roots.length} root{roots.length === 1 ? '' : 's'}
+                            </div>
                         </div>
-                        <div className="rounded-2xl overflow-hidden"
+                        <div className="rounded-2xl overflow-hidden py-1"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
                                 border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
                             }}>
-                            {topLevelSections.map((acc: any, i: number) => (
-                                <div key={`${acc.code}-${i}`}
-                                    className="flex items-center gap-3 px-3 py-2.5"
-                                    style={{ borderTop: i === 0 ? undefined : '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
-                                    <span className="font-mono font-black tabular-nums flex-shrink-0"
-                                        style={{ fontSize: 'var(--tp-md)', color: accent, minWidth: 42 }}>
-                                        {acc.code}
-                                    </span>
-                                    <span className="font-bold text-app-foreground truncate flex-1"
-                                        style={{ fontSize: 'var(--tp-md)' }}>
-                                        {acc.name}
-                                    </span>
-                                    {acc.type && (
-                                        <span className="font-black uppercase tracking-widest text-app-muted-foreground flex-shrink-0"
-                                            style={{ fontSize: 'var(--tp-xxs)' }}>
-                                            {acc.type}
-                                        </span>
-                                    )}
-                                </div>
+                            {roots.map((acc: any, i: number) => (
+                                <AccountTreeRow
+                                    key={`${acc.code}-${i}`}
+                                    node={acc}
+                                    level={0}
+                                    accent={accent}
+                                />
                             ))}
-                            {(full?.accounts?.length || 0) > topLevelSections.length && (
-                                <div className="px-3 py-2 text-center font-bold text-app-muted-foreground"
-                                    style={{ fontSize: 'var(--tp-xs)', borderTop: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
-                                    + {(full?.accounts?.length || 0) - topLevelSections.length} more
-                                </div>
-                            )}
                         </div>
                     </div>
                 )}

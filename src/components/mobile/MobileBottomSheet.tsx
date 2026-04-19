@@ -4,11 +4,15 @@
 /* ═══════════════════════════════════════════════════════════
  *  MobileBottomSheet — draggable 3-snap sheet
  *  Snaps: closed (below viewport) / peek (40% visible) / expanded (90%)
- *  Drag-down past threshold closes. Backdrop tap closes.
+ *
+ *  Drag behavior: framer-motion's drag is gated by useDragControls so
+ *  only the drag-handle button starts a sheet drag. The content body
+ *  retains normal touch-action: auto, so vertical swipes inside the
+ *  content scroll the content instead of dismissing the sheet.
  * ═══════════════════════════════════════════════════════════ */
 
 import { useEffect, useState, ReactNode } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
+import { motion, AnimatePresence, PanInfo, useDragControls } from 'framer-motion'
 import { useBackHandler, useEscapeKey } from '@/hooks/use-back-handler'
 
 type Snap = 'peek' | 'expanded' | 'closed'
@@ -23,6 +27,7 @@ interface Props {
 export function MobileBottomSheet({ open, onClose, children, initialSnap = 'peek' }: Props) {
     const [snap, setSnap] = useState<Snap>('closed')
     const [vh, setVh] = useState(0)
+    const dragControls = useDragControls()
 
     useEffect(() => {
         const update = () => setVh(window.innerHeight)
@@ -96,6 +101,8 @@ export function MobileBottomSheet({ open, onClose, children, initialSnap = 'peek
                         exit={{ y: vh }}
                         transition={{ type: 'spring', stiffness: 420, damping: 38 }}
                         drag="y"
+                        dragListener={false}
+                        dragControls={dragControls}
                         dragConstraints={{ top: yFor('expanded'), bottom: vh }}
                         dragElastic={{ top: 0.05, bottom: 0.15 }}
                         onDragEnd={handleDragEnd}
@@ -104,18 +111,21 @@ export function MobileBottomSheet({ open, onClose, children, initialSnap = 'peek
                             height: '100dvh',
                             background: 'var(--app-surface)',
                             borderTop: '1px solid var(--app-border)',
-                            touchAction: 'none',
                         }}>
-                        {/* Drag handle — tap toggles peek↔expanded */}
+                        {/* Drag handle — tap toggles peek↔expanded, drag starts sheet drag */}
                         <button
                             onClick={() => setSnap(snap === 'expanded' ? 'peek' : 'expanded')}
-                            className="flex-shrink-0 flex flex-col items-center justify-center pt-2 pb-1 active:opacity-70 transition-opacity"
-                            style={{ touchAction: 'none', minHeight: 28 }}
+                            onPointerDown={(e) => dragControls.start(e)}
+                            className="flex-shrink-0 flex flex-col items-center justify-center pt-2 pb-2 active:opacity-70 transition-opacity cursor-grab"
+                            style={{ touchAction: 'none', minHeight: 32 }}
                             aria-label={snap === 'expanded' ? 'Collapse to peek' : 'Expand sheet'}>
-                            <div style={{ width: 40, height: 4, borderRadius: 999, background: 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }} />
+                            <div style={{
+                                width: 40, height: 4, borderRadius: 999,
+                                background: 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)',
+                            }} />
                         </button>
-                        {/* Content — pointerEvents auto inside; outer is draggable */}
-                        <div className="flex-1 min-h-0 flex flex-col overflow-hidden" style={{ touchAction: 'auto' }}>
+                        {/* Content — normal scrolling / touch behavior */}
+                        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                             {children}
                         </div>
                     </motion.div>
