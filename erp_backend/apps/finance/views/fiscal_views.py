@@ -98,6 +98,26 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization_id = get_current_tenant_id()
         organization = Organization.objects.get(id=organization_id)
 
+        try:
+            from apps.finance.services.closing_service import ClosingService
+            ClosingService.soft_close_fiscal_year(
+                organization, fiscal_year,
+                user=request.user if request.user.is_authenticated else None
+            )
+            return Response({"status": "Fiscal Year Soft Closed"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def finalize(self, request, pk=None):
+        """
+        Year-end finalize: runs the full SAP-style sequence (P&L → retained earnings, opening
+        balances for next year) and permanently hard-locks to FINALIZED.
+        """
+        fiscal_year = self.get_object()
+        organization_id = get_current_tenant_id()
+        organization = Organization.objects.get(id=organization_id)
+
         # Optional close_date for partial year close
         close_date = request.data.get('close_date') if hasattr(request, 'data') else None
 
@@ -108,19 +128,9 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 user=request.user if request.user.is_authenticated else None,
                 close_date=close_date,
             )
-            return Response({"status": "Fiscal Year Closed"})
+            return Response({"status": "Fiscal Year Finalized"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def finalize(self, request, pk=None):
-        """
-        Year-end finalize — alias for `close` that makes intent explicit:
-        runs the full SAP-style sequence (P&L → retained earnings, opening
-        balances for next year, both scopes). Frontend should prefer this
-        endpoint for year-end close; `/close/` is retained for backwards compat.
-        """
-        return self.close(request, pk=pk)
 
     @action(detail=True, methods=['get'], url_path='close-preview')
     def close_preview(self, request, pk=None):

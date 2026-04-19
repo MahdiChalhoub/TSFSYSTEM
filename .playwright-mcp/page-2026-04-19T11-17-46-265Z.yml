@@ -1,0 +1,94 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e470]:
+    - banner [ref=e471]:
+      - button "Menu" [ref=e472]:
+        - img [ref=e473]
+      - heading "POS Terminal" [level=1] [ref=e1617]
+      - button "Search" [ref=e476]:
+        - img [ref=e477]
+      - link "Notifications" [ref=e480] [cursor=pointer]:
+        - /url: /settings/notifications
+        - img [ref=e481]
+      - button "Account" [ref=e484]: A
+    - main [ref=e485]:
+      - generic [ref=e1703]:
+        - generic [ref=e1704]:
+          - generic [ref=e1705]:
+            - heading "Select Branch" [level=2] [ref=e1706]
+            - paragraph [ref=e1707]: Choose your point of sale location
+          - generic [ref=e1708]:
+            - img [ref=e1709]
+            - generic [ref=e1711]: POS
+        - generic [ref=e1713]:
+          - generic [ref=e1715]:
+            - generic [ref=e1716]: "1"
+            - generic [ref=e1717]: Site
+          - generic [ref=e1721]: "2"
+          - generic [ref=e1725]: "3"
+          - generic [ref=e1729]: "4"
+          - generic [ref=e1733]: "5"
+        - main [ref=e1734]:
+          - generic [ref=e1736]:
+            - generic [ref=e1737]:
+              - generic [ref=e1738]:
+                - img [ref=e1739]
+                - generic [ref=e1742]: Select Location
+              - heading "Where are you working?" [level=2] [ref=e1743]
+              - paragraph [ref=e1744]: Choose the site for this session
+            - generic [ref=e1745]:
+              - button "test TES test 2 registers ● Live" [ref=e1746]:
+                - generic [ref=e1748]:
+                  - img [ref=e1750]
+                  - heading "test" [level=3] [ref=e1754]
+                  - paragraph [ref=e1755]: TES
+                  - paragraph [ref=e1756]: test
+                  - generic [ref=e1757]:
+                    - generic [ref=e1758]: 2 registers
+                    - generic [ref=e1759]: ● Live
+              - button "test tayrflsay No registers" [ref=e1760]:
+                - generic [ref=e1761]:
+                  - img [ref=e1763]
+                  - heading "test" [level=3] [ref=e1767]
+                  - paragraph [ref=e1768]: tayrflsay
+                  - generic [ref=e1770]: No registers
+        - generic [ref=e1771]:
+          - generic [ref=e1774]: Online
+          - link "Settings" [ref=e1775] [cursor=pointer]:
+            - /url: /sales/pos-settings
+            - img [ref=e1776]
+            - text: Settings
+          - generic [ref=e1779]:
+            - generic [ref=e1780]:
+              - img [ref=e1781]
+              - generic [ref=e1783]: v3.2
+            - generic [ref=e1784]: 4/19/2026
+    - navigation "Primary" [ref=e829]:
+      - link "Home" [ref=e830] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e831]:
+          - img [ref=e833]
+          - generic [ref=e838]: Home
+      - link "Inventory" [ref=e839] [cursor=pointer]:
+        - /url: /inventory/categories
+        - generic [ref=e840]:
+          - img [ref=e842]
+          - generic [ref=e846]: Inventory
+      - link "Sales" [ref=e847] [cursor=pointer]:
+        - /url: /sales
+        - generic [ref=e848]:
+          - img [ref=e850]
+          - generic [ref=e854]: Sales
+      - link "Finance" [ref=e855] [cursor=pointer]:
+        - /url: /finance/chart-of-accounts
+        - generic [ref=e856]:
+          - img [ref=e858]
+          - generic [ref=e861]: Finance
+      - button "More" [ref=e862]:
+        - generic [ref=e863]:
+          - img [ref=e865]
+          - generic [ref=e869]: More
+  - button [ref=e871]:
+    - img [ref=e872]
+  - button "Open Next.js Dev Tools" [ref=e466] [cursor=pointer]:
+    - img [ref=e467]
+  - alert [ref=e875]

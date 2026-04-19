@@ -100,6 +100,48 @@ class ClosingService:
         return fiscal_period
 
     @staticmethod
+    def soft_close_fiscal_year(organization, fiscal_year, user=None):
+        """
+        Soft close a fiscal year. Closes all standard periods but leaves the
+        adjusting/audit period (13th month) and the year itself OPEN.
+        """
+        from apps.finance.models import JournalEntry
+        from django.db.models import Q
+        
+        if fiscal_year.status in ['CLOSED', 'FINALIZED']:
+            raise ValidationError(f"Fiscal year {fiscal_year.name} is already {fiscal_year.status}.")
+            
+        with transaction.atomic():
+            periods_to_close = fiscal_year.periods.filter(is_closed=False).exclude(
+                Q(is_adjustment_period=True) | Q(name__istartswith='Audit')
+            )
+            
+            # Check for unposted entries in periods being closed
+            draft_count = JournalEntry.objects.filter(
+                organization=organization,
+                fiscal_period__in=periods_to_close,
+                status='DRAFT',
+            ).count()
+            
+            if draft_count > 0:
+                raise ValidationError(
+                    f"Cannot soft-close year: {draft_count} draft journal entries remain "
+                    f"in the periods being closed. Post or delete them first."
+                )
+                
+            # Close the standard periods
+            closed_count = 0
+            for period in periods_to_close:
+                period.transition_to('CLOSED', user=user)
+                closed_count += 1
+                
+            logger.info(
+                f"ClosingService: Soft-closed {closed_count} periods for {fiscal_year.name} by "
+                f"{user.username if user else 'system'}"
+            )
+            return fiscal_year
+
+    @staticmethod
     def close_fiscal_year(organization, fiscal_year, user=None, retained_earnings_account_id=None, close_date=None):
         """
         Full year-end close sequence.
@@ -402,13 +444,12 @@ class ClosingService:
                     f"Opening balances not generated. Create next year first."
                 )
 
-            # ── Step 5: Mark fiscal year CLOSED ────────────────────
-            # Hard-lock (FINALIZED) is a separate explicit step via the
-            # `/lock/` endpoint — close and finalize are deliberately distinct.
-            fiscal_year.transition_to('CLOSED', user=user)
+            # ── Step 5: Mark fiscal year FINALIZED ────────────────────
+            # This completes the Year-End Close sequence by permanently locking the year.
+            fiscal_year.transition_to('FINALIZED', user=user)
 
             logger.info(
-                f"ClosingService: Fiscal year {fiscal_year.name} closed by "
+                f"ClosingService: Fiscal year {fiscal_year.name} finalized by "
                 f"{user.username if user else 'system'}"
             )
             return fiscal_year

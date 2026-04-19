@@ -1,0 +1,256 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: E
+        - generic [ref=e7]:
+          - heading "Enterprise ERP" [level=1] [ref=e8]
+          - paragraph [ref=e9]: Platform Admin
+      - generic [ref=e11]:
+        - button "Official" [ref=e12]:
+          - img [ref=e13]
+          - text: Official
+        - button "Internal" [ref=e17]:
+          - img [ref=e18]
+          - text: Internal
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e23]: Production
+          - generic [ref=e25]: "1"
+        - generic [ref=e27] [cursor=pointer]:
+          - img [ref=e28]
+          - generic [ref=e31]: Finance
+          - img [ref=e33]
+        - generic [ref=e35] [cursor=pointer]:
+          - generic [ref=e37]: Development (23)
+          - img [ref=e39]
+        - generic [ref=e42] [cursor=pointer]:
+          - img [ref=e43]
+          - generic [ref=e46]: SaaS Control
+          - img [ref=e48]
+        - generic [ref=e51] [cursor=pointer]:
+          - img [ref=e52]
+          - generic [ref=e57]: Dashboard
+          - button "Add to favorites" [ref=e58]:
+            - img [ref=e59]
+        - generic [ref=e61]:
+          - generic [ref=e62] [cursor=pointer]:
+            - img [ref=e63]
+            - generic [ref=e66]: Commercial
+            - img [ref=e68]
+          - generic [ref=e70]:
+            - generic [ref=e71]:
+              - generic [ref=e72] [cursor=pointer]:
+                - img [ref=e73]
+                - generic [ref=e77]: Point of Sale
+                - img [ref=e79]
+              - generic [ref=e81]:
+                - generic [ref=e83] [cursor=pointer]:
+                  - generic [ref=e85]: POS Terminal
+                  - button "Add to favorites" [ref=e86]:
+                    - img [ref=e87]
+                - generic [ref=e90] [cursor=pointer]:
+                  - generic [ref=e91]: POS Registers
+                  - button "Add to favorites" [ref=e92]:
+                    - img [ref=e93]
+                - generic [ref=e96] [cursor=pointer]:
+                  - generic [ref=e97]: POS Tickets
+                  - button "Add to favorites" [ref=e98]:
+                    - img [ref=e99]
+                - generic [ref=e102] [cursor=pointer]:
+                  - generic [ref=e103]: Order History
+                  - button "Add to favorites" [ref=e104]:
+                    - img [ref=e105]
+                - generic [ref=e108] [cursor=pointer]:
+                  - generic [ref=e109]: Sales Orders
+                  - button "Add to favorites" [ref=e110]:
+                    - img [ref=e111]
+                - generic [ref=e114] [cursor=pointer]:
+                  - generic [ref=e115]: Sales Analytics
+                  - button "Add to favorites" [ref=e116]:
+                    - img [ref=e117]
+                - generic [ref=e120] [cursor=pointer]:
+                  - generic [ref=e121]: Sales Summary
+                  - button "Add to favorites" [ref=e122]:
+                    - img [ref=e123]
+                - generic [ref=e126] [cursor=pointer]:
+                  - generic [ref=e127]: POS Sessions
+                  - button "Add to favorites" [ref=e128]:
+                    - img [ref=e129]
+                - generic [ref=e132] [cursor=pointer]:
+                  - generic [ref=e133]: Quotations
+                  - button "Add to favorites" [ref=e134]:
+                    - img [ref=e135]
+                - generic [ref=e138] [cursor=pointer]:
+                  - generic [ref=e139]: Deliveries
+                  - button "Add to favorites" [ref=e140]:
+                    - img [ref=e141]
+                - generic [ref=e144] [cursor=pointer]:
+                  - generic [ref=e145]: Discount Rules
+                  - button "Add to favorites" [ref=e146]:
+                    - img [ref=e147]
+                - generic [ref=e150] [cursor=pointer]:
+                  - generic [ref=e151]: Consignment
+                  - button "Add to favorites" [ref=e152]:
+                    - img [ref=e153]
+                - generic [ref=e156] [cursor=pointer]:
+                  - generic [ref=e157]: Consignment Settlements
+                  - button "Add to favorites" [ref=e158]:
+                    - img [ref=e159]
+                - generic [ref=e162] [cursor=pointer]:
+                  - generic [ref=e163]: Delivery Zones
+                  - button "Add to favorites" [ref=e164]:
+                    - img [ref=e165]
+                - generic [ref=e168] [cursor=pointer]:
+                  - generic [ref=e169]: Sales Returns
+                  - button "Add to favorites" [ref=e170]:
+                    - img [ref=e171]
+                - generic [ref=e174] [cursor=pointer]:
+                  - generic [ref=e175]: Credit Notes
+                  - button "Add to favorites" [ref=e176]:
+                    - img [ref=e177]
+                - generic [ref=e180] [cursor=pointer]:
+                  - generic [ref=e181]: Drivers
+                  - button "Add to favorites" [ref=e182]:
+                    - img [ref=e183]
+                - generic [ref=e186] [cursor=pointer]:
+                  - generic [ref=e187]: Import Sales
+                  - button "Add to favorites" [ref=e188]:
+                    - img [ref=e189]
+                - generic [ref=e192] [cursor=pointer]:
+                  - generic [ref=e193]: Sales Audit
+                  - button "Add to favorites" [ref=e194]:
+                    - img [ref=e195]
+                - generic [ref=e198] [cursor=pointer]:
+                  - generic [ref=e199]: Supermarché
+                  - button "Add to favorites" [ref=e200]:
+                    - img [ref=e201]
+            - generic [ref=e204] [cursor=pointer]:
+              - img [ref=e205]
+              - generic [ref=e209]: POS Settings & Audit
+              - img [ref=e211]
+            - generic [ref=e214] [cursor=pointer]:
+              - img [ref=e215]
+              - generic [ref=e218]: Purchasing
+              - img [ref=e220]
+        - generic [ref=e223] [cursor=pointer]:
+          - img [ref=e224]
+          - generic [ref=e227]: Inventory
+          - img [ref=e229]
+        - generic [ref=e232] [cursor=pointer]:
+          - img [ref=e233]
+          - generic [ref=e236]: Finance
+          - img [ref=e238]
+        - generic [ref=e241] [cursor=pointer]:
+          - img [ref=e242]
+          - generic [ref=e247]: CRM
+          - img [ref=e249]
+        - generic [ref=e252] [cursor=pointer]:
+          - img [ref=e253]
+          - generic [ref=e256]: eCommerce
+          - img [ref=e258]
+        - generic [ref=e261] [cursor=pointer]:
+          - img [ref=e262]
+          - generic [ref=e265]: HR & Teams
+          - img [ref=e267]
+        - generic [ref=e270] [cursor=pointer]:
+          - img [ref=e271]
+          - generic [ref=e274]: Workspace
+          - img [ref=e276]
+        - generic [ref=e279] [cursor=pointer]:
+          - img [ref=e280]
+          - generic [ref=e285]: Client Portal
+          - img [ref=e287]
+        - generic [ref=e290] [cursor=pointer]:
+          - img [ref=e291]
+          - generic [ref=e294]: Supplier Portal
+          - img [ref=e296]
+        - generic [ref=e299] [cursor=pointer]:
+          - img [ref=e300]
+          - generic [ref=e304]: Import & Migration
+          - img [ref=e306]
+        - generic [ref=e309] [cursor=pointer]:
+          - img [ref=e310]
+          - generic [ref=e314]: Users & Access
+          - img [ref=e316]
+        - generic [ref=e319] [cursor=pointer]:
+          - img [ref=e320]
+          - generic [ref=e323]: System Settings
+          - img [ref=e325]
+        - generic [ref=e328] [cursor=pointer]:
+          - img [ref=e329]
+          - generic [ref=e332]: Products
+          - img [ref=e334]
+        - generic [ref=e337] [cursor=pointer]:
+          - img [ref=e338]
+          - generic [ref=e341]: Marketplace
+          - button "Add to favorites" [ref=e342]:
+            - img [ref=e343]
+        - generic [ref=e346] [cursor=pointer]:
+          - img [ref=e347]
+          - generic [ref=e351]: Store
+          - img [ref=e353]
+        - generic [ref=e356] [cursor=pointer]:
+          - img [ref=e357]
+          - generic [ref=e362]: Platform Dashboard
+          - button "Add to favorites" [ref=e363]:
+            - img [ref=e364]
+        - generic [ref=e367] [cursor=pointer]:
+          - img [ref=e368]
+          - generic [ref=e371]: AI Agents
+          - button "Add to favorites" [ref=e372]:
+            - img [ref=e373]
+        - generic [ref=e376] [cursor=pointer]:
+          - img [ref=e377]
+          - generic [ref=e382]: Delivery
+          - button "Add to favorites" [ref=e383]:
+            - img [ref=e384]
+        - generic [ref=e387] [cursor=pointer]:
+          - img [ref=e388]
+          - generic [ref=e390]: Setup Wizard
+          - button "Add to favorites" [ref=e391]:
+            - img [ref=e392]
+        - generic [ref=e395] [cursor=pointer]:
+          - img [ref=e396]
+          - generic [ref=e401]: Dashboard
+          - button "Add to favorites" [ref=e402]:
+            - img [ref=e403]
+        - generic [ref=e406] [cursor=pointer]:
+          - img [ref=e407]
+          - generic [ref=e410]: System Settings
+          - img [ref=e412]
+      - generic [ref=e414]:
+        - generic [ref=e415]:
+          - button "Switch to top navigation" [ref=e416]:
+            - img [ref=e417]
+          - button "Switch to vertical tabs" [ref=e419]:
+            - img [ref=e420]
+        - button "Sign Out" [ref=e422]:
+          - img [ref=e423]
+          - generic [ref=e426]: Sign Out
+    - generic [ref=e427]:
+      - banner [ref=e428]:
+        - generic [ref=e429]:
+          - button "Hide sidebar" [ref=e431]:
+            - img [ref=e432]
+          - generic [ref=e434]:
+            - button "Switch to Top Navigation" [ref=e435]:
+              - img [ref=e436]
+            - button [ref=e439]:
+              - img [ref=e440]
+            - button "Toggle" [ref=e443]:
+              - img [ref=e444]
+            - button "Theme" [ref=e447]
+          - button "AD" [ref=e451]:
+            - generic [ref=e452]: AD
+            - img [ref=e453]
+          - button [ref=e455]:
+            - img [ref=e456]
+      - generic [ref=e459]:
+        - button "New tab" [ref=e461]:
+          - img [ref=e462]
+        - button "Switch to vertical tab rail" [ref=e463]:
+          - img [ref=e464]
+      - main [ref=e466]
+  - button "Open Next.js Dev Tools" [ref=e472] [cursor=pointer]:
+    - img [ref=e473]

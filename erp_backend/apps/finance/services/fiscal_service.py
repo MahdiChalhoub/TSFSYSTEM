@@ -82,6 +82,7 @@ class FiscalYearService:
                     end_date=end_date,
                     status=initial_status,
                     is_closed=False,
+                    is_adjustment_period=True,
                 )
 
             return fiscal_year
