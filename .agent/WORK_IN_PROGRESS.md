@@ -15,6 +15,27 @@
 
 ## Session Log
 
+### Session: 2026-04-19 (part 2 — archive /saas/login)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE (code + typecheck) / ⏳ browser smoke-test pending
+- **Worked On**: Unified two login pages into one. Archived the legacy SaaS admin login at [ARCHIVE/src/app/saas/login/page.tsx](../ARCHIVE/src/app/saas/login/page.tsx) (was `src/app/saas/login/page.tsx`). The generic [`/login`](../src/app/(auth)/login/page.tsx) page is already host-aware — [LoginContent.tsx:58-66](../src/app/(auth)/login/LoginContent.tsx#L58-L66) detects `subdomain === 'saas'` and renders a "SAAS CONTROL" title + SaaS-flavored copy, so it serves both audiences.
+- **Files Modified**:
+  - `src/app/(privileged)/layout.tsx` — removed the `isSaas` branch on session-expired redirect. Always `/login?error=session_expired`.
+  - `src/proxy.ts` — added an early `/saas/login → /login` 308 (permanent redirect) so old bookmarks survive. Removed 7 other `/saas/login` branches: `isPublicRoute`, `clear_auth` guard, authenticated-user bounce, the unauthenticated `isSaasHost` dispatcher (now always `/login`), `/saas/*` clean-URL strip exception, SaaS root unauthenticated redirect (was `/saas/login`), and root-domain `/saas/*` pass-through exception.
+  - `setup_server.sh:95` — updated deployment echo from `/saas/login` to `/login`.
+- **Files Archived**:
+  - `src/app/saas/login/page.tsx` → `ARCHIVE/src/app/saas/login/page.tsx` (preserving path structure per [cleanup.md](rules/cleanup.md)).
+  - Empty `src/app/saas/` directory removed.
+- **Discoveries**:
+  - The unified login at `/login` has been ready to serve SaaS admins since before this session — `LoginContent.tsx` has the `isSaaS` rendering branch baked in. The old `/saas/login` was redundant.
+  - The legacy page used a hidden `<input name="slug" value="saas" />` trick; the unified page handles this automatically via server-side hostname parsing in [login/page.tsx](../src/app/(auth)/login/page.tsx).
+- **Warnings for Next Agent**:
+  - ⚠️ **Not browser-tested** (no dev server in this env). Smoke test needed: (a) `https://saas.developos.shop/login?error=session_expired` renders with SaaS "Commander" theming; (b) `https://saas.developos.shop/saas/login` issues a 308 to `/login`; (c) tenant subdomains still render the tenant login; (d) session-expiry on a privileged page redirects cleanly.
+  - ⚠️ Non-source references to `/saas/login` remain in: `DOCUMENTATION/ux_audit_fixes.md`, `DOCUMENTATION/security-audit-fixes.md`, `DOCUMENTATION/seed_initialization.md`, `DOCUMENTATION/portal_auth_urls.md`, `DOCUMENTATION/https_enforcement.md`, `DEPLOYMENT_GUIDE.md`, `build_log.txt`, `build_output.txt`. These are historical — **not** updated in this session. If you're cutting new docs, use `/login` instead.
+  - ⚠️ The 308 redirect preserves the query string, so `?error=session_expired` survives the bounce. Old error banners on the legacy page didn't use a route-specific variant, so this is transparent.
+
+---
+
 ### Session: 2026-04-19 (Sidebar.tsx extraction)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE (code) / ⏳ pending browser smoke-test + commit

@@ -229,13 +229,25 @@ export default async function middleware(req: NextRequest) {
         url.pathname.startsWith('/login') ||
         url.pathname.startsWith('/register');
 
-    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || url.pathname.startsWith('/saas/login') || url.pathname === '/login' || url.pathname.startsWith('/design-demo') || isAuthRoute || isPortalRoute || isStorefrontAlias || isStorefrontSubRoute;
+    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || url.pathname === '/login' || url.pathname.startsWith('/design-demo') || isAuthRoute || isPortalRoute || isStorefrontAlias || isStorefrontSubRoute;
     const hasAuthToken = req.cookies.get('auth_token')?.value && req.cookies.get('auth_token')?.value !== '';
+
+    // ─── LEGACY REDIRECT: /saas/login → /login (308 Permanent) ───────
+    // The old SaaS-admin login page has been archived. The generic /login
+    // page already detects the `saas.*` subdomain and renders the admin
+    // branding, so it serves both audiences.
+    if (url.pathname === '/saas/login' || url.pathname.startsWith('/saas/login/')) {
+        const redirectUrl = url.clone();
+        redirectUrl.pathname = '/login';
+        redirectUrl.hostname = hostname;
+        redirectUrl.port = "";
+        return NextResponse.redirect(redirectUrl, 308);
+    }
 
     // ─── GUARD: Handle stale token cleanup ──────────────────────────
     // When layout detects expired token, it redirects here with ?clear_auth=1.
     // Middleware deletes the stale cookies and lets user through to login.
-    if (url.searchParams.get('clear_auth') === '1' && (url.pathname === '/login' || url.pathname === '/saas/login')) {
+    if (url.searchParams.get('clear_auth') === '1' && url.pathname === '/login') {
         const cleanUrl = url.clone();
         cleanUrl.searchParams.delete('clear_auth');
         cleanUrl.pathname = '/login'; // Always normalize to /login
@@ -254,7 +266,7 @@ export default async function middleware(req: NextRequest) {
     // 401/429 while cookie is still present). Redirecting back to /dashboard
     // creates an infinite loop.
     const hasErrorParam = url.searchParams.has('error');
-    if (hasAuthToken && !hasErrorParam && (url.pathname === '/login' || url.pathname === '/saas/login' || url.pathname === '/register')) {
+    if (hasAuthToken && !hasErrorParam && (url.pathname === '/login' || url.pathname === '/register')) {
         const dashUrl = url.clone();
         dashUrl.pathname = '/dashboard';
         dashUrl.hostname = hostname;
@@ -265,19 +277,14 @@ export default async function middleware(req: NextRequest) {
     // console.log(`[Middleware DEBUG] path: ${url.pathname}, isPublic: ${isPublicRoute}, hasToken: ${hasAuthToken}`);
 
     if (!hasAuthToken && !isPublicRoute) {
-        // Pick the correct login page based on the host context. Saas admin
-        // hosts (bare domain, www, or the dedicated `saas.*` subdomain)
-        // route to /saas/login; every other tenant to /login.
-        const subdomain = hostname.includes('localhost')
-            ? (hostname.split('.').length > 1 ? hostname.split('.')[0] : '')
-            : (hostname.split('.').length > 2 ? hostname.split('.')[0] : '');
-        const isSaasHost = !subdomain || subdomain === 'www' || subdomain === 'saas';
-        const targetPath = isSaasHost ? '/saas/login' : '/login';
-        console.warn(`[Middleware] Unauthorized access to ${url.pathname} from ${hostname}. Redirecting to ${targetPath}.`);
+        // Single unified login page. The /login route is host-aware — it
+        // detects the `saas.*` subdomain server-side and renders the
+        // appropriate branding (see src/app/(auth)/login/LoginContent.tsx).
+        console.warn(`[Middleware] Unauthorized access to ${url.pathname} from ${hostname}. Redirecting to /login.`);
         const loginUrl = url.clone();
         loginUrl.hostname = hostname;
         loginUrl.port = "";
-        loginUrl.pathname = targetPath;
+        loginUrl.pathname = '/login';
         return NextResponse.redirect(loginUrl);
     }
 
@@ -324,9 +331,9 @@ export default async function middleware(req: NextRequest) {
     if (isOnRootOrSaaS) {
 
         if (isSaaSSubdomain) {
-            // 1. Redirect legacy /saas/xxx to /xxx (Clean URL enforcement)
-            // Exception: /saas/login is the SaaS auth page — do NOT strip or it causes a redirect loop.
-            if (url.pathname.startsWith('/saas') && !url.pathname.startsWith('/saas/login')) {
+            // 1. Redirect legacy /saas/xxx to /xxx (Clean URL enforcement).
+            // /saas/login is handled earlier by the dedicated legacy redirect.
+            if (url.pathname.startsWith('/saas')) {
                 const cleanPath = url.pathname.replace('/saas', '') || '/';
                 const redirectUrl = url.clone();
                 redirectUrl.pathname = cleanPath;
@@ -337,13 +344,13 @@ export default async function middleware(req: NextRequest) {
 
             // 2. SaaS root / → auth-aware routing
             // Authenticated: silent rewrite to dashboard (0 visible hops)
-            // Unauthenticated: single redirect to /saas/login (1 visible hop)
+            // Unauthenticated: single redirect to /login (host-aware branding)
             if (url.pathname === '/') {
                 if (hasAuthToken) {
                     return NextResponse.rewrite(new URL(`/saas-home${searchParams ? '?' + searchParams : ''}`, req.url));
                 }
                 const loginUrl = url.clone();
-                loginUrl.pathname = '/saas/login';
+                loginUrl.pathname = '/login';
                 loginUrl.hostname = hostname;
                 loginUrl.port = "";
                 return NextResponse.redirect(loginUrl);
@@ -357,8 +364,9 @@ export default async function middleware(req: NextRequest) {
             return NextResponse.next();
         }
 
-        // Special case: /saas is the Master Panel on root/IP
-        if (url.pathname.startsWith('/saas') && !url.pathname.startsWith('/saas/login')) {
+        // Special case: /saas is the Master Panel on root/IP.
+        // /saas/login is handled earlier by the dedicated legacy redirect.
+        if (url.pathname.startsWith('/saas')) {
             return NextResponse.next();
         }
 

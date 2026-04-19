@@ -92,4 +92,4 @@ echo "==========================================="
 echo "   DEPLOYMENT FINISHED"
 echo "==========================================="
 SERVER_IP=$(hostname -I | awk '{print $1}')
-echo "Access your panel: http://${SERVER_IP}/saas/login"
+echo "Access your panel: http://${SERVER_IP}/login"
