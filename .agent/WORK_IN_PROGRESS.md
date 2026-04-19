@@ -101,6 +101,20 @@
 
 ---
 
+### Session: 2026-04-18 (part 7 — prune_kernel_backups retention command)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE
+- **Worked On**: Shipped the retention command called out in the Phase 0 rollback plan. Additive, safe.
+- **Files Modified**:
+  - `erp_backend/kernel/management/commands/prune_kernel_backups.py` — NEW. `python manage.py prune_kernel_backups [--keep N] [--dry-run]`. Keeps the N newest of each backup family (`db_*.sql.gz`, `kernel_*/`, `module_*/`) in `BASE_DIR/backups/`. `--keep` defaults to `KERNEL_BACKUP_RETAIN_COUNT` kernel-config (fallback 10). `--dry-run` lists what would go without touching the filesystem.
+  - `erp_backend/kernel/backup/tests/test_prune_kernel_backups.py` — NEW. 5 test cases: keeps newest N files, prunes kernel + module dirs, dry-run doesn't delete, missing backups/ dir is a no-op, fewer-than-keep deletes nothing. Uses `tempfile.TemporaryDirectory` + `override_settings(BASE_DIR=...)` — does not touch the real `backups/` folder.
+- **Discoveries**: None beyond the plan.
+- **Warnings for Next Agent**:
+  - ⚠️ Not run against a real Docker stack in this env — static syntax check + unit tests only. Before scheduling the prune in production, run it with `--dry-run` first to confirm the globbing catches the right files.
+  - ⚠️ Nothing schedules this command. Hook into a cron / celery-beat task in a follow-up; default cadence recommendation in the plan is weekly.
+
+---
+
 ### Session: 2026-04-18 (part 6 — research + Phase 0 DB snapshot guard rail)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE
