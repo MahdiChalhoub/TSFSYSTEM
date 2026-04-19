@@ -85,31 +85,50 @@ export default async function AdminLayout({
     }
 
     // 2. Fetch data in parallel ONLY if authenticated
-    // Wrapped in try/catch to prevent layout crash on 429 (rate limit) or transient errors
-    let sites: any[] = [];
-    let organizations: any[] = [];
-    let financialSettings: any = null;
-    let installedModuleCodes: string[] = [];
-    let dynamicSidebarItems: any[] = [];
-    try {
-        const [sitesRes, orgsRes, finRes, modulesRes, dynamicRes] = await Promise.all([
-            getSites().catch(() => []),
-            getOrganizations().catch(() => []),
-            getGlobalFinancialSettings().catch(() => null),
-            getSaaSModules().catch(() => []),
-            getDynamicSidebar().catch(() => []),
-        ]);
-        sites = sitesRes;
-        organizations = orgsRes;
-        financialSettings = finRes;
-        installedModuleCodes = Array.isArray(modulesRes)
-            ? modulesRes.map((m: Record<string, any>) => m.code as string)
-            : [];
-        dynamicSidebarItems = Array.isArray(dynamicRes) ? dynamicRes : [];
-    } catch {
-        // Graceful degradation — layout renders with empty data
-        console.error('[Layout] Failed to fetch layout data, rendering with defaults');
-    }
+    // Each call wrapped with its own timeout + fallback so a single slow
+    // upstream can't stall the layout past nginx's proxy_read_timeout (→ 504).
+    // Per-call budget of 8s is generous enough for healthy backends, tight
+    // enough that 5 parallel calls can't exceed the ~60s nginx default.
+    const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T, label: string): Promise<T> => {
+        return new Promise<T>((resolve) => {
+            let settled = false;
+            const timer = setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                console.warn(`[Layout] ${label} timed out after ${ms}ms — using fallback`);
+                resolve(fallback);
+            }, ms);
+            p.then((v) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(v);
+            }).catch((e) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                console.warn(`[Layout] ${label} failed:`, e?.message || e);
+                resolve(fallback);
+            });
+        });
+    };
+
+    const LAYOUT_FETCH_TIMEOUT_MS = 8000;
+    const [sitesRes, orgsRes, finRes, modulesRes, dynamicRes] = await Promise.all([
+        withTimeout(getSites(), LAYOUT_FETCH_TIMEOUT_MS, [] as any[], 'getSites'),
+        withTimeout(getOrganizations(), LAYOUT_FETCH_TIMEOUT_MS, [] as any[], 'getOrganizations'),
+        withTimeout(getGlobalFinancialSettings(), LAYOUT_FETCH_TIMEOUT_MS, null, 'getGlobalFinancialSettings'),
+        withTimeout(getSaaSModules(), LAYOUT_FETCH_TIMEOUT_MS, [] as any[], 'getSaaSModules'),
+        withTimeout(getDynamicSidebar(), LAYOUT_FETCH_TIMEOUT_MS, [] as any[], 'getDynamicSidebar'),
+    ]);
+
+    const sites: any[] = sitesRes || [];
+    const organizations: any[] = orgsRes || [];
+    const financialSettings: any = finRes;
+    const installedModuleCodes: string[] = Array.isArray(modulesRes)
+        ? modulesRes.map((m: Record<string, any>) => m.code as string)
+        : [];
+    const dynamicSidebarItems: any[] = Array.isArray(dynamicRes) ? dynamicRes : [];
 
 
 
