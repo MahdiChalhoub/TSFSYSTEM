@@ -65,13 +65,13 @@ export function CategoryMaintenanceSidebar({ categories, activeCategoryId }: Pro
     const expandedPath = useMemo(() => findPathToNode(categories, activeCategoryId), [categories, activeCategoryId]);
 
     return (
-        <div className="w-80 border-r border-gray-200 bg-white flex flex-col h-full">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                <h2 className="font-bold text-gray-800 flex items-center gap-2">
-                    <Database size={18} className="text-emerald-600" />
+        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-app-border bg-app-surface flex flex-col h-full">
+            <div className="p-3 md:p-4 border-b border-app-border bg-app-surface-2/50">
+                <h2 className="font-bold text-app-foreground flex items-center gap-2">
+                    <Database size={18} className="text-app-primary" />
                     Category Browser
                 </h2>
-                <div className="mt-2 text-xs text-gray-400">
+                <div className="mt-2 text-app-muted-foreground" style={{ fontSize: 'var(--tp-xs)' }}>
                     Navigate to view products.
                 </div>
             </div>
@@ -106,9 +106,12 @@ function SidebarNode({ node, activeCategoryId, expandedPath, level = 0 }: { node
     return (
         <div>
             <div className={clsx(
-                "group flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors select-none",
-                isActive ? "bg-emerald-50 text-emerald-700" : "hover:bg-gray-50 text-gray-700"
-            )}>
+                "group flex items-center gap-2 px-2 py-2 rounded-lg transition-colors select-none",
+                isActive
+                    ? "bg-app-primary/10 text-app-primary"
+                    : "hover:bg-app-surface-2 text-app-foreground"
+            )}
+                style={{ minHeight: 40 }}>
                 {/* Indentation */}
                 <div style={{ width: level * 12 }} />
 
@@ -116,25 +119,29 @@ function SidebarNode({ node, activeCategoryId, expandedPath, level = 0 }: { node
                 {hasChildren ? (
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="p-0.5 rounded hover:bg-black/5 text-gray-400 opacity-60 hover:opacity-100"
+                        className="p-1 rounded hover:bg-app-border/30 text-app-muted-foreground flex-shrink-0"
                     >
                         {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </button>
                 ) : (
-                    <span className="w-4" />
+                    <span className="w-6" />
                 )}
 
-                {/* Link */}
+                {/* Link — fixed the broken /admin/ prefix: real route is /inventory/categories/maintenance */}
                 <Link
-                    href={`/admin/inventory/categories/maintenance?categoryId=${node.id}`}
+                    href={`/inventory/categories/maintenance?categoryId=${node.id}`}
                     className="flex-1 flex items-center gap-2 truncate"
                 >
-                    <Folder size={16} className={clsx(isActive ? "text-emerald-500 fill-emerald-100" : "text-amber-400")} />
-                    <span className="truncate text-sm font-medium">{node.name}</span>
+                    <Folder size={16} className={clsx(
+                        'flex-shrink-0',
+                        isActive ? "text-app-primary" : "text-app-warning"
+                    )} />
+                    <span className="truncate font-medium" style={{ fontSize: 'var(--tp-md)' }}>{node.name}</span>
 
                     {/* Count Badge */}
                     {node._count && node._count.products > 0 && (
-                        <span className="ml-auto text-[10px] font-bold bg-gray-100 text-gray-500 px-1.5 rounded-full">
+                        <span className="ml-auto font-bold bg-app-surface-2 text-app-muted-foreground px-1.5 rounded-full"
+                            style={{ fontSize: 'var(--tp-xxs)' }}>
                             {node._count.products}
                         </span>
                     )}
