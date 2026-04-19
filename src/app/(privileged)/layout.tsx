@@ -46,8 +46,13 @@ export default async function AdminLayout({
         if (parts.length > 2) subdomain = parts[0];
     }
 
-    const isSaas = !subdomain || subdomain === 'www';
     const currentSlug = subdomain || 'saas'; // Default to saas if at root
+    // isSaas means "this is the platform/saas-admin context". That's true
+    // when there's no subdomain, when it's www, *or* when the subdomain is
+    // literally 'saas' (the dedicated saas-admin host). Previously this
+    // excluded saas.*.domain, which caused unauthenticated users there to
+    // bounce to /login (tenant login) → loop back to the saas admin.
+    const isSaas = !subdomain || subdomain === 'www' || currentSlug === 'saas';
 
     // Parallel data fetching
     // 1. Authenticate FIRST (Sequential check to prevent 401 floods)
