@@ -534,7 +534,9 @@ function LedgerExpandedRow({ entry, fmt, onView, onDeleted }: { entry: JournalEn
           </div>
           <div className="flex items-center gap-3 px-3 py-1.5 border-b border-app-border/20 text-[8px] font-black uppercase tracking-widest text-app-muted-foreground">
             <div className="w-16">Code</div>
-            <div className="flex-1">Account</div>
+            <div className="flex-[1.5]">Account</div>
+            <div className="flex-1">Dimension (Cost Center / Partner)</div>
+            <div className="flex-1 text-app-muted-foreground/60 hidden md:block">Narrative</div>
             <div className="w-24 text-right">Debit</div>
             <div className="w-24 text-right">Credit</div>
           </div>
@@ -546,7 +548,21 @@ function LedgerExpandedRow({ entry, fmt, onView, onDeleted }: { entry: JournalEn
                   {l.account?.code}
                 </span>
               </div>
-              <div className="flex-1 text-[11px] font-bold text-app-foreground truncate">{l.account?.name}</div>
+              <div className="flex-[1.5] text-[11px] font-bold text-app-foreground truncate" title={l.account?.name}>{l.account?.name}</div>
+              <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                  {l.costCenter || l.cost_center ? (
+                      <span className="text-[9px] font-black uppercase tracking-widest text-app-info truncate">
+                          {l.costCenter || l.cost_center}
+                      </span>
+                  ) : null}
+                  {l.contact?.name ? (
+                      <span className="text-[10px] text-app-muted-foreground truncate">
+                          👤 {l.contact.name}
+                      </span>
+                  ) : null}
+                  {!l.costCenter && !l.cost_center && !l.contact?.name && <span className="text-[10px] opacity-20">—</span>}
+              </div>
+              <div className="flex-1 text-[10px] text-app-muted-foreground truncate hidden md:block" title={l.description}>{l.description || '—'}</div>
               <div className="w-24 text-right text-[11px] font-mono font-bold tabular-nums"
                 style={{ color: Number(l.debit) > 0 ? 'var(--app-primary)' : 'transparent' }}>
                 {Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}

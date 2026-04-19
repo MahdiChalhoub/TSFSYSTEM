@@ -67,15 +67,45 @@ class LedgerCoreMixin:
                 if fp.status == 'FUTURE':
                     raise ValidationError(f"Fiscal period {fp.name} is a future period. Cannot post yet.")
             if fp.status == 'SOFT_LOCKED' and not kwargs.get('internal_bypass'):
-                # Soft-locked: only supervisors can post
-                is_supervisor = kwargs.get('supervisor_override', False)
+                # Soft-locked: Check dynamic permission
+                is_authorized = kwargs.get('supervisor_override', False)
                 if user and hasattr(user, 'is_superuser') and user.is_superuser:
-                    is_supervisor = True
-                if not is_supervisor:
+                    is_authorized = True
+                
+                if not is_authorized and user:
+                    try:
+                        from kernel.rbac.permissions import check_permission
+                        if check_permission(user, 'finance.post_locked_period', organization):
+                            is_authorized = True
+                    except ImportError:
+                        pass
+                        
+                if not is_authorized:
                     raise ValidationError(
-                        f"Fiscal period {fp.name} is soft-locked. Only supervisors can post. "
-                        f"Contact your finance administrator."
+                        f"Fiscal period {fp.name} is soft-locked. "
+                        f"You do not have permission to post to locked periods."
                     )
+                    
+            if getattr(fp, 'is_adjustment_period', False) and not kwargs.get('internal_bypass'):
+                # Audit/Adjustment Period: Check dynamic permission
+                is_authorized = kwargs.get('supervisor_override', False)
+                if user and hasattr(user, 'is_superuser') and user.is_superuser:
+                    is_authorized = True
+                
+                if not is_authorized and user:
+                    try:
+                        from kernel.rbac.permissions import check_permission
+                        if check_permission(user, 'finance.post_adjustment_period', organization):
+                            is_authorized = True
+                    except ImportError:
+                        pass
+                        
+                if not is_authorized:
+                    raise ValidationError(
+                        f"Fiscal period {fp.name} is an audit/adjustment period. "
+                        f"You do not have permission to post adjustment entries."
+                    )
+
             if fp.fiscal_year.is_hard_locked:
                 raise ValidationError(f"Fiscal year {fp.fiscal_year.name} is hard-locked.")
             

@@ -628,7 +628,7 @@ export default function SubscriptionPlansPage() {
                 onOpenChange={(open) => { if (!open) setPendingDeleteAddon(null) }}
                 onConfirm={async () => {
                     if (pendingDeleteAddon) {
-                        await deleteAddon(pendingDeleteAddon.id)
+                        await deleteAddon(String(pendingDeleteAddon.id))
                         toast.success('Add-on deleted')
                         loadData()
                     }

@@ -1,0 +1,205 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e383]:
+    - banner [ref=e384]:
+      - button "Menu" [ref=e385]:
+        - img [ref=e386]
+      - heading "COA Templates" [level=1] [ref=e388]
+      - button "Search" [ref=e389]:
+        - img [ref=e390]
+      - link "Notifications" [ref=e393] [cursor=pointer]:
+        - /url: /settings/notifications
+        - img [ref=e394]
+      - button "Account" [ref=e397]: A
+    - main [ref=e398]:
+      - generic [ref=e400]:
+        - generic [ref=e402]:
+          - img [ref=e405]
+          - generic [ref=e407]:
+            - generic [ref=e408]: COA Templates
+            - generic [ref=e409]: 5 templates · library
+          - button "Open on Desktop" [ref=e410]:
+            - img [ref=e411]
+            - generic [ref=e413]: Open on Desktop
+          - button [ref=e415]:
+            - img [ref=e416]
+        - generic [ref=e420]:
+          - generic [ref=e422]:
+            - generic [ref=e423]:
+              - img [ref=e425]
+              - generic [ref=e427]:
+                - generic [ref=e428]: Templates
+                - generic [ref=e429]: "5"
+            - generic [ref=e430]:
+              - img [ref=e432]
+              - generic [ref=e435]:
+                - generic [ref=e436]: Total Accounts
+                - generic [ref=e437]: "659"
+            - generic [ref=e438]:
+              - img [ref=e440]
+              - generic [ref=e444]:
+                - generic [ref=e445]: Posting Rules
+                - generic [ref=e446]: "570"
+            - generic [ref=e447]:
+              - img [ref=e449]
+              - generic [ref=e452]:
+                - generic [ref=e453]: System
+                - generic [ref=e454]: "5"
+          - generic [ref=e456]:
+            - generic [ref=e457]:
+              - img [ref=e458]
+              - textbox "Search templates…" [ref=e461]
+            - button "Expand all" [ref=e462]:
+              - img [ref=e463]
+          - generic [ref=e466]:
+            - button "IFRS COA International SYSTEM Universal standard for global enterprises — International Financial Reporting Standards 134 accounts 114 rules Import" [ref=e467]:
+              - generic [ref=e468]:
+                - img [ref=e470]
+                - generic [ref=e473]:
+                  - generic [ref=e474]: IFRS COA
+                  - generic [ref=e475]:
+                    - img [ref=e476]
+                    - generic [ref=e479]: International
+                    - generic [ref=e480]: SYSTEM
+                - img [ref=e481]
+              - paragraph [ref=e483]: Universal standard for global enterprises — International Financial Reporting Standards
+              - generic [ref=e484]:
+                - generic [ref=e485]:
+                  - img [ref=e486]
+                  - text: 134 accounts
+                - generic [ref=e489]:
+                  - img [ref=e490]
+                  - text: 114 rules
+                - button "Import" [ref=e494]:
+                  - img [ref=e495]
+                  - text: Import
+            - button "Lebanese PCN Lebanon SYSTEM Plan Comptable National Libanais — standard Lebanese chart of accounts 119 accounts 114 rules Import" [ref=e498]:
+              - generic [ref=e499]:
+                - img [ref=e501]
+                - generic [ref=e505]:
+                  - generic [ref=e506]: Lebanese PCN
+                  - generic [ref=e507]:
+                    - img [ref=e508]
+                    - generic [ref=e511]: Lebanon
+                    - generic [ref=e512]: SYSTEM
+                - img [ref=e513]
+              - paragraph [ref=e515]: Plan Comptable National Libanais — standard Lebanese chart of accounts
+              - generic [ref=e516]:
+                - generic [ref=e517]:
+                  - img [ref=e518]
+                  - text: 119 accounts
+                - generic [ref=e521]:
+                  - img [ref=e522]
+                  - text: 114 rules
+                - button "Import" [ref=e526]:
+                  - img [ref=e527]
+                  - text: Import
+            - button "French PCG France SYSTEM Plan Comptable Général — standard chart of accounts for France and francophone countries 140 accounts 114 rules Import" [ref=e530]:
+              - generic [ref=e531]:
+                - img [ref=e533]
+                - generic [ref=e535]:
+                  - generic [ref=e536]: French PCG
+                  - generic [ref=e537]:
+                    - img [ref=e538]
+                    - generic [ref=e541]: France
+                    - generic [ref=e542]: SYSTEM
+                - img [ref=e543]
+              - paragraph [ref=e545]: Plan Comptable Général — standard chart of accounts for France and francophone countries
+              - generic [ref=e546]:
+                - generic [ref=e547]:
+                  - img [ref=e548]
+                  - text: 140 accounts
+                - generic [ref=e551]:
+                  - img [ref=e552]
+                  - text: 114 rules
+                - button "Import" [ref=e556]:
+                  - img [ref=e557]
+                  - text: Import
+            - button "USA GAAP United States SYSTEM Generally Accepted Accounting Principles — standard chart of accounts for US companies 108 accounts 114 rules Import" [ref=e560]:
+              - generic [ref=e561]:
+                - img [ref=e563]
+                - generic [ref=e567]:
+                  - generic [ref=e568]: USA GAAP
+                  - generic [ref=e569]:
+                    - img [ref=e570]
+                    - generic [ref=e573]: United States
+                    - generic [ref=e574]: SYSTEM
+                - img [ref=e575]
+              - paragraph [ref=e577]: Generally Accepted Accounting Principles — standard chart of accounts for US companies
+              - generic [ref=e578]:
+                - generic [ref=e579]:
+                  - img [ref=e580]
+                  - text: 108 accounts
+                - generic [ref=e583]:
+                  - img [ref=e584]
+                  - text: 114 rules
+                - button "Import" [ref=e588]:
+                  - img [ref=e589]
+                  - text: Import
+            - button "SYSCOHADA Révisé West Africa (OHADA) SYSTEM Système Comptable OHADA Révisé — standard for West and Central African OHADA countries 158 accounts 114 rules Import" [ref=e592]:
+              - generic [ref=e593]:
+                - img [ref=e595]
+                - generic [ref=e599]:
+                  - generic [ref=e600]: SYSCOHADA Révisé
+                  - generic [ref=e601]:
+                    - img [ref=e602]
+                    - generic [ref=e605]: West Africa (OHADA)
+                    - generic [ref=e606]: SYSTEM
+                - img [ref=e607]
+              - paragraph [ref=e609]: Système Comptable OHADA Révisé — standard for West and Central African OHADA countries
+              - generic [ref=e610]:
+                - generic [ref=e611]:
+                  - img [ref=e612]
+                  - text: 158 accounts
+                - generic [ref=e615]:
+                  - img [ref=e616]
+                  - text: 114 rules
+                - button "Import" [ref=e620]:
+                  - img [ref=e621]
+                  - text: Import
+          - generic [ref=e625]:
+            - generic [ref=e626]: 5 templates
+            - generic [ref=e627]: ·
+            - generic [ref=e628]: 659 accounts
+        - button "Open on Desktop" [ref=e629]:
+          - img [ref=e630]
+    - navigation "Primary" [ref=e631]:
+      - link "Home" [ref=e632] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e633]:
+          - img [ref=e635]
+          - generic [ref=e640]: Home
+      - link "Inventory" [ref=e641] [cursor=pointer]:
+        - /url: /inventory/categories
+        - generic [ref=e642]:
+          - img [ref=e644]
+          - generic [ref=e648]: Inventory
+      - link "Sales" [ref=e649] [cursor=pointer]:
+        - /url: /sales
+        - generic [ref=e650]:
+          - img [ref=e652]
+          - generic [ref=e656]: Sales
+      - link "Finance" [ref=e657] [cursor=pointer]:
+        - /url: /finance/chart-of-accounts
+        - generic [ref=e658]:
+          - img [ref=e660]
+          - generic [ref=e663]: Finance
+      - button "More" [ref=e664]:
+        - generic [ref=e665]:
+          - img [ref=e667]
+          - generic [ref=e671]: More
+  - button [ref=e673]:
+    - img [ref=e674]
+  - generic [ref=e378] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e379]:
+      - img [ref=e380]
+    - generic [ref=e677]:
+      - button "Open issues overlay" [ref=e678]:
+        - generic [ref=e679]:
+          - generic [ref=e680]: "1"
+          - generic [ref=e681]: "2"
+        - generic [ref=e682]:
+          - text: Issue
+          - generic [ref=e683]: s
+      - button "Collapse issues badge" [ref=e684]:
+        - img [ref=e685]
+  - alert [ref=e687]

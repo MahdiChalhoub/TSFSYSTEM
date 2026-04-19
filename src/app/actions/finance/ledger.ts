@@ -14,6 +14,11 @@ const JournalLineSchema = z.object({
     contact_id: z.number().int().positive().nullable().optional(),
     employeeId: z.number().int().positive().nullable().optional(),
     employee_id: z.number().int().positive().nullable().optional(),
+    costCenter: z.string().nullable().optional(),
+    taxLineId: z.number().int().positive().nullable().optional(),
+    tax_line_id: z.number().int().positive().nullable().optional(),
+    partnerId: z.number().int().positive().nullable().optional(),
+    partnerType: z.enum(['CUSTOMER', 'SUPPLIER', 'EMPLOYEE', 'PARTNER']).nullable().optional(),
 }).refine(d => (d.accountId || d.account_id), { message: 'Each line must have an account' })
 
 const JournalEntrySchema = z.object({
@@ -32,6 +37,10 @@ export type JournalLineInput = {
     description?: string
     contactId?: number | null
     employeeId?: number | null
+    costCenter?: string | null
+    taxLineId?: number | null
+    partnerId?: number | null
+    partnerType?: 'CUSTOMER' | 'SUPPLIER' | 'EMPLOYEE' | 'PARTNER' | null
 }
 
 /**
@@ -59,13 +68,17 @@ export async function createJournalEntry(data: unknown) {
     // Map camelCase lines to snake_case for Django if needed, 
     // although ViewSet now handles some of it, let's be explicit.
     if (parsed.lines) {
-        parsed.lines = parsed.lines.map((l) => ({
+        parsed.lines = parsed.lines.map((l: any) => ({
             account_id: l.accountId || l.account_id,
             debit: l.debit,
             credit: l.credit,
             description: l.description,
             contact_id: l.contactId || l.contact_id || null,
             employee_id: l.employeeId || l.employee_id || null,
+            cost_center: l.costCenter || l.cost_center || null,
+            tax_line_id: l.taxLineId || l.tax_line_id || null,
+            partner_id: l.partnerId || l.partner_id || null,
+            partner_type: l.partnerType || l.partner_type || null,
         }))
     }
 
@@ -86,13 +99,17 @@ export async function createJournalEntry(data: unknown) {
 export async function updateJournalEntry(id: number, data: unknown) {
     const parsed = JournalEntrySchema.parse(data)
     if (parsed.lines) {
-        parsed.lines = parsed.lines.map((l) => ({
+        parsed.lines = parsed.lines.map((l: any) => ({
             account_id: l.accountId || l.account_id,
             debit: l.debit,
             credit: l.credit,
             description: l.description,
             contact_id: l.contactId || l.contact_id || null,
             employee_id: l.employeeId || l.employee_id || null,
+            cost_center: l.costCenter || l.cost_center || null,
+            tax_line_id: l.taxLineId || l.tax_line_id || null,
+            partner_id: l.partnerId || l.partner_id || null,
+            partner_type: l.partnerType || l.partner_type || null,
         }))
     }
 

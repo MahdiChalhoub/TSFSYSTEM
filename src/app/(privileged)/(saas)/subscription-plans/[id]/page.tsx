@@ -103,7 +103,7 @@ export default function PlanDetailPage() {
             const result = await togglePlanPublic(id as string)
             toast.success(result.message)
             setForm(f => ({ ...f, is_public: result.is_public }))
-            setPlan((p: Record<string, any>) => ({ ...p, is_public: result.is_public }))
+            setPlan((p: any) => p ? { ...p, is_public: result.is_public } : null)
         } catch {
             toast.error("Failed to toggle visibility")
         }
