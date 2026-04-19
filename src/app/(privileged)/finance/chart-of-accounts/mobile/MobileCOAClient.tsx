@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useTransition } from 'react'
@@ -82,10 +81,10 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
         if (!actionNode) return []
         const isInactive = actionNode.isActive === false
         return [
-            { key: 'view', label: 'Details', hint: 'Info & balance', icon: <EyeIcon size={16} />, variant: 'grid', onClick: () => openSheet(actionNode) },
-            { key: 'statement', label: 'Statement', hint: 'Full page', icon: <BookOpen size={16} />, variant: 'grid', onClick: () => router.push(`/finance/chart-of-accounts/${actionNode.id}`) },
-            { key: 'add', label: 'Add sub', hint: 'Create child', icon: <Plus size={16} />, variant: 'grid', onClick: () => handleAddChild(actionNode.id) },
-            { key: 'recalc', label: 'Recalc', hint: 'Balances', icon: <RefreshCcw size={16} />, variant: 'grid', onClick: () => handleRecalc(actionNode) },
+            { key: 'view', label: 'Details', hint: 'Info & balance', icon: <EyeIcon size={16} />, variant: 'grid' as const, onClick: () => openSheet(actionNode) },
+            { key: 'statement', label: 'Statement', hint: 'Full page', icon: <BookOpen size={16} />, variant: 'grid' as const, onClick: () => router.push(`/finance/chart-of-accounts/${actionNode.id}`) },
+            { key: 'add', label: 'Add sub', hint: 'Create child', icon: <Plus size={16} />, variant: 'grid' as const, onClick: () => handleAddChild(actionNode.id) },
+            { key: 'recalc', label: 'Recalc', hint: 'Balances', icon: <RefreshCcw size={16} />, variant: 'grid' as const, onClick: () => handleRecalc(actionNode) },
             { key: 'edit', label: 'Edit', icon: <Pencil size={16} />, onClick: () => handleEdit(actionNode) },
             ...(isInactive
                 ? [{ key: 'reactivate', label: 'Reactivate', icon: <Power size={16} />, onClick: () => handleReactivate(actionNode) }]
@@ -96,7 +95,7 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                     toast.success('Code copied')
                 } catch { toast.error('Copy failed') }
             } },
-        ]
+        ] as any
     }, [actionNode, openSheet, handleAddChild, handleRecalc, handleEdit, handleReactivate, router])
 
     // Build tree with filters

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -431,7 +430,7 @@ export default function PurchaseOrdersManager() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search by PO number or supplier... (Ctrl+K)"
-        searchRef={searchRef}
+        searchRef={searchRef as React.RefObject<HTMLInputElement>}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         activeFilterCount={activeFilterCount}

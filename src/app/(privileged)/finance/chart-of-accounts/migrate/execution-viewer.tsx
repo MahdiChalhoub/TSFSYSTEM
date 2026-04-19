@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useTransition, useCallback, useEffect } from 'react'
@@ -66,7 +65,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                     }
                     return
                 }
-                setSession({ ...result, status: 'DRAFT' } as MigrationSession)
+                setSession({ ...result, status: 'DRAFT' } as unknown as MigrationSession)
                 setPlans([])
             } catch (e: any) {
                 setError(e.message || 'Failed to create session')
@@ -370,7 +369,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                     </div>
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-0 divide-x divide-app-border/50">
                         {Object.entries(MODE_COLORS).map(([mode, style]) => {
-                            const count = session.dry_run_report.stats[mode] || 0
+                            const count = session.dry_run_report!.stats[mode] || 0
                             return (
                                 <div key={mode} className="p-4 text-center">
                                     <div className={`text-2xl font-bold ${style.text}`}>{count}</div>

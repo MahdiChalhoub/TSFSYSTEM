@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
@@ -27,7 +26,7 @@ import {
 type SortKey = 'date' | 'voucher_type' | 'reference' | 'amount' | 'lifecycle_status'
 type SortDir = 'asc' | 'desc'
 
-const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
+const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
     OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
     LOCKED: { label: 'Locked', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: ShieldCheck },
@@ -154,7 +153,7 @@ export default function VouchersPage() {
         } catch { toast.error("Failed to load history") }
     }
 
-    function openEdit(v: Record<string, any>) { setEditVoucher(v); setVoucherType(v.voucher_type); setDialogOpen(true) }
+    function openEdit(v: Voucher) { setEditVoucher(v); setVoucherType(v.voucher_type as any); setDialogOpen(true) }
     function openCreate() { setEditVoucher(null); setVoucherType('TRANSFER'); setDialogOpen(true) }
     function closeDialog() { setDialogOpen(false); setEditVoucher(null) }
 
@@ -200,7 +199,7 @@ export default function VouchersPage() {
         { key: "PAYMENT", label: "Payments", icon: ArrowUpRight },
     ]
 
-    const typeConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
+    const typeConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
         TRANSFER: { icon: ArrowRightLeft, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
         RECEIPT: { icon: ArrowDownLeft, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         PAYMENT: { icon: ArrowUpRight, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
@@ -276,7 +275,7 @@ export default function VouchersPage() {
                     {/* Locked type badge for editing */}
                     {editVoucher && (
                         <div className="pt-2">
-                            <Badge variant="outline" className={`gap-1 rounded-lg border ${typeConfig[editVoucher.voucher_type]?.bg} ${typeConfig[editVoucher.voucher_type]?.color} font-semibold`}>
+                            <Badge variant="outline" className={`gap-1 rounded-lg border ${typeConfig[editVoucher.voucher_type || '']?.bg} ${typeConfig[editVoucher.voucher_type || '']?.color} font-semibold`}>
                                 {editVoucher.voucher_type}
                             </Badge>
                         </div>
@@ -510,9 +509,9 @@ export default function VouchersPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredVouchers.map((v: Record<string, any>) => {
-                            const tc = typeConfig[v.voucher_type] || typeConfig.TRANSFER
-                            const lc = LIFECYCLE_CONFIG[v.lifecycle_status] || LIFECYCLE_CONFIG.OPEN
+                        {filteredVouchers.map((v: Voucher) => {
+                            const tc = typeConfig[v.voucher_type || 'TRANSFER'] || typeConfig.TRANSFER
+                            const lc = LIFECYCLE_CONFIG[v.lifecycle_status || 'OPEN'] || LIFECYCLE_CONFIG.OPEN
                             const TypeIcon = tc.icon
                             const LcIcon = lc.icon
                             const isOpen = v.lifecycle_status === 'OPEN'

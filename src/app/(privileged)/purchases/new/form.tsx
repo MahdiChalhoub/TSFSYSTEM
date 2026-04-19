@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useActionState, useState, useEffect, useCallback } from "react";
@@ -55,7 +54,7 @@ export default function PurchaseForm({
     const [invoicePriceType, setInvoicePriceType] = useState<'HT' | 'TTC'>('HT');
     const [vatRecoverable, setVatRecoverable] = useState<boolean>(true);
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('');
-    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, unknown>[]>([]);
+    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, any>[]>([]);
 
     // --- Line Items State ---
     const [lines, setLines] = useState<PurchaseLine[]>([]);
@@ -124,19 +123,24 @@ export default function PurchaseForm({
 
     const updateLine = (idx: number, updates: Record<string, any>) => {
         const newLines = [...lines];
-        newLines[idx] = { ...newLines[idx], ...updates };
+        const line = newLines[idx];
+        if (!line) return;
+
+        Object.assign(line, updates);
+
+        const taxRate = line.taxRate || 0;
 
         // Handle HT/TTC Recalculations
         if (updates.unitCostHT !== undefined) {
-            newLines[idx].unitCostTTC = Number((updates.unitCostHT * (1 + newLines[idx].taxRate)).toFixed(2));
+            line.unitCostTTC = Number((updates.unitCostHT * (1 + taxRate)).toFixed(2));
         } else if (updates.unitCostTTC !== undefined) {
-            newLines[idx].unitCostHT = Number((updates.unitCostTTC / (1 + newLines[idx].taxRate)).toFixed(2));
+            line.unitCostHT = Number((updates.unitCostTTC / (1 + taxRate)).toFixed(2));
         }
 
         if (updates.sellingPriceHT !== undefined) {
-            newLines[idx].sellingPriceTTC = Number((updates.sellingPriceHT * (1 + newLines[idx].taxRate)).toFixed(2));
+            line.sellingPriceTTC = Number((updates.sellingPriceHT * (1 + taxRate)).toFixed(2));
         } else if (updates.sellingPriceTTC !== undefined) {
-            newLines[idx].sellingPriceHT = Number((updates.sellingPriceTTC / (1 + newLines[idx].taxRate)).toFixed(2));
+            line.sellingPriceHT = Number((updates.sellingPriceTTC / (1 + taxRate)).toFixed(2));
         }
 
         setLines(newLines);
@@ -247,7 +251,7 @@ export default function PurchaseForm({
                         </select>
                         <select className="flex-1 bg-transparent text-[10px] font-bold text-emerald-600 border-none p-0 focus:ring-0" name="warehouseId" required>
                             <option value="">WH...</option>
-                            {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                            {availableWarehouses.map(w => <option key={w.id as React.Key} value={w.id as string | number}>{w.name as React.ReactNode}</option>)}
                         </select>
                     </div>
                 </div>
@@ -305,16 +309,16 @@ export default function PurchaseForm({
                             {lines.map((line, idx) => (
                                 <tr key={line.productId} className="group hover:bg-app-surface/80 transition-colors">
                                     <td className="p-4">
-                                        <div className="font-bold text-app-foreground mb-1">{line.productName}</div>
-                                        <div className="text-[10px] text-app-muted-foreground font-mono tracking-tighter">{line.barcode || 'NO_BARCODE'}</div>
-                                        <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
+                                        <div className="font-bold text-app-foreground mb-1">{line.productName as string}</div>
+                                        <div className="text-[10px] text-app-muted-foreground font-mono tracking-tighter">{(line.barcode as string) || 'NO_BARCODE'}</div>
+                                        <input type="hidden" name={`lines[${idx}][productId]`} value={String(line.productId)} />
                                         <input type="hidden" name={`lines[${idx}][taxRate]`} value={line.taxRate} />
                                     </td>
                                     <td className="p-2 text-center font-bold text-app-muted-foreground">
-                                        {line.stockLevel}
+                                        {line.stockLevel as React.ReactNode}
                                     </td>
                                     <td className="p-2 text-center font-black text-emerald-600 bg-emerald-50/20">
-                                        {line.proposedQty}
+                                        {line.proposedQty as React.ReactNode}
                                     </td>
                                     <td className="p-2">
                                         <input
@@ -394,7 +398,7 @@ export default function PurchaseForm({
                                     </td>
                                     <td className="p-2 text-center text-[10px] space-y-1">
                                         <div className="text-app-muted-foreground">Target: <span className="text-app-foreground font-bold">$0.00</span></div>
-                                        <div className="text-app-muted-foreground">Last: <span className="text-app-foreground font-bold">${line.lastPrice || 'N/A'}</span></div>
+                                        <div className="text-app-muted-foreground">Last: <span className="text-app-foreground font-bold">${(line.lastPrice as string) || 'N/A'}</span></div>
                                     </td>
                                     <td className="p-2">
                                         <input
@@ -406,7 +410,7 @@ export default function PurchaseForm({
                                         />
                                     </td>
                                     <td className="p-2 text-right font-black text-app-foreground">
-                                        ${(line.quantity * (invoicePriceType === 'TTC' ? line.unitCostTTC : line.unitCostHT)).toFixed(2)}
+                                        ${(Number(line.quantity) * (invoicePriceType === 'TTC' ? Number(line.unitCostTTC || 0) : Number(line.unitCostHT || 0))).toFixed(2)}
                                     </td>
                                     <td className="p-2 text-center">
                                         <button
@@ -486,7 +490,7 @@ export default function PurchaseForm({
 
 function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>) => void, siteId: number }) {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<Record<string, unknown>[]>([]);
+    const [results, setResults] = useState<Record<string, any>[]>([]);
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -527,7 +531,7 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
                 <div className="absolute top-full left-0 right-0 mt-2 bg-app-surface rounded-xl shadow-2xl border border-app-border z-50 overflow-hidden">
                     {results.map(r => (
                         <button
-                            key={r.id}
+                            key={r.id as React.Key}
                             type="button"
                             onClick={() => {
                                 callback(r);
@@ -537,12 +541,12 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
                             className="w-full p-3 text-left hover:bg-emerald-50 flex items-center justify-between group transition-all"
                         >
                             <div>
-                                <div className="font-bold text-sm text-app-foreground group-hover:text-emerald-700">{r.name}</div>
-                                <div className="text-[10px] text-app-muted-foreground">{r.sku} ΓÇó Stock: {r.stockLevel}</div>
+                                <div className="font-bold text-sm text-app-foreground group-hover:text-emerald-700">{r.name as React.ReactNode}</div>
+                                <div className="text-[10px] text-app-muted-foreground">{r.sku as React.ReactNode} ΓÇó Stock: {r.stockLevel as React.ReactNode}</div>
                             </div>
                             <div className="text-right">
-                                <div className="text-xs font-bold text-app-foreground">${r.costPriceHT} HT</div>
-                                <div className="text-[10px] text-emerald-500 font-bold">Suggested: +{r.proposedQty}</div>
+                                <div className="text-xs font-bold text-app-foreground">${r.costPriceHT as React.ReactNode} HT</div>
+                                <div className="text-[10px] text-emerald-500 font-bold">Suggested: +{r.proposedQty as React.ReactNode}</div>
                             </div>
                         </button>
                     ))}

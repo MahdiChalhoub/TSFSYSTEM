@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getJournalEntry } from '@/app/actions/finance/ledger'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'

@@ -150,3 +150,14 @@ export async function removePOLine(poId: number | string, lineId: number | strin
 export async function getPODashboard() {
     return await erpFetch('purchase-orders/dashboard/')
 }
+
+export async function autoReplenish() {
+    try {
+        const result = await erpFetch('purchase-orders/auto-replenish/', { method: 'POST' });
+        revalidatePath('/purchases');
+        return { message: "Auto-replenishment initiated", data: result };
+    } catch (e: unknown) {
+        return { error: e instanceof Error ? e.message : "Failed to run automated engine" };
+    }
+}
+

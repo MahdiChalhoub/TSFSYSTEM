@@ -45,7 +45,8 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
     const [expandAll, setExpandAll] = useState<boolean | undefined>(undefined)
     const [expandKey, setExpandKey] = useState(0)
     const [overflowOpen, setOverflowOpen] = useState(false)
-    const [collapsed, setCollapsed] = useState(false)
+    // collapsed state was used for an animated title-shrink on scroll; the
+    // header is now always compact so there's nothing left to collapse.
     const [fabVisible, setFabVisible] = useState(true)
     const [scrolled, setScrolled] = useState(false)  // for shadow
     const [pullY, setPullY] = useState(0)
@@ -65,7 +66,6 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
             const dy = y - lastScrollY.current
 
             setScrolled(y > 2)
-            setCollapsed(y > 40)
 
             if (Math.abs(dy) > 8) {
                 setFabVisible(dy < 0 || y < 80)

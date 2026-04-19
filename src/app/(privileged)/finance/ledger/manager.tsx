@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -385,7 +384,7 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search by reference, narrative, or JV ID... (Ctrl+K)"
-        searchRef={searchRef}
+        searchRef={searchRef as React.RefObject<HTMLInputElement>}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         activeFilterCount={activeFilterCount}
@@ -447,7 +446,7 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
       <ConfirmDialog
         open={showSingleDelete !== null}
         onOpenChange={(open) => { if (!open) setShowSingleDelete(null) }}
-        onConfirm={() => showSingleDelete !== null && handleSingleDelete(showSingleDelete)}
+        onConfirm={() => { if (showSingleDelete !== null) handleSingleDelete(showSingleDelete) }}
         title="Delete Journal Entry?"
         description={`This will permanently delete journal entry JV #${showSingleDelete} and all its lines. This action cannot be undone.`}
         confirmText="Delete"

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -27,10 +26,15 @@ export function ComparisonPanel({
   onVerify,
   onReject,
   onSave
-}: any) {
+}: {
+  invoice?: Record<string, any> | null;
+  onVerify?: (id: number) => void;
+  onReject?: (id: number) => void;
+  onSave?: (data: Record<string, any>) => void;
+}) {
   const { fmt } = useCurrency()
   const [editing, setEditing] = useState(false)
-  const [editedValues, setEditedValues] = useState({})
+  const [editedValues, setEditedValues] = useState<Record<string, any>>({})
 
   // Verification context for interactive linking
   const {
@@ -221,7 +225,7 @@ export function ComparisonPanel({
                       onClick={() => handleFieldClick(field)}
                       title="Click to highlight in document"
                     >
-                      {field.type === 'currency' ? fmt(parseFloat(poValue)) : poValue}
+                      {field.type === 'currency' ? fmt(Number(poValue)) : poValue}
                       <LinkIcon size={10} className="opacity-0 group-hover:opacity-100" />
                     </div>
                   )}
@@ -232,7 +236,7 @@ export function ComparisonPanel({
                   <p className="text-[10px] font-bold text-app-text-muted uppercase opacity-0">{field.label}</p>
                   <p className="text-sm font-semibold text-blue-600">
                     {invoice.receipt_number
-                      ? (field.type === 'currency' ? fmt(parseFloat(poValue * 0.95)) : '—')
+                      ? (field.type === 'currency' ? fmt(Number(poValue) * 0.95) : '—')
                       : '—'
                     }
                   </p>
@@ -243,14 +247,14 @@ export function ComparisonPanel({
                   <p className="text-[10px] font-bold text-app-text-muted uppercase opacity-0">{field.label}</p>
                   <div className="flex items-center gap-2">
                     <p className={`text-sm font-bold ${mismatch ? 'text-amber-600' : 'text-emerald-600'}`}>
-                      {field.type === 'currency' ? fmt(parseFloat(invValue)) : invValue}
+                      {field.type === 'currency' ? fmt(Number(invValue)) : invValue as string}
                     </p>
                     {mismatch && <AlertCircle size={14} className="text-amber-500" />}
                     {!mismatch && invValue && <CheckCircle2 size={14} className="text-emerald-500" />}
                   </div>
                   {mismatch && field.type === 'currency' && (
                     <p className="text-xs text-amber-600 font-semibold">
-                      Diff: {fmt(Math.abs(parseFloat(invValue) - parseFloat(poValue)))}
+                      Diff: {fmt(Math.abs(Number(invValue) - Number(poValue)))}
                     </p>
                   )}
                 </div>

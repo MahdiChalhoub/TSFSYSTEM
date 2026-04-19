@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
@@ -164,8 +163,8 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                 source_account_code: srcAcc.code,
                 target_account_code: target?.code || '',
                 notes: note,
-                match_level: level,
-            })
+                match_level: level as MigrationMapping['match_level'],
+            } as MigrationMapping)
         }
         return result
     }, [sourceAccounts, targetAccounts])
@@ -282,7 +281,7 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                 updated[existing] = { ...updated[existing], target_account_code: newTargetCode }
                 return updated
             }
-            return [...prev, { source_account_code: sourceCode, target_account_code: newTargetCode, notes: '' }]
+            return [...prev, { source_account_code: sourceCode, target_account_code: newTargetCode, notes: '' } as MigrationMapping]
         })
         setDirty(true)
     }
@@ -628,7 +627,7 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                                         <input type="number" min={0} max={100} step={0.01}
                                                             value={s.mapping.allocation_percent ?? ''}
                                                             onChange={e => {
-                                                                const val = e.target.value === '' ? null : parseFloat(e.target.value)
+                                                                const val = e.target.value === '' ? undefined : parseFloat(e.target.value)
                                                                 setMappings(prev => prev.map((r, ri) =>
                                                                     ri === s.globalIdx ? { ...r, allocation_percent: val } : r
                                                                 ))

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -248,11 +247,11 @@ const MOCK_INVOICES = [
 
 // ─── Main Page Component ────────────────────────────────────────
 export default function PurchaseInvoiceVerificationPage() {
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
-  const [invoices, setInvoices] = useState(MOCK_INVOICES)
+  const [selectedInvoice, setSelectedInvoice] = useState<Record<string, any> | null>(null)
+  const [invoices, setInvoices] = useState<Record<string, any>[]>(MOCK_INVOICES)
 
   // ─── Event Handlers ────────────────────────────────────────
-  const handleSelectInvoice = (invoice: any) => {
+  const handleSelectInvoice = (invoice: Record<string, any>) => {
     setSelectedInvoice(invoice)
   }
 
@@ -278,7 +277,7 @@ export default function PurchaseInvoiceVerificationPage() {
     }
   }
 
-  const handleSave = (editedValues: any) => {
+  const handleSave = (editedValues: Record<string, any>) => {
     if (!selectedInvoice) return
     const updatedInvoice = { ...selectedInvoice, ...editedValues }
     setInvoices(prev =>
@@ -397,7 +396,7 @@ export default function PurchaseInvoiceVerificationPage() {
       capability={capabilityWithProps}
       storageKey="purchase-verification-layout"
     >
-      <VerificationProvider invoiceId={selectedInvoice?.id}>
+      <VerificationProvider invoiceId={selectedInvoice?.id || undefined}>
         <div className="h-screen flex flex-col bg-app-bg">
           {/* Page Header */}
           <header className="border-b border-app-border/30 bg-app-surface shadow-sm shrink-0">

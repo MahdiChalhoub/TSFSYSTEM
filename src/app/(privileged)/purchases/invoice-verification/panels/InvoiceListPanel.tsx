@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -20,7 +19,13 @@ export function InvoiceListPanel({
   onSelectInvoice,
   filterStatus = 'all',
   onFilterChange
-}: any) {
+}: {
+  invoices?: Record<string, any>[];
+  selectedInvoice?: Record<string, any> | null;
+  onSelectInvoice?: (inv: Record<string, any>) => void;
+  filterStatus?: string;
+  onFilterChange?: (status: string) => void;
+}) {
   const { fmt } = useCurrency()
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -31,7 +36,7 @@ export function InvoiceListPanel({
     REJECTED: 'bg-rose-100 text-rose-700 border-rose-200'
   }
 
-  const filteredInvoices = invoices.filter((inv: any) => {
+  const filteredInvoices = invoices.filter((inv) => {
     const matchesSearch = !searchQuery ||
       inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       inv.supplier_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -86,7 +91,7 @@ export function InvoiceListPanel({
 
       {/* Invoice List */}
       <div className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
-        {filteredInvoices.map((invoice: any) => (
+        {filteredInvoices.map((invoice) => (
           <Card
             key={invoice.id}
             className={`cursor-pointer transition-all border-app-border/30 hover:shadow-md ${
@@ -100,7 +105,7 @@ export function InvoiceListPanel({
                   <p className="text-sm font-bold text-app-text">{invoice.invoice_number}</p>
                   <p className="text-xs text-app-text-muted">{invoice.supplier_name}</p>
                 </div>
-                <Badge className={statusColors[invoice.status]}>{invoice.status}</Badge>
+                <Badge className={(statusColors as any)[invoice.status]}>{invoice.status}</Badge>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-app-text-faint flex items-center gap-1">

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
@@ -16,8 +15,8 @@ export function AutoReplenishButton() {
             const res = await autoReplenish();
             if (res.error) throw new Error(res.error);
             toast.success(res.message || "Replenishment sweep completed!", { id: 'replenish' });
-        } catch (error: any) {
-            toast.error(error.message || "Failed to run automated engine", { id: 'replenish' });
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Failed to run automated engine", { id: 'replenish' });
         } finally {
             setLoading(false);
         }

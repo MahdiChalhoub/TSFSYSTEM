@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -172,9 +171,9 @@ export default function PurchaseInvoiceVerificationPage() {
       setLoading(true)
       const data = await getInvoicesPendingVerification()
       setInvoices(data.invoices)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to load invoices', {
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
       })
     } finally {
       setLoading(false)
@@ -186,9 +185,9 @@ export default function PurchaseInvoiceVerificationPage() {
       setDetailLoading(true)
       const detail = await getInvoiceDetail(invoiceId)
       setInvoiceDetail(detail)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to load invoice detail', {
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
       })
     } finally {
       setDetailLoading(false)
@@ -224,9 +223,9 @@ export default function PurchaseInvoiceVerificationPage() {
           await loadInvoiceDetail(invoiceId)
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Verification Failed', {
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -242,9 +241,9 @@ export default function PurchaseInvoiceVerificationPage() {
       if (selectedInvoiceId === invoiceId) {
         await loadInvoiceDetail(invoiceId)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Rejection Failed', {
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -260,9 +259,9 @@ export default function PurchaseInvoiceVerificationPage() {
       if (selectedInvoiceId === invoiceId) {
         await loadInvoiceDetail(invoiceId)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Hold Failed', {
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -278,9 +277,9 @@ export default function PurchaseInvoiceVerificationPage() {
       if (selectedInvoiceId === invoiceId) {
         await loadInvoiceDetail(invoiceId)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Upload Failed', {
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -398,7 +397,7 @@ export default function PurchaseInvoiceVerificationPage() {
       capability={capabilityWithProps}
       storageKey="purchase-verification-layout"
     >
-      <VerificationProvider invoiceId={selectedInvoiceId}>
+      <VerificationProvider invoiceId={selectedInvoiceId || undefined}>
         <div className="h-screen flex flex-col bg-app-bg">
           {/* Page Header */}
           <header className="border-b border-app-border/30 bg-app-surface shadow-sm shrink-0">

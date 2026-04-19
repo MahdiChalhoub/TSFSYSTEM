@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -393,7 +392,7 @@ export default function OpeningBalancesManager() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search by reference, description, or ID... (Ctrl+K)"
-        searchRef={searchRef}
+        searchRef={searchRef as React.RefObject<HTMLInputElement>}
         onSetVisibleColumns={setVisibleColumns}
         onSetColumnOrder={setColumnOrder}
         moduleKey="finance.opening-balances"

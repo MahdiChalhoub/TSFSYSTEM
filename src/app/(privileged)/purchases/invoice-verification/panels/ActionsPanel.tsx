@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -26,9 +25,14 @@ export function ActionsPanel({
   onAddNote,
   onApprove,
   onReject
-}: any) {
+}: {
+  invoice?: Record<string, any> | null;
+  onAddNote?: (id: number, text: string) => void;
+  onApprove?: (id: number) => void;
+  onReject?: (id: number) => void;
+}) {
   const [note, setNote] = useState('')
-  const [notes, setNotes] = useState<any[]>([])
+  const [notes, setNotes] = useState<Record<string, any>[]>([])
 
   // Verification context for audit trail and mismatches
   const {

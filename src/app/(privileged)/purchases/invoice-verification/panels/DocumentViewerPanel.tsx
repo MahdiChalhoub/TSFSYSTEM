@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -21,7 +20,10 @@ import { useVerification } from '@/lib/workspace/VerificationContext'
 export function DocumentViewerPanel({
   invoice = null,
   onUpload
-}: any) {
+}: {
+  invoice?: Record<string, any> | null;
+  onUpload?: (file: File, invoiceId?: number) => void;
+}) {
   const [zoom, setZoom] = useState(100)
   const [rotation, setRotation] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
