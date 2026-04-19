@@ -20,21 +20,21 @@ import { useEffect } from 'react'
 export function useBackHandler(open: boolean, onClose: () => void, id: string = 'overlay') {
     useEffect(() => {
         if (!open) return
-        let dismissedByBack = false
 
         window.history.pushState({ __overlay_id: id }, '')
 
-        const onPop = () => {
-            dismissedByBack = true
-            onClose()
-        }
+        const onPop = () => onClose()
         window.addEventListener('popstate', onPop)
 
         return () => {
             window.removeEventListener('popstate', onPop)
-            if (!dismissedByBack && window.history.state?.__overlay_id === id) {
-                window.history.back()
-            }
+            // Intentionally do NOT call history.back() here. Programmatic
+            // close paths (e.g., clicking a link inside the overlay that
+            // calls router.push + onClose) race with Next.js's own
+            // history pushState and any forced back() call during cleanup
+            // cancels the forward navigation. Leaving the pushed entry in
+            // place means users may need one extra back press after close,
+            // which is the lesser evil.
         }
     }, [open, onClose, id])
 }
