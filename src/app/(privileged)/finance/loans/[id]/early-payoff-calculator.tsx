@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
@@ -41,10 +40,10 @@ export function EarlyPayoffCalculator({ loanId }: { loanId: number }) {
     }
   }
 
-  const savings = result ? parseFloat(result.interest_saved || 0) : 0
-  const payoffAmount = result ? parseFloat(result.payoff_amount || 0) : 0
-  const remainingPrincipal = result ? parseFloat(result.remaining_principal || 0) : 0
-  const remainingInterest = result ? parseFloat(result.remaining_interest || 0) : 0
+  const savings = result ? Number(result.interest_saved || 0) : 0
+  const payoffAmount = result ? Number(result.payoff_amount || 0) : 0
+  const remainingPrincipal = result ? Number(result.remaining_principal || 0) : 0
+  const remainingInterest = result ? Number(result.remaining_interest || 0) : 0
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
@@ -96,11 +95,13 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
     )
   }
 
-  const statusIcon = {
+  const statusIcon: Record<string, React.ReactNode> = {
     DRAFT: <Clock size={16} className="text-app-muted-foreground" />,
     APPROVED: <CheckCircle2 size={16} className="text-app-success" />,
     LOCKED: <Lock size={16} className="text-app-error" />
-  }[budget.status]
+  }
+
+  const currentStatusIcon = statusIcon[budget?.status || 'DRAFT']
 
   const utilizationRate = parseFloat(performance.utilization_rate)
   const variancePercentage = parseFloat(variance.variance_percentage)
@@ -127,7 +128,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
                   {budget.name}
                 </h1>
                 <Badge className="gap-1.5">
-                  {statusIcon}
+                  {currentStatusIcon}
                   {budget.status}
                 </Badge>
               </div>

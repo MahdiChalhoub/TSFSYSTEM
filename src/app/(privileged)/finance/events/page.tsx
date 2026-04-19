@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
@@ -79,10 +78,10 @@ export default function FinancialEventsPage() {
 
     const totalInflows = events
         .filter(e => ['PARTNER_INJECTION', 'CAPITAL_INJECTION', 'PARTNER_LOAN', 'LOAN_DISBURSEMENT'].includes(e.event_type))
-        .reduce((s, e) => s + parseFloat(e.amount || 0), 0)
+        .reduce((s, e) => s + Number(e.amount || 0), 0)
     const totalOutflows = events
         .filter(e => ['PARTNER_WITHDRAWAL', 'EXPENSE', 'SALARY_PAYMENT', 'LOAN_REPAYMENT'].includes(e.event_type))
-        .reduce((s, e) => s + parseFloat(e.amount || 0), 0)
+        .reduce((s, e) => s + Number(e.amount || 0), 0)
     const pendingCount = events.filter(e => e.status === 'PENDING').length
     const postedCount = events.filter(e => e.status === 'POSTED').length
 
@@ -231,7 +230,7 @@ export default function FinancialEventsPage() {
                                                     {e.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right font-bold">{fmt(parseFloat(e.amount || 0))}</TableCell>
+                                            <TableCell className="text-right font-bold">{fmt(Number(e.amount || 0))}</TableCell>
                                         </TableRow>
                                     )
                                 })}

@@ -1,9 +1,9 @@
-// @ts-nocheck
 import { getPriceLists } from '@/app/actions/finance/pricing'
 import PriceListManager from './manager'
 
 export default async function PricingPage() {
-    const priceLists = await getPriceLists()
+    const response = await getPriceLists()
+    const priceLists = response.data || []
 
     return (
         <div className="p-6">

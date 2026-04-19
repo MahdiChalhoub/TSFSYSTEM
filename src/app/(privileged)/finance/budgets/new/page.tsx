@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
@@ -53,11 +52,11 @@ export default function NewBudgetPage() {
         getChartOfAccounts(false, 'OFFICIAL')
       ])
 
-      const fyArray = Array.isArray(fyData) ? fyData : fyData.results || []
-      const accountsArray = Array.isArray(accountsData) ? accountsData : accountsData.results || []
+      const fyArray = Array.isArray(fyData) ? fyData : (fyData as any)?.results || []
+      const accountsArray = Array.isArray(accountsData) ? accountsData : (accountsData as any)?.results || []
 
       setFiscalYears(fyArray)
-      setAccounts(accountsArray.filter(a => ['INCOME', 'EXPENSE'].includes(a.type)))
+      setAccounts(accountsArray.filter((a: any) => ['INCOME', 'EXPENSE'].includes(a.type)))
 
       // Set default fiscal year to current/latest
       if (fyArray.length > 0) {
@@ -171,7 +170,7 @@ export default function NewBudgetPage() {
   }
 
   const totalBudget = budgetLines.reduce((sum, line) =>
-    sum + parseFloat(line.budgeted_amount || 0), 0
+    sum + Number(line.budgeted_amount || 0), 0
   )
 
   return (

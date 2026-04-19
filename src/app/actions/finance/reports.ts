@@ -54,9 +54,9 @@ export async function getReportExecutions(id: number) {
 export async function getReportDataSources() {
     return await erpFetch('finance/reports/data-sources/');
 }
-export async function getFinancialReportsDashboard() {
-    return await erpFetch('finance/reports/dashboard/');
+export async function getFinancialReportsDashboard(period?: string) {
+    return await erpFetch(`finance/reports/dashboard/?period=${period || 'CURRENT_MONTH'}`);
 }
-export async function getCashFlowStatement(params?: unknown) {
-    return await erpFetch('finance/reports/cash-flow/');
+export async function getCashFlowStatement(startDate: string, endDate: string, method: string) {
+    return await erpFetch(`finance/reports/cash-flow/?start_date=${startDate}&end_date=${endDate}&method=${method}`);
 }

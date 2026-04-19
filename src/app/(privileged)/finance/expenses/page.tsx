@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
@@ -46,7 +45,7 @@ export default function ExpenseTrackerPage() {
                 j.account === a.id || j.account_id === a.id ||
                 j.credit_account === a.id || j.debit_account === a.id
             )
-            const bal = Math.abs(parseFloat(a.balance || 0))
+            const bal = Math.abs(Number(a.balance || 0))
             return { ...a, journalCount: entries.length, absBalance: bal }
         }).sort((a, b) => b.absBalance - a.absBalance)
     }, [accounts, journals])

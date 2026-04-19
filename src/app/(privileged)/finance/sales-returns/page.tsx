@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
@@ -22,7 +21,7 @@ type ActiveTab = 'RETURNS' | 'CREDIT_NOTES'
 type SortKey = 'return_date' | 'status' | 'reason'
 type SortDir = 'asc' | 'desc'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
     PENDING: { label: 'Pending', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
     APPROVED: { label: 'Approved', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
     COMPLETED: { label: 'Completed', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: ShieldCheck },
@@ -31,7 +30,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 
 export default function SalesReturnsPage() {
     const [returns, setReturns] = useState<SalesReturn[]>([])
-    const [creditNotes, setCreditNotes] = useState<Record<string, unknown>[]>([])
+    const [creditNotes, setCreditNotes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<ActiveTab>('RETURNS')
     const [searchQuery, setSearchQuery] = useState("")
@@ -299,7 +298,7 @@ export default function SalesReturnsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {creditNotes.filter(cn => !searchQuery || (cn.credit_number || "").toLowerCase().includes(searchQuery.toLowerCase())).map((cn: Record<string, any>) => (
+                            {creditNotes.filter((cn: any) => !searchQuery || (cn.credit_number || "").toLowerCase().includes(searchQuery.toLowerCase())).map((cn: Record<string, any>) => (
                                 <TableRow key={cn.id} className="hover:bg-app-surface/50 transition-colors">
                                     <TableCell className="font-mono text-sm font-semibold text-app-foreground">{cn.credit_number}</TableCell>
                                     <TableCell className="text-sm text-app-muted-foreground">{cn.date}</TableCell>

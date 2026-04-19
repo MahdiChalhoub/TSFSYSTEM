@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
@@ -42,8 +41,8 @@ export default function BudgetPlanningPage() {
     const incomeAccounts = accounts.filter(a => a.type === 'INCOME')
     const expenseAccounts = accounts.filter(a => a.type === 'EXPENSE')
 
-    const totalIncome = incomeAccounts.reduce((s, a) => s + parseFloat(a.balance || 0), 0)
-    const totalExpense = expenseAccounts.reduce((s, a) => s + parseFloat(a.balance || 0), 0)
+    const totalIncome = incomeAccounts.reduce((s, a) => s + Number(a.balance || 0), 0)
+    const totalExpense = expenseAccounts.reduce((s, a) => s + Number(a.balance || 0), 0)
     const netResult = totalIncome - totalExpense
 
     if (loading) {
@@ -79,9 +78,9 @@ export default function BudgetPlanningPage() {
                         </TableHeader>
                         <TableBody>
                             {accts
-                                .sort((a, b) => Math.abs(parseFloat(b.balance || 0)) - Math.abs(parseFloat(a.balance || 0)))
+                                .sort((a, b) => Math.abs(Number(b.balance || 0)) - Math.abs(Number(a.balance || 0)))
                                 .map((a: Record<string, any>) => {
-                                    const bal = parseFloat(a.balance || 0)
+                                    const bal = Number(a.balance || 0)
                                     const total = title.includes('Income') ? totalIncome : totalExpense
                                     const pct = total !== 0 ? (Math.abs(bal) / Math.abs(total) * 100) : 0
                                     return (

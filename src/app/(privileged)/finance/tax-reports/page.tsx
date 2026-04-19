@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
@@ -40,8 +39,8 @@ export default function TaxReportsPage() {
         }
     }
 
-    const totalTaxCollected = parseFloat(summary?.sales?.tax || 0)
-    const totalSalesRevenue = parseFloat(summary?.sales?.total || 0)
+    const totalTaxCollected = Number(summary?.sales?.tax || 0)
+    const totalSalesRevenue = Number(summary?.sales?.total || 0)
     const effectiveRate = totalSalesRevenue > 0 ? (totalTaxCollected / totalSalesRevenue * 100) : 0
     const activeGroups = taxGroups.filter(g => g.is_active).length
 
@@ -189,11 +188,11 @@ export default function TaxReportsPage() {
                             </div>
                             <div className="text-center p-4 bg-app-surface rounded-xl">
                                 <p className="text-xs text-app-muted-foreground uppercase mb-1">Discounts Applied</p>
-                                <p className="text-2xl font-bold text-orange-600">{fmt(parseFloat(summary.sales?.discount || 0))}</p>
+                                <p className="text-2xl font-bold text-orange-600">{fmt(Number(summary.sales?.discount || 0))}</p>
                             </div>
                             <div className="text-center p-4 bg-app-surface rounded-xl">
                                 <p className="text-xs text-app-muted-foreground uppercase mb-1">Net Revenue</p>
-                                <p className="text-2xl font-bold text-emerald-600">{fmt(parseFloat(summary.net_revenue || 0))}</p>
+                                <p className="text-2xl font-bold text-emerald-600">{fmt(Number(summary.net_revenue || 0))}</p>
                             </div>
                         </div>
                     </CardContent>

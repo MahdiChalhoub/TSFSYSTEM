@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
@@ -16,12 +15,12 @@ import {
     User, Clock, ChevronLeft, ChevronRight, FileText, Filter, Eye
 } from "lucide-react"
 
-const ACTION_CONFIG: Record<string, { icon: Record<string, any>, color: string, bg: string }> = {
-    CREATE: { icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-    UPDATE: { icon: Edit, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-    DELETE: { icon: Trash2, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
-    POST: { icon: Send, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
-    REVERSE: { icon: RotateCcw, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
+const ACTION_CONFIG: Record<string, { label?: string; icon: React.ElementType, color: string, bg: string }> = {
+    CREATE: { label: 'Create', icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+    UPDATE: { label: 'Update', icon: Edit, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+    DELETE: { label: 'Delete', icon: Trash2, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
+    POST: { label: 'Post', icon: Send, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
+    REVERSE: { label: 'Reverse', icon: RotateCcw, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
 }
 
 export default function AuditTrailPage() {

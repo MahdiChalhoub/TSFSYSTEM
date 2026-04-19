@@ -63,3 +63,7 @@ export async function disburseLoan(loanId: number, targetAccountId: number) {
 export async function getAmortizationSchedule(loanId: number) {
     return await erpFetch(`finance/loans/${loanId}/schedule/`);
 }
+
+export async function calculateEarlyPayoff(loanId: number, payoffDate: string) {
+    return await erpFetch(`finance/loans/${loanId}/calculate_early_payoff/?date=${payoffDate}`);
+}

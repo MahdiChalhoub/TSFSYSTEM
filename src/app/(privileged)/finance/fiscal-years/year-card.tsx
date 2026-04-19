@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useTransition } from 'react'
@@ -11,7 +10,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function FiscalYearCard({ year, nextYear }: { year: Record<string, any>, nextYear?: Record<string, any> }) {
     const [isPending, startTransition] = useTransition()
-    const [editingPeriod, setEditingPeriod] = useState<FiscalPeriod | null>(null)
+    const [editingPeriod, setEditingPeriod] = useState<any>(null)
 
     const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
 
@@ -19,7 +18,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
         rollForward: () => {
             startTransition(async () => {
                 try {
-                    await transferBalancesToNextYear(year.id, nextYear.id)
+                    await transferBalancesToNextYear(year.id, nextYear!.id)
                     toast.success("Balances transferred successfully!")
                 } catch (err: unknown) {
                     toast.error((err instanceof Error ? err.message : String(err)))

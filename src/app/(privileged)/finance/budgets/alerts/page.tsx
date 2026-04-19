@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
@@ -342,7 +341,7 @@ export default function BudgetAlertsPage() {
         title={`Variance Alerts (${filteredAlerts.length})`}
         data={filteredAlerts}
         loading={loading}
-        getRowId={(alert, idx) => `${alert.budget_id}-${alert.account_code}-${idx}`}
+        getRowId={(alert: any) => `${alert.budget_id}-${alert.account_code}`}
         columns={columns}
         className="rounded-2xl border-0 shadow-sm overflow-hidden"
         visibleColumns={settings.visibleColumns}

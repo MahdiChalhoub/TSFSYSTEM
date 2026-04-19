@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useTransition } from "react"
@@ -23,7 +22,7 @@ export default function AssetsPage() {
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
-    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
+    const [selectedAsset, setSelectedAsset] = useState<any>(null)
     const [schedule, setSchedule] = useState<DepreciationScheduleItem[]>([])
     const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
@@ -70,7 +69,7 @@ export default function AssetsPage() {
         })
     }
 
-    async function viewSchedule(asset: Record<string, any>) {
+    async function viewSchedule(asset: any) {
         setSelectedAsset(asset)
         try {
             const s = await getAssetSchedule(asset.id)
@@ -106,7 +105,7 @@ export default function AssetsPage() {
     const totalBook = assets.reduce((s, a) => s + Number(a.book_value || 0), 0)
     const fullyDepreciated = assets.filter(a => a.status === "FULLY_DEPRECIATED").length
 
-    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
+    const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
         ACTIVE: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         FULLY_DEPRECIATED: { icon: AlertTriangle, color: "text-app-muted-foreground", bg: "bg-app-surface-2 border-app-border" },
         DISPOSED: { icon: XCircle, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
