@@ -51,17 +51,22 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
         }
     }
 
-    // Pre-expand the module matching the current route when the drawer opens
+    // Pre-expand the module matching the current route when the drawer opens.
+    // MENU_ITEMS can contain duplicate titles (e.g. two "Finance" modules), so we
+    // key by `${title}-${index}` — same scheme as the rendering loop.
     useEffect(() => {
         if (!open) return
-        const active = MENU_ITEMS.find(m => {
+        const idx = MENU_ITEMS.findIndex(m => {
             if (m.path && pathname.startsWith(m.path)) return true
             return (m.children || []).some((c: any) => {
                 if (c.path && pathname.startsWith(c.path)) return true
                 return (c.children || []).some((l: any) => l.path && pathname.startsWith(l.path))
             })
         })
-        if (active) setExpanded(prev => new Set(prev).add(active.title))
+        if (idx >= 0) {
+            const key = `${MENU_ITEMS[idx].title}-${idx}`
+            setExpanded(prev => new Set(prev).add(key))
+        }
     }, [open, pathname])
 
     const searchResults = useMemo(() => {
@@ -217,17 +222,18 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                     ))
                                 )
                             ) : (
-                                MENU_ITEMS.map(module => {
+                                MENU_ITEMS.map((module, i) => {
                                     const Icon = module.icon
+                                    const moduleKey = `${module.title}-${i}`
                                     const isActive = module.path && pathname.startsWith(module.path)
-                                    const isExpanded = expanded.has(module.title)
+                                    const isExpanded = expanded.has(moduleKey)
                                     const hasChildren = !!module.children
 
                                     // Leaf module (Dashboard) — direct link
                                     if (!hasChildren) {
                                         return (
                                             <button
-                                                key={module.title}
+                                                key={moduleKey}
                                                 onClick={() => module.path && go(module.path)}
                                                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl active:bg-app-primary/10 transition-colors text-left"
                                                 style={{
@@ -244,9 +250,9 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                     }
 
                                     return (
-                                        <div key={module.title}>
+                                        <div key={moduleKey}>
                                             <button
-                                                onClick={() => toggle(module.title)}
+                                                onClick={() => toggle(moduleKey)}
                                                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl active:bg-app-primary/10 transition-colors text-left"
                                                 style={{
                                                     minHeight: 48,
@@ -263,13 +269,14 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                             </button>
                                             {isExpanded && (
                                                 <div className="pl-3 pb-1 animate-in fade-in duration-150">
-                                                    {(module.children || []).map(child => {
+                                                    {(module.children || []).map((child, j) => {
                                                         const ChildIcon = child.icon
+                                                        const childKey = child.path || `${module.title}-${i}-child-${j}`
                                                         if (child.path) {
                                                             const childActive = pathname.startsWith(child.path)
                                                             return (
                                                                 <button
-                                                                    key={child.path}
+                                                                    key={childKey}
                                                                     onClick={() => go(child.path)}
                                                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-lg active:bg-app-primary/10 transition-colors text-left"
                                                                     style={{
@@ -288,7 +295,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                                         const leafs = (child.children || []).filter(l => l.path)
                                                         if (leafs.length === 0) return null
                                                         return (
-                                                            <div key={child.title} className="mt-1 mb-0.5">
+                                                            <div key={childKey} className="mt-1 mb-0.5">
                                                                 <div className="flex items-center gap-2 px-3 pt-1.5 pb-0.5"
                                                                     style={{ color: 'var(--app-muted-foreground)' }}>
                                                                     {ChildIcon && <ChildIcon size={11} style={{ opacity: 0.6 }} />}
