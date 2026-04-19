@@ -1,6 +1,6 @@
 import { getPostingRulesByModule, getEventCatalog } from '@/app/actions/finance/posting-rules'
 import { getChartOfAccounts } from '@/app/actions/finance/accounts'
-import PostingRulesConsole from './form'
+import { PostingRulesGateway } from './PostingRulesGateway'
 
 export default async function PostingRulesPage() {
     const [rulesByModule, catalog, accounts] = await Promise.all([
@@ -11,7 +11,7 @@ export default async function PostingRulesPage() {
 
     return (
         <div className="h-full flex flex-col">
-            <PostingRulesConsole
+            <PostingRulesGateway
                 rulesByModule={rulesByModule}
                 catalog={catalog}
                 accounts={JSON.parse(JSON.stringify(accounts))}
