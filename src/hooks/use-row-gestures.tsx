@@ -19,7 +19,7 @@ interface Options {
 }
 
 export function useRowGestures<T extends HTMLElement>(
-    ref: RefObject<T>,
+    ref: RefObject<T | null>,
     handlers: Handlers,
     options: Options = {}
 ) {

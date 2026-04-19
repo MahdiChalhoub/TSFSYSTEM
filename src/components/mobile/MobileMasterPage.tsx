@@ -127,46 +127,38 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
                     boxShadow: scrolled ? '0 6px 18px rgba(0,0,0,0.18)' : 'none',
                 }}>
-                {/* Top bar */}
-                <motion.div
-                    animate={{ paddingTop: collapsed ? 8 : 12, paddingBottom: collapsed ? 8 : 12 }}
-                    transition={{ duration: 0.18 }}
-                    className="px-4 flex items-center gap-2"
-                >
-                    <motion.div
-                        animate={{ width: collapsed ? 32 : 40, height: collapsed ? 32 : 40 }}
-                        transition={{ duration: 0.18 }}
-                        className="rounded-xl flex items-center justify-center flex-shrink-0"
+                {/* Compact action strip — outer admin shell already shows the
+                    route title in its own 48px top bar, so we skip the duplicate
+                    H1 here and use this row purely for page actions + the scope
+                    subtitle (e.g., "Scoped · Electronics · 12 nodes"). Icon is
+                    kept for visual page identity. */}
+                <div className="px-3 py-2 flex items-center gap-2">
+                    <div
+                        className="rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{
+                            width: 32, height: 32,
                             background: config.iconColor,
-                            boxShadow: `0 4px 14px color-mix(in srgb, ${config.iconColor} 30%, transparent)`,
+                            boxShadow: `0 2px 10px color-mix(in srgb, ${config.iconColor} 25%, transparent)`,
                         }}>
-                        <span className="text-white [&>svg]:w-[18px] [&>svg]:h-[18px]">{config.icon}</span>
-                    </motion.div>
-                    <div className="flex-1 min-w-0">
-                        <motion.h1
-                            animate={{ fontSize: collapsed ? 'var(--tp-xl)' : 'var(--tp-3xl)' }}
-                            transition={{ duration: 0.18 }}
-                            className="font-black text-app-foreground tracking-tight truncate leading-tight">
+                        <span className="text-white [&>svg]:w-[16px] [&>svg]:h-[16px]">{config.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0 leading-tight">
+                        <div className="font-black text-app-foreground truncate"
+                            style={{ fontSize: 'var(--tp-lg)' }}>
                             {config.title}
-                        </motion.h1>
-                        <AnimatePresence initial={false}>
-                            {!collapsed && (
-                                <motion.p
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.15 }}
-                                    className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-widest truncate">
-                                    {config.subtitle}
-                                </motion.p>
-                            )}
-                        </AnimatePresence>
+                        </div>
+                        <div className="font-bold text-app-muted-foreground uppercase tracking-widest truncate"
+                            style={{ fontSize: 'var(--tp-xxs)' }}>
+                            {config.subtitle}
+                        </div>
                     </div>
 
                     <button onClick={config.primaryAction.onClick}
-                        className="flex items-center gap-1 font-bold bg-app-primary text-white px-3 py-2 rounded-xl text-tp-md active:scale-95 transition-transform"
-                        style={{ boxShadow: '0 2px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)', minHeight: 36 }}>
+                        className="flex items-center gap-1 font-bold bg-app-primary text-white px-3 rounded-xl active:scale-95 transition-transform flex-shrink-0"
+                        style={{
+                            boxShadow: '0 2px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                            height: 34, fontSize: 'var(--tp-md)',
+                        }}>
                         {config.primaryAction.icon}
                         <span className="sr-only">{config.primaryAction.label}</span>
                     </button>
@@ -174,9 +166,9 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                     {config.secondaryActions && config.secondaryActions.length > 0 && (
                         <div className="relative">
                             <button onClick={() => setOverflowOpen(o => !o)}
-                                className="p-2 rounded-xl text-app-muted-foreground hover:bg-app-surface active:scale-95 transition-all"
-                                style={{ minHeight: 36, minWidth: 36 }}>
-                                <MoreHorizontal size={18} />
+                                className="rounded-xl text-app-muted-foreground hover:bg-app-surface active:scale-95 transition-all flex items-center justify-center flex-shrink-0"
+                                style={{ width: 34, height: 34 }}>
+                                <MoreHorizontal size={16} />
                             </button>
                             {overflowOpen && (
                                 <>
@@ -203,7 +195,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                             )}
                         </div>
                     )}
-                </motion.div>
+                </div>
 
                 {/* Optional sticky slot below top bar (e.g., breadcrumb) */}
                 {belowTopBar && (
