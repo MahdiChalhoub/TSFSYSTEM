@@ -471,29 +471,43 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                             </button>
                             {isOpen && (
                                 <div className="animate-in fade-in duration-150">
-                                    {items.slice(0, 50).map((acc: any, i: number) => (
-                                        <div key={`${acc.code}-${i}`}
-                                            className="flex items-center gap-2 px-3 py-2"
-                                            style={{
-                                                borderTop: i === 0 ? undefined : '1px dashed color-mix(in srgb, var(--app-border) 20%, transparent)',
-                                            }}>
-                                            <span className="font-mono font-black tabular-nums flex-shrink-0"
-                                                style={{ fontSize: 'var(--tp-sm)', color: cfg.color, minWidth: 46 }}>
-                                                {acc.code}
-                                            </span>
-                                            <span className="font-bold text-app-foreground truncate flex-1"
-                                                style={{ fontSize: 'var(--tp-sm)' }}>
-                                                {acc.name}
-                                            </span>
-                                            {acc.suggested_target?.code && acc.suggested_target.code !== acc.code && (
-                                                <span className="flex items-center gap-1 font-mono font-black tabular-nums flex-shrink-0"
-                                                    style={{ fontSize: 'var(--tp-xxs)', color: 'var(--app-muted-foreground)' }}>
-                                                    <ArrowRight size={10} />
-                                                    {acc.suggested_target.code}
-                                                </span>
-                                            )}
-                                        </div>
-                                    ))}
+                                    {items.slice(0, 50).map((acc: any, i: number) => {
+                                        const hasTarget = acc.suggested_target?.code && acc.suggested_target.code !== acc.code
+                                        const targetName = acc.suggested_target?.name
+                                        return (
+                                            <div key={`${acc.code}-${i}`}
+                                                className="px-3 py-2"
+                                                style={{
+                                                    borderTop: i === 0 ? undefined : '1px dashed color-mix(in srgb, var(--app-border) 20%, transparent)',
+                                                }}>
+                                                {/* Source: code · name */}
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono font-black tabular-nums flex-shrink-0"
+                                                        style={{ fontSize: 'var(--tp-sm)', color: cfg.color, minWidth: 46 }}>
+                                                        {acc.code}
+                                                    </span>
+                                                    <span className="font-bold text-app-foreground truncate flex-1"
+                                                        style={{ fontSize: 'var(--tp-sm)' }}>
+                                                        {acc.name}
+                                                    </span>
+                                                </div>
+                                                {/* Target: code · name (indented under source) */}
+                                                {hasTarget && (
+                                                    <div className="flex items-center gap-2 mt-1" style={{ paddingLeft: 46 + 8 }}>
+                                                        <ArrowRight size={11} style={{ color: 'var(--app-muted-foreground)', flexShrink: 0 }} />
+                                                        <span className="font-mono font-black tabular-nums flex-shrink-0"
+                                                            style={{ fontSize: 'var(--tp-xs)', color: 'var(--app-muted-foreground)', minWidth: 42 }}>
+                                                            {acc.suggested_target.code}
+                                                        </span>
+                                                        <span className="font-bold truncate flex-1"
+                                                            style={{ fontSize: 'var(--tp-xs)', color: 'var(--app-muted-foreground)' }}>
+                                                            {targetName || '—'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
                                     {items.length > 50 && (
                                         <div className="px-3 py-2 text-center font-bold text-app-muted-foreground"
                                             style={{
