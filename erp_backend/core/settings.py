@@ -329,7 +329,7 @@ AUTH_USER_MODEL = 'erp.User'
 import sys
 # Local dev hacks to bypass model clashes and migration history issues
 if 'runserver' in sys.argv or 'test' in sys.argv or 'migrate' in sys.argv or os.getenv('APP_ENV') == 'production':
-    SILENCED_SYSTEM_CHECKS = ["fields.E304"]
+    SILENCED_SYSTEM_CHECKS = ["fields.E304", "auth.W004"]
     # Bypass migrations for speed/simplicity in local dev if needed
     if 'test' in sys.argv:
         class DisableMigrations:

@@ -18,7 +18,7 @@ import { useCurrency } from '@/lib/utils/currency';
 import {
     Truck, MapPin, Package, Plus, X, Search, RefreshCw,
     DollarSign, Clock, Edit2, Trash2, Check, User, Shield,
-    CheckCircle2, AlertCircle, Loader2, Eye, EyeOff, Mail, Layers, Zap
+    CheckCircle2, AlertCircle, Loader2, Eye, EyeOff, Mail, Layers, Zap, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';

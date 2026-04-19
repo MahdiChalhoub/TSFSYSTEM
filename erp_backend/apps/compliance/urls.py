@@ -16,7 +16,6 @@ router.register(r'regulations', PriceRegulationViewSet, basename='price-regulati
 router.register(r'rules', RegulationRuleViewSet, basename='regulation-rule')
 router.register(r'audit-log', RegulationAuditLogViewSet, basename='regulation-audit-log')
 
-app_name = 'compliance'
 urlpatterns = [
     path('', include(router.urls)),
 ]

@@ -7,7 +7,6 @@ URL patterns for core functionality including themes.
 from django.urls import path
 from . import views_themes
 
-app_name = 'core'
 
 urlpatterns = [
     # Theme Management Endpoints (no api/ prefix — included under api/ in core/urls.py)
