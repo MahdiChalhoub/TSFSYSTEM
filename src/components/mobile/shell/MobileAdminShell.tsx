@@ -48,12 +48,20 @@ export function MobileAdminShell({ user, organizations, currentSlug, children }:
             />
 
             <main
-                className="flex-1 w-full"
+                className="flex-1 w-full relative"
                 style={{
+                    // Use padding so in-flow children stay within the chrome
+                    // gap, AND wrap children in a relative `position: relative`
+                    // box so any descendant using `absolute inset-0` (e.g.,
+                    // non-migrated pages like Sales POS) fills this area
+                    // instead of escaping to the viewport and hiding behind
+                    // the fixed top header.
                     paddingTop: `calc(${MOBILE_TOP_HEADER_HEIGHT}px + env(safe-area-inset-top, 0))`,
                     paddingBottom: `calc(${MOBILE_BOTTOM_NAV_HEIGHT}px + env(safe-area-inset-bottom, 0))`,
                 }}>
-                {children}
+                <div className="relative w-full" style={{ minHeight: `calc(100dvh - var(--mobile-chrome, 104px))` }}>
+                    {children}
+                </div>
             </main>
 
             <MobileBottomNav onMorePress={() => setDrawerOpen(true)} />
