@@ -34,6 +34,12 @@ interface Props {
     onMorePress?: () => void
 }
 
+const haptic = () => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try { navigator.vibrate?.(8) } catch {}
+    }
+}
+
 export function MobileBottomNav({ items = DEFAULT_ITEMS, onMorePress }: Props) {
     const pathname = usePathname() || ''
 
@@ -89,10 +95,14 @@ export function MobileBottomNav({ items = DEFAULT_ITEMS, onMorePress }: Props) {
                 )
                 const common = 'flex-1 flex items-stretch py-1.5 min-h-[56px]'
                 if (item.path) {
-                    return <Link key={item.key} href={item.path} className={common}>{content}</Link>
+                    return (
+                        <Link key={item.key} href={item.path} className={common} onClick={haptic}>
+                            {content}
+                        </Link>
+                    )
                 }
                 return (
-                    <button key={item.key} onClick={onMorePress} className={common} aria-label={item.label}>
+                    <button key={item.key} onClick={() => { haptic(); onMorePress?.() }} className={common} aria-label={item.label}>
                         {content}
                     </button>
                 )

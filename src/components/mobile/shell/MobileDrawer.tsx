@@ -13,6 +13,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { X, Search, LogOut, ChevronRight, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
+import { TenantSwitcher } from '@/components/admin/TenantSwitcher'
 import { logoutAction } from '@/app/actions/auth'
 
 interface Props {
@@ -133,7 +134,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                     {user?.username || user?.email || 'User'}
                                 </div>
                                 <div className="font-bold text-app-muted-foreground truncate" style={{ fontSize: 'var(--tp-xs)' }}>
-                                    {currentSlug || 'tsf'}
+                                    {user?.email || ''}
                                 </div>
                             </div>
                             <button onClick={onClose} aria-label="Close menu"
@@ -142,6 +143,17 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                 <X size={18} />
                             </button>
                         </div>
+
+                        {/* Organization switcher */}
+                        {organizations && organizations.length > 0 && (
+                            <div className="flex-shrink-0 px-3 pt-2 pb-1">
+                                <TenantSwitcher
+                                    organizations={organizations}
+                                    forcedSlug={currentSlug}
+                                    user={user}
+                                />
+                            </div>
+                        )}
 
                         {/* Search */}
                         <div className="flex-shrink-0 px-3 pt-3 pb-2">

@@ -10,7 +10,7 @@
  *    - MobileDrawer (slide-in from hamburger)
  * ═══════════════════════════════════════════════════════════ */
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { MobileTopHeader, MOBILE_TOP_HEADER_HEIGHT } from './MobileTopHeader'
 import { MobileBottomNav, MOBILE_BOTTOM_NAV_HEIGHT } from './MobileBottomNav'
 import { MobileDrawer } from './MobileDrawer'
@@ -24,6 +24,10 @@ interface Props {
 
 export function MobileAdminShell({ user, organizations, currentSlug, children }: Props) {
     const [drawerOpen, setDrawerOpen] = useState(false)
+
+    const openCommandPalette = useCallback(() => {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))
+    }, [])
 
     // Expose chrome height to descendants (MobileMasterPage reads it to
     // size its fixed-height scroll container correctly).
@@ -40,6 +44,7 @@ export function MobileAdminShell({ user, organizations, currentSlug, children }:
                 user={user}
                 onMenuPress={() => setDrawerOpen(true)}
                 onAvatarPress={() => setDrawerOpen(true)}
+                onSearchPress={openCommandPalette}
             />
 
             <main
