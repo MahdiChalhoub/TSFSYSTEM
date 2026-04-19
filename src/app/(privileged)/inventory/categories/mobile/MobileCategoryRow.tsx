@@ -87,7 +87,11 @@ export function MobileCategoryRow({
     }
 
     return (
-        <div>
+        <div style={{
+            // Viewport virtualization — browser skips offscreen row work.
+            contentVisibility: 'auto',
+            containIntrinsicSize: `0 ${isRoot ? 88 : 78}px`,
+        }}>
             <div
                 ref={rowRef}
                 onClick={() => {

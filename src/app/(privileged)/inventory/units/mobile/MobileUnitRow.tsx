@@ -52,7 +52,11 @@ export function MobileUnitRow({
     const needsBalance = !!node.needs_balance
 
     return (
-        <div>
+        <div style={{
+            // Viewport virtualization — browser skips offscreen row work.
+            contentVisibility: 'auto',
+            containIntrinsicSize: `0 ${isBase ? 80 : 70}px`,
+        }}>
             <div
                 ref={rowRef}
                 onClick={() => {

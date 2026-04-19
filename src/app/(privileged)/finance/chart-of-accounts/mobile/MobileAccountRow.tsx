@@ -70,7 +70,16 @@ export function MobileAccountRow({
     const balance = node.rollupBalance ?? node.rollup_balance ?? node.balance ?? 0
 
     return (
-        <div style={{ opacity: node.isActive === false ? 0.55 : 1 }}>
+        <div style={{
+            opacity: node.isActive === false ? 0.55 : 1,
+            // Viewport virtualization: skip layout/paint for offscreen rows.
+            // The browser resolves row content only when it's near/in the
+            // viewport. containIntrinsicSize reserves scrollbar space using
+            // an estimate close to the actual row heights (62–74px + 6px
+            // mb + optional children).
+            contentVisibility: 'auto',
+            containIntrinsicSize: `0 ${isRoot ? 78 : 68}px`,
+        }}>
             <div
                 ref={rowRef}
                 onClick={() => {
