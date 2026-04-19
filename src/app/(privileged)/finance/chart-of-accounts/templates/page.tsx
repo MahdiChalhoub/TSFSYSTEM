@@ -1,4 +1,4 @@
-import TemplatesPageClient from './TemplatesPageClient'
+import { TemplatesGateway } from './TemplatesGateway'
 import {
     getTemplateKeys,
     getFullTemplate,
@@ -69,7 +69,7 @@ export default async function TemplatesLibraryPage() {
     }
 
     return (
-        <TemplatesPageClient
+        <TemplatesGateway
             templates={templates}
             templatesMap={templatesMap}
             migrationMaps={migrationMaps}
