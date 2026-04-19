@@ -15,6 +15,32 @@
 
 ## Session Log
 
+### Session: 2026-04-19 (Sidebar.tsx extraction)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE (code) / ⏳ pending browser smoke-test + commit
+- **Worked On**: Extracted [Sidebar.tsx](../src/components/admin/Sidebar.tsx) from **1,362 → 264 lines** per [task and plan/kernel_sidebar_extraction_001.md](../task%20and%20plan/kernel_sidebar_extraction_001.md). Kept hybrid nav architecture intact — kernel routes remain frontend-owned, [views_saas_modules.py:306-310](../erp_backend/erp/views_saas_modules.py#L306-L310) guard untouched. All 7 `MENU_ITEMS` importers continue to work via barrel re-export from `Sidebar.tsx`.
+- **Files Modified**:
+  - `src/components/admin/Sidebar.tsx` — 1362 → 264 lines, orchestration-only.
+  - NEW `src/components/admin/_lib/icon-map.ts` (105) — `ICON_MAP` + `getIcon`.
+  - NEW `src/components/admin/_lib/parse-dynamic-items.ts` (19).
+  - NEW `src/components/admin/_lib/menu/types.ts` (9) — `MenuItem` type.
+  - NEW `src/components/admin/_lib/menu/index.ts` (48) — barrel, preserves original order.
+  - NEW `src/components/admin/_lib/menu/{core,finance,commercial,inventory,crm,ecommerce,hr,workspace,saas}.ts` — 9 module files, 18–189 lines each.
+  - NEW `src/components/admin/_components/MenuItem.tsx` (153) — recursive renderer.
+  - NEW `src/components/admin/_components/FavoritesPanel.tsx` (65).
+  - NEW `src/components/admin/_hooks/useSidebar.ts` (51) — module fetch + dynamic items state.
+- **Discoveries**:
+  - The initial architectural critique ("fully dynamic nav binding") was overscoped — the hybrid is correct, the real issue was just the file size violation.
+  - MENU_ITEMS data preserved exactly: 390 paths + 440 titles identical between old/new (sorted set diff).
+  - One pre-existing TS error at [purchases/new/form.tsx:314](../src/app/(privileged)/purchases/new/form.tsx#L314) (from 2026-04-12 auto-backup) — unrelated to this refactor, all refactored files typecheck clean.
+- **Warnings for Next Agent**:
+  - ⚠️ **No browser smoke-test** (no dev server in this env). Before deploying, verify: desktop sidebar renders, favorites panel add/remove + collapse, multi-level expansion (e.g. Finance → Settings → COA Templates), mobile drawer mirrors the tree, command palette search still finds items, tab navigator opens tabs. Smoke-test checklist lives in the plan file.
+  - ⚠️ **Not committed yet.** Diff is staged-in-tree — single commit recommended: `[refactor] KERNEL: extract MENU_ITEMS and helpers from Sidebar.tsx`.
+  - ⚠️ Pre-existing uncommitted WIP from a parallel session still sits alongside: modified `delivery/page.tsx`, `finance/chart-of-accounts/page.tsx`, `LayoutShellGateway.tsx`, `tsconfig.json`, plus untracked `COAGateway.tsx` and `finance/chart-of-accounts/mobile/` folder. Unclear origin — do **not** commit these together with the Sidebar refactor.
+  - ⚠️ The 7 `MENU_ITEMS` importers were not touched. The re-export line in `Sidebar.tsx` (`export { MENU_ITEMS } from './_lib/menu';`) is load-bearing — do not remove it in a future cleanup pass without migrating all importers.
+
+---
+
 ### Session: 2026-02-09 (v2.7.0 series)
 - **Agent**: Antigravity
 - **Status**: ✅ DONE

@@ -49,6 +49,14 @@
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
 - **Fix**: Backend already resolves `crm_contact_id` in the billing endpoint (`views_saas_org_billing.py:344-365`). Frontend button now uses it when present (`/crm/contacts/${crm_contact_id}`) with email-search fallback when the contact isn't resolvable.
 
+### [DONE 2026-04-19] Refactor `Sidebar.tsx` — 1362 → 264 lines
+- **Discovered**: 2026-04-19 (during architectural critique discussion, not pre-existing WORKMAP item)
+- **Impact**: Violated `code-quality.md` hard limit (≥300 lines, 4.5× over). Original critique framed this as "fully dynamic nav binding" migration; that was overscoped. Actual issue was file size.
+- **Files**: `src/components/admin/Sidebar.tsx` (1362 → 264) + new `_lib/`, `_components/`, `_hooks/` siblings.
+- **Plan**: `task and plan/kernel_sidebar_extraction_001.md`
+- **Fix**: Extracted `ICON_MAP` + `parseDynamicItems` to `_lib/`, split `MENU_ITEMS` into 9 per-module data files + barrel (`_lib/menu/`), extracted `MenuItem` + `FavoritesPanel` sub-components and `useSidebar` hook. Kept hybrid nav architecture — kernel routes remain frontend-owned, [views_saas_modules.py:306-310](../erp_backend/erp/views_saas_modules.py#L306-L310) guard untouched. All 7 `MENU_ITEMS` importers continue to resolve via barrel re-export from `Sidebar.tsx`. 390 paths + 440 titles verified identical between old/new.
+- **Follow-up**: Browser smoke-test pending (no dev server in this env). Not committed yet — single commit recommended.
+
 ### [DONE 2026-04-18] Refactor `organizations/[id]/page.tsx` — 1503 → 239 lines
 - **Discovered**: 2026-04-18
 - **Impact**: Violated `code-quality.md` rule (hard limit 300 lines, mandatory refactor over 400).
