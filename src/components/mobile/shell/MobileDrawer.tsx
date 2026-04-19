@@ -107,6 +107,116 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
         .map(s => s[0]?.toUpperCase())
         .join('') || '?'
 
+    const renderModule = (module: any, i: number) => {
+        const Icon = module.icon
+        const moduleKey = `${module.title}-${i}`
+        const isActive = module.path && pathname.startsWith(module.path)
+        const isExpanded = expanded.has(moduleKey)
+        const hasChildren = !!module.children
+
+        if (!hasChildren) {
+            return (
+                <button
+                    key={moduleKey}
+                    onClick={() => module.path && go(module.path)}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl active:bg-app-primary/10 transition-colors text-left"
+                    style={{
+                        minHeight: 48,
+                        background: isActive ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
+                        color: isActive ? 'var(--app-primary)' : 'var(--app-foreground)',
+                    }}>
+                    {Icon && <Icon size={17} />}
+                    <span className="font-black tracking-tight" style={{ fontSize: 'var(--tp-lg)' }}>
+                        {module.title}
+                    </span>
+                </button>
+            )
+        }
+
+        return (
+            <div key={moduleKey}>
+                <button
+                    onClick={() => toggle(moduleKey)}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl active:bg-app-primary/10 transition-colors text-left"
+                    style={{
+                        minHeight: 48,
+                        background: isActive ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
+                        color: isActive ? 'var(--app-primary)' : 'var(--app-foreground)',
+                    }}>
+                    {Icon && <Icon size={17} />}
+                    <span className="flex-1 font-black tracking-tight" style={{ fontSize: 'var(--tp-lg)' }}>
+                        {module.title}
+                    </span>
+                    {isExpanded
+                        ? <ChevronDown size={15} style={{ color: 'var(--app-muted-foreground)' }} />
+                        : <ChevronRight size={15} style={{ color: 'var(--app-muted-foreground)' }} />}
+                </button>
+                {isExpanded && (
+                    <div className="pl-3 pb-1 animate-in fade-in duration-150">
+                        {(module.children || []).map((child: any, j: number) => {
+                            const ChildIcon = child.icon
+                            const childKey = child.path || `${module.title}-${i}-child-${j}`
+                            if (child.path) {
+                                const childActive = pathname.startsWith(child.path)
+                                return (
+                                    <button
+                                        key={childKey}
+                                        onClick={() => go(child.path)}
+                                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg active:bg-app-primary/10 transition-colors text-left"
+                                        style={{
+                                            minHeight: 40,
+                                            color: childActive ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                            background: childActive ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent',
+                                        }}>
+                                        {ChildIcon && <ChildIcon size={14} />}
+                                        <span className="font-bold truncate" style={{ fontSize: 'var(--tp-md)' }}>
+                                            {child.title}
+                                        </span>
+                                    </button>
+                                )
+                            }
+                            // Nested group — render as a subgroup with label + indented leaves
+                            const leafs = (child.children || []).filter((l: any) => l.path)
+                            if (leafs.length === 0) return null
+                            return (
+                                <div key={childKey} className="mt-1 mb-0.5">
+                                    <div className="flex items-center gap-2 px-3 pt-1.5 pb-0.5"
+                                        style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {ChildIcon && <ChildIcon size={11} style={{ opacity: 0.6 }} />}
+                                        <span className="font-black uppercase tracking-widest"
+                                            style={{ fontSize: 'var(--tp-xxs)', opacity: 0.7 }}>
+                                            {child.title}
+                                        </span>
+                                    </div>
+                                    {leafs.map((leaf: any) => {
+                                        const LeafIcon = leaf.icon
+                                        const active = pathname.startsWith(leaf.path)
+                                        return (
+                                            <button
+                                                key={leaf.path}
+                                                onClick={() => go(leaf.path)}
+                                                className="w-full flex items-center gap-3 px-5 py-1.5 rounded-lg active:bg-app-primary/10 transition-colors text-left"
+                                                style={{
+                                                    minHeight: 36,
+                                                    color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                                    background: active ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent',
+                                                }}>
+                                                {LeafIcon && <LeafIcon size={12} />}
+                                                <span className="font-bold truncate" style={{ fontSize: 'var(--tp-sm)' }}>
+                                                    {leaf.title}
+                                                </span>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     return (
         <AnimatePresence>
             {open && (
@@ -222,116 +332,42 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                     ))
                                 )
                             ) : (
-                                MENU_ITEMS.map((module, i) => {
-                                    const Icon = module.icon
-                                    const moduleKey = `${module.title}-${i}`
-                                    const isActive = module.path && pathname.startsWith(module.path)
-                                    const isExpanded = expanded.has(moduleKey)
-                                    const hasChildren = !!module.children
-
-                                    // Leaf module (Dashboard) — direct link
-                                    if (!hasChildren) {
-                                        return (
-                                            <button
-                                                key={moduleKey}
-                                                onClick={() => module.path && go(module.path)}
-                                                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl active:bg-app-primary/10 transition-colors text-left"
-                                                style={{
-                                                    minHeight: 48,
-                                                    background: isActive ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
-                                                    color: isActive ? 'var(--app-primary)' : 'var(--app-foreground)',
-                                                }}>
-                                                {Icon && <Icon size={17} />}
-                                                <span className="font-black tracking-tight" style={{ fontSize: 'var(--tp-lg)' }}>
-                                                    {module.title}
-                                                </span>
-                                            </button>
-                                        )
-                                    }
-
+                                (() => {
+                                    const withIndex = MENU_ITEMS.map((m, i) => ({ module: m, idx: i }))
+                                    const prodItems = withIndex.filter(({ module }: any) => module.stage === 'production')
+                                    const devItems = withIndex.filter(({ module }: any) => module.stage !== 'production')
                                     return (
-                                        <div key={moduleKey}>
-                                            <button
-                                                onClick={() => toggle(moduleKey)}
-                                                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl active:bg-app-primary/10 transition-colors text-left"
-                                                style={{
-                                                    minHeight: 48,
-                                                    background: isActive ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
-                                                    color: isActive ? 'var(--app-primary)' : 'var(--app-foreground)',
-                                                }}>
-                                                {Icon && <Icon size={17} />}
-                                                <span className="flex-1 font-black tracking-tight" style={{ fontSize: 'var(--tp-lg)' }}>
-                                                    {module.title}
-                                                </span>
-                                                {isExpanded
-                                                    ? <ChevronDown size={15} style={{ color: 'var(--app-muted-foreground)' }} />
-                                                    : <ChevronRight size={15} style={{ color: 'var(--app-muted-foreground)' }} />}
-                                            </button>
-                                            {isExpanded && (
-                                                <div className="pl-3 pb-1 animate-in fade-in duration-150">
-                                                    {(module.children || []).map((child, j) => {
-                                                        const ChildIcon = child.icon
-                                                        const childKey = child.path || `${module.title}-${i}-child-${j}`
-                                                        if (child.path) {
-                                                            const childActive = pathname.startsWith(child.path)
-                                                            return (
-                                                                <button
-                                                                    key={childKey}
-                                                                    onClick={() => go(child.path)}
-                                                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg active:bg-app-primary/10 transition-colors text-left"
-                                                                    style={{
-                                                                        minHeight: 40,
-                                                                        color: childActive ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                                                        background: childActive ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent',
-                                                                    }}>
-                                                                    {ChildIcon && <ChildIcon size={14} />}
-                                                                    <span className="font-bold truncate" style={{ fontSize: 'var(--tp-md)' }}>
-                                                                        {child.title}
-                                                                    </span>
-                                                                </button>
-                                                            )
-                                                        }
-                                                        // Nested group — render as a subgroup with label + indented leaves
-                                                        const leafs = (child.children || []).filter(l => l.path)
-                                                        if (leafs.length === 0) return null
-                                                        return (
-                                                            <div key={childKey} className="mt-1 mb-0.5">
-                                                                <div className="flex items-center gap-2 px-3 pt-1.5 pb-0.5"
-                                                                    style={{ color: 'var(--app-muted-foreground)' }}>
-                                                                    {ChildIcon && <ChildIcon size={11} style={{ opacity: 0.6 }} />}
-                                                                    <span className="font-black uppercase tracking-widest"
-                                                                        style={{ fontSize: 'var(--tp-xxs)', opacity: 0.7 }}>
-                                                                        {child.title}
-                                                                    </span>
-                                                                </div>
-                                                                {leafs.map(leaf => {
-                                                                    const LeafIcon = leaf.icon
-                                                                    const active = pathname.startsWith(leaf.path)
-                                                                    return (
-                                                                        <button
-                                                                            key={leaf.path}
-                                                                            onClick={() => go(leaf.path)}
-                                                                            className="w-full flex items-center gap-3 px-5 py-1.5 rounded-lg active:bg-app-primary/10 transition-colors text-left"
-                                                                            style={{
-                                                                                minHeight: 36,
-                                                                                color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                                                                background: active ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent',
-                                                                            }}>
-                                                                            {LeafIcon && <LeafIcon size={12} />}
-                                                                            <span className="font-bold truncate" style={{ fontSize: 'var(--tp-sm)' }}>
-                                                                                {leaf.title}
-                                                                            </span>
-                                                                        </button>
-                                                                    )
-                                                                })}
-                                                            </div>
-                                                        )
-                                                    })}
+                                        <>
+                                            {prodItems.length > 0 && (
+                                                <div className="px-3 pt-2 pb-1 flex items-center gap-2">
+                                                    <span className="font-black uppercase tracking-widest"
+                                                        style={{ fontSize: 'var(--tp-xxs)', color: 'var(--app-success, #10b981)', opacity: 0.85 }}>
+                                                        Production
+                                                    </span>
+                                                    <span className="font-bold tabular-nums"
+                                                        style={{ fontSize: 'var(--tp-xxs)', color: 'var(--app-success, #10b981)', opacity: 0.6 }}>
+                                                        {prodItems.length}
+                                                    </span>
                                                 </div>
                                             )}
-                                        </div>
+                                            {prodItems.map(({ module, idx }: any) => renderModule(module, idx))}
+                                            {devItems.length > 0 && (
+                                                <div className="px-3 pt-3 pb-1 flex items-center gap-2"
+                                                    style={{ borderTop: prodItems.length > 0 ? '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' : undefined, marginTop: prodItems.length > 0 ? 8 : 0 }}>
+                                                    <span className="font-black uppercase tracking-widest"
+                                                        style={{ fontSize: 'var(--tp-xxs)', color: 'var(--app-muted-foreground)' }}>
+                                                        Development
+                                                    </span>
+                                                    <span className="font-bold tabular-nums text-app-muted-foreground"
+                                                        style={{ fontSize: 'var(--tp-xxs)', opacity: 0.6 }}>
+                                                        {devItems.length}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {devItems.map(({ module, idx }: any) => renderModule(module, idx))}
+                                        </>
                                     )
-                                })
+                                })()
                             )}
                         </div>
 
