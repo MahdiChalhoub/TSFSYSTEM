@@ -11,7 +11,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { X, Search, LogOut, ChevronRight, ChevronDown, Sun, Moon } from 'lucide-react'
-import { motion, AnimatePresence, PanInfo } from 'framer-motion'
+import { motion, PanInfo } from 'framer-motion'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
 import { TenantSwitcher } from '@/components/admin/TenantSwitcher'
 import { useAppTheme } from '@/components/app/AppThemeProvider'
@@ -217,40 +217,47 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
         )
     }
 
+    // Stay mounted — toggle via transform/opacity instead of unmount. First
+    // open costs the initial render; every open after is instant because the
+    // MENU_ITEMS tree and TenantSwitcher are already warm.
     return (
-        <AnimatePresence>
-            {open && (
-                <>
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.18 }}
-                        onClick={onClose}
-                        className="fixed inset-0 z-[80]"
-                        style={{ background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(3px)' }}
-                    />
+        <>
+            <motion.div
+                initial={false}
+                animate={{ opacity: open ? 1 : 0 }}
+                transition={{ duration: 0.18 }}
+                onClick={onClose}
+                aria-hidden={!open}
+                className="fixed inset-0 z-[80]"
+                style={{
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    backdropFilter: 'blur(3px)',
+                    pointerEvents: open ? 'auto' : 'none',
+                }}
+            />
 
-                    <motion.aside
-                        initial={{ x: '-100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '-100%' }}
-                        transition={{ type: 'spring', stiffness: 420, damping: 40 }}
-                        drag="x"
-                        dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={{ left: 0.25, right: 0 }}
-                        onDragEnd={handleDragEnd}
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="Main navigation"
-                        className="fixed top-0 left-0 bottom-0 z-[81] flex flex-col"
-                        style={{
-                            width: 'min(88vw, 340px)',
-                            background: 'var(--app-surface)',
-                            borderRight: '1px solid var(--app-border)',
-                            boxShadow: '8px 0 32px rgba(0,0,0,0.35)',
-                            paddingTop: 'env(safe-area-inset-top, 0)',
-                        }}>
+            <motion.aside
+                initial={false}
+                animate={{ x: open ? 0 : '-100%' }}
+                transition={{ type: 'spring', stiffness: 420, damping: 40 }}
+                drag={open ? 'x' : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={{ left: 0.25, right: 0 }}
+                onDragEnd={handleDragEnd}
+                role="dialog"
+                aria-modal="true"
+                aria-hidden={!open}
+                aria-label="Main navigation"
+                className="fixed top-0 left-0 bottom-0 z-[81] flex flex-col"
+                style={{
+                    width: 'min(88vw, 340px)',
+                    background: 'var(--app-surface)',
+                    borderRight: '1px solid var(--app-border)',
+                    boxShadow: '8px 0 32px rgba(0,0,0,0.35)',
+                    paddingTop: 'env(safe-area-inset-top, 0)',
+                    visibility: open ? 'visible' : 'hidden',
+                    pointerEvents: open ? 'auto' : 'none',
+                }}>
 
                         {/* Header */}
                         <div className="flex-shrink-0 px-4 pt-3 pb-3 flex items-center gap-3"
@@ -402,9 +409,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                 <LogOut size={15} /> Sign out
                             </button>
                         </div>
-                    </motion.aside>
-                </>
-            )}
-        </AnimatePresence>
+            </motion.aside>
+        </>
     )
 }
