@@ -14,6 +14,32 @@ import { PLATFORM_CONFIG } from "@/lib/branding";
 export const metadata: Metadata = {
     title: `${PLATFORM_CONFIG.name} | Global System`,
     description: "Multi-Tenant Enterprise OS",
+    appleWebApp: {
+        capable: true,
+        title: PLATFORM_CONFIG.name,
+        statusBarStyle: 'black-translucent',
+    },
+    icons: {
+        icon: [
+            { url: '/favicon.ico' },
+            { url: '/favicon.svg', type: 'image/svg+xml' },
+        ],
+        apple: [
+            { url: '/icons/icon-192.png', sizes: '192x192' },
+            { url: '/icons/icon-512.png', sizes: '512x512' },
+        ],
+    },
+    formatDetection: {
+        telephone: false,
+    },
+};
+
+export const viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: 'cover' as const,
+    themeColor: '#6366f1',
 };
 
 // ── Builds a :root{} CSS block from theme colors — injected in <head> so
@@ -108,7 +134,6 @@ export default async function RootLayout({
                 {ssrThemeJSON && <script id="__tsf_ssr_theme__" type="application/json" dangerouslySetInnerHTML={{ __html: ssrThemeJSON }} />}
                 <ThemeScript />
                 <link rel="manifest" href="/manifest.json" />
-                <meta name="theme-color" content="#6366f1" />
             </head>
             <body className={`${outfit.variable} ${roboto.variable} ${inter.variable} ${outfit.className}`}>
                 <AppThemeProvider>
