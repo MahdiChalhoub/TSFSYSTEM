@@ -1,5 +1,5 @@
 import { erpFetch } from '@/lib/erp-api'
-import MigrationPageClient from './MigrationPageClient'
+import { MigrateGateway } from './MigrateGateway'
 
 async function getTemplatesWithNames(): Promise<{ key: string; name: string }[]> {
     try {
@@ -25,7 +25,7 @@ export default async function CoaMigrationPage() {
     ])
 
     return (
-        <MigrationPageClient
+        <MigrateGateway
             templateList={templateList}
             currentTemplateKey={coaStatus?.current_template || ''}
             accountCount={coaStatus?.account_count || 0}
