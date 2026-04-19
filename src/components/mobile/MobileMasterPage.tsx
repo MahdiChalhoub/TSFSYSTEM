@@ -250,7 +250,8 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                             <div key={k.label}
                                 className="flex-shrink-0 snap-start flex items-center gap-2 px-3 py-2 rounded-xl"
                                 style={{
-                                    minWidth: 130,
+                                    // Wide enough to hold "LIABILITIES" (11ch) or "DERIVED" without truncation.
+                                    minWidth: 150,
                                     background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
                                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                 }}>
