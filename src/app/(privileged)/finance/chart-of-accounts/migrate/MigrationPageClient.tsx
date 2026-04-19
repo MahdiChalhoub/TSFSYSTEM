@@ -179,7 +179,9 @@ export default function MigrationPageClient({
     ]
 
     return (
-        <div className="flex flex-col h-full" style={{ height: 'calc(100vh - 120px)' }}>
+        // Use --mobile-chrome when inside the mobile shell (set by MobileAdminShell),
+        // falling back to desktop's 120px header+tabs allowance.
+        <div className="flex flex-col h-full" style={{ height: 'calc(100dvh - var(--mobile-chrome, 120px))' }}>
             {/* ═══ TOP HEADER ═══ */}
             <div className="flex-shrink-0 rounded-t-2xl" style={{
                 background: 'var(--app-surface)',
@@ -221,8 +223,9 @@ export default function MigrationPageClient({
                     )}
                 </div>
 
-                {/* Current State KPIs */}
-                <div className="flex items-center gap-3 px-5 pb-3">
+                {/* Current State KPIs — wraps on narrow viewports so the "Migration Required" badge
+                    doesn't clip off the right edge on mobile. */}
+                <div className="flex items-center gap-2 px-4 md:px-5 pb-3 flex-wrap">
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px]"
                         style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
                         <Database size={12} style={{ color: 'var(--app-primary)' }} />
