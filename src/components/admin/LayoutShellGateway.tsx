@@ -4,19 +4,19 @@
  *  LayoutShellGateway — branches between desktop and mobile shell
  *  at render time based on viewport. Layout.tsx (server) fetches
  *  data once and hands it here; we pick which shell to render.
+ *
+ *  Note: MobileAdminShell is imported directly (not dynamic). A
+ *  dynamic import with `loading: () => null` caused children to
+ *  disappear during the chunk load, breaking navigation. The shell
+ *  is small enough that the bundle-size win isn't worth the race.
  * ═══════════════════════════════════════════════════════════ */
 
-import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Sidebar } from '@/components/admin/Sidebar'
 import { TopHeader } from '@/components/admin/TopHeader'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { PeriodWarningBanner } from '@/components/finance/period-warning-banner'
-
-const MobileAdminShell = dynamic(
-    () => import('@/components/mobile/shell/MobileAdminShell').then(m => m.MobileAdminShell),
-    { ssr: false, loading: () => null }
-)
+import { MobileAdminShell } from '@/components/mobile/shell/MobileAdminShell'
 
 interface Props {
     user: any
