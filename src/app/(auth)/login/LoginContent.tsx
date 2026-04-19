@@ -30,6 +30,15 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
     useEffect(() => {
         getPublicConfig().then(setConfig).catch(() => { });
 
+        // Auto-redirect authenticated users to /dashboard — but ONLY when we
+        // weren't bounced here by a protected layout's auth failure. When
+        // ?error=session_expired (or any error) is present, the (privileged)
+        // layout just kicked us out; redirecting back creates an infinite
+        // loop whenever the backend's auth check is flaky. Let the user
+        // re-sign in explicitly in that case.
+        const hasError = !!searchParams?.get('error');
+        if (hasError) return;
+
         if (typeof window !== 'undefined') {
             import("@/app/actions/auth").then(({ meAction }) => {
                 meAction().then((user: any) => {
@@ -39,7 +48,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                 }).catch(() => { });
             });
         }
-    }, []);
+    }, [searchParams]);
 
     const tenant = config.tenant;
     const tenantLogo = tenant?.logo;
