@@ -11,7 +11,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
     const [data, setData] = useState(initialData)
     const [isPending, startTransition] = useTransition()
     const [showDiagnostics, setShowDiagnostics] = useState(false)
-    const [diagnostics, setDiagnostics] = useState<Record<string, unknown>[]>([])
+    const [diagnostics, setDiagnostics] = useState<any[]>([])
     const [mounted, setMounted] = useState(false)
     const [isHealing, setIsHealing] = useState(false)
     const router = useRouter()
@@ -29,7 +29,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
 
     const runDiagnostics = async () => {
         const issues = await diagnoseFinancialDiscrepancy()
-        setDiagnostics(issues)
+        setDiagnostics(Array.isArray(issues) ? issues : (issues as any).issues || [])
     }
 
     useEffect(() => {

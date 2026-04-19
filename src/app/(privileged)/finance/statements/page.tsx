@@ -23,8 +23,8 @@ export default function StatementsPage() {
     const [contacts, setContacts] = useState<Contact[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
-    const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
-    const [detail, setDetail] = useState<Record<string, unknown> | null>(null)
+    const [selectedContact, setSelectedContact] = useState<any>(null)
+    const [detail, setDetail] = useState<any>(null)
     const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'journal'>('orders')
 
     useEffect(() => { loadContacts() }, [])
@@ -42,7 +42,7 @@ export default function StatementsPage() {
         }
     }
 
-    async function viewStatement(contact: Record<string, any>) {
+    async function viewStatement(contact: any) {
         setLoading(true)
         setSelectedContact(contact)
         try {

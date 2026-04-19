@@ -147,7 +147,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
     )
 }
 
-function GroupRows({ group, allAccounts, formatAmount, level = 0 }: { group: Record<string, any>, allAccounts: Record<string, any>[], formatAmount: Record<string, any>, level: number }) {
+function GroupRows({ group, allAccounts, formatAmount, level = 0 }: { group: Record<string, any>, allAccounts: Record<string, any>[], formatAmount: any, level: number }) {
     if (group.items.length === 0) return null
 
     return (
@@ -164,7 +164,7 @@ function GroupRows({ group, allAccounts, formatAmount, level = 0 }: { group: Rec
     )
 }
 
-function AccountRow({ account, level, allAccounts, formatAmount }: { account: Record<string, any>, level: number, allAccounts: Record<string, any>[], formatAmount: Record<string, any> }) {
+function AccountRow({ account, level, allAccounts, formatAmount }: { account: Record<string, any>, level: number, allAccounts: Record<string, any>[], formatAmount: any }) {
     const [expanded, setExpanded] = useState(level < 1) // Expand roots by default
     const isParent = account.children && account.children.length > 0
     const hasBalance = Math.abs(account.balance) > 0.001

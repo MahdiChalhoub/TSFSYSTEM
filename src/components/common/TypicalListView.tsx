@@ -95,6 +95,7 @@ export type TypicalListViewProps<T, D = any> = {
   columnOrder?: string[]
   onColumnReorder?: (newOrder: string[]) => void
   className?: string
+  style?: React.CSSProperties
   children?: React.ReactNode
 }
 

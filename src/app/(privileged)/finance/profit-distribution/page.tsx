@@ -245,7 +245,7 @@ export default function ProfitDistributionPage() {
                             <div className="space-y-5 pt-2">
                                 <div className="bg-gradient-to-br from-stone-50 to-emerald-50/30 rounded-2xl p-5 border">
                                     <p className="text-xs font-bold text-app-muted-foreground uppercase">Fiscal Year</p>
-                                    <p className="text-lg font-bold text-app-foreground">{preview.fiscal_year}</p>
+                                    <p className="text-lg font-bold text-app-foreground">{String(preview.fiscal_year)}</p>
                                     <p className="text-xs font-bold text-app-muted-foreground uppercase mt-3">Net Profit</p>
                                     <p className="text-4xl font-bold text-emerald-600">{Number(preview.net_profit).toLocaleString()}</p>
                                 </div>
