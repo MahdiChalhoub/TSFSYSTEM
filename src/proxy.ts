@@ -249,7 +249,12 @@ export default async function middleware(req: NextRequest) {
 
     // ─── GUARD: Redirect authenticated users AWAY from login pages ──────
     // Prevents the brief flash of /login during post-login navigation.
-    if (hasAuthToken && (url.pathname === '/login' || url.pathname === '/saas/login' || url.pathname === '/register')) {
+    // Skip when ?error=... is present: that means a protected layout just
+    // bounced the user here because its own auth check failed (e.g., backend
+    // 401/429 while cookie is still present). Redirecting back to /dashboard
+    // creates an infinite loop.
+    const hasErrorParam = url.searchParams.has('error');
+    if (hasAuthToken && !hasErrorParam && (url.pathname === '/login' || url.pathname === '/saas/login' || url.pathname === '/register')) {
         const dashUrl = url.clone();
         dashUrl.pathname = '/dashboard';
         dashUrl.hostname = hostname;
@@ -260,11 +265,19 @@ export default async function middleware(req: NextRequest) {
     // console.log(`[Middleware DEBUG] path: ${url.pathname}, isPublic: ${isPublicRoute}, hasToken: ${hasAuthToken}`);
 
     if (!hasAuthToken && !isPublicRoute) {
-        console.warn(`[Middleware] Unauthorized access to ${url.pathname} from ${hostname}. Redirecting to /login.`);
+        // Pick the correct login page based on the host context. Saas admin
+        // hosts (bare domain, www, or the dedicated `saas.*` subdomain)
+        // route to /saas/login; every other tenant to /login.
+        const subdomain = hostname.includes('localhost')
+            ? (hostname.split('.').length > 1 ? hostname.split('.')[0] : '')
+            : (hostname.split('.').length > 2 ? hostname.split('.')[0] : '');
+        const isSaasHost = !subdomain || subdomain === 'www' || subdomain === 'saas';
+        const targetPath = isSaasHost ? '/saas/login' : '/login';
+        console.warn(`[Middleware] Unauthorized access to ${url.pathname} from ${hostname}. Redirecting to ${targetPath}.`);
         const loginUrl = url.clone();
         loginUrl.hostname = hostname;
         loginUrl.port = "";
-        loginUrl.pathname = '/login';
+        loginUrl.pathname = targetPath;
         return NextResponse.redirect(loginUrl);
     }
 
