@@ -87,7 +87,11 @@ When starting or ending a session:
 3. **Update** both files at session end
 4. **Never delete** completed items from WORKMAP — mark as DONE with date
 
-## 8. Kernel OS v2.0 Primitives
+## 8. Agent Bootstrap
+
+Every AI-agent session should start by reading [`.agent/BOOTSTRAP.md`](../BOOTSTRAP.md), which lists the full rule + workflow set and the mandatory first-reply format. Users can paste a single-line bootstrap: `Read and follow .agent/BOOTSTRAP.md before anything else.`
+
+## 9. Kernel OS v2.0 Primitives
 
 The kernel at `erp_backend/kernel/` implements these architecture rules in code via `TenantOwnedModel`, `AuditLogMixin`, `emit_event`, `get_config`, and `@require_permission`. New models and flows should use these primitives.
 
