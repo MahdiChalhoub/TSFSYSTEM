@@ -1,0 +1,188 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: E
+        - generic [ref=e7]:
+          - heading "Enterprise ERP" [level=1] [ref=e8]
+          - paragraph [ref=e9]: Platform Admin
+      - generic [ref=e11]:
+        - button "Official" [ref=e12]:
+          - img [ref=e13]
+          - text: Official
+        - button "Internal" [ref=e17]:
+          - img [ref=e18]
+          - text: Internal
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e23]: Production
+          - generic [ref=e25]: "1"
+        - generic [ref=e26]:
+          - generic [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+            - generic [ref=e31]: Finance
+            - img [ref=e33]
+          - generic [ref=e35]:
+            - generic [ref=e37] [cursor=pointer]:
+              - img [ref=e38]
+              - generic [ref=e40]: Chart of Accounts
+              - button "Add to favorites" [ref=e41]:
+                - img [ref=e42]
+            - generic [ref=e44]:
+              - generic [ref=e45] [cursor=pointer]:
+                - img [ref=e46]
+                - generic [ref=e49]: Settings
+                - img [ref=e51]
+              - generic [ref=e53]:
+                - generic [ref=e55] [cursor=pointer]:
+                  - img [ref=e57]
+                  - generic [ref=e62]: COA Templates
+                  - button "Add to favorites" [ref=e63]:
+                    - img [ref=e64]
+                - generic [ref=e67] [cursor=pointer]:
+                  - img [ref=e68]
+                  - generic [ref=e72]: Migration Tool
+                  - button "Add to favorites" [ref=e73]:
+                    - img [ref=e74]
+                - generic [ref=e77] [cursor=pointer]:
+                  - img [ref=e78]
+                  - generic [ref=e81]: Posting Rules
+                  - button "Add to favorites" [ref=e82]:
+                    - img [ref=e83]
+        - generic [ref=e85] [cursor=pointer]:
+          - generic [ref=e87]: Development (23)
+          - img [ref=e89]
+        - generic [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+          - generic [ref=e96]: SaaS Control
+          - img [ref=e98]
+        - generic [ref=e101] [cursor=pointer]:
+          - img [ref=e102]
+          - generic [ref=e107]: Dashboard
+          - button "Add to favorites" [ref=e108]:
+            - img [ref=e109]
+        - generic [ref=e112] [cursor=pointer]:
+          - img [ref=e113]
+          - generic [ref=e116]: Commercial
+          - img [ref=e118]
+        - generic [ref=e121] [cursor=pointer]:
+          - img [ref=e122]
+          - generic [ref=e125]: Inventory
+          - img [ref=e127]
+        - generic [ref=e130] [cursor=pointer]:
+          - img [ref=e131]
+          - generic [ref=e134]: Finance
+          - img [ref=e136]
+        - generic [ref=e139] [cursor=pointer]:
+          - img [ref=e140]
+          - generic [ref=e145]: CRM
+          - img [ref=e147]
+        - generic [ref=e150] [cursor=pointer]:
+          - img [ref=e151]
+          - generic [ref=e154]: eCommerce
+          - img [ref=e156]
+        - generic [ref=e159] [cursor=pointer]:
+          - img [ref=e160]
+          - generic [ref=e163]: HR & Teams
+          - img [ref=e165]
+        - generic [ref=e168] [cursor=pointer]:
+          - img [ref=e169]
+          - generic [ref=e172]: Workspace
+          - img [ref=e174]
+        - generic [ref=e177] [cursor=pointer]:
+          - img [ref=e178]
+          - generic [ref=e183]: Client Portal
+          - img [ref=e185]
+        - generic [ref=e188] [cursor=pointer]:
+          - img [ref=e189]
+          - generic [ref=e192]: Supplier Portal
+          - img [ref=e194]
+        - generic [ref=e197] [cursor=pointer]:
+          - img [ref=e198]
+          - generic [ref=e202]: Import & Migration
+          - img [ref=e204]
+        - generic [ref=e207] [cursor=pointer]:
+          - img [ref=e208]
+          - generic [ref=e212]: Users & Access
+          - img [ref=e214]
+        - generic [ref=e217] [cursor=pointer]:
+          - img [ref=e218]
+          - generic [ref=e221]: System Settings
+          - img [ref=e223]
+        - generic [ref=e226] [cursor=pointer]:
+          - img [ref=e227]
+          - generic [ref=e230]: Products
+          - img [ref=e232]
+        - generic [ref=e235] [cursor=pointer]:
+          - img [ref=e236]
+          - generic [ref=e239]: Marketplace
+          - button "Add to favorites" [ref=e240]:
+            - img [ref=e241]
+        - generic [ref=e244] [cursor=pointer]:
+          - img [ref=e245]
+          - generic [ref=e249]: Store
+          - img [ref=e251]
+        - generic [ref=e254] [cursor=pointer]:
+          - img [ref=e255]
+          - generic [ref=e260]: Platform Dashboard
+          - button "Add to favorites" [ref=e261]:
+            - img [ref=e262]
+        - generic [ref=e265] [cursor=pointer]:
+          - img [ref=e266]
+          - generic [ref=e269]: AI Agents
+          - button "Add to favorites" [ref=e270]:
+            - img [ref=e271]
+        - generic [ref=e274] [cursor=pointer]:
+          - img [ref=e275]
+          - generic [ref=e280]: Delivery
+          - button "Add to favorites" [ref=e281]:
+            - img [ref=e282]
+        - generic [ref=e285] [cursor=pointer]:
+          - img [ref=e286]
+          - generic [ref=e288]: Setup Wizard
+          - button "Add to favorites" [ref=e289]:
+            - img [ref=e290]
+        - generic [ref=e293] [cursor=pointer]:
+          - img [ref=e294]
+          - generic [ref=e299]: Dashboard
+          - button "Add to favorites" [ref=e300]:
+            - img [ref=e301]
+        - generic [ref=e304] [cursor=pointer]:
+          - img [ref=e305]
+          - generic [ref=e308]: System Settings
+          - img [ref=e310]
+      - generic [ref=e312]:
+        - generic [ref=e313]:
+          - button "Switch to top navigation" [ref=e314]:
+            - img [ref=e315]
+          - button "Switch to vertical tabs" [ref=e317]:
+            - img [ref=e318]
+        - button "Sign Out" [ref=e320]:
+          - img [ref=e321]
+          - generic [ref=e324]: Sign Out
+    - generic [ref=e325]:
+      - banner [ref=e326]:
+        - generic [ref=e327]:
+          - button "Hide sidebar" [ref=e329]:
+            - img [ref=e330]
+          - generic [ref=e332]:
+            - button "Switch to Top Navigation" [ref=e333]:
+              - img [ref=e334]
+            - button [ref=e337]:
+              - img [ref=e338]
+            - button "Toggle" [ref=e341]:
+              - img [ref=e342]
+            - button "Theme" [ref=e345]
+          - button "AD" [ref=e349]:
+            - generic [ref=e350]: AD
+            - img [ref=e351]
+          - button [ref=e353]:
+            - img [ref=e354]
+      - generic [ref=e357]:
+        - button "New tab" [ref=e359]:
+          - img [ref=e360]
+        - button "Switch to vertical tab rail" [ref=e361]:
+          - img [ref=e362]
+      - main [ref=e364]
+  - button "Open Next.js Dev Tools" [ref=e379] [cursor=pointer]:
+    - img [ref=e380]

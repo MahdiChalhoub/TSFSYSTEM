@@ -1,0 +1,87 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e520]:
+    - banner [ref=e521]:
+      - button "Menu" [ref=e522]:
+        - img [ref=e523]
+      - heading "Categories Audit" [level=1] [ref=e525]
+      - button "Search" [ref=e526]:
+        - img [ref=e527]
+      - link "Notifications" [ref=e530] [cursor=pointer]:
+        - /url: /settings/notifications
+        - img [ref=e531]
+      - button "Account" [ref=e534]: A
+    - main [ref=e535]:
+      - generic [ref=e537]:
+        - generic [ref=e539]:
+          - link [ref=e540] [cursor=pointer]:
+            - /url: /inventory/categories
+            - img [ref=e541]
+          - generic [ref=e543]:
+            - heading "Category Maintenance" [level=1] [ref=e544]
+            - paragraph [ref=e545]: Reorganize products by moving them between categories.
+        - generic [ref=e546]:
+          - generic [ref=e547]:
+            - generic [ref=e548]:
+              - heading "Category Browser" [level=2] [ref=e549]:
+                - img [ref=e550]
+                - text: Category Browser
+              - generic [ref=e554]: Navigate to view products.
+            - generic [ref=e555]:
+              - link "test" [ref=e558] [cursor=pointer]:
+                - /url: /admin/inventory/categories/maintenance?categoryId=6
+                - img [ref=e559]
+                - generic [ref=e561]: test
+              - link "test1" [ref=e564] [cursor=pointer]:
+                - /url: /admin/inventory/categories/maintenance?categoryId=7
+                - img [ref=e565]
+                - generic [ref=e567]: test1
+              - link "test3" [ref=e570] [cursor=pointer]:
+                - /url: /admin/inventory/categories/maintenance?categoryId=8
+                - img [ref=e571]
+                - generic [ref=e573]: test3
+              - link "Fragrances" [ref=e576] [cursor=pointer]:
+                - /url: /admin/inventory/categories/maintenance?categoryId=9
+                - img [ref=e577]
+                - generic [ref=e579]: Fragrances
+              - link "Skincare" [ref=e582] [cursor=pointer]:
+                - /url: /admin/inventory/categories/maintenance?categoryId=10
+                - img [ref=e583]
+                - generic [ref=e585]: Skincare
+              - link "Makeup" [ref=e588] [cursor=pointer]:
+                - /url: /admin/inventory/categories/maintenance?categoryId=11
+                - img [ref=e589]
+                - generic [ref=e591]: Makeup
+          - main [ref=e592]:
+            - generic [ref=e593]:
+              - img [ref=e595]
+              - paragraph [ref=e597]: Select a category from the sidebar to manage its products.
+    - navigation "Primary" [ref=e598]:
+      - link "Home" [ref=e599] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e600]:
+          - img [ref=e602]
+          - generic [ref=e607]: Home
+      - link "Inventory" [ref=e608] [cursor=pointer]:
+        - /url: /inventory/categories
+        - generic [ref=e609]:
+          - img [ref=e611]
+          - generic [ref=e615]: Inventory
+      - link "Sales" [ref=e616] [cursor=pointer]:
+        - /url: /sales
+        - generic [ref=e617]:
+          - img [ref=e619]
+          - generic [ref=e623]: Sales
+      - link "Finance" [ref=e624] [cursor=pointer]:
+        - /url: /finance/chart-of-accounts
+        - generic [ref=e625]:
+          - img [ref=e627]
+          - generic [ref=e630]: Finance
+      - button "More" [ref=e631]:
+        - generic [ref=e632]:
+          - img [ref=e634]
+          - generic [ref=e638]: More
+  - button [ref=e640]:
+    - img [ref=e641]
+  - button "Open Next.js Dev Tools" [ref=e516] [cursor=pointer]:
+    - img [ref=e517]
+  - alert [ref=e644]

@@ -1,0 +1,110 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e379]:
+    - banner [ref=e380]:
+      - button "Menu" [ref=e381]:
+        - img [ref=e382]
+      - heading "Migration Tool" [level=1] [ref=e384]
+      - button "Search" [ref=e385]:
+        - img [ref=e386]
+      - link "Notifications" [ref=e389] [cursor=pointer]:
+        - /url: /settings/notifications
+        - img [ref=e390]
+      - button "Account" [ref=e393]: A
+    - main [ref=e394]:
+      - generic [ref=e396]:
+        - generic [ref=e398]:
+          - img [ref=e401]
+          - generic [ref=e404]:
+            - generic [ref=e405]: Migration Tool
+            - generic [ref=e406]: 134 accounts · 31 journal entries
+          - button "Back" [ref=e407]:
+            - img [ref=e408]
+            - generic [ref=e410]: Back
+          - button [ref=e412]:
+            - img [ref=e413]
+        - generic [ref=e417]:
+          - generic [ref=e419]:
+            - generic [ref=e420]:
+              - img [ref=e422]
+              - generic [ref=e426]:
+                - generic [ref=e427]: Current
+                - generic [ref=e428]: IFRS COA
+            - generic [ref=e429]:
+              - img [ref=e431]
+              - generic [ref=e433]:
+                - generic [ref=e434]: Accounts
+                - generic [ref=e435]: "134"
+            - generic [ref=e436]:
+              - img [ref=e438]
+              - generic [ref=e441]:
+                - generic [ref=e442]: Journal Entries
+                - generic [ref=e443]: "31"
+          - generic [ref=e445]:
+            - generic [ref=e446]:
+              - img [ref=e447]
+              - textbox "Not searchable" [ref=e450]
+            - button "Expand all" [ref=e451]:
+              - img [ref=e452]
+          - generic [ref=e456]:
+            - generic [ref=e457]:
+              - generic [ref=e458]:
+                - img [ref=e459]
+                - generic [ref=e463]: Current Template
+              - generic [ref=e464]: IFRS COA
+              - generic [ref=e465]:
+                - generic [ref=e466]:
+                  - img [ref=e467]
+                  - text: 134 accounts
+                - generic [ref=e469]:
+                  - img [ref=e470]
+                  - text: 31 journal entries
+            - button "Target Template Tap to pick target" [ref=e473]:
+              - generic [ref=e474]:
+                - img [ref=e475]
+                - generic [ref=e477]: Target Template
+              - generic [ref=e478]:
+                - generic [ref=e479]: Tap to pick target
+                - img [ref=e480]
+            - button "Analyze Migration" [disabled] [ref=e482]:
+              - img [ref=e483]
+              - text: Analyze Migration
+            - generic [ref=e485]:
+              - img [ref=e487]
+              - paragraph [ref=e490]: Select a target template
+              - paragraph [ref=e491]: The system will scan all accounts and show what needs attention before migration.
+          - generic [ref=e493]:
+            - generic [ref=e494]: Migration required
+            - generic [ref=e495]: ·
+            - generic [ref=e496]: 134 accounts to migrate
+        - button "Back" [ref=e497]:
+          - img [ref=e498]
+    - navigation "Primary" [ref=e499]:
+      - link "Home" [ref=e500] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e501]:
+          - img [ref=e503]
+          - generic [ref=e508]: Home
+      - link "Inventory" [ref=e509] [cursor=pointer]:
+        - /url: /inventory/categories
+        - generic [ref=e510]:
+          - img [ref=e512]
+          - generic [ref=e516]: Inventory
+      - link "Sales" [ref=e517] [cursor=pointer]:
+        - /url: /sales
+        - generic [ref=e518]:
+          - img [ref=e520]
+          - generic [ref=e524]: Sales
+      - link "Finance" [ref=e525] [cursor=pointer]:
+        - /url: /finance/chart-of-accounts
+        - generic [ref=e526]:
+          - img [ref=e528]
+          - generic [ref=e531]: Finance
+      - button "More" [ref=e532]:
+        - generic [ref=e533]:
+          - img [ref=e535]
+          - generic [ref=e539]: More
+  - button [ref=e541]:
+    - img [ref=e542]
+  - button "Open Next.js Dev Tools" [ref=e375] [cursor=pointer]:
+    - img [ref=e376]
+  - alert [ref=e545]
