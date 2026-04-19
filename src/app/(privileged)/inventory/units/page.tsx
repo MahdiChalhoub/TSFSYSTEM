@@ -1,5 +1,5 @@
 import { erpFetch } from "@/lib/erp-api";
-import UnitsClient from "./UnitsClient";
+import { UnitsGateway } from "./UnitsGateway";
 
 export const dynamic = 'force-dynamic';
 
@@ -17,5 +17,5 @@ async function getUnitsData() {
 
 export default async function UnitsPage() {
     const flatUnits = await getUnitsData();
-    return <UnitsClient initialUnits={flatUnits} />;
+    return <UnitsGateway initialUnits={flatUnits} />;
 }
