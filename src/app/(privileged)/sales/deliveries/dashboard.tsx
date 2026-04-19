@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState } from 'react'
@@ -24,7 +23,7 @@ interface Delivery {
 
 interface Zone { id: number; name: string; base_fee: number; estimated_days: number }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
     PENDING: { label: 'Pending', color: 'bg-app-surface-2 text-app-foreground', icon: Clock },
     PREPARING: { label: 'Preparing', color: 'bg-blue-100 text-blue-700', icon: Package },
     IN_TRANSIT: { label: 'In Transit', color: 'bg-amber-100 text-amber-700', icon: Truck },

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
@@ -18,7 +17,7 @@ function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
 }
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: Record<string, any> }> = {
+const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: any }> = {
     PENDING: { label: 'Pending', bg: 'bg-app-surface-2 text-app-foreground', icon: Clock },
     PREPARING: { label: 'Preparing', bg: 'bg-blue-100 text-blue-700', icon: Package },
     IN_TRANSIT: { label: 'In Transit', bg: 'bg-amber-100 text-amber-700', icon: Truck },

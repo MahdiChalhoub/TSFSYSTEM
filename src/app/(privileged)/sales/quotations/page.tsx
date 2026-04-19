@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { erpFetch } from '@/lib/erp-fetch'
+import { erpFetch } from '@/lib/erp-api'
 import QuotationManager from './manager'
 
 interface Contact {
@@ -26,9 +25,9 @@ interface Quotation {
 }
 
 export default async function QuotationsPage() {
-    let quotations: Quotation[] = []
-    let contacts: Contact[] = []
-    let products: Record<string, any>[] = []
+    let quotations: any[] = []
+    let contacts: any[] = []
+    let products: any[] = []
 
     try {
         const [qRes, cRes, pRes] = await Promise.all([
@@ -36,9 +35,9 @@ export default async function QuotationsPage() {
             erpFetch('/contacts/'),
             erpFetch('/products/'),
         ])
-        quotations = Array.isArray(qRes) ? qRes : qRes.results || []
-        contacts = Array.isArray(cRes) ? cRes : cRes.results || []
-        products = Array.isArray(pRes) ? pRes : pRes.results || []
+        quotations = Array.isArray(qRes) ? qRes : (qRes as any)?.results || []
+        contacts = Array.isArray(cRes) ? cRes : (cRes as any)?.results || []
+        products = Array.isArray(pRes) ? pRes : (pRes as any)?.results || []
     } catch { /* empty */ }
 
     return (

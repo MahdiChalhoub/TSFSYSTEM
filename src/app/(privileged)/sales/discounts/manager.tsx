@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState } from 'react'
@@ -24,7 +23,7 @@ interface DiscountRule {
     created_by_name: string | null; created_at: string
 }
 
-const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
+const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
     PERCENTAGE: { label: 'Percentage', icon: Percent, color: 'bg-blue-100 text-blue-700' },
     FIXED: { label: 'Fixed Amount', icon: Tag, color: 'bg-emerald-100 text-emerald-700' },
     BUY_X_GET_Y: { label: 'Buy X Get Y', icon: Gift, color: 'bg-purple-100 text-purple-700' },

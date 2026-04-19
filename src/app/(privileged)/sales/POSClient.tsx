@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 /**
@@ -61,9 +60,9 @@ export default function POSClient() {
     const [cashReceived, setCashReceived] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [isOverrideOpen, setIsOverrideOpen] = useState(false);
-    const [pendingOverrideAction, setPendingOverrideAction] = useState(null);
+    const [pendingOverrideAction, setPendingOverrideAction] = useState<any>(null);
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
-    const [lastOrder, setLastOrder] = useState(null);
+    const [lastOrder, setLastOrder] = useState<any>(null);
     const [storeChangeInWallet, setStoreChangeInWallet] = useState(false);
     const [pointsRedeemed, setPointsRedeemed] = useState(0);
     const [isOnline, setIsOnline] = useState(true);
@@ -106,7 +105,7 @@ export default function POSClient() {
         import('@/lib/erp-api').then(({ erpFetch }) =>
             erpFetch('contacts/?type=CLIENT&page_size=200').then(data => {
                 const rows = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
-                setClients(rows.map(c => ({
+                setClients(rows.map((c: any) => ({
                     id: c.id, name: c.name, phone: c.phone || '',
                     balance: 0, creditLimit: c.credit_limit || 0, currentBalance: 0,
                     loyalty: c.loyalty_points || 0, address: c.address || '', zone: c.zone || '',
@@ -293,7 +292,7 @@ export default function POSClient() {
             const { erpFetch } = await import('@/lib/erp-api');
             const data = await erpFetch(`contacts/?type=CLIENT&search=${encodeURIComponent(query)}&page_size=50`);
             const rows = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
-            setClients(rows.map(c => ({
+            setClients(rows.map((c: any) => ({
                 id: c.id, name: c.name, phone: c.phone || '',
                 balance: 0, creditLimit: c.credit_limit || 0, currentBalance: 0,
                 loyalty: c.loyalty_points || 0, address: c.address || '', zone: c.zone || '',
@@ -384,7 +383,7 @@ export default function POSClient() {
 
     return (
         <div className="absolute inset-0">
-            <POSLayoutModern {...posProps} />
+            <POSLayoutModern {...(posProps as any)} />
             {showCloseModal && registerConfig && (
                 <CloseRegisterModal
                     sessionId={registerConfig.sessionId}

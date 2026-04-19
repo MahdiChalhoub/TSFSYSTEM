@@ -1,0 +1,14 @@
+- generic [ref=e2]:
+  - generic [ref=e17]:
+    - button "Back to safety" [ref=e18] [cursor=pointer]
+    - button "Hide advanced" [expanded] [active] [ref=e20] [cursor=pointer]
+  - generic [ref=e21]:
+    - paragraph [ref=e22]:
+      - text: This server could not prove that it is
+      - strong [ref=e23]: saas.developos.shop
+      - text: ; its security certificate is from
+      - strong [ref=e24]: developos.shop
+      - text: . This may be caused by a misconfiguration or an attacker intercepting your connection.
+    - paragraph [ref=e25]:
+      - link "Proceed to saas.developos.shop (unsafe)" [ref=e26] [cursor=pointer]:
+        - /url: "#"

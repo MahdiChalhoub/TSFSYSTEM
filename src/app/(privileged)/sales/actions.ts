@@ -127,3 +127,30 @@ export async function processSale(data: {
         throw new Error((e instanceof Error ? e.message : String(e)) || "Checkout Failed");
     }
 }
+
+export async function lockOrder(orderId: number, locked: boolean) {
+    try {
+        const res = await erpFetch(`pos/orders/${orderId}/lock/`, { method: 'POST', body: JSON.stringify({ locked }) });
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message };
+    }
+}
+
+export async function verifyOrder(orderId: number, verified: boolean) {
+    try {
+        const res = await erpFetch(`pos/orders/${orderId}/verify/`, { method: 'POST', body: JSON.stringify({ verified }) });
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message };
+    }
+}
+
+export async function deleteOrder(orderId: number) {
+    try {
+        const res = await erpFetch(`pos/orders/${orderId}/`, { method: 'DELETE' });
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message };
+    }
+}

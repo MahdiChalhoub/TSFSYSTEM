@@ -1,0 +1,84 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e7]: E
+        - generic [ref=e8]: EnterpriseERP
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e13]:
+          - generic [ref=e14]:
+            - img [ref=e15]
+            - text: Enterprise Business Platform
+          - heading "Enterprise ERP" [level=1] [ref=e18]
+          - paragraph [ref=e19]: Unifying distributed business intelligence into a single, high-fidelity command interface.
+        - generic [ref=e20]:
+          - generic [ref=e22]:
+            - button "Sign In" [ref=e23]:
+              - img [ref=e24]
+              - generic [ref=e27]: Sign In
+            - button "Join" [ref=e29]:
+              - img [ref=e30]
+              - generic [ref=e33]: Join
+            - button "Register" [ref=e34]:
+              - img [ref=e35]
+              - generic [ref=e39]: Register
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - generic [ref=e44]: Workspace ID
+              - textbox "e.g. acme" [ref=e45]
+              - paragraph [ref=e46]: Connect to your organization's secure instance.
+            - button "Sign In" [ref=e47]:
+              - generic [ref=e48]:
+                - text: Sign In
+                - img [ref=e49]
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - generic [ref=e54]:
+                - img [ref=e55]
+                - text: 2.4s
+              - generic [ref=e57]: Response Time
+            - generic [ref=e58]:
+              - generic [ref=e59]:
+                - img [ref=e60]
+                - text: AES
+              - generic [ref=e63]: Encryption
+            - generic [ref=e64]:
+              - generic [ref=e65]:
+                - img [ref=e66]
+                - text: INF
+              - generic [ref=e69]: Provisioning
+        - generic [ref=e70]: Secured by TSF Platform
+    - contentinfo [ref=e73]:
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e76]: EnterpriseERP
+          - paragraph [ref=e77]: The ultimate SaaS platform for modern business management. Unified ERP, POS, Finance and Inventory scaling with you.
+        - generic [ref=e78]:
+          - heading "Platform" [level=4] [ref=e79]
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - link "Features" [ref=e82] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e83]:
+              - link "Pricing" [ref=e84] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e85]:
+              - link "Roadmap" [ref=e86] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e87]:
+          - heading "Company" [level=4] [ref=e88]
+          - list [ref=e89]:
+            - listitem [ref=e90]:
+              - link "About Us" [ref=e91] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e92]:
+              - link "Privacy Policy" [ref=e93] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e94]:
+              - link "Contact Support" [ref=e95] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=e96]: © 2026 TSF Platform. All rights reserved.
+  - button "Open Next.js Dev Tools" [ref=e102] [cursor=pointer]:
+    - img [ref=e103]
+  - alert [ref=e106]

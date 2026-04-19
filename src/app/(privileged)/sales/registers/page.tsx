@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,9 +7,9 @@ import { Plus, RefreshCw, Settings, Power, PowerOff, Loader2, X, Check, Monitor 
 import Link from 'next/link';
 
 export default function RegistersPage() {
-  const [registers, setRegisters] = useState([]);
-  const [warehouses, setWarehouses] = useState([]);
-  const [accounts, setAccounts] = useState([]);
+  const [registers, setRegisters] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -75,7 +74,7 @@ export default function RegistersPage() {
     setCreating(false);
   };
 
-  const handleToggleActive = async (reg) => {
+  const handleToggleActive = async (reg: any) => {
     try {
       await erpFetch(`pos-registers/${reg.id}/`, {
         method: 'PATCH',

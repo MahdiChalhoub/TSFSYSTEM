@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useMemo } from "react"
