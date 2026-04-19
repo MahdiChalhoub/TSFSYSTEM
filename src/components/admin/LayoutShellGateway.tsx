@@ -5,13 +5,18 @@
  *  at render time based on viewport. Layout.tsx (server) fetches
  *  data once and hands it here; we pick which shell to render.
  *
+ *  Initial render uses a server-side `initialIsMobile` hint (from
+ *  User-Agent sniffing in layout.tsx) so phones don't briefly render
+ *  the desktop Sidebar before the media-query check kicks in. After
+ *  hydration, useIsMobile takes over with the accurate viewport size.
+ *
  *  Note: MobileAdminShell is imported directly (not dynamic). A
  *  dynamic import with `loading: () => null` caused children to
  *  disappear during the chunk load, breaking navigation. The shell
  *  is small enough that the bundle-size win isn't worth the race.
  * ═══════════════════════════════════════════════════════════ */
 
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useEffect, useState } from 'react'
 import { Sidebar } from '@/components/admin/Sidebar'
 import { TopHeader } from '@/components/admin/TopHeader'
 import { AdminShell } from '@/components/admin/AdminShell'
@@ -27,11 +32,26 @@ interface Props {
     installedModuleCodes: string[]
     dynamicSidebarItems: any[]
     financialSettings: any
+    initialIsMobile?: boolean
     children: React.ReactNode
 }
 
+const MOBILE_BREAKPOINT = 768
+
+function useResolvedIsMobile(initial: boolean): boolean {
+    const [isMobile, setIsMobile] = useState(initial)
+    useEffect(() => {
+        const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+        const onChange = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+        mql.addEventListener('change', onChange)
+        setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+        return () => mql.removeEventListener('change', onChange)
+    }, [])
+    return isMobile
+}
+
 export function LayoutShellGateway(props: Props) {
-    const isMobile = useIsMobile()
+    const isMobile = useResolvedIsMobile(!!props.initialIsMobile)
 
     if (isMobile) {
         return (

@@ -118,6 +118,11 @@ export default async function AdminLayout({
     const navLayout = cookieStore.get('tsf_nav_layout')?.value as 'sidebar' | 'topnav' | undefined;
     const tabLayout = cookieStore.get('tsf_tab_layout')?.value as 'horizontal' | 'vertical' | undefined;
 
+    // Coarse mobile hint from the User-Agent so the correct shell renders on
+    // first paint. The client-side media-query in the gateway corrects this
+    // after hydration if the guess was wrong (e.g., tablet, resized window).
+    const uaMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(headerList.get('user-agent') || '');
+
     return (
         <DesignSystemProvider>
         <AdminProvider
@@ -138,6 +143,7 @@ export default async function AdminLayout({
                     installedModuleCodes={installedModuleCodes}
                     dynamicSidebarItems={dynamicSidebarItems}
                     financialSettings={financialSettings}
+                    initialIsMobile={uaMobile}
                 >
                     {children}
                 </LayoutShellGateway>
