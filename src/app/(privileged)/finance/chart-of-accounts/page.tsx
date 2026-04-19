@@ -1,5 +1,5 @@
 import { getChartOfAccounts } from '@/app/actions/finance/accounts'
-import { ChartOfAccountsViewer } from './viewer'
+import { COAGateway } from './COAGateway'
 import { cookies } from 'next/headers'
 
 export default async function ChartOfAccountsPage() {
@@ -9,7 +9,7 @@ export default async function ChartOfAccountsPage() {
 
     return (
         <div className="h-full flex flex-col">
-            <ChartOfAccountsViewer accounts={JSON.parse(JSON.stringify(accounts))} />
+            <COAGateway accounts={JSON.parse(JSON.stringify(accounts))} />
         </div>
     )
 }
