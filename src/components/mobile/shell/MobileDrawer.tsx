@@ -10,13 +10,14 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { X, Search, LogOut, ChevronRight, ChevronDown, Sun, Moon } from 'lucide-react'
+import { X, Search, LogOut, ChevronRight, ChevronDown, Sun, Moon, Clock } from 'lucide-react'
 import { motion, PanInfo } from 'framer-motion'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
 import { TenantSwitcher } from '@/components/admin/TenantSwitcher'
 import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { logoutAction } from '@/app/actions/auth'
 import { useBackHandler, useEscapeKey } from '@/hooks/use-back-handler'
+import { useRecentRoutes } from '@/hooks/use-recent-routes'
 
 interface Props {
     open: boolean
@@ -40,6 +41,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
     const [q, setQ] = useState('')
     const [expanded, setExpanded] = useState<Set<string>>(new Set())
     const { isDark, toggleColorMode } = useAppTheme()
+    const recentRoutes = useRecentRoutes()
 
     useBackHandler(open, onClose, 'mobile-drawer')
     useEscapeKey(open, onClose)
@@ -343,8 +345,43 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                     const withIndex = MENU_ITEMS.map((m, i) => ({ module: m, idx: i }))
                                     const prodItems = withIndex.filter(({ module }: any) => module.stage === 'production')
                                     const devItems = withIndex.filter(({ module }: any) => module.stage !== 'production')
+                                    // Skip the active route from Recent — you're already there
+                                    const recent = recentRoutes.filter(r => !pathname.startsWith(r.path)).slice(0, 5)
                                     return (
                                         <>
+                                            {recent.length > 0 && (
+                                                <>
+                                                    <div className="px-3 pt-2 pb-1 flex items-center gap-2">
+                                                        <Clock size={10} style={{ color: 'var(--app-muted-foreground)', opacity: 0.7 }} />
+                                                        <span className="font-black uppercase tracking-widest"
+                                                            style={{ fontSize: 'var(--tp-xxs)', color: 'var(--app-muted-foreground)' }}>
+                                                            Recent
+                                                        </span>
+                                                    </div>
+                                                    {recent.map(r => {
+                                                        const RIcon = r.icon
+                                                        return (
+                                                            <button
+                                                                key={`recent-${r.path}`}
+                                                                onClick={() => go(r.path)}
+                                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl active:bg-app-primary/10 transition-colors text-left"
+                                                                style={{ minHeight: 40, color: 'var(--app-foreground)' }}>
+                                                                {RIcon
+                                                                    ? <RIcon size={15} style={{ color: 'var(--app-muted-foreground)' }} />
+                                                                    : <div style={{ width: 15 }} />}
+                                                                <span className="flex-1 font-bold truncate" style={{ fontSize: 'var(--tp-md)' }}>
+                                                                    {r.title}
+                                                                </span>
+                                                                <span className="font-mono truncate text-app-muted-foreground"
+                                                                    style={{ fontSize: 'var(--tp-xxs)', maxWidth: 120, opacity: 0.6 }}>
+                                                                    {r.path}
+                                                                </span>
+                                                            </button>
+                                                        )
+                                                    })}
+                                                    <div className="mx-3 my-2 h-px" style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }} />
+                                                </>
+                                            )}
                                             {prodItems.length > 0 && (
                                                 <div className="px-3 pt-2 pb-1 flex items-center gap-2">
                                                     <span className="font-black uppercase tracking-widest"
