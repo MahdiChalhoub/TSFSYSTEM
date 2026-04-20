@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit, Roboto, Inter } from 'next/font/google';
+import { Toaster } from 'sonner';
 import "./globals.css";
 import { ThemeScript, AppThemeProvider } from '@/components/app/AppThemeProvider';
 import { cookies, headers } from 'next/headers';
@@ -128,10 +129,11 @@ export default async function RootLayout({
     return (
         <html lang="en" className="scroll-smooth" suppressHydrationWarning data-scroll-behavior="smooth">
             <head>
-                {/* SSR theme: correct colors on byte 1, before any JS runs */}
-                {ssrThemeCSS && <style id="ssr-theme" dangerouslySetInnerHTML={{ __html: ssrThemeCSS }} />}
-                {/* Serialized theme data for ThemeScript to hydrate from on first visit */}
-                {ssrThemeJSON && <script id="__tsf_ssr_theme__" type="application/json" dangerouslySetInnerHTML={{ __html: ssrThemeJSON }} />}
+                {/* SSR theme: correct colors on byte 1, before any JS runs.
+                    ALWAYS render both tags (even if empty) so the DOM tree shape
+                    is identical on server and client — prevents hydration mismatch. */}
+                <style id="ssr-theme" dangerouslySetInnerHTML={{ __html: ssrThemeCSS }} />
+                <script id="__tsf_ssr_theme__" type="application/json" dangerouslySetInnerHTML={{ __html: ssrThemeJSON || '{}' }} />
                 <ThemeScript />
                 <link rel="manifest" href="/manifest.json" />
             </head>
@@ -139,6 +141,7 @@ export default async function RootLayout({
                 <AppThemeProvider>
                     {children}
                 </AppThemeProvider>
+                <Toaster position="top-center" richColors />
                 <script dangerouslySetInnerHTML={{
                     __html: `
                     if ('serviceWorker' in navigator) {
