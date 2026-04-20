@@ -10,13 +10,13 @@ import {
     delivery,
     setupWizard,
 } from './core';
-import { financeProduction, financeMain } from './finance';
+import { financeProduction, financeInProgress, financeMain } from './finance';
 import { commercial } from './commercial';
-import { inventory, products } from './inventory';
+import { inventory, inventoryInProgress, products } from './inventory';
 import { crm, clientPortal, supplierPortal } from './crm';
 import { ecommerce, store } from './ecommerce';
 import { hr } from './hr';
-import { workspace } from './workspace';
+import { workspace, workspaceInProgress } from './workspace';
 import { saasControl } from './saas';
 
 export type { MenuItem } from './types';
@@ -24,7 +24,13 @@ export type { MenuItem } from './types';
 // Order preserved from the original monolithic MENU_ITEMS array in Sidebar.tsx.
 export const MENU_ITEMS: MenuItem[] = [
     dashboard,
+    // ── Production (finished) ──
     financeProduction,
+    // ── In Progress ──
+    financeInProgress,
+    inventoryInProgress,
+    workspaceInProgress,
+    // ── Development (default) ──
     commercial,
     inventory,
     financeMain,

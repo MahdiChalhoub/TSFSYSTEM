@@ -7,12 +7,21 @@ import {
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
+export const workspaceInProgress: MenuItem = {
+    title: 'Workspace',
+    icon: ClipboardList,
+    module: 'workspace',
+    stage: 'in-progress',
+    children: [
+        { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
+    ],
+};
+
 export const workspace: MenuItem = {
     title: 'Workspace',
     icon: ClipboardList,
     module: 'workspace',
     children: [
-        { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
         { title: 'Checklists', path: '/workspace/checklists', icon: ListChecks },
         { title: 'Checklist Templates', path: '/workspace/checklist-templates' },
         { title: 'Performance', path: '/workspace/performance', icon: Trophy },

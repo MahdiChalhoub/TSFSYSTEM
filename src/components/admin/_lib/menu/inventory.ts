@@ -10,6 +10,17 @@ import {
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
+export const inventoryInProgress: MenuItem = {
+    title: 'Inventory',
+    icon: Box,
+    module: 'inventory',
+    stage: 'in-progress',
+    children: [
+        { title: 'Categories', path: '/inventory/categories', icon: FolderTree },
+        { title: 'Units & Packaging', path: '/inventory/units', icon: Warehouse },
+    ],
+};
+
 export const inventory: MenuItem = {
     title: 'Inventory',
     icon: Box,
@@ -88,10 +99,8 @@ export const inventory: MenuItem = {
             title: 'Catalog Setup',
             icon: FolderTree,
             children: [
-                { title: 'Categories', path: '/inventory/categories' },
                 { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
                 { title: 'Category Rules', path: '/inventory/category-rules' },
-                { title: 'Units & Packaging', path: '/inventory/units' },
                 { title: 'Packaging', path: '/inventory/packaging' },
                 { title: 'Brands', path: '/inventory/brands' },
                 { title: 'Countries', path: '/inventory/countries' },

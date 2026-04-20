@@ -35,6 +35,17 @@ export const financeProduction: MenuItem = {
     ],
 };
 
+export const financeInProgress: MenuItem = {
+    title: 'Finance',
+    icon: FileText,
+    module: 'finance',
+    stage: 'in-progress',
+    children: [
+        { title: 'General Ledger', path: '/finance/ledger', icon: BookOpen },
+        { title: 'Fiscal Years', path: '/finance/fiscal-years', icon: Calendar },
+    ],
+};
+
 export const financeMain: MenuItem = {
     title: 'Finance',
     icon: FileText,
@@ -50,7 +61,6 @@ export const financeMain: MenuItem = {
                 { title: 'Account Categories', path: '/finance/account-categories' },
                 { title: 'Account Book', path: '/finance/account-book' },
                 { title: 'COA Management', path: '/finance/coa' },
-                { title: 'General Ledger', path: '/finance/ledger' },
                 { title: 'Opening Balances', path: '/finance/opening-balances' },
                 { title: 'CSV Import', path: '/finance/ledger/import' },
                 { title: 'Journal Entries', path: '/finance/journal' },
@@ -154,7 +164,6 @@ export const financeMain: MenuItem = {
             title: 'Fiscal & Periods',
             icon: Calendar,
             children: [
-                { title: 'Fiscal Years', path: '/finance/fiscal-years' },
                 { title: 'Fiscal Periods', path: '/finance/fiscal-periods' },
             ],
         },
