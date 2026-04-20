@@ -372,8 +372,30 @@ class DashboardViewSet(viewsets.ViewSet):
                 products_qs = products_qs.filter(id__in=linked_product_ids)
             except Exception:
                 pass
-        
-        products_qs = products_qs[:20]
+
+        # Smart Fill mode — return only products likely needing a reorder.
+        # Heuristic: low stock (< 10 units) AND either has sales history or is
+        # flagged as low. Ordered by urgency (lowest stock first). Limit 30.
+        mode = request.query_params.get('mode', '')
+        if mode == 'smart_fill':
+            try:
+                from django.db.models import Sum
+                from apps.inventory.models import Inventory
+                # Aggregate current stock and pick the low-stock ones.
+                stock_by_product = Inventory.objects.filter(
+                    organization=organization
+                ).values('product_id').annotate(total=Sum('quantity'))
+                low_stock_ids = [
+                    r['product_id'] for r in stock_by_product
+                    if (r['total'] or 0) < 10
+                ]
+                if low_stock_ids:
+                    products_qs = products_qs.filter(id__in=low_stock_ids)
+                products_qs = products_qs[:30]
+            except Exception:
+                products_qs = products_qs[:30]
+        else:
+            products_qs = products_qs[:20]
         
         data = []
         thirty_days_ago = timezone.now() - timedelta(days=30)

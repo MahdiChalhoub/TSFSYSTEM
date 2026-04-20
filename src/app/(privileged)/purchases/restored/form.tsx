@@ -19,7 +19,9 @@ import { SmartFillModal } from "../new-order/_components/SmartFillModal";
 import { ImportFromPOModal } from "../new-order/_components/ImportFromPOModal";
 import { SupplierScorecard } from "../new-order/_components/SupplierScorecard";
 import { ConfigSidebar } from "../new-order/_components/ConfigSidebar";
-import { Zap, FileDown, ClipboardList } from "lucide-react";
+import { TransferRequestDialog } from "../new-order/_components/TransferRequestDialog";
+import { PurchaseRequestDialog } from "../new-order/_components/PurchaseRequestDialog";
+import { Zap, FileDown, ClipboardList, ArrowRightLeft, Send } from "lucide-react";
 import {
     PO_ALL_COLUMNS,
     PO_DEFAULT_VISIBLE_COLS,
@@ -155,6 +157,47 @@ export default function PurchaseForm({
     const [selectedDriverId, setSelectedDriverId] = useState<number | ''>('');
     const [assignedToId, setAssignedToId] = useState<number | ''>('');
     const [notes, setNotes] = useState('');
+    const [transferLine, setTransferLine] = useState<any | null>(null);
+    const [purchaseRequestLine, setPurchaseRequestLine] = useState<any | null>(null);
+    const [mobileSheetLine, setMobileSheetLine] = useState<any | null>(null);
+    const [toastMsg, setToastMsg] = useState<string | null>(null);
+    // Tier 3.1 — sortable headers
+    const [sortBy, setSortBy] = useState<'none' | 'quantity' | 'stockTotal' | 'scoreAdjust' | 'expirySafety'>('none');
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+    const toggleSort = (key: typeof sortBy) => {
+        if (sortBy === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+        else { setSortBy(key); setSortDir('desc'); }
+    };
+    // Tier 4.2 — Bulk selection
+    const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+    const toggleRowSelection = (productId: number) => {
+        setSelectedRows(prev => {
+            const next = new Set(prev);
+            if (next.has(productId)) next.delete(productId);
+            else next.add(productId);
+            return next;
+        });
+    };
+    const selectAllRows = () => setSelectedRows(new Set(lines.map((l: any) => Number(l.productId))));
+    const clearSelection = () => setSelectedRows(new Set());
+    const bulkDelete = () => {
+        setLines(lines.filter((l: any) => !selectedRows.has(Number(l.productId))));
+        clearSelection();
+    };
+    const bulkSetProposed = () => {
+        setLines(lines.map((l: any) => selectedRows.has(Number(l.productId))
+            ? { ...l, quantity: l.requiredProposed || l.quantity, _flash: Date.now() }
+            : l));
+    };
+
+    const sortedLines = (() => {
+        if (sortBy === 'none') return lines;
+        const mult = sortDir === 'asc' ? 1 : -1;
+        return [...lines].sort((a: any, b: any) => {
+            const av = Number(a[sortBy] || 0), bv = Number(b[sortBy] || 0);
+            return (av - bv) * mult;
+        });
+    })();
     // Per-session overrides (persisted browser-local)
     const [stockScope, setStockScope] = useState<'branch' | 'all'>('branch');
     const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | ''>('');
@@ -229,14 +272,63 @@ export default function PurchaseForm({
 
     useEffect(() => { setVatRecoverable(scope === 'OFFICIAL'); }, [scope]);
 
-    // Keyboard shortcut: Ctrl+K → focus search
+    // Keyboard shortcuts: Ctrl+K → focus search, Ctrl+Enter → submit
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus(); }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                const submitBtn = document.querySelector<HTMLButtonElement>('button[type="submit"]');
+                if (submitBtn && !submitBtn.disabled) { e.preventDefault(); submitBtn.click(); }
+            }
         };
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
     }, []);
+
+    // Tier 1.4 — Success redirect: when the action returns a successful message,
+    // route to the purchases list after a brief flash.
+    useEffect(() => {
+        if (state.message && (!state.errors || Object.keys(state.errors).length === 0)) {
+            const t = setTimeout(() => {
+                try { localStorage.removeItem('po_draft'); } catch { /* noop */ }
+                router.push('/purchases');
+            }, 900);
+            return () => clearTimeout(t);
+        }
+    }, [state, router]);
+
+    // Tier 4.3 — Draft auto-save: persist the in-progress PO every 10s and
+    // restore on mount. Cleared on successful submit.
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            const raw = localStorage.getItem('po_draft');
+            if (raw) {
+                const d = JSON.parse(raw);
+                if (Array.isArray(d.lines) && d.lines.length > 0) setLines(d.lines);
+                if (d.notes) setNotes(d.notes);
+                if (d.selectedSupplierId) setSelectedSupplierId(d.selectedSupplierId);
+                if (d.selectedSiteId) setSelectedSiteId(d.selectedSiteId);
+                if (d.selectedPaymentTermId) setSelectedPaymentTermId(d.selectedPaymentTermId);
+                if (d.selectedDriverId) setSelectedDriverId(d.selectedDriverId);
+                if (d.assignedToId) setAssignedToId(d.assignedToId);
+            }
+        } catch { /* noop */ }
+    }, []);
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const t = setTimeout(() => {
+            try {
+                if (lines.length === 0 && !notes) { localStorage.removeItem('po_draft'); return; }
+                localStorage.setItem('po_draft', JSON.stringify({
+                    lines, notes, selectedSupplierId, selectedSiteId,
+                    selectedPaymentTermId, selectedDriverId, assignedToId,
+                    savedAt: Date.now(),
+                }));
+            } catch { /* noop */ }
+        }, 10000);
+        return () => clearTimeout(t);
+    }, [lines, notes, selectedSupplierId, selectedSiteId, selectedPaymentTermId, selectedDriverId, assignedToId]);
 
     // ── Line Management ──
     // Intelligence fields come from `search_enhanced` endpoint (or catalogue_list).
@@ -345,6 +437,15 @@ export default function PurchaseForm({
 
     return (
         <form action={formAction} className="flex-1 flex flex-col relative">
+            {/* Tier 3.4 — Print layout */}
+            <style jsx global>{`
+                @media print {
+                    .no-print, .no-print * { display: none !important; }
+                    body { background: white !important; }
+                    .print-only { display: block !important; }
+                }
+                .print-only { display: none; }
+            `}</style>
             <input type="hidden" name="scope" value={scope} />
             <input type="hidden" name="invoicePriceType" value={invoicePriceType} />
             <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
@@ -357,7 +458,7 @@ export default function PurchaseForm({
             <input type="hidden" name="notes" value={notes} />
 
             {/* ═══ Page Header — back arrow + title + scope pills + icon triplet ═══ */}
-            <div className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 flex-shrink-0"
+            <div className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 flex-shrink-0 no-print"
                 style={{
                     background: 'var(--app-surface)',
                     borderBottom: '1px solid var(--app-border)',
@@ -474,16 +575,22 @@ export default function PurchaseForm({
                     borderBottom: '1px solid var(--app-border)',
                 }}>
                 <div className="px-4 py-3 w-[200px] flex-shrink-0">Product</div>
-                {col('qty') && <div className="px-2 py-3 w-[60px] flex-shrink-0 text-center">Qty</div>}
+                {col('qty') && <button type="button" onClick={() => toggleSort('quantity')}
+                    className="px-2 py-3 w-[60px] flex-shrink-0 text-center text-[10px] font-black uppercase tracking-wider transition-colors hover:text-app-primary"
+                    style={{ color: sortBy === 'quantity' ? 'var(--app-primary)' : 'inherit' }}>
+                    Qty {sortBy === 'quantity' && (sortDir === 'asc' ? '↑' : '↓')}
+                </button>}
                 {col('salesWindows') && <div className="px-2 py-3 w-[75px] flex-shrink-0 text-center hidden xl:block">Requested</div>}
                 {col('qty') && <div className="px-2 py-3 w-[80px] flex-shrink-0 text-center">
                     <div>Required</div>
                     <div className="font-semibold normal-case text-[9px] opacity-60">proposed</div>
                 </div>}
-                {col('stock') && <div className="px-2 py-3 w-[90px] flex-shrink-0 text-center hidden lg:block">
-                    <div>Stock</div>
+                {col('stock') && <button type="button" onClick={() => toggleSort('stockTotal')}
+                    className="px-2 py-3 w-[90px] flex-shrink-0 text-center hidden lg:block text-[10px] font-black uppercase tracking-wider transition-colors hover:text-app-primary"
+                    style={{ color: sortBy === 'stockTotal' ? 'var(--app-primary)' : 'inherit' }}>
+                    <div>Stock {sortBy === 'stockTotal' && (sortDir === 'asc' ? '↑' : '↓')}</div>
                     <div className="font-semibold normal-case text-[9px] opacity-60">transit · total</div>
-                </div>}
+                </button>}
                 {col('productStatus') && <div className="px-2 py-3 w-[65px] flex-shrink-0 text-center hidden lg:block">
                     <div>PO</div>
                     <div className="font-semibold normal-case text-[9px] opacity-60">Count</div>
@@ -493,10 +600,12 @@ export default function PurchaseForm({
                     <div>Sales</div>
                     <div className="font-semibold normal-case text-[9px] opacity-60">monthly</div>
                 </div>}
-                {col('financialScore') && <div className="px-2 py-3 w-[65px] flex-shrink-0 text-center hidden xl:block">
-                    <div>Score</div>
+                {col('financialScore') && <button type="button" onClick={() => toggleSort('scoreAdjust')}
+                    className="px-2 py-3 w-[65px] flex-shrink-0 text-center hidden xl:block text-[10px] font-black uppercase tracking-wider transition-colors hover:text-app-primary"
+                    style={{ color: sortBy === 'scoreAdjust' ? 'var(--app-primary)' : 'inherit' }}>
+                    <div>Score {sortBy === 'scoreAdjust' && (sortDir === 'asc' ? '↑' : '↓')}</div>
                     <div className="font-semibold normal-case text-[9px] opacity-60">adjust</div>
-                </div>}
+                </button>}
                 {col('trend') && <div className="px-2 py-3 w-[75px] flex-shrink-0 text-center hidden xl:block">
                     <div>Purchased</div>
                     <div className="font-semibold normal-case text-[9px] opacity-60">sold</div>
@@ -532,15 +641,30 @@ export default function PurchaseForm({
                 )}
 
                 {/* Desktop Rows */}
-                {lines.length > 0 && (
+                {sortedLines.length > 0 && (
                     <div className="hidden md:block">
-                        {lines.map((line, idx) => {
+                        {sortedLines.map((line, idx) => {
                             const statusStyle = statusColorMap[(line.statusText as string) || 'OPTIONAL'] || statusColorMap['OPTIONAL'];
+                            // Tier 3.2 — row conditional tinting by urgency
+                            const rowBg = line.safetyTag === 'RISKY'
+                                ? 'color-mix(in srgb, var(--app-error, #ef4444) 4%, transparent)'
+                                : line.statusText === 'URGENT'
+                                ? 'color-mix(in srgb, var(--app-error, #ef4444) 3%, transparent)'
+                                : line.statusText === 'LOW'
+                                ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 3%, transparent)'
+                                : 'transparent';
+                            const rowHoverBg = line.safetyTag === 'RISKY'
+                                ? 'color-mix(in srgb, var(--app-error, #ef4444) 7%, transparent)'
+                                : line.statusText === 'URGENT'
+                                ? 'color-mix(in srgb, var(--app-error, #ef4444) 5%, transparent)'
+                                : line.statusText === 'LOW'
+                                ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 5%, transparent)'
+                                : 'color-mix(in srgb, var(--app-primary) 3%, transparent)';
                             return (
                                 <div key={line.productId} className="group flex items-center gap-0 transition-colors"
-                                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 3%, transparent)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)', background: rowBg }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = rowHoverBg}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = rowBg}>
                                     {/* Product */}
                                     <div className="px-4 py-2.5 w-[200px] flex-shrink-0">
                                         <div className="flex items-center gap-2">
@@ -553,12 +677,14 @@ export default function PurchaseForm({
                                         <input type="hidden" name={`lines[${idx}][productId]`} value={String(line.productId)} />
                                         <input type="hidden" name={`lines[${idx}][taxRate]`} value={line.taxRate} />
                                     </div>
-                                    {/* Qty */}
+                                    {/* Qty — inline editor w/ live line-total flash (Tier 1.2) */}
                                     {col('qty') && <div className="px-2 py-2 w-[60px] flex-shrink-0 text-center">
-                                        <input type="number" className="w-full rounded-lg p-1.5 text-center font-bold text-[12px] outline-none transition-all"
+                                        <input type="number" className="w-full rounded-lg p-1.5 text-center font-bold text-[12px] outline-none transition-all focus:ring-2"
                                             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
                                             value={line.quantity}
-                                            onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
+                                            onChange={(e) => {
+                                                updateLine(idx, { quantity: Number(e.target.value), _flash: Date.now() });
+                                            }}
                                             name={`lines[${idx}][quantity]`} />
                                     </div>}
                                     {/* Requested */}
@@ -567,11 +693,18 @@ export default function PurchaseForm({
                                     {col('qty') && <div className="px-2 py-2.5 w-[80px] flex-shrink-0 text-center">
                                         <span className="font-bold text-[12px] tabular-nums" style={{ color: 'var(--app-foreground)' }}>{line.requiredProposed as number}</span>
                                     </div>}
-                                    {/* Stock */}
-                                    {col('stock') && <div className="px-2 py-2.5 w-[90px] flex-shrink-0 text-center hidden lg:block">
+                                    {/* Stock + Transfer button — spec: po_intelligence_grid.md §3.2 */}
+                                    {col('stock') && <div className="px-2 py-2.5 w-[90px] flex-shrink-0 text-center hidden lg:block group/stock relative">
                                         <span className="text-[12px] tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{line.stockTransit as number}</span>
                                         <span className="text-[12px] mx-0.5" style={{ color: 'var(--app-border)' }}>·</span>
                                         <span className="font-bold text-[12px] tabular-nums" style={{ color: 'var(--app-foreground)' }}>{line.stockTotal as number}</span>
+                                        <button type="button"
+                                            onClick={() => setTransferLine(line)}
+                                            title="⇄ Request transfer from another warehouse"
+                                            className="absolute -right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/stock:opacity-100 p-1 rounded-md transition-all"
+                                            style={{ color: 'var(--app-info, #3b82f6)', background: 'var(--app-surface)' }}>
+                                            <ArrowRightLeft size={11} />
+                                        </button>
                                     </div>}
                                     {/* PO Count */}
                                     {col('productStatus') && <div className="px-2 py-2.5 w-[65px] flex-shrink-0 text-center hidden lg:block">
@@ -599,15 +732,33 @@ export default function PurchaseForm({
                                     {col('trend') && <div className="px-2 py-2.5 w-[75px] flex-shrink-0 text-center hidden xl:block">
                                         <span className="font-bold text-[12px] tabular-nums" style={{ color: 'var(--app-foreground)' }}>{line.purchasedSold as number}</span>
                                     </div>}
-                                    {/* Cost */}
+                                    {/* Cost — dual row: unit cost + live line total; flashes when qty changes (Tier 1.2) */}
                                     {col('unitCost') && <div className="px-2 py-2.5 w-[80px] flex-shrink-0 text-center">
-                                        <div className="font-bold font-mono text-[11px] tabular-nums" style={{ color: 'var(--app-foreground)' }}>{Number(line.unitCostHT).toFixed(2)}</div>
-                                        <div className="text-[10px] font-bold line-through tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{Number(line.sellingPriceHT).toFixed(2)}</div>
+                                        <div className="font-bold font-mono text-[11px] tabular-nums" style={{ color: 'var(--app-foreground)' }}>
+                                            {Number(line.unitCostHT).toFixed(2)}
+                                        </div>
+                                        <div className="text-[10px] font-black font-mono tabular-nums transition-colors duration-500"
+                                            key={line._flash || 0}
+                                            style={{
+                                                color: line._flash && Date.now() - Number(line._flash) < 600
+                                                    ? 'var(--app-primary)'
+                                                    : 'var(--app-muted-foreground)',
+                                            }}
+                                            title={`Line total: ${Number(line.quantity) * Number(line.unitCostHT)}`}>
+                                            = {(Number(line.quantity) * Number(line.unitCostHT)).toLocaleString()}
+                                        </div>
                                         <input type="hidden" name={`lines[${idx}][unitCostHT]`} value={line.unitCostHT} />
                                     </div>}
-                                    {/* Supplier Price */}
-                                    {col('bestSupplier') && <div className="px-2 py-2.5 w-[80px] flex-shrink-0 text-center hidden lg:block">
+                                    {/* Supplier Price + Request button — spec: po_intelligence_grid.md §3.2 */}
+                                    {col('bestSupplier') && <div className="px-2 py-2.5 w-[80px] flex-shrink-0 text-center hidden lg:block group/sup relative">
                                         <span className="font-bold font-mono text-[11px] tabular-nums" style={{ color: 'var(--app-error, #ef4444)' }}>{Number(line.supplierPrice).toFixed(2)}</span>
+                                        <button type="button"
+                                            onClick={() => setPurchaseRequestLine(line)}
+                                            title="📨 Request from another supplier"
+                                            className="absolute -right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/sup:opacity-100 p-1 rounded-md transition-all"
+                                            style={{ color: 'var(--app-warning, #f59e0b)', background: 'var(--app-surface)' }}>
+                                            <Send size={11} />
+                                        </button>
                                     </div>}
                                     {/* Expiry + Safety Tag — spec: po_intelligence_grid.md §2.1 */}
                                     {col('expiry') && <div className="px-2 py-2.5 w-[80px] flex-shrink-0 text-center hidden lg:block">
@@ -626,12 +777,17 @@ export default function PurchaseForm({
                                             );
                                         })()}
                                     </div>}
-                                    {/* Delete (SUP+ slot — always present for row actions) */}
-                                    {col('suppliers') && <div className="px-2 py-2.5 w-[45px] flex-shrink-0 text-center" style={{ borderLeft: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                                    {/* SUP+ slot — bulk checkbox + delete (Tier 4.2) */}
+                                    {col('suppliers') && <div className="px-2 py-2.5 w-[45px] flex-shrink-0 flex items-center justify-center gap-1" style={{ borderLeft: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                                        <input type="checkbox"
+                                            checked={selectedRows.has(Number(line.productId))}
+                                            onChange={() => toggleRowSelection(Number(line.productId))}
+                                            className="w-3 h-3 rounded cursor-pointer"
+                                            style={{ accentColor: 'var(--app-primary)' }} />
                                         <button type="button" onClick={() => removeLine(idx)}
-                                            className="opacity-20 group-hover:opacity-100 p-1.5 rounded-lg transition-all"
+                                            className="opacity-20 group-hover:opacity-100 p-1 rounded-lg transition-all"
                                             style={{ color: 'var(--app-error, #ef4444)' }}>
-                                            <Trash2 size={14} />
+                                            <Trash2 size={12} />
                                         </button>
                                     </div>}
                                 </div>
@@ -646,7 +802,13 @@ export default function PurchaseForm({
                         {lines.map((line, idx) => {
                             const statusStyle = statusColorMap[(line.statusText as string) || 'OPTIONAL'] || statusColorMap['OPTIONAL'];
                             return (
-                                <div key={line.productId} className="p-3 rounded-xl shadow-sm relative"
+                                <div key={line.productId}
+                                    onClick={(e) => {
+                                        // Tap on the card (not on a control) opens the detail sheet
+                                        if ((e.target as HTMLElement).closest('input, button, select')) return;
+                                        setMobileSheetLine(line);
+                                    }}
+                                    className="p-3 rounded-xl shadow-sm relative cursor-pointer"
                                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -694,29 +856,107 @@ export default function PurchaseForm({
                 )}
             </div>
 
+            {/* ═══ Bulk Actions Bar (Tier 4.2) — appears when ≥1 row selected ═══ */}
+            {selectedRows.size > 0 && (
+                <div className="flex-shrink-0 flex items-center justify-between gap-3 px-5 py-2.5 animate-in slide-in-from-bottom-2 duration-150"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-primary) 12%, var(--app-surface))',
+                        borderTop: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                    }}>
+                    <div className="flex items-center gap-2 text-[11px] font-black" style={{ color: 'var(--app-primary)' }}>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono"
+                            style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            {selectedRows.size}
+                        </span>
+                        <span className="uppercase tracking-widest">selected</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <button type="button" onClick={bulkSetProposed}
+                            className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
+                            style={{ color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)', background: 'var(--app-surface)' }}>
+                            Set Qty = Proposed
+                        </button>
+                        <button type="button" onClick={bulkDelete}
+                            className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1"
+                            style={{ color: 'var(--app-error, #ef4444)', border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)', background: 'var(--app-surface)' }}>
+                            <Trash2 size={11} /> Delete
+                        </button>
+                        <button type="button" onClick={clearSelection}
+                            className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
+                            style={{ color: 'var(--app-muted-foreground)' }}>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* ═══ Sticky Footer with Gradient Line ═══ */}
             <div className="flex-shrink-0 relative">
                 {/* Teal gradient line */}
                 <div className="h-[3px] w-full"
                     style={{ background: `linear-gradient(to right, color-mix(in srgb, var(--app-primary) 60%, transparent), color-mix(in srgb, var(--app-primary) 20%, transparent))` }} />
 
-                <div className="flex justify-between items-center gap-4 px-5 py-4"
+                {(() => {
+                    const itemCount = lines.length;
+                    const unitCount = lines.reduce((s, l: any) => s + Number(l.quantity || 0), 0);
+                    const subtotalHT = lines.reduce((s, l: any) => s + Number(l.quantity || 0) * Number(l.unitCostHT || 0), 0);
+                    const taxAmount = lines.reduce((s, l: any) => s + Number(l.quantity || 0) * Number(l.unitCostHT || 0) * Number(l.taxRate || 0), 0);
+                    const totalTTC = subtotalHT + (vatRecoverable ? 0 : taxAmount);
+                    // Tier 5.3 — Multi-currency: pull from org financial settings.
+                    const currency = String(financialSettings?.default_currency || financialSettings?.currency_code || 'CFA');
+                    const riskyCount = lines.filter((l: any) => l.safetyTag === 'RISKY').length;
+                    const cautionCount = lines.filter((l: any) => l.safetyTag === 'CAUTION').length;
+                    const safeCount = lines.filter((l: any) => l.safetyTag === 'SAFE').length;
+                    // Expected delivery: today + org lead_days (from analytics config) or 14d fallback
+                    const leadDays = Number(analyticsConfig?.proposed_qty_lead_days ?? 14);
+                    const expectedDelivery = new Date(Date.now() + leadDays * 86400000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+                    return (
+                        <>
+                            {/* Order Intelligence Summary strip — Tier 2.2 */}
+                            {itemCount > 0 && (
+                                <div className="px-5 py-2 flex items-center gap-3 text-[10px] font-black uppercase tracking-widest flex-wrap"
+                                    style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                                    <span style={{ color: 'var(--app-muted-foreground)' }}>Intelligence:</span>
+                                    <span className="inline-flex items-center gap-1" style={{ color: 'var(--app-success, #22c55e)' }}>
+                                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} /> Safe <span className="font-mono">{safeCount}</span>
+                                    </span>
+                                    <span className="inline-flex items-center gap-1" style={{ color: 'var(--app-warning, #f59e0b)' }}>
+                                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} /> Caution <span className="font-mono">{cautionCount}</span>
+                                    </span>
+                                    <span className="inline-flex items-center gap-1" style={{ color: 'var(--app-error, #ef4444)' }}>
+                                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} /> Risky <span className="font-mono">{riskyCount}</span>
+                                    </span>
+                                    <span className="ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        ETA: <span style={{ color: 'var(--app-foreground)' }}>{expectedDelivery}</span> ({leadDays}d lead)
+                                    </span>
+                                </div>
+                            )}
+
+                <div className="flex justify-between items-center gap-4 px-5 py-3"
                     style={{ background: 'var(--app-surface)', borderTop: '1px solid var(--app-border)' }}>
-                    {/* Left: Live totals chips (spec: po_intelligence_grid.md) */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                    {/* Left: Rich totals — spec: 11/10 plan Tier 1.1 */}
+                    <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
                             style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
-                            Items <span className="font-mono text-[11px]">{lines.length}</span>
+                            Items <span className="font-mono text-[11px]">{itemCount}</span>
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
                             style={{ background: 'color-mix(in srgb, #a855f7 10%, transparent)', color: '#a855f7' }}>
-                            Units <span className="font-mono text-[11px]">{lines.reduce((s, l: any) => s + Number(l.quantity || 0), 0)}</span>
+                            Units <span className="font-mono text-[11px]">{unitCount}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                            style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                            HT <span className="font-mono text-[11px] tabular-nums">{subtotalHT.toLocaleString()}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                            style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}
+                            title={vatRecoverable ? 'VAT recoverable — excluded from TTC' : 'VAT not recoverable — included in TTC'}>
+                            VAT <span className="font-mono text-[11px] tabular-nums">{taxAmount.toLocaleString()}</span>
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
-                            style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
-                            Cost <span className="font-mono text-[11px] tabular-nums">
-                                {lines.reduce((s, l: any) => s + Number(l.quantity || 0) * Number(l.unitCostHT || 0), 0).toLocaleString()} CFA
-                            </span>
+                            style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            Total <span className="font-mono text-[11px] tabular-nums">{totalTTC.toLocaleString()} {currency}</span>
                         </span>
                     </div>
 
@@ -737,19 +977,39 @@ export default function PurchaseForm({
                         )}
                     </div>
 
-                    {/* Right: Create PO button */}
-                    <button
-                        type="submit"
-                        disabled={isPending || lines.length === 0}
-                        className="flex items-center justify-center gap-2 px-8 py-2.5 rounded-full font-black uppercase tracking-widest text-[11px] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                        style={{
-                            background: 'var(--app-primary)',
-                            color: 'white',
-                            boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 40%, transparent)',
-                        }}>
-                        {isPending ? 'Processing...' : <><ArrowRight size={14} /> Create PO</>}
-                    </button>
+                    {/* Right: Approval hint + Create PO button — Tier 5.1 */}
+                    {(() => {
+                        const approvalThreshold = Number(financialSettings?.po_approval_threshold ?? 500000);
+                        const needsApproval = totalTTC > approvalThreshold;
+                        return (
+                            <div className="flex items-center gap-2">
+                                {needsApproval && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest"
+                                        style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)' }}
+                                        title={`Total exceeds approval threshold (${approvalThreshold.toLocaleString()} CFA)`}>
+                                        ⚠ Requires Approval
+                                    </span>
+                                )}
+                                <button
+                                    type="submit"
+                                    disabled={isPending || lines.length === 0}
+                                    className="flex items-center justify-center gap-2 px-8 py-2.5 rounded-full font-black uppercase tracking-widest text-[11px] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                    style={{
+                                        background: needsApproval ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)',
+                                        color: 'white',
+                                        boxShadow: needsApproval
+                                            ? '0 4px 14px color-mix(in srgb, var(--app-warning, #f59e0b) 40%, transparent)'
+                                            : '0 4px 14px color-mix(in srgb, var(--app-primary) 40%, transparent)',
+                                    }}>
+                                    {isPending ? 'Processing...' : <><ArrowRight size={14} /> {needsApproval ? 'Submit for Approval' : 'Create PO'}</>}
+                                </button>
+                            </div>
+                        );
+                    })()}
                 </div>
+                        </>
+                    );
+                })()}
             </div>
 
             {catalogueOpen && (
@@ -997,11 +1257,129 @@ export default function PurchaseForm({
                 visibleColCount={visibleColCount}
             />
 
+            {transferLine && (
+                <TransferRequestDialog
+                    productId={Number(transferLine.productId)}
+                    productName={String(transferLine.productName || '')}
+                    currentQty={Number(transferLine.quantity || 1)}
+                    otherWarehouses={Array.isArray(transferLine.otherWarehouseStock) ? transferLine.otherWarehouseStock : []}
+                    toWarehouseId={Number(selectedWarehouseId) || undefined}
+                    toWarehouseName={siteWarehouses.find(w => w.id === Number(selectedWarehouseId))?.name}
+                    onClose={() => setTransferLine(null)}
+                    onSubmitted={() => setToastMsg('Transfer request queued ✓')}
+                />
+            )}
+
+            {purchaseRequestLine && (
+                <PurchaseRequestDialog
+                    productId={Number(purchaseRequestLine.productId)}
+                    productName={String(purchaseRequestLine.productName || '')}
+                    currentQty={Number(purchaseRequestLine.quantity || 1)}
+                    suggestedPrice={Number(purchaseRequestLine.supplierPrice || purchaseRequestLine.unitCostHT || 0)}
+                    suppliers={suppliers as any}
+                    excludeSupplierId={Number(selectedSupplierId) || undefined}
+                    onClose={() => setPurchaseRequestLine(null)}
+                    onSubmitted={() => setToastMsg('Purchase request queued ✓')}
+                />
+            )}
+
+            {/* Tier 3.3 — Mobile bottom sheet for full line detail / edit */}
+            {mobileSheetLine && (
+                <>
+                    <div className="fixed inset-0 bg-black/40 z-50 md:hidden" onClick={() => setMobileSheetLine(null)} />
+                    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden rounded-t-3xl p-5 pb-8 max-h-[80vh] overflow-y-auto animate-in slide-in-from-bottom duration-200"
+                        style={{ background: 'var(--app-surface)', boxShadow: '0 -12px 40px rgba(0,0,0,0.2)' }}>
+                        <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--app-border)' }} />
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                <Package size={18} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-[14px] font-black truncate" style={{ color: 'var(--app-foreground)' }}>
+                                    {mobileSheetLine.productName}
+                                </div>
+                                <div className="text-[10px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    {mobileSheetLine.sku || '—'}
+                                </div>
+                            </div>
+                            <button type="button" onClick={() => setMobileSheetLine(null)}
+                                className="p-1.5 rounded-lg" style={{ color: 'var(--app-muted-foreground)' }}>✕</button>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 mb-4">
+                            {[
+                                { label: 'Qty', value: mobileSheetLine.quantity },
+                                { label: 'Stock', value: mobileSheetLine.stockTotal },
+                                { label: 'Daily', value: Math.round(Number(mobileSheetLine.salesMonthly || 0) / 30) },
+                                { label: 'Score', value: mobileSheetLine.scoreAdjust },
+                                { label: 'Cost', value: Number(mobileSheetLine.unitCostHT).toFixed(2) },
+                                { label: 'Supplier', value: Number(mobileSheetLine.supplierPrice).toFixed(2) },
+                            ].map(s => (
+                                <div key={s.label} className="px-2 py-2 rounded-lg text-center"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                                    <div className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                    <div className="text-[12px] font-black font-mono mt-0.5" style={{ color: 'var(--app-foreground)' }}>{String(s.value)}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                                Order Quantity
+                            </label>
+                            <input type="number" value={mobileSheetLine.quantity}
+                                onChange={(e) => {
+                                    const idx = lines.findIndex((l: any) => l.productId === mobileSheetLine.productId);
+                                    if (idx >= 0) updateLine(idx, { quantity: Number(e.target.value), _flash: Date.now() });
+                                    setMobileSheetLine({ ...mobileSheetLine, quantity: Number(e.target.value) });
+                                }}
+                                className="w-full text-[14px] font-black px-3 py-3 rounded-xl outline-none text-center"
+                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <button type="button" onClick={() => { setMobileSheetLine(null); setTransferLine(mobileSheetLine); }}
+                                className="py-3 rounded-xl text-[11px] font-black uppercase tracking-wider"
+                                style={{ color: 'var(--app-info, #3b82f6)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)' }}>
+                                ⇄ Transfer
+                            </button>
+                            <button type="button" onClick={() => { setMobileSheetLine(null); setPurchaseRequestLine(mobileSheetLine); }}
+                                className="py-3 rounded-xl text-[11px] font-black uppercase tracking-wider"
+                                style={{ color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                                📨 Request
+                            </button>
+                            <button type="button"
+                                onClick={() => {
+                                    const idx = lines.findIndex((l: any) => l.productId === mobileSheetLine.productId);
+                                    if (idx >= 0) removeLine(idx);
+                                    setMobileSheetLine(null);
+                                }}
+                                className="col-span-2 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider"
+                                style={{ color: 'var(--app-error, #ef4444)', border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>
+                                <Trash2 size={13} className="inline mr-1" /> Remove Line
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {toastMsg && (
+                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-[11px] font-bold animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    style={{
+                        background: 'var(--app-success, #22c55e)', color: 'white',
+                        boxShadow: '0 8px 24px color-mix(in srgb, var(--app-success, #22c55e) 40%, transparent)',
+                    }}
+                    onAnimationEnd={() => setTimeout(() => setToastMsg(null), 2500)}>
+                    {toastMsg}
+                </div>
+            )}
+
             {/* ═══ Right-Edge Floating Icon Rail ═══
              * Secondary actions — grid/column customize + focus search (Ctrl+K).
              * Sticks to the viewport right edge, vertically centered lower.
              */}
-            <div className="fixed right-3 bottom-24 z-30 flex flex-col gap-2">
+            <div className="fixed right-3 bottom-24 z-30 flex flex-col gap-2 no-print">
                 <button type="button" onClick={() => setCustomizeOpen(true)}
                     title="Customize columns"
                     className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"

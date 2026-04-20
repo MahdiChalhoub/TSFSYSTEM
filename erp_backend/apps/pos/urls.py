@@ -16,6 +16,7 @@ from apps.pos.views import (
     POSAuditRuleViewSet, POSAuditEventViewSet,
     POSSettingsViewSet,
     ManagerAddressBookViewSet,
+    ProcurementRequestViewSet,
 )
 from .views.procurement_analytics_views import (
     ProcurementDashboardView, POAgingView, CycleTimesView,
@@ -47,6 +48,7 @@ router.register(r'pos-audit-rules', POSAuditRuleViewSet, basename='pos-audit-rul
 router.register(r'pos-audit-events', POSAuditEventViewSet, basename='pos-audit-events')
 router.register(r'pos-settings', POSSettingsViewSet, basename='pos-settings')
 router.register(r'manager-address-book', ManagerAddressBookViewSet, basename='manager-address-book')
+router.register(r'procurement-requests', ProcurementRequestViewSet, basename='procurement-requests')
 
 urlpatterns = [
     path('', include(router.urls)),

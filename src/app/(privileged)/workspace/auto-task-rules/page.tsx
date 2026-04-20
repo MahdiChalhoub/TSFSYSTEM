@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { erpFetch } from '@/lib/erp-api';
 import { toast } from 'sonner';
 import {
     Plus, Trash2, Edit3, Check, X, Zap, Filter, User, Users,
     DollarSign, MapPin, CreditCard, Search, Loader2, Maximize2, Minimize2,
+    ChevronRight, ChevronDown, Package, ShoppingCart, Landmark, Heart,
+    Receipt, UserCircle, Settings2, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -41,6 +44,9 @@ const TRIGGER_EVENTS = [
     { value: 'BANK_STATEMENT', label: 'Bank Statement', group: 'Finance' },
     { value: 'DAILY_SUMMARY', label: 'End-of-Day Summary', group: 'Finance' },
     { value: 'MONTH_END', label: 'Month-End Close', group: 'Finance' },
+    { value: 'PERIOD_CLOSING_SOON', label: 'Fiscal Period Closing Soon', group: 'Finance' },
+    { value: 'PERIOD_STARTING_SOON', label: 'Next Fiscal Period Starting Soon', group: 'Finance' },
+    { value: 'PERIOD_REOPEN_REQUEST', label: 'Fiscal Period Reopen Requested', group: 'Finance' },
     { value: 'PROMOTION_TRIGGERED', label: 'Targeted Client Promotion', group: 'CRM' },
     { value: 'EXTERNAL_DOCUMENT_SEND', label: 'Send External Document', group: 'CRM' },
     { value: 'CLIENT_FOLLOWUP_DUE', label: 'Client Follow-Up Due', group: 'CRM' },
@@ -60,14 +66,18 @@ const TRIGGER_EVENTS = [
 ];
 
 const MODULES = [
-    { value: 'inventory', label: 'Inventory' },
-    { value: 'purchasing', label: 'Purchasing' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'crm', label: 'CRM' },
-    { value: 'sales', label: 'Sales / POS' },
-    { value: 'hr', label: 'HR' },
-    { value: 'system', label: 'System' },
+    { value: 'inventory', label: 'Inventory', icon: Package, color: 'var(--app-info, #3b82f6)', group: 'Inventory' },
+    { value: 'purchasing', label: 'Purchasing', icon: ShoppingCart, color: '#f59e0b', group: 'Purchasing' },
+    { value: 'finance', label: 'Finance', icon: Landmark, color: 'var(--app-primary)', group: 'Finance' },
+    { value: 'crm', label: 'CRM', icon: Heart, color: '#ec4899', group: 'CRM' },
+    { value: 'sales', label: 'Sales / POS', icon: Receipt, color: '#8b5cf6', group: 'Finance' },
+    { value: 'hr', label: 'HR', icon: UserCircle, color: '#10b981', group: 'HR' },
+    { value: 'system', label: 'System', icon: Settings2, color: 'var(--app-muted-foreground)', group: 'System' },
 ];
+
+const moduleMeta = (code: string) =>
+    MODULES.find(m => m.value === (code || '').toLowerCase())
+        || { value: code || 'system', label: code || 'Other', icon: Settings2, color: 'var(--app-muted-foreground)', group: 'System' };
 
 const RECURRENCE_INTERVALS = [
     { value: 'DAILY', label: 'Daily' },
@@ -108,6 +118,7 @@ interface AutoTaskRule {
     };
     assign_to_user_id?: number | null;
     assign_to_role_id?: number | null;
+    assign_to_user_group_id?: number | null;
     stale_threshold_days?: number;
     is_active: boolean;
 }
@@ -122,6 +133,7 @@ const emptyRule = (): AutoTaskRule => ({
     template_data: { title: '', priority: 'HIGH', estimated_minutes: 30, default_points: 1 },
     assign_to_user_id: null,
     assign_to_role_id: null,
+    assign_to_user_group_id: null,
     stale_threshold_days: 3,
     is_active: true,
 });
@@ -135,25 +147,41 @@ export default function AutoTaskRulesPage() {
     const [rules, setRules] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [roles, setRoles] = useState<any[]>([]);
+    const [userGroups, setUserGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingRule, setEditingRule] = useState<AutoTaskRule | null>(null);
     const [isNew, setIsNew] = useState(false);
     const [saving, setSaving] = useState(false);
     const [search, setSearch] = useState('');
     const [focusMode, setFocusMode] = useState(false);
+    const [collapsedModules, setCollapsedModules] = useState<Record<string, boolean>>({});
+    const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
+    const searchParams = useSearchParams();
     const searchRef = useRef<HTMLInputElement>(null);
+
+    // Read ?module= from URL; collapse everything except that module so quick-access
+    // deep links (e.g. from /finance/fiscal-years) land on a focused view.
+    useEffect(() => {
+        const focus = searchParams?.get('module');
+        if (!focus) return;
+        const collapsed: Record<string, boolean> = {};
+        for (const m of MODULES) if (m.value !== focus) collapsed[m.value] = true;
+        setCollapsedModules(collapsed);
+    }, [searchParams]);
 
     const load = async () => {
         setLoading(true);
         try {
-            const [r, u, rl] = await Promise.all([
+            const [r, u, rl, ug] = await Promise.all([
                 erpFetch('auto-task-rules/').catch(() => []),
                 erpFetch('erp/users/').catch(() => []),
                 erpFetch('roles/').catch(() => []),
+                erpFetch('user-groups/').catch(() => []),
             ]);
             setRules(Array.isArray(r) ? r : r?.results || []);
             setUsers(Array.isArray(u) ? u : u?.results || []);
             setRoles(Array.isArray(rl) ? rl : rl?.results || []);
+            setUserGroups(Array.isArray(ug) ? ug : ug?.results || []);
         } finally {
             setLoading(false);
         }
@@ -189,6 +217,7 @@ export default function AutoTaskRulesPage() {
                 conditions: editingRule.conditions,
                 is_active: editingRule.is_active,
                 assign_to_user: editingRule.assign_to_user_id || null,
+                assign_to_user_group: editingRule.assign_to_user_group_id || null,
             };
 
             const tmpl = await erpFetch('task-templates/', {
@@ -254,6 +283,21 @@ export default function AutoTaskRulesPage() {
                r.trigger_event?.toLowerCase().includes(q);
     });
 
+    // Group rules by module for the organized list view.
+    const rulesByModule = useMemo(() => {
+        const buckets: Record<string, any[]> = {};
+        for (const m of MODULES) buckets[m.value] = [];
+        for (const r of filteredRules) {
+            const key = (r.module || 'system').toLowerCase();
+            if (!buckets[key]) buckets[key] = [];
+            buckets[key].push(r);
+        }
+        return buckets;
+    }, [filteredRules]);
+
+    const toggleModule = (code: string) =>
+        setCollapsedModules(p => ({ ...p, [code]: !p[code] }));
+
     return (
         <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
             {/* ── Header ────────────────────────────────────────────── */}
@@ -295,7 +339,7 @@ export default function AutoTaskRulesPage() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <button
-                            onClick={() => { setEditingRule(emptyRule()); setIsNew(true); }}
+                            onClick={() => { setEditingRule(emptyRule()); setIsNew(true); setWizardStep(1); }}
                             className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                         >
@@ -354,14 +398,53 @@ export default function AutoTaskRulesPage() {
                             </p>
                         </div>
                     ) : (
-                        filteredRules.map((rule: any) => (
+                        MODULES.map((mod) => {
+                            const modRules = rulesByModule[mod.value] || [];
+                            if (modRules.length === 0 && search.trim()) return null;
+                            const collapsed = !!collapsedModules[mod.value];
+                            const Icon = mod.icon;
+                            return (
+                                <div key={mod.value} className="border-b border-app-border/30">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleModule(mod.value)}
+                                        className="w-full flex items-center gap-2 px-3 py-2 bg-app-surface/60 hover:bg-app-surface/80 transition-all text-left sticky top-0 z-10"
+                                        style={{ borderLeft: `3px solid ${mod.color}` }}
+                                    >
+                                        {collapsed ? <ChevronRight size={13} className="text-app-muted-foreground flex-shrink-0" /> : <ChevronDown size={13} className="text-app-muted-foreground flex-shrink-0" />}
+                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                            style={{ background: `color-mix(in srgb, ${mod.color} 12%, transparent)`, color: mod.color }}>
+                                            <Icon size={12} />
+                                        </div>
+                                        <span className="text-[12px] font-black uppercase tracking-wider flex-1" style={{ color: 'var(--app-foreground)' }}>
+                                            {mod.label}
+                                        </span>
+                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                            {modRules.length}
+                                        </span>
+                                    </button>
+                                    {!collapsed && modRules.length === 0 && (
+                                        <div className="px-4 py-3 text-[11px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            No rules in this module yet.{' '}
+                                            <button onClick={() => {
+                                                const seed = emptyRule();
+                                                seed.module = mod.value;
+                                                setEditingRule(seed);
+                                                setIsNew(true);
+                                                setWizardStep(1);
+                                            }} className="font-black underline" style={{ color: mod.color }}>
+                                                Add one
+                                            </button>
+                                        </div>
+                                    )}
+                                    {!collapsed && modRules.map((rule: any) => (
                             <div
                                 key={rule.id}
                                 className={`group flex items-center gap-2 md:gap-3 transition-all duration-150 border-b border-app-border/30 hover:bg-app-surface/40 py-2 md:py-2.5 ${!rule.is_active ? 'opacity-60' : ''}`}
                                 style={{
                                     paddingLeft: '12px',
                                     paddingRight: '12px',
-                                    borderLeft: '3px solid var(--app-primary)',
+                                    borderLeft: `3px solid ${mod.color}`,
                                 }}
                             >
                                 <div
@@ -446,8 +529,10 @@ export default function AutoTaskRulesPage() {
                                                 },
                                                 assign_to_role_id: rule.template?.assign_to_role || null,
                                                 assign_to_user_id: rule.assign_to_user || null,
+                                                assign_to_user_group_id: rule.assign_to_user_group || null,
                                             });
                                             setIsNew(false);
+                                            setWizardStep(3);
                                         }}
                                         className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"
                                         title="Edit"
@@ -464,7 +549,10 @@ export default function AutoTaskRulesPage() {
                                     </button>
                                 </div>
                             </div>
-                        ))
+                                    ))}
+                                </div>
+                            );
+                        })
                     )}
                 </div>
             </div>
@@ -519,7 +607,118 @@ export default function AutoTaskRulesPage() {
                             </button>
                         </div>
 
-                        {/* Modal Body */}
+                        {/* ── Wizard Stepper ─────────────────────────────── */}
+                        <div className="flex items-center justify-center gap-2 px-5 py-2 flex-shrink-0"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 90%, var(--app-bg))' }}>
+                            {([
+                                { n: 1, label: 'Module', done: !!editingRule.module },
+                                { n: 2, label: 'Event', done: !!editingRule.trigger_event },
+                                { n: 3, label: 'Settings', done: wizardStep >= 3 && !!editingRule.name && !!editingRule.template_data?.title },
+                            ] as const).map((step, i) => {
+                                const isActive = wizardStep === step.n;
+                                const clickable = step.n < wizardStep || step.n === wizardStep;
+                                return (
+                                    <div key={step.n} className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => { if (clickable) setWizardStep(step.n as 1 | 2 | 3); }}
+                                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${clickable ? '' : 'opacity-50 cursor-not-allowed'}`}
+                                            style={{
+                                                background: isActive ? 'var(--app-primary)' : step.done ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                color: isActive ? 'white' : step.done ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                            }}>
+                                            <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black"
+                                                style={{ background: isActive ? 'white' : step.done ? 'var(--app-primary)' : 'transparent', color: isActive ? 'var(--app-primary)' : step.done ? 'white' : 'inherit' }}>
+                                                {step.done && !isActive ? <Check size={9} /> : step.n}
+                                            </span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{step.label}</span>
+                                        </button>
+                                        {i < 2 && <div className="w-6 h-px" style={{ background: 'var(--app-border)' }} />}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* ── Step 1: Module Picker ─────────────────────── */}
+                        {wizardStep === 1 && (
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3">
+                                <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Choose which part of the system this rule reacts to.
+                                </p>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                                    {MODULES.map(m => {
+                                        const Icon = m.icon;
+                                        const selected = editingRule.module === m.value;
+                                        return (
+                                            <button key={m.value} type="button"
+                                                onClick={() => setEditingRule({ ...editingRule, module: m.value })}
+                                                className="flex flex-col items-start gap-2 p-3 rounded-xl transition-all text-left"
+                                                style={{
+                                                    background: selected ? `color-mix(in srgb, ${m.color} 10%, transparent)` : 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                                                    border: `2px solid ${selected ? m.color : 'color-mix(in srgb, var(--app-border) 50%, transparent)'}`,
+                                                }}>
+                                                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                                                    style={{ background: `color-mix(in srgb, ${m.color} 15%, transparent)`, color: m.color }}>
+                                                    <Icon size={16} />
+                                                </div>
+                                                <div>
+                                                    <div className="text-[12px] font-black" style={{ color: 'var(--app-foreground)' }}>{m.label}</div>
+                                                    <div className="text-[10px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                        {TRIGGER_EVENTS.filter(t => t.group === m.group).length} events
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Step 2: Event Picker ──────────────────────── */}
+                        {wizardStep === 2 && (
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3">
+                                <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Pick the event that should fire this rule.
+                                </p>
+                                {(() => {
+                                    const mod = moduleMeta(editingRule.module);
+                                    const events = TRIGGER_EVENTS.filter(t => t.group === mod.group);
+                                    if (events.length === 0) {
+                                        return (
+                                            <div className="p-4 rounded-xl text-[11px] font-medium text-center"
+                                                style={{ background: 'color-mix(in srgb, var(--app-warning) 6%, transparent)', color: 'var(--app-warning)' }}>
+                                                No predefined events for this module. Use a Custom Event instead.
+                                            </div>
+                                        );
+                                    }
+                                    return (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '6px' }}>
+                                            {events.map(t => {
+                                                const selected = editingRule.trigger_event === t.value;
+                                                return (
+                                                    <button key={t.value} type="button"
+                                                        onClick={() => setEditingRule({ ...editingRule, trigger_event: t.value })}
+                                                        className="flex items-center gap-2 p-2.5 rounded-xl transition-all text-left"
+                                                        style={{
+                                                            background: selected ? `color-mix(in srgb, ${mod.color} 10%, transparent)` : 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                                                            border: `1px solid ${selected ? mod.color : 'color-mix(in srgb, var(--app-border) 50%, transparent)'}`,
+                                                        }}>
+                                                        <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                                            style={{ background: selected ? mod.color : 'transparent', border: `2px solid ${selected ? mod.color : 'var(--app-border)'}` }}>
+                                                            {selected && <Check size={10} className="text-white" />}
+                                                        </div>
+                                                        <span className="text-[12px] font-bold flex-1 min-w-0 truncate" style={{ color: 'var(--app-foreground)' }}>{t.label}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        )}
+
+                        {/* ── Step 3: Details ──────────────────────────── */}
+                        {wizardStep === 3 && (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
                             {/* Name + Code */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
@@ -829,6 +1028,27 @@ export default function AutoTaskRulesPage() {
                                         </select>
                                         <p className="text-[10px] font-medium text-app-muted-foreground mt-1">User overrides Role.</p>
                                     </div>
+                                    <div>
+                                        <label className={`${labelCls} flex items-center gap-1`}>
+                                            <Users size={10} /> User Group (Team)
+                                        </label>
+                                        <select
+                                            value={editingRule.assign_to_user_group_id ?? ''}
+                                            onChange={e => setEditingRule({
+                                                ...editingRule,
+                                                assign_to_user_group_id: e.target.value ? Number(e.target.value) : null,
+                                            })}
+                                            className={inputCls}
+                                        >
+                                            <option value="">— none —</option>
+                                            {userGroups.map((g: any) => (
+                                                <option key={g.id} value={g.id}>
+                                                    {g.name} ({g.member_count ?? 0} members)
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <p className="text-[10px] font-medium text-app-muted-foreground mt-1">Fans out — one task per member.</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -846,10 +1066,11 @@ export default function AutoTaskRulesPage() {
                                 </button>
                             </div>
                         </div>
+                        )}
 
-                        {/* Modal Footer */}
+                        {/* Wizard Footer — Back / Next / Save */}
                         <div
-                            className="px-5 py-3 flex justify-end gap-2 flex-shrink-0"
+                            className="px-5 py-3 flex items-center justify-between gap-2 flex-shrink-0"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-bg))',
                                 borderTop: '1px solid var(--app-border)',
@@ -861,14 +1082,35 @@ export default function AutoTaskRulesPage() {
                             >
                                 Cancel
                             </button>
-                            <button
-                                onClick={saveRule}
-                                disabled={saving}
-                                className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
-                                style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
-                            >
-                                {saving ? 'Saving…' : (<><Check size={13} /> Save Rule</>)}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {wizardStep > 1 && (
+                                    <button
+                                        onClick={() => setWizardStep((wizardStep - 1) as 1 | 2 | 3)}
+                                        className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                                    >
+                                        <ArrowLeft size={12} /> Back
+                                    </button>
+                                )}
+                                {wizardStep < 3 ? (
+                                    <button
+                                        onClick={() => setWizardStep((wizardStep + 1) as 1 | 2 | 3)}
+                                        disabled={(wizardStep === 1 && !editingRule.module) || (wizardStep === 2 && !editingRule.trigger_event)}
+                                        className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                        style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                                    >
+                                        Next <ArrowRight size={12} />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={saveRule}
+                                        disabled={saving}
+                                        className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                        style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                                    >
+                                        {saving ? 'Saving…' : (<><Check size={13} /> Save Rule</>)}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
