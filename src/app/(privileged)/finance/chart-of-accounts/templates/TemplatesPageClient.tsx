@@ -14,6 +14,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-coa-templates'
 
 // ── Icon resolver ──────────────────────────────────────────
 const ICON_MAP: Record<string, any> = {
@@ -200,6 +202,14 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
         { id: 'migration' as const, label: 'Migration', icon: ArrowRightLeft },
     ]
 
+    // Interactive tour step actions — drives the view-switcher so users see each mode in action
+    const tourStepActions = useMemo(() => ({
+        3: () => setActiveView('gallery'),
+        5: () => setActiveView('compare'),
+        7: () => setActiveView('migration'),
+        9: () => setActiveView('gallery'),
+    }), [])
+
     return (
         <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300 overflow-hidden"
             style={{ height: 'calc(100dvh - 6rem)' }}>
@@ -236,7 +246,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <div className="flex items-center gap-1 p-1 rounded-xl"
+                        <div data-tour="templates-tab-bar" className="flex items-center gap-1 p-1 rounded-xl"
                             style={{ background: 'var(--app-surface-2, var(--app-surface))' }}>
                             {TABS.map(tab => {
                                 const Icon = tab.icon
@@ -252,7 +262,8 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                 )
                             })}
                         </div>
-                        <button onClick={() => setFocusMode(true)}
+                        <PageTour tourId="finance-coa-templates" stepActions={tourStepActions} />
+                        <button data-tour="templates-focus-mode-btn" onClick={() => setFocusMode(true)}
                             className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                             <Maximize2 size={13} />
                         </button>
@@ -262,7 +273,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
 
             {/* ── KPI Strip (hidden in focus mode) ── */}
             {!focusMode && (
-                <div className="mb-4 flex-shrink-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                <div data-tour="templates-kpi-strip" className="mb-4 flex-shrink-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
                     {kpis.map(s => (
                         <div key={s.label} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
                             style={{
@@ -283,7 +294,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
             )}
 
             {/* ── Toolbar (search + tabs in focus, just search in normal) ── */}
-            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+            <div data-tour="templates-search-bar" className="flex items-center gap-2 mb-3 flex-shrink-0">
                 {focusMode && (
                     <>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -325,7 +336,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
             </div>
 
             {/* ── Content (stretches to fill all space between toolbar and footer) ── */}
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar rounded-2xl"
+            <div data-tour="templates-content" className="flex-1 min-h-0 overflow-y-auto custom-scrollbar rounded-2xl"
                 style={{ border: '1px solid var(--app-border)' }}>
                 {activeView === 'gallery' && (
                     <GalleryView templates={filteredTemplates} templatesMap={templatesMap}
