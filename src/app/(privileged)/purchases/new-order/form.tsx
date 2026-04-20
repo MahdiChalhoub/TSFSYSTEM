@@ -1,13 +1,11 @@
-// @ts-nocheck
 'use client';
 
 import { useActionState, useState, useEffect } from "react";
 import type { PurchaseLine } from '@/types/erp';
-import { createFormalPurchaseOrder, getProcurementIntelligence } from "@/app/actions/commercial/purchases";
+import { createFormalPurchaseOrder } from "@/app/actions/commercial/purchases";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
 import { erpFetch } from "@/lib/erp-api";
-import { Plus, Trash2, Search, Info, AlertTriangle, CheckCircle2, ShoppingCart, ArrowRight, BarChart3, Clock } from "lucide-react";
-import { ProcurementPulse, SupplierPerformance, ProcurementActivityFeed } from "../PurchasesDashboardWidgets";
+import { Plus, Trash2, Search, Info, AlertTriangle, CheckCircle2, ShoppingCart, ArrowRight } from "lucide-react";
 
 export default function FormalOrderForm({
     suppliers,
@@ -23,14 +21,8 @@ export default function FormalOrderForm({
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('');
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | ''>('');
     const [supplierPriceHints, setSupplierPriceHints] = useState<Record<number, number>>({});
-    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, unknown>[]>([]);
+    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, any>[]>([]);
     const [lines, setLines] = useState<PurchaseLine[]>([]);
-    const [intelligence, setIntelligence] = useState<any>(null);
-
-    // Fetch Procurement Intelligence
-    useEffect(() => {
-        getProcurementIntelligence().then(setIntelligence).catch(console.error);
-    }, []);
 
     useEffect(() => {
         if (selectedSiteId) {
@@ -85,193 +77,171 @@ export default function FormalOrderForm({
 
     return (
         <form action={formAction} className="space-y-6">
-            <div className="flex flex-col lg:flex-row gap-8">
-                {/* Main Workflow Form */}
-                <div className="flex-1 min-w-0 space-y-6">
-                    <div className="grid lg:grid-cols-4 gap-4">
-                        {/* Scope */}
-                        <div className="bg-app-surface p-5 rounded-3xl border border-app-border shadow-sm flex flex-col justify-center">
-                            <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Procurement Scope</label>
-                            <div className="flex p-1 bg-app-surface rounded-2xl h-11">
-                                <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-muted-foreground'}`}>OFFICIAL</button>
-                                <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-app-muted-foreground'}`}>INTERNAL</button>
-                            </div>
-                            <input type="hidden" name="scope" value={scope} />
-                        </div>
-
-                        {/* Logistics */}
-                        <div className="bg-app-surface p-5 rounded-3xl border border-app-border shadow-sm flex flex-col justify-center">
-                            <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Destination Site</label>
-                            <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center" value={selectedSiteId} onChange={(e) => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
-                                <option value="">Select Destination...</option>
-                                {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="bg-app-surface p-5 rounded-3xl border border-app-border shadow-sm flex flex-col justify-center">
-                            <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Warehouse</label>
-                            <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center text-indigo-600" name="warehouseId" required>
-                                <option value="">Warehouse...</option>
-                                {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                            </select>
-                        </div>
-
-                        {/* Supplier */}
-                        <div className="bg-app-surface p-5 rounded-3xl border border-app-border shadow-sm flex flex-col justify-center">
-                            <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Supplier</label>
-                            <select
-                                className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center"
-                                name="supplierId"
-                                required
-                                value={selectedSupplierId}
-                                onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
-                            >
-                                <option value="">Select Supplier...</option>
-                                {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            </select>
-                        </div>
+            <div className="grid lg:grid-cols-4 gap-4">
+                {/* Scope */}
+                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Procurement Scope</label>
+                    <div className="flex p-1 bg-gray-50 rounded-2xl h-11">
+                        <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}>OFFICIAL</button>
+                        <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-400'}`}>INTERNAL</button>
                     </div>
+                    <input type="hidden" name="scope" value={scope} />
+                </div>
 
-                    {/* Items Table */}
-                    <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
-                        <div className="p-4 bg-app-surface border-b flex items-center gap-4">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" size={18} />
-                                <ProductSearch callback={addProductToLines} siteId={Number(selectedSiteId)} />
-                            </div>
-                        </div>
+                {/* Logistics */}
+                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Destination Site</label>
+                    <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center" value={selectedSiteId} onChange={(e) => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
+                        <option value="">Select Destination...</option>
+                        {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-[#F8FAFC] text-[10px] font-black text-app-muted-foreground uppercase tracking-widest border-b border-app-border">
-                                    <tr>
-                                        <th className="p-6">Product</th>
-                                        <th className="p-6 w-32 text-center">Quantity</th>
-                                        <th className="p-6 w-48 text-center">Expected Price (HT)</th>
-                                        <th className="p-6 text-right">Subtotal</th>
-                                        <th className="p-6 w-10"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50 text-sm">
-                                    {lines.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="p-20 text-center text-app-muted-foreground italic">
-                                                No items added to the quotation yet.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        lines.map((line, idx) => (
-                                            <tr key={line.productId} className="hover:bg-app-surface/50 transition-colors">
-                                                <td className="p-6">
-                                                    <div className="font-bold text-app-foreground">{line.productName}</div>
-                                                    <div className="text-[10px] text-app-muted-foreground font-mono mt-1">{line.sku}</div>
-                                                    <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
-                                                </td>
-                                                <td className="p-6">
-                                                    <input
-                                                        type="number"
-                                                        className="w-full bg-app-surface border border-app-border rounded-xl p-2.5 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
-                                                        value={line.quantity}
-                                                        onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
-                                                        name={`lines[${idx}][quantity]`}
-                                                    />
-                                                </td>
-                                                <td className="p-6">
-                                                    <div className="relative flex items-center">
-                                                        <input
-                                                            type="number" step="0.01"
-                                                            className="w-full bg-app-surface border border-app-border rounded-xl p-2.5 pr-10 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
-                                                            value={line.unitPrice}
-                                                            onChange={(e) => updateLine(idx, { unitPrice: Number(e.target.value) })}
-                                                            name={`lines[${idx}][unitPrice]`}
-                                                        />
-                                                        <span className="absolute right-3 text-[10px] font-black text-app-faint">XOF</span>
-                                                        {supplierPriceHints[line.productId] && (
-                                                            <div className="absolute -top-6 left-0 right-0 text-center">
-                                                                <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-emerald-100">
-                                                                    Vendor Hint: {supplierPriceHints[line.productId].toLocaleString()}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="p-6 text-right font-black text-app-foreground whitespace-nowrap">
-                                                    {(line.quantity * line.unitPrice).toLocaleString()} XOF
-                                                </td>
-                                                <td className="p-6 text-center">
-                                                    <button type="button" onClick={() => removeLine(idx)} className="p-2 text-app-faint hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Warehouse</label>
+                    <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center text-indigo-600" name="warehouseId" required>
+                        <option value="">Warehouse...</option>
+                        {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                    </select>
+                </div>
 
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-                        <div className="flex-1 w-full bg-app-surface p-6 rounded-3xl border border-app-border shadow-sm">
-                            <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-3 block">Conditions & Observations</label>
-                            <textarea
-                                name="notes"
-                                rows={4}
-                                className="w-full border border-app-border rounded-2xl p-4 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none"
-                                placeholder="Specify delivery terms, payment conditions, or reference codes..."
-                            />
-                        </div>
+                {/* Supplier */}
+                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Supplier</label>
+                    <select
+                        className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center"
+                        name="supplierId"
+                        required
+                        value={selectedSupplierId}
+                        onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
+                    >
+                        <option value="">Select Supplier...</option>
+                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                </div>
+            </div>
 
-                        <div className="w-full md:w-96 space-y-4">
-                            <div className="bg-app-bg text-white p-8 rounded-[2rem] shadow-2xl">
-                                <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-6 border-b border-gray-800 pb-4">Quotation Summary</div>
-                                <div className="space-y-4 mb-8">
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-app-muted-foreground">Items Count</span>
-                                        <span className="font-bold">{lines.length}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-lg font-bold">Estimated Total</span>
-                                        <span className="text-3xl font-black text-indigo-400">{totalAmount.toLocaleString()} XOF</span>
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={isPending || lines.length === 0}
-                                    className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 group"
-                                >
-                                    {isPending ? 'CREATING RFQ...' : 'SEND RFQ TO SUPPLIER'}
-                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                </button>
-
-                                {state.message && (
-                                    <div className={`mt-6 p-4 rounded-xl flex items-center gap-3 text-xs font-bold ${state.errors ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                                        {state.errors ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
-                                        {state.message}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+            {/* Items Table */}
+            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                <div className="p-4 bg-gray-50 border-b flex items-center gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <ProductSearch callback={addProductToLines} siteId={Number(selectedSiteId)} />
                     </div>
                 </div>
 
-                {/* Intelligence Sidebar */}
-                <aside className="w-full lg:w-80 space-y-6 shrink-0">
-                    <ProcurementActivityFeed orders={intelligence?.recent || []} />
-                    <ProcurementPulse data={intelligence?.trend || []} />
-                    <SupplierPerformance data={intelligence?.suppliers || []} />
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-[#F8FAFC] text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                            <tr>
+                                <th className="p-6">Product</th>
+                                <th className="p-6 w-32 text-center">Quantity</th>
+                                <th className="p-6 w-48 text-center">Expected Price (HT)</th>
+                                <th className="p-6 text-right">Subtotal</th>
+                                <th className="p-6 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 text-sm">
+                            {lines.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="p-20 text-center text-gray-400 italic">
+                                        No items added to the quotation yet.
+                                    </td>
+                                </tr>
+                            ) : (
+                                lines.map((line, idx) => (
+                                    <tr key={line.productId} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="p-6">
+                                            <div className="font-bold text-gray-900">{line.productName}</div>
+                                            <div className="text-[10px] text-gray-400 font-mono mt-1">{line.sku}</div>
+                                            <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
+                                        </td>
+                                        <td className="p-6">
+                                            <input
+                                                type="number"
+                                                className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                                                value={line.quantity}
+                                                onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
+                                                name={`lines[${idx}][quantity]`}
+                                            />
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="relative flex items-center">
+                                                <input
+                                                    type="number" step="0.01"
+                                                    className="w-full bg-white border border-gray-200 rounded-xl p-2.5 pr-10 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                                                    value={line.unitPrice}
+                                                    onChange={(e) => updateLine(idx, { unitPrice: Number(e.target.value) })}
+                                                    name={`lines[${idx}][unitPrice]`}
+                                                />
+                                                <span className="absolute right-3 text-[10px] font-black text-gray-300">XOF</span>
+                                                {supplierPriceHints[line.productId] && (
+                                                    <div className="absolute -top-6 left-0 right-0 text-center">
+                                                        <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-emerald-100">
+                                                            Vendor Hint: {supplierPriceHints[line.productId].toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="p-6 text-right font-black text-gray-900 whitespace-nowrap">
+                                            {(line.quantity * line.unitPrice).toLocaleString()} XOF
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <button type="button" onClick={() => removeLine(idx)} className="p-2 text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                    <div className="bg-indigo-500/5 rounded-[2rem] border border-indigo-500/10 p-6">
-                        <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 mb-3">
-                            <Info size={14} />
-                            Procurement Intelligence
-                        </h4>
-                        <p className="text-[10px] text-app-muted-foreground font-medium leading-relaxed">
-                            This panel provides real-time access to your historical spend, top supplier performance, and live transaction activity to help you make data-driven procurement decisions.
-                        </p>
+            <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                <div className="flex-1 w-full bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block">Conditions & Observations</label>
+                    <textarea
+                        name="notes"
+                        rows={4}
+                        className="w-full border border-gray-100 rounded-2xl p-4 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none"
+                        placeholder="Specify delivery terms, payment conditions, or reference codes..."
+                    />
+                </div>
+
+                <div className="w-full md:w-96 space-y-4">
+                    <div className="bg-gray-900 text-white p-8 rounded-[2rem] shadow-2xl">
+                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 border-b border-gray-800 pb-4">Quotation Summary</div>
+                        <div className="space-y-4 mb-8">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-500">Items Count</span>
+                                <span className="font-bold">{lines.length}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-lg font-bold">Estimated Total</span>
+                                <span className="text-3xl font-black text-indigo-400">{totalAmount.toLocaleString()} XOF</span>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isPending || lines.length === 0}
+                            className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 group"
+                        >
+                            {isPending ? 'CREATING RFQ...' : 'SEND RFQ TO SUPPLIER'}
+                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+
+                        {state.message && (
+                            <div className={`mt-6 p-4 rounded-xl flex items-center gap-3 text-xs font-bold ${state.errors ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                                {state.errors ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
+                                {state.message}
+                            </div>
+                        )}
                     </div>
-                </aside>
+                </div>
             </div>
         </form>
     );
@@ -279,7 +249,7 @@ export default function FormalOrderForm({
 
 function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>) => void, siteId: number }) {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<Record<string, unknown>[]>([]);
+    const [results, setResults] = useState<Record<string, any>[]>([]);
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -300,14 +270,14 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
         <div className="relative">
             <input
                 type="text"
-                className="w-full bg-transparent p-2 pl-4 text-sm font-bold text-app-foreground placeholder:text-app-muted-foreground outline-none"
+                className="w-full bg-transparent p-2 pl-4 text-sm font-bold text-gray-900 placeholder:text-gray-400 outline-none"
                 placeholder="Search products to replenish..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => query.length > 1 && setOpen(true)}
             />
             {open && results.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-3 bg-app-surface rounded-2xl shadow-2xl border border-app-border z-50 overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in slide-in-from-top-2 duration-300">
                     {results.map(r => (
                         <button
                             key={r.id}
@@ -320,8 +290,8 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
                             className="w-full p-4 text-left hover:bg-indigo-50 flex items-center justify-between group transition-all"
                         >
                             <div>
-                                <div className="font-bold text-sm text-app-foreground group-hover:text-indigo-700">{r.name}</div>
-                                <div className="text-[10px] text-app-muted-foreground">SKU: {r.sku} ΓÇó In Stock: {r.stockLevel}</div>
+                                <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-700">{r.name}</div>
+                                <div className="text-[10px] text-gray-400">SKU: {r.sku} ΓÇó In Stock: {r.stockLevel}</div>
                             </div>
                             <div className="text-right whitespace-nowrap">
                                 <div className="text-xs font-black text-indigo-600">{r.costPriceHT?.toLocaleString()} XOF HT</div>
