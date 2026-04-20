@@ -35,7 +35,7 @@ const migrateTour: TourConfig = {
     title: 'Chart of Accounts — Migration Workspace',
     module: 'finance',
     description: 'Interactive walkthrough of the migration workspace — analyze, review, and safely execute a template swap without losing journal history.',
-    version: 2,
+    version: 3,
     steps: [
         // 0 — Welcome
         {
@@ -85,11 +85,11 @@ const migrateTour: TourConfig = {
             behavior: 'action',
             actionDelay: 1500,
         },
-        // 5 — Summary stats
+        // 5 — Summary stats (KPI strip now includes them post-preview)
         {
-            target: '[data-tour="migrate-summary-stats"]',
+            target: '[data-tour="migrate-state-kpis"]',
             title: 'The Impact Summary',
-            description: 'Once analyzed, you\'ll see a summary: Total accounts, how many have Balance, Transactions, are Custom sub-accounts, or are Clean. The net balance is there too — it should stay identical after migration.',
+            description: 'The KPI strip just expanded with the analysis result: total accounts, how many have Balance, Transactions, Custom sub-accounts, or are Clean. The net balance should stay identical before and after migration.',
             icon: createElement(ShieldCheck, { size: 16 }),
             color: 'var(--app-success, #22c55e)',
             placement: 'bottom',
