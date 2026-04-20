@@ -1,5 +1,5 @@
 import { erpFetch } from "@/lib/erp-api";
-import { BrandManager } from "@/components/admin/BrandManager";
+import { BrandsGateway } from "./BrandsGateway";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +27,7 @@ export default async function BrandsPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <BrandManager
+            <BrandsGateway
                 brands={brands}
                 countries={countries}
                 categories={categories}
