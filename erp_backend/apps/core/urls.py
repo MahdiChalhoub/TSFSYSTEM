@@ -5,7 +5,7 @@ URL patterns for core functionality including themes.
 """
 
 from django.urls import path
-from . import views_themes
+from . import views_themes, views_tours
 
 
 urlpatterns = [
@@ -20,4 +20,8 @@ urlpatterns = [
     path('ui-themes/<int:theme_id>/delete/', views_themes.delete_theme, name='themes-delete'),
     path('ui-themes/<int:theme_id>/activate/', views_themes.activate_theme, name='themes-activate'),
     path('ui-themes/<int:theme_id>/export/', views_themes.export_theme, name='themes-export'),
+
+    # Per-user guided-tour completion persistence
+    path('user-tours/', views_tours.user_tours_collection, name='user-tours-collection'),
+    path('user-tours/<str:tour_id>/', views_tours.user_tours_detail, name='user-tours-detail'),
 ]

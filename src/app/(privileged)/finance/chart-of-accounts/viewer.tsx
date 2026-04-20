@@ -202,7 +202,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                     </div>
                 </div>
             )}
-            <ConfirmDialog isOpen={!!pendingAction} onClose={() => setPendingAction(null)} title={pendingAction?.title || ''} description={pendingAction?.description || ''} onConfirm={handleConfirmAction} variant={pendingAction?.variant || 'info'} isLoading={isPending} />
+            <ConfirmDialog open={!!pendingAction} onOpenChange={(o) => { if (!o) setPendingAction(null) }} title={pendingAction?.title || ''} description={pendingAction?.description || ''} onConfirm={handleConfirmAction} variant={pendingAction?.variant || 'info'} />
             <style jsx>{`
                 .toolbar-btn { display: flex; items-center: centerbox; gap: 0.375rem; font-size: 0.6875rem; font-weight: 700; border: 1px solid var(--app-border); padding: 0.375rem 0.625rem; border-radius: 0.75rem; transition: all 0.2s; }
                 .toolbar-btn:hover { background: var(--app-surface); color: var(--app-foreground); }

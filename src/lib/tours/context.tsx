@@ -6,15 +6,22 @@
  *  Mount in the privileged layout so all ERP pages have access.
  * ═══════════════════════════════════════════════════════════ */
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { TourState, TourConfig } from './types'
 import { getAllTours, getToursByModule } from './registry'
-import { getTourStatus, markTourCompleted, resetTourStatus, resetAllTourStatuses } from './storage'
+import { getTourStatus, markTourCompleted, resetTourStatus, resetAllTourStatuses, hydrateTourStatusesFromBackend } from './storage'
 
 const TourContext = createContext<TourState | null>(null)
 
 export function TourProvider({ children }: { children: ReactNode }) {
     const [activeTourId, setActiveTourId] = useState<string | null>(null)
+
+    // Hydrate per-user tour completions from the backend once on mount.
+    // Anonymous users silently stay on localStorage-only (endpoint returns
+    // 401 → hydrateTourStatusesFromBackend bails out).
+    useEffect(() => {
+        hydrateTourStatusesFromBackend()
+    }, [])
 
     const startTour = useCallback((tourId: string) => {
         setActiveTourId(tourId)
