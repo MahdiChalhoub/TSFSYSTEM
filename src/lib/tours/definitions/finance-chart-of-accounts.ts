@@ -31,7 +31,7 @@ const coaTour: TourConfig = {
     title: 'Chart of Accounts',
     module: 'finance',
     description: 'Walkthrough of the ledger root — types, templates, migration, posting rules, and auditing.',
-    version: 1,
+    version: 2,
     steps: [
         // 0 — Welcome
         {
@@ -111,7 +111,7 @@ const coaTour: TourConfig = {
             title: 'Recalculate Balances',
             description: 'Audit rebuilds every account balance from the posted journal entries. Run it after bulk imports or if a balance ever looks suspicious.',
             icon: createElement(RefreshCcw, { size: 16 }),
-            color: 'var(--app-muted-foreground)',
+            color: 'var(--app-info, #3b82f6)',
             placement: 'bottom',
         },
         // 9 — Focus mode
