@@ -15,6 +15,38 @@ const DJANGO_URL = isClient
 const isDev = process.env.NODE_ENV === 'development';
 const debug = (...args: unknown[]) => isDev && console.log(...args);
 
+// Default per-request timeout. Django occasionally hangs (slow queries, stale
+// connections, pending migrations) and the Node fetch default is ~300s — far
+// past nginx's upstream_read_timeout, which produces cascading 504s and ties
+// up Next.js workers. Bound each request to 20s so a hung backend fails fast
+// and the caller can recover, fall back, or retry.
+const ERP_FETCH_TIMEOUT_MS = Number(process.env.ERP_FETCH_TIMEOUT_MS) || 20_000;
+
+/** Wraps fetch() with an AbortController so hung requests don't consume the
+ *  Next.js worker. Callers may still pass their own `signal` via options; we
+ *  merge them — whichever aborts first wins. */
+async function fetchWithTimeout(
+    url: string,
+    options: RequestInit = {},
+    timeoutMs: number = ERP_FETCH_TIMEOUT_MS,
+): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    // If caller supplied a signal, forward its aborts into our controller too
+    const callerSignal = options.signal as AbortSignal | undefined;
+    if (callerSignal) {
+        if (callerSignal.aborted) controller.abort();
+        else callerSignal.addEventListener('abort', () => controller.abort(), { once: true });
+    }
+
+    try {
+        return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 /** Custom error class for ERP API errors — used for type-safe catch blocks */
 export class ErpApiError extends Error {
     status: number
@@ -78,7 +110,7 @@ export const getTenantContext = cache(async function getTenantContext() {
             ? `/api/proxy/tenant/resolve/?slug=${subdomain}`
             : `${DJANGO_URL}/api/tenant/resolve/?slug=${subdomain}`;
 
-        const res = await fetch(tenantResolveUrl, {
+        const res = await fetchWithTimeout(tenantResolveUrl, {
             cache: 'no-store',  // Never cache — a cached 404 causes infinite crash loops
         });
 
@@ -88,7 +120,12 @@ export const getTenantContext = cache(async function getTenantContext() {
         }
         return await res.json();
     } catch (e) {
-        console.error("Failed to resolve tenant:", e);
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg.includes('aborted')) {
+            console.error('[DEBUG] Tenant Resolution timed out — Django slow or unreachable');
+        } else {
+            console.error("Failed to resolve tenant:", e);
+        }
         return null;
     }
 });
@@ -183,7 +220,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             fetchOptions.cache = 'no-store';
         }
 
-        const response = await fetch(url, fetchOptions);
+        const response = await fetchWithTimeout(url, fetchOptions);
 
         debug(`[ERP_API] Response: ${response.status} from ${path}`);
 
@@ -263,8 +300,18 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
         return await response.json();
     } catch (error: unknown) {
+        // Timeout/abort — surface as a typed 504-ish error so callers can
+        // distinguish a slow/down backend from a real application-level error.
+        const errName = (error instanceof Error ? error.name : '') || '';
+        const msgRaw = (error instanceof Error ? error.message : String(error)) || '';
+        const isAbort = errName === 'AbortError' || msgRaw.toLowerCase().includes('aborted');
+        if (isAbort) {
+            console.error(`[ERP_API] Request to ${path} timed out after ${ERP_FETCH_TIMEOUT_MS}ms — Django slow or unreachable`);
+            throw new ErpApiError(`Backend timeout: ${path}`, 504);
+        }
+
         // Suppress noisy logs for expected auth redirection flows and known SaaS-root context gaps
-        const msg = (error instanceof Error ? error.message : String(error)) || '';
+        const msg = msgRaw;
         const isAuthError =
             msg.includes('Authentication credentials') ||
             msg.includes('Invalid token') ||
