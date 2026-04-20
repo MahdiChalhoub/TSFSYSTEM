@@ -395,7 +395,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                     </button>
                     <button
                         data-tour="migration-btn"
-                        onClick={() => router.push('/finance/chart-of-accounts/migrate')}
+                        onClick={() => router.push('/finance/chart-of-accounts/migrate?from=coa')}
                         className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
                         style={{
                             color: 'var(--app-warning, #F59E0B)',
