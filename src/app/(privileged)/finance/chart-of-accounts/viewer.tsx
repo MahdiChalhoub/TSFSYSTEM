@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-chart-of-accounts'
 
 // ─── Type color map (V2 CSS variables) ────────────────────────
 const TYPE_CONFIG: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
@@ -380,6 +382,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
                 <div className="flex items-center gap-2 flex-wrap justify-end">
                     <button
+                        data-tour="posting-rules-btn"
                         onClick={() => router.push('/finance/settings/posting-rules?from=coa')}
                         className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
                         style={{
@@ -391,6 +394,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                         <Settings2 size={13} /> Posting Rules
                     </button>
                     <button
+                        data-tour="migration-btn"
                         onClick={() => router.push('/finance/chart-of-accounts/migrate')}
                         className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
                         style={{
@@ -402,6 +406,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                         <Zap size={13} /> Migration
                     </button>
                     <button
+                        data-tour="templates-btn"
                         onClick={() => router.push('/finance/chart-of-accounts/templates?from=coa')}
                         className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
                         style={{
@@ -414,6 +419,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                         <Library size={13} /> Templates
                     </button>
                     <button
+                        data-tour="audit-btn"
                         onClick={() => setPendingAction({ type: 'recalculate', title: 'Recalculate Balances?', description: 'Rebuild all account balances from posted journal entries.', variant: 'warning' })}
                         disabled={isPending}
                         className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50"
@@ -424,6 +430,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                         <RefreshCcw size={13} className={isPending ? 'animate-spin' : ''} /> Audit
                     </button>
                     <button
+                        data-tour="add-account-btn"
                         onClick={() => openAddModal()}
                         className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
                         style={{
@@ -434,7 +441,9 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                     >
                         <Plus size={14} /> New Account
                     </button>
+                    <PageTour tourId="finance-chart-of-accounts" />
                     <button
+                        data-tour="focus-mode-btn"
                         onClick={() => setFocusMode(p => !p)}
                         title="Toggle Focus Mode (Ctrl+Q)"
                         className="p-1.5 rounded-xl border transition-all"
@@ -446,7 +455,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
             </div>}
 
             {/* ── KPI Strip ─────────────────────────────────── */}
-            {!focusMode && <div className="flex-shrink-0 mb-4 px-4 md:px-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+            {!focusMode && <div data-tour="kpi-strip" className="flex-shrink-0 mb-4 px-4 md:px-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
                 {stats.map(s => {
                     const isActive = typeFilter === s.filterKey || (s.filterKey === null && typeFilter === null)
                     return (
@@ -481,7 +490,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
             </div>}
 
             {/* ── Unified Toolbar ────────────────────────────── */}
-            <div className="flex items-center gap-2 mb-3 flex-shrink-0 px-4 md:px-6">
+            <div data-tour="search-bar" className="flex items-center gap-2 mb-3 flex-shrink-0 px-4 md:px-6">
                 {/* Focus mode: title label on the left */}
                 {focusMode && (
                     <div className="flex items-center gap-2 flex-shrink-0 mr-1">
@@ -643,6 +652,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
             {/* ── Tree Table ─────────────────────────────────── */}
             <div
+                data-tour="account-tree"
                 className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col mx-4 md:mx-6"
                 style={{
                     background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)',

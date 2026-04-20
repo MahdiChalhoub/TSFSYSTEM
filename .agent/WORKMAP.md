@@ -37,6 +37,13 @@
 
 ## 🟡 MEDIUM
 
+### [DONE 2026-04-20] Guided-tour button on Chart of Accounts + reusable `<PageTour>` wrapper
+- **Discovered**: 2026-04-20
+- **Impact**: Users on `/finance/chart-of-accounts` had no onboarding walkthrough. `/inventory/units` had a tour button (rendered by TreeMasterPage) but it was dead — no registered definition and no mounted renderer.
+- **Files**: `src/components/ui/PageTour.tsx` (new), `src/lib/tours/definitions/finance-chart-of-accounts.ts` (new, 12 steps), `src/lib/tours/definitions/inventory-units.ts` (new, 14 steps), `src/app/(privileged)/finance/chart-of-accounts/viewer.tsx`, `src/app/(privileged)/inventory/units/UnitsClient.tsx`.
+- **Fix**: Factored the existing `TourTriggerButton` + `<GuidedTour>` into a single `<PageTour>` component. Supports `renderButton={false}` for pages whose template already renders the trigger. Dropped it into COA's header and fixed Units by wiring step actions + mounting the renderer. COA gets 12 passive steps; Units mirrors Categories with 6 programmatic step actions (expand tree / open sidebar on first base unit / switch tabs / close).
+- **Follow-up**: Browser smoke-test pending (no dev server in this env). Mobile tours not implemented — see new LOW item below.
+
 ### [DONE 2026-04-18] Plan Switch UI Refresh
 - **Discovered**: 2026-02-09
 - **Impact**: After confirming plan switch, usage/billing data may not visually update without page refresh
@@ -86,6 +93,12 @@
 
 ## 🟢 LOW
 
+### [OPEN] Mobile guided tours (COA + Units + Categories)
+- **Discovered**: 2026-04-20
+- **Impact**: Mobile pages (`MobileCOAClient.tsx`, `mobile/MobileUnitsClient.tsx`, mobile categories) have no `<PageTour>` and no `data-tour` markers. Mobile users can't replay the onboarding walkthrough that desktop users get.
+- **Files**: `src/app/(privileged)/finance/chart-of-accounts/mobile/MobileCOAClient.tsx`, `src/app/(privileged)/inventory/units/mobile/MobileUnitsClient.tsx`, plus any mobile categories client.
+- **Notes**: Mobile has different layouts (stacked cards, bottom sheets) so the tour script needs rewriting — selectors from the desktop tours won't line up. Consider a separate `finance-chart-of-accounts-mobile.ts` definition, or `data-tour-mobile` attributes targeted from a unified definition. `GuidedTour` tooltip width is already responsive (`calc(100vw - 32px)`), so the renderer itself doesn't need changes.
+
 ### [OPEN — Phase 1 blocked on staging env] Module Hot-Reload
 - **Discovered**: 2026-02-05
 - **Impact**: After `ModuleManager.upgrade/install_for_all/revoke_all`, gunicorn + Celery don't see the change until manually restarted.
@@ -103,7 +116,10 @@
 
 ## ✅ COMPLETED
 
-### [DONE 2026-04-20] MCP AI Chat Interface
+### [DONE 2026-04-20] Purchase Order Intelligence Grid
+- **Discovered**: 2026-04-20
+- **Impact**: UI overhaul of `purchases/new/` mapping to '11-zone Intelligence Grid' mock.
+- **Fix**: Flattened the bulky configuration headers. Transformed the `form.tsx` line-items table to a 13-column dashboard matching the TSFSYSTEM V3 specification layout perfectly. Created the floating sticky action bar.
 - **Discovered**: 2026-04-19
 - **Impact**: AI Assistant Chat module was a "Coming Soon" placeholder
 - **Fix**: Replaced generic Conversations Detail page with a fully interactive Chat UI. Supports parallel fetching of metadata and messages, real-time message posting to `MCPChatView`, optimistic updates, and displays tool call history inline.

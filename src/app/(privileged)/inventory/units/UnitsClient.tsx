@@ -19,6 +19,8 @@ import { UnitCalculator } from '@/components/admin/UnitCalculator'
 import { BalanceBarcodeConfigModal } from '@/components/admin/BalanceBarcodeConfigModal'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 import { EntityProductsTab } from '@/components/templates/EntityProductsTab'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/inventory-units'
 
 /* ═══════════════════════════════════════════════════════════
  *  UNIT ROW — matches CategoryRow design exactly
@@ -416,6 +418,20 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
         return { total: data.length, base: baseCount, derived: derivedCount, totalProducts, scaleUnits }
     }, [data])
 
+    // Tour step actions — programmatic interactions wired to the tree state
+    const renderPropsRef = useRef<any>(null)
+    const tourStepActions = useMemo(() => ({
+        5: () => { renderPropsRef.current?.setExpandAll(true); renderPropsRef.current?.setExpandKey((k: number) => k + 1) },
+        6: () => {
+            const firstBase = data.find((u: any) => !u.base_unit)
+            if (firstBase) { renderPropsRef.current?.setSidebarNode(firstBase); renderPropsRef.current?.setSidebarTab('overview') }
+        },
+        8: () => { renderPropsRef.current?.setSidebarTab('products') },
+        9: () => { renderPropsRef.current?.setSidebarTab('packages') },
+        10: () => { renderPropsRef.current?.setSidebarTab('calculator') },
+        11: () => { renderPropsRef.current?.setSidebarNode(null) },
+    }), [data])
+
     return (
         <TreeMasterPage
             config={{
@@ -450,6 +466,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
             modals={<>
                 <UnitFormModal key={formKey} isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSuccess={() => { setIsFormOpen(false); router.refresh() }} potentialParents={data} />
                 <BalanceBarcodeConfigModal isOpen={showBarcodeConfig} onClose={() => setShowBarcodeConfig(false)} />
+                <PageTour tourId="inventory-units" stepActions={tourStepActions} renderButton={false} />
                 <ConfirmDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }} onConfirm={handleConfirmDelete}
                     title={`Delete "${deleteTarget?.name}"?`} description="This will permanently remove this unit. Make sure no products are using it." confirmText="Delete" variant="danger" />
             </>}
@@ -458,7 +475,9 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 <UnitDetailPanel node={node} onEdit={openEditForm} onAdd={openForm} onDelete={(n: any) => setDeleteTarget(n)} allUnits={data} initialTab={tab} onClose={onClose} onPin={onPin} />
             )}
         >
-            {({ searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar, selectedNode, setSelectedNode, sidebarNode, setSidebarNode, setSidebarTab, setPanelTab }) => {
+            {(renderProps) => {
+                const { searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar, selectedNode, setSelectedNode, sidebarNode, setSidebarNode, setSidebarTab, setPanelTab } = renderProps
+                renderPropsRef.current = renderProps
                 let filtered = data
                 if (searchQuery.trim()) {
                     const q = searchQuery.toLowerCase()

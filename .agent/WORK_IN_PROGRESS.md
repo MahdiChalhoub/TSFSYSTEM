@@ -15,6 +15,43 @@
 
 ## Session Log
 
+### Session: 2026-04-20 (Purchase Order Redesign)
+- **Agent**: Antigravity
+- **Status**: ✅ DONE (code + typecheck running)
+- **Worked On**: Overhauled the New Purchase Order page (`purchases/new`) to match the "Intelligence Grid" UI mockup. Flattened the UI by removing heavy configuration cars, implemented a streamlined Top Bar / Toolbar with search, a dense 13-column Grid, and an anchored Cyan sticky footer for the `Create PO` action. Substituted mock intelligence fields (Stock Transit, Sales Monthly, Adjust Score, etc.) into the data-structure pending backend API hydration.
+- **Files Modified**:
+  - `src/app/(privileged)/purchases/new/page.tsx` — Simplified layout shell.
+  - `src/app/(privileged)/purchases/new/form.tsx` — Massive structural rewrite corresponding to new design language constraints.
+- **Discoveries**:
+  - The `searchProductsSimple` endpoint currently only guarantees core inventory product attributes; advanced Intelligence markers are mocked in TSX.
+- **Warnings for Next Agent**:
+  - ⚠️ Make sure to connect the real real-time API telemetry to `form.tsx` for `stockTransit`, `poCount`, `salesMonthly`, and `scoreAdjust` once the backend aggregates are live.
+  - ⚠️ The Settings drop-downs (Official/Internal, Recoverable VAT, Price Type HT/TTC, and Site selection) were structurally hidden to fulfill the minimalist visual goal. They use fixed/hidden states. Before shipping to prod, we need an advanced config Slide-Over or Modal attached to the `Settings2` icon to toggle these meaningfully.
+
+### Session: 2026-04-20 (part 2 — Tour button on COA + reusable `<PageTour>` wrapper + Units tour fix)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE (code + typecheck clean) / ⏳ browser smoke-test pending
+- **Worked On**: Added the ✨ guided-tour affordance to `/finance/chart-of-accounts`, factored the button+renderer into a single reusable `<PageTour>` component, and fixed the dead tour button on `/inventory/units` (previously rendered by TreeMasterPage but never functional — no definition, no mounted renderer).
+- **Files Modified**:
+  - NEW `src/components/ui/PageTour.tsx` (55 lines) — one-liner wrapper over `TourTriggerButton` + `GuidedTour`. Supports `renderButton={false}` mode for pages whose template (TreeMasterPage/MasterDataPage) already provides the trigger button. Returns `null` when the tour isn't registered → avoids dead buttons.
+  - NEW `src/lib/tours/definitions/finance-chart-of-accounts.ts` (12-step tour) — welcome → KPI filters → search → tree → New Account → Templates → Migration → Posting Rules → Audit → Focus Mode → keyboard shortcuts → complete. All steps are passive 'info' (no programmatic actions needed).
+  - NEW `src/lib/tours/definitions/inventory-units.ts` (14-step tour) — mirrors the categories tour shape with expand/open-sidebar/tab-switch programmatic actions.
+  - `src/app/(privileged)/inventory/units/UnitsClient.tsx` — imported `PageTour` + definition (side-effect registration), added `renderPropsRef` to capture TreeMasterPage render props, wired `tourStepActions` for steps 5/6/8/9/10/11 (expand tree, open sidebar on first base unit, switch tabs, close sidebar), mounted `<PageTour tourId="inventory-units" renderButton={false} stepActions={...} />` inside `modals` (button is provided by TreeMasterPage via `config.tourId`).
+  - `src/app/(privileged)/finance/chart-of-accounts/viewer.tsx` — imported `PageTour` + definition, inserted `<PageTour tourId="finance-chart-of-accounts" />` between New Account and Focus Mode in the header action row, and added `data-tour` markers: `kpi-strip` (KPI grid), `search-bar` (toolbar row), `account-tree` (tree container), `add-account-btn`, `posting-rules-btn`, `migration-btn`, `templates-btn`, `audit-btn`, `focus-mode-btn`.
+- **Discoveries**:
+  - `TreeMasterPage` renders the `TourTriggerButton` when `config.tourId` is set, but does NOT mount `<GuidedTour>`. Pages using the template must mount the renderer themselves (e.g. via `<PageTour renderButton={false} />`). Categories already does this pattern with a raw `<GuidedTour>`; Units didn't, hence the dead button.
+  - `MasterDataPage` template does mount both, so pages on that template only need the definition file.
+  - The existing `TourTriggerButton` already hides its label on screens <md (responsive). `GuidedTour` tooltip is width-clamped to `calc(100vw - 32px)` so it degrades OK on phones — though mobile COA is a separate file (`MobileCOAClient.tsx`) and does NOT get a tour in this session; flagged as a follow-up WORKMAP item.
+  - Typecheck is clean (`npx tsc --noEmit` → exit 0).
+- **Warnings for Next Agent**:
+  - ⚠️ **Browser smoke-test pending** (no dev server in this env). Before deploying, verify on desktop: (a) Units page — click ✨ Tour, walk through all 14 steps including the auto-open sidebar and tab-switch actions, confirm the final "You're all set" card. (b) COA page — click ✨ Tour, walk through 12 steps, confirm each highlighted element is the right one (the step-4 "New Account" step and step-9 "Focus Mode" in particular, since those use unique selectors).
+  - ⚠️ **First-visit auto-start**: both tours will auto-start on first load for users who've never seen the tour at the current `version`. If this is unwanted on COA specifically, pass `autoStart={false}` on `<PageTour>` — the prop exists on the wrapper.
+  - ⚠️ **Mobile tour not implemented**. `MobileCOAClient.tsx` and the mobile units client have NO tour. Tracked as a new LOW WORKMAP item.
+  - ⚠️ `viewer.tsx` is still over the 300-line `code-quality.md` limit (was ~862 before, now ~880 with the additive changes). Pre-existing violation, not worsened materially by this work. Flag for a dedicated refactor plan later.
+  - ⚠️ The `<PageTour>` component is importable by any bespoke page going forward — recommended pattern for new tours. To add a tour to page X: (1) create `src/lib/tours/definitions/x.ts` with `registerTour({...})`, (2) import it for its side effect, (3) drop `<PageTour tourId="x" />` wherever the button should appear.
+
+---
+
 ### Session: 2026-04-20 (MCP Chat Module Implementation)
 - **Agent**: Antigravity
 - **Status**: ✅ DONE (code + typecheck running)
