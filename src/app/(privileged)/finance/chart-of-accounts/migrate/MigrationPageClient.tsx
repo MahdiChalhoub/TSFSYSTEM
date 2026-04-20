@@ -4,9 +4,9 @@ import { useState, useCallback, useMemo } from 'react'
 import {
     ArrowRightLeft, DollarSign, FileText, UserPlus, ChevronDown,
     CheckCircle2, Zap, Loader2, X, AlertTriangle, Shield,
-    Database, BarChart3, Search, Filter, ArrowRight,
+    Database, BarChart3, Search, Filter, ArrowRight, ChevronLeft,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
     getMigrationPreview,
@@ -14,6 +14,8 @@ import {
     type MigrationPreview,
     type MigrationPreviewAccount,
 } from '@/app/actions/finance/coa-templates'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-coa-migrate'
 
 interface Props {
     templateList: { key: string; name: string }[]
@@ -31,6 +33,8 @@ export default function MigrationPageClient({
     hasData,
 }: Props) {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const cameFromCOA = searchParams.get('from') === 'coa'
     const [targetKey, setTargetKey] = useState('')
     const [preview, setPreview] = useState<MigrationPreview | null>(null)
     const [loading, setLoading] = useState(false)
@@ -183,7 +187,7 @@ export default function MigrationPageClient({
         // falling back to desktop's 120px header+tabs allowance.
         <div className="flex flex-col h-full" style={{ height: 'calc(100dvh - var(--mobile-chrome, 120px))' }}>
             {/* ═══ TOP HEADER ═══ */}
-            <div className="flex-shrink-0 rounded-t-2xl" style={{
+            <div data-tour="migrate-header" className="flex-shrink-0 rounded-t-2xl" style={{
                 background: 'var(--app-surface)',
                 borderBottom: '1px solid var(--app-border)',
                 border: '1px solid var(--app-border)',
@@ -191,6 +195,20 @@ export default function MigrationPageClient({
                 {/* Title Row */}
                 <div className="flex items-center justify-between px-5 py-4">
                     <div className="flex items-center gap-3">
+                        {cameFromCOA && (
+                            <button
+                                onClick={() => router.push('/finance/chart-of-accounts')}
+                                className="flex items-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-xl border transition-all mr-1"
+                                style={{
+                                    color: 'var(--app-muted-foreground)',
+                                    borderColor: 'var(--app-border)',
+                                }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
+                            >
+                                <ChevronLeft size={14} /> Back
+                            </button>
+                        )}
                         <div className="flex items-center justify-center w-10 h-10 rounded-xl"
                             style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
                             <ArrowRightLeft size={20} style={{ color: 'var(--app-primary)' }} />
@@ -204,28 +222,31 @@ export default function MigrationPageClient({
                             </p>
                         </div>
                     </div>
-                    {preview && (
-                        <button onClick={handleExecute} disabled={executing}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all"
-                            style={{
-                                background: executing ? 'var(--app-muted)' : 'var(--app-primary)',
-                                color: 'white',
-                                opacity: executing ? 0.6 : 1,
-                                cursor: executing ? 'wait' : 'pointer',
-                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
-                            }}>
-                            {executing ? (
-                                <><Loader2 size={14} className="animate-spin" /> Migrating...</>
-                            ) : (
-                                <><Zap size={14} /> Apply Migration &amp; Import</>
-                            )}
-                        </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                        <PageTour tourId="finance-coa-migrate" />
+                        {preview && (
+                            <button data-tour="migrate-apply-btn" onClick={handleExecute} disabled={executing}
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all"
+                                style={{
+                                    background: executing ? 'var(--app-muted)' : 'var(--app-primary)',
+                                    color: 'white',
+                                    opacity: executing ? 0.6 : 1,
+                                    cursor: executing ? 'wait' : 'pointer',
+                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                }}>
+                                {executing ? (
+                                    <><Loader2 size={14} className="animate-spin" /> Migrating...</>
+                                ) : (
+                                    <><Zap size={14} /> Apply Migration &amp; Import</>
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Current State KPIs — wraps on narrow viewports so the "Migration Required" badge
                     doesn't clip off the right edge on mobile. */}
-                <div className="flex items-center gap-2 px-4 md:px-5 pb-3 flex-wrap">
+                <div data-tour="migrate-state-kpis" className="flex items-center gap-2 px-4 md:px-5 pb-3 flex-wrap">
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px]"
                         style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
                         <Database size={12} style={{ color: 'var(--app-primary)' }} />
@@ -262,7 +283,7 @@ export default function MigrationPageClient({
 
                 {/* Target Template Selection */}
                 <div className="flex items-center gap-3 px-5 pb-4">
-                    <div className="flex items-center gap-2 flex-1">
+                    <div data-tour="migrate-target-select" className="flex items-center gap-2 flex-1">
                         <ArrowRight size={14} style={{ color: 'var(--app-muted-foreground)' }} />
                         <select
                             value={targetKey}
@@ -280,6 +301,7 @@ export default function MigrationPageClient({
                         </select>
                     </div>
                     <button
+                        data-tour="migrate-analyze-btn"
                         onClick={handleLoadPreview}
                         disabled={!targetKey || loading}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold transition-all"
@@ -316,7 +338,7 @@ export default function MigrationPageClient({
                     style={{ border: '1px solid var(--app-border)', borderTop: 'none' }}>
 
                     {/* ── Summary Stats Bar ── */}
-                    <div className="flex-shrink-0 flex items-center gap-3 px-5 py-3"
+                    <div data-tour="migrate-summary-stats" className="flex-shrink-0 flex items-center gap-3 px-5 py-3"
                         style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
                         {[
                             { label: 'Total', value: preview.summary.total_accounts, color: 'var(--app-foreground)' },
@@ -381,7 +403,7 @@ export default function MigrationPageClient({
                     </div>
 
                     {/* ── Scrollable Sections ── */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3"
+                    <div data-tour="migrate-sections" className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3"
                         style={{ background: 'var(--app-background)' }}>
                         {sections.map(section => (
                             section.accounts.length > 0 && (
