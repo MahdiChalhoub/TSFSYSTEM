@@ -14,6 +14,8 @@ import {
     autoDetectAndApply, bulkSaveRules, syncFromTemplate,
     type PostingRuleV2, type CatalogModule,
 } from '@/app/actions/finance/posting-rules'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-posting-rules'
 
 // ── Account Tree Picker ────────────────────────────────────────
 function AccountTreePicker({
@@ -354,6 +356,15 @@ export default function PostingRulesConsole({
         })
     }
 
+    // ── Interactive tour actions — drives module selection ──
+    const tourStepActions = useMemo(() => ({
+        2: () => {
+            // Prefer a module that has at least one event, fall back to first key
+            const preferred = moduleKeys.find(k => (modules[k] || []).length > 0) || moduleKeys[0]
+            if (preferred) setSelectedModule(preferred)
+        },
+    }), [moduleKeys, modules])
+
     // ── KPI config (all clickable) ──
     const kpis = [
         { label: 'Total Events', value: totalEvents, color: 'var(--app-primary)', icon: <Target size={14} />, filterKey: 'ALL' as string | null },
@@ -390,17 +401,17 @@ export default function PostingRulesConsole({
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <button onClick={() => router.push('/finance/chart-of-accounts')}
+                        <button data-tour="postingrules-coa-btn" onClick={() => router.push('/finance/chart-of-accounts')}
                             className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
                             style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                             <BookOpen size={13} /> Chart of Accounts
                         </button>
-                        <button onClick={handleSyncTemplate} disabled={isPending}
+                        <button data-tour="postingrules-sync-btn" onClick={handleSyncTemplate} disabled={isPending}
                             className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50"
                             style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                             <RefreshCcw size={13} /> Sync Template
                         </button>
-                        <button onClick={handleAutoDetect} disabled={isPending}
+                        <button data-tour="postingrules-autodetect-btn" onClick={handleAutoDetect} disabled={isPending}
                             className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50"
                             style={{
                                 color: 'var(--app-warning, #f59e0b)',
@@ -410,19 +421,20 @@ export default function PostingRulesConsole({
                             <Zap size={13} /> Auto-Detect
                         </button>
                         {hasChanges && (
-                            <button onClick={handleSave} disabled={isPending}
+                            <button data-tour="postingrules-save-btn" onClick={handleSave} disabled={isPending}
                                 className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
                                 style={{ background: 'var(--app-primary)', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                                 {isPending ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Save Changes
                             </button>
                         )}
+                        <PageTour tourId="finance-posting-rules" stepActions={tourStepActions} />
                     </div>
                 </div>
             )}
 
             {/* ── KPI Strip (clickable filters) ── */}
             {!focusMode && (
-                <div className="flex-shrink-0 mb-4 px-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+                <div data-tour="postingrules-kpi-strip" className="flex-shrink-0 mb-4 px-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
                     {kpis.map(k => {
                         const isActive = kpiFilter === k.filterKey || (k.filterKey === 'ALL' && kpiFilter === null) || (k.filterKey === null && kpiFilter === null)
                         const isClickable = k.filterKey !== null
@@ -475,7 +487,7 @@ export default function PostingRulesConsole({
             )}
 
             {/* ── Toolbar (focus mode: compact) ── */}
-            <div className="flex items-center gap-2 mb-3 flex-shrink-0 px-0">
+            <div data-tour="postingrules-search-bar" className="flex items-center gap-2 mb-3 flex-shrink-0 px-0">
                 {focusMode && (
                     <div className="flex items-center gap-2 flex-shrink-0 mr-1">
                         <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold"
@@ -516,7 +528,7 @@ export default function PostingRulesConsole({
                 style={{ border: '1px solid var(--app-border)' }}>
 
                 {/* Module Sidebar */}
-                <div className="w-[180px] md:w-[200px] flex-shrink-0 overflow-y-auto custom-scrollbar"
+                <div data-tour="postingrules-module-sidebar" className="w-[180px] md:w-[200px] flex-shrink-0 overflow-y-auto custom-scrollbar"
                     style={{ background: 'var(--app-surface)', borderRight: '1px solid var(--app-border)' }}>
                     {filteredModuleKeys.map(mod => {
                         const meta = getMeta(mod)
@@ -550,7 +562,7 @@ export default function PostingRulesConsole({
                 </div>
 
                 {/* Rules Content */}
-                <div className="flex-1 flex flex-col min-w-0">
+                <div data-tour="postingrules-rules-grid" className="flex-1 flex flex-col min-w-0">
                     {/* Module title bar */}
                     {activeModule && (() => {
                         const meta = getMeta(activeModule)
