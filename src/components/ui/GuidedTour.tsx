@@ -235,6 +235,10 @@ export function GuidedTour({
 
     const isCentered = step.isWelcome || !step.target || !targetRect
     const accentColor = step.color || 'var(--app-primary)'
+    // CTA color — always primary so the Next / "Got it!" button is readable
+    // regardless of what accentColor a step picks. (Light/muted accents make
+    // white-on-accent buttons invisible; see past issues on COA + Posting Rules.)
+    const ctaColor = 'var(--app-primary)'
     const isClickStep = behavior === 'click'
 
     /* ─── Spotlight geometry (for box-shadow approach) ─── */
@@ -494,7 +498,8 @@ export function GuidedTour({
                                     display: 'flex', alignItems: 'center', gap: 4,
                                     fontSize: 10, fontWeight: 700, padding: '5px 14px', borderRadius: 8,
                                     color: '#fff', cursor: 'pointer',
-                                    background: accentColor, border: 'none',
+                                    background: ctaColor, border: 'none',
+                                    boxShadow: `0 2px 8px color-mix(in srgb, ${ctaColor} 30%, transparent)`,
                                 }}
                             >
                                 {isLast ? (
