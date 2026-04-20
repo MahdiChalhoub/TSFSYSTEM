@@ -419,40 +419,43 @@ export default function JournalEntryForm({
                     <div className="hidden md:block">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-app-surface border-b border-app-border/40 text-left">
-                                    <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider min-w-[220px]">Ledger Account</th>
-                                    <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-40">Subledger (Contact)</th>
-                                    <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-32">Cost Center</th>
-                                    <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider min-w-[180px]">Line Description</th>
-                                    <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-36 text-right">Debit</th>
-                                    <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-36 text-right">Credit</th>
-                                    <th className="px-4 py-3 w-10"></th>
+                                <tr style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                                    <th className="px-3 py-2 text-[9px] font-black uppercase tracking-wider text-left min-w-[200px]" style={{ color: 'var(--app-muted-foreground)' }}>Ledger Account</th>
+                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-left w-36" style={{ color: 'var(--app-muted-foreground)' }}>Subledger</th>
+                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-left w-28" style={{ color: 'var(--app-muted-foreground)' }}>Cost Center</th>
+                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-left min-w-[160px]" style={{ color: 'var(--app-muted-foreground)' }}>Description</th>
+                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-right w-32" style={{ color: 'var(--app-primary)' }}>Debit</th>
+                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-right w-32" style={{ color: 'var(--app-error)' }}>Credit</th>
+                                    <th className="px-2 py-2 w-8"></th>
                                 </tr>
                             </thead>
                             <tbody>
                             {lines.map((line: any, idx: number) => (
-                                <tr key={idx} className="border-b border-app-border/20 last:border-0 hover:bg-app-surface/40 group transition-colors">
-                                    <td className="px-4 py-2.5 relative">
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                list="accounts-list"
-                                                placeholder="Code or name..."
-                                                value={line.searchString}
-                                                onChange={e => updateLine(idx, 'searchString', e.target.value)}
-                                                className={`w-full p-2 border rounded-lg text-xs focus:ring-2 focus:ring-app-primary/20 outline-none font-bold transition-all shadow-sm ${
-                                                    line.accountId 
-                                                    ? 'border-emerald-500/30 bg-emerald-500/5 text-app-foreground' 
-                                                    : 'border-app-border/60 bg-app-surface text-app-foreground'
-                                                }`}
-                                            />
-                                            {line.accountId && (
-                                                <div className="flex items-center gap-1 shrink-0">
-                                                    {!selectableAccounts.find(a => a.id.toString() === line.accountId)?.isActive && (
-                                                        <span className="text-[8px] bg-rose-500/10 text-rose-500 px-1.5 py-0.5 rounded-md font-black uppercase">INACTIVE</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
+                                <tr key={idx}
+                                    className="group transition-colors"
+                                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}
+                                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}
+                                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                                >
+                                    {/* Account */}
+                                    <td className="px-3 py-1.5 relative">
+                                        <input
+                                            list="accounts-list"
+                                            placeholder="Code or name..."
+                                            value={line.searchString}
+                                            onChange={e => updateLine(idx, 'searchString', e.target.value)}
+                                            className="w-full px-2.5 py-1.5 rounded-lg text-[12px] font-bold outline-none transition-all"
+                                            style={{
+                                                background: line.accountId ? 'color-mix(in srgb, var(--app-success) 4%, transparent)' : 'transparent',
+                                                border: line.accountId ? '1px solid color-mix(in srgb, var(--app-success) 25%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                color: 'var(--app-foreground)',
+                                            }}
+                                            onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-primary)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                                            onBlur={e => { 
+                                                (e.target as HTMLElement).style.borderColor = line.accountId ? 'color-mix(in srgb, var(--app-success) 25%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)';
+                                                (e.target as HTMLElement).style.background = line.accountId ? 'color-mix(in srgb, var(--app-success) 4%, transparent)' : 'transparent'
+                                            }}
+                                        />
                                         <datalist id="accounts-list">
                                             {selectableAccounts.map(acc => (
                                                 <option key={acc.id} value={`${acc.code} ${acc.name}`}>
@@ -461,20 +464,28 @@ export default function JournalEntryForm({
                                             ))}
                                         </datalist>
                                         {!line.accountId && line.searchString && (
-                                            <div className="absolute left-4 top-[calc(100%-4px)] z-10 text-[9px] text-white font-black uppercase tracking-widest bg-rose-500 px-2 py-0.5 rounded-full shadow-md">
-                                                Unknown Account
+                                            <div className="absolute left-3 top-[calc(100%-2px)] z-10 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                                                style={{ background: 'var(--app-error)', color: '#fff' }}>
+                                                Unknown
                                             </div>
                                         )}
                                     </td>
                                     
-                                    {/* Subledger Selector */}
-                                    <td className="px-3 py-2.5">
+                                    {/* Subledger */}
+                                    <td className="px-2 py-1.5">
                                         <div className="relative flex items-center">
-                                            <User size={12} className="absolute left-2.5 text-app-muted-foreground opacity-50" />
+                                            <User size={11} className="absolute left-2" style={{ color: 'var(--app-muted-foreground)', opacity: 0.4 }} />
                                             <select
                                                 value={line.contactId}
                                                 onChange={e => updateLine(idx, 'contactId', e.target.value)}
-                                                className="w-full pl-7 pr-2 py-2 border border-app-border/60 rounded-lg text-[11px] font-medium focus:ring-2 focus:ring-app-primary/20 outline-none bg-app-surface appearance-none text-app-foreground transition-all shadow-sm disabled:opacity-50"
+                                                className="w-full pl-6 pr-1 py-1.5 rounded-lg text-[11px] font-medium outline-none appearance-none transition-all"
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                    color: 'var(--app-foreground)',
+                                                }}
+                                                onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-primary)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                                                onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 40%, transparent)'; (e.target as HTMLElement).style.background = 'transparent' }}
                                             >
                                                 <option value="">None</option>
                                                 {contacts.map(c => (
@@ -485,73 +496,101 @@ export default function JournalEntryForm({
                                     </td>
                                     
                                     {/* Cost Center */}
-                                    <td className="px-3 py-2.5">
+                                    <td className="px-2 py-1.5">
                                         <div className="relative flex items-center">
-                                            <Building2 size={12} className="absolute left-2.5 text-app-muted-foreground opacity-50" />
+                                            <Building2 size={11} className="absolute left-2" style={{ color: 'var(--app-muted-foreground)', opacity: 0.4 }} />
                                             <input
                                                 value={line.costCenter}
                                                 onChange={e => updateLine(idx, 'costCenter', e.target.value)}
-                                                placeholder="e.g. MARKETING"
-                                                className="w-full pl-7 pr-2 py-2 border border-app-border/60 rounded-lg text-[11px] font-bold uppercase focus:ring-2 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground transition-all shadow-sm placeholder:normal-case placeholder:font-medium placeholder:opacity-40"
+                                                placeholder="e.g. MARKE"
+                                                className="w-full pl-6 pr-1 py-1.5 rounded-lg text-[11px] font-bold uppercase outline-none transition-all placeholder:normal-case placeholder:font-medium"
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                    color: 'var(--app-foreground)',
+                                                }}
+                                                onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-primary)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                                                onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 40%, transparent)'; (e.target as HTMLElement).style.background = 'transparent' }}
                                             />
                                         </div>
                                     </td>
 
-                                    <td className="px-3 py-2.5">
-                                        <div className="flex gap-2 items-center">
+                                    {/* Description */}
+                                    <td className="px-2 py-1.5">
+                                        <div className="flex gap-1 items-center">
                                             <input
                                                 value={line.description}
                                                 onChange={e => updateLine(idx, 'description', e.target.value)}
                                                 onKeyDown={e => handleKeyDown(e, idx, 'description')}
-                                                className="w-full p-2 border border-app-border/60 rounded-lg text-xs focus:ring-2 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground transition-all shadow-sm placeholder:opacity-40"
+                                                className="w-full px-2.5 py-1.5 rounded-lg text-[11px] outline-none transition-all"
                                                 placeholder={header.description || "Specific text..."}
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                    color: 'var(--app-foreground)',
+                                                }}
+                                                onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-primary)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                                                onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 40%, transparent)'; (e.target as HTMLElement).style.background = 'transparent' }}
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => handleAutoBalance(idx)}
-                                                title="Calculate Auto-Plug"
-                                                className="opacity-20 group-hover:opacity-100 text-app-primary hover:bg-app-primary/10 p-1.5 rounded-md transition-all flex-shrink-0"
+                                                title="Auto-Balance"
+                                                className="opacity-0 group-hover:opacity-100 p-1 rounded-md transition-all flex-shrink-0"
+                                                style={{ color: 'var(--app-primary)' }}
                                             >
-                                                <Send size={14} />
+                                                <Send size={12} />
                                             </button>
                                         </div>
                                     </td>
                                     
-                                    <td className="px-4 py-2.5">
-                                        <div className="relative">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-app-muted-foreground opacity-40 select-none">Dr</span>
-                                            <input
-                                                type="number" step="0.01" min="0"
-                                                value={line.debit}
-                                                onKeyDown={e => handleKeyDown(e, idx, 'debit')}
-                                                onChange={e => updateLine(idx, 'debit', e.target.value)}
-                                                className="w-full pl-8 pr-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-sm focus:ring-2 focus:ring-app-primary/20 outline-none bg-app-surface shadow-sm transition-all text-app-primary placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
+                                    {/* Debit */}
+                                    <td className="px-2 py-1.5">
+                                        <input
+                                            type="number" step="0.01" min="0"
+                                            value={line.debit}
+                                            onKeyDown={e => handleKeyDown(e, idx, 'debit')}
+                                            onChange={e => updateLine(idx, 'debit', e.target.value)}
+                                            className="w-full px-2.5 py-1.5 rounded-lg text-right font-mono font-bold text-[12px] outline-none transition-all tabular-nums"
+                                            placeholder="0.00"
+                                            style={{
+                                                background: 'transparent',
+                                                border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                color: 'var(--app-primary)',
+                                            }}
+                                            onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-primary)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                                            onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 40%, transparent)'; (e.target as HTMLElement).style.background = 'transparent' }}
+                                        />
                                     </td>
                                     
-                                    <td className="px-4 py-2.5">
-                                        <div className="relative">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-app-muted-foreground opacity-40 select-none">Cr</span>
-                                            <input
-                                                type="number" step="0.01" min="0"
-                                                value={line.credit}
-                                                onKeyDown={e => handleKeyDown(e, idx, 'credit')}
-                                                onChange={e => updateLine(idx, 'credit', e.target.value)}
-                                                className="w-full pl-8 pr-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-sm focus:ring-2 focus:ring-rose-500/20 outline-none bg-app-surface shadow-sm transition-all focus:border-rose-500/50 text-rose-500 placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
+                                    {/* Credit */}
+                                    <td className="px-2 py-1.5">
+                                        <input
+                                            type="number" step="0.01" min="0"
+                                            value={line.credit}
+                                            onKeyDown={e => handleKeyDown(e, idx, 'credit')}
+                                            onChange={e => updateLine(idx, 'credit', e.target.value)}
+                                            className="w-full px-2.5 py-1.5 rounded-lg text-right font-mono font-bold text-[12px] outline-none transition-all tabular-nums"
+                                            placeholder="0.00"
+                                            style={{
+                                                background: 'transparent',
+                                                border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                color: 'var(--app-error)',
+                                            }}
+                                            onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-error)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                                            onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 40%, transparent)'; (e.target as HTMLElement).style.background = 'transparent' }}
+                                        />
                                     </td>
 
-                                    <td className="px-4 py-2.5 text-center">
+                                    {/* Delete */}
+                                    <td className="px-1 py-1.5 text-center">
                                         <button
                                             type="button"
                                             onClick={() => removeLine(idx)}
-                                            className="opacity-20 group-hover:opacity-100 text-rose-500 hover:bg-rose-500/10 p-1.5 rounded-lg transition-all"
+                                            className="opacity-0 group-hover:opacity-100 p-1 rounded-md transition-all"
+                                            style={{ color: 'var(--app-error)' }}
                                         >
-                                            <Trash2 size={15} />
+                                            <Trash2 size={13} />
                                         </button>
                                     </td>
                                 </tr>

@@ -1,0 +1,711 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e494]:
+    - banner [ref=e495]:
+      - button "Menu" [ref=e496]:
+        - img [ref=e497]
+      - heading "General Ledger" [level=1] [ref=e499]
+      - button "Search" [ref=e500]:
+        - img [ref=e501]
+      - link "Notifications" [ref=e504] [cursor=pointer]:
+        - /url: /settings/notifications
+        - img [ref=e505]
+      - button "Account" [ref=e508]: A
+    - main [ref=e509]:
+      - generic [ref=e512]:
+        - generic [ref=e514]:
+          - img [ref=e517]
+          - generic [ref=e519]:
+            - generic [ref=e520]: General Ledger
+            - generic [ref=e521]: 31 entries · Internal
+          - button "New Entry" [ref=e522]:
+            - img [ref=e523]
+            - generic [ref=e524]: New Entry
+          - button [ref=e526]:
+            - img [ref=e527]
+        - generic [ref=e531]:
+          - generic [ref=e533]:
+            - generic [ref=e534]:
+              - img [ref=e536]
+              - generic [ref=e539]:
+                - generic [ref=e540]: Total
+                - generic [ref=e541]: "31"
+            - generic [ref=e542]:
+              - img [ref=e544]
+              - generic [ref=e547]:
+                - generic [ref=e548]: Posted
+                - generic [ref=e549]: "25"
+            - generic [ref=e550]:
+              - img [ref=e552]
+              - generic [ref=e555]:
+                - generic [ref=e556]: Draft
+                - generic [ref=e557]: "5"
+            - generic [ref=e558]:
+              - img [ref=e560]
+              - generic [ref=e563]:
+                - generic [ref=e564]: Reversed
+                - generic [ref=e565]: "1"
+            - generic [ref=e566]:
+              - img [ref=e568]
+              - generic [ref=e570]:
+                - generic [ref=e571]: Total Debit
+                - generic [ref=e572]: 971 955 F CFA
+            - generic [ref=e573]:
+              - img [ref=e575]
+              - generic [ref=e577]:
+                - generic [ref=e578]: Total Credit
+                - generic [ref=e579]: 971 955 F CFA
+          - generic [ref=e581]:
+            - generic [ref=e582]:
+              - img [ref=e583]
+              - textbox "Search reference, source…" [ref=e586]
+            - button "Expand all" [ref=e587]:
+              - img [ref=e588]
+          - generic [ref=e592]:
+            - generic [ref=e593]:
+              - button "All 31" [ref=e594]:
+                - text: All
+                - generic [ref=e595]: "31"
+              - button "Posted 25" [ref=e596]:
+                - text: Posted
+                - generic [ref=e597]: "25"
+              - button "Draft 5" [ref=e598]:
+                - text: Draft
+                - generic [ref=e599]: "5"
+              - button "Reversed 1" [ref=e600]:
+                - text: Reversed
+                - generic [ref=e601]: "1"
+            - button "INT-PROV-Q1 Draft — Dr 18 000 F CFA Cr 18 000 F CFA 0" [ref=e602]:
+              - generic [ref=e603]:
+                - generic [ref=e604]: INT-PROV-Q1
+                - generic [ref=e605]:
+                  - img [ref=e606]
+                  - text: Draft
+              - generic [ref=e610]:
+                - img [ref=e611]
+                - text: —
+              - generic [ref=e613]:
+                - generic [ref=e614]:
+                  - generic [ref=e615]: Dr 18 000 F CFA
+                  - generic [ref=e616]: Cr 18 000 F CFA
+                - generic [ref=e617]:
+                  - img [ref=e618]
+                  - text: "0"
+                - img [ref=e622]
+            - button "POS-CLOSE-001 Posted — pos OFF Dr 32 500 F CFA Cr 32 500 F CFA 0" [ref=e624]:
+              - generic [ref=e625]:
+                - generic [ref=e626]: POS-CLOSE-001
+                - generic [ref=e627]:
+                  - img [ref=e628]
+                  - text: Posted
+              - generic [ref=e631]:
+                - generic [ref=e632]:
+                  - img [ref=e633]
+                  - text: —
+                - generic [ref=e635]: pos
+                - generic [ref=e636]: "OFF"
+              - generic [ref=e637]:
+                - generic [ref=e638]:
+                  - generic [ref=e639]: Dr 32 500 F CFA
+                  - generic [ref=e640]: Cr 32 500 F CFA
+                - generic [ref=e641]:
+                  - img [ref=e642]
+                  - text: "0"
+                - img [ref=e646]
+            - button "INV-2026-0414 Draft — sales OFF Dr 22 000 F CFA Cr 22 000 F CFA 0" [ref=e648]:
+              - generic [ref=e649]:
+                - generic [ref=e650]: INV-2026-0414
+                - generic [ref=e651]:
+                  - img [ref=e652]
+                  - text: Draft
+              - generic [ref=e655]:
+                - generic [ref=e656]:
+                  - img [ref=e657]
+                  - text: —
+                - generic [ref=e659]: sales
+                - generic [ref=e660]: "OFF"
+              - generic [ref=e661]:
+                - generic [ref=e662]:
+                  - generic [ref=e663]: Dr 22 000 F CFA
+                  - generic [ref=e664]: Cr 22 000 F CFA
+                - generic [ref=e665]:
+                  - img [ref=e666]
+                  - text: "0"
+                - img [ref=e670]
+            - button "OFF-JV-002 Draft — OFF Dr 480 F CFA Cr 480 F CFA 0" [ref=e672]:
+              - generic [ref=e673]:
+                - generic [ref=e674]: OFF-JV-002
+                - generic [ref=e675]:
+                  - img [ref=e676]
+                  - text: Draft
+              - generic [ref=e679]:
+                - generic [ref=e680]:
+                  - img [ref=e681]
+                  - text: —
+                - generic [ref=e683]: "OFF"
+              - generic [ref=e684]:
+                - generic [ref=e685]:
+                  - generic [ref=e686]: Dr 480 F CFA
+                  - generic [ref=e687]: Cr 480 F CFA
+                - generic [ref=e688]:
+                  - img [ref=e689]
+                  - text: "0"
+                - img [ref=e693]
+            - button "#8 Posted — OFF Dr 1 500 F CFA Cr 1 500 F CFA 0" [ref=e695]:
+              - generic [ref=e696]:
+                - generic [ref=e697]: "#8"
+                - generic [ref=e698]:
+                  - img [ref=e699]
+                  - text: Posted
+              - generic [ref=e702]:
+                - generic [ref=e703]:
+                  - img [ref=e704]
+                  - text: —
+                - generic [ref=e706]: "OFF"
+              - generic [ref=e707]:
+                - generic [ref=e708]:
+                  - generic [ref=e709]: Dr 1 500 F CFA
+                  - generic [ref=e710]: Cr 1 500 F CFA
+                - generic [ref=e711]:
+                  - img [ref=e712]
+                  - text: "0"
+                - img [ref=e716]
+            - button "#7 Posted — OFF Dr 100 000 F CFA Cr 100 000 F CFA 0" [ref=e718]:
+              - generic [ref=e719]:
+                - generic [ref=e720]: "#7"
+                - generic [ref=e721]:
+                  - img [ref=e722]
+                  - text: Posted
+              - generic [ref=e725]:
+                - generic [ref=e726]:
+                  - img [ref=e727]
+                  - text: —
+                - generic [ref=e729]: "OFF"
+              - generic [ref=e730]:
+                - generic [ref=e731]:
+                  - generic [ref=e732]: Dr 100 000 F CFA
+                  - generic [ref=e733]: Cr 100 000 F CFA
+                - generic [ref=e734]:
+                  - img [ref=e735]
+                  - text: "0"
+                - img [ref=e739]
+            - button "#6 Posted — OFF Dr 22 000 F CFA Cr 22 000 F CFA 0" [ref=e741]:
+              - generic [ref=e742]:
+                - generic [ref=e743]: "#6"
+                - generic [ref=e744]:
+                  - img [ref=e745]
+                  - text: Posted
+              - generic [ref=e748]:
+                - generic [ref=e749]:
+                  - img [ref=e750]
+                  - text: —
+                - generic [ref=e752]: "OFF"
+              - generic [ref=e753]:
+                - generic [ref=e754]:
+                  - generic [ref=e755]: Dr 22 000 F CFA
+                  - generic [ref=e756]: Cr 22 000 F CFA
+                - generic [ref=e757]:
+                  - img [ref=e758]
+                  - text: "0"
+                - img [ref=e762]
+            - button "#5 Posted — OFF Dr 15 000 F CFA Cr 15 000 F CFA 0" [ref=e764]:
+              - generic [ref=e765]:
+                - generic [ref=e766]: "#5"
+                - generic [ref=e767]:
+                  - img [ref=e768]
+                  - text: Posted
+              - generic [ref=e771]:
+                - generic [ref=e772]:
+                  - img [ref=e773]
+                  - text: —
+                - generic [ref=e775]: "OFF"
+              - generic [ref=e776]:
+                - generic [ref=e777]:
+                  - generic [ref=e778]: Dr 15 000 F CFA
+                  - generic [ref=e779]: Cr 15 000 F CFA
+                - generic [ref=e780]:
+                  - img [ref=e781]
+                  - text: "0"
+                - img [ref=e785]
+            - button "#4 Posted — OFF Dr 8 000 F CFA Cr 8 000 F CFA 0" [ref=e787]:
+              - generic [ref=e788]:
+                - generic [ref=e789]: "#4"
+                - generic [ref=e790]:
+                  - img [ref=e791]
+                  - text: Posted
+              - generic [ref=e794]:
+                - generic [ref=e795]:
+                  - img [ref=e796]
+                  - text: —
+                - generic [ref=e798]: "OFF"
+              - generic [ref=e799]:
+                - generic [ref=e800]:
+                  - generic [ref=e801]: Dr 8 000 F CFA
+                  - generic [ref=e802]: Cr 8 000 F CFA
+                - generic [ref=e803]:
+                  - img [ref=e804]
+                  - text: "0"
+                - img [ref=e808]
+            - button "#3 Posted — OFF Dr 3 200 F CFA Cr 3 200 F CFA 0" [ref=e810]:
+              - generic [ref=e811]:
+                - generic [ref=e812]: "#3"
+                - generic [ref=e813]:
+                  - img [ref=e814]
+                  - text: Posted
+              - generic [ref=e817]:
+                - generic [ref=e818]:
+                  - img [ref=e819]
+                  - text: —
+                - generic [ref=e821]: "OFF"
+              - generic [ref=e822]:
+                - generic [ref=e823]:
+                  - generic [ref=e824]: Dr 3 200 F CFA
+                  - generic [ref=e825]: Cr 3 200 F CFA
+                - generic [ref=e826]:
+                  - img [ref=e827]
+                  - text: "0"
+                - img [ref=e831]
+            - button "#2 Posted — OFF Dr 12 500 F CFA Cr 12 500 F CFA 0" [ref=e833]:
+              - generic [ref=e834]:
+                - generic [ref=e835]: "#2"
+                - generic [ref=e836]:
+                  - img [ref=e837]
+                  - text: Posted
+              - generic [ref=e840]:
+                - generic [ref=e841]:
+                  - img [ref=e842]
+                  - text: —
+                - generic [ref=e844]: "OFF"
+              - generic [ref=e845]:
+                - generic [ref=e846]:
+                  - generic [ref=e847]: Dr 12 500 F CFA
+                  - generic [ref=e848]: Cr 12 500 F CFA
+                - generic [ref=e849]:
+                  - img [ref=e850]
+                  - text: "0"
+                - img [ref=e854]
+            - button "#1 Posted — OFF Dr 50 000 F CFA Cr 50 000 F CFA 0" [ref=e856]:
+              - generic [ref=e857]:
+                - generic [ref=e858]: "#1"
+                - generic [ref=e859]:
+                  - img [ref=e860]
+                  - text: Posted
+              - generic [ref=e863]:
+                - generic [ref=e864]:
+                  - img [ref=e865]
+                  - text: —
+                - generic [ref=e867]: "OFF"
+              - generic [ref=e868]:
+                - generic [ref=e869]:
+                  - generic [ref=e870]: Dr 50 000 F CFA
+                  - generic [ref=e871]: Cr 50 000 F CFA
+                - generic [ref=e872]:
+                  - img [ref=e873]
+                  - text: "0"
+                - img [ref=e877]
+            - button "ADJ-PROV-Q1 Draft — OFF Dr 7 500 F CFA Cr 7 500 F CFA 0" [ref=e879]:
+              - generic [ref=e880]:
+                - generic [ref=e881]: ADJ-PROV-Q1
+                - generic [ref=e882]:
+                  - img [ref=e883]
+                  - text: Draft
+              - generic [ref=e886]:
+                - generic [ref=e887]:
+                  - img [ref=e888]
+                  - text: —
+                - generic [ref=e890]: "OFF"
+              - generic [ref=e891]:
+                - generic [ref=e892]:
+                  - generic [ref=e893]: Dr 7 500 F CFA
+                  - generic [ref=e894]: Cr 7 500 F CFA
+                - generic [ref=e895]:
+                  - img [ref=e896]
+                  - text: "0"
+                - img [ref=e900]
+            - button "INT-TRF-001 Posted — Dr 55 000 F CFA Cr 55 000 F CFA 0" [ref=e902]:
+              - generic [ref=e903]:
+                - generic [ref=e904]: INT-TRF-001
+                - generic [ref=e905]:
+                  - img [ref=e906]
+                  - text: Posted
+              - generic [ref=e910]:
+                - img [ref=e911]
+                - text: —
+              - generic [ref=e913]:
+                - generic [ref=e914]:
+                  - generic [ref=e915]: Dr 55 000 F CFA
+                  - generic [ref=e916]: Cr 55 000 F CFA
+                - generic [ref=e917]:
+                  - img [ref=e918]
+                  - text: "0"
+                - img [ref=e922]
+            - button "BANK-DEP-001 Posted — OFF Dr 25 000 F CFA Cr 25 000 F CFA 0" [ref=e924]:
+              - generic [ref=e925]:
+                - generic [ref=e926]: BANK-DEP-001
+                - generic [ref=e927]:
+                  - img [ref=e928]
+                  - text: Posted
+              - generic [ref=e931]:
+                - generic [ref=e932]:
+                  - img [ref=e933]
+                  - text: —
+                - generic [ref=e935]: "OFF"
+              - generic [ref=e936]:
+                - generic [ref=e937]:
+                  - generic [ref=e938]: Dr 25 000 F CFA
+                  - generic [ref=e939]: Cr 25 000 F CFA
+                - generic [ref=e940]:
+                  - img [ref=e941]
+                  - text: "0"
+                - img [ref=e945]
+            - button "INV-2026-0413 Posted — sales OFF Dr 8 750 F CFA Cr 8 750 F CFA 0" [ref=e947]:
+              - generic [ref=e948]:
+                - generic [ref=e949]: INV-2026-0413
+                - generic [ref=e950]:
+                  - img [ref=e951]
+                  - text: Posted
+              - generic [ref=e954]:
+                - generic [ref=e955]:
+                  - img [ref=e956]
+                  - text: —
+                - generic [ref=e958]: sales
+                - generic [ref=e959]: "OFF"
+              - generic [ref=e960]:
+                - generic [ref=e961]:
+                  - generic [ref=e962]: Dr 8 750 F CFA
+                  - generic [ref=e963]: Cr 8 750 F CFA
+                - generic [ref=e964]:
+                  - img [ref=e965]
+                  - text: "0"
+                - img [ref=e969]
+            - button "INV-RCV-0089 Posted — inventory OFF Dr 6 200 F CFA Cr 6 200 F CFA 0" [ref=e971]:
+              - generic [ref=e1371]:
+                - generic [ref=e972]: INV-RCV-0089
+                - generic [ref=e973]:
+                  - img [ref=e974]
+                  - text: Posted
+              - generic [ref=e977]:
+                - generic [ref=e978]:
+                  - img [ref=e979]
+                  - text: —
+                - generic [ref=e981]: inventory
+                - generic [ref=e982]: "OFF"
+              - generic [ref=e983]:
+                - generic [ref=e984]:
+                  - generic [ref=e985]: Dr 6 200 F CFA
+                  - generic [ref=e986]: Cr 6 200 F CFA
+                - generic [ref=e987]:
+                  - img [ref=e988]
+                  - text: "0"
+                - img [ref=e992]
+            - button "CUS-PAY-0412 Posted — sales OFF Dr 15 000 F CFA Cr 15 000 F CFA 0" [ref=e994]:
+              - generic [ref=e1372]:
+                - generic [ref=e995]: CUS-PAY-0412
+                - generic [ref=e996]:
+                  - img [ref=e997]
+                  - text: Posted
+              - generic [ref=e1000]:
+                - generic [ref=e1001]:
+                  - img [ref=e1002]
+                  - text: —
+                - generic [ref=e1004]: sales
+                - generic [ref=e1005]: "OFF"
+              - generic [ref=e1006]:
+                - generic [ref=e1007]:
+                  - generic [ref=e1008]: Dr 15 000 F CFA
+                  - generic [ref=e1009]: Cr 15 000 F CFA
+                - generic [ref=e1010]:
+                  - img [ref=e1011]
+                  - text: "0"
+                - img [ref=e1015]
+            - button "PUR-2026-0089 Posted — purchases OFF Dr 6 200 F CFA Cr 6 200 F CFA 0" [ref=e1017]:
+              - generic [ref=e1373]:
+                - generic [ref=e1018]: PUR-2026-0089
+                - generic [ref=e1019]:
+                  - img [ref=e1020]
+                  - text: Posted
+              - generic [ref=e1023]:
+                - generic [ref=e1024]:
+                  - img [ref=e1025]
+                  - text: —
+                - generic [ref=e1027]: purchases
+                - generic [ref=e1028]: "OFF"
+              - generic [ref=e1029]:
+                - generic [ref=e1030]:
+                  - generic [ref=e1031]: Dr 6 200 F CFA
+                  - generic [ref=e1032]: Cr 6 200 F CFA
+                - generic [ref=e1033]:
+                  - img [ref=e1034]
+                  - text: "0"
+                - img [ref=e1038]
+            - button "PRL-2026-03 Posted — hr OFF Dr 85 000 F CFA Cr 85 000 F CFA 0" [ref=e1040]:
+              - generic [ref=e1374]:
+                - generic [ref=e1041]: PRL-2026-03
+                - generic [ref=e1042]:
+                  - img [ref=e1043]
+                  - text: Posted
+              - generic [ref=e1046]:
+                - generic [ref=e1047]:
+                  - img [ref=e1048]
+                  - text: —
+                - generic [ref=e1050]: hr
+                - generic [ref=e1051]: "OFF"
+              - generic [ref=e1052]:
+                - generic [ref=e1053]:
+                  - generic [ref=e1054]: Dr 85 000 F CFA
+                  - generic [ref=e1055]: Cr 85 000 F CFA
+                - generic [ref=e1056]:
+                  - img [ref=e1057]
+                  - text: "0"
+                - img [ref=e1061]
+            - button "INV-2026-0412 Posted — sales OFF Dr 15 000 F CFA Cr 15 000 F CFA 0" [ref=e1063]:
+              - generic [ref=e1375]:
+                - generic [ref=e1064]: INV-2026-0412
+                - generic [ref=e1065]:
+                  - img [ref=e1066]
+                  - text: Posted
+              - generic [ref=e1069]:
+                - generic [ref=e1070]:
+                  - img [ref=e1071]
+                  - text: —
+                - generic [ref=e1073]: sales
+                - generic [ref=e1074]: "OFF"
+              - generic [ref=e1075]:
+                - generic [ref=e1076]:
+                  - generic [ref=e1077]: Dr 15 000 F CFA
+                  - generic [ref=e1078]: Cr 15 000 F CFA
+                - generic [ref=e1079]:
+                  - img [ref=e1080]
+                  - text: "0"
+                - img [ref=e1084]
+            - button "REV-INV-0410 Reversed — sales OFF Dr 9 800 F CFA Cr 9 800 F CFA 0" [ref=e1086]:
+              - generic [ref=e1376]:
+                - generic [ref=e1087]: REV-INV-0410
+                - generic [ref=e1088]:
+                  - img [ref=e1089]
+                  - text: Reversed
+              - generic [ref=e1092]:
+                - generic [ref=e1093]:
+                  - img [ref=e1094]
+                  - text: —
+                - generic [ref=e1096]: sales
+                - generic [ref=e1097]: "OFF"
+              - generic [ref=e1098]:
+                - generic [ref=e1099]:
+                  - generic [ref=e1100]: Dr 9 800 F CFA
+                  - generic [ref=e1101]: Cr 9 800 F CFA
+                - generic [ref=e1102]:
+                  - img [ref=e1103]
+                  - text: "0"
+                - img [ref=e1107]
+            - button "SUP-PAY-0088 Posted — purchases OFF Dr 45 000 F CFA Cr 45 000 F CFA 0" [ref=e1109]:
+              - generic [ref=e1377]:
+                - generic [ref=e1110]: SUP-PAY-0088
+                - generic [ref=e1111]:
+                  - img [ref=e1112]
+                  - text: Posted
+              - generic [ref=e1115]:
+                - generic [ref=e1116]:
+                  - img [ref=e1117]
+                  - text: —
+                - generic [ref=e1119]: purchases
+                - generic [ref=e1120]: "OFF"
+              - generic [ref=e1121]:
+                - generic [ref=e1122]:
+                  - generic [ref=e1123]: Dr 45 000 F CFA
+                  - generic [ref=e1124]: Cr 45 000 F CFA
+                - generic [ref=e1125]:
+                  - img [ref=e1126]
+                  - text: "0"
+                - img [ref=e1130]
+            - button "PUR-2026-0088 Posted — purchases OFF Dr 45 000 F CFA Cr 45 000 F CFA 0" [ref=e1132]:
+              - generic [ref=e1378]:
+                - generic [ref=e1133]: PUR-2026-0088
+                - generic [ref=e1134]:
+                  - img [ref=e1135]
+                  - text: Posted
+              - generic [ref=e1138]:
+                - generic [ref=e1139]:
+                  - img [ref=e1140]
+                  - text: —
+                - generic [ref=e1142]: purchases
+                - generic [ref=e1143]: "OFF"
+              - generic [ref=e1144]:
+                - generic [ref=e1145]:
+                  - generic [ref=e1146]: Dr 45 000 F CFA
+                  - generic [ref=e1147]: Cr 45 000 F CFA
+                - generic [ref=e1148]:
+                  - img [ref=e1149]
+                  - text: "0"
+                - img [ref=e1153]
+            - button "INV-ADJ-001 Posted — inventory OFF Dr 1 800 F CFA Cr 1 800 F CFA 0" [ref=e1155]:
+              - generic [ref=e1379]:
+                - generic [ref=e1156]: INV-ADJ-001
+                - generic [ref=e1157]:
+                  - img [ref=e1158]
+                  - text: Posted
+              - generic [ref=e1161]:
+                - generic [ref=e1162]:
+                  - img [ref=e1163]
+                  - text: —
+                - generic [ref=e1165]: inventory
+                - generic [ref=e1166]: "OFF"
+              - generic [ref=e1167]:
+                - generic [ref=e1168]:
+                  - generic [ref=e1169]: Dr 1 800 F CFA
+                  - generic [ref=e1170]: Cr 1 800 F CFA
+                - generic [ref=e1171]:
+                  - img [ref=e1172]
+                  - text: "0"
+                - img [ref=e1176]
+            - button "TAX-DED-MAR Draft — finance OFF Dr 2 950 F CFA Cr 2 950 F CFA 0" [ref=e1178]:
+              - generic [ref=e1380]:
+                - generic [ref=e1179]: TAX-DED-MAR
+                - generic [ref=e1180]:
+                  - img [ref=e1181]
+                  - text: Draft
+              - generic [ref=e1184]:
+                - generic [ref=e1185]:
+                  - img [ref=e1186]
+                  - text: —
+                - generic [ref=e1188]: finance
+                - generic [ref=e1189]: "OFF"
+              - generic [ref=e1190]:
+                - generic [ref=e1191]:
+                  - generic [ref=e1192]: Dr 2 950 F CFA
+                  - generic [ref=e1193]: Cr 2 950 F CFA
+                - generic [ref=e1194]:
+                  - img [ref=e1195]
+                  - text: "0"
+                - img [ref=e1199]
+            - button "TAX-TVA-MAR Posted — finance OFF Dr 4 125 F CFA Cr 4 125 F CFA 0" [ref=e1201]:
+              - generic [ref=e1381]:
+                - generic [ref=e1202]: TAX-TVA-MAR
+                - generic [ref=e1203]:
+                  - img [ref=e1204]
+                  - text: Posted
+              - generic [ref=e1207]:
+                - generic [ref=e1208]:
+                  - img [ref=e1209]
+                  - text: —
+                - generic [ref=e1211]: finance
+                - generic [ref=e1212]: "OFF"
+              - generic [ref=e1213]:
+                - generic [ref=e1214]:
+                  - generic [ref=e1215]: Dr 4 125 F CFA
+                  - generic [ref=e1216]: Cr 4 125 F CFA
+                - generic [ref=e1217]:
+                  - img [ref=e1218]
+                  - text: "0"
+                - img [ref=e1222]
+            - button "ADJ-FX-001 Posted — OFF Dr 2 100 F CFA Cr 2 100 F CFA 0" [ref=e1224]:
+              - generic [ref=e1382]:
+                - generic [ref=e1225]: ADJ-FX-001
+                - generic [ref=e1226]:
+                  - img [ref=e1227]
+                  - text: Posted
+              - generic [ref=e1230]:
+                - generic [ref=e1231]:
+                  - img [ref=e1232]
+                  - text: —
+                - generic [ref=e1234]: "OFF"
+              - generic [ref=e1235]:
+                - generic [ref=e1236]:
+                  - generic [ref=e1237]: Dr 2 100 F CFA
+                  - generic [ref=e1238]: Cr 2 100 F CFA
+                - generic [ref=e1239]:
+                  - img [ref=e1240]
+                  - text: "0"
+                - img [ref=e1244]
+            - button "BANK-CHG-Q1 Posted — OFF Dr 350 F CFA Cr 350 F CFA 0" [ref=e1246]:
+              - generic [ref=e1383]:
+                - generic [ref=e1247]: BANK-CHG-Q1
+                - generic [ref=e1248]:
+                  - img [ref=e1249]
+                  - text: Posted
+              - generic [ref=e1252]:
+                - generic [ref=e1253]:
+                  - img [ref=e1254]
+                  - text: —
+                - generic [ref=e1256]: "OFF"
+              - generic [ref=e1257]:
+                - generic [ref=e1258]:
+                  - generic [ref=e1259]: Dr 350 F CFA
+                  - generic [ref=e1260]: Cr 350 F CFA
+                - generic [ref=e1261]:
+                  - img [ref=e1262]
+                  - text: "0"
+                - img [ref=e1266]
+            - button "INT-JV-003 Posted — Dr 12 000 F CFA Cr 12 000 F CFA 0" [ref=e1268]:
+              - generic [ref=e1384]:
+                - generic [ref=e1269]: INT-JV-003
+                - generic [ref=e1270]:
+                  - img [ref=e1271]
+                  - text: Posted
+              - generic [ref=e1275]:
+                - img [ref=e1276]
+                - text: —
+              - generic [ref=e1278]:
+                - generic [ref=e1279]:
+                  - generic [ref=e1280]: Dr 12 000 F CFA
+                  - generic [ref=e1281]: Cr 12 000 F CFA
+                - generic [ref=e1282]:
+                  - img [ref=e1283]
+                  - text: "0"
+                - img [ref=e1287]
+            - button "OPEN-FY2026 Posted — OFF Dr 340 000 F CFA Cr 340 000 F CFA 0" [ref=e1289]:
+              - generic [ref=e1385]:
+                - generic [ref=e1290]: OPEN-FY2026
+                - generic [ref=e1291]:
+                  - img [ref=e1292]
+                  - text: Posted
+              - generic [ref=e1295]:
+                - generic [ref=e1296]:
+                  - img [ref=e1297]
+                  - text: —
+                - generic [ref=e1299]: "OFF"
+                - img [ref=e1300]
+                - img [ref=e1303]
+              - generic [ref=e1306]:
+                - generic [ref=e1307]:
+                  - generic [ref=e1308]: Dr 340 000 F CFA
+                  - generic [ref=e1309]: Cr 340 000 F CFA
+                - generic [ref=e1310]:
+                  - img [ref=e1311]
+                  - text: "0"
+                - img [ref=e1315]
+          - generic [ref=e1318]:
+            - generic [ref=e1319]: 31 entries
+            - generic [ref=e1320]: ·
+            - generic [ref=e1321]: Internal
+        - button "New Entry" [ref=e1322]:
+          - img [ref=e1323]
+    - navigation "Primary" [ref=e1324]:
+      - link "Home" [ref=e1325] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e1326]:
+          - img [ref=e1328]
+          - generic [ref=e1333]: Home
+      - link "Inventory" [ref=e1334] [cursor=pointer]:
+        - /url: /inventory/categories
+        - generic [ref=e1335]:
+          - img [ref=e1337]
+          - generic [ref=e1341]: Inventory
+      - link "Sales" [ref=e1342] [cursor=pointer]:
+        - /url: /sales
+        - generic [ref=e1343]:
+          - img [ref=e1345]
+          - generic [ref=e1349]: Sales
+      - link "Finance" [ref=e1350] [cursor=pointer]:
+        - /url: /finance/chart-of-accounts
+        - generic [ref=e1351]:
+          - img [ref=e1353]
+          - generic [ref=e1356]: Finance
+      - button "More" [ref=e1357]:
+        - generic [ref=e1358]:
+          - img [ref=e1360]
+          - generic [ref=e1364]: More
+  - button [ref=e1366]:
+    - img [ref=e1367]
+  - button "Open Next.js Dev Tools" [ref=e490] [cursor=pointer]:
+    - img [ref=e491]
+  - alert [ref=e1370]
