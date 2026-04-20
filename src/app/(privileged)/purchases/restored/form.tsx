@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useEffect, useRef, forwardRef } from "react";
+import React, { useActionState, useState, useEffect, useRef, forwardRef } from "react";
 import type { PurchaseLine } from '@/types/erp';
 import { createPurchaseInvoice } from "@/app/actions/commercial/purchases";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
@@ -21,7 +21,8 @@ import { SupplierScorecard } from "../new-order/_components/SupplierScorecard";
 import { ConfigSidebar } from "../new-order/_components/ConfigSidebar";
 import { TransferRequestDialog } from "../new-order/_components/TransferRequestDialog";
 import { PurchaseRequestDialog } from "../new-order/_components/PurchaseRequestDialog";
-import { Zap, FileDown, ClipboardList, ArrowRightLeft, Send } from "lucide-react";
+import { ProcurementIntelligenceDrawer } from "./ProcurementIntelligenceDrawer";
+import { Zap, FileDown, ClipboardList, ArrowRightLeft, Send, BarChart3 } from "lucide-react";
 import {
     PO_ALL_COLUMNS,
     PO_DEFAULT_VISIBLE_COLS,
@@ -32,6 +33,28 @@ import {
     type POViewProfile,
 } from "../new-order/_lib/constants";
 import { getPurchaseAnalyticsConfig, type PurchaseAnalyticsConfig } from "@/app/actions/settings/purchase-analytics-config";
+
+/* ═══════════════════════════════════════════════════════════════
+ *  DEEP STAT — a key/value tile used in the row expansion panel
+ * ═══════════════════════════════════════════════════════════════ */
+function DeepStat({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+    return (
+        <div className="px-2 py-1.5 rounded-lg"
+            style={{
+                background: highlight ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'var(--app-background)',
+                border: `1px solid ${highlight ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)' : 'var(--app-border)'}`,
+            }}>
+            <div className="text-[8px] font-black uppercase tracking-widest"
+                style={{ color: highlight ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }}>
+                {label}
+            </div>
+            <div className="text-[12px] font-black font-mono tabular-nums mt-0.5"
+                style={{ color: highlight ? 'var(--app-primary)' : 'var(--app-foreground)' }}>
+                {value}
+            </div>
+        </div>
+    );
+}
 
 /* ═══════════════════════════════════════════════════════════════
  *  CONFIG ROW — read-only key/value pair in Analytics drawer
@@ -160,6 +183,11 @@ export default function PurchaseForm({
     const [transferLine, setTransferLine] = useState<any | null>(null);
     const [purchaseRequestLine, setPurchaseRequestLine] = useState<any | null>(null);
     const [mobileSheetLine, setMobileSheetLine] = useState<any | null>(null);
+    const [intelligenceOpen, setIntelligenceOpen] = useState(false);
+    // Dajingo Pro V2 — Focus Mode: collapses header + intelligence strip
+    // for max data density. Toggles with Ctrl+Q.
+    const [focusMode, setFocusMode] = useState(false);
+    const [expandedRow, setExpandedRow] = useState<number | null>(null);
     const [toastMsg, setToastMsg] = useState<string | null>(null);
     // Tier 3.1 — sortable headers
     const [sortBy, setSortBy] = useState<'none' | 'quantity' | 'stockTotal' | 'scoreAdjust' | 'expirySafety'>('none');
@@ -279,6 +307,10 @@ export default function PurchaseForm({
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
                 const submitBtn = document.querySelector<HTMLButtonElement>('button[type="submit"]');
                 if (submitBtn && !submitBtn.disabled) { e.preventDefault(); submitBtn.click(); }
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') {
+                e.preventDefault();
+                setFocusMode(prev => !prev);
             }
         };
         window.addEventListener('keydown', handler);
@@ -458,7 +490,7 @@ export default function PurchaseForm({
             <input type="hidden" name="notes" value={notes} />
 
             {/* ═══ Page Header — back arrow + title + scope pills + icon triplet ═══ */}
-            <div className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 flex-shrink-0 no-print"
+            {!focusMode && <div className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 flex-shrink-0 no-print"
                 style={{
                     background: 'var(--app-surface)',
                     borderBottom: '1px solid var(--app-border)',
@@ -516,7 +548,26 @@ export default function PurchaseForm({
                         )}
                     </button>
                 </div>
-            </div>
+            </div>}
+
+            {/* Compact Focus-Mode exit bar */}
+            {focusMode && (
+                <div className="sticky top-0 z-40 flex items-center justify-between px-3 py-1.5 flex-shrink-0 no-print"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-primary) 8%, var(--app-surface))',
+                        borderBottom: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                    }}>
+                    <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color: 'var(--app-primary)' }}>
+                        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'currentColor' }} />
+                        Focus Mode
+                    </span>
+                    <button type="button" onClick={() => setFocusMode(false)}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-md transition-colors"
+                        style={{ color: 'var(--app-primary)' }}>
+                        Exit (Ctrl+Q)
+                    </button>
+                </div>
+            )}
 
             {/* ═══ Toolbar: Product Lines + Search + Actions ═══ */}
             <div className="flex-shrink-0 flex items-center gap-0"
@@ -660,16 +711,24 @@ export default function PurchaseForm({
                                 : line.statusText === 'LOW'
                                 ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 5%, transparent)'
                                 : 'color-mix(in srgb, var(--app-primary) 3%, transparent)';
+                            const isExpanded = expandedRow === Number(line.productId);
                             return (
-                                <div key={line.productId} className="group flex items-center gap-0 transition-colors"
-                                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)', background: rowBg }}
+                                <React.Fragment key={line.productId}>
+                                <div className="group flex items-center gap-0 transition-colors"
+                                    style={{ borderBottom: isExpanded ? 'none' : '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)', background: rowBg }}
                                     onMouseEnter={(e) => e.currentTarget.style.background = rowHoverBg}
                                     onMouseLeave={(e) => e.currentTarget.style.background = rowBg}>
-                                    {/* Product */}
-                                    <div className="px-4 py-2.5 w-[200px] flex-shrink-0">
+                                    {/* Product — click to expand intelligence deep-dive */}
+                                    <div className="px-4 py-2.5 w-[200px] flex-shrink-0 cursor-pointer"
+                                        onClick={() => setExpandedRow(expandedRow === Number(line.productId) ? null : Number(line.productId))}
+                                        title="Click to expand intelligence details">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                                style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform"
+                                                style={{
+                                                    background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                                    color: 'var(--app-primary)',
+                                                    transform: expandedRow === Number(line.productId) ? 'rotate(90deg)' : 'rotate(0)',
+                                                }}>
                                                 <Package size={13} />
                                             </div>
                                             <span className="truncate text-[13px] font-bold" style={{ color: 'var(--app-foreground)' }}>{line.productName as string}</span>
@@ -791,6 +850,29 @@ export default function PurchaseForm({
                                         </button>
                                     </div>}
                                 </div>
+                                {isExpanded && (
+                                    <div className="px-6 py-3 animate-in fade-in duration-150"
+                                        style={{
+                                            background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))',
+                                            borderBottom: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)',
+                                        }}>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 text-[11px]">
+                                            <DeepStat label="Stock Scope" value={stockScope === 'all' ? 'All Branches' : 'Branch'} />
+                                            <DeepStat label="In Transit" value={String(line.stockTransit)} />
+                                            <DeepStat label="Lifetime Sold" value={String(line.purchasedSold)} />
+                                            <DeepStat label="Avg Monthly" value={String(line.salesMonthly)} />
+                                            <DeepStat label="Adjustment" value={String(line.scoreAdjust)} />
+                                            <DeepStat label="Safety Tag" value={String(line.safetyTag || '—')} />
+                                            <DeepStat label="Best Supplier $" value={Number(line.supplierPrice).toFixed(2)} />
+                                            <DeepStat label="Our Cost HT" value={Number(line.unitCostHT).toFixed(2)} />
+                                            <DeepStat label="Sell HT" value={Number(line.sellingPriceHT).toFixed(2)} />
+                                            <DeepStat label="Expiry" value={String(line.expirySafety || '—')} />
+                                            <DeepStat label="Proposed Qty" value={String(line.requiredProposed)} />
+                                            <DeepStat label="Line Total" value={`${(Number(line.quantity) * Number(line.unitCostHT)).toLocaleString()}`} highlight />
+                                        </div>
+                                    </div>
+                                )}
+                                </React.Fragment>
                             );
                         })}
                     </div>
@@ -1380,6 +1462,16 @@ export default function PurchaseForm({
              * Sticks to the viewport right edge, vertically centered lower.
              */}
             <div className="fixed right-3 bottom-24 z-30 flex flex-col gap-2 no-print">
+                <button type="button" onClick={() => setIntelligenceOpen(true)}
+                    title="Procurement Intelligence — KPIs, trends, recent POs"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+                    style={{
+                        background: 'var(--app-primary)',
+                        color: 'white',
+                        boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                    }}>
+                    <BarChart3 size={14} />
+                </button>
                 <button type="button" onClick={() => setCustomizeOpen(true)}
                     title="Customize columns"
                     className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"
@@ -1403,6 +1495,11 @@ export default function PurchaseForm({
                     <Plus size={14} />
                 </button>
             </div>
+
+            <ProcurementIntelligenceDrawer
+                open={intelligenceOpen}
+                onClose={() => setIntelligenceOpen(false)}
+            />
         </form>
     );
 }
