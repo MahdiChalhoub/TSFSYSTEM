@@ -105,20 +105,26 @@
 
 ## 🟢 LOW
 
-### [OPEN] Fiscal Years `/new` + `/[id]` are broken scaffold pages
+### [DONE 2026-04-19] Fiscal Years `/new` + `/[id]` broken scaffolds
 - **Discovered**: 2026-04-19
-- **Impact**: `src/app/(privileged)/finance/fiscal-years/new/page.tsx` renders a form with the placeholder `<p>No form fields available</p>` and submits an empty `{}` to `POST /finance/fiscal-years/` — the route is unusable. The real creation flow is the inline Wizard inside `viewer.tsx`. `src/app/(privileged)/finance/fiscal-years/[id]/page.tsx` is a scaffold that dumps `Object.entries(item)` as raw JSON and its Edit button navigates to `/finance/fiscal-years/${id}/edit` — a route that **does not exist** (404).
-- **Options**: (a) delete both scaffolds and ensure nothing links to them — but check first; (b) finish them properly; (c) replace with redirects back to the main list. Needs product call.
+- **Impact**: `new/page.tsx` had `<p>No form fields available</p>` and submitted `{}` — unusable. `[id]/page.tsx` dumped raw JSON and linked to a non-existent `/edit` route (404).
+- **Fix**: Both archived to `ARCHIVE/src/app/(privileged)/finance/fiscal-years/{new,[id]}/page.tsx` per cleanup rule. No app code linked to them — confirmed by grep. The real creation flow stays inside the Wizard modal triggered from `viewer.tsx`.
 
-### [OPEN] Dead fiscal-years components: `wizard.tsx` + `year-card.tsx`
+### [DONE 2026-04-19] Dead fiscal-years components: `wizard.tsx` + `year-card.tsx`
 - **Discovered**: 2026-04-19
-- **Impact**: `src/app/(privileged)/finance/fiscal-years/wizard.tsx` (226 lines) and `year-card.tsx` (258 lines) export default React components that are **never imported anywhere**. `viewer.tsx` reimplements both inline. Dead code.
-- **Fix**: Per `.agent/rules/cleanup.md`, archive rather than delete — move to `/ARCHIVE/src/app/(privileged)/finance/fiscal-years/` preserving the folder shape.
+- **Impact**: 226 + 258 = 484 lines never imported anywhere. Dead code.
+- **Fix**: Archived to `ARCHIVE/src/app/(privileged)/finance/fiscal-years/` per cleanup rule.
 
-### [OPEN] `fiscal-years/viewer.tsx` is 1363 lines (over 300-line limit)
+### [IN PROGRESS 2026-04-19] `fiscal-years/viewer.tsx` — 1363 → 866 lines (still over 300 limit)
 - **Discovered**: 2026-04-19
-- **Impact**: Violates `code-quality.md` hard limit. Any further edits should refactor first. Not refactored this session — modal-escape fixes were additive and the file was already over-limit.
-- **Fix**: Extract the three bespoke modals (Wizard, Draft Audit, Year-End Close) into `_components/`. Extract the year/period rendering into `_components/YearPanel.tsx`. Extract the `openWizard` gap-detection logic + state into `_hooks/useFiscalYearsViewer.ts`. Target: page ≤ 250 lines of orchestration. Est: 3–4 hours.
+- **Impact**: Violates `code-quality.md` hard limit.
+- **Progress 2026-04-19**: Extracted the 3 bespoke modals into `_components/`:
+  - `WizardModal.tsx` (127 lines) — Create Fiscal Year form with partial-year banner + period-strategy preview.
+  - `DraftAuditModal.tsx` (77 lines) — Shows draft JEs blocking period close.
+  - `YearEndCloseModal.tsx` (293 lines) — Preview/confirm/result 3-stage year-end close flow.
+  - Each modal owns its own `useModalDismiss` call so the viewer no longer manages escape-key plumbing for them.
+- **Remaining**: The ~307-line year-list loop (lines 500-807) with per-year tabs (periods / summary / history) still lives inline. Extracting it into `_components/YearPanel.tsx` + sub-components would get under 300. ~3-4 hours. Has deep state dependencies (yearTab, summaryCache, historyCache, period action handlers) so needs careful prop threading + browser smoke-test. Deferred as a dedicated refactor task.
+- **Fix (Phase 2)**: Extract KPI strip, filter bar, and year-list loop into `_components/YearPanel.tsx` + `_components/YearTabs.tsx` (Periods / Summary / History sub-tabs). Target ≤ 250 lines of orchestration in `viewer.tsx`.
 
 ### [OPEN] Mobile guided tours (COA + Units + Categories)
 - **Discovered**: 2026-04-20

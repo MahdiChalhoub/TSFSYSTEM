@@ -18,8 +18,10 @@ import {
 } from '@/app/actions/finance/fiscal-year'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { notifyPeriodChange } from '@/components/finance/period-warning-banner'
-import { useModalDismiss } from '@/hooks/useModalDismiss'
 import PeriodEditor from './period-editor'
+import { WizardModal, type WizardFormData } from './_components/WizardModal'
+import { DraftAuditModal } from './_components/DraftAuditModal'
+import { YearEndCloseModal } from './_components/YearEndCloseModal'
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
     OPEN:      { color: 'var(--app-success, #22c55e)', bg: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', label: 'Open' },
@@ -54,9 +56,6 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     const closeYearEndModal = () => {
         setCloseStep(null); setClosePreview(null); setCloseResult(null); setCloseConfirmText(''); setClosingYearId(null)
     }
-    const wizardDismiss = useModalDismiss(showWizard, () => setShowWizard(false))
-    const draftAuditDismiss = useModalDismiss(draftAudit !== null, () => setDraftAudit(null))
-    const yearEndDismiss = useModalDismiss(closeStep !== null && closePreview !== null, closeYearEndModal)
 
     // Listen for period changes from the global banner
     useEffect(() => {
@@ -73,9 +72,9 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
     const currentYear = new Date().getFullYear()
     const lastYear = years[0] || null
-    const [wizardData, setWizardData] = useState({
+    const [wizardData, setWizardData] = useState<WizardFormData>({
         name: `FY ${currentYear}`, startDate: `${currentYear}-01-01`, endDate: `${currentYear}-12-31`,
-        frequency: 'MONTHLY' as 'MONTHLY' | 'QUARTERLY', defaultPeriodStatus: 'OPEN' as 'OPEN' | 'FUTURE', includeAuditPeriod: true,
+        frequency: 'MONTHLY', defaultPeriodStatus: 'OPEN', includeAuditPeriod: true,
     })
 
     const stats = useMemo(() => {
@@ -812,551 +811,55 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
             {/* Wizard Modal */}
             {showWizard && (
-                <div {...wizardDismiss.backdropProps} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-                    <div {...wizardDismiss.contentProps} className="rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
-                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                        <div className="px-5 py-4 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
-                                    <Calendar size={16} style={{ color: 'var(--app-primary)' }} />
-                                </div>
-                                <div>
-                                    <h2 className="text-[13px] font-black" style={{ color: 'var(--app-foreground)' }}>Create Fiscal Year</h2>
-                                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Configure periods and timeline</p>
-                                </div>
-                            </div>
-                            <button onClick={() => setShowWizard(false)} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--app-muted-foreground)' }}><X size={16} /></button>
-                        </div>
-                        <form onSubmit={handleCreateYear} className="p-5 space-y-4">
-                            <div>
-                                <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Year Name</label>
-                                <input value={wizardData.name} onChange={e => setWizardData({ ...wizardData, name: e.target.value })}
-                                    className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary" required />
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <div>
-                                    <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Start Date</label>
-                                    <input type="date" value={wizardData.startDate} onChange={e => {
-                                        const s = new Date(e.target.value); const en = new Date(s); en.setFullYear(en.getFullYear() + 1); en.setDate(en.getDate() - 1)
-                                        setWizardData({ ...wizardData, startDate: e.target.value, endDate: en.toISOString().split('T')[0] })
-                                    }} className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none" required />
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>End Date</label>
-                                    <input type="date" value={wizardData.endDate} onChange={e => setWizardData({ ...wizardData, endDate: e.target.value })}
-                                        className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none" required />
-                                </div>
-                            </div>
-                            {(() => {
-                                const sd = new Date(wizardData.startDate)
-                                const ed = new Date(wizardData.endDate)
-                                const validDates = !isNaN(sd.getTime()) && !isNaN(ed.getTime()) && ed >= sd
-                                let monthsSpan = 0
-                                if (validDates) {
-                                    monthsSpan = (ed.getFullYear() - sd.getFullYear()) * 12 + (ed.getMonth() - sd.getMonth()) + 1
-                                }
-                                const isPartial = validDates && (sd.getMonth() !== 0 || sd.getDate() !== 1 || monthsSpan !== 12)
-                                const baseCount = wizardData.frequency === 'MONTHLY' ? monthsSpan : Math.ceil(monthsSpan / 3)
-                                const totalCount = baseCount + (wizardData.includeAuditPeriod ? 1 : 0)
-                                return (
-                                    <>
-                                        {isPartial && (
-                                            <div className="rounded-xl p-3 flex items-start gap-2"
-                                                style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
-                                                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                                <div>
-                                                    <div className="text-[11px] font-black uppercase tracking-wider" style={{ color: 'var(--app-warning, #f59e0b)' }}>Partial Fiscal Year</div>
-                                                    <div className="text-[10px] font-medium mt-0.5" style={{ color: 'var(--app-foreground)' }}>
-                                                        Spans {monthsSpan} month{monthsSpan === 1 ? '' : 's'} ({sd.toLocaleDateString('en', { month: 'short', day: 'numeric' })} → {ed.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}). A standard fiscal year is 12 calendar months starting Jan 1.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div className="rounded-xl p-4" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 15%, transparent)' }}>
-                                            <div className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-info, #3b82f6)' }}>Period Strategy</div>
-                                            <div className="flex gap-3 mb-3">
-                                                {(['MONTHLY', 'QUARTERLY'] as const).map(f => {
-                                                    const c = f === 'MONTHLY' ? monthsSpan : Math.ceil(monthsSpan / 3)
-                                                    return (
-                                                        <label key={f} className="flex items-center gap-2 cursor-pointer">
-                                                            <input type="radio" name="freq" checked={wizardData.frequency === f} onChange={() => setWizardData({ ...wizardData, frequency: f })} className="accent-[var(--app-primary)]" />
-                                                            <span className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>{f === 'MONTHLY' ? `Monthly (${c || 12})` : `Quarterly (${c || 4})`}</span>
-                                                        </label>
-                                                    )
-                                                })}
-                                            </div>
-                                            <div className="mb-3">
-                                                <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Initial Status</label>
-                                                <select value={wizardData.defaultPeriodStatus} onChange={e => setWizardData({ ...wizardData, defaultPeriodStatus: e.target.value as any })}
-                                                    className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[11px] font-medium text-app-foreground outline-none">
-                                                    <option value="OPEN">OPEN — Active immediately</option>
-                                                    <option value="FUTURE">FUTURE — Locked until needed</option>
-                                                </select>
-                                            </div>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="checkbox" checked={wizardData.includeAuditPeriod} onChange={e => setWizardData({ ...wizardData, includeAuditPeriod: e.target.checked })} className="accent-[var(--app-primary)] rounded" />
-                                                <span className="text-[10px] font-bold" style={{ color: 'var(--app-foreground)' }}>Include Audit Period (+1 adjustment period)</span>
-                                            </label>
-                                            {validDates && (
-                                                <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)' }}>
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Will generate</span>
-                                                    <span className="text-[12px] font-black" style={{ color: 'var(--app-info, #3b82f6)' }}>
-                                                        {totalCount} period{totalCount === 1 ? '' : 's'}
-                                                        {wizardData.includeAuditPeriod && <span className="text-[10px] font-bold ml-1" style={{ color: 'var(--app-muted-foreground)' }}>({baseCount} + 1 audit)</span>}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </>
-                                )
-                            })()}
-                            <div className="flex gap-2 pt-1">
-                                <button type="button" onClick={() => setShowWizard(false)} className="flex-1 py-2 text-[11px] font-bold rounded-xl border transition-all" style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>Cancel</button>
-                                <button type="submit" disabled={isPending} className="flex-1 py-2 text-[11px] font-bold rounded-xl transition-all disabled:opacity-50" style={{ background: 'var(--app-primary)', color: 'white' }}>
-                                    {isPending ? <><Loader2 size={12} className="animate-spin inline mr-1" /> Generating...</> : 'Generate Periods'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <WizardModal
+                    data={wizardData}
+                    setData={setWizardData}
+                    onClose={() => setShowWizard(false)}
+                    onSubmit={handleCreateYear}
+                    isPending={isPending}
+                />
             )}
 
             {editingPeriod && <PeriodEditor period={editingPeriod} onClose={() => { setEditingPeriod(null); refreshData() }} />}
 
             {/* ── Draft Audit Modal ── */}
-            {draftAudit && (
-                <div {...draftAuditDismiss.backdropProps} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-                    <div {...draftAuditDismiss.contentProps} className="rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
-                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                        <div className="px-5 py-4 flex justify-between items-center"
-                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error, #ef4444) 4%, transparent)' }}>
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                                    style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 15%, transparent)' }}>
-                                    <AlertTriangle size={16} style={{ color: 'var(--app-error, #ef4444)' }} />
-                                </div>
-                                <div>
-                                    <h2 className="text-[13px] font-black" style={{ color: 'var(--app-foreground)' }}>
-                                        Cannot Close {draftAudit.periodName}
-                                    </h2>
-                                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
-                                        {draftAudit.total} draft journal {draftAudit.total === 1 ? 'entry' : 'entries'} must be posted or deleted
-                                    </p>
-                                </div>
-                            </div>
-                            <button onClick={() => setDraftAudit(null)} className="p-1.5 rounded-lg" style={{ color: 'var(--app-muted-foreground)' }}>
-                                <X size={16} />
-                            </button>
-                        </div>
-                        <div className="p-4 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                            <div className="space-y-1">
-                                {draftAudit.drafts.map(d => (
-                                    <div key={d.id} className="flex items-center gap-3 px-3 py-2 rounded-xl transition-all"
-                                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                        <div className="flex-shrink-0">
-                                            <AlertTriangle size={13} style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>{d.reference}</div>
-                                            <div className="text-[9px] font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>{d.description}</div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>
-                                                {d.total_debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </div>
-                                            <div className="text-[9px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>{d.date}</div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {draftAudit.total > draftAudit.drafts.length && (
-                                    <div className="text-[10px] font-bold text-center py-2" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        ... and {draftAudit.total - draftAudit.drafts.length} more
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="px-5 py-3" style={{ borderTop: '1px solid var(--app-border)' }}>
-                            <button onClick={() => setDraftAudit(null)}
-                                className="w-full py-2 text-[11px] font-bold rounded-xl border transition-all"
-                                style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {draftAudit && <DraftAuditModal data={draftAudit} onClose={() => setDraftAudit(null)} />}
 
             <ConfirmDialog open={pendingAction !== null} onOpenChange={o => { if (!o) setPendingAction(null) }} onConfirm={confirmAction}
                 title={pendingAction?.title ?? ''} description={pendingAction?.description ?? ''} confirmText="Confirm" variant={pendingAction?.variant ?? 'danger'} />
 
-            {/* ══════ Year-End Close Modal ══════ */}
             {closeStep && closePreview && (
-                <div {...yearEndDismiss.backdropProps} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-                    <div {...yearEndDismiss.contentProps} className="rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
-                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-
-                        {/* Header */}
-                        <div className="px-5 py-4 flex justify-between items-center"
-                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error, #ef4444) 4%, transparent)' }}>
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                                    style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 15%, transparent)' }}>
-                                    <ShieldCheck size={18} style={{ color: 'var(--app-error, #ef4444)' }} />
-                                </div>
-                                <div>
-                                    <h2 className="text-[14px] font-black" style={{ color: 'var(--app-foreground)' }}>
-                                        {closeStep === 'preview'
-                                            ? ((() => {
-                                                const today = new Date()
-                                                const yearEnd = new Date(closePreview.year.end_date)
-                                                return today < yearEnd ? 'Partial Year-End Close' : 'Year-End Close'
-                                            })())
-                                            : 'Close Complete'}
-                                    </h2>
-                                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        {closePreview.year.name} · {closePreview.year.start_date} — {closePreview.year.end_date}
-                                    </p>
-                                </div>
-                            </div>
-                            <button onClick={closeYearEndModal}
-                                className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--app-muted-foreground)' }}>
-                                <X size={16} />
-                            </button>
-                        </div>
-
-                        {closeStep === 'preview' ? (
-                            /* ── Preview Report ── */
-                            <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-
-                                {/* Partial Close Banner */}
-                                {(() => {
-                                    const today = new Date()
-                                    const yearEnd = new Date(closePreview.year.end_date)
-                                    const isPartial = today < yearEnd
-                                    if (!isPartial) return null
-                                    // Closed year ends YESTERDAY; remainder starts TODAY (so today stays postable)
-                                    const lastClosedDay = new Date(today); lastClosedDay.setDate(lastClosedDay.getDate() - 1)
-                                    const remainderStart = today
-                                    const sm = remainderStart.toLocaleDateString('en', { month: 'short' })
-                                    const em = yearEnd.toLocaleDateString('en', { month: 'short' })
-                                    const lastClosedStr = lastClosedDay.toISOString().split('T')[0]
-                                    const todayStr = today.toISOString().split('T')[0]
-                                    return (
-                                        <div className="rounded-xl p-3 space-y-2"
-                                            style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
-                                            <div className="flex items-center gap-2">
-                                                <AlertTriangle size={14} style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                                <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: 'var(--app-warning, #f59e0b)' }}>Partial Year Close</span>
-                                            </div>
-                                            <div className="text-[11px] font-medium leading-relaxed" style={{ color: 'var(--app-foreground)' }}>
-                                                Today ({todayStr}) is before the year end ({closePreview.year.end_date}). The year will be split:
-                                            </div>
-                                            <div className="space-y-1 pl-2">
-                                                <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
-                                                    <Lock size={10} style={{ color: 'var(--app-error, #ef4444)' }} />
-                                                    <span><strong>{closePreview.year.name}</strong> truncated to {closePreview.year.start_date} — {lastClosedStr} and locked</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
-                                                    <Plus size={10} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                                    <span>New year <strong>FY {remainderStart.getFullYear()} ({sm}-{em})</strong> auto-created from {todayStr}, posting stays open today</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                })()}
-
-                                {/* Blockers */}
-                                {closePreview.blockers.length > 0 && (
-                                    <div className="rounded-xl p-3 space-y-2"
-                                        style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 20%, transparent)' }}>
-                                        <div className="flex items-center gap-2">
-                                            <AlertTriangle size={14} style={{ color: 'var(--app-error, #ef4444)' }} />
-                                            <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: 'var(--app-error, #ef4444)' }}>Blockers</span>
-                                        </div>
-                                        {closePreview.blockers.map((b, i) => (
-                                            <div key={i} className="text-[11px] font-medium flex items-start gap-2" style={{ color: 'var(--app-error, #ef4444)' }}>
-                                                <X size={12} className="flex-shrink-0 mt-0.5" /> {b}
-                                            </div>
-                                        ))}
-
-                                        {/* No manual period close needed — Year-End Close auto-closes all periods */}
-                                    </div>
-                                )}
-
-                                {/* Periods summary */}
-                                <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                    <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Periods</div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                                        {[
-                                            { label: 'Open', value: closePreview.periods.open, color: 'var(--app-success, #22c55e)' },
-                                            { label: 'Closed', value: closePreview.periods.closed, color: 'var(--app-muted-foreground)' },
-                                            { label: 'Future', value: closePreview.periods.future, color: 'var(--app-info, #3b82f6)' },
-                                        ].map(s => (
-                                            <div key={s.label} className="text-center">
-                                                <div className="text-[16px] font-black tabular-nums" style={{ color: s.color }}>{s.value}</div>
-                                                <div className="text-[9px] font-bold uppercase" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Journal entries */}
-                                <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                    <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Journal Entries</div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-[12px] font-bold" style={{ color: 'var(--app-foreground)' }}>
-                                            {closePreview.journal_entries.posted} posted
-                                        </span>
-                                        {closePreview.journal_entries.draft > 0 && (
-                                            <span className="text-[12px] font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
-                                                {closePreview.journal_entries.draft} draft
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* P&L Summary */}
-                                <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                    <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Profit & Loss Closing</div>
-                                    <div className="space-y-1.5">
-                                        <div className="flex justify-between">
-                                            <span className="text-[11px] font-bold flex items-center gap-1.5" style={{ color: 'var(--app-success, #22c55e)' }}>
-                                                <TrendingUp size={12} /> Revenue
-                                            </span>
-                                            <span className="text-[12px] font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>
-                                                {closePreview.pnl.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-[11px] font-bold flex items-center gap-1.5" style={{ color: 'var(--app-error, #ef4444)' }}>
-                                                <TrendingDown size={12} /> Expenses
-                                            </span>
-                                            <span className="text-[12px] font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>
-                                                {closePreview.pnl.expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between pt-1.5 mt-1.5" style={{ borderTop: '1px solid var(--app-border)' }}>
-                                            <span className="text-[11px] font-black uppercase" style={{ color: 'var(--app-foreground)' }}>
-                                                Net {closePreview.pnl.net_income >= 0 ? 'Income' : 'Loss'}
-                                            </span>
-                                            <span className="text-[13px] font-black tabular-nums"
-                                                style={{ color: closePreview.pnl.net_income >= 0 ? 'var(--app-success, #22c55e)' : 'var(--app-error, #ef4444)' }}>
-                                                {closePreview.pnl.net_income.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* What will happen */}
-                                <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                    <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>What will happen</div>
-                                    <div className="space-y-2">
-                                        <div className="flex items-start gap-2">
-                                            <ArrowRight size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-primary)' }} />
-                                            <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
-                                                {closePreview.periods.open > 0 ? `${closePreview.periods.open} open periods will be auto-closed, then all` : 'All'} Income & Expense accounts will be zeroed out
-                                            </span>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <ArrowRight size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-primary)' }} />
-                                            <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
-                                                Net {closePreview.pnl.net_income >= 0 ? 'income' : 'loss'} transferred to{' '}
-                                                <strong>{closePreview.retained_earnings ? `${closePreview.retained_earnings.code} — ${closePreview.retained_earnings.name}` : 'Retained Earnings (not found!)'}</strong>
-                                            </span>
-                                        </div>
-                                        {(() => {
-                                            const today = new Date()
-                                            const yearEnd = new Date(closePreview.year.end_date)
-                                            const isPartial = today < yearEnd
-                                            if (isPartial) {
-                                                return (
-                                                    <div className="flex items-start gap-2">
-                                                        <ArrowRight size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-primary)' }} />
-                                                        <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
-                                                            Remainder fiscal year auto-created with monthly open periods, opening balances carried forward
-                                                        </span>
-                                                    </div>
-                                                )
-                                            }
-                                            return closePreview.next_year ? (
-                                                <div className="flex items-start gap-2">
-                                                    <ArrowRight size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-primary)' }} />
-                                                    <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
-                                                        {closePreview.opening_balances_count} opening balances generated for <strong>{closePreview.next_year.name}</strong>
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-start gap-2">
-                                                    <AlertTriangle size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                                    <span className="text-[11px] font-medium" style={{ color: 'var(--app-warning, #f59e0b)' }}>
-                                                        No next fiscal year found — opening balances will NOT be generated. Create the next year first.
-                                                    </span>
-                                                </div>
-                                            )
-                                        })()}
-                                        <div className="flex items-start gap-2">
-                                            <Lock size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-error, #ef4444)' }} />
-                                            <span className="text-[11px] font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
-                                                This fiscal year will be permanently locked. This cannot be undone.
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Opening Balances Preview */}
-                                {closePreview.opening_preview && closePreview.opening_preview.length > 0 && (
-                                    <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            Opening Balances Preview ({closePreview.opening_balances_count} accounts)
-                                        </div>
-                                        <div className="max-h-[120px] overflow-y-auto custom-scrollbar space-y-0.5">
-                                            {closePreview.opening_preview.map(ob => (
-                                                <div key={ob.code} className="flex items-center justify-between text-[10px] py-0.5"
-                                                    style={{ borderBottom: '1px solid var(--app-border)' }}>
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        <span className="font-mono font-bold flex-shrink-0" style={{ color: 'var(--app-primary)', minWidth: '40px' }}>{ob.code}</span>
-                                                        <span className="font-medium truncate" style={{ color: 'var(--app-foreground)' }}>{ob.name}</span>
-                                                    </div>
-                                                    <span className="font-black tabular-nums flex-shrink-0 ml-2"
-                                                        style={{ color: ob.balance >= 0 ? 'var(--app-foreground)' : 'var(--app-error, #ef4444)' }}>
-                                                        {ob.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {closePreview.opening_balances_count > 30 && (
-                                            <div className="text-[9px] font-bold mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
-                                                ... and {closePreview.opening_balances_count - 30} more accounts
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Typed-confirmation gate (required for partial close) */}
-                                {(() => {
-                                    const today = new Date()
-                                    const yearEnd = new Date(closePreview.year.end_date)
-                                    const isPartial = today < yearEnd
-                                    if (!isPartial) return null
-                                    return (
-                                        <div className="rounded-xl p-3 space-y-2"
-                                            style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)' }}>
-                                            <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-error, #ef4444)' }}>Confirm Permanent Action</div>
-                                            <div className="text-[10px] font-medium" style={{ color: 'var(--app-foreground)' }}>
-                                                This locks <strong>{closePreview.year.name}</strong> permanently and splits the year. To proceed, type the year name below.
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={closeConfirmText}
-                                                onChange={e => setCloseConfirmText(e.target.value)}
-                                                placeholder={closePreview.year.name}
-                                                className="w-full px-3 py-2 text-[11px] font-mono rounded-lg outline-none"
-                                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
-                                            />
-                                        </div>
-                                    )
-                                })()}
-
-                                {/* Actions */}
-                                <div className="flex gap-2 pt-1">
-                                    <button onClick={closeYearEndModal}
-                                        className="flex-1 py-2.5 text-[11px] font-bold rounded-xl border transition-all"
-                                        style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
-                                        Cancel
-                                    </button>
-                                    {(() => {
-                                        const today = new Date()
-                                        const yearEnd = new Date(closePreview.year.end_date)
-                                        const isPartial = today < yearEnd
-                                        const confirmed = !isPartial || closeConfirmText.trim() === closePreview.year.name
-                                        return (
-                                    <button disabled={!closePreview.can_close || isPending || !confirmed}
-                                        onClick={() => {
-                                            if (!closingYearId) return
-                                            startTransition(async () => {
-                                                try {
-                                                    // close_date = last day of the closed year. Pass YESTERDAY so today
-                                                    // falls into the remainder year and users can keep posting today.
-                                                    let closeDate: string | undefined
-                                                    if (isPartial) {
-                                                        const d = new Date()
-                                                        d.setDate(d.getDate() - 1)
-                                                        closeDate = d.toISOString().split('T')[0]
-                                                    }
-
-                                                    await hardLockFiscalYear(closingYearId, closeDate)
-                                                    setCloseStep('result')
-                                                    setCloseConfirmText('')
-                                                    setCloseResult(
-                                                        isPartial
-                                                            ? `Partial year-end close complete. P&L closed into Retained Earnings. New fiscal year auto-created for the remaining period.`
-                                                            : `Year-end close completed successfully. P&L accounts closed into Retained Earnings. Opening balances generated for the next year.`
-                                                    )
-                                                } catch (err: unknown) {
-                                                    setCloseStep('result')
-                                                    setCloseResult(`Error: ${err instanceof Error ? err.message : String(err)}`)
-                                                }
-                                            })
-                                        }}
-                                        className="flex-1 py-2.5 text-[11px] font-bold rounded-xl transition-all disabled:opacity-40 flex items-center justify-center gap-1.5"
-                                        style={{ background: closePreview.can_close ? 'var(--app-error, #ef4444)' : 'var(--app-muted)', color: 'white' }}>
-                                        {isPending ? <><Loader2 size={12} className="animate-spin" /> Closing...</> : <><ShieldCheck size={12} /> {isPartial ? 'Execute Partial Close & Split Year' : 'Execute Year-End Close'}</>}
-                                    </button>
-                                        )
-                                    })()}
-                                </div>
-                            </div>
-                        ) : closeStep === 'result' ? (
-                            /* ── Result Report ── */
-                            <div className="p-5 space-y-4">
-                                <div className="flex flex-col items-center py-4">
-                                    {closeResult?.startsWith('Error') ? (
-                                        <AlertTriangle size={36} style={{ color: 'var(--app-error, #ef4444)' }} />
-                                    ) : (
-                                        <CheckCircle2 size={36} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                    )}
-                                    <p className="text-[13px] font-bold mt-3 text-center" style={{ color: 'var(--app-foreground)' }}>
-                                        {closeResult?.startsWith('Error') ? 'Year-End Close Failed' : 'Year-End Close Complete'}
-                                    </p>
-                                    <p className="text-[11px] font-medium mt-2 text-center leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        {closeResult}
-                                    </p>
-                                </div>
-
-                                {!closeResult?.startsWith('Error') && (() => {
-                                    const today = new Date()
-                                    const yearEnd = new Date(closePreview.year.end_date)
-                                    const wasPartial = today < yearEnd
-                                    const remainderStart = new Date(today); remainderStart.setDate(remainderStart.getDate() + 1)
-                                    const sm = remainderStart.toLocaleDateString('en', { month: 'short' })
-                                    const em = yearEnd.toLocaleDateString('en', { month: 'short' })
-                                    const remainderName = `FY ${remainderStart.getFullYear()} (${sm}-${em})`
-                                    return (
-                                        <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                            <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Summary</div>
-                                            <div className="space-y-1.5 text-[11px]" style={{ color: 'var(--app-foreground)' }}>
-                                                <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> P&L closed into Retained Earnings</div>
-                                                <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> Net {closePreview.pnl.net_income >= 0 ? 'income' : 'loss'}: {closePreview.pnl.net_income.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                                                {wasPartial ? (
-                                                    <div className="flex items-center gap-2"><Plus size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> Remainder year <strong>{remainderName}</strong> auto-created with opening balances</div>
-                                                ) : closePreview.next_year && (
-                                                    <div className="flex items-center gap-2"><CheckCircle2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} /> Opening balances → {closePreview.next_year.name}</div>
-                                                )}
-                                                <div className="flex items-center gap-2"><Lock size={11} style={{ color: 'var(--app-error, #ef4444)' }} /> {closePreview.year.name} permanently locked</div>
-                                            </div>
-                                        </div>
-                                    )
-                                })()}
-
-                                <button onClick={() => { closeYearEndModal(); refreshData() }}
-                                    className="w-full py-2.5 text-[11px] font-bold rounded-xl transition-all"
-                                    style={{ background: 'var(--app-primary)', color: 'white' }}>
-                                    Done
-                                </button>
-                            </div>
-                        ) : null}
-                    </div>
-                </div>
+                <YearEndCloseModal
+                    closeStep={closeStep}
+                    closePreview={closePreview}
+                    closeResult={closeResult}
+                    closeConfirmText={closeConfirmText}
+                    setCloseConfirmText={setCloseConfirmText}
+                    isPending={isPending}
+                    onClose={closeYearEndModal}
+                    onDone={() => { closeYearEndModal(); refreshData() }}
+                    onExecute={(isPartial) => {
+                        if (!closingYearId) return
+                        startTransition(async () => {
+                            try {
+                                let closeDate: string | undefined
+                                if (isPartial) {
+                                    const d = new Date(); d.setDate(d.getDate() - 1)
+                                    closeDate = d.toISOString().split('T')[0]
+                                }
+                                await hardLockFiscalYear(closingYearId, closeDate)
+                                setCloseStep('result')
+                                setCloseConfirmText('')
+                                setCloseResult(isPartial
+                                    ? `Partial year-end close complete. P&L closed into Retained Earnings. New fiscal year auto-created for the remaining period.`
+                                    : `Year-end close completed successfully. P&L accounts closed into Retained Earnings. Opening balances generated for the next year.`)
+                            } catch (err: unknown) {
+                                setCloseStep('result')
+                                setCloseResult(`Error: ${err instanceof Error ? err.message : String(err)}`)
+                            }
+                        })
+                    }}
+                />
             )}
         </div>
     )

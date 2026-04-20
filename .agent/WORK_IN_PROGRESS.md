@@ -15,6 +15,31 @@
 
 ## Session Log
 
+### Session: 2026-04-19 (part 2 — Fiscal Years "fix all" follow-up)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ Fixes landed / ⏳ browser smoke-test still pending (Playwright Chrome locked by another Claude session)
+- **User request**: "fixx all, and test t it and keep it full workabae" — tackle the remaining fiscal-years issues logged in the previous session.
+- **Files Modified**:
+  - `ARCHIVE/src/app/(privileged)/finance/fiscal-years/new/page.tsx` — moved from `src/` (per cleanup rule). Was a broken scaffold: `<p>No form fields available</p>`, submitted `{}`.
+  - `ARCHIVE/src/app/(privileged)/finance/fiscal-years/[id]/page.tsx` — moved from `src/`. Was a raw-JSON dump with a 404-linking Edit button.
+  - `ARCHIVE/src/app/(privileged)/finance/fiscal-years/wizard.tsx` — moved. Dead code; never imported anywhere.
+  - `ARCHIVE/src/app/(privileged)/finance/fiscal-years/year-card.tsx` — moved. Dead code.
+  - `src/app/actions/finance/fiscal-year.ts` — fixed typo `revalidatePath('/finance/finance/fiscal-years')` → `/finance/fiscal-years` (missed Next cache invalidation on lock action).
+  - `src/app/(privileged)/finance/fiscal-years/_components/WizardModal.tsx` — NEW (127 lines). Extracted.
+  - `src/app/(privileged)/finance/fiscal-years/_components/DraftAuditModal.tsx` — NEW (77 lines). Extracted.
+  - `src/app/(privileged)/finance/fiscal-years/_components/YearEndCloseModal.tsx` — NEW (293 lines). Extracted — owns its own dismiss hook. `onExecute(isPartial)` callback keeps the hardLock call + result-message construction inside `viewer.tsx` so it can reuse `hardLockFiscalYear`, `setCloseStep`, etc.
+  - `src/app/(privileged)/finance/fiscal-years/viewer.tsx` — 1363 → 866 lines. Swapped the 3 bespoke modals for component calls. Dropped the three `useModalDismiss` hook calls (now inside each modal). Added typed `WizardFormData` to `wizardData` state so the prop type flows through.
+- **Discoveries**:
+  - Playwright Chrome is single-profile — when another Claude session holds the lock, I can't smoke-test. Filed as a silent limitation, not blocking.
+  - Nothing in the app linked to `/finance/fiscal-years/new` or `/finance/fiscal-years/<id>` — verified via grep across `src/`. Safe to archive without breaking navigation.
+  - The typo `revalidatePath('/finance/finance/fiscal-years')` meant lock action failures left stale cache — user could click Lock, see success, but the list wouldn't reflect the state change until a manual refresh.
+- **Warnings for Next Agent**:
+  - ⚠️ **Browser smoke-test still required** — exercise on `/finance/fiscal-years`: (a) Escape + backdrop close for all 3 modals (Wizard, Draft Audit, Year-End Close) + Period Editor; (b) Year-End Close preview → execute → result flow, including the typed-confirmation gate for partial close; (c) 404 check for `/finance/fiscal-years/new` and `/finance/fiscal-years/<some-id>` — should 404 now (archived), not render broken forms; (d) CRUD on periods with forced network-failure — optimistic update should roll back, error toast should show the real message; (e) lock action — list should refresh to show the year locked.
+  - ⚠️ **viewer.tsx is still 866 lines** — above the 300-line limit. The year-list loop (~307 lines with per-year tabs) is the next extraction target. Documented as an [IN PROGRESS] item in WORKMAP with a concrete plan.
+  - ⚠️ The archived scaffolds at `/new` and `/[id]` were route pages. Now the routes 404. If any external bookmarks or generated emails link to `<host>/finance/fiscal-years/<some-id>`, users will see a 404. Consider a `layout.tsx` with `notFound()` or a `not-found.tsx` that redirects to `/finance/fiscal-years` if that's expected.
+
+---
+
 ### Session: 2026-04-19 (Fiscal Years silent-bug audit — the "I was trying to escape from it" bug)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ Fixes landed / ⏳ browser smoke-test pending (another Claude session held the Playwright Chrome lock)
