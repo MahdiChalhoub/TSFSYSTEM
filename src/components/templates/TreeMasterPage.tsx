@@ -86,7 +86,10 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     }
 
     // Tour support
-    const tourHook = config.tourId ? usePageTour(config.tourId) : null
+    // Call the hook unconditionally (Rules of Hooks). Empty id → undefined
+    // currentTour, trigger button is hidden via tourActive below.
+    const tourHook = usePageTour(config.tourId || '')
+    const tourActive = Boolean(config.tourId && tourHook.currentTour)
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -193,7 +196,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                     <Plus size={14} /><span className="hidden sm:inline">{config.primaryAction.label}</span>
                                 </button>
-                                {tourHook && <TourTriggerButton onClick={tourHook.start} />}
+                                {tourActive && <TourTriggerButton onClick={tourHook.start} />}
                                 {config.onRefresh && (
                                     <button onClick={handleRefresh} disabled={refreshing} title="Refresh"
                                         className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all disabled:opacity-60">

@@ -59,8 +59,11 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
     // header is now always compact so there's nothing left to collapse.
     const [fabVisible, setFabVisible] = useState(true)
 
-    // Tour support — mirrors TreeMasterPage's usage
-    const tourHook = config.tourId ? usePageTour(config.tourId) : null
+    // Tour support — call the hook unconditionally (Rules of Hooks). When no
+    // tourId is provided we pass an empty id; usePageTour then returns an
+    // undefined currentTour and the trigger button is hidden below.
+    const tourHook = usePageTour(config.tourId || '')
+    const tourActive = Boolean(config.tourId && tourHook.currentTour)
     const [scrolled, setScrolled] = useState(false)  // for shadow
     const [pullY, setPullY] = useState(0)
     const [refreshing, setRefreshing] = useState(false)
@@ -176,7 +179,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                         <span className="sr-only">{config.primaryAction.label}</span>
                     </button>
 
-                    {tourHook && <TourTriggerButton onClick={tourHook.start} />}
+                    {tourActive && <TourTriggerButton onClick={tourHook.start} />}
 
                     {config.secondaryActions && config.secondaryActions.length > 0 && (
                         <div className="relative">

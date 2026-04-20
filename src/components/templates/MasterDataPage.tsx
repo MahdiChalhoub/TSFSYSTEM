@@ -150,8 +150,10 @@ export function MasterDataPage<T = any>({
     const [drawerTab, setDrawerTab] = useState('overview')
 
     /* ── Tour ── */
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const tourHook = tourId ? usePageTour(tourId) : null
+    // Call the hook unconditionally (Rules of Hooks). Empty id → undefined
+    // currentTour; trigger button is hidden via tourActive below.
+    const tourHook = usePageTour(tourId || '')
+    const tourActive = Boolean(tourId && tourHook.currentTour)
 
     /* ── Keyboard shortcuts ── */
     useEffect(() => {
@@ -245,7 +247,7 @@ export function MasterDataPage<T = any>({
                             </div>
 
                             <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
-                                {tourHook && <TourTriggerButton onClick={tourHook.start} />}
+                                {tourActive && <TourTriggerButton onClick={tourHook.start} />}
 
                                 {secondaryActions.map((action, i) => {
                                     const st = action.active ? {
