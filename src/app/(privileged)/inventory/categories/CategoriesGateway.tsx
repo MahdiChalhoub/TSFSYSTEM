@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobileCategoriesClient').then(m => m.MobileCategoriesClient),
@@ -34,6 +35,6 @@ export function CategoriesGateway({ initialCategories }: { initialCategories: an
     // useIsMobile starts as `false` (not undefined in current impl) — but it flips
     // to the correct value on first effect. Brief mismatch is acceptable.
     return isMobile
-        ? <MobileClient initialCategories={initialCategories} />
+        ? <MobileErrorBoundary><MobileClient initialCategories={initialCategories} /></MobileErrorBoundary>
         : <DesktopClient initialCategories={initialCategories} />
 }

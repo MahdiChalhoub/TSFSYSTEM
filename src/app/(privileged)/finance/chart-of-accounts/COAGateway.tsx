@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobileCOAClient').then(m => m.MobileCOAClient),
@@ -31,6 +32,6 @@ function GatewaySkeleton() {
 export function COAGateway({ accounts }: { accounts: any[] }) {
     const isMobile = useIsMobile()
     return isMobile
-        ? <MobileClient accounts={accounts} />
+        ? <MobileErrorBoundary><MobileClient accounts={accounts} /></MobileErrorBoundary>
         : <DesktopClient accounts={accounts} />
 }

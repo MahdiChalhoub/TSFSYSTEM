@@ -420,14 +420,129 @@ export function MobilePostingRulesClient({ rulesByModule, catalog, accounts }: P
     )
 }
 
+/* Recursive row for the account picker tree */
+function AccountPickerRow({ node, level, currentAccountId, onPick, defaultOpen }: {
+    node: any; level: number; currentAccountId: number | null; onPick: (id: number) => void; defaultOpen?: boolean
+}) {
+    const hasChildren = Array.isArray(node.children) && node.children.length > 0
+    const [open, setOpen] = useState(!!defaultOpen)
+    const isCurrent = node.id === currentAccountId
+
+    return (
+        <div>
+            <div className="flex items-center gap-1 px-1 mb-1" style={{ paddingLeft: 4 + level * 14 }}>
+                {hasChildren ? (
+                    <button
+                        onClick={() => setOpen(o => !o)}
+                        className="flex items-center justify-center rounded-md flex-shrink-0 active:scale-90 transition-transform"
+                        style={{
+                            width: 26, height: 26,
+                            background: open
+                                ? 'color-mix(in srgb, var(--app-primary) 14%, transparent)'
+                                : 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                            color: open ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                            transition: 'transform 150ms, background 150ms',
+                            transform: open ? 'rotate(90deg)' : 'none',
+                        }}
+                        aria-label={open ? 'Collapse' : 'Expand'}>
+                        <ChevronRight size={13} />
+                    </button>
+                ) : (
+                    <span className="flex-shrink-0" style={{ width: 26 }} />
+                )}
+                <button
+                    onClick={() => onPick(node.id)}
+                    className="flex-1 flex items-center gap-2.5 px-3 py-2 rounded-xl active:scale-[0.99] transition-all text-left min-w-0"
+                    style={{
+                        minHeight: 44,
+                        background: isCurrent
+                            ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)'
+                            : 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
+                        border: `1px solid ${isCurrent
+                            ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)'
+                            : 'color-mix(in srgb, var(--app-border) 35%, transparent)'}`,
+                    }}>
+                    <span className="font-mono font-black tabular-nums flex-shrink-0"
+                        style={{
+                            fontSize: 'var(--tp-sm)',
+                            color: isCurrent ? 'var(--app-primary)' : (level === 0 ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)'),
+                            minWidth: 46,
+                        }}>
+                        {node.code}
+                    </span>
+                    <div className="flex-1 text-left min-w-0">
+                        <div className={`${level === 0 ? 'font-black' : 'font-bold'} text-app-foreground truncate`}
+                            style={{ fontSize: 'var(--tp-md)' }}>
+                            {node.name}
+                        </div>
+                        {node.type && level === 0 && (
+                            <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                                style={{ fontSize: 'var(--tp-xxs)' }}>
+                                {node.type}
+                            </div>
+                        )}
+                    </div>
+                    {hasChildren && (
+                        <span className="font-black tabular-nums rounded-full px-1.5 py-0.5 flex-shrink-0"
+                            style={{
+                                fontSize: 'var(--tp-xxs)',
+                                background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                color: 'var(--app-muted-foreground)',
+                                minWidth: 22, textAlign: 'center',
+                            }}>
+                            {node.children.length}
+                        </span>
+                    )}
+                    {isCurrent && (
+                        <CheckCircle2 size={16} style={{ color: 'var(--app-primary)', flexShrink: 0 }} />
+                    )}
+                </button>
+            </div>
+            {hasChildren && open && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                    {node.children.map((child: any) => (
+                        <AccountPickerRow
+                            key={child.id}
+                            node={child}
+                            level={level + 1}
+                            currentAccountId={currentAccountId}
+                            onPick={onPick}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
 /* ─── Account picker sheet ─── */
 function AccountPickerSheet({ event, accounts, currentAccountId, onPick, onClear, onClose }: any) {
     const [search, setSearch] = useState('')
     const activeAccounts = useMemo(() => accounts.filter((a: any) => a.isActive !== false), [accounts])
 
-    const filtered = useMemo(() => {
+    // Build tree: parentId → children
+    const tree = useMemo(() => {
+        const map: Record<string, any> = {}
+        for (const a of activeAccounts) map[a.id] = { ...a, children: [] }
+        const roots: any[] = []
+        for (const a of activeAccounts) {
+            const pid = a.parentId ?? a.parent
+            if (pid && map[pid]) map[pid].children.push(map[a.id])
+            else if (!pid) roots.push(map[a.id])
+        }
+        // Sort each level by code
+        const sort = (nodes: any[]) => {
+            nodes.sort((a, b) => String(a.code).localeCompare(String(b.code), undefined, { numeric: true }))
+            nodes.forEach(n => n.children?.length && sort(n.children))
+        }
+        sort(roots)
+        return roots
+    }, [activeAccounts])
+
+    // When searching, flatten matching accounts (still showing code + name).
+    const searchResults = useMemo(() => {
         const q = search.trim().toLowerCase()
-        if (!q) return activeAccounts.slice(0, 200)
+        if (!q) return null
         return activeAccounts
             .filter((a: any) =>
                 a.code?.toLowerCase().includes(q)
@@ -506,54 +621,72 @@ function AccountPickerSheet({ event, accounts, currentAccountId, onPick, onClear
                 </div>
             )}
 
-            {/* List */}
+            {/* List / Tree */}
             <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-3 custom-scrollbar">
-                {filtered.length === 0 ? (
+                {searchResults ? (
+                    searchResults.length === 0 ? (
+                        <div className="py-8 text-center font-bold text-app-muted-foreground"
+                            style={{ fontSize: 'var(--tp-md)' }}>
+                            No matching accounts
+                        </div>
+                    ) : searchResults.map((acc: any) => {
+                        const isCurrent = acc.id === currentAccountId
+                        return (
+                            <button key={acc.id}
+                                onClick={() => onPick(acc.id)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-1 active:scale-[0.99] transition-all"
+                                style={{
+                                    minHeight: 52,
+                                    background: isCurrent
+                                        ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)'
+                                        : 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
+                                    border: `1px solid ${isCurrent
+                                        ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)'
+                                        : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
+                                }}>
+                                <span className="font-mono font-black tabular-nums flex-shrink-0"
+                                    style={{
+                                        fontSize: 'var(--tp-md)',
+                                        color: isCurrent ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                        minWidth: 50,
+                                    }}>
+                                    {acc.code}
+                                </span>
+                                <div className="flex-1 text-left min-w-0">
+                                    <div className="font-bold text-app-foreground truncate"
+                                        style={{ fontSize: 'var(--tp-md)' }}>
+                                        {acc.name}
+                                    </div>
+                                    {acc.type && (
+                                        <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                                            style={{ fontSize: 'var(--tp-xxs)' }}>
+                                            {acc.type}
+                                        </div>
+                                    )}
+                                </div>
+                                {isCurrent && (
+                                    <CheckCircle2 size={16} style={{ color: 'var(--app-primary)', flexShrink: 0 }} />
+                                )}
+                            </button>
+                        )
+                    })
+                ) : tree.length === 0 ? (
                     <div className="py-8 text-center font-bold text-app-muted-foreground"
                         style={{ fontSize: 'var(--tp-md)' }}>
-                        No matching accounts
+                        No accounts available
                     </div>
-                ) : filtered.map((acc: any) => {
-                    const isCurrent = acc.id === currentAccountId
-                    return (
-                        <button key={acc.id}
-                            onClick={() => onPick(acc.id)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-1 active:scale-[0.99] transition-all"
-                            style={{
-                                minHeight: 52,
-                                background: isCurrent
-                                    ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)'
-                                    : 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
-                                border: `1px solid ${isCurrent
-                                    ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)'
-                                    : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
-                            }}>
-                            <span className="font-mono font-black tabular-nums flex-shrink-0"
-                                style={{
-                                    fontSize: 'var(--tp-md)',
-                                    color: isCurrent ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                    minWidth: 50,
-                                }}>
-                                {acc.code}
-                            </span>
-                            <div className="flex-1 text-left min-w-0">
-                                <div className="font-bold text-app-foreground truncate"
-                                    style={{ fontSize: 'var(--tp-md)' }}>
-                                    {acc.name}
-                                </div>
-                                {acc.type && (
-                                    <div className="font-black uppercase tracking-widest text-app-muted-foreground"
-                                        style={{ fontSize: 'var(--tp-xxs)' }}>
-                                        {acc.type}
-                                    </div>
-                                )}
-                            </div>
-                            {isCurrent && (
-                                <CheckCircle2 size={16} style={{ color: 'var(--app-primary)', flexShrink: 0 }} />
-                            )}
-                        </button>
-                    )
-                })}
+                ) : (
+                    tree.map((node: any) => (
+                        <AccountPickerRow
+                            key={node.id}
+                            node={node}
+                            level={0}
+                            currentAccountId={currentAccountId}
+                            onPick={onPick}
+                            defaultOpen={tree.length <= 6}
+                        />
+                    ))
+                )}
             </div>
         </div>
     )

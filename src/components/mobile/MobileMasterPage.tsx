@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { TourTriggerButton } from '@/components/ui/GuidedTour'
 import { usePageTour } from '@/lib/tours/useTour'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import type { MasterPageConfig } from '@/components/templates/master-page-config'
 
 // Re-export for callers; kept as aliases to the shared types.
@@ -47,6 +48,10 @@ const PULL_THRESHOLD = 72
 
 export function MobileMasterPage({ config, children, sheet, modals, belowTopBar }: Props) {
     const [searchQuery, setSearchQuery] = useState('')
+    // Debounced copy — feed this to render-prop children so list filters
+    // don't re-run on every keystroke. The input stays bound to the raw
+    // `searchQuery` so typing feels immediate.
+    const searchQueryDebounced = useDebouncedValue(searchQuery, 180)
     const [expandAll, setExpandAll] = useState<boolean | undefined>(undefined)
     const [expandKey, setExpandKey] = useState(0)
     const [overflowOpen, setOverflowOpen] = useState(false)
@@ -325,7 +330,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
 
                 {/* Rows */}
                 <div data-tour="tree-container" className="px-3 pb-24">
-                    {children({ searchQuery, expandAll, expandKey, setExpandAll, setExpandKey })}
+                    {children({ searchQuery: searchQueryDebounced, expandAll, expandKey, setExpandAll, setExpandKey })}
                 </div>
 
                 {/* Footer */}

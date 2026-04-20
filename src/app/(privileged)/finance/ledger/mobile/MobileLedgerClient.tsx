@@ -55,16 +55,52 @@ export function MobileLedgerClient() {
     const [entries, setEntries] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [statusFilter, setStatusFilter] = useState<string>('')
+    const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month' | 'qtd' | 'ytd'>('all')
     const [sheetEntry, setSheetEntry] = useState<any | null>(null)
     const [actionEntry, setActionEntry] = useState<any | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
     const [reverseTarget, setReverseTarget] = useState<any | null>(null)
+
+    const dateBounds = useMemo(() => {
+        const now = new Date()
+        const y = now.getFullYear(), m = now.getMonth(), d = now.getDate()
+        const iso = (dt: Date) => dt.toISOString().slice(0, 10)
+        switch (dateRange) {
+            case 'today': {
+                const start = new Date(y, m, d)
+                return { from: iso(start), to: iso(now) }
+            }
+            case 'week': {
+                // Monday of current ISO week
+                const dow = (now.getDay() + 6) % 7 // 0 = Mon
+                const start = new Date(y, m, d - dow)
+                return { from: iso(start), to: iso(now) }
+            }
+            case 'month': {
+                const start = new Date(y, m, 1)
+                return { from: iso(start), to: iso(now) }
+            }
+            case 'qtd': {
+                const qStart = Math.floor(m / 3) * 3
+                const start = new Date(y, qStart, 1)
+                return { from: iso(start), to: iso(now) }
+            }
+            case 'ytd': {
+                const start = new Date(y, 0, 1)
+                return { from: iso(start), to: iso(now) }
+            }
+            default:
+                return null
+        }
+    }, [dateRange])
 
     const loadData = useCallback(async () => {
         setLoading(true)
         try {
             const data = await getLedgerEntries(viewScope || 'INTERNAL', {
                 status: statusFilter || undefined,
+                date_from: dateBounds?.from,
+                date_to: dateBounds?.to,
             })
             setEntries(Array.isArray(data) ? data : [])
         } catch (e: any) {
@@ -72,7 +108,7 @@ export function MobileLedgerClient() {
         } finally {
             setLoading(false)
         }
-    }, [viewScope, statusFilter])
+    }, [viewScope, statusFilter, dateBounds])
 
     useEffect(() => { loadData() }, [loadData])
 
@@ -261,6 +297,39 @@ export function MobileLedgerClient() {
                                             }}>
                                             {f.count}
                                         </span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        {/* Date range chips */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                            {[
+                                { key: 'all', label: 'All time' },
+                                { key: 'today', label: 'Today' },
+                                { key: 'week', label: 'This week' },
+                                { key: 'month', label: 'This month' },
+                                { key: 'qtd', label: 'QTD' },
+                                { key: 'ytd', label: 'YTD' },
+                            ].map(r => {
+                                const active = dateRange === r.key
+                                return (
+                                    <button key={r.key}
+                                        onClick={() => setDateRange(r.key as any)}
+                                        className="flex-shrink-0 flex items-center gap-1 font-black rounded-lg px-3 py-1.5 active:scale-95 transition-transform"
+                                        style={{
+                                            fontSize: 'var(--tp-xxs)',
+                                            minHeight: 30,
+                                            color: active ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)',
+                                            background: active
+                                                ? 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)'
+                                                : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                            border: `1px solid ${active
+                                                ? 'color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)'
+                                                : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
+                                        }}>
+                                        <Calendar size={11} />
+                                        {r.label}
                                     </button>
                                 )
                             })}

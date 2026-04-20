@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobileUnitsClient').then(m => m.MobileUnitsClient),
@@ -32,6 +33,6 @@ function GatewaySkeleton() {
 export function UnitsGateway({ initialUnits }: { initialUnits: any[] }) {
     const isMobile = useIsMobile()
     return isMobile
-        ? <MobileClient initialUnits={initialUnits} />
+        ? <MobileErrorBoundary><MobileClient initialUnits={initialUnits} /></MobileErrorBoundary>
         : <DesktopClient initialUnits={initialUnits} />
 }

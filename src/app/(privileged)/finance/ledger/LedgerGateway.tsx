@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobileLedgerClient').then(m => m.MobileLedgerClient),
@@ -30,5 +31,7 @@ function Skeleton() {
 
 export function LedgerGateway() {
     const isMobile = useIsMobile()
-    return isMobile ? <MobileClient /> : <DesktopClient />
+    return isMobile
+        ? <MobileErrorBoundary><MobileClient /></MobileErrorBoundary>
+        : <DesktopClient />
 }

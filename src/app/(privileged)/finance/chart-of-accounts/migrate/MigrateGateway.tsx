@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobileMigrateClient').then(m => m.MobileMigrateClient),
@@ -27,5 +28,7 @@ function Skeleton() {
 
 export function MigrateGateway(props: any) {
     const isMobile = useIsMobile()
-    return isMobile ? <MobileClient {...props} /> : <DesktopClient {...props} />
+    return isMobile
+        ? <MobileErrorBoundary><MobileClient {...props} /></MobileErrorBoundary>
+        : <DesktopClient {...props} />
 }

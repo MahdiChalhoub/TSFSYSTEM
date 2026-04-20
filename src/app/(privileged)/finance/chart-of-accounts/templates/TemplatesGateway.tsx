@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobileTemplatesClient').then(m => m.MobileTemplatesClient),
@@ -31,6 +32,6 @@ function Skeleton() {
 export function TemplatesGateway(props: any) {
     const isMobile = useIsMobile()
     return isMobile
-        ? <MobileClient {...props} />
+        ? <MobileErrorBoundary><MobileClient {...props} /></MobileErrorBoundary>
         : <DesktopClient {...props} />
 }

@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobilePostingRulesClient').then(m => m.MobilePostingRulesClient),
@@ -30,5 +31,7 @@ function Skeleton() {
 
 export function PostingRulesGateway(props: any) {
     const isMobile = useIsMobile()
-    return isMobile ? <MobileClient {...props} /> : <DesktopClient {...props} />
+    return isMobile
+        ? <MobileErrorBoundary><MobileClient {...props} /></MobileErrorBoundary>
+        : <DesktopClient {...props} />
 }
