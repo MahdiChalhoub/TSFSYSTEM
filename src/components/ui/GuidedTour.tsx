@@ -47,6 +47,7 @@ export function GuidedTour({
     const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
     const tooltipRef = useRef<HTMLDivElement>(null)
     const clickListenerRef = useRef<(() => void) | null>(null)
+    const isAutoScrolling = useRef(false)
 
     // Track mobile viewport — bottom sheet layout kicks in below 768 px
     useEffect(() => {
@@ -138,47 +139,67 @@ export function GuidedTour({
     }, [isActive, currentStep, behavior])
 
     // Position highlight + tooltip — with retry for dynamically created elements
-    const positionTooltip = useCallback(() => {
+    const positionTooltip = useCallback((fromScroll = false) => {
         if (!step || step.isWelcome || !step.target) {
             setTargetRect(null)
             return
         }
+
+        // If we're already auto-scrolling, ignore further position calls to avoid loops
+        if (isAutoScrolling.current) return
+
         const el = document.querySelector(step.target)
         if (!el) { setTargetRect(null); return }
         const rect = el.getBoundingClientRect()
-        setTargetRect(rect)
+        
+        // Performance guard: only update state if rect actually moved significantly
+        setTargetRect(prev => {
+            if (!prev) return rect
+            const deltaThreshold = 1
+            if (Math.abs(prev.top - rect.top) < deltaThreshold && 
+                Math.abs(prev.left - rect.left) < deltaThreshold &&
+                Math.abs(prev.width - rect.width) < deltaThreshold &&
+                Math.abs(prev.height - rect.height) < deltaThreshold) {
+                return prev
+            }
+            return rect
+        })
 
-        // Scroll target into the visible gap. Mobile bottom sheet covers the
-        // bottom of the viewport and a sticky page header often covers the top,
-        // so we must scroll target into the CENTER of the available region, not
-        // the absolute viewport center.
-        const spotlightPad = 12 // matches the spotlight ring padding
+        // Scroll target into the visible gap.
+        const spotlightPad = 12 
         const headerOffset = 80
-        // Reserve space at the bottom for the tooltip: on mobile it's a bottom
-        // sheet (~240 px + 12 px margin). On desktop we reserve only a small
-        // buffer since the tooltip floats next to the target, not under it.
         const bottomReserve = isMobile ? 260 : 40
         const availableTop = headerOffset
         const availableBottom = window.innerHeight - bottomReserve
+        
         const topClipped = rect.top - spotlightPad < availableTop
         const bottomClipped = rect.bottom + spotlightPad > availableBottom
+        
         if (topClipped || bottomClipped) {
-            // Center target in the available region
+            // If the call came from a scroll event, don't initiate another scroll
+            // unless the target is severely clipped. This prevents the "fighting"
+            // effect between user scrolling and tour centering.
+            if (fromScroll && !topClipped && rect.bottom < availableBottom + 50) return
+
             const availableCenter = availableTop + (availableBottom - availableTop) / 2
             const targetCenter = rect.top + rect.height / 2
             const delta = targetCenter - availableCenter
+            
+            isAutoScrolling.current = true
             window.scrollTo({ top: window.scrollY + delta, behavior: 'smooth' })
+            
+            // Unset the guard after the smooth scroll completes
+            setTimeout(() => { isAutoScrolling.current = false }, 500)
         }
     }, [step, isMobile])
 
     useEffect(() => {
         if (!isActive) return
-        // Retry a few times for dynamically-created elements
-        const t1 = setTimeout(positionTooltip, 150)
-        const t2 = setTimeout(positionTooltip, 600)
-        // Auto-skip steps whose target never resolves — lets the same tour
-        // definition work on mobile + desktop even when some elements are
-        // desktop-only (split panel, focus mode button, etc.)
+        
+        // Initial positioning
+        const t1 = setTimeout(() => positionTooltip(), 150)
+        const t2 = setTimeout(() => positionTooltip(), 600)
+        
         const t3 = setTimeout(() => {
             if (!step || step.isWelcome || !step.target) return
             const el = document.querySelector(step.target)
@@ -190,12 +211,22 @@ export function GuidedTour({
                 setActionExecuted(false)
             }
         }, 1400)
-        window.addEventListener('resize', positionTooltip)
-        window.addEventListener('scroll', positionTooltip, true)
+
+        const handleResize = () => positionTooltip()
+        const handleScroll = () => {
+            // Only re-position on scroll if we're not currently auto-scrolling
+            if (!isAutoScrolling.current) {
+                positionTooltip(true)
+            }
+        }
+
+        window.addEventListener('resize', handleResize)
+        window.addEventListener('scroll', handleScroll, true)
+        
         return () => {
             clearTimeout(t1); clearTimeout(t2); clearTimeout(t3)
-            window.removeEventListener('resize', positionTooltip)
-            window.removeEventListener('scroll', positionTooltip, true)
+            window.removeEventListener('resize', handleResize)
+            window.removeEventListener('scroll', handleScroll, true)
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive, currentStep, positionTooltip, actionExecuted])
