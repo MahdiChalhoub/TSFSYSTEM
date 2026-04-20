@@ -303,6 +303,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'apps.workspace.tasks.check_stale_orders',
         'schedule': crontab(minute=0, hour='*/4'),   # Every 4 hours
     },
+    'fire-period-reminders': {
+        'task': 'apps.finance.tasks.fire_period_reminders',
+        'schedule': crontab(minute=0, hour=6),       # Daily 06:00
+    },
 }
 
 # ── Email Configuration (for notifications) ──────────────────

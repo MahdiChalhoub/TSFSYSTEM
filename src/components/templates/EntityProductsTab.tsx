@@ -387,9 +387,41 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
                     <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin text-app-primary" /></div>
                 ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                        <Package size={32} className="text-app-muted-foreground mb-2 opacity-40" />
-                        <p className="text-sm font-bold text-app-muted-foreground">{search || activeFilterCount > 0 ? 'No matching products' : `No products in this ${entityType}`}</p>
-                        <p className="text-[11px] text-app-muted-foreground mt-1">Assign products from the Products page.</p>
+                        <Package size={32} className="text-app-muted-foreground mb-3 opacity-40" />
+                        <p className="text-sm font-bold text-app-foreground">
+                            {search || activeFilterCount > 0 ? 'No matching products' : `No products in this ${entityType} yet`}
+                        </p>
+                        {!(search || activeFilterCount > 0) && (
+                            <>
+                                <p className="text-[11px] text-app-muted-foreground mt-1 mb-4 max-w-sm">
+                                    Create a new product and assign it to <strong>{entityName}</strong>, or browse existing products to re-assign.
+                                </p>
+                                <div className="flex flex-wrap items-center justify-center gap-2">
+                                    <Link
+                                        href={`/products/new?${entityType}=${entityId}&${entityType}_name=${encodeURIComponent(entityName)}`}
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all"
+                                        style={{
+                                            background: 'var(--app-primary)',
+                                            color: 'white',
+                                            boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 35%, transparent)',
+                                        }}>
+                                        <Package size={12} /> New Product
+                                    </Link>
+                                    <Link
+                                        href={`/inventory/products?${entityType}=${entityId}`}
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all"
+                                        style={{
+                                            color: 'var(--app-muted-foreground)',
+                                            border: '1px solid var(--app-border)',
+                                        }}>
+                                        <ExternalLink size={12} /> Browse &amp; Assign
+                                    </Link>
+                                </div>
+                                <p className="text-[10px] text-app-muted-foreground mt-4 opacity-60">
+                                    Tip: you can also bulk-import products from the <Link href="/inventory/products" className="underline">Products page</Link>.
+                                </p>
+                            </>
+                        )}
                     </div>
                 ) : (
                     <>

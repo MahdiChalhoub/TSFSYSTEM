@@ -28,6 +28,7 @@ class Migration(migrations.Migration):
                     blank=True, related_name='user_groups', to=settings.AUTH_USER_MODEL,
                 )),
                 ('organization', models.ForeignKey(
+                    db_column='tenant_id',
                     on_delete=django.db.models.deletion.CASCADE, to='erp.organization',
                 )),
             ],

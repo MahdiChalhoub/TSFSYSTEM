@@ -206,6 +206,18 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
             unit=unit, organization=organization
         ).select_related('brand', 'category', 'unit')
 
+        # DEBUG — temporary probe to diagnose the 0-product issue
+        import logging
+        _dbg = logging.getLogger('explore-debug')
+        _dbg.error(
+            "[EXPLORE-DEBUG] unit_id=%s unit.org_id=%s caller_org_id=%s "
+            "raw_count=%s tenant_scoped_count=%s sql=%s",
+            unit.id, unit.organization_id, organization.id,
+            Product.original_objects.filter(unit=unit, organization_id=unit.organization_id).count(),
+            products_qs.count(),
+            str(products_qs.query)[:500],
+        )
+
         # Server-side search
         if search:
             from django.db.models import Q as Qf

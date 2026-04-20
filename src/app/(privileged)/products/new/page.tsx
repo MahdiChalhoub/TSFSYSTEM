@@ -3,7 +3,18 @@ import { erpFetch } from '@/lib/erp-api';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewProductPage(props: { searchParams: Promise<{ cloneId?: string }> }) {
+export default async function NewProductPage(props: {
+    searchParams: Promise<{
+        cloneId?: string;
+        // Entity-prefill params (sent by EntityProductsTab empty-state CTA)
+        unit?: string;
+        unit_name?: string;
+        category?: string;
+        category_name?: string;
+        brand?: string;
+        brand_name?: string;
+    }>
+}) {
     const searchParams = await props.searchParams;
     const cloneId = searchParams.cloneId;
 
@@ -20,6 +31,19 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
             console.error("Failed to fetch cloned product", error);
         }
     }
+
+    // Entity prefill — applied when not cloning. Populates unit/category/brand
+    // on the product form from Empty-state CTAs on /inventory/units, /inventory/categories, /inventory/brands.
+    const entityPrefill = !clonedProduct ? {
+        ...(searchParams.unit ? { unit_id: Number(searchParams.unit), unit_name: searchParams.unit_name } : {}),
+        ...(searchParams.category ? { category_id: Number(searchParams.category), category_name: searchParams.category_name } : {}),
+        ...(searchParams.brand ? { brand_id: Number(searchParams.brand), brand_name: searchParams.brand_name } : {}),
+    } : {};
+    const initialData = clonedProduct || (Object.keys(entityPrefill).length ? entityPrefill : null);
+    const prefillSource = searchParams.unit ? ('unit' as const)
+        : searchParams.category ? ('category' as const)
+        : searchParams.brand ? ('brand' as const) : null;
+    const prefillName = searchParams.unit_name || searchParams.category_name || searchParams.brand_name;
 
     return (
         <div>
@@ -38,13 +62,26 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
                             {cloneId ? 'Clone Product' : 'Create Product'}
                         </h1>
                         <p className="text-[11px] font-medium" style={{ color: 'var(--app-text-muted)' }}>
-                            {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Smart product wizard with AI suggestions'}
+                            {cloneId ? `Creating a copy of "${clonedProduct?.name}"` :
+                             prefillSource ? `Will be assigned to ${prefillSource}: ${prefillName}` :
+                             'Smart product wizard with AI suggestions'}
                         </p>
                     </div>
                 </div>
+                {prefillSource && prefillName && (
+                    <div className="mt-3 px-3 py-2 rounded-lg inline-flex items-center gap-2 text-[11px] font-bold"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                            color: 'var(--app-primary)',
+                            border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                        }}>
+                        <span className="uppercase tracking-widest text-[9px]">Pre-filled</span>
+                        <span>{prefillSource}: <strong>{prefillName}</strong></span>
+                    </div>
+                )}
             </div>
 
-            <ProductFormWrapper initialData={clonedProduct} />
+            <ProductFormWrapper initialData={initialData} />
         </div>
     );
 }

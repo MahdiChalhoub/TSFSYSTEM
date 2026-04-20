@@ -123,3 +123,14 @@ def backfill_finance_summary(org_id: int = None, days: int = 30):
         results.append(result)
     logger.info(f"[backfill_finance_summary] Backfilled {days} days")
     return {'days_processed': days, 'results': results}
+
+
+@shared_task(name='apps.finance.tasks.fire_period_reminders')
+def fire_period_reminders():
+    """Daily Celery Beat job: fire PERIOD_CLOSING_SOON / PERIOD_STARTING_SOON
+    auto-task events for every org, using each org's configured lead-time
+    (Organization.settings['period_reminder_days_before'], default 7)."""
+    from django.core.management import call_command
+    call_command('fire_period_reminders')
+    logger.info('[fire_period_reminders] Completed daily fiscal-period reminder sweep')
+    return {'status': 'ok'}

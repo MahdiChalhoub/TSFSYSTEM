@@ -1,7 +1,10 @@
 'use client'
 
-import { Calendar, Plus, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Calendar, Plus, Zap, Bell, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
+import { erpFetch } from '@/lib/erp-api'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import PeriodEditor from './period-editor'
 import { WizardModal } from './_components/WizardModal'
@@ -11,6 +14,55 @@ import { KpiStrip } from './_components/KpiStrip'
 import { Toolbar } from './_components/Toolbar'
 import { YearPanel } from './_components/YearPanel'
 import { useFiscalYears } from './_hooks/useFiscalYears'
+
+function ReminderLeadTimeControl() {
+    const [days, setDays] = useState<number>(7)
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+
+    useEffect(() => {
+        erpFetch('settings/item/period_reminder_days_before/')
+            .then((v: any) => {
+                const n = Number(v)
+                if (Number.isFinite(n) && n > 0) setDays(n)
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false))
+    }, [])
+
+    const save = async (v: number) => {
+        setSaving(true)
+        try {
+            await erpFetch('settings/item/period_reminder_days_before/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(v),
+            })
+            toast.success(`Reminder lead-time set to ${v} day${v === 1 ? '' : 's'}`)
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to save')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    return (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+            style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)' }}
+            title="How many days before a period's end/start the reminder task fires">
+            <Bell size={13} style={{ color: 'var(--app-primary)' }} />
+            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)' }}>Lead</span>
+            <input type="number" min={1} max={60} value={days}
+                disabled={loading || saving}
+                onChange={e => { const n = Math.max(1, Math.min(60, Number(e.target.value) || 1)); setDays(n) }}
+                onBlur={() => { if (!loading) save(days) }}
+                className="w-12 text-[12px] font-black tabular-nums px-1.5 py-0.5 rounded-md outline-none"
+                style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+            <span className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>days</span>
+            {saving && <Loader2 size={11} className="animate-spin" style={{ color: 'var(--app-primary)' }} />}
+        </div>
+    )
+}
 
 export default function FiscalYearsViewer({ initialYears }: { initialYears: Record<string, any>[] }) {
     const fy = useFiscalYears(initialYears)
@@ -31,6 +83,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <ReminderLeadTimeControl />
                         <Link href="/workspace/auto-task-rules?module=finance"
                             title="Auto-task rules for fiscal period events (closing/starting soon, reopen requests)"
                             className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"

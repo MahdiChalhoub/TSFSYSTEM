@@ -1,6 +1,12 @@
 from rest_framework import serializers
-from apps.inventory.models import Unit, Category, Brand, Parfum, ProductGroup
+from apps.inventory.models import Unit, Category, Brand, Parfum, Product, ProductGroup
 from erp.models import Country
+
+# NOTE: Reverse-related managers (obj.products, obj.brands, etc.) bypass the
+# TenantManager and leak cross-organization data. All get_*_count methods
+# below explicitly use Product.objects.filter(...) (tenant-scoped) instead
+# of obj.products.count() to ensure counts match /explore/ results.
+
 
 class UnitSerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
@@ -8,15 +14,15 @@ class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Unit
         fields = [
-            'id', 'code', 'name', 'short_name', 'type', 
-            'conversion_factor', 'base_unit', 'allow_fraction', 
+            'id', 'code', 'name', 'short_name', 'type',
+            'conversion_factor', 'base_unit', 'allow_fraction',
             'needs_balance', 'balance_code_structure', 'product_count',
             'organization'
         ]
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
-        return obj.products.count()
+        return Product.objects.filter(unit=obj).count()
 
 
 class CountrySimpleSerializer(serializers.ModelSerializer):
@@ -40,13 +46,13 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ['organization', 'level', 'full_path']
 
     def get_product_count(self, obj):
-        return obj.products.count()
+        return Product.objects.filter(category=obj).count()
 
     def get_brand_count(self, obj):
-        return obj.brands.count()
+        return Brand.objects.filter(categories=obj).count()
 
     def get_parfum_count(self, obj):
-        return obj.parfums.count()
+        return Parfum.objects.filter(categories=obj).count()
 
 
 class CategorySimpleSerializer(serializers.ModelSerializer):
@@ -84,7 +90,7 @@ class BrandSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
-        return obj.products.count()
+        return Product.objects.filter(brand=obj).count()
 
 
 class BrandDetailSerializer(serializers.ModelSerializer):
@@ -101,7 +107,7 @@ class BrandDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
-        return obj.products.count()
+        return Product.objects.filter(brand=obj).count()
 
 
 class StorefrontBrandSerializer(serializers.ModelSerializer):
@@ -128,7 +134,7 @@ class ParfumSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
-        return obj.products.count()
+        return Product.objects.filter(parfum=obj).count()
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -148,4 +154,4 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
-        return obj.products.count()
+        return Product.objects.filter(product_group=obj).count()
