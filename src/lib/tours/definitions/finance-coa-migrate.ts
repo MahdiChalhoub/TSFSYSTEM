@@ -1,22 +1,24 @@
 /* ═══════════════════════════════════════════════════════════
  *  TOUR: Finance — Chart of Accounts Migration Workspace
  *
- *  Walkthrough of the legacy-book migration flow. Tour steps
- *  are primarily informational — the page is a form/preview
- *  flow, not a tab switcher, so we annotate each control
- *  without triggering an actual migration.
+ *  INTERACTIVE walkthrough — drives the workspace so the user
+ *  sees each stage of the migration flow in real time:
+ *    • Auto-select a target template
+ *    • Auto-run the Analyze preview (read-only — safe)
+ *    • Tour then walks the user through the loaded preview
+ *      (sections, stats, mapping dropdowns, apply button)
  *
- *  Step index reference:
+ *  Step index reference (for stepActions in MigrationPageClient):
  *    0 = Welcome (centered)
  *    1 = Page header + title (info)
  *    2 = Current state KPIs (info)
- *    3 = Target template selector (info)
- *    4 = Analyze Migration button (info)
- *    5 = Summary stats bar (info — visible only after preview)
- *    6 = Category sections (info — visible only after preview)
+ *    3 = ACTION: pick first available target template
+ *    4 = ACTION: trigger handleLoadPreview — wait for preview
+ *    5 = Summary stats bar (info — now visible)
+ *    6 = Category sections (info — now visible)
  *    7 = Target dropdown + match badges (info)
- *    8 = Apply Migration button (info — visible only after preview)
- *    9 = Keyboard shortcuts (centered)
+ *    8 = Apply Migration button (info — now visible)
+ *    9 = Warnings / post-apply explainer (centered)
  *   10 = Complete (centered)
  * ═══════════════════════════════════════════════════════════ */
 
@@ -32,8 +34,8 @@ const migrateTour: TourConfig = {
     id: 'finance-coa-migrate',
     title: 'Chart of Accounts — Migration Workspace',
     module: 'finance',
-    description: 'Walkthrough of the migration workspace — analyze, review, and safely execute a template swap without losing journal history.',
-    version: 1,
+    description: 'Interactive walkthrough of the migration workspace — analyze, review, and safely execute a template swap without losing journal history.',
+    version: 2,
     steps: [
         // 0 — Welcome
         {
@@ -62,23 +64,26 @@ const migrateTour: TourConfig = {
             color: 'var(--app-info, #3b82f6)',
             placement: 'bottom',
         },
-        // 3 — Target template selector
+        // 3 — ACTION: Pick target template
         {
             target: '[data-tour="migrate-target-select"]',
             title: 'Pick a Target Template',
-            description: 'Choose where you want to end up — French PCG, SYSCOHADA, Lebanese PCN, etc. Only templates different from your current one are offered.',
+            description: 'We just picked the first available target for you — French PCG, SYSCOHADA, Lebanese PCN, or whichever is first in your list. You\'d normally choose based on your business needs; only templates different from the current one are offered.',
             icon: createElement(Layers, { size: 16 }),
             color: 'var(--app-warning, #f59e0b)',
             placement: 'bottom',
+            behavior: 'action',
         },
-        // 4 — Analyze Migration button
+        // 4 — ACTION: Analyze
         {
             target: '[data-tour="migrate-analyze-btn"]',
             title: 'Analyze the Impact',
-            description: 'Click Analyze to run a full preview. The system scans every source account, matches it against the target template using exact/parent/name-similarity heuristics, and groups the results by risk category.',
+            description: 'We\'re running the Analyze preview right now — the system scans every source account, matches it against the target template using exact/parent/name-similarity heuristics, and groups results by risk. This is read-only; nothing is committed.',
             icon: createElement(BarChart3, { size: 16 }),
             color: 'var(--app-info, #3b82f6)',
             placement: 'bottom',
+            behavior: 'action',
+            actionDelay: 1500,
         },
         // 5 — Summary stats
         {

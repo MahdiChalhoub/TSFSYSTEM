@@ -149,6 +149,30 @@ export default function MigrationPageClient({
         return overrides[code] || (suggested?.code ?? '')
     }
 
+    // Interactive tour step actions — drives target select + Analyze so the preview
+    // loads during the walkthrough. Uses firstAvailable directly (not state) to
+    // avoid stale-closure issues between steps 3 and 4.
+    const tourStepActions = useMemo(() => {
+        const firstAvailable = templateList.find(t => t.key !== currentTemplateKey)?.key
+        return {
+            3: () => {
+                if (!firstAvailable) return
+                setTargetKey(firstAvailable)
+                setPreview(null)
+            },
+            4: async () => {
+                if (!firstAvailable) return
+                setLoading(true)
+                try {
+                    const data = await getMigrationPreview(firstAvailable)
+                    if (data) setPreview(data)
+                } catch { /* silent during tour */ } finally {
+                    setLoading(false)
+                }
+            },
+        }
+    }, [templateList, currentTemplateKey])
+
     const sections = [
         {
             key: 'HAS_BALANCE',
@@ -223,7 +247,7 @@ export default function MigrationPageClient({
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <PageTour tourId="finance-coa-migrate" />
+                        <PageTour tourId="finance-coa-migrate" stepActions={tourStepActions} />
                         {preview && (
                             <button data-tour="migrate-apply-btn" onClick={handleExecute} disabled={executing}
                                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all"
