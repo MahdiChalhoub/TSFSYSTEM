@@ -15,6 +15,34 @@
 
 ## Session Log
 
+### Session: 2026-04-20 (Fiscal Years viewer.tsx full refactor — 867 → 121 lines)
+- **Agent**: Antigravity (Claude Opus 4.6 Thinking)
+- **Status**: ✅ DONE (code + typecheck clean)
+- **Worked On**: Completed the WORKMAP IN PROGRESS item to bring `fiscal-years/viewer.tsx` under the 300-line code-quality limit. Full structural refactor: extracted all state + business logic into a custom hook, all UI blocks into 6 sub-components, and shared constants/types/helpers into `_lib/`.
+- **Files Modified**:
+  - `src/app/(privileged)/finance/fiscal-years/viewer.tsx` — 867 → 121 lines. Now pure orchestration: imports hook, renders Header → KpiStrip → Toolbar → YearPanel list → footer → modals.
+  - NEW `_hooks/useFiscalYears.ts` (294 lines) — owns all 22 state variables + business logic (refreshData, handleCreateYear, handlePeriodStatus, applyPeriodStatus, confirmAction, openWizard, closeWizard, loadSummary, loadHistory, startYearEndClose, executeYearEndClose).
+  - NEW `_lib/constants.ts` (9 lines) — `STATUS_STYLE` map + `getStatusStyle` helper.
+  - NEW `_lib/types.ts` (89 lines) — `KpiItem`, `FiscalYearStats`, `UseFiscalYearsReturn` interfaces.
+  - NEW `_lib/wizard-defaults.ts` (62 lines) — pure `computeWizardDefaults()` gap-detection logic extracted from openWizard.
+  - NEW `_components/KpiStrip.tsx` (43 lines) — KPI filter buttons grid.
+  - NEW `_components/Toolbar.tsx` (55 lines) — Search + focus-mode + filter toolbar.
+  - NEW `_components/YearPanel.tsx` (110 lines) — Single expanded year: collapse header, tab bar, year actions, delegates to tab sub-components.
+  - NEW `_components/PeriodsGrid.tsx` (45 lines) — Period cards with status action buttons.
+  - NEW `_components/SummaryTab.tsx` (112 lines) — P&L, Balance Sheet, JE stats, closing entry, opening balances.
+  - NEW `_components/HistoryTab.tsx` (60 lines) — Event log timeline + JE-by-month chips.
+  - `.agent/WORKMAP.md` — marked viewer.tsx refactor as DONE.
+- **Discoveries**:
+  - KPI icons had to be stored as component references (not JSX elements) in the hook to avoid hooks-in-non-component context; the KpiStrip component renders them via `<Icon size={14} />`.
+  - `useRouter` was imported but unused in the original viewer.tsx — removed.
+  - The original WizardModal `onClose` in viewer.tsx was incorrectly calling `openWizard` (re-opening) instead of closing. Fixed with a dedicated `closeWizard` method.
+- **Warnings for Next Agent**:
+  - ⚠️ **Browser smoke-test required**. Before deploying, verify on `/finance/fiscal-years`: (a) expand a year → verify Periods/Summary/History tabs render; (b) KPI filters work; (c) search works; (d) focus mode toggle; (e) Create Year wizard opens, submits, closes; (f) period status buttons (Open/Close/Future/Lock/Reopen); (g) Soft Close / Year-End Close flow; (h) Delete year confirmation; (i) Escape/backdrop dismiss on all modals.
+  - ⚠️ **Not committed yet.** Recommended commit: `[refactor] FINANCE: extract viewer.tsx into hook + components (867→121 lines)`.
+  - ⚠️ The pre-existing `YearEndCloseModal.tsx` is at 293 lines — close to the limit but compliant.
+
+---
+
 ### Session: 2026-04-19 (part 2 — Fiscal Years "fix all" follow-up)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ Fixes landed / ⏳ browser smoke-test still pending (Playwright Chrome locked by another Claude session)

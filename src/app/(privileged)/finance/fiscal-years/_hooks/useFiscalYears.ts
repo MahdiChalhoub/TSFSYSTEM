@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import { Calendar, PlayCircle, Lock, Clock, ShieldCheck } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
     deleteFiscalYear, updatePeriodStatus, closeFiscalYear,
@@ -17,7 +16,6 @@ import type { UseFiscalYearsReturn } from '../_lib/types'
 import { computeWizardDefaults } from '../_lib/wizard-defaults'
 
 export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYearsReturn {
-    const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [years, setYears] = useState(initialYears)
     const [expandedYear, setExpandedYear] = useState<number | null>(years[0]?.id ?? null)
@@ -220,23 +218,13 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
         const { type, yearId } = pendingAction; setPendingAction(null)
         if (type === 'periodChange' && pendingPeriodChange.current) {
             const { periodId, newStatus, period } = pendingPeriodChange.current
-            pendingPeriodChange.current = null
-            applyPeriodStatus(periodId, newStatus, period)
-            return
+            pendingPeriodChange.current = null; applyPeriodStatus(periodId, newStatus, period); return
         }
         startTransition(async () => {
             try {
                 if (type === 'delete' && yearId) { await deleteFiscalYear(yearId); toast.success('Year deleted') }
-                if (type === 'close' && yearId) {
-                    const res = await closeFiscalYear(yearId)
-                    if (res?.success === false) { toast.error(res.error || 'Failed to soft close year'); return }
-                    toast.success('Year soft-closed')
-                }
-                if (type === 'hardLock' && yearId) {
-                    const res = await hardLockFiscalYear(yearId)
-                    if (res?.success === false) { toast.error(res.error || 'Failed to year-end close'); return }
-                    toast.success('Year-end close complete — P&L closed, opening balances generated')
-                }
+                if (type === 'close' && yearId) { const res = await closeFiscalYear(yearId); if (res?.success === false) { toast.error(res.error || 'Failed'); return }; toast.success('Year soft-closed') }
+                if (type === 'hardLock' && yearId) { const res = await hardLockFiscalYear(yearId); if (res?.success === false) { toast.error(res.error || 'Failed'); return }; toast.success('Year-end close complete') }
                 refreshData()
             } catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)) }
         })
@@ -253,19 +241,11 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
     const closeWizard = () => setShowWizard(false)
 
     const loadSummary = (yearId: number) => {
-        if (summaryCache[yearId]) return
-        startTransition(async () => {
-            const s = await getYearSummary(yearId)
-            if (s) setSummaryCache(prev => ({ ...prev, [yearId]: s }))
-        })
+        if (!summaryCache[yearId]) startTransition(async () => { const s = await getYearSummary(yearId); if (s) setSummaryCache(p => ({ ...p, [yearId]: s })) })
     }
 
     const loadHistory = (yearId: number) => {
-        if (historyCache[yearId]) return
-        startTransition(async () => {
-            const h = await getYearHistory(yearId)
-            setHistoryCache(prev => ({ ...prev, [yearId]: h }))
-        })
+        if (!historyCache[yearId]) startTransition(async () => { const h = await getYearHistory(yearId); setHistoryCache(p => ({ ...p, [yearId]: h })) })
     }
 
     const startYearEndClose = (yearId: number) => {

@@ -115,16 +115,11 @@
 - **Impact**: 226 + 258 = 484 lines never imported anywhere. Dead code.
 - **Fix**: Archived to `ARCHIVE/src/app/(privileged)/finance/fiscal-years/` per cleanup rule.
 
-### [IN PROGRESS 2026-04-19] `fiscal-years/viewer.tsx` — 1363 → 866 lines (still over 300 limit)
+### [DONE 2026-04-20] `fiscal-years/viewer.tsx` — 867 → 121 lines (fully compliant)
 - **Discovered**: 2026-04-19
-- **Impact**: Violates `code-quality.md` hard limit.
-- **Progress 2026-04-19**: Extracted the 3 bespoke modals into `_components/`:
-  - `WizardModal.tsx` (127 lines) — Create Fiscal Year form with partial-year banner + period-strategy preview.
-  - `DraftAuditModal.tsx` (77 lines) — Shows draft JEs blocking period close.
-  - `YearEndCloseModal.tsx` (293 lines) — Preview/confirm/result 3-stage year-end close flow.
-  - Each modal owns its own `useModalDismiss` call so the viewer no longer manages escape-key plumbing for them.
-- **Remaining**: The ~307-line year-list loop (lines 500-807) with per-year tabs (periods / summary / history) still lives inline. Extracting it into `_components/YearPanel.tsx` + sub-components would get under 300. ~3-4 hours. Has deep state dependencies (yearTab, summaryCache, historyCache, period action handlers) so needs careful prop threading + browser smoke-test. Deferred as a dedicated refactor task.
-- **Fix (Phase 2)**: Extract KPI strip, filter bar, and year-list loop into `_components/YearPanel.tsx` + `_components/YearTabs.tsx` (Periods / Summary / History sub-tabs). Target ≤ 250 lines of orchestration in `viewer.tsx`.
+- **Impact**: Violated `code-quality.md` hard limit.
+- **Progress 2026-04-19**: Extracted the 3 bespoke modals into `_components/` (WizardModal, DraftAuditModal, YearEndCloseModal). 1363 → 866 lines.
+- **Fix 2026-04-20**: Full structural refactor. Extracted all state + business logic into `_hooks/useFiscalYears.ts` (294 lines). Extracted UI into 6 new components: `KpiStrip.tsx` (43), `Toolbar.tsx` (55), `YearPanel.tsx` (110), `PeriodsGrid.tsx` (45), `SummaryTab.tsx` (112), `HistoryTab.tsx` (60). Extracted pure helpers: `_lib/constants.ts` (9), `_lib/types.ts` (89), `_lib/wizard-defaults.ts` (62). `viewer.tsx` is now 121 lines of pure orchestration. All files under 300-line limit. `npx tsc --noEmit` passes clean.
 
 ### [OPEN] Mobile guided tours (COA + Units + Categories)
 - **Discovered**: 2026-04-20

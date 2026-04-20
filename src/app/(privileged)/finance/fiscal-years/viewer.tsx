@@ -100,7 +100,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             </div>
 
             {/* ── Modals ── */}
-            {fy.showWizard && <WizardModal data={fy.wizardData} setData={fy.setWizardData} onClose={() => fy.openWizard /* toggle handled by hook */} onSubmit={fy.handleCreateYear} isPending={fy.isPending} />}
+            {fy.showWizard && <WizardModal data={fy.wizardData} setData={fy.setWizardData} onClose={fy.closeWizard} onSubmit={fy.handleCreateYear} isPending={fy.isPending} />}
             {fy.editingPeriod && <PeriodEditor period={fy.editingPeriod} onClose={() => { fy.setEditingPeriod(null); fy.refreshData() }} />}
             {fy.draftAudit && <DraftAuditModal data={fy.draftAudit} onClose={() => fy.setDraftAudit(null)} />}
 

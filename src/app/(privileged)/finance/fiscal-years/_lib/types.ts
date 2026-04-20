@@ -45,6 +45,7 @@ export interface UseFiscalYearsReturn {
     wizardData: WizardFormData
     setWizardData: React.Dispatch<React.SetStateAction<WizardFormData>>
     openWizard: () => void
+    closeWizard: () => void
     handleCreateYear: (e: React.FormEvent) => void
 
     // Period actions

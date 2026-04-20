@@ -446,6 +446,11 @@ class ClosingService:
 
             # ── Step 5: Mark fiscal year FINALIZED ────────────────────
             # This completes the Year-End Close sequence by permanently locking the year.
+            # Transition lattice is OPEN → CLOSED → FINALIZED; bridge via CLOSED when
+            # the caller hit finalize directly on an open year (the accounting work
+            # above has already done the soft-close equivalent).
+            if fiscal_year.status == 'OPEN':
+                fiscal_year.transition_to('CLOSED', user=user)
             fiscal_year.transition_to('FINALIZED', user=user)
 
             logger.info(
