@@ -89,3 +89,13 @@ export async function searchContacts(query: string) {
         return []
     }
 }
+
+export async function getSupplierScorecard(supplierId: number) {
+    if (!supplierId) return null
+    try {
+        return await erpFetch(`contacts/${supplierId}/scorecard/`)
+    } catch (error) {
+        console.error("Failed to fetch supplier scorecard:", error)
+        return null
+    }
+}

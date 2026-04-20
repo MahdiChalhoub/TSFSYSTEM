@@ -32,7 +32,7 @@ export function SmartFillModal({ supplierId, siteId, warehouseId, stockScope, ex
             setLoading(true)
             try {
                 // Use server action instead of direct erpFetch (which is server-only)
-                const data = await searchProductsSimple('*', siteId, supplierId, warehouseId, stockScope, 'smart_fill')
+                const data = await searchProductsSimple('*', siteId, supplierId, { warehouseId, stockScope: stockScope as 'branch' | 'all' })
                 const items = Array.isArray(data) ? data : (data?.results ?? data ?? [])
                 
                 // Filter out already-added products and sort by urgency

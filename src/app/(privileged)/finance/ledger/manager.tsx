@@ -269,7 +269,10 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
         const succeeded = results.filter(r => r.success).length
         const failed = results.filter(r => !r.success)
         if (succeeded > 0) toast.success(`${succeeded} entr${succeeded === 1 ? 'y' : 'ies'} deleted`)
-        if (failed.length > 0) toast.error(`${failed.length} entr${failed.length === 1 ? 'y' : 'ies'} failed to delete`)
+        if (failed.length > 0) {
+          const firstErr = failed[0]?.error || 'unknown error'
+          toast.error(`${failed.length} entr${failed.length === 1 ? 'y' : 'ies'} failed: ${firstErr}`, { duration: 8000 })
+        }
         const deletedIds = new Set(results.filter(r => r.success).map(r => r.id))
         setItems(prev => prev.filter(e => !deletedIds.has(e.id)))
         setSelectedIds(new Set())

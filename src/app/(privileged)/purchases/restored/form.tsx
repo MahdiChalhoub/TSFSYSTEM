@@ -15,6 +15,10 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { CatalogueModal } from "../new-order/_components/CatalogueModal";
 import { CustomizeSidebar } from "../new-order/_components/CustomizeSidebar";
+import { SmartFillModal } from "../new-order/_components/SmartFillModal";
+import { ImportFromPOModal } from "../new-order/_components/ImportFromPOModal";
+import { SupplierScorecard } from "../new-order/_components/SupplierScorecard";
+import { Zap, FileDown } from "lucide-react";
 import {
     PO_ALL_COLUMNS,
     PO_DEFAULT_VISIBLE_COLS,
@@ -136,6 +140,9 @@ export default function PurchaseForm({
     const [vatRecoverable, setVatRecoverable] = useState<boolean>(true);
     const [lines, setLines] = useState<PurchaseLine[]>([]);
     const [catalogueOpen, setCatalogueOpen] = useState(false);
+    const [smartFillOpen, setSmartFillOpen] = useState(false);
+    const [importPoOpen, setImportPoOpen] = useState(false);
+    const [selectedSupplierId, setSelectedSupplierId] = useState<number | ''>('');
     // Per-session overrides (persisted browser-local)
     const [stockScope, setStockScope] = useState<'branch' | 'all'>('branch');
     const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | ''>('');
@@ -224,7 +231,15 @@ export default function PurchaseForm({
     // Spec: po_intelligence_grid.md — 25+ analytics fields, safety tag logic,
     // proposed qty = max(0, daily_sales × lead_time_days - stock_on_location).
     const addProductToLines = (product: Record<string, any>) => {
-        if (lines.find(l => l.productId === product.id)) return;
+        // Duplicate-merge (Tier 1.3 from 11/10 plan): incrementing qty instead of
+        // silently dropping the re-add, so double-click from search/catalogue counts up.
+        const existingIdx = lines.findIndex(l => l.productId === product.id);
+        if (existingIdx >= 0) {
+            const next = [...lines];
+            (next[existingIdx] as any).quantity = Number((next[existingIdx] as any).quantity || 0) + 1;
+            setLines(next);
+            return;
+        }
         const taxRate = Number(product.tax_rate ?? product.taxRate ?? 0.11);
         const unitCostHT = Number(product.cost_price_ht ?? product.costPriceHT ?? product.unitCostHT ?? 0);
         const sellingPriceHT = Number(product.selling_price_ht ?? product.sellingPriceHT ?? 0);
@@ -287,6 +302,28 @@ export default function PurchaseForm({
     };
 
     const removeLine = (idx: number) => setLines(lines.filter((_, i) => i !== idx));
+
+    // Bulk-add products (used by SmartFill + CatalogueModal multi-select if enabled)
+    const addProductsBulk = (products: Record<string, any>[]) => {
+        products.forEach(p => addProductToLines(p));
+    };
+
+    // Import pre-formed lines from a previous PO. Each line already has productId,
+    // quantity, unitCost — we re-key them to our shape and skip duplicates.
+    const importPOLines = (poLines: Record<string, any>[]) => {
+        const existing = new Set(lines.map(l => l.productId));
+        const toAdd = poLines.filter(l => !existing.has(l.product_id ?? l.productId));
+        toAdd.forEach(l => {
+            addProductToLines({
+                id: l.product_id ?? l.productId,
+                name: l.product_name ?? l.productName,
+                sku: l.sku ?? '',
+                proposedQty: l.quantity,
+                cost_price_ht: l.unit_cost ?? l.unitCost ?? 0,
+                tax_rate: l.tax_rate ?? l.taxRate ?? 0.11,
+            });
+        });
+    };
 
     const statusColorMap: Record<string, { bg: string; text: string; border: string }> = {
         LOW: { bg: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', text: 'var(--app-warning)', border: 'color-mix(in srgb, var(--app-warning) 25%, transparent)' },
@@ -406,6 +443,22 @@ export default function PurchaseForm({
                         style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
                         <BookOpen size={13} />
                         <span className="hidden md:inline">Catalogue</span>
+                    </button>
+                    <button type="button" onClick={() => setSmartFillOpen(true)}
+                        disabled={!selectedSupplierId}
+                        title={selectedSupplierId ? 'Auto-suggest products below reorder point' : 'Pick a supplier first (⚙️ → Supplier)'}
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-app-border/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{ color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                        <Zap size={13} />
+                        <span className="hidden md:inline">Smart Fill</span>
+                    </button>
+                    <button type="button" onClick={() => setImportPoOpen(true)}
+                        disabled={!selectedSupplierId}
+                        title={selectedSupplierId ? 'Import lines from a previous PO' : 'Pick a supplier first (⚙️ → Supplier)'}
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-app-border/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
+                        <FileDown size={13} />
+                        <span className="hidden md:inline">Import</span>
                     </button>
                     <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
                         style={{ background: 'var(--app-primary)', color: 'white', boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
@@ -688,6 +741,28 @@ export default function PurchaseForm({
                     onSelect={(p) => addProductToLines(p)}
                     onClose={() => setCatalogueOpen(false)}
                     siteId={Number(selectedSiteId) || 0}
+                    supplierId={Number(selectedSupplierId) || undefined}
+                />
+            )}
+
+            {smartFillOpen && selectedSupplierId && (
+                <SmartFillModal
+                    supplierId={Number(selectedSupplierId)}
+                    siteId={Number(selectedSiteId) || 0}
+                    warehouseId={Number(selectedWarehouseId) || 0}
+                    stockScope={stockScope}
+                    existingProductIds={lines.map(l => Number(l.productId))}
+                    onAddProducts={(products) => { addProductsBulk(products); setSmartFillOpen(false); }}
+                    onClose={() => setSmartFillOpen(false)}
+                />
+            )}
+
+            {importPoOpen && selectedSupplierId && (
+                <ImportFromPOModal
+                    supplierId={Number(selectedSupplierId)}
+                    existingProductIds={lines.map(l => Number(l.productId))}
+                    onImportLines={(poLines) => { importPOLines(poLines); setImportPoOpen(false); }}
+                    onClose={() => setImportPoOpen(false)}
                 />
             )}
 
@@ -720,6 +795,32 @@ export default function PurchaseForm({
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                            {/* Supplier picker — required for Smart Fill + Import */}
+                            <section>
+                                <div className="text-[10px] font-black uppercase tracking-widest mb-2"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Supplier
+                                </div>
+                                <select value={selectedSupplierId}
+                                    onChange={(e) => setSelectedSupplierId(e.target.value ? Number(e.target.value) : '')}
+                                    className="w-full text-[12px] font-bold px-2.5 py-2 rounded-lg outline-none"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                    <option value="">— None selected —</option>
+                                    {suppliers.map((s: any) => (
+                                        <option key={s.id} value={s.id}>{s.name || s.company_name}</option>
+                                    ))}
+                                </select>
+                                {selectedSupplierId ? (
+                                    <div className="mt-2">
+                                        <SupplierScorecard supplierId={Number(selectedSupplierId)} />
+                                    </div>
+                                ) : (
+                                    <p className="text-[10px] mt-1.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        Required for Smart Fill &amp; Import.
+                                    </p>
+                                )}
+                            </section>
+
                             {/* Session overrides (this browser only) */}
                             <section>
                                 <div className="text-[10px] font-black uppercase tracking-widest mb-2"
