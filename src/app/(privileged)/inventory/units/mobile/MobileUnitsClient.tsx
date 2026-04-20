@@ -17,6 +17,8 @@ import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { MobileUnitRow } from './MobileUnitRow'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/inventory-units-mobile'
 
 export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
     const router = useRouter()
@@ -88,6 +90,7 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 subtitle: `${stats.total} units · hierarchical conversions`,
                 icon: <Ruler size={20} />,
                 iconColor: 'var(--app-info, #3b82f6)',
+                tourId: 'inventory-units-mobile',
                 searchPlaceholder: 'Search by name, code, or type…',
                 primaryAction: {
                     label: 'New Unit',
@@ -150,6 +153,7 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                         subtitle={actionNode ? `${actionNode.code || '—'} · Long-press menu` : undefined}
                         items={actionItems}
                     />
+                    <PageTour tourId="inventory-units-mobile" renderButton={false} />
                 </>
             }
             sheet={

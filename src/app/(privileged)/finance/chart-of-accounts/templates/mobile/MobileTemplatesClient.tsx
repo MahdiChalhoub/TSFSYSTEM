@@ -21,6 +21,8 @@ import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-coa-templates-mobile'
 
 const ICON_MAP: Record<string, any> = {
     Globe, Landmark, BookOpen, FileText, Flag, MapPin, Library, Layers, Scale, Building2,
@@ -101,6 +103,7 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                 subtitle: `${stats.templates} templates · library`,
                 icon: <Library size={20} />,
                 iconColor: 'var(--app-primary)',
+                tourId: 'finance-coa-templates-mobile',
                 searchPlaceholder: 'Search templates…',
                 primaryAction: {
                     label: 'Open on Desktop',
@@ -144,6 +147,7 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                         confirmText="Import"
                         variant="info"
                     />
+                    <PageTour tourId="finance-coa-templates-mobile" renderButton={false} />
                 </>
             }
             sheet={

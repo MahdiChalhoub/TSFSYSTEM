@@ -20,6 +20,8 @@ import { MobileMoveDialog } from './MobileMoveDialog'
 import { MobileBreadcrumb } from './MobileBreadcrumb'
 import { MobileCategoryDetailSheet } from './MobileCategoryDetailSheet'
 import type { CategoryNode, PanelTab } from '../components/types'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/inventory-categories-mobile'
 
 export function MobileCategoriesClient({ initialCategories }: { initialCategories: any[] }) {
     const router = useRouter()
@@ -144,6 +146,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                     : `${data.length} Nodes · Tree`,
                 icon: <FolderTree size={20} />,
                 iconColor: 'var(--app-primary)',
+                tourId: 'inventory-categories-mobile',
                 searchPlaceholder: 'Search categories…',
                 primaryAction: {
                     label: 'New Category',
@@ -206,6 +209,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                         allCategories={data}
                         onClose={() => setMoveNode(null)}
                     />
+                    <PageTour tourId="inventory-categories-mobile" renderButton={false} />
                 </>
             }
             sheet={

@@ -22,6 +22,8 @@ import {
 } from '@/app/actions/finance/posting-rules'
 import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-posting-rules-mobile'
 
 const MODULE_META: Record<string, { icon: any; color: string; label: string }> = {
     sales:       { icon: ShoppingCart,   color: 'var(--app-info, #3b82f6)',    label: 'Sales' },
@@ -183,6 +185,7 @@ export function MobilePostingRulesClient({ rulesByModule, catalog, accounts }: P
                     : `${coveragePct}% coverage · ${mappedEvents}/${totalEvents} mapped`,
                 icon: <Target size={20} />,
                 iconColor: 'var(--app-primary)',
+                tourId: 'finance-posting-rules-mobile',
                 searchPlaceholder: 'Not searchable here',
                 primaryAction: {
                     label: hasChanges ? 'Save Changes' : 'All Saved',
@@ -215,6 +218,7 @@ export function MobilePostingRulesClient({ rulesByModule, catalog, accounts }: P
                     </>
                 ),
             }}
+            modals={<PageTour tourId="finance-posting-rules-mobile" renderButton={false} />}
             sheet={
                 <MobileBottomSheet
                     open={pickerForEvent !== null}

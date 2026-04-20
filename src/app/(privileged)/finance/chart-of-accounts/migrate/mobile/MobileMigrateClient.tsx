@@ -25,6 +25,8 @@ import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-coa-migrate-mobile'
 
 interface Props {
     templateList: { key: string; name: string }[]
@@ -135,6 +137,7 @@ export function MobileMigrateClient({
                     : 'Switch chart-of-accounts template',
                 icon: <ArrowRightLeft size={20} />,
                 iconColor: 'var(--app-warning, #f59e0b)',
+                tourId: 'finance-coa-migrate-mobile',
                 searchPlaceholder: 'Not searchable',
                 primaryAction: {
                     label: 'Back',
@@ -176,6 +179,7 @@ export function MobileMigrateClient({
                         confirmText="Migrate"
                         variant="warning"
                     />
+                    <PageTour tourId="finance-coa-migrate-mobile" renderButton={false} />
                 </>
             }
             sheet={
