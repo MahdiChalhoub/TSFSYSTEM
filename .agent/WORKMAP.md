@@ -103,6 +103,11 @@
 
 ## ✅ COMPLETED
 
+### [DONE 2026-04-20] MCP AI Chat Interface
+- **Discovered**: 2026-04-19
+- **Impact**: AI Assistant Chat module was a "Coming Soon" placeholder
+- **Fix**: Replaced generic Conversations Detail page with a fully interactive Chat UI. Supports parallel fetching of metadata and messages, real-time message posting to `MCPChatView`, optimistic updates, and displays tool call history inline.
+
 ### [DONE 2026-02-09] Business Registration Endpoint (v2.7.0-b010)
 - Created `auth/register/business/` public endpoint
 - Provisions org + admin user + SaaSClient + CRM contact

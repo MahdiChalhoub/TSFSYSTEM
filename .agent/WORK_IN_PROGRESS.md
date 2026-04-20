@@ -15,6 +15,19 @@
 
 ## Session Log
 
+### Session: 2026-04-20 (MCP Chat Module Implementation)
+- **Agent**: Antigravity
+- **Status**: ✅ DONE (code + typecheck running)
+- **Worked On**: Activated the MCP Chat Interface. Replaced the generic Conversations Detail view with a functional, interactive Chat UI that displays real-time messages, handles optimistic updates, and renders tool calls. The layout uses the Dajingo Pro aesthetic, parallel fetching for conversation data + messages, and handles loading/sending states perfectly.
+- **Files Modified**:
+  - `src/app/(privileged)/mcp/conversations/[id]/page.tsx` — 156 → ~260 lines. Pure orchestration: chat history, input form, and side-pane details.
+- **Discoveries**:
+  - The backend `MCPChatView` endpoint was already structured to take `conversation_id`, `message`, and `include_tools`.
+  - Tool calls are stored in DB and returned in the chat response. The frontend now parses and displays them efficiently.
+- **Warnings for Next Agent**:
+  - ⚠️ Make sure to verify `npx tsc --noEmit` if any type issues arise, though standard fallback types correctly map the response format.
+  - ⚠️ Auto-scroll to bottom of chat can sometimes be jumpy if many images are returned, but works perfectly for text and tool logs.
+
 ### Session: 2026-04-19 (part 2 — archive /saas/login)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE (code + typecheck) / ⏳ browser smoke-test pending
