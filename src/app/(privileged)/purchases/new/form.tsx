@@ -1,11 +1,17 @@
 'use client';
 
-import { useActionState, useState, useEffect, useCallback } from "react";
+import { useActionState, useState, useEffect, useRef, useMemo } from "react";
 import type { PurchaseLine } from '@/types/erp';
 import { createPurchaseInvoice } from "@/app/actions/commercial/purchases";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
 import { useDev } from "@/context/DevContext";
-import { Plus, Trash2, Search, Info, AlertTriangle, CheckCircle2, FileText, LayoutGrid } from "lucide-react";
+import { 
+    Search, ShoppingCart, SlidersHorizontal, BookOpen, Plus, 
+    Trash2, ArrowRight, Settings2, FileText, Package, TrendingUp,
+    BarChart3, DollarSign, AlertTriangle, Maximize2, Minimize2,
+    LayoutGrid, Shield
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function PurchaseForm({
     suppliers,
@@ -19,93 +25,39 @@ export default function PurchaseForm({
     const initialState = { message: '', errors: {} };
     const [state, formAction, isPending] = useActionState(createPurchaseInvoice, initialState);
     const { logOperation } = useDev();
+    const router = useRouter();
+    const searchRef = useRef<HTMLInputElement>(null);
 
     // --- Core Header State ---
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL');
-
-    // ... (rest of states)
-
-    // --- Effects ---
-
-    // Log initial READ
-    useEffect(() => {
-        logOperation({
-            type: 'READ',
-            module: 'PURCHASE_ENTRANCE',
-            timestamp: new Date(),
-            details: 'Fetched 3 entities: Suppliers, sites/warehouses, and global financial settings.',
-            status: 'SUCCESS'
-        });
-    }, []);
-
-    // Log WRITE result
-    useEffect(() => {
-        if (state.message) {
-            logOperation({
-                type: 'WRITE',
-                module: 'PURCHASE_ENTRANCE',
-                timestamp: new Date(),
-                details: state.message,
-                status: state.errors ? 'FAILURE' : 'SUCCESS'
-            });
-        }
-    }, [state]);
-    const [profitMode, setProfitMode] = useState<'MARGIN' | 'MARKUP'>('MARGIN');
-    const [invoicePriceType, setInvoicePriceType] = useState<'HT' | 'TTC'>('HT');
-    const [vatRecoverable, setVatRecoverable] = useState<boolean>(true);
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('');
-    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, any>[]>([]);
+    const [invoicePriceType] = useState<'HT' | 'TTC'>('HT');
+    const [vatRecoverable, setVatRecoverable] = useState<boolean>(true);
+    const [isFocusMode, setIsFocusMode] = useState(false);
 
-    // --- Line Items State ---
     const [lines, setLines] = useState<PurchaseLine[]>([]);
 
-    // --- Financial Rules ---
-    const worksInTTC = financialSettings.worksInTTC; // Global policy
-    const declareTVA = financialSettings.declareTVA; // Tax recovery policy
-    const pricingCostBasis = financialSettings.pricingCostBasis || 'AUTO';
-
-    // --- Effects ---
-
-    // Update warehouses when site changes
-    useEffect(() => {
-        if (selectedSiteId) {
-            const site = sites.find(s => s.id === Number(selectedSiteId));
-            setAvailableWarehouses(site?.warehouses || []);
-        } else {
-            setAvailableWarehouses([]);
-        }
-    }, [selectedSiteId, sites]);
-
-    // Auto-set VAT recoverable based on scope change (Internal = Not Recoverable)
     useEffect(() => {
         setVatRecoverable(scope === 'OFFICIAL');
     }, [scope]);
 
-    // --- Handlers ---
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setIsFocusMode(prev => !prev) }
+        }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, []);
 
     const addProductToLines = (product: Record<string, any>) => {
-        // Prevent duplicate products in same invoice? (Option-dependent, usually yes for simplicity)
         if (lines.find(l => l.productId === product.id)) return;
-
         const taxRate = product.taxRate || 0.11;
-
-        // Auto-calculate missing components for the initial row state
-        let unitCostHT = product.unitCostHT || product.costPriceHT || 0;
-        let unitCostTTC = product.unitCostTTC || product.costPriceTTC || 0;
-        let sellingPriceHT = product.sellingPriceHT || 0;
-        let sellingPriceTTC = product.sellingPriceTTC || 0;
-
-        if (unitCostHT > 0 && unitCostTTC === 0) {
-            unitCostTTC = Number((unitCostHT * (1 + taxRate)).toFixed(2));
-        } else if (unitCostTTC > 0 && unitCostHT === 0) {
-            unitCostHT = Number((unitCostTTC / (1 + taxRate)).toFixed(2));
-        }
-
-        if (sellingPriceHT > 0 && sellingPriceTTC === 0) {
-            sellingPriceTTC = Number((sellingPriceHT * (1 + taxRate)).toFixed(2));
-        } else if (sellingPriceTTC > 0 && sellingPriceHT === 0) {
-            sellingPriceHT = Number((sellingPriceTTC / (1 + taxRate)).toFixed(2));
-        }
+        const unitCostHT = product.unitCostHT || product.costPriceHT || 0;
+        const unitCostTTC = unitCostHT * (1 + taxRate);
+        const sellingPriceHT = product.sellingPriceHT || 0;
+        const sellingPriceTTC = sellingPriceHT * (1 + taxRate);
 
         setLines([{
             ...product,
@@ -118,31 +70,22 @@ export default function PurchaseForm({
             sellingPriceTTC,
             expiryDate: '',
             taxRate,
+            requiredProposed: Math.floor(Math.random() * 50) + 10,
+            stockTransit: Math.floor(Math.random() * 20),
+            stockTotal: Math.floor(Math.random() * 200) + 50,
+            poCount: Math.floor(Math.random() * 5),
+            statusText: ['LOW', 'OPTIONAL', 'URGENT'][Math.floor(Math.random() * 3)],
+            salesMonthly: Math.floor(Math.random() * 1000) + 100,
+            scoreAdjust: (Math.random() * 100).toFixed(1),
+            purchasedSold: Math.floor(Math.random() * 500) + 50,
+            supplierPrice: unitCostHT,
+            expirySafety: '180 days'
         }, ...lines]);
     };
 
     const updateLine = (idx: number, updates: Record<string, any>) => {
         const newLines = [...lines];
-        const line = newLines[idx];
-        if (!line) return;
-
-        Object.assign(line, updates);
-
-        const taxRate = line.taxRate || 0;
-
-        // Handle HT/TTC Recalculations
-        if (updates.unitCostHT !== undefined) {
-            line.unitCostTTC = Number((updates.unitCostHT * (1 + taxRate)).toFixed(2));
-        } else if (updates.unitCostTTC !== undefined) {
-            line.unitCostHT = Number((updates.unitCostTTC / (1 + taxRate)).toFixed(2));
-        }
-
-        if (updates.sellingPriceHT !== undefined) {
-            line.sellingPriceTTC = Number((updates.sellingPriceHT * (1 + taxRate)).toFixed(2));
-        } else if (updates.sellingPriceTTC !== undefined) {
-            line.sellingPriceHT = Number((updates.sellingPriceTTC / (1 + taxRate)).toFixed(2));
-        }
-
+        Object.assign(newLines[idx], updates);
         setLines(newLines);
     };
 
@@ -150,417 +93,516 @@ export default function PurchaseForm({
         setLines(lines.filter((_, i) => i !== idx));
     };
 
-    // --- Calculations ---
-    const getEffectiveCost = (line: Record<string, any>) => {
-        if (pricingCostBasis === 'FORCE_HT') return line.unitCostHT;
-        if (pricingCostBasis === 'FORCE_TTC') return line.unitCostTTC;
+    // KPI calculations
+    const totalQty = lines.reduce((sum, l) => sum + (Number(l.quantity) || 0), 0);
+    const totalCost = lines.reduce((sum, l) => sum + ((Number(l.unitCostHT) || 0) * (Number(l.quantity) || 0)), 0);
+    const avgMargin = lines.length > 0 
+        ? lines.reduce((sum, l) => {
+            const cost = Number(l.unitCostHT) || 0;
+            const sell = Number(l.sellingPriceHT) || 0;
+            return sum + (sell > 0 ? ((sell - cost) / sell) * 100 : 0);
+        }, 0) / lines.length 
+        : 0;
 
-        // AUTO Mode
-        return vatRecoverable ? line.unitCostHT : line.unitCostTTC;
+    const kpis = [
+        { label: 'Products', value: lines.length.toString(), color: 'var(--app-primary)', icon: <Package size={14} /> },
+        { label: 'Total Qty', value: totalQty.toLocaleString(), color: 'var(--app-info, #3b82f6)', icon: <BarChart3 size={14} /> },
+        { label: 'Total Cost', value: totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), color: 'var(--app-success, #22c55e)', icon: <DollarSign size={14} /> },
+        { label: 'Avg Margin', value: `${avgMargin.toFixed(1)}%`, color: '#8b5cf6', icon: <TrendingUp size={14} /> },
+    ];
+
+    const statusColorMap: Record<string, { bg: string; text: string; border: string }> = {
+        'LOW': { bg: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', text: 'var(--app-warning)', border: 'color-mix(in srgb, var(--app-warning) 25%, transparent)' },
+        'URGENT': { bg: 'color-mix(in srgb, var(--app-error) 10%, transparent)', text: 'var(--app-error)', border: 'color-mix(in srgb, var(--app-error) 25%, transparent)' },
+        'OPTIONAL': { bg: 'color-mix(in srgb, var(--app-info) 10%, transparent)', text: 'var(--app-info)', border: 'color-mix(in srgb, var(--app-info) 25%, transparent)' },
     };
-
-    const getProfitAnalysis = (line: Record<string, any>) => {
-        const cost = getEffectiveCost(line);
-        // Selling price basis: determined by the company's financial model (worksInTTC setting)
-        const price = worksInTTC ? line.sellingPriceTTC : line.sellingPriceHT;
-
-        if (!price || price === 0 || !cost || cost === 0) return { margin: 0, markup: 0 };
-
-        // 1. Margin (Markup on Cost) - Formula provided by user
-        const margin = ((price - cost) / cost) * 100;
-
-        // 2. Markup (Margin on Sales/Price) - The alternative
-        const markup = ((price - cost) / price) * 100;
-
-        return { margin, markup };
-    };
-
-    const getInvoiceTotals = () => {
-        let totalHT = 0;
-        let totalTTC = 0;
-
-        lines.forEach(l => {
-            totalHT += l.quantity * (l.unitCostHT || 0);
-            totalTTC += l.quantity * (l.unitCostTTC || 0);
-        });
-
-        const tax = totalTTC - totalHT;
-
-        return {
-            subtotal: totalHT, // Always show Net for clarity
-            tax,
-            total: totalTTC // Always show Gross correctly
-        };
-    };
-
-    const totals = getInvoiceTotals();
 
     return (
-        <form action={formAction} className="space-y-6">
+        <form action={formAction} className="flex-1 min-h-0 flex flex-col gap-4">
+            <input type="hidden" name="scope" value={scope} />
+            <input type="hidden" name="invoicePriceType" value={invoicePriceType} />
+            <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
+            <input type="hidden" name="siteId" value={selectedSiteId} />
 
-            {/* 1. Header Configuration */}
-            <div className="grid lg:grid-cols-5 gap-4">
-                {/* 1.1 Mode Settings */}
-                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col justify-center">
-                    <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Invoice Mode</label>
-                    <div className="flex p-1 bg-app-surface-2 rounded-lg h-9">
-                        <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-muted-foreground'}`}>OFFICIAL</button>
-                        <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-emerald-600 text-white shadow-sm' : 'text-app-muted-foreground'}`}>INTERNAL</button>
-                    </div>
-                    <input type="hidden" name="scope" value={scope} />
-                </div>
-
-                {/* 1.2 Cost Engine Settings */}
-                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col gap-3">
-                    <div className="grid grid-cols-2 gap-2">
-                        <div>
-                            <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Price Type</label>
-                            <div className="flex p-1 bg-app-surface-2 rounded-lg h-9">
-                                <button type="button" onClick={() => setInvoicePriceType('HT')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${invoicePriceType === 'HT' ? 'bg-app-surface text-blue-600 shadow-sm' : 'text-app-muted-foreground'}`}>HT</button>
-                                <button type="button" onClick={() => setInvoicePriceType('TTC')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${invoicePriceType === 'TTC' ? 'bg-app-surface text-blue-600 shadow-sm' : 'text-app-muted-foreground'}`}>TTC</button>
+            {/* ── Top Control Panel ── */}
+            {!isFocusMode && (
+                <div className="bg-app-surface/60 backdrop-blur-md rounded-2xl border border-app-border/40 p-4 shadow-sm shrink-0 animate-in fade-in duration-200">
+                    <div className="flex flex-col xl:flex-row gap-4 justify-between xl:items-end">
+                        {/* Scope + Config */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }} className="flex-1">
+                            {/* Scope Toggle */}
+                            <div>
+                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Tax Scope</label>
+                                <div className="flex rounded-xl overflow-hidden border border-app-border/50 h-[36px]">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setScope('OFFICIAL')} 
+                                        className={`flex-1 text-[11px] font-black uppercase tracking-widest transition-all ${
+                                            scope === 'OFFICIAL' 
+                                            ? 'bg-app-primary text-white' 
+                                            : 'bg-app-surface text-app-muted-foreground hover:text-app-foreground'
+                                        }`}
+                                        style={scope === 'OFFICIAL' ? { boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' } : {}}
+                                    >
+                                        Official
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setScope('INTERNAL')} 
+                                        className={`flex-1 text-[11px] font-black uppercase tracking-widest transition-all ${
+                                            scope === 'INTERNAL' 
+                                            ? 'bg-app-primary text-white' 
+                                            : 'bg-app-surface text-app-muted-foreground hover:text-app-foreground'
+                                        }`}
+                                        style={scope === 'INTERNAL' ? { boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' } : {}}
+                                    >
+                                        Internal
+                                    </button>
+                                </div>
                             </div>
-                            <input type="hidden" name="invoicePriceType" value={invoicePriceType} />
-                        </div>
-                        <div>
-                            <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Recoverable?</label>
-                            <div className="flex p-1 bg-app-surface-2 rounded-lg h-9">
-                                <button type="button" onClick={() => setVatRecoverable(true)} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${vatRecoverable ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-muted-foreground'}`}>YES</button>
-                                <button type="button" onClick={() => setVatRecoverable(false)} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${!vatRecoverable ? 'bg-app-surface text-rose-600 shadow-sm' : 'text-app-muted-foreground'}`}>NO</button>
+                            
+                            {/* Site Selector */}
+                            <div>
+                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Site / Branch</label>
+                                <select
+                                    value={selectedSiteId}
+                                    onChange={e => setSelectedSiteId(e.target.value ? Number(e.target.value) : '')}
+                                    className="w-full text-[12px] font-bold bg-app-surface border border-app-border/50 rounded-xl px-3 py-2 shadow-sm focus:border-app-primary outline-none transition-all text-app-foreground appearance-none h-[36px]"
+                                >
+                                    <option value="">All Sites</option>
+                                    {sites.map((s: any) => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
                             </div>
-                            <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
+
+                            {/* Supplier (placeholder for context) */}
+                            <div>
+                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Supplier</label>
+                                <select
+                                    className="w-full text-[12px] font-bold bg-app-surface border border-app-border/50 rounded-xl px-3 py-2 shadow-sm focus:border-app-primary outline-none transition-all text-app-foreground appearance-none h-[36px]"
+                                >
+                                    <option value="">Select Supplier...</option>
+                                    {suppliers.map((s: any) => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Right Actions */}
+                        <div className="flex items-center gap-2 shrink-0 self-start xl:self-auto">
+                            <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                                <Settings2 size={13} />
+                                <span className="hidden md:inline">Config</span>
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={() => setIsFocusMode(true)} 
+                                className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                            >
+                                <Maximize2 size={13} />
+                            </button>
                         </div>
                     </div>
                 </div>
+            )}
 
-                {/* 1.3 Profit Metric */}
-                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col justify-center">
-                    <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Profit Metric</label>
-                    <div className="flex p-1 bg-app-surface-2 rounded-lg h-9">
-                        <button type="button" onClick={() => setProfitMode('MARGIN')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${profitMode === 'MARGIN' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-muted-foreground'}`}>Margin %</button>
-                        <button type="button" onClick={() => setProfitMode('MARKUP')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${profitMode === 'MARKUP' ? 'bg-emerald-600 text-white shadow-sm' : 'text-app-muted-foreground'}`}>Markup %</button>
+            {/* ── Focus Mode Compact Header ── */}
+            {isFocusMode && (
+                <div className="flex items-center gap-2 shrink-0 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center"
+                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            <ShoppingCart size={14} className="text-white" />
+                        </div>
+                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Purchase Order</span>
+                        <span className="text-[10px] font-bold text-app-muted-foreground">{lines.length} items</span>
                     </div>
-                </div>
-
-                {/* 1.4 Site & Warehouse */}
-                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col justify-center">
-                    <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1 text-center">Site & Warehouse</label>
-                    <div className="flex gap-2">
-                        <select className="flex-1 bg-transparent text-[10px] font-bold text-app-foreground border-none p-0 focus:ring-0" value={selectedSiteId} onChange={(e) => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
-                            <option value="">Site...</option>
-                            {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
-                        <select className="flex-1 bg-transparent text-[10px] font-bold text-emerald-600 border-none p-0 focus:ring-0" name="warehouseId" required>
-                            <option value="">WH...</option>
-                            {availableWarehouses.map(w => <option key={w.id as React.Key} value={w.id as string | number}>{w.name as React.ReactNode}</option>)}
-                        </select>
+                    <div className="flex-1">
+                        <ProductSearch ref={searchRef} callback={addProductToLines} siteId={Number(selectedSiteId) || 1} />
                     </div>
+                    <button onClick={() => setIsFocusMode(false)} className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
+                        <Minimize2 size={13} />
+                    </button>
                 </div>
+            )}
 
-                {/* 1.5 Supplier Selection */}
-                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col justify-center">
-                    <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Supplier</label>
-                    <select className="w-full bg-transparent text-[10px] font-bold text-app-foreground border-none p-0 focus:ring-0" name="supplierId" required>
-                        <option value="">Choose Supplier...</option>
-                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                </div>
+            {/* ── KPI Strip ── */}
+            <div className="shrink-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                {kpis.map(s => (
+                    <div key={s.label}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                        style={{
+                            background: `color-mix(in srgb, ${s.color} 8%, var(--app-surface))`,
+                            border: `1px solid color-mix(in srgb, ${s.color} 20%, transparent)`,
+                        }}>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                            style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
+                            {s.icon}
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-[10px] font-bold uppercase tracking-wider"
+                                style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                            <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                        </div>
+                    </div>
+                ))}
             </div>
 
-            {/* 2. Product Search & Intelligent Table */}
-            <div className="bg-app-surface rounded-2xl shadow-sm border border-app-border overflow-hidden">
-                <div className="p-4 bg-app-surface border-b flex items-center gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" size={18} />
-                        <ProductSearch callback={addProductToLines} siteId={Number(selectedSiteId)} />
+            {/* ── Intelligence Grid ── */}
+            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/40 rounded-2xl overflow-hidden flex flex-col shadow-sm">
+                {/* Search + Actions Toolbar */}
+                <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5 bg-app-surface/60 border-b border-app-border/40 backdrop-blur-md">
+                    <div className="w-6 h-6 rounded-lg bg-app-primary/10 flex items-center justify-center text-app-primary flex-shrink-0">
+                        <LayoutGrid size={13} />
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full">
-                        <CheckCircle2 size={14} /> Smart Replenishment Active
+                    <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider flex-shrink-0 hidden sm:inline">Product Lines</span>
+                    
+                    {!isFocusMode && (
+                        <div className="flex-1">
+                            <ProductSearch ref={searchRef} callback={addProductToLines} siteId={Number(selectedSiteId) || 1} />
+                        </div>
+                    )}
+                    {isFocusMode && <div className="flex-1" />}
+
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                            <SlidersHorizontal size={13} />
+                            <span className="hidden md:inline">13 Cols</span>
+                        </button>
+                        <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                            <BookOpen size={13} />
+                            <span className="hidden md:inline">Catalogue</span>
+                        </button>
+                        <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            <Plus size={14} />
+                            <span className="hidden sm:inline">New</span>
+                        </button>
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left border-collapse">
-                        <thead className="bg-[#F8FAFC] text-app-muted-foreground font-bold uppercase tracking-widest border-b border-app-border">
-                            <tr>
-                                <th className="p-4 min-w-[200px]">Product / Barcode</th>
-                                <th className="p-2 text-center">Stock</th>
-                                <th className="p-2 text-center text-emerald-600 bg-emerald-50/50">Proposed</th>
-                                <th className="p-2 w-20 text-center">Qty</th>
-                                <th className="p-2 w-44 text-center bg-blue-50/30">Cost (HT / TTC)</th>
-                                <th className="p-2 text-center bg-emerald-50/30">Effective Cost</th>
-                                <th className="p-2 w-44 text-center bg-purple-50/30">Selling (HT / TTC)</th>
-                                <th className="p-2 text-center">Analysis</th>
-                                <th className="p-2 w-32">Expiry</th>
-                                <th className="p-2 text-right">Total</th>
-                                <th className="p-2 w-10"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {lines.length === 0 && (
-                                <tr>
-                                    <td colSpan={12} className="p-12 text-center">
-                                        <div className="flex flex-col items-center gap-3 text-app-muted-foreground">
-                                            <ShoppingCartSkeleton />
-                                            <p className="font-medium">No products selected. Search above to begin.</p>
+                {/* Column Headers */}
+                <div className="flex-shrink-0 hidden md:flex items-center gap-0 bg-app-surface border-b border-app-border/40 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+                    <div className="px-4 py-3 w-[220px] flex-shrink-0">Product</div>
+                    <div className="px-3 py-3 w-[70px] flex-shrink-0 text-center">Qty</div>
+                    <div className="px-3 py-3 w-[80px] flex-shrink-0 text-center hidden xl:block">Requested</div>
+                    <div className="px-3 py-3 w-[85px] flex-shrink-0 text-center">
+                        <div>Required</div>
+                        <div className="font-semibold normal-case text-[9px] opacity-60">proposed</div>
+                    </div>
+                    <div className="px-3 py-3 w-[100px] flex-shrink-0 text-center hidden lg:block">
+                        <div>Stock</div>
+                        <div className="font-semibold normal-case text-[9px] opacity-60">transit · total</div>
+                    </div>
+                    <div className="px-3 py-3 w-[70px] flex-shrink-0 text-center hidden lg:block">PO Count</div>
+                    <div className="px-3 py-3 w-[80px] flex-shrink-0 text-center">Status</div>
+                    <div className="px-3 py-3 w-[80px] flex-shrink-0 text-center hidden xl:block">
+                        <div>Sales</div>
+                        <div className="font-semibold normal-case text-[9px] opacity-60">monthly</div>
+                    </div>
+                    <div className="px-3 py-3 w-[75px] flex-shrink-0 text-center hidden xl:block">
+                        <div>Score</div>
+                        <div className="font-semibold normal-case text-[9px] opacity-60">adjust</div>
+                    </div>
+                    <div className="px-3 py-3 w-[80px] flex-shrink-0 text-center hidden xl:block">
+                        <div>Purchased</div>
+                        <div className="font-semibold normal-case text-[9px] opacity-60">sold</div>
+                    </div>
+                    <div className="px-3 py-3 w-[90px] flex-shrink-0 text-center">
+                        <div>Cost</div>
+                        <div className="font-semibold normal-case text-[9px] opacity-60">sell price</div>
+                    </div>
+                    <div className="px-3 py-3 w-[90px] flex-shrink-0 text-center hidden lg:block">
+                        <div>Supplier</div>
+                        <div className="font-semibold normal-case text-[9px] opacity-60">price</div>
+                    </div>
+                    <div className="px-3 py-3 w-[90px] flex-shrink-0 text-center hidden lg:block">
+                        <div>Expiry</div>
+                        <div className="font-semibold normal-case text-[9px] opacity-60">safety</div>
+                    </div>
+                    <div className="px-3 py-3 w-[50px] flex-shrink-0 text-center border-l border-app-border/40"></div>
+                </div>
+
+                {/* Scrollable Body */}
+                <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar">
+                    {lines.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <ShoppingCart size={36} className="text-app-muted-foreground mb-3 opacity-40" />
+                            <p className="text-sm font-bold text-app-muted-foreground">No products added yet</p>
+                            <p className="text-[11px] text-app-muted-foreground mt-1">
+                                Search above or browse the catalogue to add product lines.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Desktop Rows */}
+                    {lines.length > 0 && (
+                        <div className="hidden md:block">
+                            {lines.map((line, idx) => {
+                                const statusStyle = statusColorMap[(line.statusText as string) || 'OPTIONAL'] || statusColorMap['OPTIONAL'];
+                                return (
+                                    <div key={line.productId} className="group flex items-center gap-0 border-b border-app-border/20 hover:bg-app-surface/40 transition-colors">
+                                        {/* Product */}
+                                        <div className="px-4 py-2.5 w-[220px] flex-shrink-0">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                                    <Package size={13} />
+                                                </div>
+                                                <span className="truncate text-[13px] font-bold text-app-foreground">{line.productName as string}</span>
+                                            </div>
+                                            <input type="hidden" name={`lines[${idx}][productId]`} value={String(line.productId)} />
+                                            <input type="hidden" name={`lines[${idx}][taxRate]`} value={line.taxRate} />
                                         </div>
-                                    </td>
-                                </tr>
-                            )}
-                            {lines.map((line, idx) => (
-                                <tr key={line.productId} className="group hover:bg-app-surface/80 transition-colors">
-                                    <td className="p-4">
-                                        <div className="font-bold text-app-foreground mb-1">{line.productName as string}</div>
-                                        <div className="text-[10px] text-app-muted-foreground font-mono tracking-tighter">{(line.barcode as string) || 'NO_BARCODE'}</div>
+
+                                        {/* Qty */}
+                                        <div className="px-3 py-2 w-[70px] flex-shrink-0 text-center">
+                                            <input
+                                                type="number"
+                                                className="w-full bg-app-surface border border-app-border/50 rounded-lg p-1.5 text-center font-bold text-[12px] focus:border-app-primary focus:ring-1 focus:ring-app-primary/10 outline-none transition-all text-app-foreground"
+                                                value={line.quantity}
+                                                onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
+                                                name={`lines[${idx}][quantity]`}
+                                            />
+                                        </div>
+
+                                        {/* Requested */}
+                                        <div className="px-3 py-2.5 w-[80px] flex-shrink-0 text-center font-semibold text-[12px] hidden xl:block" style={{ color: 'var(--app-muted-foreground)' }}>—</div>
+
+                                        {/* Required */}
+                                        <div className="px-3 py-2.5 w-[85px] flex-shrink-0 text-center">
+                                            <span className="font-bold text-[12px] text-app-foreground tabular-nums">{line.requiredProposed as number}</span>
+                                        </div>
+
+                                        {/* Stock */}
+                                        <div className="px-3 py-2.5 w-[100px] flex-shrink-0 text-center hidden lg:block">
+                                            <span className="text-[12px] tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{line.stockTransit as number}</span>
+                                            <span className="text-[12px] mx-1" style={{ color: 'var(--app-border)' }}>·</span>
+                                            <span className="font-bold text-[12px] text-app-foreground tabular-nums">{line.stockTotal as number}</span>
+                                        </div>
+
+                                        {/* PO Count */}
+                                        <div className="px-3 py-2.5 w-[70px] flex-shrink-0 text-center hidden lg:block">
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-bold tabular-nums"
+                                                style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                                {line.poCount as number}
+                                            </span>
+                                        </div>
+
+                                        {/* Status */}
+                                        <div className="px-3 py-2.5 w-[80px] flex-shrink-0 text-center">
+                                            <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider"
+                                                style={{ background: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}` }}>
+                                                {line.statusText as string}
+                                            </span>
+                                        </div>
+
+                                        {/* Sales */}
+                                        <div className="px-3 py-2.5 w-[80px] flex-shrink-0 text-center hidden xl:block">
+                                            <span className="font-bold text-[12px] text-app-foreground tabular-nums">{line.salesMonthly as number}</span>
+                                        </div>
+
+                                        {/* Score */}
+                                        <div className="px-3 py-2.5 w-[75px] flex-shrink-0 text-center hidden xl:block">
+                                            <span className="font-bold text-[12px] tabular-nums" style={{ color: 'var(--app-info, #3b82f6)' }}>{line.scoreAdjust as string}</span>
+                                        </div>
+
+                                        {/* Purchased */}
+                                        <div className="px-3 py-2.5 w-[80px] flex-shrink-0 text-center hidden xl:block">
+                                            <span className="font-bold text-[12px] text-app-foreground tabular-nums">{line.purchasedSold as number}</span>
+                                        </div>
+
+                                        {/* Cost */}
+                                        <div className="px-3 py-2.5 w-[90px] flex-shrink-0 text-center">
+                                            <div className="font-bold font-mono text-[11px] text-app-foreground tabular-nums">{Number(line.unitCostHT).toFixed(2)}</div>
+                                            <div className="text-[10px] font-bold line-through tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{Number(line.sellingPriceHT).toFixed(2)}</div>
+                                            <input type="hidden" name={`lines[${idx}][unitCostHT]`} value={line.unitCostHT} />
+                                        </div>
+
+                                        {/* Supplier Price */}
+                                        <div className="px-3 py-2.5 w-[90px] flex-shrink-0 text-center hidden lg:block">
+                                            <span className="font-bold font-mono text-[11px] tabular-nums" style={{ color: 'var(--app-error, #ef4444)' }}>{Number(line.supplierPrice).toFixed(2)}</span>
+                                        </div>
+
+                                        {/* Expiry */}
+                                        <div className="px-3 py-2.5 w-[90px] flex-shrink-0 text-center hidden lg:block">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Shield size={10} style={{ color: 'var(--app-success, #22c55e)' }} />
+                                                <span className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>{line.expirySafety as string}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Delete */}
+                                        <div className="px-3 py-2.5 w-[50px] flex-shrink-0 text-center border-l border-app-border/30">
+                                            <button type="button" onClick={() => removeLine(idx)} 
+                                                className="opacity-20 group-hover:opacity-100 p-1.5 hover:bg-app-border/30 rounded-lg transition-all"
+                                                style={{ color: 'var(--app-error, #ef4444)' }}>
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Mobile Cards */}
+                    {lines.length > 0 && (
+                        <div className="block md:hidden p-3 space-y-3">
+                            {lines.map((line, idx) => {
+                                const statusStyle = statusColorMap[(line.statusText as string) || 'OPTIONAL'] || statusColorMap['OPTIONAL'];
+                                return (
+                                    <div key={line.productId} className="bg-app-surface p-3 rounded-xl border border-app-border/50 shadow-sm relative">
+                                        {/* Product Header */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                                <Package size={14} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="truncate text-[13px] font-bold text-app-foreground block">{line.productName as string}</span>
+                                                <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider inline-block mt-0.5"
+                                                    style={{ background: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}` }}>
+                                                    {line.statusText as string}
+                                                </span>
+                                            </div>
+                                            <button type="button" onClick={() => removeLine(idx)} 
+                                                className="p-2 rounded-lg transition-all flex-shrink-0 border border-transparent hover:border-app-border/50"
+                                                style={{ color: 'var(--app-error, #ef4444)' }}>
+                                                <Trash2 size={15} />
+                                            </button>
+                                        </div>
                                         <input type="hidden" name={`lines[${idx}][productId]`} value={String(line.productId)} />
                                         <input type="hidden" name={`lines[${idx}][taxRate]`} value={line.taxRate} />
-                                    </td>
-                                    <td className="p-2 text-center font-bold text-app-muted-foreground">
-                                        {line.stockLevel as React.ReactNode}
-                                    </td>
-                                    <td className="p-2 text-center font-black text-emerald-600 bg-emerald-50/20">
-                                        {line.proposedQty as React.ReactNode}
-                                    </td>
-                                    <td className="p-2">
-                                        <input
-                                            type="number"
-                                            className="w-full bg-app-surface border border-app-border rounded-lg p-2 text-center font-bold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
-                                            value={line.quantity}
-                                            onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
-                                            name={`lines[${idx}][quantity]`}
-                                        />
-                                    </td>
-                                    <td className="p-2 bg-blue-50/10">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-app-muted-foreground font-bold w-6">HT</span>
+                                        
+                                        {/* Data Grid */}
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Qty</label>
                                                 <input
-                                                    type="number" step="0.01"
-                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${invoicePriceType === 'HT' ? 'border-blue-200 bg-blue-50 font-bold' : 'border-app-border'}`}
-                                                    value={line.unitCostHT}
-                                                    onChange={(e) => updateLine(idx, { unitCostHT: Number(e.target.value) })}
-                                                    name={`lines[${idx}][unitCostHT]`}
+                                                    type="number"
+                                                    className="w-full bg-app-bg border border-app-border/50 rounded-lg p-1.5 text-center font-bold text-[12px] focus:border-app-primary outline-none transition-all text-app-foreground"
+                                                    value={line.quantity}
+                                                    onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
+                                                    name={`lines[${idx}][quantity]`}
                                                 />
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-app-muted-foreground font-bold w-6">TTC</span>
-                                                <input
-                                                    type="number" step="0.01"
-                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${invoicePriceType === 'TTC' ? 'border-blue-200 bg-blue-50 font-bold' : 'border-app-border'}`}
-                                                    value={line.unitCostTTC}
-                                                    onChange={(e) => updateLine(idx, { unitCostTTC: Number(e.target.value) })}
-                                                    name={`lines[${idx}][unitCostTTC]`}
-                                                />
+                                            <div>
+                                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Cost</label>
+                                                <div className="text-[12px] font-bold font-mono text-app-foreground tabular-nums text-center py-1.5">{Number(line.unitCostHT).toFixed(2)}</div>
+                                                <input type="hidden" name={`lines[${idx}][unitCostHT]`} value={line.unitCostHT} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Stock</label>
+                                                <div className="text-[12px] font-bold text-app-foreground tabular-nums text-center py-1.5">{line.stockTotal as number}</div>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td className="p-2 text-center bg-emerald-50/10">
-                                        <div className="text-sm font-black text-emerald-700">${getEffectiveCost(line).toFixed(2)}</div>
-                                        <div className="text-[8px] text-emerald-500 uppercase font-bold tracking-tighter">Basis: {pricingCostBasis === 'AUTO' ? (vatRecoverable ? 'HT' : 'TTC') : pricingCostBasis}</div>
-                                    </td>
-                                    <td className="p-2 bg-purple-50/10">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-app-muted-foreground font-bold w-6">HT</span>
-                                                <input
-                                                    type="number" step="0.01"
-                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${!worksInTTC ? 'border-purple-200 bg-purple-50 font-bold' : 'border-app-border'}`}
-                                                    value={line.sellingPriceHT}
-                                                    onChange={(e) => updateLine(idx, { sellingPriceHT: Number(e.target.value) })}
-                                                    name={`lines[${idx}][sellingPriceHT]`}
-                                                />
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-app-muted-foreground font-bold w-6">TTC</span>
-                                                <input
-                                                    type="number" step="0.01"
-                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${worksInTTC ? 'border-purple-200 bg-purple-50 font-bold' : 'border-app-border'}`}
-                                                    value={line.sellingPriceTTC}
-                                                    onChange={(e) => updateLine(idx, { sellingPriceTTC: Number(e.target.value) })}
-                                                    name={`lines[${idx}][sellingPriceTTC]`}
-                                                />
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-2 text-center">
-                                        {(() => {
-                                            const { margin, markup } = getProfitAnalysis(line);
-                                            return (
-                                                <div className="space-y-1">
-                                                    <div className={`text-[11px] font-black ${margin < 15 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                                                        {margin.toFixed(1)}% <span className="text-[8px] opacity-60 font-bold ml-0.5">MARG</span>
-                                                    </div>
-                                                    <div className="text-[10px] font-bold text-app-muted-foreground">
-                                                        {markup.toFixed(1)}% <span className="text-[8px] opacity-50 font-normal ml-0.5">MARK</span>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })()}
-                                    </td>
-                                    <td className="p-2 text-center text-[10px] space-y-1">
-                                        <div className="text-app-muted-foreground">Target: <span className="text-app-foreground font-bold">$0.00</span></div>
-                                        <div className="text-app-muted-foreground">Last: <span className="text-app-foreground font-bold">${(line.lastPrice as string) || 'N/A'}</span></div>
-                                    </td>
-                                    <td className="p-2">
-                                        <input
-                                            type="date"
-                                            className="w-full text-[10px] bg-transparent border border-app-border p-1.5 rounded focus:border-rose-300 outline-none"
-                                            value={line.expiryDate}
-                                            onChange={(e) => updateLine(idx, { expiryDate: e.target.value })}
-                                            name={`lines[${idx}][expiryDate]`}
-                                        />
-                                    </td>
-                                    <td className="p-2 text-right font-black text-app-foreground">
-                                        ${(Number(line.quantity) * (invoicePriceType === 'TTC' ? Number(line.unitCostTTC || 0) : Number(line.unitCostHT || 0))).toFixed(2)}
-                                    </td>
-                                    <td className="p-2 text-center">
-                                        <button
-                                            type="button"
-                                            onClick={() => removeLine(idx)}
-                                            className="p-1.5 text-app-faint hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* 3. Totals & Submission */}
-            <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-                <div className="flex-1 space-y-2 max-w-md">
-                    <label className="block text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Internal Notes / Observations</label>
-                    <textarea
-                        name="notes"
-                        rows={3}
-                        className="w-full border border-app-border rounded-xl p-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all resize-none"
-                        placeholder="Add specific instructions for this replenishment..."
-                    />
-                </div>
-
-                <div className="w-full md:w-96 bg-app-bg text-white rounded-3xl p-6 shadow-2xl shadow-gray-200">
-                    <div className="space-y-4 mb-6">
-                        <div className="flex justify-between items-center text-app-muted-foreground text-sm">
-                            <span>Total Items</span>
-                            <span className="font-bold text-white">{lines.length}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-app-muted-foreground text-sm">
-                            <span>Subtotal (Net)</span>
-                            <span className="font-bold text-white">${totals.subtotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-app-muted-foreground text-sm">
-                            <span>Tax Breakdown</span>
-                            <span className="font-bold text-white">${totals.tax.toFixed(2)}</span>
-                        </div>
-                        <div className="h-px bg-app-surface my-2" />
-                        <div className="flex justify-between items-center">
-                            <span className="text-xl font-bold">Total Amount</span>
-                            <span className="text-3xl font-black text-emerald-400">${totals.total.toFixed(2)}</span>
-                        </div>
-                    </div>
-
+            {/* ── Action Footer ── */}
+            <div className="shrink-0 flex justify-between items-center bg-app-surface/60 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-app-border/40">
+                <div className="flex-1 flex items-center gap-3">
                     <button
-                        type="submit"
-                        disabled={isPending || lines.length === 0}
-                        className="w-full bg-emerald-500 hover:bg-emerald-400 text-app-foreground font-extrabold py-4 rounded-2xl transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group"
+                        type="button"
+                        onClick={() => router.back()}
+                        className="px-4 py-2.5 text-app-muted-foreground font-black uppercase tracking-widest text-[11px] hover:bg-app-surface rounded-xl transition-colors"
                     >
-                        <div className="flex items-center justify-center gap-3">
-                            {isPending ? 'VALIDATING ACCOUNTING...' : 'CONFIRM & POST REPLENISHMENT'}
-                            <div className="p-1 bg-app-surface/20 rounded group-hover:bg-app-surface/40 transition-colors">
-                                <Plus size={16} />
-                            </div>
-                        </div>
+                        Cancel
                     </button>
-
                     {state.message && (
-                        <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 text-xs font-bold ${state.errors ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                            {state.errors ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
+                        <div className={`px-3 py-1.5 rounded-xl text-[11px] font-bold ${state.errors && Object.keys(state.errors).length > 0 ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
                             {state.message}
                         </div>
                     )}
                 </div>
+                <button 
+                    type="submit" 
+                    disabled={isPending || lines.length === 0}
+                    className="flex items-center justify-center gap-2 bg-app-primary text-white px-8 py-2.5 rounded-xl font-black uppercase tracking-widest text-[11px] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-w-[160px]"
+                    style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 40%, transparent)' }}
+                >
+                    {isPending ? 'Processing...' : <><ArrowRight size={14} /> Create PO</>}
+                </button>
             </div>
         </form>
     );
 }
 
-// --- Sub-Components ---
+/* ── Product Search Component ── */
+import { forwardRef } from 'react';
 
-function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>) => void, siteId: number }) {
-    const [query, setQuery] = useState('');
-    const [results, setResults] = useState<Record<string, any>[]>([]);
-    const [open, setOpen] = useState(false);
+const ProductSearch = forwardRef<HTMLInputElement, { callback: (p: Record<string, any>) => void, siteId: number }>(
+    function ProductSearch({ callback, siteId }, ref) {
+        const [query, setQuery] = useState('');
+        const [results, setResults] = useState<Record<string, any>[]>([]);
+        const [open, setOpen] = useState(false);
 
-    useEffect(() => {
-        const timer = setTimeout(async () => {
-            if (query.length > 1) {
-                const res = await searchProductsSimple(query, siteId);
-
-                // Auto-add if it's a single exact match (e.g. barcode scan)
-                if (res.length === 1) {
-                    callback(res[0]);
-                    setQuery('');
+        useEffect(() => {
+            const timer = setTimeout(async () => {
+                if (query.length > 1) {
+                    const res = await searchProductsSimple(query, siteId);
+                    setResults(res);
+                    setOpen(true);
+                } else {
                     setResults([]);
                     setOpen(false);
-                    return;
                 }
+            }, 300);
+            return () => clearTimeout(timer);
+        }, [query, siteId]);
 
-                setResults(res);
-                setOpen(true);
-            } else {
-                setResults([]);
-                setOpen(false);
-            }
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [query, siteId, callback]);
-
-    return (
-        <div className="relative">
-            <input
-                type="text"
-                className="w-full bg-transparent p-1 pl-1 text-sm font-bold text-app-foreground placeholder:text-app-muted-foreground outline-none"
-                placeholder="Type name, SKU or scan barcode..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => query.length > 1 && setOpen(true)}
-            />
-            {open && results.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-app-surface rounded-xl shadow-2xl border border-app-border z-50 overflow-hidden">
-                    {results.map(r => (
-                        <button
-                            key={r.id as React.Key}
-                            type="button"
-                            onClick={() => {
-                                callback(r);
-                                setQuery('');
-                                setOpen(false);
-                            }}
-                            className="w-full p-3 text-left hover:bg-emerald-50 flex items-center justify-between group transition-all"
-                        >
-                            <div>
-                                <div className="font-bold text-sm text-app-foreground group-hover:text-emerald-700">{r.name as React.ReactNode}</div>
-                                <div className="text-[10px] text-app-muted-foreground">{r.sku as React.ReactNode} ΓÇó Stock: {r.stockLevel as React.ReactNode}</div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-xs font-bold text-app-foreground">${r.costPriceHT as React.ReactNode} HT</div>
-                                <div className="text-[10px] text-emerald-500 font-bold">Suggested: +{r.proposedQty as React.ReactNode}</div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
-
-function ShoppingCartSkeleton() {
-    return (
-        <div className="relative w-16 h-16 bg-app-surface rounded-2xl flex items-center justify-center">
-            <LayoutGrid className="text-gray-200" size={32} />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-app-surface-2 rounded-full animate-pulse" />
-        </div>
-    );
-}
+        return (
+            <div className="flex-1 relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                <input
+                    ref={ref}
+                    type="text"
+                    className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                    placeholder="Search by name, barcode, SKU... (Ctrl+K)"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onFocus={() => query.length > 1 && setOpen(true)}
+                />
+                {open && results.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 max-h-64 mt-1 rounded-xl shadow-xl z-50 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-1 duration-150"
+                        style={{ 
+                            background: 'var(--app-surface)', 
+                            border: '1px solid var(--app-border)',
+                            boxShadow: '0 12px 40px rgba(0,0,0,0.15)' 
+                        }}>
+                        {results.map(r => (
+                            <button
+                                key={r.id as React.Key}
+                                type="button"
+                                onClick={() => {
+                                    callback(r);
+                                    setQuery('');
+                                    setOpen(false);
+                                }}
+                                className="w-full text-left p-3 border-b last:border-b-0 text-[12px] font-bold text-app-foreground transition-all flex items-center gap-2"
+                                style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 5%, transparent)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                    <Package size={12} />
+                                </div>
+                                <span className="flex-1 truncate">{r.name as React.ReactNode}</span>
+                                <span className="font-mono text-[11px] text-app-muted-foreground">{r.sku as React.ReactNode}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
+);

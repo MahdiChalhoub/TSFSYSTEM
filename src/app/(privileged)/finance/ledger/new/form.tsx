@@ -3,7 +3,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import { createJournalEntry, updateJournalEntry } from '@/app/actions/finance/ledger'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, Save, FileText, Send, CheckCircle2, Building2, User, LayoutGrid, Hash, Calculator } from 'lucide-react'
+import { Plus, Trash2, Save, FileText, Send, CheckCircle2, Building2, User, LayoutGrid, Hash, Calculator, Maximize2, Minimize2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { KPIStrip } from '@/components/ui/KPIStrip'
 
@@ -36,6 +36,8 @@ export default function JournalEntryForm({
         description: initialEntry?.description || '',
         reference: initialEntry?.reference || ''
     })
+
+    const [isFocusMode, setIsFocusMode] = useState(false)
 
     const [lines, setLines] = useState(initialEntry?.lines.map((l: Record<string, any>) => ({
         accountId: l.accountId?.toString() || l.account?.id?.toString() || '',
@@ -185,85 +187,78 @@ export default function JournalEntryForm({
     const activePeriod = activeYear?.periods?.find((p: Record<string, any>) => p.id === fiscalContext.periodId)
 
     return (
-        <form onSubmit={e => e.preventDefault()} className="space-y-6 max-w-[1400px]">
+        <form onSubmit={e => e.preventDefault()} className="flex-1 min-h-0 flex flex-col gap-4">
             
-            {/* ── KPI Strip ── */}
-            <KPIStrip stats={[
-                { label: 'Total Debit', value: totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }), icon: <Calculator size={11} />, color: 'var(--app-primary)' },
-                { label: 'Total Credit', value: totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }), icon: <Calculator size={11} />, color: 'var(--app-error)' },
-                { label: 'Balance State', value: isBalanced ? 'Balanced' : Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 }), icon: <Hash size={11} />, color: isBalanced ? 'var(--app-success)' : 'var(--app-warning)' },
-            ]} />
+            {/* ── Top Control & KPIs ── */}
+            <div className="bg-app-surface/60 backdrop-blur-md rounded-2xl border border-app-border/40 p-4 shadow-sm shrink-0">
+                <div className="flex flex-col xl:flex-row gap-4 justify-between xl:items-end">
+                    {/* Journal Control Data (Grid) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }} className="flex-1">
+                        <div>
+                            <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Transaction Date</label>
+                            <input
+                                type="date"
+                                required
+                                value={header.transactionDate}
+                                onChange={e => setHeader({ ...header, transactionDate: e.target.value })}
+                                className="w-full text-[12px] font-bold bg-app-surface border border-app-border/50 rounded-xl px-3 py-2 shadow-sm focus:border-app-primary outline-none transition-all"
+                            />
+                        </div>
+                        <div style={{ gridColumn: 'span min(2, 100%)' }}>
+                            <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Global Description</label>
+                            <input
+                                required
+                                value={header.description}
+                                onChange={e => setHeader({ ...header, description: e.target.value })}
+                                className="w-full text-[12px] font-bold bg-app-surface border border-app-border/50 rounded-xl px-3 py-2 shadow-sm focus:border-app-primary outline-none transition-all placeholder:text-app-muted-foreground/40"
+                                placeholder="Reason for entry..."
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Reference</label>
+                            <input
+                                value={header.reference}
+                                onChange={e => setHeader({ ...header, reference: e.target.value })}
+                                className="w-full text-[12px] font-bold font-mono bg-app-surface border border-app-border/50 rounded-xl px-3 py-2 shadow-sm focus:border-app-primary outline-none transition-all placeholder:text-app-muted-foreground/40"
+                                placeholder="Auto-generated"
+                            />
+                        </div>
+                    </div>
 
-            {/* ── Header Metadata ── */}
-            <div className="bg-app-surface/60 backdrop-blur-md p-5 rounded-2xl border border-app-border/40 shadow-sm transition-all focus-within:border-app-primary/30">
-                <div className="flex items-center gap-2 mb-4 text-[10px] font-black uppercase tracking-widest text-app-muted-foreground border-b border-app-border/30 pb-2">
-                    <FileText size={14} className="text-app-primary" /> Journal Control Data
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-4 items-start">
-                    <div className="md:col-span-3">
-                        <label className="block text-[10px] font-black uppercase tracking-wider text-app-muted-foreground mb-1.5 ml-1">Transaction Date</label>
-                        <input
-                            type="date"
-                            required
-                            value={header.transactionDate}
-                            onChange={e => setHeader({ ...header, transactionDate: e.target.value })}
-                            className="w-full bg-app-surface border border-app-border/50 rounded-xl px-4 py-2 text-sm font-medium focus:ring-1 focus:ring-app-primary focus:border-app-primary outline-none transition-all shadow-sm"
-                        />
-                    </div>
-                    <div className="md:col-span-4">
-                        <label className="block text-[10px] font-black uppercase tracking-wider text-app-muted-foreground mb-1.5 ml-1">Global Description</label>
-                        <input
-                            required
-                            value={header.description}
-                            onChange={e => setHeader({ ...header, description: e.target.value })}
-                            className="w-full bg-app-surface border border-app-border/50 rounded-xl px-4 py-2 text-sm font-medium focus:ring-1 focus:ring-app-primary focus:border-app-primary outline-none transition-all shadow-sm placeholder:text-app-muted-foreground/40"
-                            placeholder="e.g. Monthly Accrual for April"
-                        />
-                    </div>
-                    <div className="md:col-span-2">
-                        <label className="block text-[10px] font-black uppercase tracking-wider text-app-muted-foreground mb-1.5 ml-1">Reference</label>
-                        <input
-                            value={header.reference}
-                            onChange={e => setHeader({ ...header, reference: e.target.value })}
-                            className="w-full bg-app-surface border border-app-border/50 rounded-xl px-4 py-2 text-sm font-medium font-mono focus:ring-1 focus:ring-app-primary focus:border-app-primary outline-none transition-all shadow-sm placeholder:text-app-muted-foreground/40"
-                            placeholder="Auto-generated"
-                        />
-                    </div>
-                    
-                    {/* Fiscal Context Badge */}
-                    <div className="md:col-span-3 pb-1">
-                        <label className="block text-[10px] font-black uppercase tracking-wider text-app-muted-foreground mb-1.5 ml-1">Posting Period Context</label>
-                        {fiscalContext.yearId ? (
-                            <div className="flex flex-col gap-1 items-start bg-app-surface px-4 py-2 rounded-xl border border-app-success/20 shadow-sm" style={{ background: 'color-mix(in srgb, var(--app-success) 5%, var(--app-surface))' }}>
-                                <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--app-success)' }}>
-                                    <CheckCircle2 size={13} fill="currentColor" className="text-white" />
-                                    {activeYear?.name}
-                                </span>
-                                {activePeriod && (
-                                    <span className="text-[10px] font-bold opacity-80" style={{ color: 'var(--app-success)' }}>
-                                        {activePeriod.name} — ({new Date(activePeriod.startDate).toLocaleDateString('en-GB')} to {new Date(activePeriod.endDate).toLocaleDateString('en-GB')})
-                                    </span>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-500 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm">
-                                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                                INVALID FISCAL SCOPE
-                            </div>
-                        )}
+                    {/* Vertical KPIs */}
+                    <div className="flex gap-2 self-start xl:self-auto w-full xl:w-auto shrink-0 mt-2 xl:mt-0">
+                        <div className="flex-1 xl:w-36 bg-app-surface border border-app-primary/20 rounded-xl px-4 py-2.5 shadow-sm flex flex-col justify-center items-end" style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, transparent)' }}>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-app-primary/70">Dr</span>
+                            <span className="text-[14px] font-black text-app-primary font-mono">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex-1 xl:w-36 bg-app-surface border border-rose-500/20 rounded-xl px-4 py-2.5 shadow-sm flex flex-col justify-center items-end" style={{ background: 'color-mix(in srgb, var(--app-error) 3%, transparent)' }}>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-rose-500/70">Cr</span>
+                            <span className="text-[14px] font-black text-rose-500 font-mono">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className={`flex-1 xl:w-40 border rounded-xl px-4 py-2.5 shadow-sm flex flex-col justify-center items-end ${isBalanced ? 'border-emerald-500/30' : 'border-app-warning/30'}`} style={{ background: isBalanced ? 'color-mix(in srgb, var(--app-success) 5%, transparent)' : 'color-mix(in srgb, var(--app-warning) 5%, transparent)' }}>
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${isBalanced ? 'text-emerald-500/70' : 'text-app-warning/70'}`}>Diff</span>
+                            <span className={`text-[14px] font-black font-mono ${isBalanced ? 'text-emerald-500' : 'text-app-warning'}`}>
+                                {isBalanced ? 'BALANCED' : Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* ── Advanced Financial Matrix ── */}
-            <div className="bg-app-surface/60 backdrop-blur-md rounded-2xl border border-app-border/40 shadow-sm overflow-hidden flex flex-col">
-                <div className="px-5 py-3 border-b border-app-border/30 flex items-center gap-2" style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)' }}>
-                    <LayoutGrid size={14} style={{ color: 'var(--app-info)' }} />
-                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-info)' }}>Dimensional Entry Matrix</span>
+            {/* ── Advanced Financial Matrix (Scrollable container) ── */}
+            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/40 rounded-2xl overflow-hidden flex flex-col shadow-sm relative">
+                {/* Embedded Header */}
+                <div className="flex-shrink-0 flex items-center gap-2 px-5 py-3 bg-app-surface/60 border-b border-app-border/40 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider backdrop-blur-md">
+                    <div className="w-6 h-6 rounded-lg bg-app-info/10 flex items-center justify-center text-app-info">
+                        <LayoutGrid size={13} />
+                    </div>
+                    Dimensional Entry Matrix
                 </div>
                 
-                <div className="overflow-x-auto">
+                {/* Scrollable Body */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    {/* Desktop view (table) */}
+                    <div className="hidden md:block">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-app-surface border-b border-app-border/40 text-left">
@@ -440,7 +435,132 @@ export default function JournalEntryForm({
                     </table>
                 </div>
 
-                <div className="p-2 border-t border-app-border/40 bg-app-surface/50">
+                {/* Mobile view (cards) */}
+                <div className="block md:hidden p-3 space-y-3 bg-app-surface/30">
+                    {lines.map((line: any, idx: number) => (
+                        <div key={idx} className="bg-app-surface p-3 rounded-xl border border-app-border/50 shadow-sm flex flex-col gap-3 relative">
+                            {/* Account Picker */}
+                            <div>
+                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Ledger Account</label>
+                                <input
+                                    list={`accounts-list-mob-${idx}`}
+                                    placeholder="Code or name..."
+                                    value={line.searchString}
+                                    onChange={e => updateLine(idx, 'searchString', e.target.value)}
+                                    className={`w-full p-2 border rounded-lg text-[12px] font-bold focus:ring-1 focus:ring-app-primary/20 outline-none transition-all shadow-sm ${
+                                        line.accountId 
+                                        ? 'border-emerald-500/30 bg-emerald-500/5 text-app-foreground' 
+                                        : 'border-app-border/60 bg-app-surface text-app-foreground'
+                                    }`}
+                                />
+                                <datalist id={`accounts-list-mob-${idx}`}>
+                                    {selectableAccounts.map(acc => (
+                                        <option key={acc.id} value={`${acc.code} ${acc.name}`}>
+                                            {acc.type} {acc.isActive ? '' : '(INACTIVE)'}
+                                        </option>
+                                    ))}
+                                </datalist>
+                                {!line.accountId && line.searchString && (
+                                    <div className="text-[9px] text-rose-500 font-bold uppercase tracking-widest mt-1">Unknown Account</div>
+                                )}
+                            </div>
+                            
+                            {/* Details Row */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Subledger</label>
+                                    <select
+                                        value={line.contactId}
+                                        onChange={e => updateLine(idx, 'contactId', e.target.value)}
+                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-[11px] font-medium focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground h-[32px] shadow-sm appearance-none"
+                                    >
+                                        <option value="">None</option>
+                                        {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Cost Center</label>
+                                    <input
+                                        value={line.costCenter}
+                                        onChange={e => updateLine(idx, 'costCenter', e.target.value)}
+                                        placeholder="EX: MKTG"
+                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-[11px] font-bold uppercase focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground h-[32px] shadow-sm"
+                                    />
+                                </div>
+                            </div>
+                            
+                            {/* Description */}
+                            <div>
+                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Line Description</label>
+                                <div className="flex gap-2 items-center">
+                                    <input
+                                        value={line.description}
+                                        onChange={e => updateLine(idx, 'description', e.target.value)}
+                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-[12px] font-bold focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground shadow-sm"
+                                        placeholder={header.description || "Specific text..."}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleAutoBalance(idx)}
+                                        className="text-app-primary hover:bg-app-primary/10 p-1.5 rounded-md flex items-center justify-center shrink-0 border border-transparent hover:border-app-primary/20 transition-all"
+                                    >
+                                        <Send size={14} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Amount Row */}
+                            <div className="grid grid-cols-2 gap-3 pb-8">
+                                <div>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Debit (Dr)</label>
+                                    <input
+                                        type="number" step="0.01" min="0" value={line.debit}
+                                        onChange={e => updateLine(idx, 'debit', e.target.value)}
+                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-[12px] focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface shadow-sm transition-all text-app-primary placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Credit (Cr)</label>
+                                    <input
+                                        type="number" step="0.01" min="0" value={line.credit}
+                                        onChange={e => updateLine(idx, 'credit', e.target.value)}
+                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-[12px] focus:ring-1 focus:ring-rose-500/20 outline-none bg-app-surface shadow-sm transition-all focus:border-rose-500/50 text-rose-500 placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
+                            
+                            {/* Remove button absolute positioned bottom right */}
+                            <button
+                                type="button"
+                                onClick={() => removeLine(idx)}
+                                className="absolute bottom-2 right-2 text-rose-500 hover:bg-rose-500/10 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-500/20"
+                            >
+                                <Trash2 size={15} />
+                            </button>
+                        </div>
+                    ))}
+                    
+                    {/* Mobile summary footer inside the mobile view block */}
+                    <div className="bg-app-surface p-3 flex flex-col gap-1.5 rounded-xl border border-app-border/40 font-mono shadow-sm">
+                        <div className="flex justify-between items-center text-[12px] font-bold">
+                            <span className="text-app-primary">Dr: {totalDebit > 0 ? totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</span>
+                            <span className="text-rose-500">Cr: {totalCredit > 0 ? totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</span>
+                        </div>
+                        {isBalanced ? (
+                            <div className="text-emerald-500 text-[9px] font-black uppercase tracking-widest">
+                                TRIAL BALANCE ZEROED
+                            </div>
+                        ) : (
+                            <div className="text-rose-500 text-[9px] font-black uppercase tracking-widest">
+                                DIFF: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="p-2 border-t border-app-border/40 bg-app-surface/50 border-b">
                     <button
                         type="button"
                         onClick={addLine}
@@ -450,9 +570,10 @@ export default function JournalEntryForm({
                     </button>
                 </div>
             </div>
+            </div>
 
             {/* ── Action Footer ── */}
-            <div className="flex justify-between items-center bg-app-surface/60 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-app-border/40 mt-12 sticky bottom-6 max-w-[1400px]">
+            <div className="shrink-0 flex justify-between items-center bg-app-surface/60 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-app-border/40">
                 <button
                     type="button"
                     onClick={() => router.back()}
