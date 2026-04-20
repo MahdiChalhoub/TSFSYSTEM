@@ -41,6 +41,7 @@ import Link from 'next/link'
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
 import { NumericRangeFilter, EMPTY_RANGE, type NumericRange } from '@/components/ui/NumericRangeFilter'
 import { erpFetch } from '@/lib/erp-api'
+import { revalidateEntityPath } from '@/app/actions/inventory/revalidate'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
@@ -261,7 +262,13 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
             })
             const targetName = moveTargets.find((t: any) => t.id === moveTarget)?.name || 'target'
             toast.success(`Moved ${selected.size} product${selected.size > 1 ? 's' : ''} to "${targetName}"`)
-            closeMoveModal(); setSelected(new Set()); loadProducts(0, false); router.refresh()
+            closeMoveModal(); setSelected(new Set())
+            // Bust the Next.js 30s fetch cache for the inventory entity pages so
+            // the tree/sidebar badges reflect the new counts immediately.
+            try { await revalidateEntityPath(entityType) } catch { /* non-blocking */ }
+            // Reload this tab's product list AND trigger server-component re-render.
+            loadProducts(0, false)
+            router.refresh()
         } catch (e: any) { toast.error(e?.message || 'Move failed'); setMoveStep('preview') }
     }
 

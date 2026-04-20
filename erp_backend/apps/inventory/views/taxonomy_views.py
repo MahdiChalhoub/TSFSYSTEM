@@ -206,18 +206,6 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
             unit=unit, organization=organization
         ).select_related('brand', 'category', 'unit')
 
-        # DEBUG — temporary probe to diagnose the 0-product issue
-        import logging
-        _dbg = logging.getLogger('explore-debug')
-        _dbg.error(
-            "[EXPLORE-DEBUG] unit_id=%s unit.org_id=%s caller_org_id=%s "
-            "raw_count=%s tenant_scoped_count=%s sql=%s",
-            unit.id, unit.organization_id, organization.id,
-            Product.original_objects.filter(unit=unit, organization_id=unit.organization_id).count(),
-            products_qs.count(),
-            str(products_qs.query)[:500],
-        )
-
         # Server-side search
         if search:
             from django.db.models import Q as Qf
@@ -230,27 +218,39 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
         sort_dir = request.query_params.get('sort_dir', 'asc')
         order_prefix = '' if sort_dir == 'asc' else '-'
 
-        # Annotate stock_on_hand from StockLedger
+        # Annotate stock_on_hand from StockLedger.
+        # Previously used a nested Subquery with OuterRef(OuterRef('pk')) which is an invalid
+        # double-wrap — Django rejects it at SQL compile time with
+        # "This queryset contains a reference to an outer query and may only be used in a subquery."
+        # The annotation succeeded but iteration crashed the whole endpoint with a 500.
+        # Fix: compute "latest-per-warehouse" stock via a single non-nested Subquery.
         from django.db.models import Sum, Subquery, OuterRef, DecimalField, Value
         from django.db.models.functions import Coalesce
         try:
             from apps.inventory.models import StockLedger
+            # Latest ledger row per (product, warehouse) within this org.
+            # Using a correlated subquery to fetch the running_on_hand sum.
+            latest_per_wh = StockLedger.objects.filter(
+                product=OuterRef('pk'),
+                organization=organization,
+            ).order_by('warehouse', '-created_at').distinct('warehouse').values('id')
+
             products_qs = products_qs.annotate(
                 stock_on_hand=Coalesce(
-                    Sum('stock_ledger__running_on_hand',
-                        filter=Q(
-                            stock_ledger__id__in=Subquery(
-                                StockLedger.objects.filter(
-                                    product=OuterRef(OuterRef('pk')),
-                                    organization=organization,
-                                ).order_by('warehouse', '-created_at').distinct('warehouse').values('id')
-                            )
-                        )),
-                    0,
-                    output_field=DecimalField()
+                    Sum(
+                        'stock_ledger__running_on_hand',
+                        filter=Q(stock_ledger__id__in=Subquery(latest_per_wh)),
+                    ),
+                    Value(0),
+                    output_field=DecimalField(),
                 )
             )
-        except Exception:
+            # Force-evaluate at annotation time so any SQL compile error is caught here
+            # (not at iteration) and we can fall back cleanly.
+            str(products_qs.query)
+        except Exception as e:
+            import logging
+            logging.getLogger('explore').warning("stock_on_hand annotation failed, using 0: %s", e)
             products_qs = products_qs.annotate(
                 stock_on_hand=Value(0, output_field=DecimalField())
             )
