@@ -15,6 +15,35 @@
 
 ## Session Log
 
+### Session: 2026-04-19 (Fiscal Years silent-bug audit — the "I was trying to escape from it" bug)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ Fixes landed / ⏳ browser smoke-test pending (another Claude session held the Playwright Chrome lock)
+- **User report**: "i was trying to escape from it" on `/finance/fiscal-years`. Suspected many silent bugs.
+- **Root cause — "can't escape"**: Four bespoke modals on the page (Wizard, Draft Audit, Year-End Close, Period Editor) are raw `<div className="fixed inset-0">` wrappers, not `<Dialog>` components. They have **no Escape-key handler and no backdrop-click dismissal** — the only exit is clicking the small X icon. Easy to miss, especially with a keyboard-first workflow.
+- **Other silent bugs found in the same file**:
+  1. `applyPeriodStatus` (viewer.tsx) did an optimistic local update, then awaited the server PATCH in a `try/catch` where **both branches called `toast.success`** regardless of outcome (comment: "PATCH may return 500 due to audit log conflict but data IS saved" — not guaranteed for every 500). Server-side failures showed up as green success toasts and the UI diverged from the server.
+  2. `refreshData` swallowed errors silently (`catch { /* silent */ }`). Called after every mutation — so a broken refresh after a failed update would leave the optimistic state looking real.
+  3. Close-preview fetch showed a generic `toast.error('Failed')` with no detail, and `closingYearId` state was not cleared — leaving the year stuck in "close in progress" indicator if preview fetch threw.
+- **Files Modified**:
+  - `src/hooks/useModalDismiss.ts` — NEW (43 lines). Reusable hook: Escape key listener + backdrop-click dismissal. Returns spreadable `backdropProps` / `contentProps`.
+  - `src/app/(privileged)/finance/fiscal-years/viewer.tsx` — wired `useModalDismiss` into all 3 bespoke modals. Introduced `closeYearEndModal()` helper (was duplicated inline in 3 places). Rewrote `applyPeriodStatus` to snapshot previous status + `is_closed`, roll back the optimistic update on genuine server failure, surface the real error via `toast.error`. `refreshData` now surfaces failures. Close-preview fetch now shows the real error message and clears `closingYearId` on failure.
+  - `src/app/(privileged)/finance/fiscal-years/period-editor.tsx` — wired `useModalDismiss`.
+  - `.agent/WORKMAP.md` — logged this work as DONE; added 3 new LOW items (see below).
+- **Unfinished silent bugs deferred to WORKMAP LOW**:
+  - `new/page.tsx` is a broken scaffold — `<p>No form fields available</p>` + empty `{}` POST. Unusable. Needs product call: delete, finish, or redirect.
+  - `[id]/page.tsx` is a scaffold that dumps raw JSON and its Edit button 404s (no `[id]/edit` route).
+  - `wizard.tsx` (226 lines) and `year-card.tsx` (258 lines) are **never imported** — dead code. Per cleanup rule, archive not delete.
+  - `viewer.tsx` is 1363 lines — over the 300-line hard limit. Pre-existing; not worsened this session.
+- **Discoveries**:
+  - Playwright MCP Chrome is single-user-data-dir — when another Claude session holds the lock, browser smoke tests aren't possible. Pivoted to source-level audit.
+  - Same bespoke-modal pattern (fixed inset-0, no Escape, no backdrop) likely exists on other pages across the app. Candidate for a repo-wide audit in a future session. Use `grep -rn 'fixed inset-0 bg-black' src/` to find them.
+- **Warnings for Next Agent**:
+  - ⚠️ **Browser smoke-test required** before deploying. Verify on `/finance/fiscal-years`: (a) Escape and backdrop-click close each of Wizard / Draft Audit / Year-End Close / Period Editor; (b) when period-status PATCH fails, the optimistic change rolls back and the error toast shows detail; (c) close-preview fetch failure shows a specific error and clears the "closing" indicator.
+  - ⚠️ The `applyPeriodStatus` rollback uses the `period` object captured at call time. If the period was stale by then, the rollback restores stale data. Acceptable for a UX fix; for correctness-critical flows a server refetch after failure is better.
+  - ⚠️ Do NOT strip the new `useModalDismiss` hook thinking it's redundant — it's deliberately tiny and generic. Other bespoke modals in the app should adopt it too.
+
+---
+
 ### Session: 2026-04-20 (Purchase Order Redesign)
 - **Agent**: Antigravity
 - **Status**: ✅ DONE (code + typecheck running)

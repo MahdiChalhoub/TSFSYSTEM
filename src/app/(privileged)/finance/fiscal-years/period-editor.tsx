@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { updatePeriod } from '@/app/actions/finance/fiscal-year'
+import { useModalDismiss } from '@/hooks/useModalDismiss'
 
 export default function PeriodEditor({ period, onClose }: { period: Record<string, any>; onClose: () => void }) {
     const [isPending, setIsPending] = useState(false)
+    const { backdropProps, contentProps } = useModalDismiss(true, onClose)
     const [formData, setFormData] = useState({
         name: period.name,
         startDate: (period.start_date || period.startDate || '').split('T')[0],
@@ -28,8 +30,8 @@ export default function PeriodEditor({ period, onClose }: { period: Record<strin
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-            <div className="rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200"
+        <div {...backdropProps} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+            <div {...contentProps} className="rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                 <div className="px-4 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)' }}>
                     <h3 className="text-[12px] font-black" style={{ color: 'var(--app-foreground)' }}>Edit Period</h3>

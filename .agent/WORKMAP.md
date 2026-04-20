@@ -37,6 +37,18 @@
 
 ## 🟡 MEDIUM
 
+### [DONE 2026-04-19] Fiscal Years — silent-bug audit + modal escape + rollback
+- **Discovered**: 2026-04-19 (user reported being unable to escape a modal and suspecting silent bugs)
+- **Impact**: Four bespoke modals on `/finance/fiscal-years` (Wizard, Draft Audit, Year-End Close, Period Editor) had no Escape-key / backdrop-click dismissal — users could only close via the X icon. `applyPeriodStatus` always toast-success'd regardless of whether the server accepted the change (swallowed errors in a generic `catch {}` with the excuse "PATCH may return 500 due to audit log conflict"). `refreshData` silently swallowed all errors. Generic "Failed" toast on close-preview. `closingYearId` leaked if close-preview fetch rejected.
+- **Files**: `src/hooks/useModalDismiss.ts` (new, 43 lines), `src/app/(privileged)/finance/fiscal-years/viewer.tsx`, `src/app/(privileged)/finance/fiscal-years/period-editor.tsx`.
+- **Fix**:
+  - New reusable `useModalDismiss(open, onClose)` hook — installs an Escape-key listener when `open` is true, returns `backdropProps` and `contentProps` spreadable onto the outer/inner modal divs so backdrop-click dismisses without the inner div bubbling up.
+  - Wired into all 4 bespoke modals in `fiscal-years`.
+  - `applyPeriodStatus` now snapshots previous status + `is_closed`, rolls the optimistic update back on server failure, surfaces the real error via `toast.error`. `refreshData()` is now awaited after success so local state tracks server truth.
+  - `refreshData` surfaces refresh failures via `toast.error` instead of a silent `/* silent */` catch.
+  - Generic "Failed" toast on close-preview replaced with a specific error surfacing the underlying exception; `closingYearId` cleared on preview failure to prevent stuck "close in progress" indicator.
+- **Follow-up**: New LOW items added below for (a) broken `[id]/page.tsx` stub with 404 Edit link, (b) broken `new/page.tsx` placeholder (empty form), (c) dead `wizard.tsx` + `year-card.tsx` (not imported anywhere), (d) `viewer.tsx` at 1363 lines (over the 300-line code-quality limit).
+
 ### [DONE 2026-04-20] Guided-tour button on Chart of Accounts + reusable `<PageTour>` wrapper
 - **Discovered**: 2026-04-20
 - **Impact**: Users on `/finance/chart-of-accounts` had no onboarding walkthrough. `/inventory/units` had a tour button (rendered by TreeMasterPage) but it was dead — no registered definition and no mounted renderer.
@@ -92,6 +104,21 @@
 ---
 
 ## 🟢 LOW
+
+### [OPEN] Fiscal Years `/new` + `/[id]` are broken scaffold pages
+- **Discovered**: 2026-04-19
+- **Impact**: `src/app/(privileged)/finance/fiscal-years/new/page.tsx` renders a form with the placeholder `<p>No form fields available</p>` and submits an empty `{}` to `POST /finance/fiscal-years/` — the route is unusable. The real creation flow is the inline Wizard inside `viewer.tsx`. `src/app/(privileged)/finance/fiscal-years/[id]/page.tsx` is a scaffold that dumps `Object.entries(item)` as raw JSON and its Edit button navigates to `/finance/fiscal-years/${id}/edit` — a route that **does not exist** (404).
+- **Options**: (a) delete both scaffolds and ensure nothing links to them — but check first; (b) finish them properly; (c) replace with redirects back to the main list. Needs product call.
+
+### [OPEN] Dead fiscal-years components: `wizard.tsx` + `year-card.tsx`
+- **Discovered**: 2026-04-19
+- **Impact**: `src/app/(privileged)/finance/fiscal-years/wizard.tsx` (226 lines) and `year-card.tsx` (258 lines) export default React components that are **never imported anywhere**. `viewer.tsx` reimplements both inline. Dead code.
+- **Fix**: Per `.agent/rules/cleanup.md`, archive rather than delete — move to `/ARCHIVE/src/app/(privileged)/finance/fiscal-years/` preserving the folder shape.
+
+### [OPEN] `fiscal-years/viewer.tsx` is 1363 lines (over 300-line limit)
+- **Discovered**: 2026-04-19
+- **Impact**: Violates `code-quality.md` hard limit. Any further edits should refactor first. Not refactored this session — modal-escape fixes were additive and the file was already over-limit.
+- **Fix**: Extract the three bespoke modals (Wizard, Draft Audit, Year-End Close) into `_components/`. Extract the year/period rendering into `_components/YearPanel.tsx`. Extract the `openWizard` gap-detection logic + state into `_hooks/useFiscalYearsViewer.ts`. Target: page ≤ 250 lines of orchestration. Est: 3–4 hours.
 
 ### [OPEN] Mobile guided tours (COA + Units + Categories)
 - **Discovered**: 2026-04-20

@@ -18,6 +18,7 @@ import {
 } from '@/app/actions/finance/fiscal-year'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { notifyPeriodChange } from '@/components/finance/period-warning-banner'
+import { useModalDismiss } from '@/hooks/useModalDismiss'
 import PeriodEditor from './period-editor'
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
@@ -49,6 +50,13 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     const [summaryCache, setSummaryCache] = useState<Record<number, YearSummary>>({})
     const [historyCache, setHistoryCache] = useState<Record<number, { events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }>>({})
     const [draftAudit, setDraftAudit] = useState<{ drafts: DraftAuditEntry[]; total: number; periodName: string } | null>(null)
+
+    const closeYearEndModal = () => {
+        setCloseStep(null); setClosePreview(null); setCloseResult(null); setCloseConfirmText(''); setClosingYearId(null)
+    }
+    const wizardDismiss = useModalDismiss(showWizard, () => setShowWizard(false))
+    const draftAuditDismiss = useModalDismiss(draftAudit !== null, () => setDraftAudit(null))
+    const yearEndDismiss = useModalDismiss(closeStep !== null && closePreview !== null, closeYearEndModal)
 
     // Listen for period changes from the global banner
     useEffect(() => {
@@ -112,7 +120,11 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             const { getFiscalYears } = await import('@/app/actions/finance/fiscal-year')
             const fresh = await getFiscalYears()
             setYears(Array.isArray(fresh) ? fresh : [])
-        } catch { /* silent */ }
+        } catch (err) {
+            // Don't block the UI, but surface the failure so a stale optimistic
+            // state isn't mistaken for the truth.
+            toast.error(`Failed to refresh fiscal years: ${err instanceof Error ? err.message : String(err)}`)
+        }
     }
 
     const handleCreateYear = async (e: React.FormEvent) => {
@@ -230,22 +242,34 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
     /** Apply period status after validation/confirmation */
     const applyPeriodStatus = (periodId: number, newStatus: string, period: Record<string, any>) => {
-        // Optimistic local update
+        // Snapshot of prior state for rollback on genuine failure.
+        const prevStatus = period.status
+        const prevIsClosed = !!period.is_closed
+
+        // Optimistic local update.
         setYears(prev => prev.map(y => ({
             ...y,
             periods: (y.periods || []).map((p: any) =>
                 p.id === periodId ? { ...p, status: newStatus, is_closed: newStatus === 'CLOSED' } : p
             ),
         })))
-        // Notify the global banner immediately
         notifyPeriodChange()
+
         startTransition(async () => {
             try {
                 await updatePeriodStatus(periodId, newStatus)
                 toast.success(`${period.name} → ${newStatus}`)
-            } catch {
-                // PATCH may return 500 due to audit log conflict but data IS saved.
-                toast.success(`${period.name} → ${newStatus}`)
+                refreshData()
+            } catch (err) {
+                // Roll the optimistic update back so local state matches the server.
+                setYears(prev => prev.map(y => ({
+                    ...y,
+                    periods: (y.periods || []).map((p: any) =>
+                        p.id === periodId ? { ...p, status: prevStatus, is_closed: prevIsClosed } : p
+                    ),
+                })))
+                notifyPeriodChange()
+                toast.error(`Failed to change ${period.name} → ${newStatus}: ${err instanceof Error ? err.message : String(err)}`)
             }
         })
     }
@@ -559,7 +583,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                             {yearStatus === 'OPEN' && (() => {
                                                 const isPartial = new Date() < new Date(year.endDate || year.end_date)
                                                 return (
-                                                    <button onClick={() => { setClosingYearId(year.id); startTransition(async () => { const p = await getClosePreview(year.id); if (p) { setClosePreview(p); setCloseStep('preview') } else toast.error('Failed') }) }}
+                                                    <button onClick={() => { setClosingYearId(year.id); startTransition(async () => { try { const p = await getClosePreview(year.id); if (p) { setClosePreview(p); setCloseStep('preview') } else { setClosingYearId(null); toast.error(`Failed to load close preview for ${year.name}`) } } catch (err) { setClosingYearId(null); toast.error(`Failed to load close preview: ${err instanceof Error ? err.message : String(err)}`) } }) }}
                                                         disabled={isPending} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
                                                         title={isPartial ? 'Year not finished yet — will perform partial close and auto-create remainder year' : 'Close fiscal year and post P&L to Retained Earnings'}
                                                         style={{ color: isPartial ? 'var(--app-warning, #f59e0b)' : 'var(--app-error, #ef4444)', borderColor: isPartial ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' : 'color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>
@@ -788,8 +812,8 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
             {/* Wizard Modal */}
             {showWizard && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-                    <div className="rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+                <div {...wizardDismiss.backdropProps} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+                    <div {...wizardDismiss.contentProps} className="rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                         <div className="px-5 py-4 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)' }}>
                             <div className="flex items-center gap-2.5">
@@ -901,8 +925,8 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
             {/* ── Draft Audit Modal ── */}
             {draftAudit && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-                    <div className="rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
+                <div {...draftAuditDismiss.backdropProps} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+                    <div {...draftAuditDismiss.contentProps} className="rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                         <div className="px-5 py-4 flex justify-between items-center"
                             style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error, #ef4444) 4%, transparent)' }}>
@@ -967,8 +991,8 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
             {/* ══════ Year-End Close Modal ══════ */}
             {closeStep && closePreview && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-                    <div className="rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
+                <div {...yearEndDismiss.backdropProps} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+                    <div {...yearEndDismiss.contentProps} className="rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
 
                         {/* Header */}
@@ -994,7 +1018,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                     </p>
                                 </div>
                             </div>
-                            <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseResult(null); setCloseConfirmText('') }}
+                            <button onClick={closeYearEndModal}
                                 className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--app-muted-foreground)' }}>
                                 <X size={16} />
                             </button>
@@ -1235,7 +1259,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
                                 {/* Actions */}
                                 <div className="flex gap-2 pt-1">
-                                    <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseConfirmText('') }}
+                                    <button onClick={closeYearEndModal}
                                         className="flex-1 py-2.5 text-[11px] font-bold rounded-xl border transition-all"
                                         style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                                         Cancel
@@ -1324,7 +1348,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                     )
                                 })()}
 
-                                <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseResult(null); setCloseConfirmText(''); refreshData() }}
+                                <button onClick={() => { closeYearEndModal(); refreshData() }}
                                     className="w-full py-2.5 text-[11px] font-bold rounded-xl transition-all"
                                     style={{ background: 'var(--app-primary)', color: 'white' }}>
                                     Done
