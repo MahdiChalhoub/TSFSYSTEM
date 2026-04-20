@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client';
 
-import { useActionState, useState, useEffect, useMemo } from "react";
+import { useActionState, useState, useEffect, useMemo, forwardRef, useImperativeHandle } from "react";
 import type { PurchaseLine } from '@/types/erp';
 import { createFormalPurchaseOrderV2 } from "@/app/actions/commercial/purchases-v2";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
@@ -77,17 +77,23 @@ function SafetyBadge({ tag }: { tag: string }) {
 /* ═══════════════════════════════════════════════════════════
  *  MAIN FORM — mirrors Product smart-form layout
  * ═══════════════════════════════════════════════════════════ */
-export default function FormalOrderFormV2({
-    suppliers,
-    sites,
-    paymentTerms,
-    drivers
-}: {
+export type FormalOrderFormV2Handle = {
+    addProduct: (product: Record<string, any>) => Promise<void> | void;
+    getSelectedSiteId: () => number | '';
+    getSelectedSupplierId: () => number | '';
+};
+
+const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
     suppliers: Record<string, any>[],
     sites: Record<string, any>[],
     paymentTerms: Record<string, any>[],
     drivers: Record<string, any>[]
-}) {
+}>(function FormalOrderFormV2({
+    suppliers,
+    sites,
+    paymentTerms,
+    drivers
+}, ref) {
     const initialState = { message: '', errors: {} };
     const [state, formAction, isPending] = useActionState(createFormalPurchaseOrderV2, initialState);
 
@@ -169,6 +175,12 @@ export default function FormalOrderFormV2({
             return {};
         }
     };
+
+    useImperativeHandle(ref, () => ({
+        addProduct: (product: Record<string, any>) => addProductToLines(product),
+        getSelectedSiteId: () => selectedSiteId,
+        getSelectedSupplierId: () => selectedSupplierId,
+    }), [selectedSiteId, selectedSupplierId, lines, supplierPriceHints]);
 
     const addProductToLines = async (product: Record<string, any>) => {
         if (lines.find(l => l.productId === product.id)) return;
@@ -701,7 +713,9 @@ export default function FormalOrderFormV2({
             </div>
         </form>
     );
-}
+});
+
+export default FormalOrderFormV2;
 
 /* ═══════════════════════════════════════════════════════════
  *  PRODUCT SEARCH — V2 styled dropdown
