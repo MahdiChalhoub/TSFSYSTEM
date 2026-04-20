@@ -42,6 +42,12 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
     const [expanded, setExpanded] = useState<Set<string>>(new Set())
     const { isDark, toggleColorMode } = useAppTheme()
     const recentRoutes = useRecentRoutes()
+    // Suppress hydration mismatch on the theme toggle — server renders a
+    // default colorMode, client reads the real one from localStorage. The
+    // button content depends on isDark; gate it behind a mount flag so the
+    // server render is neutral.
+    const [themeReady, setThemeReady] = useState(false)
+    useEffect(() => { setThemeReady(true) }, [])
 
     useBackHandler(open, onClose, 'mobile-drawer')
     useEscapeKey(open, onClose)
@@ -431,8 +437,11 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                     minWidth: 48,
                                 }}
-                                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
-                                {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                                suppressHydrationWarning
+                                aria-label={themeReady ? (isDark ? 'Switch to light mode' : 'Switch to dark mode') : 'Toggle color mode'}>
+                                <span suppressHydrationWarning>
+                                    {themeReady ? (isDark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
+                                </span>
                             </button>
                             <button
                                 onClick={handleLogout}

@@ -262,7 +262,6 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                 )
                             })}
                         </div>
-                        <PageTour tourId="finance-coa-templates" stepActions={tourStepActions} />
                         <button data-tour="templates-focus-mode-btn" onClick={() => setFocusMode(true)}
                             className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                             <Maximize2 size={13} />
@@ -327,6 +326,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                         placeholder="Search by name, region, key... (Ctrl+K)"
                         className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
                 </div>
+                <PageTour tourId="finance-coa-templates" stepActions={tourStepActions} />
                 {focusMode && (
                     <button onClick={() => setFocusMode(false)}
                         className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
