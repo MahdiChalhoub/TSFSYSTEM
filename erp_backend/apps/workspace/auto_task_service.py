@@ -61,7 +61,7 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
         rule_type='EVENT',       # Only EVENT rules — RECURRING handled by Celery
         chain_parent__isnull=True,  # Chain children only fire on parent completion
         is_active=True,
-    ).select_related('template', 'template__assign_to_role', 'assign_to_user')
+    ).select_related('template', 'template__assign_to_role', 'assign_to_user', 'assign_to_user_group')
 
     if not rules.exists():
         return []
@@ -152,8 +152,31 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
         related_label = reference or product_name or rule.name
 
         try:
+            # ── User-group fan-out: one task per member (ad-hoc team) ─────────
+            if rule.assign_to_user_group_id and not rule.assign_to_user_id:
+                members = rule.assign_to_user_group.members.filter(is_active=True)
+                for user in members:
+                    task = Task.objects.create(
+                        organization=organization,
+                        title=f"🤖 {tmpl.name}" if tmpl.name else f"Auto: {rule.get_trigger_event_display()}",
+                        description="\n".join(description_lines),
+                        priority=priority,
+                        status='PENDING',
+                        source='SYSTEM',
+                        auto_rule=rule,
+                        template=tmpl,
+                        assigned_to=user,
+                        assigned_to_user_group=rule.assign_to_user_group,
+                        due_date=due,
+                        related_object_type=related_type,
+                        related_object_id=related_id,
+                        related_object_label=related_label,
+                        points=tmpl.default_points or 1,
+                        estimated_minutes=tmpl.estimated_minutes or 30,
+                    )
+                    created_tasks.append(task)
             # ── Broadcast mode: task for every user in the role ───────────────
-            if rule.broadcast_to_role and tmpl.assign_to_role:
+            elif rule.broadcast_to_role and tmpl.assign_to_role:
                 from erp.models import User
                 users = User.objects.filter(
                     organization=organization,

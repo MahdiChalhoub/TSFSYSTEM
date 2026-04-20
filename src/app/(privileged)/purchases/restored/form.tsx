@@ -7,7 +7,7 @@ import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
 import { useDev } from "@/context/DevContext";
 import {
     Search, ShoppingCart, SlidersHorizontal, BookOpen, Plus,
-    Trash2, ArrowRight, Settings2, FileText, Package,
+    Trash2, ArrowRight, ArrowLeft, Settings2, FileText, Package,
     LayoutGrid, Shield
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -18,7 +18,8 @@ import { CustomizeSidebar } from "../new-order/_components/CustomizeSidebar";
 import { SmartFillModal } from "../new-order/_components/SmartFillModal";
 import { ImportFromPOModal } from "../new-order/_components/ImportFromPOModal";
 import { SupplierScorecard } from "../new-order/_components/SupplierScorecard";
-import { Zap, FileDown } from "lucide-react";
+import { ConfigSidebar } from "../new-order/_components/ConfigSidebar";
+import { Zap, FileDown, ClipboardList } from "lucide-react";
 import {
     PO_ALL_COLUMNS,
     PO_DEFAULT_VISIBLE_COLS,
@@ -121,11 +122,17 @@ const ProductSearch = forwardRef<HTMLInputElement, {
 export default function PurchaseForm({
     suppliers,
     sites,
-    financialSettings
+    financialSettings,
+    paymentTerms = [],
+    drivers = [],
+    users = [],
 }: {
     suppliers: Record<string, any>[],
     sites: Record<string, any>[],
-    financialSettings: Record<string, any>
+    financialSettings: Record<string, any>,
+    paymentTerms?: Record<string, any>[],
+    drivers?: Record<string, any>[],
+    users?: Record<string, any>[],
 }) {
     const initialState = { message: '', errors: {} };
     const [state, formAction, isPending] = useActionState(createPurchaseInvoice, initialState);
@@ -142,7 +149,12 @@ export default function PurchaseForm({
     const [catalogueOpen, setCatalogueOpen] = useState(false);
     const [smartFillOpen, setSmartFillOpen] = useState(false);
     const [importPoOpen, setImportPoOpen] = useState(false);
+    const [configOpen, setConfigOpen] = useState(false);
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | ''>('');
+    const [selectedPaymentTermId, setSelectedPaymentTermId] = useState<number | ''>('');
+    const [selectedDriverId, setSelectedDriverId] = useState<number | ''>('');
+    const [assignedToId, setAssignedToId] = useState<number | ''>('');
+    const [notes, setNotes] = useState('');
     // Per-session overrides (persisted browser-local)
     const [stockScope, setStockScope] = useState<'branch' | 'all'>('branch');
     const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | ''>('');
@@ -337,70 +349,72 @@ export default function PurchaseForm({
             <input type="hidden" name="invoicePriceType" value={invoicePriceType} />
             <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
             <input type="hidden" name="siteId" value={selectedSiteId} />
+            <input type="hidden" name="warehouseId" value={selectedWarehouseId} />
+            <input type="hidden" name="supplierId" value={selectedSupplierId} />
+            <input type="hidden" name="paymentTermId" value={selectedPaymentTermId} />
+            <input type="hidden" name="driverId" value={selectedDriverId} />
+            <input type="hidden" name="assignedToId" value={assignedToId} />
+            <input type="hidden" name="notes" value={notes} />
 
-            {/* ═══ Floating Scope Toggle (top-right, inside header bar) ═══ */}
-            <div className="absolute top-0 right-0 z-40 flex items-center gap-2 px-5 py-3"
-                style={{ top: '-52px' }}>
-                {/* Stock Scope Toggle — spec: po_intelligence_grid.md §3.1 */}
-                <div className="flex rounded-full overflow-hidden h-[30px]"
-                    style={{ border: '1px solid var(--app-border)' }}>
-                    <button type="button" onClick={() => setStockScope('branch')}
-                        title="Local site stock only"
-                        className="px-3 text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1"
-                        style={stockScope === 'branch' ? {
-                            background: 'var(--app-info, #3b82f6)', color: 'white',
-                        } : { background: 'var(--app-surface)', color: 'var(--app-muted-foreground)' }}>
-                        🏪 Branch
+            {/* ═══ Page Header — back arrow + title + scope pills + icon triplet ═══ */}
+            <div className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 flex-shrink-0"
+                style={{
+                    background: 'var(--app-surface)',
+                    borderBottom: '1px solid var(--app-border)',
+                    boxShadow: '0 1px 3px color-mix(in srgb, var(--app-foreground) 4%, transparent)',
+                }}>
+                {/* Left: back + title */}
+                <div className="flex items-center gap-3">
+                    <Link href="/purchases"
+                        className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-app-border/30"
+                        style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
+                        <ArrowLeft size={16} />
+                    </Link>
+                    <h1 className="text-lg md:text-xl font-black tracking-tight"
+                        style={{ color: 'var(--app-foreground)' }}>
+                        New <span style={{ color: 'var(--app-primary)' }}>Purchase Order</span>
+                    </h1>
+                </div>
+
+                {/* Right: scope pills + config + analytics + doc */}
+                <div className="flex items-center gap-2">
+                    <div className="flex rounded-full overflow-hidden h-[30px]"
+                        style={{ border: '1px solid var(--app-border)' }}>
+                        <button type="button" onClick={() => setScope('OFFICIAL')}
+                            className="px-4 text-[10px] font-black uppercase tracking-wider transition-all"
+                            style={scope === 'OFFICIAL' ? {
+                                background: 'var(--app-primary)', color: 'white',
+                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                            } : { background: 'var(--app-surface)', color: 'var(--app-muted-foreground)' }}>
+                            Official
+                        </button>
+                        <button type="button" onClick={() => setScope('INTERNAL')}
+                            className="px-4 text-[10px] font-black uppercase tracking-wider transition-all"
+                            style={scope === 'INTERNAL' ? {
+                                background: 'var(--app-primary)', color: 'white',
+                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                            } : { background: 'var(--app-surface)', color: 'var(--app-muted-foreground)' }}>
+                            Internal
+                        </button>
+                    </div>
+                    <button type="button" onClick={() => setAnalyticsOpen(true)}
+                        title="Analytics profile — stock scope + org config"
+                        className="p-1.5 rounded-lg transition-colors hover:bg-app-border/20"
+                        style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
+                        <SlidersHorizontal size={15} />
                     </button>
-                    <button type="button" onClick={() => setStockScope('all')}
-                        title="Global multi-site stock"
-                        className="px-3 text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1"
-                        style={stockScope === 'all' ? {
-                            background: 'var(--app-info, #3b82f6)', color: 'white',
-                        } : { background: 'var(--app-surface)', color: 'var(--app-muted-foreground)' }}>
-                        🌐 All
+                    <button type="button" onClick={() => setConfigOpen(true)}
+                        title="Order configuration — supplier, branch, payment, driver, notes"
+                        className="p-1.5 rounded-lg transition-colors relative"
+                        style={{ background: 'var(--app-primary)', color: 'white' }}>
+                        <FileText size={15} />
+                        {!selectedSupplierId && (
+                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
+                                style={{ background: 'var(--app-error, #ef4444)' }}
+                                title="Supplier not selected" />
+                        )}
                     </button>
                 </div>
-                {/* Scope Pills */}
-                <div className="flex rounded-full overflow-hidden h-[30px]"
-                    style={{ border: '1px solid var(--app-border)' }}>
-                    <button type="button" onClick={() => setScope('OFFICIAL')}
-                        className="px-4 text-[10px] font-black uppercase tracking-wider transition-all"
-                        style={scope === 'OFFICIAL' ? {
-                            background: 'var(--app-primary)',
-                            color: 'white',
-                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
-                        } : {
-                            background: 'var(--app-surface)',
-                            color: 'var(--app-muted-foreground)',
-                        }}>
-                        Official
-                    </button>
-                    <button type="button" onClick={() => setScope('INTERNAL')}
-                        className="px-4 text-[10px] font-black uppercase tracking-wider transition-all"
-                        style={scope === 'INTERNAL' ? {
-                            background: 'var(--app-primary)',
-                            color: 'white',
-                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
-                        } : {
-                            background: 'var(--app-surface)',
-                            color: 'var(--app-muted-foreground)',
-                        }}>
-                        Internal
-                    </button>
-                </div>
-                {/* Settings gear — opens Analytics Profile drawer */}
-                <button type="button" onClick={() => setAnalyticsOpen(true)}
-                    title="Analytics profile — stock scope, averaging window, price lookback"
-                    className="p-1.5 rounded-lg transition-colors hover:bg-app-border/20"
-                    style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
-                    <Settings2 size={15} />
-                </button>
-                {/* Document icon */}
-                <button type="button" className="p-1.5 rounded-lg transition-colors"
-                    style={{ background: 'var(--app-primary)', color: 'white' }}>
-                    <FileText size={15} />
-                </button>
             </div>
 
             {/* ═══ Toolbar: Product Lines + Search + Actions ═══ */}
@@ -443,22 +457,6 @@ export default function PurchaseForm({
                         style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
                         <BookOpen size={13} />
                         <span className="hidden md:inline">Catalogue</span>
-                    </button>
-                    <button type="button" onClick={() => setSmartFillOpen(true)}
-                        disabled={!selectedSupplierId}
-                        title={selectedSupplierId ? 'Auto-suggest products below reorder point' : 'Pick a supplier first (⚙️ → Supplier)'}
-                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-app-border/20 disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{ color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                        <Zap size={13} />
-                        <span className="hidden md:inline">Smart Fill</span>
-                    </button>
-                    <button type="button" onClick={() => setImportPoOpen(true)}
-                        disabled={!selectedSupplierId}
-                        title={selectedSupplierId ? 'Import lines from a previous PO' : 'Pick a supplier first (⚙️ → Supplier)'}
-                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-app-border/20 disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
-                        <FileDown size={13} />
-                        <span className="hidden md:inline">Import</span>
                     </button>
                     <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
                         style={{ background: 'var(--app-primary)', color: 'white', boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
@@ -702,10 +700,28 @@ export default function PurchaseForm({
                 <div className="h-[3px] w-full"
                     style={{ background: `linear-gradient(to right, color-mix(in srgb, var(--app-primary) 60%, transparent), color-mix(in srgb, var(--app-primary) 20%, transparent))` }} />
 
-                <div className="flex justify-between items-center px-5 py-4"
+                <div className="flex justify-between items-center gap-4 px-5 py-4"
                     style={{ background: 'var(--app-surface)', borderTop: '1px solid var(--app-border)' }}>
-                    {/* Left: Messages */}
-                    <div className="flex-1">
+                    {/* Left: Live totals chips (spec: po_intelligence_grid.md) */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                            style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
+                            Items <span className="font-mono text-[11px]">{lines.length}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                            style={{ background: 'color-mix(in srgb, #a855f7 10%, transparent)', color: '#a855f7' }}>
+                            Units <span className="font-mono text-[11px]">{lines.reduce((s, l: any) => s + Number(l.quantity || 0), 0)}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                            Cost <span className="font-mono text-[11px] tabular-nums">
+                                {lines.reduce((s, l: any) => s + Number(l.quantity || 0) * Number(l.unitCostHT || 0), 0).toLocaleString()} CFA
+                            </span>
+                        </span>
+                    </div>
+
+                    {/* Right: Messages + Create PO */}
+                    <div className="flex-1 flex justify-end items-center gap-3">
                         {state.message && (
                             <div className={`px-3 py-1.5 rounded-xl text-[11px] font-bold inline-block ${state.errors && Object.keys(state.errors).length > 0 ? '' : ''}`}
                                 style={{
@@ -795,6 +811,30 @@ export default function PurchaseForm({
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                            {/* Quick actions — Smart Fill + Import from PO */}
+                            <section>
+                                <div className="text-[10px] font-black uppercase tracking-widest mb-2"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Quick Actions
+                                </div>
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    <button type="button" onClick={() => { setAnalyticsOpen(false); setSmartFillOpen(true); }}
+                                        disabled={!selectedSupplierId}
+                                        title={selectedSupplierId ? 'Auto-suggest products below reorder point' : 'Pick a supplier first'}
+                                        className="flex items-center justify-center gap-1.5 text-[11px] font-bold px-2 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                        style={{ color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                        <Zap size={12} /> Smart Fill
+                                    </button>
+                                    <button type="button" onClick={() => { setAnalyticsOpen(false); setImportPoOpen(true); }}
+                                        disabled={!selectedSupplierId}
+                                        title={selectedSupplierId ? 'Import lines from a previous PO' : 'Pick a supplier first'}
+                                        className="flex items-center justify-center gap-1.5 text-[11px] font-bold px-2 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                        style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
+                                        <FileDown size={12} /> Import
+                                    </button>
+                                </div>
+                            </section>
+
                             {/* Supplier picker — required for Smart Fill + Import */}
                             <section>
                                 <div className="text-[10px] font-black uppercase tracking-widest mb-2"
@@ -915,6 +955,35 @@ export default function PurchaseForm({
                 </>
             )}
 
+            <ConfigSidebar
+                configOpen={configOpen}
+                setConfigOpen={setConfigOpen}
+                selectedSiteId={selectedSiteId}
+                setSelectedSiteId={(v: number) => setSelectedSiteId(v)}
+                selectedWarehouseId={selectedWarehouseId}
+                setSelectedWarehouseId={(v: number) => setSelectedWarehouseId(v)}
+                selectedSupplierId={selectedSupplierId}
+                setSelectedSupplierId={(v: number) => setSelectedSupplierId(v)}
+                selectedPaymentTermId={selectedPaymentTermId}
+                setSelectedPaymentTermId={(v: number) => setSelectedPaymentTermId(v)}
+                selectedDriverId={selectedDriverId}
+                setSelectedDriverId={(v: number) => setSelectedDriverId(v)}
+                assignedToId={assignedToId}
+                setAssignedToId={(v: number) => setAssignedToId(v)}
+                availableWarehouses={siteWarehouses}
+                safeSites={sites}
+                safeSuppliers={suppliers}
+                safePaymentTerms={paymentTerms}
+                safeDrivers={drivers}
+                safeUsers={users}
+                docNumberPreview={`${scope === 'OFFICIAL' ? 'PO' : 'INT'}-${new Date().getFullYear()}-NEW`}
+                scope={scope}
+                setScope={setScope}
+                canToggleScope={true}
+                notes={notes}
+                setNotes={setNotes}
+            />
+
             <CustomizeSidebar
                 customizeOpen={customizeOpen}
                 setCustomizeOpen={setCustomizeOpen}
@@ -927,6 +996,35 @@ export default function PurchaseForm({
                 activeProfile={activeProfile}
                 visibleColCount={visibleColCount}
             />
+
+            {/* ═══ Right-Edge Floating Icon Rail ═══
+             * Secondary actions — grid/column customize + focus search (Ctrl+K).
+             * Sticks to the viewport right edge, vertically centered lower.
+             */}
+            <div className="fixed right-3 bottom-24 z-30 flex flex-col gap-2">
+                <button type="button" onClick={() => setCustomizeOpen(true)}
+                    title="Customize columns"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+                    style={{
+                        background: 'var(--app-surface)',
+                        color: 'var(--app-muted-foreground)',
+                        border: '1px solid var(--app-border)',
+                        boxShadow: '0 2px 8px color-mix(in srgb, var(--app-foreground) 8%, transparent)',
+                    }}>
+                    <SlidersHorizontal size={14} />
+                </button>
+                <button type="button" onClick={() => searchRef.current?.focus()}
+                    title="Focus search (Ctrl+K)"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+                    style={{
+                        background: 'var(--app-surface)',
+                        color: 'var(--app-muted-foreground)',
+                        border: '1px solid var(--app-border)',
+                        boxShadow: '0 2px 8px color-mix(in srgb, var(--app-foreground) 8%, transparent)',
+                    }}>
+                    <Plus size={14} />
+                </button>
+            </div>
         </form>
     );
 }

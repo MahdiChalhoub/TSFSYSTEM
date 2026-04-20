@@ -59,7 +59,7 @@ export function LayoutShellGateway(props: Props) {
                 user={props.user}
                 organizations={props.organizations}
                 currentSlug={props.currentSlug}>
-                <PeriodWarningBanner />
+                <PeriodWarningBanner isSuperuser={!!props.user?.is_superuser} />
                 {props.children}
             </MobileAdminShell>
         )
@@ -77,7 +77,7 @@ export function LayoutShellGateway(props: Props) {
             />
             <div className="flex-1 flex flex-col min-w-0">
                 <TopHeader sites={props.sites} organizations={props.organizations} currentSlug={props.currentSlug} user={props.user} />
-                <PeriodWarningBanner />
+                <PeriodWarningBanner isSuperuser={!!props.user?.is_superuser} />
                 <AdminShell>{props.children}</AdminShell>
             </div>
         </div>

@@ -14,6 +14,7 @@ router.register(r'auto-rules', views.AutoTaskRuleViewSet, basename='auto-task-ru
 router.register(r'tasks', views.TaskViewSet, basename='task')
 router.register(r'comments', views.TaskCommentViewSet, basename='task-comment')
 router.register(r'requests', views.EmployeeRequestViewSet, basename='employee-request')
+router.register(r'user-groups', views.UserGroupViewSet, basename='user-group')
 
 # Checklists
 router.register(r'checklist-templates', views.ChecklistTemplateViewSet, basename='checklist-template')

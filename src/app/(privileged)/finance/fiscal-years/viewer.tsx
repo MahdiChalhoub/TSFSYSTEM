@@ -1,6 +1,7 @@
 'use client'
 
-import { Calendar, Plus } from 'lucide-react'
+import { Calendar, Plus, Zap } from 'lucide-react'
+import Link from 'next/link'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import PeriodEditor from './period-editor'
 import { WizardModal } from './_components/WizardModal'
@@ -29,11 +30,19 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                             <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Accounting Periods & Closing Cycles</p>
                         </div>
                     </div>
-                    <button onClick={fy.openWizard} disabled={fy.isPending}
-                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
-                        style={{ background: 'var(--app-primary)', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                        <Plus size={13} /> Create Fiscal Year
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <Link href="/workspace/auto-task-rules?module=finance"
+                            title="Auto-task rules for fiscal period events (closing/starting soon, reopen requests)"
+                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
+                            <Zap size={13} /> Reminder Rules
+                        </Link>
+                        <button onClick={fy.openWizard} disabled={fy.isPending}
+                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                            style={{ background: 'var(--app-primary)', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                            <Plus size={13} /> Create Fiscal Year
+                        </button>
+                    </div>
                 </div>
             )}
 

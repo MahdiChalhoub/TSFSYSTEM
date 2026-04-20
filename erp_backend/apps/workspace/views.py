@@ -12,7 +12,7 @@ from django.db.models import Q, Count
 from erp.views import TenantFilterMixin, AuditLogMixin
 from .models import (
     TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
-    TaskAttachment, EmployeeRequest,
+    TaskAttachment, EmployeeRequest, UserGroup,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
     WorkspaceConfig, EmployeePerformance,
@@ -20,7 +20,7 @@ from .models import (
 from .serializers import (
     TaskCategorySerializer, TaskTemplateSerializer, AutoTaskRuleSerializer,
     TaskSerializer, TaskListSerializer, TaskCommentSerializer, TaskAttachmentSerializer,
-    EmployeeRequestSerializer,
+    EmployeeRequestSerializer, UserGroupSerializer,
     ChecklistTemplateSerializer, ChecklistTemplateItemSerializer,
     ChecklistInstanceSerializer, ChecklistItemResponseSerializer,
     QuestionnaireSerializer, QuestionnaireQuestionSerializer,
@@ -44,6 +44,13 @@ class TaskCategoryViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSe
 class TaskTemplateViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
     queryset = TaskTemplate.objects.select_related('category').all()
     serializer_class = TaskTemplateSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class UserGroupViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
+    """Ad-hoc user groups (teams) — assignable from AutoTaskRule + Task."""
+    queryset = UserGroup.objects.prefetch_related('members').select_related('leader').all()
+    serializer_class = UserGroupSerializer
     permission_classes = [IsAuthenticated]
 
 

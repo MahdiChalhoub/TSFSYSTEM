@@ -202,6 +202,20 @@ export async function reopenPeriod(periodId: number) {
     }
 }
 
+export async function requestReopenPeriod(periodId: number, reason: string) {
+    try {
+        const res = await erpFetch(`fiscal-periods/${periodId}/request-reopen/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason }),
+        })
+        return { success: true, tasksCreated: res?.tasks_created ?? 0 }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
 export async function updatePeriodStatus(periodId: number, newStatus: string) {
     try {
         const result = await erpFetch(`fiscal-periods/${periodId}/`, {

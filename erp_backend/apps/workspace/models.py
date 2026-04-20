@@ -161,6 +161,35 @@ class TaskTemplate(TenantModel):
         return self.name
 
 
+class UserGroup(TenantModel):
+    """Ad-hoc team of users. Members can hold different roles; one member
+    may be flagged as leader. Used as an assignee target on AutoTaskRule
+    and Task — a group assignment fans out to one task per member."""
+    name = models.CharField(max_length=150)
+    description = models.TextField(null=True, blank=True)
+    members = models.ManyToManyField(
+        User, related_name='user_groups', blank=True,
+    )
+    leader = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='led_user_groups',
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'workspace_user_group'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organization', 'name'],
+                name='unique_user_group_name_per_org',
+            )
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 class AutoTaskRule(TenantModel):
     """
     Rules for automatic task generation from system events.
@@ -210,6 +239,9 @@ class AutoTaskRule(TenantModel):
         ('DAILY_SUMMARY', 'End-of-Day Summary'),
         ('BANK_STATEMENT', 'Bank Statement Received'),
         ('MONTH_END', 'Month-End Close'),
+        ('PERIOD_CLOSING_SOON', 'Fiscal Period Closing Soon'),
+        ('PERIOD_STARTING_SOON', 'Next Fiscal Period Starting Soon'),
+        ('PERIOD_REOPEN_REQUEST', 'Fiscal Period Reopen Requested'),
         ('LATE_PAYMENT', 'Late Payment Detected'),
         ('CLIENT_FOLLOWUP_DUE', 'Client Follow-Up Due'),
         ('SUPPLIER_FOLLOWUP_DUE', 'Supplier Follow-Up Due'),
@@ -299,6 +331,11 @@ class AutoTaskRule(TenantModel):
         related_name='auto_task_rules_assigned',
         help_text='Assign generated task to this specific user (overrides role)'
     )
+    assign_to_user_group = models.ForeignKey(
+        'workspace.UserGroup', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='auto_task_rules_assigned',
+        help_text='Assign generated task to every member of this ad-hoc user group (overrides role)'
+    )
     broadcast_to_role = models.BooleanField(
         default=False,
         help_text='If True, create a task for EVERY user in the assigned role'
@@ -385,6 +422,11 @@ class Task(TenantModel):
     assigned_to_group = models.ForeignKey(
         'erp.Role', on_delete=models.SET_NULL, null=True, blank=True,
         help_text='Assign to all users with this role'
+    )
+    assigned_to_user_group = models.ForeignKey(
+        'workspace.UserGroup', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='tasks_received',
+        help_text='Ad-hoc user group the task was broadcast to (for provenance)'
     )
 
     # Parent task (for subtasks)

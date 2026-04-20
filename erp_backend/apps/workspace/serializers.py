@@ -4,11 +4,30 @@ Workspace Module — Serializers
 from rest_framework import serializers
 from .models import (
     WorkspaceConfig, TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
-    TaskAttachment, EmployeeRequest,
+    TaskAttachment, EmployeeRequest, UserGroup,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
     EmployeePerformance,
 )
+
+
+class UserGroupSerializer(serializers.ModelSerializer):
+    member_count = serializers.IntegerField(source='members.count', read_only=True)
+    leader_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserGroup
+        fields = (
+            'id', 'name', 'description', 'is_active',
+            'members', 'leader', 'leader_name', 'member_count', 'created_at',
+        )
+        read_only_fields = ('organization', 'created_at', 'member_count', 'leader_name')
+
+    def get_leader_name(self, obj):
+        u = obj.leader
+        if not u:
+            return None
+        return u.get_full_name() or u.username
 
 
 # =============================================================================

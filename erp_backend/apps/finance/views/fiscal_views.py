@@ -526,3 +526,45 @@ class FiscalPeriodViewSet(TenantModelViewSet):
             return Response({"status": "Period Reopened"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'], url_path='request-reopen')
+    def request_reopen(self, request, pk=None):
+        """Non-superuser path: fire PERIOD_REOPEN_REQUEST so the auto-task
+        engine routes it to whoever is configured (specific user, role, or
+        ad-hoc user group). The requester identifies themselves and the
+        reason; the approver sees both in the generated task."""
+        period = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+        reason = (request.data.get('reason') or '').strip()
+        if not reason:
+            return Response(
+                {"error": "A reason is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            from apps.workspace.auto_task_service import fire_auto_tasks
+            requester_name = (
+                user.get_full_name() or user.username if user else 'Anonymous'
+            )
+            created = fire_auto_tasks(
+                period.organization,
+                'PERIOD_REOPEN_REQUEST',
+                {
+                    'user': user,
+                    'reference': f'Period {period.name}',
+                    'extra': {
+                        'object_type': 'FiscalPeriod',
+                        'object_id': period.id,
+                        'Period': period.name,
+                        'Status': period.status,
+                        'Requested by': requester_name,
+                        'Reason': reason,
+                    },
+                },
+            )
+            return Response({
+                "status": "Request sent",
+                "tasks_created": len(created),
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
