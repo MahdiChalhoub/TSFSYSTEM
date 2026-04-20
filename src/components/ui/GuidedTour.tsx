@@ -44,8 +44,20 @@ export function GuidedTour({
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
     const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
     const [actionExecuted, setActionExecuted] = useState(false)
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
     const tooltipRef = useRef<HTMLDivElement>(null)
     const clickListenerRef = useRef<(() => void) | null>(null)
+
+    // Track mobile viewport — bottom sheet layout kicks in below 768 px
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth < 768)
+        window.addEventListener('resize', handler)
+        window.addEventListener('orientationchange', handler)
+        return () => {
+            window.removeEventListener('resize', handler)
+            window.removeEventListener('orientationchange', handler)
+        }
+    }, [])
 
     const tourConfig = getTour(tourId)
     const isActive = activeTourId === tourId
@@ -145,13 +157,28 @@ export function GuidedTour({
         // Retry a few times for dynamically-created elements
         const t1 = setTimeout(positionTooltip, 150)
         const t2 = setTimeout(positionTooltip, 600)
+        // Auto-skip steps whose target never resolves — lets the same tour
+        // definition work on mobile + desktop even when some elements are
+        // desktop-only (split panel, focus mode button, etc.)
+        const t3 = setTimeout(() => {
+            if (!step || step.isWelcome || !step.target) return
+            const el = document.querySelector(step.target)
+            if (el) return
+            if (currentStep >= steps.length - 1) {
+                completeTour()
+            } else {
+                setCurrentStep(s => s + 1)
+                setActionExecuted(false)
+            }
+        }, 1400)
         window.addEventListener('resize', positionTooltip)
         window.addEventListener('scroll', positionTooltip, true)
         return () => {
-            clearTimeout(t1); clearTimeout(t2)
+            clearTimeout(t1); clearTimeout(t2); clearTimeout(t3)
             window.removeEventListener('resize', positionTooltip)
             window.removeEventListener('scroll', positionTooltip, true)
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive, currentStep, positionTooltip, actionExecuted])
 
     // Calculate tooltip position
@@ -323,21 +350,31 @@ export function GuidedTour({
                 </div>
             )}
 
-            {/* ── Tooltip Card ── */}
+            {/* ── Tooltip Card (floating on desktop, bottom sheet on mobile) ── */}
             <div
                 ref={tooltipRef}
-                className={isCentered ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : 'fixed'}
+                className={
+                    isMobile && !isCentered
+                        ? 'fixed left-3 right-3 bottom-3'
+                        : isCentered
+                            ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                            : 'fixed'
+                }
                 style={{
-                    ...(!isCentered ? { top: tooltipPos.top, left: tooltipPos.left } : {}),
-                    width: 360,
-                    maxWidth: 'calc(100vw - 32px)',
-                    borderRadius: 16,
+                    ...(isMobile && !isCentered
+                        ? { maxWidth: '100%' }
+                        : !isCentered
+                            ? { top: tooltipPos.top, left: tooltipPos.left, width: 360, maxWidth: 'calc(100vw - 32px)' }
+                            : { width: 360, maxWidth: 'calc(100vw - 32px)' }),
+                    borderRadius: isMobile && !isCentered ? 20 : 16,
                     overflow: 'hidden',
                     background: 'var(--app-surface)',
                     border: '1px solid var(--app-border)',
-                    boxShadow: `0 16px 48px rgba(0,0,0,0.25)`,
+                    boxShadow: isMobile && !isCentered
+                        ? '0 -8px 32px rgba(0,0,0,0.35)'
+                        : '0 16px 48px rgba(0,0,0,0.25)',
                     zIndex: 10002,
-                    transition: !isCentered ? 'top 0.3s ease, left 0.3s ease' : undefined,
+                    transition: !isCentered && !isMobile ? 'top 0.3s ease, left 0.3s ease' : undefined,
                 }}
                 onClick={e => e.stopPropagation()}
             >
