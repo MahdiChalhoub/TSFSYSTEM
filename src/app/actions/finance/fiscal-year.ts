@@ -228,7 +228,7 @@ export async function lockFiscalYear(id: number) {
         await erpFetch(`fiscal-years/${id}/lock/`, {
             method: 'POST'
         })
-        revalidatePath('/finance/finance/fiscal-years')
+        revalidatePath('/finance/fiscal-years')
         return { success: true }
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error)

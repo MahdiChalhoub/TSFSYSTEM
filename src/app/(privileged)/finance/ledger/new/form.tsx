@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, useEffect } from 'react'
 import { createJournalEntry, updateJournalEntry } from '@/app/actions/finance/ledger'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Save, FileText, Send, CheckCircle2, Building2, User, LayoutGrid, Hash, Calculator, Maximize2, Minimize2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { KPIStrip } from '@/components/ui/KPIStrip'
+import { useAdmin } from '@/context/AdminContext'
 
 // Helper to find the correct Fiscal Year/Period for a date
 function findFiscalContext(date: string, years: Record<string, any>[]) {
@@ -30,14 +30,23 @@ export default function JournalEntryForm({
 }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
+    const [focusMode, setFocusMode] = useState(false)
+    const { viewScope, setViewScope, canToggleScope } = useAdmin()
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(p => !p) }
+        }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, [])
 
     const [header, setHeader] = useState({
         transactionDate: initialEntry ? new Date(initialEntry.transactionDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         description: initialEntry?.description || '',
         reference: initialEntry?.reference || ''
     })
-
-    const [isFocusMode, setIsFocusMode] = useState(false)
 
     const [lines, setLines] = useState(initialEntry?.lines.map((l: Record<string, any>) => ({
         accountId: l.accountId?.toString() || l.account?.id?.toString() || '',
@@ -187,91 +196,240 @@ export default function JournalEntryForm({
     const activePeriod = activeYear?.periods?.find((p: Record<string, any>) => p.id === fiscalContext.periodId)
 
     return (
-        <form onSubmit={e => e.preventDefault()} className="flex-1 min-h-0 flex flex-col gap-4">
-            
-            {/* ── Top Control & KPIs ── */}
-            <div className="bg-app-surface/60 backdrop-blur-md rounded-2xl border border-app-border/40 p-4 shadow-sm shrink-0">
-                <div className="flex flex-col xl:flex-row gap-4 justify-between xl:items-end">
-                    {/* Journal Control Data (Grid) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }} className="flex-1">
-                        <div>
-                            <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Transaction Date</label>
-                            <input
-                                type="date"
-                                required
-                                value={header.transactionDate}
-                                onChange={e => setHeader({ ...header, transactionDate: e.target.value })}
-                                className="w-full text-[12px] font-bold bg-app-surface border border-app-border/50 rounded-xl px-3 py-2 shadow-sm focus:border-app-primary outline-none transition-all"
-                            />
-                        </div>
-                        <div style={{ gridColumn: 'span min(2, 100%)' }}>
-                            <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Global Description</label>
-                            <input
-                                required
-                                value={header.description}
-                                onChange={e => setHeader({ ...header, description: e.target.value })}
-                                className="w-full text-[12px] font-bold bg-app-surface border border-app-border/50 rounded-xl px-3 py-2 shadow-sm focus:border-app-primary outline-none transition-all placeholder:text-app-muted-foreground/40"
-                                placeholder="Reason for entry..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 ml-1">Reference</label>
-                            <input
-                                value={header.reference}
-                                onChange={e => setHeader({ ...header, reference: e.target.value })}
-                                className="w-full text-[12px] font-bold font-mono bg-app-surface border border-app-border/50 rounded-xl px-3 py-2 shadow-sm focus:border-app-primary outline-none transition-all placeholder:text-app-muted-foreground/40"
-                                placeholder="Auto-generated"
-                            />
-                        </div>
-                    </div>
+        <form onSubmit={e => e.preventDefault()} className="flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
 
-                    {/* Vertical KPIs */}
-                    <div className="flex gap-2 self-start xl:self-auto w-full xl:w-auto shrink-0 mt-2 xl:mt-0">
-                        <div className="flex-1 xl:w-36 bg-app-surface border border-app-primary/20 rounded-xl px-4 py-2.5 shadow-sm flex flex-col justify-center items-end" style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, transparent)' }}>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-app-primary/70">Dr</span>
-                            <span className="text-[14px] font-black text-app-primary font-mono">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex-1 xl:w-36 bg-app-surface border border-rose-500/20 rounded-xl px-4 py-2.5 shadow-sm flex flex-col justify-center items-end" style={{ background: 'color-mix(in srgb, var(--app-error) 3%, transparent)' }}>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-rose-500/70">Cr</span>
-                            <span className="text-[14px] font-black text-rose-500 font-mono">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className={`flex-1 xl:w-40 border rounded-xl px-4 py-2.5 shadow-sm flex flex-col justify-center items-end ${isBalanced ? 'border-emerald-500/30' : 'border-app-warning/30'}`} style={{ background: isBalanced ? 'color-mix(in srgb, var(--app-success) 5%, transparent)' : 'color-mix(in srgb, var(--app-warning) 5%, transparent)' }}>
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${isBalanced ? 'text-emerald-500/70' : 'text-app-warning/70'}`}>Diff</span>
-                            <span className={`text-[14px] font-black font-mono ${isBalanced ? 'text-emerald-500' : 'text-app-warning'}`}>
-                                {isBalanced ? 'BALANCED' : Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </span>
-                        </div>
+            {/* ── Page Header ── */}
+            {!focusMode && <div className="flex items-start justify-between gap-4 mb-4 flex-shrink-0 px-4 md:px-6 pt-4 md:pt-6">
+                <div className="flex items-center gap-3">
+                    <div
+                        className="page-header-icon bg-app-primary"
+                        style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}
+                    >
+                        <FileText size={20} className="text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                            Post Manual Journal
+                        </h1>
+                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                            General Ledger · Dimensional Engine
+                        </p>
                     </div>
                 </div>
-            </div>
 
-            {/* ── Advanced Financial Matrix (Scrollable container) ── */}
-            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/40 rounded-2xl overflow-hidden flex flex-col shadow-sm relative">
-                {/* Embedded Header */}
-                <div className="flex-shrink-0 flex items-center gap-2 px-5 py-3 bg-app-surface/60 border-b border-app-border/40 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider backdrop-blur-md">
-                    <div className="w-6 h-6 rounded-lg bg-app-info/10 flex items-center justify-center text-app-info">
-                        <LayoutGrid size={13} />
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                    {/* Scope Toggle */}
+                    <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--app-border)' }}>
+                        {(['OFFICIAL', 'INTERNAL'] as const).map(scope => {
+                            const isActive = viewScope === scope
+                            return (
+                                <button
+                                    key={scope}
+                                    type="button"
+                                    onClick={() => setViewScope(scope)}
+                                    className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all"
+                                    style={{
+                                        background: isActive ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
+                                        color: isActive ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                        borderRight: scope === 'OFFICIAL' ? '1px solid var(--app-border)' : 'none',
+                                    }}
+                                >
+                                    {scope === 'OFFICIAL' ? 'Official' : 'Internal'}
+                                </button>
+                            )
+                        })}
                     </div>
+
+                    {/* Focus Mode */}
+                    <button
+                        type="button"
+                        onClick={() => setFocusMode(p => !p)}
+                        title="Toggle Focus Mode (Ctrl+Q)"
+                        className="p-1.5 rounded-xl border transition-all"
+                        style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}
+                    >
+                        {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                    </button>
+                </div>
+            </div>}
+
+            {/* ── KPI Strip ── */}
+            {!focusMode && <div className="flex-shrink-0 mb-3 px-4 md:px-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                {[
+                    { label: 'Total Debit', value: totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }), color: 'var(--app-primary)', icon: <Calculator size={14} /> },
+                    { label: 'Total Credit', value: totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }), color: 'var(--app-error, #EF4444)', icon: <Calculator size={14} /> },
+                    { label: 'Balance State', value: isBalanced ? 'Balanced' : Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 }), color: isBalanced ? 'var(--app-success, #22c55e)' : 'var(--app-warning, #F59E0B)', icon: <Hash size={14} /> },
+                ].map(s => (
+                    <div key={s.label}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                        }}>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
+                            {s.icon}
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-[10px] font-bold uppercase tracking-wider"
+                                style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                            <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>}
+
+            {/* ── Journal Control Toolbar ── */}
+            {!focusMode && <div className="flex items-center gap-2 mb-3 flex-shrink-0 px-4 md:px-6">
+                {/* Date */}
+                <div className="flex-shrink-0 w-[140px]">
+                    <input
+                        type="date"
+                        required
+                        value={header.transactionDate}
+                        onChange={e => setHeader({ ...header, transactionDate: e.target.value })}
+                        className="w-full pl-3 pr-2 py-2 text-[12px] md:text-[13px] font-bold rounded-xl outline-none transition-all"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                            color: 'var(--app-foreground)',
+                        }}
+                        onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-border)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                        onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                    />
+                </div>
+
+                {/* Description */}
+                <div className="flex-1">
+                    <input
+                        required
+                        value={header.description}
+                        onChange={e => setHeader({ ...header, description: e.target.value })}
+                        placeholder="Journal description..."
+                        className="w-full pl-3 pr-3 py-2 text-[12px] md:text-[13px] rounded-xl outline-none transition-all"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                            color: 'var(--app-foreground)',
+                        }}
+                        onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-border)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                        onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                    />
+                </div>
+
+                {/* Reference */}
+                <div className="flex-shrink-0 w-[130px] hidden sm:block">
+                    <input
+                        value={header.reference}
+                        onChange={e => setHeader({ ...header, reference: e.target.value })}
+                        placeholder="Reference..."
+                        className="w-full pl-3 pr-2 py-2 text-[11px] font-mono rounded-xl outline-none transition-all"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                            color: 'var(--app-foreground)',
+                        }}
+                        onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-border)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                        onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                    />
+                </div>
+
+                {/* Fiscal Badge */}
+                {fiscalContext.yearId ? (
+                    <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[11px] font-bold flex-shrink-0"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-success) 6%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)',
+                            color: 'var(--app-success)',
+                        }}>
+                        <CheckCircle2 size={12} />
+                        <span className="hidden lg:inline">{activeYear?.name}</span>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[10px] font-bold flex-shrink-0"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-error) 6%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)',
+                            color: 'var(--app-error)',
+                        }}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" /> No Fiscal Year
+                    </div>
+                )}
+            </div>}
+
+            {/* ── Focus Mode: Compact inline header ── */}
+            {focusMode && (
+                <div className="flex items-center gap-2 flex-shrink-0 px-4 md:px-6 py-2 pt-3">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
+                            <FileText size={14} className="text-white" />
+                        </div>
+                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Post Manual Journal</span>
+                    </div>
+
+                    {/* Mini KPIs in focus mode */}
+                    <div className="flex items-center gap-3 ml-auto mr-2">
+                        <span className="text-[11px] font-black font-mono tabular-nums" style={{ color: 'var(--app-primary)' }}>Dr {totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className="text-[11px] font-black font-mono tabular-nums" style={{ color: 'var(--app-error)' }}>Cr {totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className={`text-[11px] font-black font-mono tabular-nums`} style={{ color: isBalanced ? 'var(--app-success)' : 'var(--app-warning)' }}>
+                            {isBalanced ? '✓ BAL' : `Δ ${Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setFocusMode(false)}
+                        title="Exit Focus Mode (Ctrl+Q)"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all flex-shrink-0 text-[11px] font-bold"
+                        style={{
+                            color: 'var(--app-primary)',
+                            borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
+                        }}
+                    >
+                        <Minimize2 size={13} /> Exit
+                    </button>
+                </div>
+            )}
+
+            {/* ── Dimensional Entry Matrix (Tree Table Container pattern) ── */}
+            <div
+                className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col mx-4 md:mx-6"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                }}
+            >
+                {/* Column Headers */}
+                <div
+                    className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 border-b text-[10px] font-black uppercase tracking-wider"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                        borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+                        color: 'var(--app-muted-foreground)',
+                    }}
+                >
+                    <LayoutGrid size={13} style={{ color: 'var(--app-info)' }} />
                     Dimensional Entry Matrix
                 </div>
-                
+
                 {/* Scrollable Body */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
                     {/* Desktop view (table) */}
                     <div className="hidden md:block">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-app-surface border-b border-app-border/40 text-left">
-                                <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider min-w-[220px]">Ledger Account</th>
-                                <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-40">Subledger (Contact)</th>
-                                <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-32">Cost Center</th>
-                                <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider min-w-[180px]">Line Description</th>
-                                <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-36 text-right">Debit</th>
-                                <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-36 text-right">Credit</th>
-                                <th className="px-4 py-3 w-10"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-app-surface border-b border-app-border/40 text-left">
+                                    <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider min-w-[220px]">Ledger Account</th>
+                                    <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-40">Subledger (Contact)</th>
+                                    <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-32">Cost Center</th>
+                                    <th className="px-3 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider min-w-[180px]">Line Description</th>
+                                    <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-36 text-right">Debit</th>
+                                    <th className="px-4 py-3 font-black text-[10px] uppercase text-app-muted-foreground tracking-wider w-36 text-right">Credit</th>
+                                    <th className="px-4 py-3 w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
                             {lines.map((line: any, idx: number) => (
                                 <tr key={idx} className="border-b border-app-border/20 last:border-0 hover:bg-app-surface/40 group transition-colors">
                                     <td className="px-4 py-2.5 relative">
@@ -400,39 +558,53 @@ export default function JournalEntryForm({
                             ))}
                         </tbody>
                         <tfoot>
-                            <tr className="bg-app-surface/80">
-                                <td colSpan={4} className="px-5 py-3 text-right">
+                            <tr style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)' }}>
+                                <td colSpan={4} className="px-5 py-2.5 text-right">
                                     {isBalanced ? (
-                                        <div className="inline-flex items-center gap-2 text-emerald-500 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                            TRIAL BALANCE ZEROED
+                                        <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                                            style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-success) 15%, transparent)' }}>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                                            Trial Balance Zeroed
                                         </div>
                                     ) : (
-                                        <div className="inline-flex items-center gap-3">
-                                            <div className="flex items-center gap-2 text-rose-500 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20">
-                                                <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-                                                DIFF: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        <div className="inline-flex items-center gap-2">
+                                            <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                                                style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error) 15%, transparent)' }}>
+                                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                                                Diff: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => addLine()}
-                                                className="text-[10px] text-app-muted-foreground hover:text-app-foreground underline uppercase font-bold"
-                                            >
-                                                Add Offset Line
-                                            </button>
                                         </div>
                                     )}
                                 </td>
-                                <td className="px-4 py-4 text-right font-mono font-bold text-[15px] border-t-2 border-app-border" style={{ color: totalDebit > 0 ? 'var(--app-primary)' : 'inherit' }}>
-                                    {totalDebit > 0 ? totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
+                                <td className="px-4 py-2.5 text-right font-mono font-bold text-[13px] tabular-nums"
+                                    style={{ color: totalDebit > 0 ? 'var(--app-primary)' : 'var(--app-muted-foreground)', borderTop: '2px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
+                                    {totalDebit > 0 ? totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
                                 </td>
-                                <td className="px-4 py-4 text-right font-mono font-bold text-[15px] border-t-2 border-app-border text-rose-500" style={{ color: totalCredit > 0 ? 'var(--app-error)' : 'inherit' }}>
-                                    {totalCredit > 0 ? totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
+                                <td className="px-4 py-2.5 text-right font-mono font-bold text-[13px] tabular-nums"
+                                    style={{ color: totalCredit > 0 ? 'var(--app-error)' : 'var(--app-muted-foreground)', borderTop: '2px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
+                                    {totalCredit > 0 ? totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
                                 </td>
-                                <td className="px-4 py-4 border-t-2 border-app-border"></td>
+                                <td style={{ borderTop: '2px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}></td>
                             </tr>
                         </tfoot>
                     </table>
+
+                    {/* Add line button inside desktop scroll */}
+                    <div className="px-3 py-2">
+                        <button
+                            type="button"
+                            onClick={addLine}
+                            className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                            style={{
+                                border: '1px dashed color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                color: 'var(--app-muted-foreground)',
+                            }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-primary)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-primary)'; (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-primary) 4%, transparent)' }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 60%, transparent)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                        >
+                            <Plus size={13} /> Add Line
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile view (cards) */}
@@ -531,7 +703,7 @@ export default function JournalEntryForm({
                                 </div>
                             </div>
                             
-                            {/* Remove button absolute positioned bottom right */}
+                            {/* Remove button */}
                             <button
                                 type="button"
                                 onClick={() => removeLine(idx)}
@@ -542,61 +714,82 @@ export default function JournalEntryForm({
                         </div>
                     ))}
                     
-                    {/* Mobile summary footer inside the mobile view block */}
-                    <div className="bg-app-surface p-3 flex flex-col gap-1.5 rounded-xl border border-app-border/40 font-mono shadow-sm">
+                    {/* Mobile summary */}
+                    <div className="p-3 flex flex-col gap-1.5 rounded-xl font-mono"
+                        style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                         <div className="flex justify-between items-center text-[12px] font-bold">
-                            <span className="text-app-primary">Dr: {totalDebit > 0 ? totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</span>
-                            <span className="text-rose-500">Cr: {totalCredit > 0 ? totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</span>
+                            <span style={{ color: 'var(--app-primary)' }}>Dr: {totalDebit > 0 ? totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</span>
+                            <span style={{ color: 'var(--app-error)' }}>Cr: {totalCredit > 0 ? totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</span>
                         </div>
                         {isBalanced ? (
-                            <div className="text-emerald-500 text-[9px] font-black uppercase tracking-widest">
-                                TRIAL BALANCE ZEROED
-                            </div>
+                            <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success)' }}>Trial Balance Zeroed</div>
                         ) : (
-                            <div className="text-rose-500 text-[9px] font-black uppercase tracking-widest">
-                                DIFF: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </div>
+                            <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-error)' }}>Diff: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                         )}
                     </div>
-                </div>
 
-                <div className="p-2 border-t border-app-border/40 bg-app-surface/50 border-b">
+                    {/* Mobile add line */}
                     <button
                         type="button"
                         onClick={addLine}
-                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-dashed border-app-border/60 text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface hover:border-app-primary/40 text-xs font-black uppercase tracking-widest transition-all"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        style={{
+                            border: '1px dashed color-mix(in srgb, var(--app-border) 60%, transparent)',
+                            color: 'var(--app-muted-foreground)',
+                        }}
                     >
-                        <Plus size={14} /> Insert Additional Vector Line
+                        <Plus size={13} /> Add Line
                     </button>
                 </div>
-            </div>
+                </div>
             </div>
 
-            {/* ── Action Footer ── */}
-            <div className="shrink-0 flex justify-between items-center bg-app-surface/60 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-app-border/40">
+            {/* ── Action Footer (COA-style) ── */}
+            <div
+                className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2.5 mx-4 md:mx-6 rounded-b-2xl"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                    borderTop: 'none',
+                    marginTop: '-1px',
+                    marginBottom: '8px',
+                    color: 'var(--app-muted-foreground)',
+                }}
+            >
                 <button
                     type="button"
                     onClick={() => router.back()}
-                    className="px-6 py-2.5 text-app-muted-foreground font-black uppercase tracking-widest text-[11px] hover:bg-app-surface rounded-xl transition-colors"
+                    className="text-[11px] font-bold transition-colors"
+                    style={{ color: 'var(--app-muted-foreground)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
                 >
                     Cancel
                 </button>
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                     <button
                         type="button"
                         onClick={() => handleAction('DRAFT')}
                         disabled={isPending}
-                        className="flex items-center justify-center gap-2 bg-app-surface text-app-foreground px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[11px] hover:brightness-95 disabled:opacity-50 transition-all border border-app-border shadow-sm min-w-[140px]"
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-all disabled:opacity-50"
+                        style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
                     >
-                        {isPending ? 'Saving...' : <><Save size={14} /> Save Draft</>}
+                        <Save size={13} /> {isPending ? 'Saving...' : 'Save Draft'}
                     </button>
                     <button
                         type="button"
                         onClick={() => handleAction('POSTED')}
                         disabled={isPending || !isBalanced}
-                        className="flex items-center justify-center gap-2 bg-app-primary text-white px-8 py-2.5 rounded-xl font-black uppercase tracking-widest text-[11px] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_color-mix(in_srgb,var(--app-primary)_40%,transparent)] transition-all min-w-[160px]"
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                            background: 'var(--app-primary)',
+                            color: '#fff',
+                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                        }}
                     >
-                        {isPending ? 'Processing...' : <><Send size={14} /> Post to Ledger</>}
+                        <Send size={13} /> {isPending ? 'Processing...' : 'Post to Ledger'}
                     </button>
                 </div>
             </div>
