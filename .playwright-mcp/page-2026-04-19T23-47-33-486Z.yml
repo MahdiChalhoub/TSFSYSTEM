@@ -1,0 +1,45 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: S
+      - heading "SAAS CONTROL" [level=2] [ref=e7]
+    - generic [ref=e8]:
+      - img [ref=e11]
+      - heading "Welcome Back" [level=2] [ref=e20]
+      - paragraph [ref=e21]: Enter your credentials to access the workspace.
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - text: Username
+          - generic [ref=e25]:
+            - img [ref=e26]
+            - textbox [ref=e29]
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e32]: Password
+            - link "Forgot?" [ref=e33] [cursor=pointer]:
+              - /url: /forgot-password
+          - generic [ref=e34]:
+            - img [ref=e35]
+            - textbox [ref=e38]
+            - button [ref=e39]:
+              - img [ref=e40]
+      - button "Sign In" [ref=e43]:
+        - generic [ref=e44]:
+          - text: Sign In
+          - img [ref=e45]
+      - generic [ref=e47]:
+        - link "Register My Business" [ref=e48] [cursor=pointer]:
+          - /url: /register/business
+          - button "Register My Business" [ref=e49]:
+            - img [ref=e50]
+            - text: Register My Business
+        - paragraph [ref=e54]:
+          - text: Need access to an existing business?
+          - link "Request Employee Access" [ref=e55] [cursor=pointer]:
+            - /url: /register/user
+    - generic [ref=e56]:
+      - button "🗑️ Clear Session & Cookies" [ref=e57]
+      - paragraph [ref=e58]: Powered by Enterprise ERP · End-to-End Encrypted
+  - region "Notifications alt+T"
+  - alert [ref=e59]
