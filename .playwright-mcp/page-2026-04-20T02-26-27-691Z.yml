@@ -1,0 +1,251 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e469]:
+    - banner [ref=e470]:
+      - button "Menu" [ref=e471]:
+        - img [ref=e472]
+      - heading "Brands" [level=1] [ref=e474]
+      - button "Search" [ref=e475]:
+        - img [ref=e476]
+      - link "Notifications" [ref=e479] [cursor=pointer]:
+        - /url: /settings/notifications
+        - img [ref=e480]
+      - button "Account" [ref=e483]: A
+    - main [ref=e484]:
+      - generic [ref=e487]:
+        - generic [ref=e489]:
+          - img [ref=e492]
+          - generic [ref=e496]:
+            - generic [ref=e497]: Brands
+            - generic [ref=e498]: 16 brands · 81 products
+          - button "New Brand" [ref=e499]:
+            - img [ref=e500]
+            - generic [ref=e501]: New Brand
+          - button [ref=e503]:
+            - img [ref=e504]
+        - generic [ref=e508]:
+          - generic [ref=e510]:
+            - generic [ref=e511]:
+              - img [ref=e513]
+              - generic [ref=e517]:
+                - generic [ref=e518]: Total
+                - generic [ref=e519]: "16"
+            - generic [ref=e520]:
+              - img [ref=e522]
+              - generic [ref=e526]:
+                - generic [ref=e527]: With Products
+                - generic [ref=e528]: "14"
+            - generic [ref=e529]:
+              - img [ref=e531]
+              - generic [ref=e534]:
+                - generic [ref=e535]: With Countries
+                - generic [ref=e536]: "0"
+            - generic [ref=e537]:
+              - img [ref=e539]
+              - generic [ref=e542]:
+                - generic [ref=e543]: With Categories
+                - generic [ref=e544]: "3"
+            - generic [ref=e545]:
+              - img [ref=e547]
+              - generic [ref=e550]:
+                - generic [ref=e551]: Products
+                - generic [ref=e552]: "81"
+          - generic [ref=e554]:
+            - generic [ref=e555]:
+              - img [ref=e556]
+              - textbox "Search brands…" [ref=e559]
+            - button "Expand all" [ref=e560]:
+              - img [ref=e561]
+          - generic [ref=e565]:
+            - generic [ref=e566]:
+              - button "All (16)" [ref=e567]
+              - button "test3 1" [ref=e568]:
+                - text: test3
+                - generic [ref=e569]: "1"
+              - button "Skincare 2" [ref=e570]:
+                - text: Skincare
+                - generic [ref=e571]: "2"
+            - button "TE tes test" [ref=e572]:
+              - generic [ref=e573]:
+                - generic [ref=e574]: TE
+                - generic [ref=e576]:
+                  - generic [ref=e577]: tes
+                  - generic [ref=e578]: test
+                - img [ref=e579]
+            - button "TE test2 test2" [ref=e581]:
+              - generic [ref=e582]:
+                - generic [ref=e583]: TE
+                - generic [ref=e585]:
+                  - generic [ref=e586]: test2
+                  - generic [ref=e587]: test2
+                - img [ref=e588]
+            - button "CH Chanel 9" [ref=e590]:
+              - generic [ref=e591]:
+                - generic [ref=e592]: CH
+                - generic [ref=e593]:
+                  - generic [ref=e595]: Chanel
+                  - generic [ref=e597]:
+                    - img [ref=e598]
+                    - text: "9"
+                - img [ref=e602]
+            - button "DI Dior 16 test3" [ref=e604]:
+              - generic [ref=e605]:
+                - generic [ref=e606]: DI
+                - generic [ref=e607]:
+                  - generic [ref=e609]: Dior
+                  - generic [ref=e611]:
+                    - img [ref=e612]
+                    - text: "16"
+                  - generic [ref=e616]:
+                    - img [ref=e617]
+                    - generic [ref=e620]: test3
+                - img [ref=e621]
+            - button "GU Guerlain 7" [ref=e623]:
+              - generic [ref=e624]:
+                - generic [ref=e625]: GU
+                - generic [ref=e626]:
+                  - generic [ref=e628]: Guerlain
+                  - generic [ref=e630]:
+                    - img [ref=e631]
+                    - text: "7"
+                - img [ref=e635]
+            - button "TO Tom Ford 3" [ref=e637]:
+              - generic [ref=e638]:
+                - generic [ref=e639]: TO
+                - generic [ref=e640]:
+                  - generic [ref=e642]: Tom Ford
+                  - generic [ref=e644]:
+                    - img [ref=e645]
+                    - text: "3"
+                - img [ref=e649]
+            - button "YS YSL 6" [ref=e651]:
+              - generic [ref=e652]:
+                - generic [ref=e653]: YS
+                - generic [ref=e654]:
+                  - generic [ref=e656]: YSL
+                  - generic [ref=e658]:
+                    - img [ref=e659]
+                    - text: "6"
+                - img [ref=e663]
+            - button "LA Lancôme 11" [ref=e665]:
+              - generic [ref=e666]:
+                - generic [ref=e667]: LA
+                - generic [ref=e668]:
+                  - generic [ref=e670]: Lancôme
+                  - generic [ref=e672]:
+                    - img [ref=e673]
+                    - text: "11"
+                - img [ref=e677]
+            - button "GI Givenchy 4" [ref=e679]:
+              - generic [ref=e680]:
+                - generic [ref=e681]: GI
+                - generic [ref=e682]:
+                  - generic [ref=e684]: Givenchy
+                  - generic [ref=e686]:
+                    - img [ref=e687]
+                    - text: "4"
+                - img [ref=e691]
+            - button "PR Prada 3" [ref=e693]:
+              - generic [ref=e694]:
+                - generic [ref=e695]: PR
+                - generic [ref=e696]:
+                  - generic [ref=e698]: Prada
+                  - generic [ref=e700]:
+                    - img [ref=e701]
+                    - text: "3"
+                - img [ref=e705]
+            - button "VE Versace 6" [ref=e707]:
+              - generic [ref=e708]:
+                - generic [ref=e709]: VE
+                - generic [ref=e710]:
+                  - generic [ref=e712]: Versace
+                  - generic [ref=e714]:
+                    - img [ref=e715]
+                    - text: "6"
+                - img [ref=e719]
+            - button "DO Dolce Gabbana 3" [ref=e721]:
+              - generic [ref=e722]:
+                - generic [ref=e723]: DO
+                - generic [ref=e724]:
+                  - generic [ref=e726]: Dolce Gabbana
+                  - generic [ref=e728]:
+                    - img [ref=e729]
+                    - text: "3"
+                - img [ref=e733]
+            - button "CA Calvin Klein 3" [ref=e735]:
+              - generic [ref=e736]:
+                - generic [ref=e737]: CA
+                - generic [ref=e738]:
+                  - generic [ref=e740]: Calvin Klein
+                  - generic [ref=e742]:
+                    - img [ref=e743]
+                    - text: "3"
+                - img [ref=e747]
+            - button "AR Armani 4" [ref=e749]:
+              - generic [ref=e750]:
+                - generic [ref=e751]: AR
+                - generic [ref=e752]:
+                  - generic [ref=e754]: Armani
+                  - generic [ref=e756]:
+                    - img [ref=e757]
+                    - text: "4"
+                - img [ref=e761]
+            - button "BU Burberry 2 Skincare" [ref=e763]:
+              - generic [ref=e764]:
+                - generic [ref=e765]: BU
+                - generic [ref=e766]:
+                  - generic [ref=e768]: Burberry
+                  - generic [ref=e770]:
+                    - img [ref=e771]
+                    - text: "2"
+                  - generic [ref=e775]:
+                    - img [ref=e776]
+                    - generic [ref=e779]: Skincare
+                - img [ref=e780]
+            - button "HU Hugo Boss 4 Skincare" [ref=e782]:
+              - generic [ref=e783]:
+                - generic [ref=e784]: HU
+                - generic [ref=e785]:
+                  - generic [ref=e787]: Hugo Boss
+                  - generic [ref=e789]:
+                    - img [ref=e790]
+                    - text: "4"
+                  - generic [ref=e794]:
+                    - img [ref=e795]
+                    - generic [ref=e798]: Skincare
+                - img [ref=e799]
+          - generic [ref=e802]:
+            - generic [ref=e803]: 16 brands
+            - generic [ref=e804]: ·
+            - generic [ref=e805]: 81 products
+        - button "New Brand" [ref=e806]:
+          - img [ref=e807]
+    - navigation "Primary" [ref=e808]:
+      - link "Home" [ref=e809] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e810]:
+          - img [ref=e812]
+          - generic [ref=e817]: Home
+      - link "Inventory" [ref=e818] [cursor=pointer]:
+        - /url: /inventory/categories
+        - generic [ref=e819]:
+          - img [ref=e821]
+          - generic [ref=e825]: Inventory
+      - link "Sales" [ref=e826] [cursor=pointer]:
+        - /url: /sales
+        - generic [ref=e827]:
+          - img [ref=e829]
+          - generic [ref=e833]: Sales
+      - link "Finance" [ref=e834] [cursor=pointer]:
+        - /url: /finance/chart-of-accounts
+        - generic [ref=e835]:
+          - img [ref=e837]
+          - generic [ref=e840]: Finance
+      - button "More" [ref=e841]:
+        - generic [ref=e842]:
+          - img [ref=e844]
+          - generic [ref=e848]: More
+  - button [ref=e850]:
+    - img [ref=e851]
+  - button "Open Next.js Dev Tools" [ref=e465] [cursor=pointer]:
+    - img [ref=e466]
+  - alert [ref=e854]

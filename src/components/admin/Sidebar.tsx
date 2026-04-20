@@ -42,6 +42,7 @@ export function Sidebar({
     // ── All hooks MUST be declared before any conditional returns (React rules-of-hooks) ──
     const { installedModules, dynamicItems } = useSidebar({ initialModuleCodes, initialDynamicItems });
     const [devSectionOpen, setDevSectionOpen] = useState(true);
+    const [inProgressSectionOpen, setInProgressSectionOpen] = useState(true);
 
     // In topnav mode the sidebar is hidden — navigation lives in the header
     if (navLayout === 'topnav') return null;
@@ -67,10 +68,12 @@ export function Sidebar({
         ]
         : processedItems;
 
-    // Split items by stage: production (finished) vs development (in progress).
+    // Split items by stage: production (finished) vs in-progress vs development (not started).
     // To promote an item to production, add `stage: 'production'` to it in the menu data.
+    // To mark as in-progress, add `stage: 'in-progress'`.
     const productionItems = filteredItems.filter((i: any) => i.stage === 'production');
-    const developmentItems = filteredItems.filter((i: any) => i.stage !== 'production');
+    const inProgressItems = filteredItems.filter((i: any) => i.stage === 'in-progress');
+    const developmentItems = filteredItems.filter((i: any) => i.stage !== 'production' && i.stage !== 'in-progress');
 
     return (
         <React.Fragment>
@@ -168,6 +171,38 @@ export function Sidebar({
                             </div>
                             {productionItems.map((item: any, idx: number) => (
                                 <React.Fragment key={`prod-${idx}`}>
+                                    {idx > 0 && item.visibility === 'saas' && (
+                                        <div className="my-2 mx-2 flex items-center gap-2">
+                                            <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
+                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Platform</span>
+                                            <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
+                                        </div>
+                                    )}
+                                    <MenuItem item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
+                                </React.Fragment>
+                            ))}
+                        </>
+                    )}
+
+                    {inProgressItems.length > 0 && (
+                        <>
+                            <div
+                                className="my-3 mx-2 flex items-center gap-2 cursor-pointer select-none group"
+                                onClick={() => setInProgressSectionOpen(!inProgressSectionOpen)}
+                            >
+                                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--app-info, #3b82f6)' }} />
+                                <span className="text-[9px] font-black uppercase tracking-widest transition-colors" style={{ color: 'var(--app-info, #3b82f6)', opacity: 0.85 }}>
+                                    In Progress ({inProgressItems.length})
+                                </span>
+                                <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)' }} />
+                                <ChevronRight
+                                    size={12}
+                                    className={clsx("transition-transform duration-200", inProgressSectionOpen ? "rotate-90" : "")}
+                                    style={{ color: 'var(--app-info, #3b82f6)', opacity: 0.6 }}
+                                />
+                            </div>
+                            {inProgressSectionOpen && inProgressItems.map((item: any, idx: number) => (
+                                <React.Fragment key={`inprog-${idx}`}>
                                     {idx > 0 && item.visibility === 'saas' && (
                                         <div className="my-2 mx-2 flex items-center gap-2">
                                             <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
