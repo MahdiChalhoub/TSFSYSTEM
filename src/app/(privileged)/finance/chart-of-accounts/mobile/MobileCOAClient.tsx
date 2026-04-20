@@ -15,6 +15,8 @@ import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { MobileAccountRow } from './MobileAccountRow'
 import { MobileAccountDetailSheet } from './MobileAccountDetailSheet'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-chart-of-accounts-mobile'
 
 export function MobileCOAClient({ accounts }: { accounts: any[] }) {
     const router = useRouter()
@@ -121,6 +123,7 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                 subtitle: `${stats.total} accounts · ${stats.active} active`,
                 icon: <BookOpen size={20} />,
                 iconColor: 'var(--app-primary)',
+                tourId: 'finance-chart-of-accounts-mobile',
                 searchPlaceholder: 'Search by code, name, SYSCOHADA…',
                 primaryAction: {
                     label: 'New Account',
@@ -164,13 +167,16 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                 },
             }}
             modals={
-                <MobileActionSheet
-                    open={actionNode !== null}
-                    onClose={() => setActionNode(null)}
-                    title={actionNode?.name}
-                    subtitle={actionNode ? `${actionNode.code} · Long-press menu` : undefined}
-                    items={actionItems}
-                />
+                <>
+                    <MobileActionSheet
+                        open={actionNode !== null}
+                        onClose={() => setActionNode(null)}
+                        title={actionNode?.name}
+                        subtitle={actionNode ? `${actionNode.code} · Long-press menu` : undefined}
+                        items={actionItems}
+                    />
+                    <PageTour tourId="finance-chart-of-accounts-mobile" renderButton={false} />
+                </>
             }
             sheet={
                 <MobileBottomSheet

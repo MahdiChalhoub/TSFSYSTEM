@@ -12,15 +12,20 @@ import { useState, useRef, useEffect, useCallback, ReactNode } from 'react'
 import { Search, Plus, X, ChevronsUpDown, ChevronsDownUp, MoreHorizontal, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { TourTriggerButton } from '@/components/ui/GuidedTour'
+import { usePageTour } from '@/lib/tours/useTour'
 import type { MasterPageConfig } from '@/components/templates/master-page-config'
 
 // Re-export for callers; kept as aliases to the shared types.
 export type { KPI as MobileKPI, ActionButton as MobileAction } from '@/components/templates/master-page-config'
 
-// MobileMasterConfig is currently just the shared base — kept as a
-// distinct name so mobile-specific fields can be added without a
-// breaking callsite rename.
-export type MobileMasterConfig = MasterPageConfig
+// MobileMasterConfig extends the shared base with mobile-only fields.
+export interface MobileMasterConfig extends MasterPageConfig {
+    /** If set, renders a ✨ Tour trigger in the header. Page still mounts
+     *  <PageTour tourId=".." renderButton={false} /> in `modals` to mount
+     *  the GuidedTour renderer — mirrors the desktop TreeMasterPage pattern. */
+    tourId?: string
+}
 
 export interface MobileMasterRenderProps {
     searchQuery: string
@@ -48,6 +53,9 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
     // collapsed state was used for an animated title-shrink on scroll; the
     // header is now always compact so there's nothing left to collapse.
     const [fabVisible, setFabVisible] = useState(true)
+
+    // Tour support — mirrors TreeMasterPage's usage
+    const tourHook = config.tourId ? usePageTour(config.tourId) : null
     const [scrolled, setScrolled] = useState(false)  // for shadow
     const [pullY, setPullY] = useState(0)
     const [refreshing, setRefreshing] = useState(false)
@@ -153,7 +161,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                         </div>
                     </div>
 
-                    <button onClick={config.primaryAction.onClick}
+                    <button data-tour={config.primaryAction.dataTour || 'add-btn'} onClick={config.primaryAction.onClick}
                         className="flex items-center gap-1 font-bold bg-app-primary text-white px-3 rounded-xl active:scale-95 transition-transform flex-shrink-0"
                         style={{
                             boxShadow: '0 2px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)',
@@ -162,6 +170,8 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                         {config.primaryAction.icon}
                         <span className="sr-only">{config.primaryAction.label}</span>
                     </button>
+
+                    {tourHook && <TourTriggerButton onClick={tourHook.start} />}
 
                     {config.secondaryActions && config.secondaryActions.length > 0 && (
                         <div className="relative">
@@ -243,7 +253,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                 className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
 
                 {/* KPI rail — scrolls away with content */}
-                <div className="px-3 pt-3 pb-1">
+                <div data-tour="kpi-strip" className="px-3 pt-3 pb-1">
                     <div className="flex gap-2 overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-smooth pb-1"
                         style={{ scrollbarWidth: 'none' }}>
                         {config.kpis.map((k, i) => (
@@ -269,7 +279,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                 </div>
 
                 {/* Search bar — sticks when KPI rail scrolls out of its parent sticky ancestor */}
-                <div className="sticky top-0 z-20 px-3 pt-2 pb-2"
+                <div data-tour="search-bar" className="sticky top-0 z-20 px-3 pt-2 pb-2"
                     style={{
                         background: 'var(--app-bg)',
                         borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
@@ -314,7 +324,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                 </div>
 
                 {/* Rows */}
-                <div className="px-3 pb-24">
+                <div data-tour="tree-container" className="px-3 pb-24">
                     {children({ searchQuery, expandAll, expandKey, setExpandAll, setExpandKey })}
                 </div>
 
