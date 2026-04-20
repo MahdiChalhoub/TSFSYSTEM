@@ -147,10 +147,29 @@ export function GuidedTour({
         if (!el) { setTargetRect(null); return }
         const rect = el.getBoundingClientRect()
         setTargetRect(rect)
-        if (rect.top < 80 || rect.bottom > window.innerHeight - 20) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+        // Scroll target into the visible gap. Mobile bottom sheet covers the
+        // bottom of the viewport and a sticky page header often covers the top,
+        // so we must scroll target into the CENTER of the available region, not
+        // the absolute viewport center.
+        const spotlightPad = 12 // matches the spotlight ring padding
+        const headerOffset = 80
+        // Reserve space at the bottom for the tooltip: on mobile it's a bottom
+        // sheet (~240 px + 12 px margin). On desktop we reserve only a small
+        // buffer since the tooltip floats next to the target, not under it.
+        const bottomReserve = isMobile ? 260 : 40
+        const availableTop = headerOffset
+        const availableBottom = window.innerHeight - bottomReserve
+        const topClipped = rect.top - spotlightPad < availableTop
+        const bottomClipped = rect.bottom + spotlightPad > availableBottom
+        if (topClipped || bottomClipped) {
+            // Center target in the available region
+            const availableCenter = availableTop + (availableBottom - availableTop) / 2
+            const targetCenter = rect.top + rect.height / 2
+            const delta = targetCenter - availableCenter
+            window.scrollTo({ top: window.scrollY + delta, behavior: 'smooth' })
         }
-    }, [step])
+    }, [step, isMobile])
 
     useEffect(() => {
         if (!isActive) return
