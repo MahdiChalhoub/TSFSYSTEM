@@ -116,6 +116,11 @@ class TaskCategory(TenantModel):
     color = models.CharField(max_length=7, default='#6366f1', help_text='Hex color code')
     icon = models.CharField(max_length=50, null=True, blank=True, help_text='Lucide icon name')
     is_active = models.BooleanField(default=True)
+    leader = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='led_task_categories',
+        help_text='Category owner/lead — visible on the category row.',
+    )
 
     class Meta:
         db_table = 'workspace_task_category'

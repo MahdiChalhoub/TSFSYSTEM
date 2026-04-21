@@ -73,6 +73,8 @@ export interface Category {
     id: number;
     name: string;
     color: string;
+    leader?: number | null;
+    leader_name?: string | null;
 }
 
 export interface UserItem {

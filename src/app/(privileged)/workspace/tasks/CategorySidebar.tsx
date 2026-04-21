@@ -1,6 +1,9 @@
 'use client';
 
-import { ChevronDown, ChevronRight, GripVertical, User, FolderKanban, Edit2, X, Crown } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, ChevronRight, GripVertical, User, FolderKanban, Edit2, X, Crown, Check, Loader2 } from 'lucide-react';
+import { erpFetch } from '@/lib/erp-api';
+import { toast } from 'sonner';
 import type { Task, Category, UserItem, CategorySelection } from './types';
 import { getUserName } from './types';
 
@@ -15,6 +18,7 @@ interface CategorySidebarProps {
     onSelectUser: (catId: number, userId: number) => void;
     onToggleExpanded: (catId: number) => void;
     onManageCategories: () => void;
+    onLeaderChanged?: (catId: number, leaderId: number | null, leaderName: string | null) => void;
     onCloseMobile?: () => void;
 }
 
@@ -29,8 +33,31 @@ export default function CategorySidebar({
     onSelectUser,
     onToggleExpanded,
     onManageCategories,
+    onLeaderChanged,
     onCloseMobile,
 }: CategorySidebarProps) {
+    const [editingLeaderCatId, setEditingLeaderCatId] = useState<number | null>(null);
+    const [savingLeaderCatId, setSavingLeaderCatId] = useState<number | null>(null);
+
+    const saveLeader = async (cat: Category, leaderId: number | null) => {
+        setSavingLeaderCatId(cat.id);
+        try {
+            const updated: any = await erpFetch(`task-categories/${cat.id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leader: leaderId }),
+            });
+            toast.success(leaderId ? 'Leader updated' : 'Leader cleared');
+            if (onLeaderChanged) {
+                onLeaderChanged(cat.id, leaderId, updated?.leader_name ?? null);
+            }
+            setEditingLeaderCatId(null);
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to update leader');
+        } finally {
+            setSavingLeaderCatId(null);
+        }
+    };
 
     const getTaskCountForCategory = (catId: number | null) =>
         catId === null
@@ -48,12 +75,10 @@ export default function CategorySidebar({
         return users.filter(u => userIds.has(u.id));
     };
 
-    /** Get the leaders (assigned_by) for a category — people who delegate/assign tasks */
-    const getLeadersForCategory = (catId: number): UserItem[] => {
-        const leaderIds = new Set(
-            tasks.filter(t => t.category === catId && t.assigned_by).map(t => t.assigned_by as number)
-        );
-        return users.filter(u => leaderIds.has(u.id));
+    /** Get the persisted leader for a category (if any), from the category record. */
+    const getLeaderForCategory = (cat: Category): UserItem | null => {
+        if (!cat.leader) return null;
+        return users.find(u => u.id === cat.leader) || null;
     };
 
     const countBadge = (count: number) => (
@@ -115,10 +140,12 @@ export default function CategorySidebar({
                 {/* Category items */}
                 {categories.map(cat => {
                     const catUsers = getUsersForCategory(cat.id);
-                    const catLeaders = getLeadersForCategory(cat.id);
+                    const catLeader = getLeaderForCategory(cat);
                     const isExpanded = expandedCategories.has(cat.id);
                     const hasUsers = catUsers.length > 0;
                     const isSelected = selectedCategoryId === cat.id && !selectedUserId;
+                    const isEditingLeader = editingLeaderCatId === cat.id;
+                    const isSavingLeader = savingLeaderCatId === cat.id;
 
                     return (
                         <div key={cat.id} className="border-b" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
@@ -138,15 +165,18 @@ export default function CategorySidebar({
                                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cat.color || 'var(--app-primary)' }} />
                                         <div className="flex-1 min-w-0">
                                             <span className="text-[12px] font-bold truncate block" style={{ color: 'var(--app-foreground)' }}>{cat.name}</span>
-                                            {/* Leaders display */}
-                                            {catLeaders.length > 0 && (
-                                                <div className="flex items-center gap-1 mt-0.5">
-                                                    <Crown size={9} className="flex-shrink-0" style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                                    <span className="text-[9px] font-bold truncate" style={{ color: 'var(--app-muted-foreground)' }}>
-                                                        {catLeaders.map(l => getUserName(l)).join(', ')}
-                                                    </span>
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-1 mt-0.5">
+                                                <Crown size={9} className="flex-shrink-0" style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                                <span className="text-[9px] font-bold truncate" style={{ color: catLeader ? 'var(--app-muted-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 60%, transparent)' }}>
+                                                    {catLeader ? getUserName(catLeader) : (cat.leader_name || 'No leader')}
+                                                </span>
+                                                <span onClick={e => { e.stopPropagation(); setEditingLeaderCatId(isEditingLeader ? null : cat.id); }}
+                                                    title="Set leader"
+                                                    className="ml-0.5 p-0.5 rounded transition-all hover:opacity-70"
+                                                    style={{ color: 'var(--app-primary)', cursor: 'pointer' }}>
+                                                    <Edit2 size={9} />
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                     {countBadge(getTaskCountForCategory(cat.id))}

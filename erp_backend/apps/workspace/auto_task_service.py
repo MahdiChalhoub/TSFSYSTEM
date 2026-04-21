@@ -50,6 +50,30 @@ def fire_auto_tasks(organization, trigger_event, context: dict):
         return []  # Never crash the caller
 
 
+_MODULE_CATEGORY_COLORS = {
+    'inventory': '#3b82f6',
+    'purchasing': '#f59e0b',
+    'finance': '#10b981',
+    'crm': '#ec4899',
+    'sales': '#8b5cf6',
+    'hr': '#06b6d4',
+    'system': '#6b7280',
+}
+
+
+def _resolve_auto_category(organization, module):
+    """Find-or-create a per-module category so every auto-generated task
+    lands somewhere meaningful instead of 'Uncategorized'. Idempotent."""
+    from apps.workspace.models import TaskCategory
+    key = (module or 'system').strip().lower() or 'system'
+    name = f"Auto · {key.capitalize()}"
+    cat, _ = TaskCategory.objects.get_or_create(
+        organization=organization, name=name,
+        defaults={'color': _MODULE_CATEGORY_COLORS.get(key, '#6366f1'), 'is_active': True},
+    )
+    return cat
+
+
 def _fire_auto_tasks_inner(organization, trigger_event, context):
     from apps.workspace.models import AutoTaskRule, Task
     from django.utils import timezone
@@ -159,6 +183,9 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
         related_id = extra.get('object_id', rule.id) if isinstance(extra, dict) else rule.id
         related_label = reference or product_name or rule.name
 
+        # Auto-resolve a per-module category so generated tasks aren't 'Uncategorized'.
+        auto_category = _resolve_auto_category(organization, rule.module)
+
         try:
             # ── User-group fan-out: one task per member (ad-hoc team) ─────────
             if rule.assign_to_user_group_id and not rule.assign_to_user_id:
@@ -166,6 +193,7 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
                 for user in members:
                     task = Task.objects.create(
                         organization=organization,
+                        category=auto_category,
                         title=f"🤖 {tmpl.name}" if tmpl.name else f"Auto: {rule.get_trigger_event_display()}",
                         description="\n".join(description_lines),
                         priority=priority,
@@ -194,6 +222,7 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
                 for user in users:
                     task = Task.objects.create(
                         organization=organization,
+                        category=auto_category,
                         title=f"🤖 {tmpl.name}" if tmpl.name else f"Auto: {rule.get_trigger_event_display()}",
                         description="\n".join(description_lines),
                         priority=priority,
@@ -214,6 +243,7 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
                 # ── Single assignee mode ─────────────────────────────────────
                 task = Task.objects.create(
                     organization=organization,
+                    category=auto_category,
                     title=f"🤖 {tmpl.name}" if tmpl.name else f"Auto: {rule.get_trigger_event_display()}",
                     description="\n".join(description_lines),
                     priority=priority,

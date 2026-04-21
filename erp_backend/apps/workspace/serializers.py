@@ -35,10 +35,18 @@ class UserGroupSerializer(serializers.ModelSerializer):
 # =============================================================================
 
 class TaskCategorySerializer(serializers.ModelSerializer):
+    leader_name = serializers.SerializerMethodField()
+
     class Meta:
         model = TaskCategory
         fields = '__all__'
-        read_only_fields = ('organization',)
+        read_only_fields = ('organization', 'leader_name')
+
+    def get_leader_name(self, obj):
+        u = obj.leader
+        if not u:
+            return None
+        return (u.get_full_name() or '').strip() or u.username
 
 
 class TaskTemplateSerializer(serializers.ModelSerializer):
