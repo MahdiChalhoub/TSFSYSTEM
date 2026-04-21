@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { Plus, Tag, Loader2, AlertTriangle, Unlink, Pencil, ShieldAlert, ArrowRightLeft } from 'lucide-react'
+import { Plus, Tag, Loader2, AlertTriangle, Unlink, Pencil, ShieldAlert, ArrowRightLeft, Package, Barcode, X, ArrowRight, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
@@ -24,6 +24,12 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
     const [showLink, setShowLink] = useState(false)
     const [conflict, setConflict] = useState<any>(null)
     const [unlinkTarget, setUnlinkTarget] = useState<any>(null) // Pre-flight confirmation
+    // Migration flow state
+    const [migrateSource, setMigrateSource] = useState<any>(null) // The source group we're migrating away from
+    const [migrateTargetId, setMigrateTargetId] = useState<number | ''>('')
+    const [migratePreview, setMigratePreview] = useState<any>(null)
+    const [migrateMapping, setMigrateMapping] = useState<Record<number, number | ''>>({})
+    const [migrateLoading, setMigrateLoading] = useState(false)
     const router = useRouter()
 
     const loadData = useCallback(() => {
@@ -71,11 +77,89 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
         } catch (e: any) {
             const cd = e?.data || e
             if (cd?.error === 'conflict' && cd?.products) {
-                setConflict({ ...cd, _attrId: attrId })
+                // Attach source attribute ref so the migrate CTA knows which group to migrate from
+                const source = linkedAttrs.find(a => a.id === attrId)
+                setConflict({ ...cd, _attrId: attrId, _source: source })
             } else {
                 toast.error(e?.message || 'Failed to unlink')
             }
         } finally { setLinking(false) }
+    }
+
+    // ── Migration flow ──────────────────────────────────────────────────────
+    // Open migration from either the conflict dialog (Refresh & Retry isn't
+    // enough — the user needs to bulk-move values) or the direct Migrate
+    // button on a linked attribute row.
+    const openMigrate = useCallback(async (source: any) => {
+        setMigrateSource(source)
+        setConflict(null); setUnlinkTarget(null)
+        setMigrateTargetId(''); setMigrateMapping({})
+        setMigrateLoading(true)
+        try {
+            const preview = await erpFetch(
+                `inventory/categories/${categoryId}/migrate_attribute_preview/?source_attribute_id=${source.id}`
+            )
+            setMigratePreview(preview)
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to load migration preview')
+            setMigrateSource(null)
+        } finally {
+            setMigrateLoading(false)
+        }
+    }, [categoryId])
+
+    const closeMigrate = () => {
+        setMigrateSource(null); setMigrateTargetId(''); setMigratePreview(null); setMigrateMapping({})
+    }
+
+    // When target changes, re-fetch preview with that target to populate target_values for the mapping
+    const selectMigrateTarget = async (targetId: number | '') => {
+        setMigrateTargetId(targetId)
+        setMigrateMapping({})  // reset mapping when target changes
+        if (!migrateSource) return
+        setMigrateLoading(true)
+        try {
+            const qs = targetId ? `&target_attribute_id=${targetId}` : ''
+            const preview = await erpFetch(
+                `inventory/categories/${categoryId}/migrate_attribute_preview/?source_attribute_id=${migrateSource.id}${qs}`
+            )
+            setMigratePreview(preview)
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to load target values')
+        } finally {
+            setMigrateLoading(false)
+        }
+    }
+
+    const applyMigration = async () => {
+        if (!migrateSource) return
+        setMigrateLoading(true)
+        try {
+            const body: any = {
+                source_attribute_id: migrateSource.id,
+                unlink: true,
+            }
+            if (migrateTargetId) body.target_attribute_id = migrateTargetId
+            // Keep only explicit picks; missing entries = drop (null on backend)
+            const mapping: Record<string, number | null> = {}
+            Object.entries(migrateMapping).forEach(([sv, tv]) => {
+                mapping[sv] = tv === '' ? null : tv
+            })
+            body.value_mapping = mapping
+            const res: any = await erpFetch(
+                `inventory/categories/${categoryId}/migrate_attribute/`,
+                { method: 'POST', body: JSON.stringify(body) }
+            )
+            toast.success(
+                `Migrated ${res?.products_updated ?? 0} product${res?.products_updated === 1 ? '' : 's'}` +
+                (res?.unlinked ? ' and unlinked source' : '')
+            )
+            closeMigrate(); loadData(); router.refresh()
+        } catch (e: any) {
+            toast.error(e?.message || 'Migration failed')
+        } finally {
+            setMigrateLoading(false)
+        }
     }
 
     return (
@@ -126,12 +210,18 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                         Unlinking may affect product barcodes and attribute values. Products with attribute-based
                         barcodes will need manual reassignment.
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <button onClick={() => openMigrate(unlinkTarget)} disabled={migrateLoading}
+                            className="flex items-center gap-1 text-tp-xxs font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                            style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            <ArrowRightLeft size={10} />
+                            Migrate & Unlink
+                        </button>
                         <button onClick={() => executeUnlink(unlinkTarget.id)} disabled={linking}
                             className="flex items-center gap-1 text-tp-xxs font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-50"
                             style={{ background: 'var(--app-error)', color: 'white' }}>
                             <AlertTriangle size={10} />
-                            {linking ? 'Checking...' : 'Proceed with Unlink'}
+                            {linking ? 'Checking...' : 'Force Unlink'}
                         </button>
                         <button onClick={() => setUnlinkTarget(null)}
                             className="text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground transition-all px-2 py-1">
@@ -173,11 +263,105 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                         ))}
                         {conflict.affected_count > 20 && <p className="text-tp-xs font-bold text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>}
                     </div>
-                    <div className="flex items-center gap-3 mt-2">
-                        <button onClick={() => { setConflict(null); loadData(); router.refresh() }} className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                    <div className="flex items-center gap-3 mt-2 flex-wrap">
+                        {conflict._source && (
+                            <button onClick={() => openMigrate(conflict._source)} className="flex items-center gap-1 text-tp-xs font-black px-2.5 py-1 rounded-lg transition-all" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                <ArrowRightLeft size={10} /> Migrate Attribute Values
+                            </button>
+                        )}
+                        <button onClick={() => { setConflict(null); loadData(); router.refresh() }} className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
                             <ArrowRightLeft size={10} /> Refresh & Retry
                         </button>
                         <button onClick={() => setConflict(null)} className="text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground transition-all">Dismiss</button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Migration Panel — map source values → target values, then bulk-reassign ── */}
+            {migrateSource && (
+                <div className="flex-shrink-0 px-4 py-3 animate-in slide-in-from-top-2 duration-200"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                            <ArrowRightLeft size={14} style={{ color: 'var(--app-primary)' }} />
+                            <span className="text-tp-sm font-black" style={{ color: 'var(--app-primary)' }}>
+                                Migrate "{migrateSource.name}" → ?
+                            </span>
+                            {migratePreview?.affected_product_count !== undefined && (
+                                <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded-full"
+                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+                                    {migratePreview.affected_product_count} product{migratePreview.affected_product_count === 1 ? '' : 's'}
+                                </span>
+                            )}
+                        </div>
+                        <button onClick={closeMigrate} className="text-app-muted-foreground hover:text-app-foreground"><X size={14} /></button>
+                    </div>
+
+                    {/* Target group picker */}
+                    <div className="mb-2">
+                        <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1">Target attribute group</p>
+                        <select value={migrateTargetId} onChange={e => selectMigrateTarget(e.target.value ? Number(e.target.value) : '')}
+                            className="w-full text-tp-sm font-bold px-2 py-1.5 rounded-lg outline-none"
+                            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                            <option value="">— Drop all values (no replacement) —</option>
+                            {allAttrs.filter(a => a.id !== migrateSource.id).map(a => (
+                                <option key={a.id} value={a.id}>{a.name}{a.code ? ` (${a.code})` : ''}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Per-value mapping */}
+                    {migrateLoading ? (
+                        <div className="flex items-center justify-center py-4"><Loader2 size={16} className="animate-spin" style={{ color: 'var(--app-primary)' }} /></div>
+                    ) : migratePreview?.source_values?.length > 0 ? (
+                        <div className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar mb-2">
+                            {migratePreview.source_values.map((sv: any) => (
+                                <div key={sv.id} className="flex items-center gap-2 p-1.5 rounded-lg"
+                                    style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-tp-xs font-bold text-app-foreground truncate">{sv.name}</span>
+                                            {sv.product_count > 0 && (
+                                                <span className="text-tp-xxs font-black px-1 py-0.5 rounded-full flex-shrink-0"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                                    <Package size={8} className="inline mr-0.5" />{sv.product_count}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {sv.code && <span className="text-tp-xxs font-mono text-app-muted-foreground">{sv.code}</span>}
+                                    </div>
+                                    <ArrowRight size={12} className="text-app-muted-foreground flex-shrink-0" />
+                                    <select value={migrateMapping[sv.id] ?? ''}
+                                        onChange={e => setMigrateMapping(prev => ({ ...prev, [sv.id]: e.target.value ? Number(e.target.value) : '' }))}
+                                        disabled={!migratePreview?.target_values?.length}
+                                        className="text-tp-xs font-bold px-1.5 py-1 rounded-lg outline-none flex-1 min-w-0"
+                                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                        <option value="">— drop —</option>
+                                        {(migratePreview?.target_values || []).map((tv: any) => (
+                                            <option key={tv.id} value={tv.id}>{tv.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-tp-xs text-app-muted-foreground py-2">No products currently use values from this group — a direct unlink will succeed.</p>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid var(--app-border)' }}>
+                        <button onClick={applyMigration} disabled={migrateLoading}
+                            className="flex items-center gap-1 text-tp-xxs font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                            style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            {migrateLoading ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
+                            Apply Migration & Unlink
+                        </button>
+                        <button onClick={closeMigrate}
+                            className="text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground transition-all px-2 py-1">
+                            Cancel
+                        </button>
+                        <span className="text-tp-xxs text-app-muted-foreground ml-auto">
+                            Unmapped values will be dropped from products.
+                        </span>
                     </div>
                 </div>
             )}
@@ -193,33 +377,61 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
-                        {linkedAttrs.map((group: any) => (
-                            <div key={group.id} className="flex items-center gap-3 px-4 py-2.5 group transition-all hover:bg-app-surface/50">
-                                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}><Tag size={12} /></div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5">
-                                        <p className="text-tp-md font-bold text-app-foreground truncate">{group.name}</p>
-                                        <span className="text-tp-xxs font-black px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
-                                            style={group.source === 'auto' || group.source === 'both' ? { background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' } : { background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
-                                            {group.source === 'auto' ? 'AUTO' : group.source === 'both' ? 'AUTO' : 'PRE-REG'}
-                                        </span>
-                                        {/* Danger indicator for auto-linked attributes */}
-                                        {(group.source === 'auto' || group.source === 'both') && (
-                                            <span className="text-tp-xxs font-black px-1 py-0.5 rounded flex-shrink-0"
-                                                style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)' }}>
-                                                IN USE
+                        {linkedAttrs.map((group: any) => {
+                            const pc = group.product_count ?? 0
+                            const bc = group.barcode_count ?? 0
+                            const hasProducts = pc > 0
+                            return (
+                                <div key={group.id} className="flex items-center gap-3 px-4 py-2.5 group transition-all hover:bg-app-surface/50">
+                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}><Tag size={12} /></div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <p className="text-tp-md font-bold text-app-foreground truncate">{group.name}</p>
+                                            <span className="text-tp-xxs font-black px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
+                                                style={group.source === 'auto' || group.source === 'both' ? { background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' } : { background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
+                                                {group.source === 'auto' ? 'AUTO' : group.source === 'both' ? 'AUTO' : 'PRE-REG'}
                                             </span>
-                                        )}
+                                            {/* Product count badge — always shown so users know impact before unlinking */}
+                                            <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 flex-shrink-0"
+                                                style={hasProducts
+                                                    ? { background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }
+                                                    : { background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                                <Package size={9} />{pc} product{pc === 1 ? '' : 's'}
+                                            </span>
+                                            {bc > 0 && (
+                                                <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 flex-shrink-0"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
+                                                    <Barcode size={9} />{bc} with barcode
+                                                </span>
+                                            )}
+                                            {/* Danger indicator for auto-linked attributes */}
+                                            {(group.source === 'auto' || group.source === 'both') && hasProducts && (
+                                                <span className="text-tp-xxs font-black px-1 py-0.5 rounded flex-shrink-0"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)' }}>
+                                                    IN USE
+                                                </span>
+                                            )}
+                                        </div>
+                                        {group.code && <p className="text-tp-xs font-mono font-bold text-app-muted-foreground">{group.code}</p>}
                                     </div>
-                                    {group.code && <p className="text-tp-xs font-mono font-bold text-app-muted-foreground">{group.code}</p>}
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                        {hasProducts && (
+                                            <button onClick={() => openMigrate(group)} disabled={migrateLoading}
+                                                className="flex items-center gap-1 text-tp-xxs font-bold px-1.5 py-1 rounded-lg transition-all disabled:opacity-50"
+                                                style={{ color: 'var(--app-primary)', background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}
+                                                title="Migrate attribute values to another group before unlinking">
+                                                <ArrowRightLeft size={10} />Migrate
+                                            </button>
+                                        )}
+                                        <button onClick={() => requestUnlink(group)} disabled={linking}
+                                            className="flex items-center gap-1 text-tp-xxs font-bold px-1.5 py-1 rounded-lg transition-all disabled:opacity-50"
+                                            style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                            <Unlink size={10} />Unlink
+                                        </button>
+                                    </div>
                                 </div>
-                                <button onClick={() => requestUnlink(group)} disabled={linking}
-                                    className="flex items-center gap-1 text-tp-xxs font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
-                                    <Unlink size={10} />Unlink
-                                </button>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 )}
             </div>

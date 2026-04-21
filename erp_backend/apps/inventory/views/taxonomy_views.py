@@ -398,6 +398,116 @@ class UnitPackageViewSet(TenantModelViewSet):
 
 
 # =============================================================================
+# PACKAGING SUGGESTION RULE — smart engine
+# =============================================================================
+
+class PackagingSuggestionRuleViewSet(TenantModelViewSet):
+    """CRUD for packaging suggestion rules + /suggest/ endpoint that returns
+    ranked suggestions based on (category, brand, attribute, attribute_value)."""
+    pagination_class = None
+
+    def get_serializer_class(self):
+        from apps.inventory.serializers import PackagingSuggestionRuleSerializer
+        return PackagingSuggestionRuleSerializer
+
+    def get_queryset(self):
+        from apps.inventory.models import PackagingSuggestionRule
+        qs = PackagingSuggestionRule.objects.select_related(
+            'category', 'brand', 'attribute', 'packaging', 'packaging__unit'
+        )
+        for key in ('category', 'brand', 'attribute', 'packaging'):
+            v = self.request.query_params.get(key)
+            if v:
+                qs = qs.filter(**{f'{key}_id': v})
+        return qs
+
+    @action(detail=False, methods=['get'], url_path='suggest')
+    def suggest(self, request):
+        """
+        Return packaging suggestions ranked by priority.
+
+        Query params (all optional, any combination):
+          ?category=<id>
+          ?brand=<id>
+          ?attribute=<id>
+          ?attribute_value=<string>
+
+        Rules where a dimension is NULL act as wildcards for that dimension.
+        So a rule { category=Tissue, brand=NULL } matches any brand of Tissue.
+        """
+        from apps.inventory.models import PackagingSuggestionRule
+        from django.db.models import Q as Qf
+
+        category = request.query_params.get('category')
+        brand = request.query_params.get('brand')
+        attribute = request.query_params.get('attribute')
+        attribute_value = request.query_params.get('attribute_value')
+
+        qs = PackagingSuggestionRule.objects.select_related(
+            'category', 'brand', 'attribute', 'packaging', 'packaging__unit'
+        )
+
+        # Category filter: match this category OR wildcard (NULL)
+        if category:
+            qs = qs.filter(Qf(category_id=category) | Qf(category__isnull=True))
+        else:
+            qs = qs.filter(category__isnull=True)
+
+        if brand:
+            qs = qs.filter(Qf(brand_id=brand) | Qf(brand__isnull=True))
+        else:
+            qs = qs.filter(brand__isnull=True)
+
+        if attribute:
+            if attribute_value:
+                qs = qs.filter(
+                    Qf(attribute_id=attribute, attribute_value=attribute_value)
+                    | Qf(attribute_id=attribute, attribute_value__isnull=True)
+                    | Qf(attribute_id=attribute, attribute_value='')
+                    | Qf(attribute__isnull=True)
+                )
+            else:
+                qs = qs.filter(Qf(attribute_id=attribute) | Qf(attribute__isnull=True))
+        else:
+            qs = qs.filter(attribute__isnull=True)
+
+        rules = list(qs)
+
+        # Sort by effective priority (desc), then usage_count (desc), then recency
+        rules.sort(key=lambda r: (-r.effective_priority(), -r.usage_count, -r.id))
+
+        # Deduplicate by packaging_id — keep the highest-priority rule per packaging
+        seen = set()
+        deduped = []
+        for r in rules:
+            if r.packaging_id in seen:
+                continue
+            seen.add(r.packaging_id)
+            deduped.append(r)
+
+        from apps.inventory.serializers import PackagingSuggestionRuleSerializer
+        data = PackagingSuggestionRuleSerializer(deduped, many=True).data
+        return Response({
+            'count': len(data),
+            'suggestions': data,
+            'filters': {
+                'category': category, 'brand': brand,
+                'attribute': attribute, 'attribute_value': attribute_value,
+            },
+        })
+
+    @action(detail=True, methods=['post'], url_path='accept')
+    def accept(self, request, pk=None):
+        """Bump usage_count when a user accepts this suggestion. Powers
+        the 'most-used-first' ordering over time."""
+        rule = self.get_object()
+        rule.usage_count = (rule.usage_count or 0) + 1
+        rule.save(update_fields=['usage_count', 'updated_at'])
+        from apps.inventory.serializers import PackagingSuggestionRuleSerializer
+        return Response(PackagingSuggestionRuleSerializer(rule).data)
+
+
+# =============================================================================
 # BRAND
 # =============================================================================
 
@@ -719,8 +829,24 @@ class CategoryViewSet(TenantModelViewSet):
             for g in groups_qs:
                 source = 'both' if g.id in auto_group_ids and g.id in explicit_group_ids \
                     else 'auto' if g.id in auto_group_ids else 'explicit'
+                # Count distinct products in THIS category that use any leaf value of this group.
+                # Also count how many of those have active barcodes — used by the UI to show
+                # "🔒 N with barcodes" severity indicator.
+                product_count = Product.objects.filter(
+                    category=category, organization=organization,
+                    attribute_values__parent_id=g.id,
+                ).distinct().count()
+                barcode_count = 0
+                if product_count:
+                    barcode_count = Product.objects.filter(
+                        category=category, organization=organization,
+                        attribute_values__parent_id=g.id,
+                        barcodes__is_active=True,
+                    ).distinct().count()
                 linked.append({
                     'id': g.id, 'name': g.name, 'code': g.code, 'source': source,
+                    'product_count': product_count,
+                    'barcode_count': barcode_count,
                 })
 
         all_attrs = ProductAttribute.objects.filter(
@@ -800,6 +926,189 @@ class CategoryViewSet(TenantModelViewSet):
         # Safe to unlink — remove explicit M2M
         category.attributes.remove(attr)
         return Response({"status": "unlinked", "attribute": attr.name})
+
+    @action(detail=True, methods=['get'])
+    def migrate_attribute_preview(self, request, pk=None):
+        """
+        Preview migration of attribute values from one group to another.
+        Returns: list of source leaf values used by products in this category,
+        so the UI can show a mapping form (for each source leaf → pick a target leaf).
+
+        Query params:
+          source_attribute_id (required): the group being removed
+          target_attribute_id (optional): the group to migrate TO; if provided,
+            also returns the target group's leaf values as mapping candidates.
+        """
+        category = self.get_object()
+        organization = category.organization
+        from apps.inventory.models import ProductAttribute, Product
+
+        source_id = request.query_params.get('source_attribute_id')
+        target_id = request.query_params.get('target_attribute_id')
+        if not source_id:
+            return Response({'error': 'source_attribute_id is required'}, status=400)
+
+        try:
+            source = ProductAttribute.objects.get(id=source_id, organization=organization, parent__isnull=True)
+        except ProductAttribute.DoesNotExist:
+            return Response({'error': 'Source attribute group not found'}, status=404)
+
+        # Source leaf values that are ACTIVELY used by products in this category
+        source_leaf_ids_in_use = set(
+            Product.objects.filter(
+                category=category, organization=organization,
+                attribute_values__parent_id=source.id,
+            ).values_list('attribute_values__id', flat=True)
+        )
+        source_leaf_ids_in_use.discard(None)
+
+        source_values = list(
+            ProductAttribute.objects.filter(
+                id__in=source_leaf_ids_in_use, organization=organization,
+            ).annotate(
+                product_count=models.Count(
+                    'products_with_attribute',
+                    filter=models.Q(products_with_attribute__category=category),
+                    distinct=True,
+                )
+            ).values('id', 'name', 'code', 'product_count').order_by('name')
+        )
+
+        target_group = None
+        target_values = []
+        if target_id:
+            try:
+                target = ProductAttribute.objects.get(id=target_id, organization=organization, parent__isnull=True)
+                target_group = {'id': target.id, 'name': target.name, 'code': target.code}
+                target_values = list(
+                    ProductAttribute.objects.filter(parent=target, organization=organization)
+                        .values('id', 'name', 'code').order_by('name')
+                )
+            except ProductAttribute.DoesNotExist:
+                pass
+
+        return Response({
+            'source_group': {'id': source.id, 'name': source.name, 'code': source.code},
+            'target_group': target_group,
+            'source_values': source_values,
+            'target_values': target_values,
+            'affected_product_count': Product.objects.filter(
+                category=category, organization=organization,
+                attribute_values__parent_id=source.id,
+            ).distinct().count(),
+        })
+
+    @action(detail=True, methods=['post'])
+    def migrate_attribute(self, request, pk=None):
+        """
+        Migrate attribute values on products in this category from a source
+        group to a target group, then unlink the source group.
+
+        Body:
+          source_attribute_id (required): group being replaced
+          target_attribute_id (optional): group replacing it — if omitted, values are
+            simply removed (no replacement)
+          value_mapping (optional): {source_leaf_id: target_leaf_id|null}
+            — null/missing = drop the source value without replacement
+          unlink (default true): whether to also unlink source group from category
+
+        Atomic per-product: each product's attribute_values are updated in one
+        transaction, so a partial failure doesn't leave products in a mixed state.
+        """
+        from django.db import transaction
+        from apps.inventory.models import ProductAttribute, Product
+
+        category = self.get_object()
+        organization = category.organization
+
+        source_id = request.data.get('source_attribute_id')
+        target_id = request.data.get('target_attribute_id')
+        raw_mapping = request.data.get('value_mapping') or {}
+        do_unlink = request.data.get('unlink', True)
+
+        if not source_id:
+            return Response({'error': 'source_attribute_id is required'}, status=400)
+
+        try:
+            source = ProductAttribute.objects.get(id=source_id, organization=organization, parent__isnull=True)
+        except ProductAttribute.DoesNotExist:
+            return Response({'error': 'Source attribute group not found'}, status=404)
+
+        # Normalize mapping keys to int and validate values belong to target group (if provided)
+        mapping: dict[int, int | None] = {}
+        valid_target_leaf_ids: set[int] = set()
+        if target_id:
+            try:
+                target = ProductAttribute.objects.get(id=target_id, organization=organization, parent__isnull=True)
+            except ProductAttribute.DoesNotExist:
+                return Response({'error': 'Target attribute group not found'}, status=404)
+            valid_target_leaf_ids = set(
+                ProductAttribute.objects.filter(parent=target, organization=organization)
+                    .values_list('id', flat=True)
+            )
+
+        source_leaf_ids = set(
+            ProductAttribute.objects.filter(parent=source, organization=organization)
+                .values_list('id', flat=True)
+        )
+
+        for k, v in raw_mapping.items():
+            try:
+                sk = int(k)
+            except (TypeError, ValueError):
+                continue
+            if sk not in source_leaf_ids:
+                continue
+            if v is None or v == '' or v == 'null':
+                mapping[sk] = None
+                continue
+            try:
+                tv = int(v)
+            except (TypeError, ValueError):
+                continue
+            if target_id and tv not in valid_target_leaf_ids:
+                return Response({
+                    'error': f'Target value {tv} does not belong to target group {target_id}'
+                }, status=400)
+            mapping[sk] = tv
+
+        # Products in this category that currently have any of the source leaf values
+        affected_products = list(
+            Product.objects.filter(
+                category=category, organization=organization,
+                attribute_values__parent_id=source.id,
+            ).distinct()
+        )
+
+        updated = 0
+        with transaction.atomic():
+            for product in affected_products:
+                current_values = set(product.attribute_values.values_list('id', flat=True))
+                source_values_on_product = current_values & source_leaf_ids
+                if not source_values_on_product:
+                    continue
+                # Map each source value → its target (if any)
+                additions: set[int] = set()
+                for sv in source_values_on_product:
+                    tv = mapping.get(sv)  # may be None, or missing (also None)
+                    if tv is not None:
+                        additions.add(tv)
+                # Remove source values, add mapped targets
+                product.attribute_values.remove(*source_values_on_product)
+                if additions:
+                    product.attribute_values.add(*additions)
+                updated += 1
+
+            if do_unlink:
+                category.attributes.remove(source)
+
+        return Response({
+            'status': 'migrated',
+            'source_attribute': source.name,
+            'target_attribute_id': target_id,
+            'products_updated': updated,
+            'unlinked': bool(do_unlink),
+        })
 
     @action(detail=True, methods=['get'])
     def explore(self, request, pk=None):
