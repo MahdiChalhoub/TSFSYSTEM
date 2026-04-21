@@ -183,6 +183,34 @@ export default function CategorySidebar({
                                 </button>
                             </div>
 
+                            {/* Leader picker */}
+                            {isEditingLeader && (
+                                <div className="pl-10 pr-3 py-2 flex items-center gap-1.5"
+                                    style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 4%, transparent)' }}
+                                    onClick={e => e.stopPropagation()}>
+                                    <Crown size={11} style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                    <select
+                                        value={cat.leader ?? ''}
+                                        disabled={isSavingLeader}
+                                        onChange={e => saveLeader(cat, e.target.value ? Number(e.target.value) : null)}
+                                        className="flex-1 text-[11px] font-bold px-2 py-1 rounded-lg outline-none"
+                                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                        <option value="">— no leader —</option>
+                                        {users.map(u => (
+                                            <option key={u.id} value={u.id}>{getUserName(u)}</option>
+                                        ))}
+                                    </select>
+                                    {isSavingLeader ? (
+                                        <Loader2 size={12} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
+                                    ) : (
+                                        <button onClick={() => setEditingLeaderCatId(null)}
+                                            className="p-1 rounded hover:opacity-70" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            <Check size={11} />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
                             {/* User sub-items */}
                             {isExpanded && catUsers.length > 0 && (
                                 <div style={{ background: 'color-mix(in srgb, var(--app-bg) 50%, transparent)' }}>

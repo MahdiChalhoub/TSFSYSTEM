@@ -12,7 +12,7 @@ from django.db.models import Q, Count
 from erp.views import TenantFilterMixin, AuditLogMixin
 from .models import (
     TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
-    TaskAttachment, EmployeeRequest, UserGroup,
+    TaskAttachment, EmployeeRequest, UserGroup, UserHierarchy,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
     WorkspaceConfig, EmployeePerformance,
@@ -20,7 +20,7 @@ from .models import (
 from .serializers import (
     TaskCategorySerializer, TaskTemplateSerializer, AutoTaskRuleSerializer,
     TaskSerializer, TaskListSerializer, TaskCommentSerializer, TaskAttachmentSerializer,
-    EmployeeRequestSerializer, UserGroupSerializer,
+    EmployeeRequestSerializer, UserGroupSerializer, UserHierarchySerializer,
     ChecklistTemplateSerializer, ChecklistTemplateItemSerializer,
     ChecklistInstanceSerializer, ChecklistItemResponseSerializer,
     QuestionnaireSerializer, QuestionnaireQuestionSerializer,
@@ -51,6 +51,15 @@ class UserGroupViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
     """Ad-hoc user groups (teams) — assignable from AutoTaskRule + Task."""
     queryset = UserGroup.objects.prefetch_related('members').select_related('leader').all()
     serializer_class = UserGroupSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class UserHierarchyViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
+    """Per-user leader tree. Each user gets at most one entry with an optional
+    parent_user; task visibility cascades up the tree (ancestors of the
+    assignee can also see the task)."""
+    queryset = UserHierarchy.objects.select_related('user', 'parent_user').all()
+    serializer_class = UserHierarchySerializer
     permission_classes = [IsAuthenticated]
 
 
@@ -140,10 +149,28 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
         status_filter = self.request.query_params.get('status')
         if status_filter:
             qs = qs.filter(status=status_filter)
-        # Filter by assigned_to (my tasks)
+        # Filter by assigned_to (my tasks) — or any descendant in the leader tree.
+        # When `mine=true` we include tasks assigned to this user OR to anyone
+        # reporting up to them (direct or transitively). Set `?tree=false` to
+        # disable the cascade and see only direct assignments.
         mine = self.request.query_params.get('mine')
         if mine == 'true':
-            qs = qs.filter(assigned_to=self.request.user)
+            user_ids = {self.request.user.id}
+            if self.request.query_params.get('tree') != 'false':
+                # BFS down the leader tree: find everyone whose parent_user chain reaches me.
+                seen = set(user_ids)
+                frontier = set(user_ids)
+                while frontier:
+                    children = list(UserHierarchy.objects.filter(
+                        parent_user_id__in=frontier,
+                    ).values_list('user_id', flat=True))
+                    new_children = [c for c in children if c not in seen]
+                    if not new_children:
+                        break
+                    seen.update(new_children)
+                    frontier = set(new_children)
+                user_ids = seen
+            qs = qs.filter(assigned_to__in=user_ids)
         # Filter by assigned_by
         assigned_by = self.request.query_params.get('assigned_by')
         if assigned_by == 'me':

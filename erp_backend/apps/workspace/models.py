@@ -166,6 +166,31 @@ class TaskTemplate(TenantModel):
         return self.name
 
 
+class UserHierarchy(TenantModel):
+    """Per-user leader tree (org-scoped). Each user may have at most one
+    `parent_user`, forming a hierarchy where a task assigned to a descendant
+    is also visible to every ancestor. Independent of the User model so the
+    core auth table isn't touched."""
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE,
+        related_name='hierarchy',
+    )
+    parent_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='hierarchy_children',
+        help_text='Direct superior — this user reports up to them.',
+    )
+
+    class Meta:
+        db_table = 'workspace_user_hierarchy'
+        constraints = [
+            models.UniqueConstraint(fields=['organization', 'user'], name='unique_user_hierarchy_per_org'),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} → {self.parent_user.username if self.parent_user else 'root'}"
+
+
 class UserGroup(TenantModel):
     """Ad-hoc team of users. Members can hold different roles; one member
     may be flagged as leader. Used as an assignee target on AutoTaskRule

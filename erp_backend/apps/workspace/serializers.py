@@ -4,11 +4,31 @@ Workspace Module — Serializers
 from rest_framework import serializers
 from .models import (
     WorkspaceConfig, TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
-    TaskAttachment, EmployeeRequest, UserGroup,
+    TaskAttachment, EmployeeRequest, UserGroup, UserHierarchy,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
     EmployeePerformance,
 )
+
+
+class UserHierarchySerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    parent_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserHierarchy
+        fields = ('id', 'user', 'user_name', 'parent_user', 'parent_name')
+        read_only_fields = ('organization', 'user_name', 'parent_name')
+
+    def get_user_name(self, obj):
+        u = obj.user
+        return (u.get_full_name() or '').strip() or u.username
+
+    def get_parent_name(self, obj):
+        u = obj.parent_user
+        if not u:
+            return None
+        return (u.get_full_name() or '').strip() or u.username
 
 
 class UserGroupSerializer(serializers.ModelSerializer):

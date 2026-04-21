@@ -5,6 +5,7 @@ import {
     Zap,
     Settings,
     Users,
+    Crown,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -17,6 +18,7 @@ export const workspaceInProgress: MenuItem = {
         { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
         { title: 'Auto Task Rules', path: '/workspace/auto-task-rules', icon: Zap },
         { title: 'User Groups', path: '/workspace/user-groups', icon: Users },
+        { title: 'Leader Tree', path: '/workspace/leader-tree', icon: Crown },
     ],
 };
 

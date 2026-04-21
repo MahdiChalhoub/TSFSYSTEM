@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Clock, Calendar, Star, User, FolderKanban, ExternalLink } from 'lucide-react';
+import { Clock, Calendar, Star, User, FolderKanban, ExternalLink, Check } from 'lucide-react';
 import type { Task, UserItem } from './types';
 import { STATUS_ICONS, STATUS_COLOR, PRIORITY_COLOR, getUserName, resolveTaskSourceLink } from './types';
 
 interface TaskCardProps {
     task: Task;
     users: UserItem[];
+    compact?: boolean;
     onEdit: (task: Task) => void;
     onQuickComplete: (taskId: number, currentStatus: string, e: React.MouseEvent) => void;
 }
@@ -29,7 +30,7 @@ function formatDueDate(dateStr: string): string {
     return due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: due.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
 }
 
-export default function TaskCard({ task: t, users, onEdit, onQuickComplete }: TaskCardProps) {
+export default function TaskCard({ task: t, users, compact = false, onEdit, onQuickComplete }: TaskCardProps) {
     const StatusIcon = STATUS_ICONS[t.status] ?? Clock;
     const statusColor = STATUS_COLOR[t.status] ?? 'var(--app-muted-foreground)';
     const priorityColor = PRIORITY_COLOR[t.priority] ?? 'var(--app-muted-foreground)';
@@ -39,6 +40,77 @@ export default function TaskCard({ task: t, users, onEdit, onQuickComplete }: Ta
     // Resolve assigned user from users array
     const assignedUser = t.assigned_to ? users.find(u => u.id === t.assigned_to) : null;
     const assignedName = assignedUser ? getUserName(assignedUser) : t.assigned_to_name;
+
+    if (compact) {
+        return (
+            <div onClick={() => onEdit(t)}
+                 className="group flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-150 cursor-pointer hover:bg-app-surface/70"
+                 style={{
+                     background: 'var(--app-surface)',
+                     borderColor: 'var(--app-border)',
+                     borderLeft: `3px solid ${statusColor}`,
+                     opacity: isCompleted ? 0.55 : 1,
+                 }}>
+                <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                     style={{ background: `color-mix(in srgb, ${statusColor} 10%, transparent)`, color: statusColor }}>
+                    <StatusIcon size={11} />
+                </div>
+                <span className={`text-[12px] font-bold truncate flex-1 min-w-0 ${isCompleted ? 'line-through' : ''}`}
+                      style={{ color: isCompleted ? 'var(--app-muted-foreground)' : 'var(--app-foreground)' }}>
+                    {t.title}
+                </span>
+                {t.category_name && (
+                    <span className="hidden md:inline text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                          style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                        {t.category_name}
+                    </span>
+                )}
+                <span className="hidden lg:inline text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                      style={{
+                          background: `color-mix(in srgb, ${priorityColor} 10%, transparent)`,
+                          color: priorityColor,
+                          border: `1px solid color-mix(in srgb, ${priorityColor} 25%, transparent)`,
+                      }}>
+                    {t.priority?.toLowerCase()}
+                </span>
+                {t.due_date && (
+                    <span className="hidden md:inline text-[10px] font-bold flex-shrink-0"
+                          style={t.is_overdue ? { color: 'var(--app-error)' } : { color: 'var(--app-muted-foreground)' }}>
+                        {formatDueDate(t.due_date)}
+                    </span>
+                )}
+                {assignedName && (
+                    <span className="hidden lg:flex items-center gap-0.5 text-[10px] font-bold truncate flex-shrink-0 max-w-[120px]"
+                          style={{ color: 'var(--app-muted-foreground)' }}>
+                        <User size={10} /> {assignedName}
+                    </span>
+                )}
+                {sourceLink && (
+                    <Link href={sourceLink.href}
+                          onClick={e => e.stopPropagation()}
+                          title={t.related_object_label ? `${sourceLink.label} — ${t.related_object_label}` : sourceLink.label}
+                          className="flex items-center p-1 rounded-lg transition-all flex-shrink-0"
+                          style={{
+                              background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                              color: 'var(--app-primary)',
+                          }}>
+                        <ExternalLink size={11} />
+                    </Link>
+                )}
+                <button onClick={e => onQuickComplete(t.id, t.status, e)}
+                        title={isCompleted ? 'Reopen' : 'Mark done'}
+                        className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200"
+                        style={{
+                            background: isCompleted ? 'var(--app-success, #22c55e)' : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)',
+                        }}>
+                    <span className="pointer-events-none inline-flex items-center justify-center h-4 w-4 rounded-full bg-white shadow transition-transform duration-200"
+                          style={{ transform: isCompleted ? 'translateX(18px)' : 'translateX(2px)', marginTop: '2px' }}>
+                        {isCompleted ? <Check size={8} style={{ color: 'var(--app-success, #22c55e)' }} /> : null}
+                    </span>
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div onClick={() => onEdit(t)}
@@ -129,16 +201,24 @@ export default function TaskCard({ task: t, users, onEdit, onQuickComplete }: Ta
                             <span className="hidden sm:inline">{sourceLink.label.replace(/^Open /, '')}</span>
                         </Link>
                     )}
-                    <button onClick={e => onQuickComplete(t.id, t.status, e)}
-                            className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out"
-                            style={{
-                                background: isCompleted ? 'var(--app-success, #22c55e)' : 'color-mix(in srgb, var(--app-muted-foreground) 25%, transparent)',
-                                border: '2px solid transparent',
-                            }}
-                            title={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}>
-                        <span className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out"
-                              style={{ transform: isCompleted ? 'translateX(16px)' : 'translateX(0)' }} />
-                    </button>
+                    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                        <span className="text-[10px] font-bold hidden sm:inline"
+                              style={{ color: isCompleted ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
+                            {isCompleted ? 'Done' : 'Open'}
+                        </span>
+                        <button onClick={e => onQuickComplete(t.id, t.status, e)}
+                                title={isCompleted ? 'Reopen this task' : 'Mark this task as done'}
+                                className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200"
+                                style={{
+                                    background: isCompleted ? 'var(--app-success, #22c55e)' : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)',
+                                    boxShadow: isCompleted ? '0 2px 6px color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' : 'none',
+                                }}>
+                            <span className="pointer-events-none inline-flex items-center justify-center h-5 w-5 rounded-full bg-white shadow transition-transform duration-200"
+                                  style={{ transform: isCompleted ? 'translateX(22px)' : 'translateX(2px)', marginTop: '2px' }}>
+                                {isCompleted ? <Check size={10} style={{ color: 'var(--app-success, #22c55e)' }} /> : null}
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -51,6 +51,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
     const [filterEndDate, setFilterEndDate] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+    const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
 
     /* ── Modal state ──────────────────────────────────────────────── */
     const [showCreateTask, setShowCreateTask] = useState(false);
@@ -191,6 +192,26 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-0.5 p-0.5 rounded-xl border border-app-border"
+                        style={{ background: 'color-mix(in srgb, var(--app-bg) 40%, transparent)' }}
+                        title="Switch between list and card view">
+                        <button onClick={() => setViewMode('list')}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                            style={{
+                                background: viewMode === 'list' ? 'var(--app-primary)' : 'transparent',
+                                color: viewMode === 'list' ? 'white' : 'var(--app-muted-foreground)',
+                            }}>
+                            List
+                        </button>
+                        <button onClick={() => setViewMode('card')}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                            style={{
+                                background: viewMode === 'card' ? 'var(--app-primary)' : 'transparent',
+                                color: viewMode === 'card' ? 'white' : 'var(--app-muted-foreground)',
+                            }}>
+                            Cards
+                        </button>
+                    </div>
                     <button onClick={() => setFocusMode(prev => !prev)}
                             className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
                             title="Focus Mode (Ctrl+Q)">
@@ -401,6 +422,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                 <>
                                     {activeTasks.map(t => (
                                         <TaskCard key={t.id} task={t} users={users}
+                                                  compact={viewMode === 'list'}
                                                   onEdit={setEditingTask}
                                                   onQuickComplete={handleQuickComplete} />
                                     ))}
