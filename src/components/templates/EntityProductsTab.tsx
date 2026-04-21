@@ -437,7 +437,13 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
                                 const isSelected = selected.has(p.id)
                                 return (
                                     <div key={p.id} className="flex items-center gap-2 px-4 py-2 group transition-all cursor-pointer"
-                                        style={{ background: isSelected ? 'color-mix(in srgb, var(--app-primary) 6%, transparent)' : 'transparent' }}
+                                        style={{
+                                            background: isSelected ? 'color-mix(in srgb, var(--app-primary) 6%, transparent)' : 'transparent',
+                                            // Viewport virtualization — browser skips rendering off-screen rows.
+                                            // Avoids DOM bloat after scrolling through thousands of products.
+                                            contentVisibility: 'auto',
+                                            containIntrinsicSize: '0 44px',
+                                        }}
                                         onClick={() => toggleSelect(p.id)}>
                                         {/* Checkbox */}
                                         <button className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all"

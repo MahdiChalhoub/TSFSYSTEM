@@ -7,12 +7,29 @@ from kernel.audit.mixins import AuditLogMixin
 from kernel.events import emit_event
 
 
+# ── Unit Type Taxonomy ─────────────────────────────────────────
+# Formalized as a module-level constant so new types can be appended
+# without touching model code. Stays as a CharField (not enum) to allow
+# tenants to register custom types for future scenarios without migrations.
+UNIT_TYPE_CHOICES = (
+    ('COUNT', 'Count'),
+    ('WEIGHT', 'Weight'),
+    ('VOLUME', 'Volume'),
+    ('LENGTH', 'Length'),
+    ('AREA', 'Area'),
+    ('TIME', 'Time'),
+    ('OTHER', 'Other'),
+)
+
+
 class Unit(AuditLogMixin, TenantOwnedModel):
     """Unit of measurement with Kernel OS v2.0 integration"""
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=20, null=True, blank=True)
-    type = models.CharField(max_length=50, default='UNIT')
+    # NOTE: choices= is INFORMATIONAL only — CharField keeps it extensible
+    # so orgs can add new kinds of units without a schema migration.
+    type = models.CharField(max_length=50, default='COUNT', choices=UNIT_TYPE_CHOICES)
     conversion_factor = models.DecimalField(max_digits=15, decimal_places=6, default=1.0)
     base_unit = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='derived_units')
     allow_fraction = models.BooleanField(default=True)
@@ -27,6 +44,39 @@ class Unit(AuditLogMixin, TenantOwnedModel):
 
     def __str__(self):
         return self.code
+
+
+class UnitPackage(AuditLogMixin, TenantOwnedModel):
+    """
+    Per-UNIT package template (independent of product).
+
+    Defines standard packaging configurations for a given unit — e.g.
+    "Pack of 6 Pieces", "Carton 24", "Pallet 144". When a product adopts
+    this unit, these templates can seed its product-level PackagingLevel
+    entries. Works for any unit type (count / weight / volume / etc.).
+    """
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='unit_packages')
+    name = models.CharField(max_length=120, help_text='Display name, e.g. "Pack of 6"')
+    code = models.CharField(max_length=50, null=True, blank=True, help_text='Short code, e.g. "PK6"')
+    ratio = models.DecimalField(
+        max_digits=15, decimal_places=4, default=Decimal('1.0'),
+        help_text='How many base UNITS this package contains'
+    )
+    is_default = models.BooleanField(default=False, help_text='Primary package for this unit')
+    order = models.PositiveIntegerField(default=0, help_text='Display order (ascending)')
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'unit_package'
+        ordering = ['unit_id', 'order', 'ratio']
+        constraints = [
+            models.UniqueConstraint(fields=['unit', 'name', 'organization'], name='unique_unit_package_name_tenant')
+        ]
+
+    def __str__(self):
+        return f"{self.name} (×{self.ratio} {self.unit.code})"
 
 
 class Category(AuditLogMixin, TenantOwnedModel):

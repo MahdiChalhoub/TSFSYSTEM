@@ -121,3 +121,54 @@ export async function moveUnitProducts(
   if (!preview) revalidatePath('/inventory/units')
   return result
 }
+
+/* ═══════════════════════════════════════════════════════════
+ *  UNIT PACKAGES — per-unit package templates
+ * ═══════════════════════════════════════════════════════════ */
+
+export type UnitPackage = {
+    id?: number
+    unit?: number
+    name: string
+    code?: string | null
+    ratio: number
+    is_default?: boolean
+    order?: number
+    notes?: string | null
+}
+
+export async function listUnitPackages(unitId: number | string) {
+    try {
+        const data = await erpFetch(`unit-packages/?unit=${unitId}`, { cache: 'no-store' } as any)
+        return Array.isArray(data) ? data : (data?.results ?? [])
+    } catch (e) {
+        console.error('Failed to fetch unit packages:', e)
+        return []
+    }
+}
+
+export async function createUnitPackage(data: UnitPackage) {
+    const result = await erpFetch('unit-packages/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/inventory/units')
+    return result
+}
+
+export async function updateUnitPackage(id: number, data: Partial<UnitPackage>) {
+    const result = await erpFetch(`unit-packages/${id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/inventory/units')
+    return result
+}
+
+export async function deleteUnitPackage(id: number) {
+    await erpFetch(`unit-packages/${id}/`, { method: 'DELETE' })
+    revalidatePath('/inventory/units')
+    return { success: true }
+}

@@ -376,6 +376,28 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
 
 # =============================================================================
+# UNIT PACKAGE
+# =============================================================================
+
+class UnitPackageViewSet(TenantModelViewSet):
+    """CRUD for per-unit package templates (Pack of 6, Carton 24, etc.).
+    Filterable by ?unit=<id>."""
+    pagination_class = None
+
+    def get_serializer_class(self):
+        from apps.inventory.serializers import UnitPackageSerializer
+        return UnitPackageSerializer
+
+    def get_queryset(self):
+        from apps.inventory.models import UnitPackage
+        qs = UnitPackage.objects.all().select_related('unit')
+        unit_id = self.request.query_params.get('unit')
+        if unit_id:
+            qs = qs.filter(unit_id=unit_id)
+        return qs.order_by('unit_id', 'order', 'ratio')
+
+
+# =============================================================================
 # BRAND
 # =============================================================================
 

@@ -5,7 +5,7 @@ Routes for product catalog, stock management, warehouse operations, stock counti
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from apps.inventory.views import (
-    ProductViewSet, UnitViewSet, WarehouseViewSet, InventoryViewSet,
+    ProductViewSet, UnitViewSet, UnitPackageViewSet, WarehouseViewSet, InventoryViewSet,
     BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet,
     InventoryMovementViewSet,
     StockAdjustmentOrderViewSet, StockTransferOrderViewSet,
@@ -23,6 +23,7 @@ from apps.inventory.views.location_views import (
 router = DefaultRouter()
 router.register(r'products', ProductViewSet)
 router.register(r'units', UnitViewSet)
+router.register(r'unit-packages', UnitPackageViewSet, basename='unit-packages')
 router.register(r'warehouses', WarehouseViewSet)
 router.register(r'inventory', InventoryViewSet)
 router.register(r'brands', BrandViewSet)

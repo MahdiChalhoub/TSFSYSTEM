@@ -1,5 +1,5 @@
 from .product_models import (
-    Unit, Category, Brand, Parfum, ProductGroup, Product,
+    Unit, UnitPackage, Category, Brand, Parfum, ProductGroup, Product,
     ProductAttribute, ProductAttributeValue, ProductVariant, ComboComponent,
     ProductPackaging
 )
@@ -43,7 +43,7 @@ from .internal_consumption_models import InternalConsumptionEvent
 
 __all__ = [
     # Product Catalog
-    'Unit', 'Category', 'Brand', 'Parfum', 'ProductGroup', 'Product',
+    'Unit', 'UnitPackage', 'Category', 'Brand', 'Parfum', 'ProductGroup', 'Product',
     'ProductAttribute', 'ProductAttributeValue', 'ProductVariant', 'ComboComponent',
     'ProductPackaging',
     # Warehouse & Stock

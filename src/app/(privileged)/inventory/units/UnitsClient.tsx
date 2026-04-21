@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { deleteUnit, getUnitPackaging } from '@/app/actions/inventory/units'
+import { deleteUnit, getUnitPackaging, listUnitPackages, createUnitPackage, updateUnitPackage, deleteUnitPackage } from '@/app/actions/inventory/units'
 import { buildTree } from '@/lib/utils/tree'
 import { UnitFormModal } from '@/components/admin/UnitFormModal'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
@@ -135,10 +135,27 @@ type PanelTab = 'overview' | 'products' | 'packages' | 'calculator'
 
 function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, onClose, onPin }: any) {
     const [activeTab, setActiveTab] = useState<PanelTab>((initialTab as PanelTab) ?? 'overview')
-    // Packages state
+    // Packages state — product-level (read-only) AND unit-level (CRUD)
     const [packages, setPackages] = useState<any[]>([])
     const [pkgLoading, setPkgLoading] = useState(false)
     const [pkgLoaded, setPkgLoaded] = useState(false)
+    // Unit-level packages
+    const [unitPackages, setUnitPackages] = useState<any[]>([])
+    const [unitPkgLoading, setUnitPkgLoading] = useState(false)
+    const [showNewPkg, setShowNewPkg] = useState(false)
+    const [newPkgName, setNewPkgName] = useState('')
+    const [newPkgRatio, setNewPkgRatio] = useState<string>('')
+    const [newPkgCode, setNewPkgCode] = useState('')
+    const [savingPkg, setSavingPkg] = useState(false)
+
+    const reloadUnitPackages = useCallback(async () => {
+        setUnitPkgLoading(true)
+        try {
+            const data = await listUnitPackages(node.id)
+            setUnitPackages(data)
+        } catch { /* noop */ }
+        setUnitPkgLoading(false)
+    }, [node.id])
 
     const isBase = !node.base_unit
     const children = allUnits.filter((u: any) => u.base_unit === node.id)
@@ -147,7 +164,7 @@ function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, 
     const childCount = children.length
 
     useEffect(() => { setActiveTab((initialTab as PanelTab) ?? 'overview') }, [node.id, initialTab])
-    useEffect(() => { setPkgLoaded(false); setPackages([]) }, [node.id])
+    useEffect(() => { setPkgLoaded(false); setPackages([]); setUnitPackages([]); setShowNewPkg(false) }, [node.id])
 
     // Load packages
     useEffect(() => {
@@ -156,6 +173,8 @@ function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, 
             getUnitPackaging(node.id)
                 .then((data: any) => { setPackages(data); setPkgLoaded(true); setPkgLoading(false) })
                 .catch(() => setPkgLoading(false))
+            // Load unit-level packages in parallel
+            reloadUnitPackages()
         }
     }, [activeTab, node.id, pkgLoaded])
 
@@ -322,52 +341,235 @@ function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, 
                     }} />
                 )}
 
-                {/* ─── PACKAGES TAB (like Brands in Categories) ─── */}
+                {/* ─── PACKAGES TAB — Unit-level templates + product-level packaging ─── */}
                 {activeTab === 'packages' && (
-                    <div className="p-3 animate-in fade-in duration-150">
-                        {pkgLoading ? (
-                            <div className="flex items-center justify-center py-12"><Loader2 size={20} className="animate-spin text-app-primary" /></div>
-                        ) : packages.length > 0 ? (
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between px-1">
-                                    <span className="text-[9px] font-bold text-app-muted-foreground">{packages.length} packaging level{packages.length !== 1 ? 's' : ''}</span>
+                    <div className="p-3 space-y-4 animate-in fade-in duration-150">
+
+                        {/* SECTION 1 — UNIT PACKAGE TEMPLATES (CRUD) */}
+                        <section>
+                            <div className="flex items-center justify-between mb-2 px-1">
+                                <div className="flex items-center gap-2">
+                                    <Box size={12} style={{ color: '#8b5cf6' }} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#8b5cf6' }}>
+                                        Unit Package Templates
+                                    </span>
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                                        style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                                        {unitPackages.length}
+                                    </span>
                                 </div>
-                                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, #8b5cf6 20%, transparent)' }}>
-                                    <div className="flex items-center justify-between px-4 py-2.5"
-                                        style={{ background: 'color-mix(in srgb, #8b5cf6 5%, transparent)', borderBottom: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)' }}>
-                                        <div className="flex items-center gap-2"><Box size={12} style={{ color: '#8b5cf6' }} /><span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#8b5cf6' }}>Linked Packaging</span></div>
-                                        <span className="text-[10px] font-bold" style={{ color: '#8b5cf6' }}>{packages.length}</span>
+                                {!showNewPkg && (
+                                    <button type="button" onClick={() => { setShowNewPkg(true); setNewPkgName(''); setNewPkgRatio(''); setNewPkgCode(''); }}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                                        style={{ color: '#8b5cf6', border: '1px solid color-mix(in srgb, #8b5cf6 30%, transparent)' }}>
+                                        <Plus size={11} /> Add
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* New package inline form */}
+                            {showNewPkg && (
+                                <div className="p-3 rounded-xl mb-2 space-y-2.5 animate-in fade-in slide-in-from-top-2"
+                                    style={{
+                                        background: 'color-mix(in srgb, #8b5cf6 5%, transparent)',
+                                        border: '1px solid color-mix(in srgb, #8b5cf6 25%, transparent)',
+                                    }}>
+                                    {/* Row 1 — Name + Code */}
+                                    <div className="grid grid-cols-[1fr_90px] gap-1.5">
+                                        <div>
+                                            <label className="block text-[9px] font-black uppercase tracking-widest mb-1"
+                                                style={{ color: '#8b5cf6', opacity: 0.75 }}>
+                                                Package Name
+                                            </label>
+                                            <input value={newPkgName} onChange={e => setNewPkgName(e.target.value)}
+                                                placeholder="e.g. Pack of 6"
+                                                className="w-full px-2.5 py-1.5 rounded-lg text-[12px] font-bold outline-none"
+                                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[9px] font-black uppercase tracking-widest mb-1"
+                                                style={{ color: '#8b5cf6', opacity: 0.75 }}>
+                                                Short Code
+                                            </label>
+                                            <input value={newPkgCode} onChange={e => setNewPkgCode(e.target.value.toUpperCase())}
+                                                placeholder="PK6"
+                                                className="w-full px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-bold text-center outline-none uppercase"
+                                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                        </div>
                                     </div>
+
+                                    {/* Row 2 — Ratio with explicit "= N Piece" context */}
+                                    <div>
+                                        <label className="block text-[9px] font-black uppercase tracking-widest mb-1"
+                                            style={{ color: '#8b5cf6', opacity: 0.75 }}>
+                                            Ratio — How many <strong style={{ color: '#8b5cf6', opacity: 1 }}>{node.name}</strong> in this package
+                                        </label>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[11px] font-bold font-mono whitespace-nowrap"
+                                                style={{ color: 'var(--app-muted-foreground)' }}>
+                                                1 {newPkgName || 'package'} =
+                                            </span>
+                                            <input type="number" step="0.001" min="0"
+                                                value={newPkgRatio}
+                                                onChange={e => setNewPkgRatio(e.target.value)}
+                                                placeholder="12"
+                                                className="w-24 px-2.5 py-1.5 rounded-lg text-[14px] font-mono font-black text-center outline-none"
+                                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                            <span className="text-[11px] font-bold font-mono whitespace-nowrap"
+                                                style={{ color: 'var(--app-foreground)' }}>
+                                                {node.name} <span style={{ color: 'var(--app-muted-foreground)' }}>({node.code})</span>
+                                            </span>
+                                        </div>
+                                        {newPkgRatio && Number(newPkgRatio) > 0 && (
+                                            <div className="mt-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold"
+                                                style={{
+                                                    background: 'color-mix(in srgb, #8b5cf6 10%, transparent)',
+                                                    color: '#8b5cf6',
+                                                }}>
+                                                ✓ 1 <strong>{newPkgName || 'package'}</strong> contains {Number(newPkgRatio).toLocaleString()} {node.name}{Number(newPkgRatio) !== 1 ? 's' : ''}
+                                                {Number(newPkgRatio) > 1 && ` — or ${Number(newPkgRatio).toLocaleString()} × ${node.code}`}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 justify-end">
+                                        <button type="button" onClick={() => setShowNewPkg(false)}
+                                            disabled={savingPkg}
+                                            className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                                            style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Cancel
+                                        </button>
+                                        <button type="button"
+                                            disabled={savingPkg || !newPkgName.trim() || !newPkgRatio}
+                                            onClick={async () => {
+                                                setSavingPkg(true)
+                                                try {
+                                                    await createUnitPackage({
+                                                        unit: node.id,
+                                                        name: newPkgName.trim(),
+                                                        ratio: Number(newPkgRatio),
+                                                        code: newPkgCode || null,
+                                                    })
+                                                    toast.success(`Package "${newPkgName}" created`)
+                                                    setShowNewPkg(false); setNewPkgName(''); setNewPkgRatio(''); setNewPkgCode('')
+                                                    await reloadUnitPackages()
+                                                } catch (e: any) {
+                                                    toast.error(e?.message || 'Failed to create package')
+                                                }
+                                                setSavingPkg(false)
+                                            }}
+                                            className="flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            style={{ background: '#8b5cf6', color: 'white' }}>
+                                            {savingPkg ? <Loader2 size={11} className="animate-spin" /> : <><Plus size={11} /> Save</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Package list */}
+                            {unitPkgLoading ? (
+                                <div className="flex items-center justify-center py-6">
+                                    <Loader2 size={16} className="animate-spin" style={{ color: '#8b5cf6' }} />
+                                </div>
+                            ) : unitPackages.length > 0 ? (
+                                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, #8b5cf6 20%, transparent)' }}>
                                     <div className="divide-y divide-app-border/30">
-                                        {packages.map((pkg: any) => (
-                                            <div key={pkg.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-app-background/50 transition-all group">
-                                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}><Box size={12} /></div>
+                                        {unitPackages.map((pkg: any) => (
+                                            <div key={pkg.id} className="flex items-center gap-2 px-3 py-2 hover:bg-app-background/40 transition-all group">
+                                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                                                    <Box size={12} />
+                                                </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-[12px] font-bold text-app-foreground truncate">{pkg.name}</div>
-                                                    <div className="flex items-center gap-2 text-[9px] text-app-muted-foreground">
-                                                        <span className="font-mono">×{pkg.ratio}</span>
-                                                        {pkg.product_name && <span>• {pkg.product_name}</span>}
-                                                        {pkg.barcode && <span className="font-mono">• {pkg.barcode}</span>}
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="text-[12px] font-bold text-app-foreground truncate">{pkg.name}</span>
+                                                        {pkg.code && <span className="text-[9px] font-mono font-bold uppercase px-1 py-0.5 rounded"
+                                                            style={{ background: 'var(--app-background)', color: 'var(--app-muted-foreground)' }}>{pkg.code}</span>}
+                                                        {pkg.is_default && <span className="text-[8px] font-black uppercase tracking-widest px-1 py-0.5 rounded"
+                                                            style={{ background: 'color-mix(in srgb, #8b5cf6 15%, transparent)', color: '#8b5cf6' }}>DEFAULT</span>}
+                                                    </div>
+                                                    <div className="text-[10px] text-app-muted-foreground font-mono mt-0.5">
+                                                        1 {pkg.name} = <span className="font-black" style={{ color: '#8b5cf6' }}>
+                                                            {Number(pkg.ratio).toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                                                        </span> {node.name}{Number(pkg.ratio) !== 1 ? 's' : ''}
+                                                        <span className="opacity-60"> ({node.code})</span>
                                                     </div>
                                                 </div>
-                                                <div className="text-right flex-shrink-0">
-                                                    <div className="text-[11px] font-black tabular-nums text-app-foreground">{Number(pkg.selling_price || 0).toLocaleString()}</div>
-                                                    <div className="flex items-center gap-1 text-[8px] font-bold">
-                                                        {pkg.is_default_sale && <span className="px-1 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>SALE</span>}
-                                                        {pkg.is_default_purchase && <span className="px-1 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>BUY</span>}
-                                                    </div>
-                                                </div>
+                                                <button type="button"
+                                                    onClick={async () => {
+                                                        if (!confirm(`Delete "${pkg.name}"?`)) return
+                                                        try {
+                                                            await deleteUnitPackage(pkg.id)
+                                                            toast.success(`Package "${pkg.name}" removed`)
+                                                            await reloadUnitPackages()
+                                                        } catch (e: any) { toast.error(e?.message || 'Delete failed') }
+                                                    }}
+                                                    className="opacity-0 group-hover:opacity-100 p-1 rounded-lg transition-all"
+                                                    style={{ color: 'var(--app-error, #ef4444)' }}
+                                                    title="Delete">
+                                                    <Trash2 size={12} />
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <Box size={28} className="text-app-muted-foreground mb-2 opacity-40" />
-                                <p className="text-[12px] font-bold text-app-muted-foreground">No packaging linked</p>
-                                <p className="text-[10px] text-app-muted-foreground mt-1">Packaging levels appear when products use this unit.</p>
-                            </div>
+                            ) : !showNewPkg && (
+                                <div className="flex flex-col items-center justify-center py-6 px-4 text-center rounded-xl"
+                                    style={{
+                                        background: 'color-mix(in srgb, #8b5cf6 3%, transparent)',
+                                        border: '1px dashed color-mix(in srgb, #8b5cf6 25%, transparent)',
+                                    }}>
+                                    <Box size={20} style={{ color: '#8b5cf6' }} className="mb-1.5 opacity-60" />
+                                    <p className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                        No package templates yet
+                                    </p>
+                                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        Define standard packagings like "Pack of 6", "Carton 24" — used as defaults for products.
+                                    </p>
+                                </div>
+                            )}
+                        </section>
+
+                        {/* SECTION 2 — LINKED PRODUCT PACKAGING (read-only) */}
+                        {(pkgLoading || packages.length > 0) && (
+                            <section>
+                                <div className="flex items-center gap-2 mb-2 px-1">
+                                    <Package size={12} style={{ color: 'var(--app-muted-foreground)' }} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        Linked Product Packaging
+                                    </span>
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                                        style={{ background: 'var(--app-background)', color: 'var(--app-muted-foreground)' }}>
+                                        {packages.length}
+                                    </span>
+                                </div>
+                                {pkgLoading ? (
+                                    <div className="flex items-center justify-center py-6"><Loader2 size={14} className="animate-spin text-app-muted-foreground" /></div>
+                                ) : (
+                                    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
+                                        <div className="divide-y divide-app-border/30">
+                                            {packages.map((pkg: any) => (
+                                                <div key={pkg.id} className="flex items-center gap-2 px-3 py-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-[12px] font-bold text-app-foreground truncate">{pkg.name}</div>
+                                                        <div className="flex items-center gap-2 text-[9px] text-app-muted-foreground">
+                                                            <span className="font-mono">×{pkg.ratio}</span>
+                                                            {pkg.product_name && <span>• {pkg.product_name}</span>}
+                                                            {pkg.barcode && <span className="font-mono">• {pkg.barcode}</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <div className="text-[11px] font-black tabular-nums text-app-foreground">{Number(pkg.selling_price || 0).toLocaleString()}</div>
+                                                        <div className="flex items-center gap-1 text-[8px] font-bold">
+                                                            {pkg.is_default_sale && <span className="px-1 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>SALE</span>}
+                                                            {pkg.is_default_purchase && <span className="px-1 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>BUY</span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </section>
                         )}
                     </div>
                 )}

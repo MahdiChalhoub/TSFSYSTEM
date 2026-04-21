@@ -1,5 +1,6 @@
 from .taxonomy_serializers import (
-    UnitSerializer, CategorySerializer, CategorySimpleSerializer, StorefrontCategorySerializer,
+    UnitSerializer, UnitPackageSerializer,
+    CategorySerializer, CategorySimpleSerializer, StorefrontCategorySerializer,
     BrandSerializer, BrandDetailSerializer, StorefrontBrandSerializer,
     ParfumSerializer, ProductGroupSerializer
 )
@@ -33,7 +34,8 @@ from .location_serializers import (
 )
 
 __all__ = [
-    'UnitSerializer', 'CategorySerializer', 'CategorySimpleSerializer', 'StorefrontCategorySerializer',
+    'UnitSerializer', 'UnitPackageSerializer',
+    'CategorySerializer', 'CategorySimpleSerializer', 'StorefrontCategorySerializer',
     'BrandSerializer', 'BrandDetailSerializer', 'StorefrontBrandSerializer',
     'ParfumSerializer', 'ProductGroupSerializer',
     'ProductAttributeValueSerializer', 'ProductVariantSerializer',
