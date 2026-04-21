@@ -11,7 +11,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { deleteBrand, getBrandHierarchy } from '@/app/actions/inventory/brands'
+import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
+import { deleteBrand, getBrandHierarchy, moveBrandProducts } from '@/app/actions/inventory/brands'
 import { BrandFormModal } from '@/components/admin/BrandFormModal'
 
 /* ═══════════════════════════════════════════════════════════
@@ -304,6 +305,7 @@ export function BrandsClient({ initialBrands, countries, categories }: { initial
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingBrand, setEditingBrand] = useState<any>(null)
     const [deleteTarget, setDeleteTarget] = useState<any>(null)
+    const [deleteConflict, setDeleteConflict] = useState<any>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
     const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
@@ -347,17 +349,57 @@ export function BrandsClient({ initialBrands, countries, categories }: { initial
 
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
+        const source = deleteTarget
+        setDeleteTarget(null)
         startTransition(async () => {
-            const result = await deleteBrand(deleteTarget.id)
-            if (result?.success) {
-                toast.success(`"${deleteTarget.name}" deleted`)
-                router.refresh()
-            } else {
-                toast.error(result?.message || 'Failed to delete')
+            const result = await deleteBrand(source.id)
+            if (result?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
+            if ((result as any)?.conflict) {
+                setDeleteConflict({ conflict: (result as any).conflict, source })
+                return
             }
-            setDeleteTarget(null)
+            toast.error(result?.message || 'Failed to delete')
         })
     }
+
+    const handleMigrateBrandAndDelete = async (targetId: number) => {
+        const source = deleteConflict?.source
+        if (!source) return
+        try {
+            // Brand move_products already supports also_delete_source in one shot
+            const moveRes = await moveBrandProducts({
+                source_brand_id: source.id,
+                target_brand_id: targetId,
+                also_delete_source: true,
+            })
+            if (moveRes?.success === false) {
+                toast.error(moveRes.message || 'Migration failed'); return
+            }
+            toast.success(`Products migrated and "${source.name}" deleted`)
+            setDeleteConflict(null); router.refresh()
+        } catch (e: any) {
+            toast.error(e?.message || 'Migration failed')
+        }
+    }
+
+    const handleForceDeleteBrand = async () => {
+        const source = deleteConflict?.source
+        if (!source) return
+        const res = await deleteBrand(source.id, { force: true })
+        if (res?.success) {
+            toast.success(`"${source.name}" force-deleted`)
+            setDeleteConflict(null); router.refresh()
+        } else {
+            toast.error(res?.message || 'Delete failed')
+        }
+    }
+
+    const brandMigrationTargets = useMemo(() => {
+        const sourceId = deleteConflict?.source?.id
+        return data
+            .filter((b: any) => b.id !== sourceId)
+            .map((b: any) => ({ id: b.id, name: b.name, code: b.short_name }))
+    }, [data, deleteConflict])
 
     return (
         <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`} style={{ height: '100%' }}>
@@ -610,9 +652,20 @@ export function BrandsClient({ initialBrands, countries, categories }: { initial
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
                 onConfirm={handleConfirmDelete}
                 title={`Delete "${deleteTarget?.name}"?`}
-                description="This will permanently remove this brand and unlink it from all categories. Products will not be deleted."
+                description="Products are checked before delete. If any product is assigned to this brand, you'll be guided to migrate them first."
                 confirmText="Delete"
                 variant="danger"
+            />
+
+            {/* ── 409 Conflict → Migration Flow ── */}
+            <DeleteConflictDialog
+                conflict={deleteConflict?.conflict || null}
+                sourceName={deleteConflict?.source?.name || ''}
+                entityName="brand"
+                targets={brandMigrationTargets}
+                onMigrate={handleMigrateBrandAndDelete}
+                onForceDelete={handleForceDeleteBrand}
+                onCancel={() => setDeleteConflict(null)}
             />
         </div>
     )
