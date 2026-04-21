@@ -94,15 +94,20 @@ export async function reparentCategory(id: number, newParentId: number | null) {
  }
 }
 
-export async function deleteCategory(id: number) {
+export async function deleteCategory(id: number, options: { force?: boolean } = {}) {
  try {
- await erpFetch(`inventory/categories/${id}/`, {
- method: 'DELETE'
- });
+ const url = options.force
+ ? `inventory/categories/${id}/?force=1`
+ : `inventory/categories/${id}/`;
+ await erpFetch(url, { method: 'DELETE' });
  revalidatePath('/inventory/categories');
  return { success: true };
- } catch (e) {
- return { success: false, message: 'Failed to delete category' };
+ } catch (e: any) {
+ // Surface backend 409 guard payload so the UI can offer Migrate / Force
+ if (e?.status === 409 && e?.data) {
+ return { success: false, conflict: e.data, message: e.data.message || 'Cannot delete: products or sub-categories assigned' };
+ }
+ return { success: false, message: e?.message || 'Failed to delete category' };
  }
 }
 

@@ -41,14 +41,22 @@ export async function updateUnit(id: string | number, data: any) {
 }
 
 /**
- * Delete a unit
+ * Delete a unit. Backend returns 409 with a conflict payload if products
+ * reference this unit; the caller is expected to show a Migrate / Force
+ * dialog and re-call with { force: true } on confirmation.
  */
-export async function deleteUnit(id: string | number) {
- const result = await erpFetch(`/units/${id}/`, {
- method: 'DELETE'
- })
+export async function deleteUnit(id: string | number, options: { force?: boolean } = {}) {
+ try {
+ const url = options.force ? `/units/${id}/?force=1` : `/units/${id}/`
+ await erpFetch(url, { method: 'DELETE' })
  revalidatePath('/inventory/units')
- return result
+ return { success: true }
+ } catch (e: any) {
+ if (e?.status === 409 && e?.data) {
+ return { success: false, conflict: e.data, message: e.data.message || 'Cannot delete: products assigned' }
+ }
+ return { success: false, message: e?.message || 'Failed to delete unit' }
+ }
 }
 
 /**

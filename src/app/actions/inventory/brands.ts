@@ -65,14 +65,41 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
     }
 }
 
-export async function deleteBrand(id: number) {
+export async function deleteBrand(id: number, options: { force?: boolean } = {}) {
     try {
-        await erpFetch(`inventory/brands/${id}/`, { method: 'DELETE' });
+        const url = options.force ? `inventory/brands/${id}/?force=1` : `inventory/brands/${id}/`;
+        await erpFetch(url, { method: 'DELETE' });
         revalidatePath('/inventory/brands');
         revalidatePath('/inventory/categories');
         return { success: true };
     } catch (e: any) {
+        // Surface backend 409 payload (products referencing this brand)
+        if (e?.status === 409 && e?.data) {
+            return { success: false, conflict: e.data, message: e.data.message || 'Cannot delete: products assigned' };
+        }
         return { success: false, message: e?.message || 'Failed to delete brand' };
+    }
+}
+
+/**
+ * Bulk-reassign products from one brand to another (or to unbranded = null).
+ * Used by the delete-protection migration flow.
+ */
+export async function moveBrandProducts(params: {
+    source_brand_id: number;
+    target_brand_id?: number | null;
+    also_delete_source?: boolean;
+}) {
+    try {
+        const res = await erpFetch(`inventory/brands/move_products/`, {
+            method: 'POST',
+            body: JSON.stringify(params),
+        });
+        revalidatePath('/inventory/brands');
+        revalidatePath('/inventory/categories');
+        return { success: true, ...res };
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to migrate brand products' };
     }
 }
 
