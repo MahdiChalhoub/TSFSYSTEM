@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { deleteCategory } from '@/app/actions/inventory/categories'
+import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
+import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
 import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
@@ -121,19 +123,61 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
         ]
     }, [actionNode, openSheet, openAddModal, openEditModal, requestDelete, drillInto, data])
 
+    const [deleteConflict, setDeleteConflict] = useState<any>(null)
+
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
+        const source = deleteTarget
+        setDeleteTarget(null)
         startTransition(async () => {
-            const result = await deleteCategory(deleteTarget.id)
-            if (result?.success) {
-                toast.success(`"${deleteTarget.name}" deleted`)
-                router.refresh()
-            } else {
-                toast.error(result?.message || 'Failed to delete')
+            const result = await deleteCategory(source.id)
+            if (result?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
+            if ((result as any)?.conflict) {
+                setDeleteConflict({ conflict: (result as any).conflict, source })
+                return
             }
-            setDeleteTarget(null)
+            toast.error(result?.message || 'Failed to delete')
         })
     }
+
+    const handleMigrateAndDelete = async (targetId: number) => {
+        const source = deleteConflict?.source
+        if (!source) return
+        try {
+            await erpFetch('inventory/categories/move_products/', {
+                method: 'POST',
+                body: JSON.stringify({ source_category_id: source.id, target_category_id: targetId }),
+            })
+            const delRes = await deleteCategory(source.id, { force: true })
+            if (delRes?.success) {
+                toast.success(`Migrated & deleted "${source.name}"`)
+                setDeleteConflict(null); router.refresh()
+            } else {
+                toast.error(delRes?.message || 'Delete failed after migration')
+            }
+        } catch (e: any) {
+            toast.error(e?.message || 'Migration failed')
+        }
+    }
+
+    const handleForceDelete = async () => {
+        const source = deleteConflict?.source
+        if (!source) return
+        const res = await deleteCategory(source.id, { force: true })
+        if (res?.success) {
+            toast.success(`"${source.name}" force-deleted`)
+            setDeleteConflict(null); router.refresh()
+        } else {
+            toast.error(res?.message || 'Delete failed')
+        }
+    }
+
+    const migrationTargets = useMemo(() => {
+        const sourceId = deleteConflict?.source?.id
+        return data
+            .filter((c: any) => c.id !== sourceId)
+            .map((c: any) => ({ id: c.id, name: c.name, code: c.code }))
+    }, [data, deleteConflict])
 
     return (
         <MobileMasterPage
@@ -210,6 +254,15 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                         onClose={() => setMoveNode(null)}
                     />
                     <PageTour tourId="inventory-categories-mobile" renderButton={false} />
+                    <DeleteConflictDialog
+                        conflict={deleteConflict?.conflict || null}
+                        sourceName={deleteConflict?.source?.name || ''}
+                        entityName="category"
+                        targets={migrationTargets}
+                        onMigrate={handleMigrateAndDelete}
+                        onForceDelete={handleForceDelete}
+                        onCancel={() => setDeleteConflict(null)}
+                    />
                 </>
             }
             sheet={

@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { deleteUnit } from '@/app/actions/inventory/units'
+import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
+import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { UnitFormModal } from '@/components/admin/UnitFormModal'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
@@ -54,19 +56,61 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
     const openActionMenu = useCallback((n: any) => setActionNode(n), [])
     const requestDelete = useCallback((u: any) => setDeleteTarget(u), [])
 
+    const [deleteConflict, setDeleteConflict] = useState<any>(null)
+
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
+        const source = deleteTarget
+        setDeleteTarget(null)
         startTransition(async () => {
-            const result = await deleteUnit(deleteTarget.id)
-            if (result?.success !== false) {
-                toast.success(`"${deleteTarget.name}" deleted`)
-                router.refresh()
-            } else {
-                toast.error(result?.message || 'Failed to delete')
+            const result = await deleteUnit(source.id)
+            if ((result as any)?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
+            if ((result as any)?.conflict) {
+                setDeleteConflict({ conflict: (result as any).conflict, source })
+                return
             }
-            setDeleteTarget(null)
+            toast.error((result as any)?.message || 'Failed to delete')
         })
     }
+
+    const handleMigrateAndDelete = async (targetId: number) => {
+        const source = deleteConflict?.source
+        if (!source) return
+        try {
+            await erpFetch('/units/move_products/', {
+                method: 'POST',
+                body: JSON.stringify({ source_unit_id: source.id, target_unit_id: targetId }),
+            })
+            const delRes: any = await deleteUnit(source.id, { force: true })
+            if (delRes?.success) {
+                toast.success(`Migrated & deleted "${source.name}"`)
+                setDeleteConflict(null); router.refresh()
+            } else {
+                toast.error(delRes?.message || 'Delete failed after migration')
+            }
+        } catch (e: any) {
+            toast.error(e?.message || 'Migration failed')
+        }
+    }
+
+    const handleForceDelete = async () => {
+        const source = deleteConflict?.source
+        if (!source) return
+        const res: any = await deleteUnit(source.id, { force: true })
+        if (res?.success) {
+            toast.success(`"${source.name}" force-deleted`)
+            setDeleteConflict(null); router.refresh()
+        } else {
+            toast.error(res?.message || 'Delete failed')
+        }
+    }
+
+    const unitTargets = useMemo(() => {
+        const sourceId = deleteConflict?.source?.id
+        return data
+            .filter((u: any) => u.id !== sourceId)
+            .map((u: any) => ({ id: u.id, name: u.name, code: u.code }))
+    }, [data, deleteConflict])
 
     const actionItems = useMemo(() => {
         if (!actionNode) return []
@@ -154,6 +198,15 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                         items={actionItems}
                     />
                     <PageTour tourId="inventory-units-mobile" renderButton={false} />
+                    <DeleteConflictDialog
+                        conflict={deleteConflict?.conflict || null}
+                        sourceName={deleteConflict?.source?.name || ''}
+                        entityName="unit"
+                        targets={unitTargets}
+                        onMigrate={handleMigrateAndDelete}
+                        onForceDelete={handleForceDelete}
+                        onCancel={() => setDeleteConflict(null)}
+                    />
                 </>
             }
             sheet={
