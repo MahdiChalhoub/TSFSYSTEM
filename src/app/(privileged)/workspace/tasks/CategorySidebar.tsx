@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, ChevronRight, GripVertical, User, FolderKanban, Edit2, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, GripVertical, User, FolderKanban, Edit2, X, Crown } from 'lucide-react';
 import type { Task, Category, UserItem, CategorySelection } from './types';
 import { getUserName } from './types';
 
@@ -40,11 +40,20 @@ export default function CategorySidebar({
     const getTaskCountForUser = (catId: number, userId: number) =>
         tasks.filter(t => t.category === catId && t.assigned_to === userId).length;
 
+    /** Get unique users who have tasks assigned TO them in this category */
     const getUsersForCategory = (catId: number): UserItem[] => {
         const userIds = new Set(
             tasks.filter(t => t.category === catId && t.assigned_to).map(t => t.assigned_to as number)
         );
         return users.filter(u => userIds.has(u.id));
+    };
+
+    /** Get the leaders (assigned_by) for a category — people who delegate/assign tasks */
+    const getLeadersForCategory = (catId: number): UserItem[] => {
+        const leaderIds = new Set(
+            tasks.filter(t => t.category === catId && t.assigned_by).map(t => t.assigned_by as number)
+        );
+        return users.filter(u => leaderIds.has(u.id));
     };
 
     const countBadge = (count: number) => (
@@ -106,12 +115,14 @@ export default function CategorySidebar({
                 {/* Category items */}
                 {categories.map(cat => {
                     const catUsers = getUsersForCategory(cat.id);
+                    const catLeaders = getLeadersForCategory(cat.id);
                     const isExpanded = expandedCategories.has(cat.id);
                     const hasUsers = catUsers.length > 0;
                     const isSelected = selectedCategoryId === cat.id && !selectedUserId;
 
                     return (
                         <div key={cat.id} className="border-b" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                            {/* Category row */}
                             <div className="flex items-center" style={activeStyle(isSelected)}>
                                 {hasUsers && (
                                     <button onClick={() => onToggleExpanded(cat.id)}
@@ -125,7 +136,18 @@ export default function CategorySidebar({
                                         <GripVertical size={12} className="flex-shrink-0 cursor-grab active:cursor-grabbing"
                                                       style={{ color: 'var(--app-muted-foreground)', opacity: 0.5 }} />
                                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cat.color || 'var(--app-primary)' }} />
-                                        <span className="text-[12px] font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{cat.name}</span>
+                                        <div className="flex-1 min-w-0">
+                                            <span className="text-[12px] font-bold truncate block" style={{ color: 'var(--app-foreground)' }}>{cat.name}</span>
+                                            {/* Leaders display */}
+                                            {catLeaders.length > 0 && (
+                                                <div className="flex items-center gap-1 mt-0.5">
+                                                    <Crown size={9} className="flex-shrink-0" style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                                    <span className="text-[9px] font-bold truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                        {catLeaders.map(l => getUserName(l)).join(', ')}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     {countBadge(getTaskCountForCategory(cat.id))}
                                 </button>
@@ -136,6 +158,7 @@ export default function CategorySidebar({
                                 <div style={{ background: 'color-mix(in srgb, var(--app-bg) 50%, transparent)' }}>
                                     {catUsers.map(u => {
                                         const isUserSelected = selectedCategoryId === cat.id && selectedUserId === u.id;
+                                        const userTaskCount = getTaskCountForUser(cat.id, u.id);
                                         return (
                                             <button key={u.id}
                                                     onClick={() => onSelectUser(cat.id, u.id)}
@@ -152,7 +175,7 @@ export default function CategorySidebar({
                                                 </div>
                                                 <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full ml-2"
                                                       style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
-                                                    {getTaskCountForUser(cat.id, u.id)}
+                                                    {userTaskCount}
                                                 </span>
                                             </button>
                                         );

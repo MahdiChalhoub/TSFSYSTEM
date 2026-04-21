@@ -116,6 +116,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for task lists (no nested comments)."""
     category_name = serializers.CharField(source='category.name', read_only=True, default=None)
     assigned_to_name = serializers.SerializerMethodField()
+    assigned_by_name = serializers.SerializerMethodField()
     is_overdue = serializers.BooleanField(read_only=True)
     subtask_count = serializers.SerializerMethodField()
 
@@ -123,13 +124,20 @@ class TaskListSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'title', 'status', 'priority', 'source', 'category', 'category_name',
-            'assigned_to', 'assigned_to_name', 'points', 'due_date', 'is_overdue',
+            'assigned_to', 'assigned_to_name', 'assigned_by', 'assigned_by_name',
+            'points', 'due_date', 'is_overdue',
             'subtask_count', 'related_object_label', 'created_at',
         ]
 
     def get_assigned_to_name(self, obj):
         if obj.assigned_to:
             return obj.assigned_to.email or obj.assigned_to.username
+        return None
+
+    def get_assigned_by_name(self, obj):
+        if obj.assigned_by:
+            full = obj.assigned_by.get_full_name()
+            return full if full else (obj.assigned_by.email or obj.assigned_by.username)
         return None
 
     def get_subtask_count(self, obj):

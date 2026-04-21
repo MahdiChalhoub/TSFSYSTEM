@@ -154,19 +154,17 @@ export default function AutoTaskRulesPage() {
     const [saving, setSaving] = useState(false);
     const [search, setSearch] = useState('');
     const [focusMode, setFocusMode] = useState(false);
-    const [collapsedModules, setCollapsedModules] = useState<Record<string, boolean>>({});
+    const [selectedModule, setSelectedModule] = useState<string>('inventory');
     const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
     const searchParams = useSearchParams();
     const searchRef = useRef<HTMLInputElement>(null);
 
-    // Read ?module= from URL; collapse everything except that module so quick-access
-    // deep links (e.g. from /finance/fiscal-years) land on a focused view.
+    // Read ?module= from URL to initially focus a module (from quick-access deep links).
     useEffect(() => {
         const focus = searchParams?.get('module');
-        if (!focus) return;
-        const collapsed: Record<string, boolean> = {};
-        for (const m of MODULES) if (m.value !== focus) collapsed[m.value] = true;
-        setCollapsedModules(collapsed);
+        if (focus && MODULES.some(m => m.value === focus)) {
+            setSelectedModule(focus);
+        }
     }, [searchParams]);
 
     const load = async () => {
@@ -295,8 +293,19 @@ export default function AutoTaskRulesPage() {
         return buckets;
     }, [filteredRules]);
 
-    const toggleModule = (code: string) =>
-        setCollapsedModules(p => ({ ...p, [code]: !p[code] }));
+    // Unfiltered counts (for the nav) — independent of the search filter.
+    const totalByModule = useMemo(() => {
+        const buckets: Record<string, number> = {};
+        for (const m of MODULES) buckets[m.value] = 0;
+        for (const r of rules) {
+            const key = (r.module || 'system').toLowerCase();
+            buckets[key] = (buckets[key] || 0) + 1;
+        }
+        return buckets;
+    }, [rules]);
+
+    const selectedMeta = moduleMeta(selectedModule);
+    const currentRules = rulesByModule[selectedModule] || [];
 
     return (
         <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
@@ -373,71 +382,123 @@ export default function AutoTaskRulesPage() {
                 </div>
             )}
 
-            {/* ── Table Container ─────────────────────────────────── */}
-            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
-                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
-                    <div className="w-7 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">Rule</div>
-                    <div className="hidden md:block w-36 flex-shrink-0">Trigger</div>
-                    <div className="hidden lg:block w-40 flex-shrink-0">Conditions</div>
-                    <div className="w-16 text-center flex-shrink-0">Active</div>
-                    <div className="w-20 text-right flex-shrink-0">Actions</div>
+            {/* ── 2-Pane Layout: Module Nav (left) + Rules (right) ─── */}
+            <div className="flex-1 min-h-0 flex gap-3">
+                {/* Vertical Module Nav */}
+                <div className="w-48 md:w-56 flex-shrink-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
+                    <div className="px-3 py-2 bg-app-surface/60 border-b border-app-border/50">
+                        <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Modules</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
+                        {MODULES.map(m => {
+                            const Icon = m.icon;
+                            const count = totalByModule[m.value] || 0;
+                            const isSelected = selectedModule === m.value;
+                            return (
+                                <button
+                                    key={m.value}
+                                    type="button"
+                                    onClick={() => setSelectedModule(m.value)}
+                                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all text-left"
+                                    style={{
+                                        background: isSelected ? `color-mix(in srgb, ${m.color} 12%, transparent)` : 'transparent',
+                                        borderLeft: `3px solid ${isSelected ? m.color : 'transparent'}`,
+                                    }}>
+                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style={{
+                                            background: isSelected ? m.color : `color-mix(in srgb, ${m.color} 12%, transparent)`,
+                                            color: isSelected ? 'white' : m.color,
+                                        }}>
+                                        <Icon size={13} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[12px] font-black truncate" style={{ color: isSelected ? m.color : 'var(--app-foreground)' }}>
+                                            {m.label}
+                                        </div>
+                                        <div className="text-[9px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            {count} rule{count === 1 ? '' : 's'}
+                                        </div>
+                                    </div>
+                                    {count > 0 && (
+                                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded tabular-nums flex-shrink-0"
+                                            style={{
+                                                background: isSelected ? 'white' : `color-mix(in srgb, ${m.color} 15%, transparent)`,
+                                                color: m.color,
+                                            }}>
+                                            {count}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <Loader2 size={24} className="animate-spin text-app-primary" />
+                {/* Rules Panel */}
+                <div className="flex-1 min-w-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
+                    <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-app-surface/60 border-b border-app-border/50">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: `color-mix(in srgb, ${selectedMeta.color} 12%, transparent)`, color: selectedMeta.color }}>
+                            {(() => { const I = selectedMeta.icon; return <I size={13} />; })()}
                         </div>
-                    ) : filteredRules.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                            <Zap size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-                            <p className="text-sm font-bold text-app-muted-foreground">No auto-task rules yet</p>
-                            <p className="text-[11px] text-app-muted-foreground mt-1">
-                                Create your first rule to automate task creation.
-                            </p>
-                        </div>
-                    ) : (
-                        MODULES.map((mod) => {
-                            const modRules = rulesByModule[mod.value] || [];
-                            if (modRules.length === 0 && search.trim()) return null;
-                            const collapsed = !!collapsedModules[mod.value];
-                            const Icon = mod.icon;
-                            return (
-                                <div key={mod.value} className="border-b border-app-border/30">
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleModule(mod.value)}
-                                        className="w-full flex items-center gap-2 px-3 py-2 bg-app-surface/60 hover:bg-app-surface/80 transition-all text-left sticky top-0 z-10"
-                                        style={{ borderLeft: `3px solid ${mod.color}` }}
-                                    >
-                                        {collapsed ? <ChevronRight size={13} className="text-app-muted-foreground flex-shrink-0" /> : <ChevronDown size={13} className="text-app-muted-foreground flex-shrink-0" />}
-                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                            style={{ background: `color-mix(in srgb, ${mod.color} 12%, transparent)`, color: mod.color }}>
-                                            <Icon size={12} />
-                                        </div>
-                                        <span className="text-[12px] font-black uppercase tracking-wider flex-1" style={{ color: 'var(--app-foreground)' }}>
-                                            {mod.label}
-                                        </span>
-                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: 'var(--app-muted-foreground)' }}>
-                                            {modRules.length}
-                                        </span>
+                        <span className="text-[12px] font-black uppercase tracking-wider" style={{ color: 'var(--app-foreground)' }}>
+                            {selectedMeta.label}
+                        </span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                            {currentRules.length}
+                        </span>
+                        <div className="flex-1" />
+                        <button onClick={() => {
+                            const seed = emptyRule();
+                            seed.module = selectedModule;
+                            setEditingRule(seed);
+                            setIsNew(true);
+                            setWizardStep(1);
+                        }}
+                            className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                            style={{ background: selectedMeta.color, color: 'white' }}>
+                            <Plus size={11} /> Rule
+                        </button>
+                    </div>
+
+                    <div className="hidden md:flex flex-shrink-0 items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/40 border-b border-app-border/30 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+                        <div className="w-7 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">Rule</div>
+                        <div className="hidden md:block w-36 flex-shrink-0">Trigger</div>
+                        <div className="hidden lg:block w-40 flex-shrink-0">Conditions</div>
+                        <div className="w-16 text-center flex-shrink-0">Active</div>
+                        <div className="w-20 text-right flex-shrink-0">Actions</div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
+                        {loading ? (
+                            <div className="flex items-center justify-center py-20">
+                                <Loader2 size={24} className="animate-spin text-app-primary" />
+                            </div>
+                        ) : currentRules.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                                {(() => { const I = selectedMeta.icon; return <I size={36} className="mb-3 opacity-40" style={{ color: selectedMeta.color }} />; })()}
+                                <p className="text-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    {search.trim() ? 'No matching rules' : `No rules in ${selectedMeta.label} yet`}
+                                </p>
+                                {!search.trim() && (
+                                    <button onClick={() => {
+                                        const seed = emptyRule();
+                                        seed.module = selectedModule;
+                                        setEditingRule(seed);
+                                        setIsNew(true);
+                                        setWizardStep(1);
+                                    }}
+                                        className="mt-3 flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                                        style={{ background: selectedMeta.color, color: 'white' }}>
+                                        <Plus size={12} /> Add first rule
                                     </button>
-                                    {!collapsed && modRules.length === 0 && (
-                                        <div className="px-4 py-3 text-[11px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            No rules in this module yet.{' '}
-                                            <button onClick={() => {
-                                                const seed = emptyRule();
-                                                seed.module = mod.value;
-                                                setEditingRule(seed);
-                                                setIsNew(true);
-                                                setWizardStep(1);
-                                            }} className="font-black underline" style={{ color: mod.color }}>
-                                                Add one
-                                            </button>
-                                        </div>
-                                    )}
-                                    {!collapsed && modRules.map((rule: any) => (
+                                )}
+                            </div>
+                        ) : (
+                            currentRules.map((rule: any) => {
+                                const mod = selectedMeta;
+                                return (
                             <div
                                 key={rule.id}
                                 className={`group flex items-center gap-2 md:gap-3 transition-all duration-150 border-b border-app-border/30 hover:bg-app-surface/40 py-2 md:py-2.5 ${!rule.is_active ? 'opacity-60' : ''}`}
@@ -549,11 +610,10 @@ export default function AutoTaskRulesPage() {
                                     </button>
                                 </div>
                             </div>
-                                    ))}
-                                </div>
-                            );
-                        })
-                    )}
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
             </div>
 

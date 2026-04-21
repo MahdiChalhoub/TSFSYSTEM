@@ -115,31 +115,32 @@ export default function SuggestionsManager({
     const sortedRules = useMemo(() => [...rules].sort(byPriority), [rules])
 
     return (
-        <div className="animate-in fade-in duration-300">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4 px-1">
+        <div className="animate-in fade-in duration-300 max-w-[1400px] mx-auto">
+            {/* Header — V2 page-header-icon pattern */}
+            <div className="flex items-start md:items-center flex-col md:flex-row md:justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{
                             background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
                             color: 'var(--app-primary)',
                             boxShadow: '0 2px 12px color-mix(in srgb, var(--app-primary) 15%, transparent)',
                         }}>
-                        <Sparkles size={18} />
+                        <Sparkles size={16} />
                     </div>
                     <div>
-                        <h1 className="text-xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 className="text-[18px] md:text-[20px] font-black tracking-tight leading-tight" style={{ color: 'var(--app-foreground)' }}>
                             Packaging Suggestions
                         </h1>
-                        <p className="text-[11px] font-semibold" style={{ color: 'var(--app-muted-foreground)' }}>
-                            Smart rules that auto-suggest packaging when creating products
+                        <p className="text-[10px] font-black uppercase tracking-widest mt-0.5"
+                            style={{ color: 'var(--app-primary)' }}>
+                            Smart Engine · Rules
                         </p>
                     </div>
                 </div>
                 <button type="button" onClick={() => setShowForm(v => !v)}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all"
                     style={{
-                        background: showForm ? 'var(--app-background)' : 'var(--app-primary)',
+                        background: showForm ? 'var(--app-surface)' : 'var(--app-primary)',
                         color: showForm ? 'var(--app-muted-foreground)' : 'white',
                         border: showForm ? '1px solid var(--app-border)' : 'none',
                         boxShadow: showForm ? 'none' : '0 2px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
