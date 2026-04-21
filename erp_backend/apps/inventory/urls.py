@@ -7,6 +7,7 @@ from rest_framework.routers import DefaultRouter
 from apps.inventory.views import (
     ProductViewSet, UnitViewSet, UnitPackageViewSet, WarehouseViewSet, InventoryViewSet,
     BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet,
+    PackagingSuggestionRuleViewSet,
     InventoryMovementViewSet,
     StockAdjustmentOrderViewSet, StockTransferOrderViewSet,
     OperationalRequestViewSet, ProductSerialViewSet, SerialLogViewSet,
@@ -24,6 +25,7 @@ router = DefaultRouter()
 router.register(r'products', ProductViewSet)
 router.register(r'units', UnitViewSet)
 router.register(r'unit-packages', UnitPackageViewSet, basename='unit-packages')
+router.register(r'packaging-suggestions', PackagingSuggestionRuleViewSet, basename='packaging-suggestions')
 router.register(r'warehouses', WarehouseViewSet)
 router.register(r'inventory', InventoryViewSet)
 router.register(r'brands', BrandViewSet)

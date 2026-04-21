@@ -79,6 +79,88 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
         return f"{self.name} (×{self.ratio} {self.unit.code})"
 
 
+class PackagingSuggestionRule(AuditLogMixin, TenantOwnedModel):
+    """
+    Smart Suggestion Engine — proposes the right packaging based on a product's
+    category, brand, and/or attributes. User can accept or override.
+
+    Priority math (higher = more specific = wins):
+      cat only        = 10
+      cat + brand     = 20
+      cat + attr      = 20
+      cat+brand+attr  = 30
+    Explicit priority overrides the computed default.
+    """
+    # Dimensions (all nullable — ANY combination may apply)
+    category = models.ForeignKey(
+        'Category', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='packaging_suggestions'
+    )
+    brand = models.ForeignKey(
+        'Brand', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='packaging_suggestions'
+    )
+    attribute = models.ForeignKey(
+        'ProductAttribute', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='packaging_suggestions',
+        help_text='Optional attribute (e.g. "Size: Big") this rule applies to'
+    )
+    attribute_value = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='Free-text attribute value when attribute is set (e.g. "Big")'
+    )
+
+    # Target packaging (points to the UnitPackage — our "template")
+    packaging = models.ForeignKey(
+        UnitPackage, on_delete=models.CASCADE,
+        related_name='suggestion_rules',
+        help_text='The packaging template this rule suggests'
+    )
+
+    # Scoring
+    priority = models.PositiveIntegerField(
+        default=0,
+        help_text='Manual priority — 0 = auto-compute from specificity'
+    )
+    usage_count = models.PositiveIntegerField(
+        default=0,
+        help_text='Incremented every time this suggestion is accepted'
+    )
+
+    # Audit
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'packaging_suggestion_rule'
+        ordering = ['-priority', '-usage_count', '-created_at']
+        indexes = [
+            models.Index(fields=['organization', 'category']),
+            models.Index(fields=['organization', 'brand']),
+            models.Index(fields=['organization', 'attribute']),
+            models.Index(fields=['organization', 'packaging']),
+        ]
+
+    @property
+    def specificity(self):
+        """Number of active dimensions. More = more specific."""
+        return sum(
+            1 for v in (self.category_id, self.brand_id, self.attribute_id) if v
+        )
+
+    def effective_priority(self):
+        """Manual priority if set (>0), else auto from specificity."""
+        return self.priority if self.priority > 0 else (self.specificity * 10)
+
+    def __str__(self):
+        dims = []
+        if self.category_id: dims.append(f"cat={self.category.name}")
+        if self.brand_id: dims.append(f"brand={self.brand.name}")
+        if self.attribute_id: dims.append(f"attr={self.attribute.name}={self.attribute_value or '*'}")
+        return f"[{'+'.join(dims) or 'global'}] → {self.packaging.name}"
+
+
 class Category(AuditLogMixin, TenantOwnedModel):
     """Product category with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)

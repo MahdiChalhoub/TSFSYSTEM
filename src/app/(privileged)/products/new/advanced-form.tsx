@@ -11,6 +11,7 @@ import { getAttributesByCategory } from '@/app/actions/attributes';
 import { CategorySelector } from '@/components/admin/CategorySelector';
 import { toast } from 'sonner';
 import { PackagePlus, Plus, Search, History, Percent, BarChart3, Package, Zap, Wand2, Trash2, ShoppingCart, Truck, DollarSign, Warehouse, Lock, ChevronDown } from 'lucide-react';
+import { PackagingSuggestions } from '@/components/inventory/PackagingSuggestions';
 
 /* ─────────────────────────── Styles ─────────────────────────── */
 const card = "bg-app-surface rounded-xl border border-app-border/80 overflow-hidden";
@@ -498,6 +499,31 @@ export default function AdvancedProductForm({
  {/* ── Packaging Tab ── */}
  {activeTab === 'packaging' && (
  <div className="space-y-3">
+ {/* Smart Suggestions — driven by category / brand / attributes the user has picked */}
+ <PackagingSuggestions
+     categoryId={selectedCategoryId}
+     brandId={selectedBrandId || undefined}
+     attributeId={filteredAttributes?.[0]?.id}
+     onAccept={(rule) => {
+         if (!rule.packaging || !rule.packaging_ratio) return;
+         const pkgUnitCode = rule.packaging_unit_code;
+         const matchedUnit = units.find((u: any) => u.code === pkgUnitCode) || units[0];
+         setPackagingLevels((prev: any[]) => {
+             if (prev.some((p: any) => Number(p.ratio) === Number(rule.packaging_ratio) && p.unitId === String(matchedUnit?.id))) {
+                 return prev;
+             }
+             return [...prev, {
+                 id: crypto.randomUUID(),
+                 unitId: matchedUnit?.id ? String(matchedUnit.id) : '',
+                 ratio: Number(rule.packaging_ratio),
+                 barcode: '',
+                 price: 0,
+             }];
+         });
+         toast.success(`Added "${rule.packaging_name}" from smart suggestion`);
+     }}
+ />
+
  {/* Base Level */}
  <div className="flex items-center gap-3 p-3 bg-app-background rounded-lg border border-app-border">
  <div className="w-7 h-7 rounded-full bg-app-info text-app-foreground flex items-center justify-center shrink-0">

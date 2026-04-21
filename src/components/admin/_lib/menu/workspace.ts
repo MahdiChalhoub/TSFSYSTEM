@@ -4,6 +4,7 @@ import {
     Trophy,
     Zap,
     Settings,
+    Users,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -14,6 +15,8 @@ export const workspaceInProgress: MenuItem = {
     stage: 'in-progress',
     children: [
         { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
+        { title: 'Auto Task Rules', path: '/workspace/auto-task-rules', icon: Zap },
+        { title: 'User Groups', path: '/workspace/user-groups', icon: Users },
     ],
 };
 
@@ -39,7 +42,6 @@ export const workspace: MenuItem = {
             icon: Zap,
             children: [
                 { title: 'Auto Rules', path: '/workspace/auto-rules' },
-                { title: 'Auto Task Rules', path: '/workspace/auto-task-rules' },
                 { title: 'Auto Task Settings', path: '/workspace/auto-task-settings' },
                 { title: 'WISE Console', path: '/workspace/wise-console' },
                 { title: 'WISE Rules', path: '/workspace/wise-rules' },

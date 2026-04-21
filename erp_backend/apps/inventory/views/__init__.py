@@ -5,6 +5,7 @@ from .taxonomy_views import (
     ProductGroupViewSet,
     UnitViewSet,
     UnitPackageViewSet,
+    PackagingSuggestionRuleViewSet,
 )
 from .product_views import ProductViewSet
 from .warehouse_views import WarehouseViewSet
@@ -34,6 +35,7 @@ __all__ = [
     'ProductGroupViewSet',
     'UnitViewSet',
     'UnitPackageViewSet',
+    'PackagingSuggestionRuleViewSet',
     'ProductViewSet',
     'WarehouseViewSet',
     'InventoryMovementViewSet',

@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from apps.inventory.models import Unit, UnitPackage, Category, Brand, Parfum, Product, ProductGroup
+from apps.inventory.models import (
+    Unit, UnitPackage, PackagingSuggestionRule,
+    Category, Brand, Parfum, Product, ProductGroup,
+)
 from erp.models import Country
 
 # NOTE: Reverse-related managers (obj.products, obj.brands, etc.) bypass the
@@ -170,3 +173,29 @@ class UnitPackageSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at', 'organization',
         ]
         read_only_fields = ['organization', 'created_at', 'updated_at']
+
+
+class PackagingSuggestionRuleSerializer(serializers.ModelSerializer):
+    category_name = serializers.ReadOnlyField(source='category.name')
+    brand_name = serializers.ReadOnlyField(source='brand.name')
+    attribute_name = serializers.ReadOnlyField(source='attribute.name')
+    packaging_name = serializers.ReadOnlyField(source='packaging.name')
+    packaging_ratio = serializers.ReadOnlyField(source='packaging.ratio')
+    packaging_unit_code = serializers.ReadOnlyField(source='packaging.unit.code')
+    specificity = serializers.ReadOnlyField()
+    effective_priority = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PackagingSuggestionRule
+        fields = [
+            'id', 'category', 'category_name', 'brand', 'brand_name',
+            'attribute', 'attribute_name', 'attribute_value',
+            'packaging', 'packaging_name', 'packaging_ratio', 'packaging_unit_code',
+            'priority', 'effective_priority', 'specificity',
+            'usage_count', 'notes',
+            'created_at', 'updated_at', 'organization',
+        ]
+        read_only_fields = ['organization', 'usage_count', 'created_at', 'updated_at']
+
+    def get_effective_priority(self, obj):
+        return obj.effective_priority()

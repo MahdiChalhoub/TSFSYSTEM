@@ -7,6 +7,7 @@ import {
     FolderTree,
     DollarSign,
     Wrench,
+    Sparkles,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -18,6 +19,7 @@ export const inventoryInProgress: MenuItem = {
     children: [
         { title: 'Categories', path: '/inventory/categories', icon: FolderTree },
         { title: 'Units & Packaging', path: '/inventory/units', icon: Warehouse },
+        { title: 'Packaging Rules', path: '/inventory/packaging-suggestions', icon: Sparkles },
     ],
 };
 

@@ -86,9 +86,63 @@ class ProductAttributeChildSerializer(serializers.ModelSerializer):
         ]
 
 
+def _attribute_destroy_conflict(attr, organization):
+    """Return a 409 payload dict if any products depend on this attribute
+    (either directly as a leaf value or via leaf values under a group),
+    otherwise None."""
+    if attr.parent_id is None:  # It's a group — find products using any child leaf
+        child_ids = list(
+            ProductAttribute.objects.filter(parent=attr, organization=organization)
+                .values_list('id', flat=True)
+        )
+        if not child_ids:
+            return None
+        products_qs = Product.objects.filter(
+            attribute_values__id__in=child_ids, organization=organization
+        ).distinct().only('id', 'sku', 'name', 'barcode')
+    else:  # It's a leaf — find products using this specific value
+        products_qs = Product.objects.filter(
+            attribute_values=attr, organization=organization
+        ).distinct().only('id', 'sku', 'name', 'barcode')
+
+    count = products_qs.count()
+    if count == 0:
+        return None
+    barcode_count = products_qs.filter(barcodes__is_active=True).distinct().count()
+    preview = list(products_qs[:20].values('id', 'sku', 'name', 'barcode'))
+    barcode_ids = set(products_qs[:20].filter(barcodes__is_active=True).values_list('id', flat=True))
+    for p in preview:
+        p['has_barcode'] = p['id'] in barcode_ids
+    entity = 'attribute group' if attr.parent_id is None else 'attribute value'
+    return {
+        'error': 'conflict',
+        'entity': 'attribute',
+        'affected_count': count,
+        'barcode_count': barcode_count,
+        'message': (
+            f'{count} product{"s" if count != 1 else ""} use this {entity}. '
+            f'{f"{barcode_count} have active barcodes. " if barcode_count else ""}'
+            f'Migrate them via the category Migrate tool first, or re-send DELETE with ?force=1.'
+        ),
+        'products': preview,
+    }
+
+
 class ProductAttributeViewSet(TenantModelViewSet):
     serializer_class = ProductAttributeSerializer
     queryset = ProductAttribute.objects.select_related('parent').all()
+
+    def destroy(self, request, *args, **kwargs):
+        """Guard: block delete when products use this attribute (group OR value).
+        Bypass with ?force=1."""
+        from rest_framework import status as drf_status
+        instance = self.get_object()
+        force = str(request.query_params.get('force', '')).lower() in ('1', 'true', 'yes')
+        if not force:
+            conflict = _attribute_destroy_conflict(instance, instance.organization)
+            if conflict:
+                return Response(conflict, status=drf_status.HTTP_409_CONFLICT)
+        return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = super().get_queryset()

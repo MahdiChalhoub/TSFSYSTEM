@@ -33,6 +33,50 @@ from .base import (
 )
 from erp.mixins import UDLEViewSetMixin
 
+
+# =============================================================================
+# DELETE PROTECTION HELPERS
+# =============================================================================
+# Before any destroy on Category/Unit/Brand/Attribute, we check whether
+# any Product references this entity. If yes, return 409 with a product
+# preview and barcode severity flag — the frontend uses this to show the
+# migration UI.
+#
+# Bypass: pass `?force=1` on the DELETE request (only after user explicitly
+# confirms in a warning dialog).
+
+def _build_destroy_conflict(entity_name: str, products_qs, *, preview_limit: int = 20) -> dict | None:
+    """Return a 409 payload dict if any products are linked, else None."""
+    count = products_qs.count()
+    if count == 0:
+        return None
+    barcode_count = products_qs.filter(barcodes__is_active=True).distinct().count()
+    preview = list(products_qs[:preview_limit].values('id', 'sku', 'name', 'barcode'))
+    barcode_ids = set(
+        products_qs[:preview_limit].filter(barcodes__is_active=True).values_list('id', flat=True)
+    )
+    for p in preview:
+        p['has_barcode'] = p['id'] in barcode_ids
+    msg_suffix = f'{barcode_count} have active barcodes. ' if barcode_count else ''
+    return {
+        'error': 'conflict',
+        'entity': entity_name,
+        'affected_count': count,
+        'barcode_count': barcode_count,
+        'message': (
+            f'{count} product{"s" if count != 1 else ""} assigned to this {entity_name}. '
+            f'{msg_suffix}'
+            f'Migrate them to another {entity_name} first, or re-send DELETE with ?force=1.'
+        ),
+        'products': preview,
+    }
+
+
+def _force_flag(request) -> bool:
+    """Was ?force=1 passed on the destroy request? (explicit user override)"""
+    return str(request.query_params.get('force', '')).lower() in ('1', 'true', 'yes')
+
+
 # =============================================================================
 # UNIT
 # =============================================================================
@@ -43,6 +87,18 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
     pagination_class = None  # Tree data — must return all units for hierarchy building
     filterset_fields = ['name']
     search_fields = ['name']
+
+    def destroy(self, request, *args, **kwargs):
+        """Guard: block delete when products reference this unit. Bypass with ?force=1."""
+        instance = self.get_object()
+        if not _force_flag(request):
+            qs = Product.objects.filter(
+                unit=instance, organization=instance.organization
+            ).only('id', 'sku', 'name', 'barcode')
+            conflict = _build_destroy_conflict('unit', qs)
+            if conflict:
+                return Response(conflict, status=status.HTTP_409_CONFLICT)
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=['get'])
     def family_tree(self, request):
@@ -511,7 +567,21 @@ class PackagingSuggestionRuleViewSet(TenantModelViewSet):
 # BRAND
 # =============================================================================
 
-class BrandViewSet(TenantModelViewSet):
+class BrandViewSetDeleteGuardMixin:
+    def destroy(self, request, *args, **kwargs):
+        """Guard: block delete when products reference this brand. Bypass with ?force=1."""
+        instance = self.get_object()
+        if not _force_flag(request):
+            qs = Product.objects.filter(
+                brand=instance, organization=instance.organization
+            ).only('id', 'sku', 'name', 'barcode')
+            conflict = _build_destroy_conflict('brand', qs)
+            if conflict:
+                return Response(conflict, status=status.HTTP_409_CONFLICT)
+        return super().destroy(request, *args, **kwargs)
+
+
+class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
     queryset = Brand.objects.all()
     pagination_class = None  # Taxonomy data — return all brands for tree building
 
@@ -537,6 +607,54 @@ class BrandViewSet(TenantModelViewSet):
 
         serializer = BrandSerializer(brands, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def move_products(self, request):
+        """
+        Bulk-reassign products from one brand to another (or to unbranded).
+        Used by the delete-protection migration flow.
+
+        Body:
+          source_brand_id (required): brand to move away from
+          target_brand_id (optional): brand to assign — omit/null to clear brand
+          also_delete_source (default false): after successful migration,
+            delete the source brand (only if empty now)
+        """
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        source_id = request.data.get('source_brand_id')
+        target_id = request.data.get('target_brand_id')
+        also_delete = bool(request.data.get('also_delete_source'))
+        if not source_id:
+            return Response({'error': 'source_brand_id is required'}, status=400)
+
+        try:
+            source = Brand.objects.get(id=source_id, organization=organization)
+        except Brand.DoesNotExist:
+            return Response({'error': 'Source brand not found'}, status=404)
+
+        target = None
+        if target_id:
+            try:
+                target = Brand.objects.get(id=target_id, organization=organization)
+            except Brand.DoesNotExist:
+                return Response({'error': 'Target brand not found'}, status=404)
+
+        with transaction.atomic():
+            updated = Product.objects.filter(
+                brand=source, organization=organization
+            ).update(brand=target)
+            deleted = False
+            if also_delete:
+                remaining = Product.objects.filter(brand=source, organization=organization).count()
+                if remaining == 0:
+                    source.delete()
+                    deleted = True
+        return Response({
+            'status': 'moved', 'products_updated': updated,
+            'source_deleted': deleted,
+        })
 
     @action(detail=True, methods=['get'])
     def hierarchy(self, request, pk=None):
@@ -630,6 +748,34 @@ class CategoryViewSet(TenantModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = None  # Tree data — must return all categories for hierarchy building
+
+    def destroy(self, request, *args, **kwargs):
+        """Guard: block delete when products reference this category OR child
+        categories exist. Bypass with ?force=1 (still leaves children orphaned
+        as SET_NULL children inherit category deletion)."""
+        instance = self.get_object()
+        if not _force_flag(request):
+            # Check for child categories — forbid outright; parent re-assignment
+            # should happen explicitly via the Move tool, not a blind delete.
+            child_count = Category.objects.filter(
+                parent=instance, organization=instance.organization
+            ).count()
+            if child_count > 0:
+                return Response({
+                    'error': 'conflict',
+                    'entity': 'category',
+                    'affected_count': child_count,
+                    'message': f'{child_count} sub-categor{"ies" if child_count != 1 else "y"} nested under this category. Move them to another parent first, or re-send DELETE with ?force=1.',
+                    'children': True,
+                }, status=status.HTTP_409_CONFLICT)
+
+            qs = Product.objects.filter(
+                category=instance, organization=instance.organization
+            ).only('id', 'sku', 'name', 'barcode')
+            conflict = _build_destroy_conflict('category', qs)
+            if conflict:
+                return Response(conflict, status=status.HTTP_409_CONFLICT)
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=['get'])
     def with_counts(self, request):
