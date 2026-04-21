@@ -107,6 +107,14 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
         if cond_method and pay_method and pay_method != cond_method.upper():
             continue
 
+        # ── days_before: when the scheduler fires a period-reminder event it
+        # passes context.days_before. A rule matches only if its own
+        # conditions.days_before equals that value (or is unset → matches any).
+        ctx_days_before = context.get('days_before')
+        cond_days_before = cond.get('days_before')
+        if ctx_days_before is not None and cond_days_before is not None and int(ctx_days_before) != int(cond_days_before):
+            continue
+
         # ── Build task from template ─────────────────────────────────────────
         tmpl = rule.template
         if not tmpl:

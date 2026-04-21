@@ -802,53 +802,55 @@ export default function AutoTaskRulesPage() {
                                 </div>
                             </div>
 
-                            {/* Module + Rule Type */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
-                                <div>
-                                    <label className={labelCls}>Module *</label>
-                                    <select
-                                        value={editingRule.module}
-                                        onChange={e => setEditingRule({ ...editingRule, module: e.target.value })}
-                                        className={inputCls}
-                                    >
-                                        {MODULES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className={labelCls}>Rule Type *</label>
-                                    <select
-                                        value={editingRule.rule_type}
-                                        onChange={e => setEditingRule({
-                                            ...editingRule,
-                                            rule_type: e.target.value,
-                                            recurrence_interval: e.target.value === 'EVENT' ? null : editingRule.recurrence_interval,
-                                        })}
-                                        className={inputCls}
-                                    >
-                                        <option value="EVENT">Event-Based</option>
-                                        <option value="RECURRING">Recurring (Scheduled)</option>
-                                    </select>
-                                </div>
-                            </div>
+                            {/* Module hidden — it's chosen in Step 1 of the wizard. */}
 
-                            {/* Recurrence */}
-                            {editingRule.rule_type === 'RECURRING' && (
-                                <div
-                                    className="p-4 rounded-xl"
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 4%, var(--app-surface))',
-                                        border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)',
-                                        borderLeft: '3px solid var(--app-warning, #f59e0b)',
-                                    }}
-                                >
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-warning, #f59e0b)' }}>
-                                        Recurrence Schedule
-                                    </h4>
+                            {/* Timing: Repeats? · Every? · Reminder before? */}
+                            <div className="p-4 rounded-xl space-y-3"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)',
+                                    borderLeft: '3px solid var(--app-primary)',
+                                }}>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)' }}>
+                                    Timing
+                                </h4>
+
+                                {/* Repeats? Yes/No segmented */}
+                                <div>
+                                    <label className={labelCls}>Does this repeat?</label>
+                                    <div className="flex items-center gap-1 p-1 rounded-xl"
+                                        style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', width: 'fit-content' }}>
+                                        {[
+                                            { v: 'EVENT', label: 'No — fires once per event' },
+                                            { v: 'RECURRING', label: 'Yes — on a schedule' },
+                                        ].map(o => {
+                                            const active = editingRule.rule_type === o.v
+                                            return (
+                                                <button key={o.v} type="button"
+                                                    onClick={() => setEditingRule({
+                                                        ...editingRule,
+                                                        rule_type: o.v,
+                                                        recurrence_interval: o.v === 'EVENT' ? null : (editingRule.recurrence_interval || 'DAILY'),
+                                                    })}
+                                                    className="text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                                                    style={{
+                                                        background: active ? 'var(--app-primary)' : 'transparent',
+                                                        color: active ? 'white' : 'var(--app-muted-foreground)',
+                                                    }}>
+                                                    {o.label}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Every X — only when recurring */}
+                                {editingRule.rule_type === 'RECURRING' && (
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
                                         <div>
-                                            <label className={labelCls}>Interval</label>
+                                            <label className={labelCls}>Every</label>
                                             <select
-                                                value={editingRule.recurrence_interval || ''}
+                                                value={editingRule.recurrence_interval || 'DAILY'}
                                                 onChange={e => setEditingRule({ ...editingRule, recurrence_interval: e.target.value || null })}
                                                 className={inputCls}
                                             >
@@ -856,17 +858,43 @@ export default function AutoTaskRulesPage() {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className={labelCls}>Stale Threshold (days)</label>
-                                            <input
-                                                type="number"
+                                            <label className={labelCls}>Stale after (days)</label>
+                                            <input type="number" min={1}
                                                 value={editingRule.stale_threshold_days || 3}
                                                 onChange={e => setEditingRule({ ...editingRule, stale_threshold_days: Number(e.target.value) })}
                                                 className={inputCls}
                                             />
+                                            <p className="text-[9px] font-medium mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                Item flagged stale after this many days without progress.
+                                            </p>
                                         </div>
                                     </div>
+                                )}
+
+                                {/* Reminder before — applies to both EVENT and RECURRING for time-bound triggers */}
+                                <div>
+                                    <label className={labelCls}>Remind before (days)</label>
+                                    <div className="flex items-center gap-2">
+                                        <input type="number" min={0} max={90}
+                                            value={(editingRule.conditions as any)?.days_before ?? ''}
+                                            placeholder="0 = on the day"
+                                            onChange={e => setEditingRule({
+                                                ...editingRule,
+                                                conditions: {
+                                                    ...editingRule.conditions,
+                                                    days_before: e.target.value === '' ? undefined : Number(e.target.value),
+                                                } as any,
+                                            })}
+                                            className={`${inputCls} max-w-[130px]`} />
+                                        <span className="text-[11px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            days before the target date
+                                        </span>
+                                    </div>
+                                    <p className="text-[10px] font-medium mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        Used by triggers that have a target date (period close, due invoice, expiry, follow-up). Leave blank to fall back to the tenant-wide lead-time.
+                                    </p>
                                 </div>
-                            )}
+                            </div>
 
                             {/* Trigger Event */}
                             <div>

@@ -4,8 +4,12 @@ Fires two auto-task events across every organization:
   - PERIOD_CLOSING_SOON  — today == period.end_date - days_before
   - PERIOD_STARTING_SOON — today == period.start_date - days_before
 
-The lead-time `days_before` is read per-organization from
-Organization.settings['period_reminder_days_before'] (default: 7).
+Each rule can override the lead-time via `conditions.days_before`. If unset,
+the tenant-wide setting `Organization.settings['period_reminder_days_before']`
+is used (default: 7). The scheduler collects all distinct lead-times across
+applicable rules plus the org default, and fires one event per (period,
+lead-time) pair on the matching day. The engine then dispatches only the
+rule(s) whose days_before matches.
 
 Intended to be run once per day via cron / Celery beat:
     0 6 * * *  python manage.py fire_period_reminders
@@ -16,6 +20,7 @@ from django.core.management.base import BaseCommand
 
 from apps.finance.models import FiscalPeriod
 from apps.workspace.auto_task_service import fire_auto_tasks
+from apps.workspace.models import AutoTaskRule
 from erp.models import Organization
 
 DEFAULT_LEAD_DAYS = 7
@@ -46,49 +51,62 @@ class Command(BaseCommand):
 
         total_fired = 0
         for org in orgs:
-            lead_days = self._lead_days_for(org)
-            target = today + timedelta(days=lead_days)
+            org_default = self._org_default_lead_days(org)
 
-            closing = FiscalPeriod.objects.filter(
-                organization=org, end_date=target, status='OPEN',
-            ).select_related('fiscal_year')
-            for period in closing:
-                fire_auto_tasks(org, 'PERIOD_CLOSING_SOON', {
-                    'reference': f'Period {period.name}',
-                    'extra': {
-                        'object_type': 'FiscalPeriod',
-                        'object_id': period.id,
-                        'Period': period.name,
-                        'Ends on': str(period.end_date),
-                        'Days until close': lead_days,
-                    },
-                })
-                total_fired += 1
-
-            starting = FiscalPeriod.objects.filter(
-                organization=org, start_date=target,
-            ).select_related('fiscal_year')
-            for period in starting:
-                fire_auto_tasks(org, 'PERIOD_STARTING_SOON', {
-                    'reference': f'Period {period.name}',
-                    'extra': {
-                        'object_type': 'FiscalPeriod',
-                        'object_id': period.id,
-                        'Period': period.name,
-                        'Starts on': str(period.start_date),
-                        'Days until start': lead_days,
-                    },
-                })
-                total_fired += 1
+            for trigger, field, label_key in (
+                ('PERIOD_CLOSING_SOON', 'end_date', 'Ends on'),
+                ('PERIOD_STARTING_SOON', 'start_date', 'Starts on'),
+            ):
+                lead_days_set = self._rule_lead_times_for(org, trigger, org_default)
+                for lead_days in lead_days_set:
+                    target = today + timedelta(days=lead_days)
+                    filters = {'organization': org, field: target}
+                    if trigger == 'PERIOD_CLOSING_SOON':
+                        filters['status'] = 'OPEN'
+                    periods = FiscalPeriod.objects.filter(**filters).select_related('fiscal_year')
+                    for period in periods:
+                        fire_auto_tasks(org, trigger, {
+                            'reference': f'Period {period.name}',
+                            'days_before': lead_days,
+                            'extra': {
+                                'object_type': 'FiscalPeriod',
+                                'object_id': period.id,
+                                'Period': period.name,
+                                label_key: str(getattr(period, field)),
+                                'Days out': lead_days,
+                            },
+                        })
+                        total_fired += 1
 
         self.stdout.write(self.style.SUCCESS(
             f"Fired {total_fired} period-reminder events for {today}."
         ))
 
     @staticmethod
-    def _lead_days_for(org):
+    def _org_default_lead_days(org):
         try:
             raw = (org.settings or {}).get('period_reminder_days_before')
             return int(raw) if raw is not None else DEFAULT_LEAD_DAYS
         except (TypeError, ValueError):
             return DEFAULT_LEAD_DAYS
+
+    @staticmethod
+    def _rule_lead_times_for(org, trigger, org_default):
+        """Distinct days_before values that need to be checked for this trigger.
+        Each active rule contributes either its own conditions.days_before or
+        the org default when that field is unset."""
+        out = set()
+        rules = AutoTaskRule.objects.filter(
+            organization=org, trigger_event=trigger, is_active=True,
+        ).only('conditions')
+        for r in rules:
+            val = (r.conditions or {}).get('days_before')
+            try:
+                out.add(int(val) if val is not None else org_default)
+            except (TypeError, ValueError):
+                out.add(org_default)
+        if not out:
+            # Even without rules we still fire — lets operators wire rules
+            # later and not miss reminders for today.
+            out.add(org_default)
+        return out

@@ -1,8 +1,9 @@
 'use client';
 
-import { Clock, Calendar, Star, User, FolderKanban } from 'lucide-react';
+import Link from 'next/link';
+import { Clock, Calendar, Star, User, FolderKanban, ExternalLink } from 'lucide-react';
 import type { Task, UserItem } from './types';
-import { STATUS_ICONS, STATUS_COLOR, PRIORITY_COLOR, getUserName } from './types';
+import { STATUS_ICONS, STATUS_COLOR, PRIORITY_COLOR, getUserName, resolveTaskSourceLink } from './types';
 
 interface TaskCardProps {
     task: Task;
@@ -33,6 +34,7 @@ export default function TaskCard({ task: t, users, onEdit, onQuickComplete }: Ta
     const statusColor = STATUS_COLOR[t.status] ?? 'var(--app-muted-foreground)';
     const priorityColor = PRIORITY_COLOR[t.priority] ?? 'var(--app-muted-foreground)';
     const isCompleted = t.status === 'COMPLETED';
+    const sourceLink = resolveTaskSourceLink(t);
 
     // Resolve assigned user from users array
     const assignedUser = t.assigned_to ? users.find(u => u.id === t.assigned_to) : null;
@@ -112,17 +114,32 @@ export default function TaskCard({ task: t, users, onEdit, onQuickComplete }: Ta
                     )}
                 </div>
 
-                {/* Toggle switch */}
-                <button onClick={e => onQuickComplete(t.id, t.status, e)}
-                        className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out"
-                        style={{
-                            background: isCompleted ? 'var(--app-success, #22c55e)' : 'color-mix(in srgb, var(--app-muted-foreground) 25%, transparent)',
-                            border: '2px solid transparent',
-                        }}
-                        title={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}>
-                    <span className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out"
-                          style={{ transform: isCompleted ? 'translateX(16px)' : 'translateX(0)' }} />
-                </button>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {sourceLink && (
+                        <Link href={sourceLink.href}
+                              onClick={e => e.stopPropagation()}
+                              title={t.related_object_label ? `${sourceLink.label} — ${t.related_object_label}` : sourceLink.label}
+                              className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                              style={{
+                                  background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                                  color: 'var(--app-primary)',
+                                  border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                              }}>
+                            <ExternalLink size={10} />
+                            <span className="hidden sm:inline">{sourceLink.label.replace(/^Open /, '')}</span>
+                        </Link>
+                    )}
+                    <button onClick={e => onQuickComplete(t.id, t.status, e)}
+                            className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out"
+                            style={{
+                                background: isCompleted ? 'var(--app-success, #22c55e)' : 'color-mix(in srgb, var(--app-muted-foreground) 25%, transparent)',
+                                border: '2px solid transparent',
+                            }}
+                            title={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}>
+                        <span className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out"
+                              style={{ transform: isCompleted ? 'translateX(16px)' : 'translateX(0)' }} />
+                    </button>
+                </div>
             </div>
         </div>
     );

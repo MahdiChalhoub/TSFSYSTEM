@@ -147,66 +147,65 @@ export function UnitCalculator({ units = [], defaultUnit }: { units?: Unit[]; de
                     </div>
                 </div>
 
-                {/* Equation Body */}
-                <div className="p-4">
-                    <div className="flex items-center flex-wrap gap-2">
+                {/* Equation Body — compact, same font scale as Packages form */}
+                <div className="p-3">
+                    <div className="flex items-center flex-wrap gap-1.5">
                         {/* Quantity */}
                         <input type="number" min="0" value={quantity}
                             onChange={(e) => setQuantity(Number(e.target.value))}
                             placeholder="1"
-                            className="w-[80px] px-3 py-2.5 rounded-xl text-[14px] font-mono font-black text-center outline-none transition-all focus:ring-2"
+                            className="w-[64px] px-2 py-1.5 rounded-lg text-[12px] font-mono font-bold text-center outline-none transition-all focus:ring-2"
                             style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
 
                         {/* From unit */}
                         <select value={fromUnitId} onChange={(e) => setFromUnitId(e.target.value)}
-                            className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer appearance-none outline-none transition-all focus:ring-2"
+                            className="flex-1 min-w-[100px] px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer appearance-none outline-none transition-all focus:ring-2"
                             style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                             {units.map(u => (
                                 <option key={u.id} value={u.id}>{u.name} ({u.code})</option>
                             ))}
                         </select>
 
-                        {/* Swap */}
+                        {/* Swap — compact 28×28 matching the other icon buttons */}
                         <button type="button" onClick={handleSwap}
                             disabled={isSelfConversion}
-                            className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex-shrink-0"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex-shrink-0"
                             style={{
                                 background: 'var(--app-primary)', color: 'white',
-                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 25%, transparent)',
                             }}
                             title="Swap units">
-                            <ArrowRightLeft size={14} />
+                            <ArrowRightLeft size={11} />
                         </button>
 
                         {/* To unit */}
                         <select value={toUnitId} onChange={(e) => setToUnitId(e.target.value)}
                             disabled={compatibleUnits.length === 0}
-                            className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer appearance-none outline-none transition-all focus:ring-2 disabled:opacity-50"
+                            className="flex-1 min-w-[100px] px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer appearance-none outline-none transition-all focus:ring-2 disabled:opacity-50"
                             style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                             {compatibleUnits.map(u => (
                                 <option key={u.id} value={u.id}>{u.name} ({u.code})</option>
                             ))}
                         </select>
 
-                        {/* = sign */}
-                        <span className="text-[18px] font-black font-mono px-1 flex-shrink-0"
-                            style={{ color: 'var(--app-primary)', opacity: 0.5 }}>
+                        {/* = sign — same size as body text */}
+                        <span className="text-[12px] font-black font-mono px-0.5 flex-shrink-0"
+                            style={{ color: 'var(--app-muted-foreground)' }}>
                             =
                         </span>
 
-                        {/* Result — inline hero */}
-                        <div className="flex items-baseline gap-1.5 px-4 py-2 rounded-xl flex-shrink-0"
+                        {/* Result — inline, same rhythm as inputs */}
+                        <div className="flex items-baseline gap-1 px-2.5 py-1.5 rounded-lg flex-shrink-0"
                             style={{
-                                background: `linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 10%, var(--app-surface)) 0%, color-mix(in srgb, var(--app-primary) 18%, var(--app-surface)) 100%)`,
-                                border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)',
-                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 15%, transparent)',
+                                background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
                             }}>
-                            <span className="text-[22px] font-black font-mono tabular-nums leading-none"
+                            <span className="text-[13px] font-black font-mono tabular-nums leading-none"
                                 style={{ color: 'var(--app-primary)' }}
                                 title={result}>
                                 {result}
                             </span>
-                            <span className="text-[11px] font-black" style={{ color: 'var(--app-primary)', opacity: 0.7 }}>
+                            <span className="text-[10px] font-black" style={{ color: 'var(--app-primary)', opacity: 0.75 }}>
                                 {toUnit?.code || ''}
                             </span>
                         </div>
@@ -214,15 +213,15 @@ export function UnitCalculator({ units = [], defaultUnit }: { units?: Unit[]; de
 
                     {/* Sub-caption: live ratio on its own line — quieter than the equation */}
                     {hasMeaningfulResult && ratio > 0 && fromUnitId !== toUnitId && (
-                        <div className="mt-2.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest"
+                        <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold"
                             style={{ color: 'var(--app-muted-foreground)' }}>
                             <Info size={9} />
                             <span>
-                                1 <span style={{ color: 'var(--app-primary)' }}>{fromUnit.code}</span> ={' '}
-                                <span style={{ color: 'var(--app-foreground)' }}>
+                                1 <span className="font-black" style={{ color: 'var(--app-primary)' }}>{fromUnit.code}</span> ={' '}
+                                <span className="font-mono font-black" style={{ color: 'var(--app-foreground)' }}>
                                     {ratio >= 1 ? ratio.toLocaleString(undefined, { maximumFractionDigits: 4 }) : ratio.toFixed(4)}
                                 </span>{' '}
-                                <span style={{ color: 'var(--app-primary)' }}>{toUnit.code}</span>
+                                <span className="font-black" style={{ color: 'var(--app-primary)' }}>{toUnit.code}</span>
                             </span>
                         </div>
                     )}
