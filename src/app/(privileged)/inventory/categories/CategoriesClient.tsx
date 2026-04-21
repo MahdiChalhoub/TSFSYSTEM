@@ -8,7 +8,9 @@ import {
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { deleteCategory } from '@/app/actions/inventory/categories'
+import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
+import { deleteCategory, moveProducts } from '@/app/actions/inventory/categories'
+import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
 import { GuidedTour } from '@/components/ui/GuidedTour'
@@ -27,6 +29,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [isPending, startTransition] = useTransition()
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
+    const [deleteConflict, setDeleteConflict] = useState<any>(null)  // { conflict, source } when backend 409s
     const data = initialCategories
 
     // Compute stats for KPIs
@@ -46,17 +49,73 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
 
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
+        const source = deleteTarget
+        setDeleteTarget(null)
         startTransition(async () => {
-            const result = await deleteCategory(deleteTarget.id)
+            const result = await deleteCategory(source.id)
             if (result?.success) {
-                toast.success(`"${deleteTarget.name}" deleted`)
+                toast.success(`"${source.name}" deleted`)
                 router.refresh()
-            } else {
-                toast.error(result?.message || 'Failed to delete')
+                return
             }
-            setDeleteTarget(null)
+            // Backend raised a 409 conflict — open the guided migration dialog.
+            if ((result as any)?.conflict) {
+                setDeleteConflict({ conflict: (result as any).conflict, source })
+                return
+            }
+            toast.error(result?.message || 'Failed to delete')
         })
     }
+
+    // Migrate every product from the source category → target, then force-delete.
+    // Uses the bulk shortcut path on the backend (move_products accepts
+    // source_category_id when product_ids is empty).
+    const handleMigrateAndDelete = async (targetId: number) => {
+        const source = deleteConflict?.source
+        if (!source) return
+        try {
+            // Call move_products with source_category_id shortcut
+            const moveRes = await erpFetch('inventory/categories/move_products/', {
+                method: 'POST',
+                body: JSON.stringify({ source_category_id: source.id, target_category_id: targetId }),
+            })
+            if (moveRes && moveRes.success === false) {
+                toast.error(moveRes.message || 'Migration failed — delete aborted')
+                return
+            }
+            const delRes = await deleteCategory(source.id, { force: true })
+            if (delRes?.success) {
+                toast.success(`Products migrated and "${source.name}" deleted`)
+                setDeleteConflict(null)
+                router.refresh()
+            } else {
+                toast.error(delRes?.message || 'Delete failed after migration')
+            }
+        } catch (e: any) {
+            toast.error(e?.message || 'Migration failed')
+        }
+    }
+
+    const handleForceDelete = async () => {
+        const source = deleteConflict?.source
+        if (!source) return
+        const res = await deleteCategory(source.id, { force: true })
+        if (res?.success) {
+            toast.success(`"${source.name}" force-deleted`)
+            setDeleteConflict(null)
+            router.refresh()
+        } else {
+            toast.error(res?.message || 'Delete failed')
+        }
+    }
+
+    // Targets list = all other categories (excluding the one being deleted)
+    const migrationTargets = useMemo(() => {
+        const sourceId = deleteConflict?.source?.id
+        return data
+            .filter((c: any) => c.id !== sourceId)
+            .map((c: any) => ({ id: c.id, name: c.name, code: c.code }))
+    }, [data, deleteConflict])
 
     // Ref to access render props from tour step actions
     const renderPropsRef = useRef<any>(null)
@@ -136,9 +195,18 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
                         onConfirm={handleConfirmDelete}
                         title={`Delete "${deleteTarget?.name}"?`}
-                        description="This will permanently remove this category. Make sure it has no products assigned."
+                        description="This will permanently remove this category. Products or sub-categories will be checked — if any reference this, you'll be guided to migrate them."
                         confirmText="Delete"
                         variant="danger"
+                    />
+                    <DeleteConflictDialog
+                        conflict={deleteConflict?.conflict || null}
+                        sourceName={deleteConflict?.source?.name || ''}
+                        entityName="category"
+                        targets={migrationTargets}
+                        onMigrate={handleMigrateAndDelete}
+                        onForceDelete={handleForceDelete}
+                        onCancel={() => setDeleteConflict(null)}
                     />
                 </>
             }

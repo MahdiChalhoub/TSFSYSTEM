@@ -395,6 +395,14 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
         product_ids = request.data.get('product_ids', [])
         target_unit_id = request.data.get('target_unit_id')
         preview = request.data.get('preview', False)
+        # Bulk shortcut: migrate every product with unit=source_unit_id
+        source_unit_id = request.data.get('source_unit_id')
+        if source_unit_id and not product_ids:
+            product_ids = list(
+                Product.objects.filter(
+                    unit_id=source_unit_id, organization=organization
+                ).values_list('id', flat=True)
+            )
 
         if not product_ids or not target_unit_id:
             return Response(
@@ -1440,6 +1448,17 @@ class CategoryViewSet(TenantModelViewSet):
         target_category_id = request.data.get('target_category_id')
         preview = request.data.get('preview', False)
         reconciliation = request.data.get('reconciliation', {})
+        # Bulk shortcut used by the DeleteConflictDialog: migrate every product
+        # currently in source_category_id → target_category_id. Expands into
+        # product_ids so the rest of the flow (conflict detection, M2M link
+        # reconciliation) is unchanged.
+        source_category_id = request.data.get('source_category_id')
+        if source_category_id and not product_ids:
+            product_ids = list(
+                Product.objects.filter(
+                    category_id=source_category_id, organization=organization
+                ).values_list('id', flat=True)
+            )
 
         if not product_ids or not target_category_id:
             return Response({"error": "product_ids and target_category_id are required"}, status=status.HTTP_400_BAD_REQUEST)
