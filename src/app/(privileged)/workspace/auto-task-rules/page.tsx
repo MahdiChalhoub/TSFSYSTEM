@@ -172,7 +172,7 @@ export default function AutoTaskRulesPage() {
         try {
             const [r, u, rl, ug] = await Promise.all([
                 erpFetch('auto-task-rules/').catch(() => []),
-                erpFetch('erp/users/').catch(() => []),
+                erpFetch('users/').catch(() => []),
                 erpFetch('roles/').catch(() => []),
                 erpFetch('user-groups/').catch(() => []),
             ]);
@@ -517,23 +517,50 @@ export default function AutoTaskRulesPage() {
                                 >
                                     <Zap size={13} />
                                 </div>
-                                <div className="flex-1 min-w-0 flex items-center gap-2">
-                                    {rule.code && (
-                                        <span
-                                            className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded flex-shrink-0"
-                                            style={{
-                                                background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
-                                                color: 'var(--app-muted-foreground)',
-                                            }}
-                                        >
-                                            {rule.code}
-                                        </span>
-                                    )}
-                                    <div className="min-w-0">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                        {rule.code && (
+                                            <span
+                                                className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded flex-shrink-0"
+                                                style={{
+                                                    background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                                                    color: 'var(--app-muted-foreground)',
+                                                }}
+                                            >
+                                                {rule.code}
+                                            </span>
+                                        )}
                                         <div className="truncate text-[13px] font-bold text-app-foreground">{rule.name}</div>
-                                        <div className="truncate text-[11px] font-medium text-app-muted-foreground md:hidden">
+                                    </div>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded md:hidden"
+                                            style={{ background: `color-mix(in srgb, ${mod.color} 10%, transparent)`, color: mod.color }}>
                                             {getTriggerLabel(rule.trigger_event)}
-                                        </div>
+                                        </span>
+                                        {rule.rule_type === 'RECURRING' ? (
+                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5"
+                                                style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)' }}>
+                                                🔁 {(rule.recurrence_interval || 'RECURRING').toLowerCase()}
+                                            </span>
+                                        ) : (
+                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
+                                                style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                                ⚡ once per event
+                                            </span>
+                                        )}
+                                        {(rule.conditions?.days_before !== undefined && rule.conditions?.days_before !== null) && (
+                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5"
+                                                style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+                                                🔔 {rule.conditions.days_before}d before
+                                            </span>
+                                        )}
+                                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5"
+                                            style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)', color: 'var(--app-success, #22c55e)' }}>
+                                            {rule.assign_to_user ? '👤 user'
+                                                : rule.assign_to_user_group ? '👥 group'
+                                                : rule.template?.assign_to_role ? '🏷 role'
+                                                : '⚠️ unassigned'}
+                                        </span>
                                     </div>
                                 </div>
                                 <div className="hidden md:block w-36 flex-shrink-0">
@@ -896,23 +923,32 @@ export default function AutoTaskRulesPage() {
                                 </div>
                             </div>
 
-                            {/* Trigger Event */}
-                            <div>
-                                <label className={labelCls}>Trigger Event *</label>
-                                <select
-                                    value={editingRule.trigger_event}
-                                    onChange={e => setEditingRule({ ...editingRule, trigger_event: e.target.value })}
-                                    className={inputCls}
-                                >
-                                    {['Inventory', 'Purchasing', 'Finance', 'CRM', 'HR', 'System'].map(group => (
-                                        <optgroup key={group} label={group}>
-                                            {TRIGGER_EVENTS.filter(t => t.group === group).map(t => (
-                                                <option key={t.value} value={t.value}>{t.label}</option>
-                                            ))}
-                                        </optgroup>
-                                    ))}
-                                </select>
-                            </div>
+                            {/* Trigger Event — filtered to the selected module's events */}
+                            {(() => {
+                                const mod = moduleMeta(editingRule.module);
+                                const moduleEvents = TRIGGER_EVENTS.filter(t => t.group === mod.group);
+                                return (
+                                    <div>
+                                        <label className={labelCls}>Trigger Event (in {mod.label}) *</label>
+                                        <select
+                                            value={editingRule.trigger_event}
+                                            onChange={e => setEditingRule({ ...editingRule, trigger_event: e.target.value })}
+                                            className={inputCls}
+                                        >
+                                            {moduleEvents.length === 0 ? (
+                                                <option value="CUSTOM">Custom Event</option>
+                                            ) : (
+                                                moduleEvents.map(t => (
+                                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                                ))
+                                            )}
+                                        </select>
+                                        <p className="text-[9px] font-medium mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Change the module in Step 1 to pick from other event groups.
+                                        </p>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Conditions */}
                             <div
