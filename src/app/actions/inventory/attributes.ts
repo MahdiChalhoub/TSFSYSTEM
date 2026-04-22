@@ -19,7 +19,11 @@ const BASE = 'inventory/product-attributes'
  */
 export async function getAttributeTree() {
     try {
-        return await erpFetch(`${BASE}/tree/`)
+        const res = await erpFetch(`${BASE}/tree/`)
+        console.log('[getAttributeTree]',
+            Array.isArray(res) ? `array len=${res.length}` : typeof res,
+            res && typeof res === 'object' && !Array.isArray(res) ? `keys=${Object.keys(res).slice(0, 6).join(',')}` : '')
+        return res
     } catch (e) {
         console.error('Failed to fetch attribute tree', e)
         return []
