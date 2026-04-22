@@ -243,7 +243,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                             <p className="text-sm font-bold text-app-muted-foreground mb-1">
                                 {q ? 'No matching templates' : 'No package templates yet'}
                             </p>
-                            <p className="text-[11px] text-app-muted-foreground mb-5 max-w-sm">
+                            <p className="text-tp-sm text-app-muted-foreground mb-5 max-w-sm">
                                 {q ? 'Try a different term.' : 'Define the SHAPE of your packagings — "Pack of 6", "Carton 24", "Pallet 144" — then link them to categories / brands / attributes. Products will adopt the shape and supply their own barcode + price.'}
                             </p>
                             {!q && (
@@ -302,17 +302,17 @@ function UnitGroup({ node, forceExpanded, selectedId, onOpenTemplate, onEdit, on
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-black text-app-foreground truncate">{unit?.name || node.name}</span>
+                        <span className="text-tp-lg font-bold text-app-foreground truncate">{unit?.name || node.name}</span>
                         {isBase && (
-                            <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-[1px] rounded-full"
+                            <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full"
                                 style={{ background: 'linear-gradient(135deg, var(--app-info), color-mix(in srgb, var(--app-info) 70%, #6366f1))', color: '#fff' }}>BASE</span>
                         )}
-                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md tabular-nums"
+                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md tabular-nums"
                             style={{ background: 'color-mix(in srgb, var(--app-foreground) 6%, transparent)' }}>
                             {kids.length} template{kids.length !== 1 ? 's' : ''}
                         </span>
                     </div>
-                    {unit?.code && <span className="font-mono text-[9px] font-bold text-app-muted-foreground">{unit.code}</span>}
+                    {unit?.code && <span className="font-mono text-tp-xxs font-bold text-app-muted-foreground">{unit.code}</span>}
                 </div>
             </div>
 
@@ -349,16 +349,16 @@ function TemplateRow({ node, selected, onOpen, onEdit, onDelete }: any) {
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-semibold text-app-foreground truncate">{t.name}</span>
+                    <span className="text-tp-lg font-semibold text-app-foreground truncate">{t.name}</span>
                     {t.is_default && (
-                        <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-[1px] rounded-full"
+                        <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full"
                             style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: '#fff' }}>Default</span>
                     )}
                 </div>
-                {t.code && <span className="font-mono text-[9px] font-bold text-app-muted-foreground">{t.code}</span>}
+                {t.code && <span className="font-mono text-tp-xxs font-bold text-app-muted-foreground">{t.code}</span>}
             </div>
             <div className="hidden sm:flex w-[60px] flex-shrink-0 justify-center">
-                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
+                <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
                     style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 8%, transparent)' }}>
                     <ArrowRightLeft size={9} />×{ratio}
                 </span>
@@ -386,10 +386,10 @@ function LinksCountBadge({ tplId }: { tplId: number }) {
             .catch(() => { if (alive) setN(0) })
         return () => { alive = false }
     }, [tplId])
-    if (n === null) return <span className="text-[8px]" style={{ color: 'var(--app-muted-foreground)' }}>…</span>
-    if (n === 0) return <span className="text-[8px]" style={{ color: 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)' }}>0</span>
+    if (n === null) return <span className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>…</span>
+    if (n === 0) return <span className="text-tp-xxs" style={{ color: 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)' }}>0</span>
     return (
-        <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
+        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
             style={{ color: '#8b5cf6', background: 'color-mix(in srgb, #8b5cf6 10%, transparent)' }}>
             <GitBranch size={9} />{n}
         </span>
@@ -410,10 +410,10 @@ function UsageCountBadge({ tpl }: { tpl: Template }) {
             .catch(() => { if (alive) setN(0) })
         return () => { alive = false }
     }, [tpl.unit, tpl.ratio])
-    if (n === null) return <span className="text-[8px]" style={{ color: 'var(--app-muted-foreground)' }}>…</span>
-    if (n === 0) return <span className="text-[8px]" style={{ color: 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)' }}>0</span>
+    if (n === null) return <span className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>…</span>
+    if (n === 0) return <span className="text-tp-xxs" style={{ color: 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)' }}>0</span>
     return (
-        <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
+        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
             style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 10%, transparent)' }}>
             <Package size={9} />{n}
         </span>
@@ -503,15 +503,15 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, onEdit, onDe
                         <Package size={15} />
                     </div>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-black tracking-tight truncate">{tpl.name}</h2>
+                        <h2 className="text-sm font-bold tracking-tight truncate">{tpl.name}</h2>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                            {tpl.code && <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
+                            {tpl.code && <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>{tpl.code}</span>}
-                            <span className="text-[9px] font-mono font-bold" style={{ color: 'var(--app-info)' }}>
+                            <span className="text-tp-xxs font-mono font-bold" style={{ color: 'var(--app-info)' }}>
                                 ×{Number(tpl.ratio).toLocaleString()} {tpl.unit_code || tpl.unit_name}
                             </span>
                             {tpl.is_default && (
-                                <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                                <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
                                     style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: '#fff' }}>Default</span>
                             )}
                         </div>
@@ -532,11 +532,11 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, onEdit, onDe
                     const active = tab === t.key
                     return (
                         <button key={t.key} onClick={() => setTab(t.key)}
-                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2.5 whitespace-nowrap"
+                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-2.5 whitespace-nowrap"
                             style={{ color: active ? 'var(--app-foreground)' : 'var(--app-muted-foreground)', borderBottom: active ? `2px solid ${t.color}` : '2px solid transparent', marginBottom: '-1px' }}>
                             {t.icon}<span className="hidden sm:inline">{t.label}</span>
                             {t.count !== undefined && t.count > 0 && (
-                                <span className="text-[9px] font-black px-1 py-0.5 rounded min-w-[16px] text-center"
+                                <span className="text-tp-xxs font-bold px-1 py-0.5 rounded min-w-[16px] text-center"
                                     style={{ background: `color-mix(in srgb, ${t.color} 10%, transparent)`, color: t.color }}>{t.count}</span>
                             )}
                         </button>
@@ -573,7 +573,7 @@ function OverviewTab({ tpl }: any) {
             <div className="rounded-xl px-3 py-2.5 flex items-start gap-2"
                 style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
                 <Info size={12} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
-                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
+                <p className="text-tp-sm leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
                     Templates are reusable shapes. <strong style={{ color: 'var(--app-foreground)' }}>Barcodes and prices</strong> live on each product's own packaging — open the product page and add a packaging level adopting this shape.
                 </p>
             </div>
@@ -589,8 +589,8 @@ function OverviewTab({ tpl }: any) {
                 ].filter(([, v]) => v != null && v !== '').map(([k, v]) => (
                     <div key={k} className="flex items-start gap-3 px-3 py-2 rounded-xl"
                         style={{ background: 'color-mix(in srgb, var(--app-border) 15%, transparent)' }}>
-                        <span className="text-[9px] font-black uppercase tracking-widest w-24 flex-shrink-0 pt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{k}</span>
-                        <span className="text-[11px] font-bold text-app-foreground flex-1">{v}</span>
+                        <span className="text-tp-xxs font-bold uppercase tracking-wide w-24 flex-shrink-0 pt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{k}</span>
+                        <span className="text-tp-sm font-bold text-app-foreground flex-1">{v}</span>
                     </div>
                 ))}
             </div>
@@ -602,11 +602,11 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
     return (
         <div className="p-3 space-y-2 animate-in fade-in duration-150">
             <div className="flex items-center justify-between">
-                <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                <p className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
                     {rules.length} link{rules.length !== 1 ? 's' : ''} — smart suggestion rules
                 </p>
                 <button onClick={() => setAdding(!adding)}
-                    className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
+                    className="flex items-center gap-1 text-tp-xs font-bold uppercase tracking-wide px-2 py-1 rounded-lg"
                     style={adding ? { background: 'var(--app-surface)', color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' } : { background: 'var(--app-primary)', color: '#fff' }}>
                     {adding ? <><X size={10} /> Cancel</> : <><Plus size={10} /> Add Link</>}
                 </button>
@@ -620,14 +620,14 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
                     <LinkSelect label="Attribute" icon={<Layers size={11} />} value={newLink.attribute} onChange={(v: string) => setNewLink({ ...newLink, attribute: v })} options={attributes} />
                     {newLink.attribute && (
                         <div>
-                            <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Value</label>
+                            <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Value</label>
                             <input value={newLink.attribute_value} onChange={(e) => setNewLink({ ...newLink, attribute_value: e.target.value })}
-                                placeholder="e.g. Big" className="w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold outline-none"
+                                placeholder="e.g. Big" className="w-full px-2.5 py-1.5 rounded-lg text-tp-sm font-bold outline-none"
                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
                         </div>
                     )}
                     <button onClick={onAdd}
-                        className="w-full flex items-center justify-center gap-1.5 text-[11px] font-black uppercase tracking-wider py-2 rounded-lg"
+                        className="w-full flex items-center justify-center gap-1.5 text-tp-sm font-bold uppercase tracking-wider py-2 rounded-lg"
                         style={{ background: 'var(--app-primary)', color: '#fff' }}>
                         <Check size={12} /> Create Link
                     </button>
@@ -639,8 +639,8 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
             ) : rules.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                     <Sparkles size={22} className="text-app-muted-foreground mb-2 opacity-40" />
-                    <p className="text-[12px] font-bold text-app-muted-foreground">No links yet</p>
-                    <p className="text-[10px] text-app-muted-foreground mt-1 max-w-[240px]">Link this template to a category, brand, or attribute so the smart engine suggests it during product creation.</p>
+                    <p className="text-tp-md font-bold text-app-muted-foreground">No links yet</p>
+                    <p className="text-tp-xs text-app-muted-foreground mt-1 max-w-[240px]">Link this template to a category, brand, or attribute so the smart engine suggests it during product creation.</p>
                 </div>
             ) : (
                 <div className="space-y-1.5">
@@ -652,12 +652,12 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
                                 {r.brand_name && <Chip icon={<Tag size={9} />} color="#8b5cf6">{r.brand_name}</Chip>}
                                 {r.attribute_name && <Chip icon={<Layers size={9} />} color="var(--app-warning)">{r.attribute_name}{r.attribute_value ? `=${r.attribute_value}` : ''}</Chip>}
                             </div>
-                            <span className="text-[9px] font-mono flex items-center gap-0.5" title={`Priority: ${r.effective_priority}`}
+                            <span className="text-tp-xxs font-mono flex items-center gap-0.5" title={`Priority: ${r.effective_priority}`}
                                 style={{ color: 'var(--app-primary)' }}>
                                 <Zap size={9} />p{r.effective_priority}
                             </span>
                             {r.usage_count > 0 && (
-                                <span className="text-[9px] font-bold flex items-center gap-0.5" title={`Used ${r.usage_count} times`}
+                                <span className="text-tp-xxs font-bold flex items-center gap-0.5" title={`Used ${r.usage_count} times`}
                                     style={{ color: 'var(--app-warning)' }}>
                                     <TrendingUp size={9} />{r.usage_count}
                                 </span>
@@ -679,14 +679,14 @@ function UsageTab({ products, loaded }: any) {
         return (
             <div className="flex flex-col items-center justify-center py-10 text-center">
                 <Package size={22} className="text-app-muted-foreground mb-2 opacity-40" />
-                <p className="text-[12px] font-bold text-app-muted-foreground">No products have adopted this template yet</p>
-                <p className="text-[10px] text-app-muted-foreground mt-1 max-w-[240px]">Products adopt a template by creating a ProductPackaging with the matching ratio + unit. The smart engine proposes this when category / brand / attribute matches.</p>
+                <p className="text-tp-md font-bold text-app-muted-foreground">No products have adopted this template yet</p>
+                <p className="text-tp-xs text-app-muted-foreground mt-1 max-w-[240px]">Products adopt a template by creating a ProductPackaging with the matching ratio + unit. The smart engine proposes this when category / brand / attribute matches.</p>
             </div>
         )
     }
     return (
         <div className="p-3 space-y-1">
-            <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
+            <p className="text-tp-xxs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
                 {products.length} product packaging{products.length !== 1 ? 's' : ''} adopt this shape
             </p>
             {products.map((pp: any) => (
@@ -694,14 +694,14 @@ function UsageTab({ products, loaded }: any) {
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}><Package size={11} /></div>
                     <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-bold truncate">
+                        <div className="text-tp-sm font-bold truncate">
                             {pp.product_name || `Product #${pp.product}`}
                             {pp.display_name && <span className="text-app-muted-foreground ml-1 font-normal">· {pp.display_name}</span>}
                         </div>
                         <div className="flex items-center gap-1.5">
-                            {pp.barcode && <span className="font-mono text-[9px] font-bold" style={{ color: 'var(--app-info)' }}>{pp.barcode}</span>}
+                            {pp.barcode && <span className="font-mono text-tp-xxs font-bold" style={{ color: 'var(--app-info)' }}>{pp.barcode}</span>}
                             {pp.effective_selling_price > 0 && (
-                                <span className="text-[9px] font-black" style={{ color: 'var(--app-warning)' }}>
+                                <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-warning)' }}>
                                     {Number(pp.effective_selling_price).toLocaleString()}
                                 </span>
                             )}
@@ -720,9 +720,9 @@ function UsageTab({ products, loaded }: any) {
 function LinkSelect({ label, icon, value, onChange, options }: any) {
     return (
         <div>
-            <label className="text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1" style={{ color: 'var(--app-muted-foreground)' }}>{icon} {label}</label>
+            <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 flex items-center gap-1" style={{ color: 'var(--app-muted-foreground)' }}>{icon} {label}</label>
             <select value={value} onChange={(e) => onChange(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold outline-none"
+                className="w-full px-2.5 py-1.5 rounded-lg text-tp-sm font-bold outline-none"
                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                 <option value="">— Any {label.toLowerCase()} (wildcard) —</option>
                 {options.map((o: any) => <option key={o.id} value={o.id}>{o.name}</option>)}
@@ -733,7 +733,7 @@ function LinkSelect({ label, icon, value, onChange, options }: any) {
 
 function Chip({ icon, color, children }: any) {
     return (
-        <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-lg"
+        <span className="inline-flex items-center gap-1 text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-lg"
             style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color }}>
             {icon}{children}
         </span>
@@ -746,8 +746,8 @@ function StatTile({ label, value, icon, color }: any) {
             style={{ background: `color-mix(in srgb, ${color} 5%, var(--app-surface))`, border: `1px solid color-mix(in srgb, ${color} 15%, transparent)` }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>{icon}</div>
             <div>
-                <div className="text-sm font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>{value}</div>
-                <div className="text-[8px] font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
+                <div className="text-sm font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>{value}</div>
+                <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
             </div>
         </div>
     )
@@ -789,8 +789,8 @@ function TemplateFormModal({ tpl, units, onSave, onClose }: any) {
                             <Package size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black">{tpl ? 'Edit Template' : 'New Template'}</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <h3 className="text-sm font-bold">{tpl ? 'Edit Template' : 'New Template'}</h3>
+                            <p className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
                                 Shape only — products supply their own barcode + price
                             </p>
                         </div>
@@ -802,7 +802,7 @@ function TemplateFormModal({ tpl, units, onSave, onClose }: any) {
                     <div className="rounded-xl px-3 py-2.5 flex items-start gap-2"
                         style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
                         <Info size={12} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
-                        <p className="text-[11px] leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <p className="text-tp-sm leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
                             A template is a reusable shape (e.g. "Pack of 6" ×6 Piece). Each product that adopts this shape gets its own barcode and price on its product page.
                         </p>
                     </div>
@@ -810,33 +810,33 @@ function TemplateFormModal({ tpl, units, onSave, onClose }: any) {
                         <FormField label="Name *" value={form.name} onChange={(v: string) => setForm({ ...form, name: v })} placeholder="Pack of 6" />
                         <FormField label="Code" value={form.code} onChange={(v: string) => setForm({ ...form, code: v })} placeholder="PK6" mono />
                         <div>
-                            <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Unit *</label>
+                            <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Unit *</label>
                             <select value={form.unit} onChange={e => setForm({ ...form, unit: Number(e.target.value) })}
-                                className="w-full px-3 py-2 rounded-xl outline-none text-[12px] font-bold"
+                                className="w-full px-3 py-2 rounded-xl outline-none text-tp-md font-bold"
                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                                 {units.map((u: any) => <option key={u.id} value={u.id}>{u.name}{u.code ? ` (${u.code})` : ''}</option>)}
                             </select>
                         </div>
                         <FormField label="Ratio (base units) *" value={String(form.ratio)} onChange={(v: string) => setForm({ ...form, ratio: Number(v) || 1 })} mono placeholder="6" />
                         <FormField label="Order" value={String(form.order)} onChange={(v: string) => setForm({ ...form, order: Number(v) || 0 })} mono placeholder="0" />
-                        <label className="flex items-center gap-2 text-[11px] font-bold cursor-pointer mt-5">
+                        <label className="flex items-center gap-2 text-tp-sm font-bold cursor-pointer mt-5">
                             <input type="checkbox" checked={form.is_default} onChange={e => setForm({ ...form, is_default: e.target.checked })} />
                             Default for this unit
                         </label>
                     </div>
                     <div>
-                        <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Notes</label>
+                        <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Notes</label>
                         <textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })}
-                            rows={2} className="w-full px-3 py-2 rounded-xl outline-none text-[12px]"
+                            rows={2} className="w-full px-3 py-2 rounded-xl outline-none text-tp-md"
                             style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
                     </div>
                 </div>
 
                 <div className="px-5 py-3 flex items-center justify-end gap-2 flex-shrink-0"
                     style={{ background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)', borderTop: '1px solid var(--app-border)' }}>
-                    <button onClick={onClose} disabled={saving} className="text-[11px] font-bold px-3 py-2 rounded-xl" style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
+                    <button onClick={onClose} disabled={saving} className="text-tp-sm font-bold px-3 py-2 rounded-xl" style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
                     <button onClick={submit} disabled={saving}
-                        className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider px-4 py-2 rounded-xl"
+                        className="flex items-center gap-1.5 text-tp-sm font-bold uppercase tracking-wider px-4 py-2 rounded-xl"
                         style={{ background: 'var(--app-primary)', color: '#fff', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                         {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                         {tpl ? 'Save Template' : 'Create Template'}
@@ -850,9 +850,9 @@ function TemplateFormModal({ tpl, units, onSave, onClose }: any) {
 function FormField({ label, value, onChange, placeholder, mono }: any) {
     return (
         <div>
-            <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{label}</label>
+            <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{label}</label>
             <input value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-                className={`w-full px-3 py-2 rounded-xl outline-none text-[12px] ${mono ? 'font-mono font-bold' : 'font-medium'}`}
+                className={`w-full px-3 py-2 rounded-xl outline-none text-tp-md ${mono ? 'font-mono font-bold' : 'font-medium'}`}
                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
         </div>
     )
