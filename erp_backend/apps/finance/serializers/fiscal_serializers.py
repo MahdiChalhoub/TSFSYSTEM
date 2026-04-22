@@ -15,15 +15,39 @@ class FiscalPeriodSerializer(serializers.ModelSerializer):
 
     def get_journal_entry_count(self, obj):
         from apps.finance.models import JournalEntry
-        return JournalEntry.objects.filter(fiscal_period=obj).count()
+        from django.db.models import Q
+        return JournalEntry.objects.filter(
+            organization=obj.organization,
+        ).filter(
+            Q(fiscal_period=obj) |
+            Q(fiscal_period__isnull=True,
+              transaction_date__date__gte=obj.start_date,
+              transaction_date__date__lte=obj.end_date)
+        ).count()
 
     def get_draft_je_count(self, obj):
         from apps.finance.models import JournalEntry
-        return JournalEntry.objects.filter(fiscal_period=obj, status='DRAFT').count()
+        from django.db.models import Q
+        return JournalEntry.objects.filter(
+            organization=obj.organization, status='DRAFT',
+        ).filter(
+            Q(fiscal_period=obj) |
+            Q(fiscal_period__isnull=True,
+              transaction_date__date__gte=obj.start_date,
+              transaction_date__date__lte=obj.end_date)
+        ).count()
 
     def get_draft_je_refs(self, obj):
         from apps.finance.models import JournalEntry
-        drafts = JournalEntry.objects.filter(fiscal_period=obj, status='DRAFT').values_list('reference', flat=True)[:10]
+        from django.db.models import Q
+        drafts = JournalEntry.objects.filter(
+            organization=obj.organization, status='DRAFT',
+        ).filter(
+            Q(fiscal_period=obj) |
+            Q(fiscal_period__isnull=True,
+              transaction_date__date__gte=obj.start_date,
+              transaction_date__date__lte=obj.end_date)
+        ).values_list('reference', flat=True)[:10]
         return list(drafts)
 
 class FiscalYearSerializer(serializers.ModelSerializer):

@@ -110,7 +110,7 @@ export default function RichOverviewPage() {
             const [t, u, meRes] = await Promise.all([
                 erpFetch('tasks/?page_size=500').catch(() => []),
                 erpFetch('users/').catch(() => []),
-                erpFetch('users/me/').catch(() => null),
+                erpFetch('auth/me/').catch(() => null),
             ])
             setTasks(Array.isArray(t) ? t : (t as any)?.results ?? [])
             setUsers(Array.isArray(u) ? u : (u as any)?.results ?? [])
@@ -227,7 +227,11 @@ export default function RichOverviewPage() {
 
     // Me: streak + today's agenda
     const meStats = useMemo(() => {
-        if (!me) return null
+        if (!me) {
+            // Fallback when auth lookup fails: zero-filled so the page still renders.
+            const weeklyGoal = Math.max(10, Math.ceil(sparkline14d.slice(0, 7).reduce((s, d) => s + d.done, 0)) || 10)
+            return { doneThisWeek: 0, pointsThisWeek: 0, streak: 0, delegatedByMe: 0, openCount: 0, weeklyGoal }
+        }
         let doneThisWeek = 0, pointsThisWeek = 0, delegatedByMe = 0
         for (const t of tasks) {
             if (t.assigned_to === me.id && t.status === 'COMPLETED' && t.completed_at) {
@@ -338,47 +342,43 @@ export default function RichOverviewPage() {
         return { open, overdue, urgent, unassigned, doneThisWeek, doneLastWeek, wowDiff, wowPct, autoPct, topCategories, leaderboard, healthScore }
     }, [tasks, userMap, weekAgoIso, twoWeeksAgoIso])
 
+    // Always expose all three lenses — role detection is best-effort and
+    // we don't want missing flags to hide tabs the user clearly wants.
     const availableTabs: { key: Tab; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
         { key: 'me', label: 'Me', Icon: UserIcon },
-        ...(role.isLeader ? [{ key: 'team' as Tab, label: 'My team', Icon: Users }] : []),
-        ...(role.isOwner ? [{ key: 'company' as Tab, label: 'Company', Icon: Building2 }] : []),
+        { key: 'team', label: 'My team', Icon: Users },
+        { key: 'company', label: 'Company', Icon: Building2 },
     ]
 
     /* ─────────────────────────────── render ─────────────────────────────── */
 
     return (
         <div className="flex flex-col h-full" style={{ background: 'var(--app-bg)' }}>
-            <header className="flex-shrink-0 px-5 md:px-8 pt-5 pb-0 border-b"
+            <header className="flex-shrink-0 px-5 md:px-8 py-3 flex items-center gap-4 flex-wrap border-b"
                     style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
-                <div className="flex items-center gap-4 flex-wrap mb-3">
-                    <div className="flex items-baseline gap-3">
-                        <h1 className="text-2xl md:text-3xl font-black leading-none" style={{ color: 'var(--app-foreground)' }}>
-                            {tab === 'me' ? `Hi, ${me?.first_name || me?.username || 'there'}`
-                             : tab === 'team' ? 'Team dashboard'
-                             : 'Company dashboard'}
-                        </h1>
-                        <span className="text-tp-sm hidden md:inline" style={{ color: 'var(--app-muted-foreground)' }}>
-                            {today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-                        </span>
-                    </div>
-                    <button onClick={() => load(true)} disabled={refreshing}
-                            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-tp-sm font-bold transition-all disabled:opacity-50"
-                            style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}>
-                        {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
-                        Refresh
-                    </button>
+                <div className="flex items-baseline gap-3">
+                    <h1 className="text-tp-2xl md:text-tp-3xl font-bold leading-none" style={{ color: 'var(--app-foreground)' }}>
+                        {tab === 'me' ? `Hi, ${me?.first_name || me?.username || 'there'}`
+                         : tab === 'team' ? 'Team'
+                         : 'Company'}
+                    </h1>
+                    <span className="text-tp-xs hidden md:inline" style={{ color: 'var(--app-muted-foreground)' }}>
+                        {today.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </span>
                 </div>
+
                 {availableTabs.length > 1 && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 mx-auto p-1 rounded-xl"
+                         style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
                         {availableTabs.map(t => {
                             const active = tab === t.key
                             return (
                                 <button key={t.key} onClick={() => { setTab(t.key); setTabManuallyChosen(true) }}
-                                        className="flex items-center gap-1.5 px-3 py-2 text-tp-sm font-bold transition-all"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-sm font-bold transition-all"
                                         style={{
+                                            background: active ? 'var(--app-surface)' : 'transparent',
                                             color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                            borderBottom: `2px solid ${active ? 'var(--app-primary)' : 'transparent'}`,
-                                            marginBottom: '-1px',
+                                            boxShadow: active ? '0 1px 3px color-mix(in srgb, #000 8%, transparent)' : 'none',
                                         }}>
                                     <t.Icon size={13} /> {t.label}
                                 </button>
@@ -386,6 +386,13 @@ export default function RichOverviewPage() {
                         })}
                     </div>
                 )}
+
+                <button onClick={() => load(true)} disabled={refreshing}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-tp-sm font-bold transition-all disabled:opacity-50"
+                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}>
+                    {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
+                    Refresh
+                </button>
             </header>
 
             {loading ? (
@@ -393,57 +400,65 @@ export default function RichOverviewPage() {
                     <Loader2 size={24} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
                 </div>
             ) : (
-                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-5 md:px-8 py-6 space-y-6">
+                <div className="flex-1 min-h-0 overflow-hidden px-5 md:px-8 py-4"
+                     style={{
+                         display: 'grid',
+                         gridTemplateRows: tab === 'me' ? 'auto auto minmax(0, 1fr)'
+                             : tab === 'team' ? 'auto auto minmax(0, 1fr)'
+                             : 'auto auto minmax(0, 1fr)',
+                         alignContent: 'start',
+                         gap: '12px',
+                     }}>
 
                     {/* ═════════════════ ME TAB ═════════════════ */}
                     {tab === 'me' && meStats && (
                         <>
-                            {/* Hero: today's agenda + streak ring */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)', gap: '16px' }}
+                            {/* Hero: compact agenda + streak ring */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(240px, 1fr)', gap: '12px' }}
                                  className="md:grid-cols-[2fr_1fr] grid-cols-1">
-                                {/* Today's agenda */}
-                                <div className="p-5 rounded-2xl"
+                                {/* Today's agenda — max 3 items */}
+                                <div className="p-3 rounded-2xl"
                                      style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <Sparkles size={14} style={{ color: 'var(--app-primary)' }} />
-                                        <h2 className="text-tp-sm font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Sparkles size={12} style={{ color: 'var(--app-primary)' }} />
+                                        <h2 className="text-tp-xs font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
                                             Your agenda
                                         </h2>
-                                        <span className="text-tp-xs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        <span className="text-tp-xxs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
                                             {agenda.length === 0 ? 'clear day' : `${agenda.length} up now`}
                                         </span>
                                     </div>
                                     {agenda.length === 0 ? (
-                                        <div className="py-10 text-center">
-                                            <CheckCircle2 size={36} className="mx-auto mb-3" style={{ color: 'var(--app-success, #22c55e)' }} />
-                                            <div className="text-tp-lg font-black" style={{ color: 'var(--app-foreground)' }}>No fires today.</div>
-                                            <div className="text-tp-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
-                                                Use the clear day to knock out {meStats.openCount} open task{meStats.openCount === 1 ? '' : 's'}.
+                                        <div className="py-2 flex items-center gap-3">
+                                            <CheckCircle2 size={20} style={{ color: 'var(--app-success, #22c55e)' }} />
+                                            <div>
+                                                <div className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>No fires today.</div>
+                                                <div className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                    {meStats.openCount} open task{meStats.openCount === 1 ? '' : 's'} waiting.
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="space-y-2">
-                                            {agenda.map(t => {
+                                        <div className="space-y-1">
+                                            {agenda.slice(0, 3).map(t => {
                                                 const pColor = PRIORITY_COLOR[t.priority]
                                                 const overdueText = t.is_overdue ? 'Overdue' : relDue(t.due_date, today)
                                                 return (
                                                     <Link key={t.id} href={`/workspace/tasks?focus=${t.id}`}
-                                                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:translate-x-0.5"
+                                                          className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all hover:translate-x-0.5"
                                                           style={{
                                                               background: t.is_overdue ? 'color-mix(in srgb, var(--app-error) 6%, transparent)' : 'var(--app-bg)',
                                                               border: `1px solid ${t.is_overdue ? 'color-mix(in srgb, var(--app-error) 25%, transparent)' : 'var(--app-border)'}`,
                                                               borderLeft: `3px solid ${pColor}`,
                                                           }}>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-tp-md font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{t.title}</div>
-                                                            <div className="text-tp-xs flex items-center gap-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                            <div className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{t.title}</div>
+                                                            <div className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
                                                                 <span className="font-bold" style={{ color: t.is_overdue ? 'var(--app-error)' : pColor }}>{overdueText}</span>
-                                                                {t.category_name && <>
-                                                                    <span>·</span><span className="truncate">{t.category_name}</span>
-                                                                </>}
+                                                                {t.category_name && <> · {t.category_name}</>}
                                                             </div>
                                                         </div>
-                                                        <ArrowRight size={14} style={{ color: 'var(--app-muted-foreground)' }} className="flex-shrink-0" />
+                                                        <ArrowRight size={12} style={{ color: 'var(--app-muted-foreground)' }} className="flex-shrink-0" />
                                                     </Link>
                                                 )
                                             })}
@@ -451,21 +466,25 @@ export default function RichOverviewPage() {
                                     )}
                                 </div>
 
-                                {/* Weekly goal ring */}
-                                <div className="p-5 rounded-2xl flex flex-col items-center justify-center"
+                                {/* Weekly goal ring — compact */}
+                                <div className="p-3 rounded-2xl flex items-center gap-3"
                                      style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <div className="text-tp-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        Weekly goal
-                                    </div>
                                     <ProgressRing
-                                        size={150} stroke={12}
+                                        size={80} stroke={8}
                                         value={meStats.doneThisWeek}
                                         max={meStats.weeklyGoal}
                                         color="var(--app-primary)"
                                     />
-                                    <div className="text-tp-xs mt-3 text-center" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        {meStats.doneThisWeek} of {meStats.weeklyGoal} done this week
-                                        {meStats.pointsThisWeek > 0 && <> · {meStats.pointsThisWeek} pts</>}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Weekly goal
+                                        </div>
+                                        <div className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                            {meStats.doneThisWeek} / {meStats.weeklyGoal}
+                                        </div>
+                                        <div className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            {meStats.pointsThisWeek > 0 ? `${meStats.pointsThisWeek} pts · ` : ''}done this week
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -487,23 +506,10 @@ export default function RichOverviewPage() {
                                     sub="awaiting others" />
                             </div>
 
-                            {/* 30-day activity heatmap */}
-                            <div className="p-5 rounded-2xl"
-                                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Activity size={14} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                    <h2 className="text-tp-sm font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
-                                        Your last 30 days
-                                    </h2>
-                                    <span className="text-tp-xs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        {heatmap30d.reduce((s, d) => s + d.count, 0)} completions · {heatmap30d.filter(d => d.count > 0).length} active days
-                                    </span>
-                                </div>
-                                <Heatmap30 days={heatmap30d} />
+                            {/* Personal kanban board — fills remaining height */}
+                            <div className="min-h-0">
+                                <Board board={board} today={today} userMap={userMap} />
                             </div>
-
-                            {/* Personal kanban board */}
-                            <Board board={board} today={today} userMap={userMap} />
                         </>
                     )}
 
@@ -515,7 +521,7 @@ export default function RichOverviewPage() {
                                  style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                                     <TrendingUp size={14} style={{ color: 'var(--app-primary)' }} />
-                                    <h2 className="text-tp-sm font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                                    <h2 className="text-tp-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
                                         Team velocity · 14 days
                                     </h2>
                                     <div className="flex items-center gap-4 ml-auto text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -534,8 +540,8 @@ export default function RichOverviewPage() {
                                 </div>
                             </div>
 
-                            {/* Stats strip */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                            {/* Stats strip — compact */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                                 <StatWithSpark label="Members" value={teamMemberIds.size} color="var(--app-foreground)" Icon={Users} />
                                 <StatWithSpark label="Open" value={totalOpen} color="var(--app-info, #3b82f6)" Icon={Target} />
                                 <StatWithSpark label="On fire" value={board.now.length} color="var(--app-error, #ef4444)" Icon={Flame} />
@@ -543,29 +549,25 @@ export default function RichOverviewPage() {
                                     series={sparkline14d.map(s => s.done)} trend={{ diff: wow.diff, pct: wow.pct }} />
                             </div>
 
-                            {/* Load distribution + Board side-by-side on wide */}
-                            {teamLoad.length > 0 && (
-                                <div className="p-5 rounded-2xl"
-                                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <Users size={14} style={{ color: 'var(--app-primary)' }} />
-                                        <h2 className="text-tp-sm font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
-                                            Load distribution
-                                        </h2>
-                                        <span className="text-tp-xs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            pending (grey) + overdue (red) + done 7d (green)
-                                        </span>
-                                    </div>
-                                    <LoadDistribution rows={teamLoad} meId={me?.id} />
+                            {/* Main row: board + team load side-by-side, fills remaining height */}
+                            <div className="min-h-0" style={{ display: 'grid', gridTemplateColumns: teamLoad.length > 0 ? 'minmax(0, 3fr) minmax(240px, 1fr)' : '1fr', gap: '12px' }}>
+                                <div className="min-h-0">
+                                    <Board board={board} today={today} userMap={userMap} />
                                 </div>
-                            )}
-
-                            {/* Team kanban board */}
-                            <div>
-                                <h2 className="text-tp-sm font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-foreground)' }}>
-                                    Team board
-                                </h2>
-                                <Board board={board} today={today} userMap={userMap} />
+                                {teamLoad.length > 0 && (
+                                    <div className="p-3 rounded-2xl flex flex-col min-h-0"
+                                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                        <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+                                            <Users size={12} style={{ color: 'var(--app-primary)' }} />
+                                            <h2 className="text-tp-xs font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                                                Team load
+                                            </h2>
+                                        </div>
+                                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                                            <LoadDistribution rows={teamLoad} meId={me?.id} />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
@@ -573,86 +575,84 @@ export default function RichOverviewPage() {
                     {/* ═════════════════ COMPANY TAB ═════════════════ */}
                     {tab === 'company' && (
                         <>
-                            {/* Hero: health score + velocity */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(0, 2fr)', gap: '16px' }}
-                                 className="md:grid-cols-[1fr_2fr] grid-cols-1">
-                                <div className="p-5 rounded-2xl flex flex-col items-center justify-center"
+                            {/* Row 1: health + velocity + 4 stacked KPIs */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 1fr) minmax(0, 2fr) minmax(200px, 1fr)', gap: '10px' }}>
+                                {/* Health ring — compact */}
+                                <div className="p-3 rounded-2xl flex items-center gap-3"
                                      style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <div className="text-tp-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        Operations health
-                                    </div>
-                                    <ProgressRing size={170} stroke={14}
+                                    <ProgressRing size={80} stroke={8}
                                         value={companyStats.healthScore} max={100}
                                         color={companyStats.healthScore >= 75 ? 'var(--app-success, #22c55e)'
                                             : companyStats.healthScore >= 50 ? 'var(--app-warning, #f59e0b)'
                                             : 'var(--app-error, #ef4444)'}
                                         label={`${companyStats.healthScore}`} sublabel="/ 100" />
-                                    <div className="text-tp-xs mt-3 text-center" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        {companyStats.healthScore >= 75 ? 'Running smoothly'
-                                         : companyStats.healthScore >= 50 ? 'Watchlist'
-                                         : 'Needs attention'}
-                                    </div>
-                                </div>
-                                <div className="p-5 rounded-2xl"
-                                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <div className="flex items-center gap-3 mb-4 flex-wrap">
-                                        <TrendingUp size={14} style={{ color: 'var(--app-primary)' }} />
-                                        <h2 className="text-tp-sm font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
-                                            Org velocity · 14 days
-                                        </h2>
-                                        <div className="ml-auto text-tp-xs flex items-center gap-3" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--app-success, #22c55e)' }} /> Done</span>
-                                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--app-muted-foreground)' }} /> Created</span>
+                                    <div className="min-w-0">
+                                        <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Health</div>
+                                        <div className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                            {companyStats.healthScore >= 75 ? 'Smooth'
+                                             : companyStats.healthScore >= 50 ? 'Watchlist'
+                                             : 'Attention'}
                                         </div>
                                     </div>
-                                    <VelocityChart data={sparkline14d} />
+                                </div>
+                                {/* Velocity chart */}
+                                <div className="p-3 rounded-2xl"
+                                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <TrendingUp size={12} style={{ color: 'var(--app-primary)' }} />
+                                        <h2 className="text-tp-xs font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                                            Velocity · 14d
+                                        </h2>
+                                        <div className="ml-auto text-tp-xxs flex items-center gap-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-success, #22c55e)' }} /> Done</span>
+                                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-muted-foreground)' }} /> Created</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ maxHeight: 90 }}>
+                                        <VelocityChart data={sparkline14d} />
+                                    </div>
+                                </div>
+                                {/* 2x2 mini KPI grid */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    <MiniKPI label="Open" value={companyStats.open} color="var(--app-foreground)" />
+                                    <MiniKPI label="Overdue" value={companyStats.overdue} color="var(--app-error, #ef4444)" />
+                                    <MiniKPI label="Done·7d" value={companyStats.doneThisWeek} color="var(--app-success, #22c55e)"
+                                        trend={{ diff: companyStats.wowDiff, pct: companyStats.wowPct }} />
+                                    <MiniKPI label="Auto" value={`${companyStats.autoPct}%`} color="var(--app-info, #3b82f6)" />
                                 </div>
                             </div>
 
-                            {/* Hero KPI row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>
-                                <HeroStat label="Open tasks" value={companyStats.open} color="var(--app-foreground)" Icon={Target} />
-                                <HeroStat label="Overdue" value={companyStats.overdue} color="var(--app-error, #ef4444)" Icon={AlertTriangle} />
-                                <HeroStat label="Done · 7d" value={companyStats.doneThisWeek} color="var(--app-success, #22c55e)" Icon={CheckCircle2}
-                                          trend={{ diff: companyStats.wowDiff, pct: companyStats.wowPct }} />
-                                <HeroStat label="Automated" value={`${companyStats.autoPct}%`} color="var(--app-info, #3b82f6)" Icon={Zap} sub="of tasks" />
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
-                                <StatWithSpark label="Urgent open" value={companyStats.urgent} color="var(--app-warning, #f59e0b)" Icon={Flame} />
-                                <StatWithSpark label="Unassigned" value={companyStats.unassigned} color="#8b5cf6" Icon={UserX} />
+                            {/* Row 2: leaderboard + categories + urgent/unassigned */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+                                <MiniKPI label="Urgent" value={companyStats.urgent} color="var(--app-warning, #f59e0b)" />
+                                <MiniKPI label="Unassigned" value={companyStats.unassigned} color="#8b5cf6" />
                             </div>
 
-                            {/* Leaderboard + Categories */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+                            {/* Row 3: fills — leaderboard + categories + compact board */}
+                            <div className="min-h-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '10px' }}>
                                 {companyStats.leaderboard.length > 0 && (
-                                    <section className="p-5 rounded-2xl"
+                                    <section className="p-3 rounded-2xl flex flex-col min-h-0"
                                              style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                        <h2 className="text-tp-sm font-black uppercase tracking-widest mb-4 flex items-center gap-1.5" style={{ color: 'var(--app-foreground)' }}>
-                                            <Trophy size={13} style={{ color: 'var(--app-warning, #f59e0b)' }} /> Top performers · 7d
+                                        <h2 className="text-tp-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5 flex-shrink-0" style={{ color: 'var(--app-foreground)' }}>
+                                            <Trophy size={11} style={{ color: 'var(--app-warning, #f59e0b)' }} /> Top performers · 7d
                                         </h2>
-                                        <div className="space-y-3">
+                                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-2">
                                             {companyStats.leaderboard.map((r, i) => {
                                                 const maxPts = companyStats.leaderboard[0]?.points || 1
                                                 const pct = (r.points / maxPts) * 100
                                                 return (
                                                     <div key={r.user?.id ?? i}>
-                                                        <div className="flex items-center gap-3 mb-1">
-                                                            <span className="w-5 text-tp-xs font-black tabular-nums text-center"
-                                                                  style={{ color: i === 0 ? 'var(--app-warning, #f59e0b)' : 'var(--app-muted-foreground)' }}>
-                                                                #{i + 1}
-                                                            </span>
-                                                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-tp-xs font-black"
-                                                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
-                                                                {fullName(r.user).charAt(0).toUpperCase()}
-                                                            </div>
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <span className="text-tp-xxs font-bold tabular-nums"
+                                                                  style={{ color: i === 0 ? 'var(--app-warning, #f59e0b)' : 'var(--app-muted-foreground)' }}>#{i + 1}</span>
                                                             <div className="flex-1 min-w-0 text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
                                                                 {fullName(r.user)}
                                                             </div>
-                                                            <span className="text-tp-xs tabular-nums font-black" style={{ color: 'var(--app-foreground)' }}>
+                                                            <span className="text-tp-xxs tabular-nums font-bold" style={{ color: 'var(--app-foreground)' }}>
                                                                 {r.points} pts
                                                             </span>
                                                         </div>
-                                                        <div className="h-1.5 rounded-full overflow-hidden ml-9"
+                                                        <div className="h-1 rounded-full overflow-hidden"
                                                              style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                                                             <div className="h-full rounded-full"
                                                                  style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #8b5cf6))' }} />
@@ -664,23 +664,23 @@ export default function RichOverviewPage() {
                                     </section>
                                 )}
                                 {companyStats.topCategories.length > 0 && (
-                                    <section className="p-5 rounded-2xl"
+                                    <section className="p-3 rounded-2xl flex flex-col min-h-0"
                                              style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                        <h2 className="text-tp-sm font-black uppercase tracking-widest mb-4 flex items-center gap-1.5" style={{ color: 'var(--app-foreground)' }}>
-                                            <Target size={13} style={{ color: 'var(--app-primary)' }} /> Biggest categories
+                                        <h2 className="text-tp-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5 flex-shrink-0" style={{ color: 'var(--app-foreground)' }}>
+                                            <Target size={11} style={{ color: 'var(--app-primary)' }} /> Biggest categories
                                         </h2>
-                                        <div className="space-y-3">
+                                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-2">
                                             {companyStats.topCategories.map(([name, count]) => {
                                                 const pct = companyStats.open > 0 ? (count / companyStats.open) * 100 : 0
                                                 return (
                                                     <div key={name}>
-                                                        <div className="flex items-center justify-between mb-1">
+                                                        <div className="flex items-center justify-between mb-0.5">
                                                             <span className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{name}</span>
-                                                            <span className="text-tp-xs font-black tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                            <span className="text-tp-xxs font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
                                                                 {count} · {pct.toFixed(0)}%
                                                             </span>
                                                         </div>
-                                                        <div className="h-2 rounded-full overflow-hidden"
+                                                        <div className="h-1 rounded-full overflow-hidden"
                                                              style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                                                             <div className="h-full rounded-full"
                                                                  style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #8b5cf6))' }} />
@@ -692,26 +692,9 @@ export default function RichOverviewPage() {
                                     </section>
                                 )}
                             </div>
-
-                            {/* Compact company board */}
-                            <section>
-                                <h2 className="text-tp-sm font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-foreground)' }}>
-                                    Company board
-                                </h2>
-                                <Board board={board} today={today} userMap={userMap} compact />
-                            </section>
                         </>
                     )}
 
-                    <div className="pt-4 flex items-center gap-5 flex-wrap text-tp-sm border-t" style={{ borderColor: 'var(--app-border)' }}>
-                        <Link href="/workspace/tasks" className="font-bold flex items-center gap-1 hover:underline" style={{ color: 'var(--app-primary)' }}>All tasks <ArrowRight size={12} /></Link>
-                        {(role.isLeader || role.isOwner) && (
-                            <Link href="/workspace/auto-task-rules" className="font-bold flex items-center gap-1 hover:underline" style={{ color: 'var(--app-primary)' }}><Zap size={12} /> Automations</Link>
-                        )}
-                        {role.isOwner && (
-                            <Link href="/workspace/leader-tree" className="font-bold flex items-center gap-1 hover:underline" style={{ color: 'var(--app-primary)' }}><Users size={12} /> Team structure</Link>
-                        )}
-                    </div>
                 </div>
             )}
         </div>
@@ -719,6 +702,28 @@ export default function RichOverviewPage() {
 }
 
 /* ───────────────────────────── Subcomponents ───────────────────────────── */
+
+function MiniKPI({ label, value, color, trend }: {
+    label: string; value: number | string; color: string;
+    trend?: { diff: number; pct: number };
+}) {
+    return (
+        <div className="px-3 py-2 rounded-xl"
+             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+            <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
+            <div className="flex items-baseline gap-1.5">
+                <div className="text-tp-lg font-bold tabular-nums leading-none" style={{ color }}>{value}</div>
+                {trend && (
+                    <span className="text-tp-xxs font-bold flex items-center gap-0.5"
+                          style={{ color: trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                        {trend.diff > 0 ? <TrendingUp size={9} /> : trend.diff < 0 ? <TrendingDown size={9} /> : <Minus size={9} />}
+                        {trend.diff > 0 ? '+' : ''}{trend.pct}%
+                    </span>
+                )}
+            </div>
+        </div>
+    )
+}
 
 function Sparkline({ values, color, height = 28, width = 100 }: {
     values: number[]; color: string; height?: number; width?: number;
@@ -753,9 +758,9 @@ function StatWithSpark({ label, value, color, Icon, series, sub, trend }: {
                      style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
                     <Icon size={13} />
                 </div>
-                <div className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
+                <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
                 {trend && (
-                    <span className="ml-auto flex items-center gap-0.5 text-tp-xxs font-black"
+                    <span className="ml-auto flex items-center gap-0.5 text-tp-xxs font-bold"
                           style={{ color: trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
                         {trend.diff > 0 ? <TrendingUp size={10} /> : trend.diff < 0 ? <TrendingDown size={10} /> : <Minus size={10} />}
                         {trend.diff > 0 ? '+' : ''}{trend.pct}%
@@ -764,7 +769,7 @@ function StatWithSpark({ label, value, color, Icon, series, sub, trend }: {
             </div>
             <div className="flex items-end justify-between gap-2">
                 <div>
-                    <div className="text-2xl font-black tabular-nums leading-none" style={{ color: 'var(--app-foreground)' }}>{value}</div>
+                    <div className="text-tp-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--app-foreground)' }}>{value}</div>
                     {sub && <div className="text-tp-xxs mt-1" style={{ color: 'var(--app-muted-foreground)' }}>{sub}</div>}
                 </div>
                 {series && series.length > 0 && <Sparkline values={series} color={color} />}
@@ -785,11 +790,11 @@ function HeroStat({ label, value, color, Icon, sub, trend }: {
                  style={{ background: `color-mix(in srgb, ${color} 8%, transparent)` }} />
             <div className="relative flex items-start justify-between gap-3">
                 <div>
-                    <div className="text-tp-xxs font-black uppercase tracking-widest mb-1" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
+                    <div className="text-tp-xxs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
                     <div className="flex items-baseline gap-2">
-                        <div className="text-3xl font-black tabular-nums" style={{ color }}>{value}</div>
+                        <div className="text-tp-3xl font-bold tabular-nums" style={{ color }}>{value}</div>
                         {trend && (
-                            <div className="flex items-center gap-0.5 text-tp-xs font-black"
+                            <div className="flex items-center gap-0.5 text-tp-xs font-bold"
                                  style={{ color: trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
                                 {trend.diff > 0 ? <TrendingUp size={12} /> : trend.diff < 0 ? <TrendingDown size={12} /> : <Minus size={12} />}
                                 {trend.diff > 0 ? '+' : ''}{trend.pct}%
@@ -831,7 +836,7 @@ function ProgressRing({ size, stroke, value, max, color, label, sublabel }: {
                 position: 'absolute', inset: 0, display: 'flex',
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             }}>
-                <div className="text-3xl font-black tabular-nums leading-none" style={{ color: 'var(--app-foreground)' }}>
+                <div className="text-tp-3xl font-bold tabular-nums leading-none" style={{ color: 'var(--app-foreground)' }}>
                     {label ?? value}
                 </div>
                 <div className="text-tp-xs font-bold mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -922,7 +927,7 @@ function LoadDistribution({ rows, meId }: {
                 const ratio = total / totalCapacity
                 return (
                     <div key={r.user.id} className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-tp-sm font-black flex-shrink-0"
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-tp-sm font-bold flex-shrink-0"
                              style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
                             {fullName(r.user).charAt(0).toUpperCase()}
                         </div>
@@ -952,25 +957,25 @@ function Board({ board, today, userMap, compact }: {
     board: Record<Lane, Task[]>; today: Date; userMap: Map<number, UserRow>; compact?: boolean;
 }) {
     return (
-        <div className="overflow-x-auto custom-scrollbar -mx-2 px-2">
-            <div className="flex gap-3 min-w-max lg:min-w-0 lg:grid lg:grid-cols-4">
+        <div className="h-full overflow-x-auto custom-scrollbar -mx-2 px-2">
+            <div className="flex gap-3 h-full min-w-max lg:min-w-0 lg:grid lg:grid-cols-4">
                 {(['now', 'today', 'week', 'later'] as Lane[]).map(lane => {
                     const meta = LANE_META[lane]; const items = board[lane]
                     return (
-                        <div key={lane} className="w-[260px] lg:w-auto flex flex-col rounded-xl"
+                        <div key={lane} className="w-[260px] lg:w-auto flex flex-col rounded-xl overflow-hidden"
                              style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                            <div className="flex items-center gap-2 px-3 py-2.5 rounded-t-xl border-b" style={{ borderColor: 'var(--app-border)' }}>
+                            <div className="flex items-center gap-2 px-3 py-2 flex-shrink-0 border-b" style={{ borderColor: 'var(--app-border)' }}>
                                 <span className="w-1.5 h-5 rounded-full" style={{ background: meta.color }} />
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>{meta.title}</div>
+                                    <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>{meta.title}</div>
                                     {!compact && <div className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>{meta.sub}</div>}
                                 </div>
-                                <span className="text-tp-sm font-black tabular-nums"
+                                <span className="text-tp-sm font-bold tabular-nums"
                                       style={{ color: items.length > 0 ? meta.color : 'var(--app-muted-foreground)' }}>
                                     {items.length}
                                 </span>
                             </div>
-                            <div className="flex-1 p-2 space-y-1.5 min-h-[80px]">
+                            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-2 space-y-1.5">
                                 {items.length === 0 ? (
                                     <div className="text-center py-6 text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
                                         {lane === 'now' ? '🎉 Nothing on fire' : 'Nothing'}
@@ -990,7 +995,7 @@ function Board({ board, today, userMap, compact }: {
                                                 {t.title}
                                             </div>
                                             <div className="flex items-center gap-2 flex-wrap text-tp-xxs">
-                                                <span className="font-black uppercase tracking-wider" style={{ color: pColor }}>
+                                                <span className="font-bold uppercase tracking-wider" style={{ color: pColor }}>
                                                     <Flag size={8} className="inline mb-0.5" /> {t.priority[0] + t.priority.slice(1).toLowerCase()}
                                                 </span>
                                                 {t.due_date && (

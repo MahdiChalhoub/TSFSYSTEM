@@ -455,7 +455,11 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
 class UnitPackageViewSet(TenantModelViewSet):
     """CRUD for per-unit package templates (Pack of 6, Carton 24, etc.).
-    Filterable by ?unit=<id>."""
+    Filterable by ?unit=<id>.
+
+    NOTE: soft-delete (is_archived) arrives with migration 0058. Until then
+    destroy() hard-deletes after the 409 guard passes.
+    """
     pagination_class = None
 
     def get_serializer_class(self):
@@ -464,11 +468,67 @@ class UnitPackageViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         from apps.inventory.models import UnitPackage
-        qs = UnitPackage.objects.all().select_related('unit')
+        qs = UnitPackage.objects.all().select_related('unit', 'parent')
         unit_id = self.request.query_params.get('unit')
         if unit_id:
             qs = qs.filter(unit_id=unit_id)
         return qs.order_by('unit_id', 'order', 'ratio')
+
+    def destroy(self, request, *args, **kwargs):
+        """Guard: block delete when the template is referenced by children
+        (chain descendants), ProductPackaging rows, or PackagingSuggestionRule
+        rows. On conflict return 409 with counts + preview. Bypass with
+        ?force=1 — which currently hard-deletes; once migration 0058 lands
+        this will archive (soft-delete) instead.
+        """
+        from apps.inventory.models import UnitPackage, ProductPackaging, PackagingSuggestionRule
+
+        instance = self.get_object()
+        org = instance.organization
+
+        children_qs = UnitPackage.objects.filter(parent=instance, organization=org)
+        # ProductPackaging has no FK to UnitPackage — match by unit + ratio
+        # (the same signature the suggestion engine uses to identify a level).
+        packaging_qs = ProductPackaging.objects.filter(
+            unit=instance.unit, ratio=instance.ratio, organization=org
+        ).select_related('product')
+        rules_qs = PackagingSuggestionRule.objects.filter(
+            packaging=instance, organization=org
+        )
+
+        if not _force_flag(request):
+            children_count = children_qs.count()
+            packaging_count = packaging_qs.count()
+            rules_count = rules_qs.count()
+            if children_count or packaging_count or rules_count:
+                preview = list(
+                    packaging_qs.values('id', 'product_id', 'product__name', 'product__sku')[:20]
+                )
+                for p in preview:
+                    p['product_name'] = p.pop('product__name')
+                    p['product_sku'] = p.pop('product__sku')
+                msg_parts = []
+                if children_count:
+                    msg_parts.append(f'{children_count} child template{"s" if children_count != 1 else ""} in the chain')
+                if packaging_count:
+                    msg_parts.append(f'{packaging_count} product packaging row{"s" if packaging_count != 1 else ""}')
+                if rules_count:
+                    msg_parts.append(f'{rules_count} suggestion rule{"s" if rules_count != 1 else ""}')
+                return Response({
+                    'error': 'conflict',
+                    'entity': 'unit-package',
+                    'affected_count': children_count + packaging_count + rules_count,
+                    'children_count': children_count,
+                    'packaging_count': packaging_count,
+                    'rules_count': rules_count,
+                    'message': (
+                        f'Cannot delete "{instance.name}" — referenced by {", ".join(msg_parts)}. '
+                        f'Re-send DELETE with ?force=1 to proceed anyway.'
+                    ),
+                    'products': preview,
+                }, status=status.HTTP_409_CONFLICT)
+
+        return super().destroy(request, *args, **kwargs)
 
 
 class ProductPackagingViewSet(TenantModelViewSet):

@@ -58,12 +58,16 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
         } catch (e: any) { toast.error(e?.message || 'Failed to link'); loadData() }
     }
 
-    // Step 1: Pre-flight confirmation — always prompt before unlinking so the
-    // user gets visible feedback even when the attribute is a pre-registered link
-    // with zero products. Auto / in-use links still land in the same dialog; the
-    // copy below adapts to the source + product count.
+    // Step 1: Pre-flight confirmation — only prompt when products are actually
+    // at risk. Zero products → unlink is safe, run it directly and let the
+    // success toast confirm. Any products → show the guard with the
+    // Migrate / Force / Cancel paths.
     const requestUnlink = (group: any) => {
-        setUnlinkTarget(group)
+        if ((group.product_count ?? 0) > 0) {
+            setUnlinkTarget(group)
+        } else {
+            executeUnlink(group.id)
+        }
     }
 
     // Step 2: Execute the actual unlink (backend will still guard with 409 if products remain)
@@ -145,17 +149,31 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                 mapping[sv] = tv === '' ? null : tv
             })
             body.value_mapping = mapping
+            console.log('[migrate_attribute] POST', body)
             const res: any = await erpFetch(
                 `inventory/categories/${categoryId}/migrate_attribute/`,
-                { method: 'POST', body: JSON.stringify(body) }
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                }
             )
-            toast.success(
-                `Migrated ${res?.products_updated ?? 0} product${res?.products_updated === 1 ? '' : 's'}` +
-                (res?.unlinked ? ' and unlinked source' : '')
-            )
+            console.log('[migrate_attribute] response', res)
+            const updated = res?.products_updated ?? 0
+            const unlinked = !!res?.unlinked
+            if (updated === 0 && !unlinked) {
+                toast.warning('Nothing to migrate — no products currently use values from this group.', { duration: 5000 })
+            } else {
+                toast.success(
+                    `Migrated ${updated} product${updated === 1 ? '' : 's'}` +
+                    (unlinked ? ' and unlinked source' : ''),
+                    { duration: 5000 }
+                )
+            }
             closeMigrate(); loadData(); router.refresh()
         } catch (e: any) {
-            toast.error(e?.message || 'Migration failed')
+            console.error('[migrate_attribute] failed', e)
+            toast.error(e?.message || 'Migration failed', { duration: 6000 })
         } finally {
             setMigrateLoading(false)
         }

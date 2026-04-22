@@ -59,7 +59,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
 
     return (
         <div
-            className="fixed inset-0 z-[60] flex items-center justify-center animate-in fade-in duration-200"
+            className="fixed inset-0 z-[110] flex items-center justify-center animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
             onClick={e => { if (e.target === e.currentTarget) onClose() }}
         >

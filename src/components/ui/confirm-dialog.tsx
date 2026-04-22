@@ -88,7 +88,7 @@ export function ConfirmDialog({
 
     return (
         <Dialog open={open} onOpenChange={(o) => { if (!o) setArmed(false); onOpenChange(o) }}>
-            <DialogContent className="sm:max-w-md rounded-2xl"
+            <DialogContent className="sm:max-w-md rounded-2xl z-[115]"
                 style={{
                     background: 'var(--app-surface)',
                     border: isCritical

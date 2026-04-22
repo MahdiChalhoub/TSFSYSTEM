@@ -200,6 +200,60 @@ class UnitPackageSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['organization', 'created_at', 'updated_at']
 
+    def validate(self, attrs):
+        """Chain integrity: tenant scope, same-unit, cycle detection,
+        parent_ratio sanity, and server-derived `ratio` when chained.
+
+        Object-level validation because `parent` must be cross-checked
+        against `unit` and `ratio` is recomputed from the chain.
+        """
+        from erp.middleware import get_current_tenant_id
+        from decimal import Decimal
+
+        instance = self.instance
+        unit = attrs.get('unit') or (instance.unit if instance else None)
+        parent = attrs.get('parent') if 'parent' in attrs else (instance.parent if instance else None)
+        parent_ratio = attrs.get('parent_ratio') if 'parent_ratio' in attrs else (instance.parent_ratio if instance else None)
+
+        if parent is not None:
+            tenant_id = get_current_tenant_id()
+            if tenant_id and parent.organization_id != tenant_id:
+                raise serializers.ValidationError({
+                    'parent': 'Parent template belongs to a different organization.'
+                })
+            if unit and parent.unit_id != unit.id:
+                raise serializers.ValidationError({
+                    'parent': (
+                        f'Parent template "{parent.name}" uses a different unit '
+                        f'({parent.unit.code}) — chains must stay within one unit family.'
+                    )
+                })
+            # Cycle detection — walk up from parent
+            seen = set()
+            cursor = parent
+            while cursor is not None:
+                if instance and cursor.id == instance.id:
+                    raise serializers.ValidationError({
+                        'parent': 'Cycle detected — a template cannot be its own ancestor.'
+                    })
+                if cursor.id in seen:
+                    raise serializers.ValidationError({
+                        'parent': 'Existing chain already contains a cycle — repair required.'
+                    })
+                seen.add(cursor.id)
+                cursor = cursor.parent
+            if parent_ratio is None or Decimal(str(parent_ratio)) <= 0:
+                raise serializers.ValidationError({
+                    'parent_ratio': 'When a parent is set, parent_ratio is required and must be > 0.'
+                })
+            # Derive `ratio` server-side — ignore any client value for consistency
+            attrs['ratio'] = (Decimal(str(parent.ratio)) * Decimal(str(parent_ratio))).quantize(Decimal('0.0001'))
+        else:
+            # Base-level template — clear parent_ratio to avoid orphan data
+            attrs['parent_ratio'] = None
+
+        return attrs
+
 
 class PackagingSuggestionRuleSerializer(serializers.ModelSerializer):
     category_name = serializers.ReadOnlyField(source='category.name')

@@ -254,8 +254,16 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
         periods = fiscal_year.periods.all().order_by('start_date')
 
-        # Journal entry stats
-        je_qs = JournalEntry.objects.filter(organization=org, fiscal_year=fiscal_year)
+        # Journal entry stats — match by FK OR by date range for orphan JEs
+        # (same logic as close_preview to catch JEs with fiscal_year=NULL)
+        je_qs = JournalEntry.objects.filter(
+            organization=org,
+        ).filter(
+            Q(fiscal_year=fiscal_year) |
+            Q(fiscal_year__isnull=True,
+              transaction_date__date__gte=fiscal_year.start_date,
+              transaction_date__date__lte=fiscal_year.end_date)
+        )
         je_stats = je_qs.aggregate(
             total=Count('id'),
             posted=Count('id', filter=Q(status='POSTED')),
@@ -385,9 +393,16 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         events.sort(key=lambda e: e.get('date', ''))
 
         # JE count by month — portable (no TO_CHAR)
+        # Match by FK OR date range to catch orphan JEs (fiscal_year=NULL)
         from django.db.models.functions import TruncMonth
         je_by_month_rows = (
-            JournalEntry.objects.filter(organization=org, fiscal_year=fiscal_year, status='POSTED')
+            JournalEntry.objects.filter(organization=org, status='POSTED')
+            .filter(
+                Q(fiscal_year=fiscal_year) |
+                Q(fiscal_year__isnull=True,
+                  transaction_date__date__gte=fiscal_year.start_date,
+                  transaction_date__date__lte=fiscal_year.end_date)
+            )
             .annotate(month_dt=TruncMonth('transaction_date'))
             .values('month_dt')
             .annotate(count=Count('id'))

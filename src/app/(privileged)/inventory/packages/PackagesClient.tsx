@@ -23,7 +23,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import {
-    Package, Plus, Pencil, Trash2, Ruler, ArrowRightLeft, Layers,
+    Package, Plus, Pencil, Trash2, Ruler, ArrowRight, ArrowRightLeft, Layers,
     Loader2, X, Check, ChevronRight, Box, Sparkles, Bookmark, Power,
     GitBranch, Tag, ShieldCheck, FolderTree, ExternalLink, Zap,
     TrendingUp, Info,
@@ -64,9 +64,10 @@ interface Props {
     categories: Option[]
     brands: Option[]
     attributes: Option[]
+    loadErrors?: Record<string, string>
 }
 
-export default function PackagesClient({ initialTemplates, units, categories, brands, attributes }: Props) {
+export default function PackagesClient({ initialTemplates, units, categories, brands, attributes, loadErrors }: Props) {
     const router = useRouter()
     const [templates, setTemplates] = useState<Template[]>(initialTemplates)
     const [editing, setEditing] = useState<Template | null>(null)
@@ -75,11 +76,23 @@ export default function PackagesClient({ initialTemplates, units, categories, br
 
     useEffect(() => { setTemplates(initialTemplates) }, [initialTemplates])
 
+    // Surface server-side load failures once on mount so empty dropdowns don't look "broken"
+    useEffect(() => {
+        if (!loadErrors) return
+        const keys = Object.keys(loadErrors)
+        if (keys.length === 0) return
+        toast.error(`Could not load: ${keys.join(', ')}`, {
+            description: 'Some lists may appear empty. Refresh or check backend connectivity.',
+        })
+    }, [loadErrors])
+
     const refresh = useCallback(async () => {
         try {
-            const data = await erpFetch('unit-packages/', { cache: 'no-store' } as any)
+            const data = await erpFetch('inventory/unit-packages/', { cache: 'no-store' } as any)
             setTemplates(Array.isArray(data) ? data : (data?.results ?? []))
-        } catch { /* silent */ }
+        } catch (e: any) {
+            toast.error('Failed to refresh templates', { description: e?.message || 'network error' })
+        }
         router.refresh()
     }, [router])
 
@@ -150,13 +163,13 @@ export default function PackagesClient({ initialTemplates, units, categories, br
     const handleSave = async (data: any) => {
         try {
             if (editing?.id) {
-                await erpFetch(`unit-packages/${editing.id}/`, {
+                await erpFetch(`inventory/unit-packages/${editing.id}/`, {
                     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
                 })
                 toast.success('Template updated')
             } else {
-                await erpFetch(`unit-packages/`, {
+                await erpFetch(`inventory/unit-packages/`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
                 })
@@ -172,7 +185,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
         const t = deleteTarget
         setDeleteTarget(null)
         try {
-            await erpFetch(`unit-packages/${t.id}/`, { method: 'DELETE' })
+            await erpFetch(`inventory/unit-packages/${t.id}/`, { method: 'DELETE' })
             toast.success(`"${t.name}" deleted`)
             refresh()
         } catch (e: any) { toast.error(e?.message || 'Delete failed') }

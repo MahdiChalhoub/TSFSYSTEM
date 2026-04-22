@@ -64,9 +64,9 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
     from the chain) — kept for fast scan/sort. Templates DON'T carry
     barcode / price / image — those are per-product on ProductPackaging.
     """
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='unit_packages')
+    unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name='unit_packages')
     parent = models.ForeignKey(
-        'self', on_delete=models.CASCADE, null=True, blank=True,
+        'self', on_delete=models.PROTECT, null=True, blank=True,
         related_name='children',
         help_text='Previous step in the packaging chain (None for base-level)',
     )
@@ -83,6 +83,12 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
     is_default = models.BooleanField(default=False, help_text='Primary package for this unit')
     order = models.PositiveIntegerField(default=0, help_text='Display order (ascending)')
     notes = models.TextField(null=True, blank=True)
+    # NOTE: is_archived + archived_at defined in migration 0058 but gated out of
+    # the Python model until that migration actually lands in DB (blocked on
+    # pre-existing 0054 history mismatch). Once `migrate inventory 0058` runs,
+    # re-add these fields and the partial unique-default constraint.
+    # is_archived = models.BooleanField(default=False, db_index=True, ...)
+    # archived_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -90,7 +96,7 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
         db_table = 'unit_package'
         ordering = ['unit_id', 'order', 'ratio']
         constraints = [
-            models.UniqueConstraint(fields=['unit', 'name', 'organization'], name='unique_unit_package_name_tenant')
+            models.UniqueConstraint(fields=['unit', 'name', 'organization'], name='unique_unit_package_name_tenant'),
         ]
 
     def __str__(self):
@@ -130,7 +136,7 @@ class PackagingSuggestionRule(AuditLogMixin, TenantOwnedModel):
 
     # Target packaging (points to the UnitPackage — our "template")
     packaging = models.ForeignKey(
-        UnitPackage, on_delete=models.CASCADE,
+        UnitPackage, on_delete=models.PROTECT,
         related_name='suggestion_rules',
         help_text='The packaging template this rule suggests'
     )

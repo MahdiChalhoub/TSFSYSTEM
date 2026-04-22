@@ -128,7 +128,7 @@ export function DeleteConflictDialog({
 
     return (
         <div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
             onClick={(e) => { if (e.target === e.currentTarget && !busy) onCancel() }}
         >
