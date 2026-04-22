@@ -292,6 +292,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                         return a.name?.toLowerCase().includes(q)
                             || a.code?.toLowerCase().includes(q)
                             || a.short_name?.toLowerCase().includes(q)
+                            || a.full_path?.toLowerCase().includes(q)
                     })
                     : source
 

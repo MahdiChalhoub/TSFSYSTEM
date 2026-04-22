@@ -42,11 +42,6 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
                     }}>
                     {isRoot ? 'Root' : `Level ${node.level ?? 1}`}
                 </span>
-                {(node.parfum_count ?? 0) > 0 && (
-                    <span className="text-tp-xs font-medium tabular-nums ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
-                        {node.parfum_count} parfums
-                    </span>
-                )}
             </div>
 
             {/* ── Stat Grid 2×2 ── */}

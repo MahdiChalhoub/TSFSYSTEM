@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from apps.inventory.models import (
     Unit, UnitPackage, PackagingSuggestionRule,
-    Category, Brand, Parfum, Product, ProductGroup,
+    Category, Brand, Parfum, Product, ProductGroup, ProductAttribute,
 )
 from erp.models import Country
 
@@ -42,13 +42,14 @@ class CategorySerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
     brand_count = serializers.SerializerMethodField()
     parfum_count = serializers.SerializerMethodField()
+    attribute_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
         fields = [
             'id', 'name', 'code', 'short_name', 'parent',
             'level', 'full_path', 'product_count',
-            'brand_count', 'parfum_count', 'organization',
+            'brand_count', 'parfum_count', 'attribute_count', 'organization',
             'is_archived', 'archived_at',
         ]
         read_only_fields = ['organization', 'level', 'full_path', 'archived_at']
@@ -71,13 +72,151 @@ class CategorySerializer(serializers.ModelSerializer):
         return value
 
     def get_product_count(self, obj):
+        pre = (self.context or {}).get('product_counts')
+        if pre is not None:
+            return pre.get(obj.id, 0)
         return Product.objects.filter(category=obj).count()
 
+    # ── Union counts (auto-linked via products + explicit M2M) ────────────
+    # `linked_brands` / `linked_attributes` / `with_counts` all compute the
+    # union of "products in this category reference this brand/attribute"
+    # (auto) and "category was explicitly pre-registered with this
+    # brand/attribute" (explicit M2M). Every Category serialisation must
+    # report the same number, otherwise row badges and detail-tab counts
+    # diverge. The single source of truth lives here.
+    #
+    # When serializing many categories at once, pass
+    # `context={'brand_counts':..., 'parfum_counts':..., 'attribute_counts':..., 'product_counts':...}`
+    # to avoid N+1 (see `CategorySerializer.prefetch_counts`).
+
     def get_brand_count(self, obj):
-        return Brand.objects.filter(categories=obj).count()
+        pre = (self.context or {}).get('brand_counts')
+        if pre is not None:
+            return pre.get(obj.id, 0)
+        auto = set(
+            Product.objects.filter(category=obj, brand__isnull=False)
+                .values_list('brand_id', flat=True).distinct()
+        )
+        explicit = set(
+            Brand.categories.through.objects
+                .filter(category_id=obj.id)
+                .values_list('brand_id', flat=True)
+        )
+        return len(auto | explicit)
 
     def get_parfum_count(self, obj):
-        return Parfum.objects.filter(categories=obj).count()
+        pre = (self.context or {}).get('parfum_counts')
+        if pre is not None:
+            return pre.get(obj.id, 0)
+        auto = set(
+            Product.objects.filter(category=obj, parfum__isnull=False)
+                .values_list('parfum_id', flat=True).distinct()
+        )
+        explicit = set(
+            Parfum.categories.through.objects
+                .filter(category_id=obj.id)
+                .values_list('parfum_id', flat=True)
+        )
+        return len(auto | explicit)
+
+    def get_attribute_count(self, obj):
+        pre = (self.context or {}).get('attribute_counts')
+        if pre is not None:
+            return pre.get(obj.id, 0)
+        # Auto-derived: attribute groups whose leaf values are referenced
+        # by a product in this category (leaf.parent → group).
+        auto = set(
+            Product.attribute_values.through.objects
+                .filter(
+                    product__category_id=obj.id,
+                    productattribute__parent_id__isnull=False,
+                )
+                .values_list('productattribute__parent_id', flat=True)
+        )
+        # Explicit: category.attributes M2M (pre-registration, root groups only).
+        explicit = set(
+            ProductAttribute.categories.through.objects
+                .filter(
+                    category_id=obj.id,
+                    productattribute__parent__isnull=True,
+                )
+                .values_list('productattribute_id', flat=True)
+        )
+        return len(auto | explicit)
+
+    @classmethod
+    def prefetch_counts(cls, organization):
+        """Bulk-compute product/brand/parfum/attribute counts for every
+        category in one tenant. Returns a context dict to pass to the
+        serializer — eliminates N+1 when rendering many categories.
+
+        Union = products-in-category (auto) ∪ pre-registered M2M (explicit).
+        """
+        product_counts: dict[int, int] = {}
+        auto_brands: dict[int, set[int]] = {}
+        auto_parfums: dict[int, set[int]] = {}
+        auto_attrs: dict[int, set[int]] = {}
+
+        # Products in this tenant grouped by category
+        for p in Product.objects.filter(
+            organization=organization, category__isnull=False
+        ).values('category_id', 'brand_id', 'parfum_id'):
+            cid = p['category_id']
+            product_counts[cid] = product_counts.get(cid, 0) + 1
+            if p['brand_id']:
+                auto_brands.setdefault(cid, set()).add(p['brand_id'])
+            if p['parfum_id']:
+                auto_parfums.setdefault(cid, set()).add(p['parfum_id'])
+
+        # Auto attributes: one pass over the product↔attribute_values through
+        # table, grouped on the leaf's parent (the attribute group).
+        for cid, gid in Product.attribute_values.through.objects.filter(
+            product__organization=organization,
+            product__category__isnull=False,
+            productattribute__parent_id__isnull=False,
+        ).values_list('product__category_id', 'productattribute__parent_id'):
+            if gid is not None:
+                auto_attrs.setdefault(cid, set()).add(gid)
+
+        # Explicit M2M links per category
+        explicit_brands: dict[int, set[int]] = {}
+        for bid, cid in Brand.categories.through.objects.filter(
+            category__organization=organization,
+        ).values_list('brand_id', 'category_id'):
+            explicit_brands.setdefault(cid, set()).add(bid)
+
+        explicit_parfums: dict[int, set[int]] = {}
+        for pid, cid in Parfum.categories.through.objects.filter(
+            category__organization=organization,
+        ).values_list('parfum_id', 'category_id'):
+            explicit_parfums.setdefault(cid, set()).add(pid)
+
+        explicit_attrs: dict[int, set[int]] = {}
+        for aid, cid in ProductAttribute.categories.through.objects.filter(
+            productattribute__organization=organization,
+            productattribute__parent__isnull=True,
+        ).values_list('productattribute_id', 'category_id'):
+            explicit_attrs.setdefault(cid, set()).add(aid)
+
+        brand_counts = {
+            cid: len(auto_brands.get(cid, set()) | explicit_brands.get(cid, set()))
+            for cid in set(auto_brands) | set(explicit_brands)
+        }
+        parfum_counts = {
+            cid: len(auto_parfums.get(cid, set()) | explicit_parfums.get(cid, set()))
+            for cid in set(auto_parfums) | set(explicit_parfums)
+        }
+        attribute_counts = {
+            cid: len(auto_attrs.get(cid, set()) | explicit_attrs.get(cid, set()))
+            for cid in set(auto_attrs) | set(explicit_attrs)
+        }
+
+        return {
+            'product_counts': product_counts,
+            'brand_counts': brand_counts,
+            'parfum_counts': parfum_counts,
+            'attribute_counts': attribute_counts,
+        }
 
 
 class CategorySimpleSerializer(serializers.ModelSerializer):

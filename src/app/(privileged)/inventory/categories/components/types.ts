@@ -14,8 +14,7 @@ export interface CategoryNode {
     parfum_count?: number
     attribute_count?: number
     level?: number
-    is_archived?: boolean
-    archived_at?: string | null
+    full_path?: string
 }
 
 export type PanelTab = 'overview' | 'products' | 'brands' | 'attributes'

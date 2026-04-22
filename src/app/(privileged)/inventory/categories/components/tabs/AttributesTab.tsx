@@ -49,13 +49,18 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
     const linkedIds = useMemo(() => new Set(linkedAttrs.map(a => a.id)), [linkedAttrs])
     const unlinkedAttrs = allAttrs.filter(a => !linkedIds.has(a.id))
 
+    // No optimistic row — backend decides auto/both/explicit and an early
+    // mis-label (e.g. 'explicit' while products are already using it →
+    // actually 'both') makes the row flicker.
     const linkAttr = async (attrId: number) => {
-        const attrObj = allAttrs.find(a => a.id === attrId)
-        if (attrObj) setLinkedAttrs(prev => [...prev, { ...attrObj, source: 'explicit' }])
         try {
-            await erpFetch(`inventory/categories/${categoryId}/link_attribute/`, { method: 'POST', body: JSON.stringify({ attribute_id: attrId }) })
+            await erpFetch(`inventory/categories/${categoryId}/link_attribute/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attribute_id: attrId }),
+            })
             toast.success('Attribute pre-registered'); loadData(); router.refresh()
-        } catch (e: any) { toast.error(e?.message || 'Failed to link'); loadData() }
+        } catch (e: any) { toast.error(e?.message || 'Failed to link') }
     }
 
     // Step 1: Pre-flight confirmation — only prompt when products are actually
@@ -507,16 +512,19 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                 migrateDisabled
                 onMigrate={async () => { /* in-tab migration handles mapping */ }}
                 onForceDelete={async () => {
-                    // Force-unlink via backend DELETE shortcut — the unlink
-                    // endpoint doesn't accept ?force, so we use the explicit
-                    // M2M clear + let the conflict dialog close.
+                    // Force-unlink: the backend accepts force=true in the body
+                    // (see unlink_attribute view). Products keep their
+                    // attribute_values — only the explicit category↔attribute
+                    // M2M link is removed. User is warned in the dialog copy.
                     const attrId = conflict?._attrId
                     if (!attrId) return
                     try {
-                        await erpFetch(`inventory/categories/${categoryId}/unlink_attribute/?force=1`, {
-                            method: 'POST', body: JSON.stringify({ attribute_id: attrId, force: true }),
+                        await erpFetch(`inventory/categories/${categoryId}/unlink_attribute/`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ attribute_id: attrId, force: true }),
                         })
-                        toast.success('Attribute force-unlinked')
+                        toast.success('Attribute force-unlinked (product tags kept)')
                         setConflict(null); loadData(); router.refresh()
                     } catch (e: any) {
                         toast.error(e?.message || 'Failed to force-unlink — open the product pages and reassign values manually.')

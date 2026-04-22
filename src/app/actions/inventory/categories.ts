@@ -128,61 +128,6 @@ export async function deleteCategory(id: number, options: { force?: boolean } = 
     }
 }
 
-/* ═══════════════════════════════════════════════════════════
- *  ARCHIVE / RESTORE / DUPLICATE — soft-delete + clone
- * ═══════════════════════════════════════════════════════════ */
-
-export async function archiveCategory(id: number) {
-    try {
-        const result = await erpFetch(`inventory/categories/${id}/archive/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: '{}',
-        });
-        revalidatePath('/inventory/categories');
-        return { success: true, category: result };
-    } catch (e: any) {
-        return { success: false, message: e?.message || 'Failed to archive' };
-    }
-}
-
-export async function restoreCategory(id: number) {
-    try {
-        const result = await erpFetch(`inventory/categories/${id}/restore/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: '{}',
-        });
-        revalidatePath('/inventory/categories');
-        return { success: true, category: result };
-    } catch (e: any) {
-        return { success: false, message: e?.message || 'Failed to restore' };
-    }
-}
-
-export async function duplicateCategory(id: number) {
-    try {
-        const result = await erpFetch(`inventory/categories/${id}/duplicate/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: '{}',
-        });
-        revalidatePath('/inventory/categories');
-        return { success: true, category: result };
-    } catch (e: any) {
-        return { success: false, message: e?.message || 'Failed to duplicate' };
-    }
-}
-
-export async function listArchivedCategories() {
-    try {
-        const data = await erpFetch('inventory/categories/?archived_only=1', { cache: 'no-store' } as any);
-        return Array.isArray(data) ? data : (data?.results ?? []);
-    } catch {
-        return [];
-    }
-}
-
 export async function getCategoryWithCounts() {
  try {
  // Try namespaced first (new standard)
@@ -196,25 +141,11 @@ export async function getCategoryWithCounts() {
  }
 }
 
-export async function moveProducts(productIds: number[], targetCategoryId: number) {
- try {
- await erpFetch('inventory/categories/move_products/', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({
- product_ids: productIds,
- target_category_id: targetCategoryId
- })
- });
-
- revalidatePath('/inventory/categories/maintenance');
- revalidatePath('/inventory/categories'); // Update main list too
- return { success: true };
- } catch (e) {
- console.error('Move products error:', e);
- return { success: false, message: 'Failed to move products' };
- }
-}
+// NOTE: the richer move flow with preview / reconciliation lives at
+// `/inventory/categories/move_products/` and is called directly by
+// `ProductsTab.executeMove` so it can pass the reconciliation payload.
+// A simpler wrapper was deleted (the alias in `@/app/actions/categories`
+// covers the flat case used by ProductReassignmentTable).
 
 /**
  * Fetch products assigned to a specific category

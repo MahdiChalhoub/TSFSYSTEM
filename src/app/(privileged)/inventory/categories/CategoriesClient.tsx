@@ -9,9 +9,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
-import {
-    deleteCategory, moveProducts,
-} from '@/app/actions/inventory/categories'
+import { deleteCategory } from '@/app/actions/inventory/categories'
 import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
@@ -61,8 +59,33 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         const source = deleteConflict?.source
         if (!source) return
         try {
+            // Step 1: preview — surface exactly which brands/attributes will
+            // be auto-linked to the target so the user can abort before the
+            // reconciliation fires silently.
+            const preview = await erpFetch('inventory/categories/move_products/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    source_category_id: source.id, target_category_id: targetId, preview: true,
+                }),
+            })
+            const brandNames: string[] = (preview?.conflict_brands || []).map((b: any) => b.name)
+            const attrNames: string[] = (preview?.conflict_attributes || []).map((a: any) => a.name)
+            if (brandNames.length || attrNames.length) {
+                const pieces = []
+                if (brandNames.length) pieces.push(`${brandNames.length} brand${brandNames.length !== 1 ? 's' : ''} (${brandNames.slice(0, 3).join(', ')}${brandNames.length > 3 ? '…' : ''})`)
+                if (attrNames.length) pieces.push(`${attrNames.length} attribute group${attrNames.length !== 1 ? 's' : ''} (${attrNames.slice(0, 3).join(', ')}${attrNames.length > 3 ? '…' : ''})`)
+                const go = confirm(
+                    `Moving ${preview?.count ?? 'these'} product${preview?.count === 1 ? '' : 's'} will auto-link the following to the target:\n\n` +
+                    pieces.map(p => `• ${p}`).join('\n') +
+                    `\n\nProceed?`
+                )
+                if (!go) return
+            }
+            // Step 2: execute the move with default reconciliation (auto-link all).
             const moveRes = await erpFetch('inventory/categories/move_products/', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ source_category_id: source.id, target_category_id: targetId }),
             })
             if (moveRes && moveRes.success === false) { toast.error(moveRes.message || 'Migration failed — delete aborted'); return }

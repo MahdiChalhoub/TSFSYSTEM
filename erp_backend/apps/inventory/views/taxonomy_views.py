@@ -857,73 +857,6 @@ class CategoryViewSet(TenantModelViewSet):
     serializer_class = CategorySerializer
     pagination_class = None  # Tree data — must return all categories for hierarchy building
 
-    def get_queryset(self):
-        """Hide archived categories by default. Pass ?include_archived=1 to
-        fetch everything (used by the Archive view), or ?archived_only=1 to
-        get just the archived list."""
-        qs = super().get_queryset()
-        params = self.request.query_params
-        archived_only = str(params.get('archived_only', '')).lower() in ('1', 'true', 'yes')
-        include_archived = str(params.get('include_archived', '')).lower() in ('1', 'true', 'yes')
-        if archived_only:
-            return qs.filter(is_archived=True)
-        if not include_archived:
-            return qs.filter(is_archived=False)
-        return qs
-
-    @action(detail=True, methods=['post'])
-    def archive(self, request, pk=None):
-        """Soft-delete: flag the category as archived. Preserves products + children."""
-        from django.utils import timezone
-        instance = self.get_object()
-        if instance.is_archived:
-            return Response({'detail': 'Already archived.'}, status=status.HTTP_400_BAD_REQUEST)
-        instance.is_archived = True
-        instance.archived_at = timezone.now()
-        instance.save(update_fields=['is_archived', 'archived_at'])
-        return Response(self.get_serializer(instance).data)
-
-    @action(detail=True, methods=['post'])
-    def restore(self, request, pk=None):
-        """Undo archive."""
-        # Use original_objects to find archived items (get_queryset filters them out)
-        try:
-            instance = Category.original_objects.get(pk=pk, organization_id=request.user.organization_id)
-        except Category.DoesNotExist:
-            return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
-        if not instance.is_archived:
-            return Response({'detail': 'Not archived.'}, status=status.HTTP_400_BAD_REQUEST)
-        instance.is_archived = False
-        instance.archived_at = None
-        instance.save(update_fields=['is_archived', 'archived_at'])
-        return Response(self.get_serializer(instance).data)
-
-    @action(detail=True, methods=['post'])
-    def duplicate(self, request, pk=None):
-        """Clone the category — same attributes/brands/parent, name suffixed with " (Copy)".
-        Does NOT copy products or sub-categories. Idempotent-ish: if "X (Copy)" exists,
-        tries "X (Copy 2)", "X (Copy 3)"…"""
-        src = self.get_object()
-        base_name = f'{src.name} (Copy)'
-        candidate = base_name
-        i = 2
-        while Category.objects.filter(name=candidate, organization=src.organization).exists():
-            candidate = f'{src.name} (Copy {i})'
-            i += 1
-            if i > 50:
-                return Response({'detail': 'Too many copies exist.'}, status=status.HTTP_400_BAD_REQUEST)
-        clone = Category.objects.create(
-            organization=src.organization,
-            name=candidate,
-            code=None,          # short code must be unique per-tenant, let user re-assign
-            short_name=src.short_name,
-            parent=src.parent,
-        )
-        # Copy the M2M attribute links
-        if src.attributes.exists():
-            clone.attributes.set(src.attributes.all())
-        return Response(self.get_serializer(clone).data, status=201)
-
     def destroy(self, request, *args, **kwargs):
         """Guard: block delete when products reference this category OR child
         categories exist. Bypass with ?force=1 (still leaves children orphaned
@@ -954,81 +887,17 @@ class CategoryViewSet(TenantModelViewSet):
 
     @action(detail=False, methods=['get'])
     def with_counts(self, request):
+        """Categories list annotated with product / brand / parfum / attribute
+        counts. CategorySerializer owns the union logic (auto + explicit) —
+        single source of truth so row badges and detail-tab badges always
+        agree. Counts are bulk-prefetched via `prefetch_counts` to avoid N+1.
+        """
         organization, err = _get_org_or_400()
         if err: return err
 
-        # 1. Fetch all categories for this org
-        categories = list(Category.objects.filter(organization=organization))
-        
-        # 2. Bulk fetch derived counts from products to avoid N+1
-        # We need unique brand/parfum counts per category including explicit M2M links
-        from django.db.models import Count
-        products_data = Product.objects.filter(
-            organization=organization, category__isnull=False
-        ).values('category_id', 'brand_id', 'parfum_id')
-        
-        # Aggregators
-        derived_brands = {}   # {cat_id: set(brand_ids)}
-        derived_parfums = {}  # {cat_id: set(parfum_ids)}
-        prod_counts = {}      # {cat_id: count}
-        
-        for p in products_data:
-            c_id = p['category_id']
-            prod_counts[c_id] = prod_counts.get(c_id, 0) + 1
-            if p['brand_id']:
-                derived_brands.setdefault(c_id, set()).add(p['brand_id'])
-            if p['parfum_id']:
-                derived_parfums.setdefault(c_id, set()).add(p['parfum_id'])
-                
-        # 3. Bulk fetch explicit M2M links
-        explicit_brands = {}
-        for bid, cid in Brand.categories.through.objects.filter(category__organization=organization).values_list('brand_id', 'category_id'):
-            explicit_brands.setdefault(cid, set()).add(bid)
-
-        explicit_parfums = {}
-        for pid, cid in Parfum.categories.through.objects.filter(category__organization=organization).values_list('parfum_id', 'category_id'):
-            explicit_parfums.setdefault(cid, set()).add(pid)
-
-        # ── Attribute groups: union of auto-derived (via product attribute_values)
-        # + explicit M2M links. Matches the /linked_attributes/ endpoint so the
-        # row badge and detail-tab badge report the same number. ──
-        from apps.inventory.models import ProductAttribute
-        # Auto-derived: for each (product, leaf value) pair, the leaf's parent
-        # is the attribute group; the product's category scopes it.
-        auto_attrs = {}  # {cat_id: set(group_ids)}
-        for cat_id, group_id in Product.attribute_values.through.objects.filter(
-            product__organization=organization,
-            product__category__isnull=False,
-            productattribute__parent_id__isnull=False,
-        ).values_list('product__category_id', 'productattribute__parent_id'):
-            if group_id is not None:
-                auto_attrs.setdefault(cat_id, set()).add(group_id)
-        # Explicit: category.attributes M2M (pre-registered groups)
-        explicit_attrs = {}
-        for aid, cid in ProductAttribute.categories.through.objects.filter(
-            productattribute__organization=organization,
-            productattribute__parent__isnull=True,
-        ).values_list('productattribute_id', 'category_id'):
-            explicit_attrs.setdefault(cid, set()).add(aid)
-
-        # 4. Construct response data
-        data = []
-        for cat in categories:
-            cat_data = CategorySerializer(cat).data
-
-            # Combine sets for union count
-            all_brands = derived_brands.get(cat.id, set()) | explicit_brands.get(cat.id, set())
-            all_parfums = derived_parfums.get(cat.id, set()) | explicit_parfums.get(cat.id, set())
-            all_attrs = auto_attrs.get(cat.id, set()) | explicit_attrs.get(cat.id, set())
-
-            cat_data["product_count"] = prod_counts.get(cat.id, 0)
-            cat_data["brand_count"] = len(all_brands)
-            cat_data["parfum_count"] = len(all_parfums)
-            cat_data["attribute_count"] = len(all_attrs)
-
-            data.append(cat_data)
-
-        return Response(data)
+        categories = Category.objects.filter(organization=organization)
+        ctx = CategorySerializer.prefetch_counts(organization)
+        return Response(CategorySerializer(categories, many=True, context=ctx).data)
 
     @action(detail=True, methods=['get'])
     def linked_brands(self, request, pk=None):
@@ -1098,11 +967,22 @@ class CategoryViewSet(TenantModelViewSet):
     def unlink_brand(self, request, pk=None):
         """
         Remove a brand from this category. Protected: if products in this
-        category use this brand, return 409 with conflict details.
+        category use this brand, return 409 with conflict details. Barcode-
+        aware (matches unlink_attribute): highlights products with active
+        barcodes (extra severity).
+
+        Pass `force=true` (body) or `?force=1` (query) to bypass the guard
+        and remove the explicit M2M link even when products still reference
+        the brand. Products keep their `brand` FK — only the explicit
+        category↔brand pre-registration link is removed.
         """
         category = self.get_object()
         organization = category.organization
         brand_id = request.data.get('brand_id')
+        force = (
+            str(request.data.get('force', '')).lower() in ('1', 'true', 'yes')
+            or str(request.query_params.get('force', '')).lower() in ('1', 'true', 'yes')
+        )
         from apps.inventory.models import Product
 
         try:
@@ -1116,21 +996,33 @@ class CategoryViewSet(TenantModelViewSet):
         ).select_related('brand').only('id', 'sku', 'name', 'barcode')
 
         count = conflicting.count()
-        if count > 0:
+        if count > 0 and not force:
+            barcode_count = conflicting.filter(barcodes__is_active=True).distinct().count()
             products_preview = list(
                 conflicting[:20].values('id', 'sku', 'name', 'barcode')
             )
+            barcode_ids = set(
+                conflicting[:20].filter(barcodes__is_active=True).values_list('id', flat=True)
+            )
+            for p in products_preview:
+                p['has_barcode'] = p['id'] in barcode_ids
             return Response({
                 "error": "conflict",
-                "message": f'{count} product{"s" if count != 1 else ""} in this category use brand "{brand.name}". '
-                           f'Reassign them to a different brand before unlinking.',
+                "entity": "brand",
+                "message": (
+                    f'{count} product{"s" if count != 1 else ""} in this category use brand "{brand.name}". '
+                    f'{f"{barcode_count} have active barcodes. " if barcode_count else ""}'
+                    f'Reassign them to a different brand before unlinking, or force-unlink to remove '
+                    f'the pre-registration only (products keep the brand FK).'
+                ),
                 "affected_count": count,
+                "barcode_count": barcode_count,
                 "products": products_preview,
             }, status=409)
 
-        # Safe to unlink — remove explicit M2M
+        # Safe (or forced) — remove explicit M2M only
         brand.categories.remove(category)
-        return Response({"status": "unlinked", "brand": brand.name})
+        return Response({"status": "unlinked", "brand": brand.name, "forced": bool(force and count > 0)})
 
     @action(detail=True, methods=['get'])
     def linked_attributes(self, request, pk=None):
@@ -1423,35 +1315,70 @@ class CategoryViewSet(TenantModelViewSet):
                 }, status=400)
             mapping[sk] = tv
 
-        # Products in this category that currently have any of the source leaf values
-        affected_products = list(
-            Product.objects.filter(
-                category=category, organization=organization,
-                attribute_values__parent_id=source.id,
-            ).distinct()
+        # Bulk fetch (product_id → set of source leaf ids currently on it).
+        # Single through-table scan instead of N queries.
+        Through = Product.attribute_values.through
+        current_rows = list(
+            Through.objects.filter(
+                product__category=category,
+                product__organization=organization,
+                productattribute_id__in=source_leaf_ids,
+            ).values_list('product_id', 'productattribute_id')
         )
+        if not current_rows:
+            # Nothing to migrate; still honour the unlink request.
+            with transaction.atomic():
+                if do_unlink:
+                    category.attributes.remove(source)
+            return Response({
+                'status': 'migrated', 'source_attribute': source.name,
+                'target_attribute_id': target_id,
+                'products_updated': 0, 'unlinked': bool(do_unlink),
+            })
 
-        updated = 0
-        with transaction.atomic():
-            for product in affected_products:
-                current_values = set(product.attribute_values.values_list('id', flat=True))
-                source_values_on_product = current_values & source_leaf_ids
-                if not source_values_on_product:
+        by_product: dict[int, set[int]] = {}
+        for pid, lid in current_rows:
+            by_product.setdefault(pid, set()).add(lid)
+
+        # Compute bulk deletes (source rows) and bulk inserts (mapped targets).
+        # We skip inserts that would create duplicates by pre-fetching the
+        # already-present target rows for the same products.
+        affected_pids = list(by_product.keys())
+        target_leaf_ids_used = {v for v in mapping.values() if v is not None}
+        existing_targets: set[tuple[int, int]] = set()
+        if target_leaf_ids_used:
+            existing_targets = set(
+                Through.objects.filter(
+                    product_id__in=affected_pids,
+                    productattribute_id__in=target_leaf_ids_used,
+                ).values_list('product_id', 'productattribute_id')
+            )
+
+        inserts: list = []
+        for pid, source_values_on_product in by_product.items():
+            for sv in source_values_on_product:
+                tv = mapping.get(sv)
+                if tv is None:
                     continue
-                # Map each source value → its target (if any)
-                additions: set[int] = set()
-                for sv in source_values_on_product:
-                    tv = mapping.get(sv)  # may be None, or missing (also None)
-                    if tv is not None:
-                        additions.add(tv)
-                # Remove source values, add mapped targets
-                product.attribute_values.remove(*source_values_on_product)
-                if additions:
-                    product.attribute_values.add(*additions)
-                updated += 1
+                key = (pid, tv)
+                if key in existing_targets:
+                    continue
+                existing_targets.add(key)  # avoid dup inserts across loop
+                inserts.append(Through(product_id=pid, productattribute_id=tv))
 
+        with transaction.atomic():
+            # 1) strip every source leaf from every affected product in ONE delete
+            Through.objects.filter(
+                product_id__in=affected_pids,
+                productattribute_id__in=source_leaf_ids,
+            ).delete()
+            # 2) attach the mapped targets in ONE insert
+            if inserts:
+                Through.objects.bulk_create(inserts, ignore_conflicts=True)
             if do_unlink:
                 category.attributes.remove(source)
+
+        updated = len(affected_pids)
 
         return Response({
             'status': 'migrated',
