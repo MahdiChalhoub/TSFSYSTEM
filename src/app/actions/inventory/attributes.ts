@@ -20,7 +20,6 @@ const BASE = 'inventory/product-attributes'
 export async function getAttributeTree() {
     try {
         const res = await erpFetch(`${BASE}/tree/`)
-        // Some endpoints are paginated; unwrap `results` when present.
         if (Array.isArray(res)) return res
         if (res && typeof res === 'object' && Array.isArray((res as any).results)) return (res as any).results
         return []

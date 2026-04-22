@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useCallback, useTransition, useRef } from 'react'
 import {
-    FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
+    FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search, Archive,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -35,7 +35,9 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
     const [deleteConflict, setDeleteConflict] = useState<any>(null)
-    const data = initialCategories
+    const [showArchived, setShowArchived] = useState(false)
+    const [archivedData, setArchivedData] = useState<any[]>([])
+    const data = showArchived ? [...initialCategories, ...archivedData] : initialCategories
 
     // Actions
     const openAddModal = useCallback((parentId?: number) => { setModalState({ open: true, parentId }) }, [])
@@ -94,9 +96,29 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
 
     const handleRestore = useCallback(async (cat: CategoryNode) => {
         const res = await restoreCategory(cat.id)
-        if (res?.success) { toast.success(`"${cat.name}" restored`); router.refresh() }
+        if (res?.success) {
+            toast.success(`"${cat.name}" restored`)
+            setArchivedData(prev => prev.filter(c => c.id !== cat.id))
+            router.refresh()
+        }
         else { toast.error(res?.message || 'Failed to restore') }
     }, [router])
+
+    const toggleArchived = useCallback(async () => {
+        if (showArchived) {
+            setShowArchived(false)
+            setArchivedData([])
+            return
+        }
+        try {
+            const res = await erpFetch('categories/?archived_only=1')
+            const archived = Array.isArray(res) ? res : (res?.results ?? [])
+            setArchivedData(archived.map((c: any) => ({ ...c, is_archived: true })))
+            setShowArchived(true)
+            if (archived.length === 0) toast.info('No archived categories found')
+            else toast.success(`${archived.length} archived categor${archived.length !== 1 ? 'ies' : 'y'} loaded`)
+        } catch { toast.error('Failed to load archived categories') }
+    }, [showArchived])
 
     const handleForceDelete = async () => {
         const source = deleteConflict?.source
@@ -137,6 +159,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
                 primaryAction: { label: 'New Category', icon: <Plus size={14} />, onClick: () => openAddModal(), dataTour: 'add-category-btn' },
                 secondaryActions: [
+                    { label: showArchived ? 'Hide Archive' : 'Archive', icon: <Archive size={13} />, onClick: toggleArchived, active: showArchived, activeColor: 'var(--app-warning)' },
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],
                 columnHeaders: [

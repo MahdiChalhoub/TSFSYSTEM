@@ -11,7 +11,31 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from django.db.models import Count, Q, Prefetch
 from erp.views_base import TenantModelViewSet
+from erp.middleware import get_current_tenant_id
+from erp.models import Organization
 from apps.inventory.models import ProductAttribute, Category, Brand, Product
+
+
+def _current_org(request):
+    """Resolve the active Organization for this request.
+
+    `request.organization` is NOT populated by the tenancy middleware — it only
+    writes to a contextvar. Authenticated DRF requests carry
+    `request.user.organization`; fall back to resolving the tenant contextvar
+    (populated from either the X-Tenant-Id header or the auth token).
+    """
+    user = getattr(request, 'user', None)
+    if user and getattr(user, 'is_authenticated', False) and getattr(user, 'organization_id', None):
+        return user.organization
+    tenant_id = get_current_tenant_id()
+    if not tenant_id:
+        return None
+    import uuid
+    try:
+        uuid.UUID(str(tenant_id))
+        return Organization.objects.filter(id=tenant_id).first()
+    except (ValueError, TypeError):
+        return Organization.objects.filter(slug=tenant_id).first()
 
 
 class ProductAttributeSerializer(serializers.ModelSerializer):
@@ -146,7 +170,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        org = getattr(self.request, 'organization', None)
+        org = _current_org(self.request)
         if org:
             qs = qs.filter(organization=org)
         else:
@@ -176,7 +200,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
         return qs.order_by('sort_order', 'name')
 
     def perform_create(self, serializer):
-        org = getattr(self.request, 'organization', None)
+        org = _current_org(self.request)
         serializer.save(organization=org)
 
     @action(detail=False, methods=['get'], url_path='tree')
@@ -185,7 +209,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
         GET /api/inventory/product-attributes/tree/
         Returns all root attributes with nested children + linked categories + linked brands.
         """
-        org = getattr(request, 'organization', None)
+        org = _current_org(request)
         if not org:
             return Response([])
 
@@ -230,7 +254,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
             )
 
         category_ids = request.data.get('category_ids', [])
-        org = getattr(request, 'organization', None)
+        org = _current_org(request)
 
         # Validate categories belong to same org
         valid_cats = Category.objects.filter(
@@ -258,7 +282,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
             )
 
         brand_ids = request.data.get('brand_ids', [])
-        org = getattr(request, 'organization', None)
+        org = _current_org(request)
 
         valid_brands = Brand.objects.filter(
             id__in=brand_ids, organization=org
@@ -282,7 +306,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
             return Response({'error': 'Can only link categories to root groups'}, status=400)
 
         category_id = request.data.get('category_id')
-        org = getattr(request, 'organization', None)
+        org = _current_org(request)
         try:
             cat = Category.objects.get(id=category_id, organization=org)
             root.categories.add(cat)
@@ -316,7 +340,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
                 status=400
             )
 
-        org = getattr(request, 'organization', None)
+        org = _current_org(request)
         name = request.data.get('name', '').strip()
         if not name:
             return Response({'error': 'Name is required'}, status=400)
@@ -358,7 +382,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
         Returns products with dimension metadata for client-side grouping.
         Lightweight: no .only(), limited to 500 products, minimal joins.
         """
-        org = getattr(request, 'organization', None)
+        org = _current_org(request)
         if not org:
             return Response({'products': [], 'dimensions': {}, 'total': 0})
 
@@ -446,7 +470,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
         POST /api/inventory/product-attributes/seed-defaults/
         Seeds common attributes for the current organization.
         """
-        org = getattr(request, 'organization', None)
+        org = _current_org(request)
         if not org:
             return Response({'error': 'No organization context'}, status=400)
 
