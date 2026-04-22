@@ -3,10 +3,73 @@ Workspace Module — Signals
 Auto-task generation from system events.
 """
 import logging
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.core.mail import send_mail
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+
+# ═══════════════════════════════════════════════════════════
+#  EMAIL NOTIFICATION ON TASK ASSIGNMENT
+# ═══════════════════════════════════════════════════════════
+# Two-step pattern: remember the previous assignee in pre_save, then in
+# post_save compare — if assigned_to changed (or was just set on create)
+# to a user with an email, send them a short heads-up.
+
+_ASSIGNEE_CACHE: dict = {}
+
+
+@receiver(pre_save, sender='workspace.Task')
+def _remember_previous_assignee(sender, instance, **kwargs):
+    if not instance.pk:
+        _ASSIGNEE_CACHE[id(instance)] = None
+        return
+    try:
+        prev = sender.objects.only('assigned_to_id').get(pk=instance.pk)
+        _ASSIGNEE_CACHE[id(instance)] = prev.assigned_to_id
+    except sender.DoesNotExist:
+        _ASSIGNEE_CACHE[id(instance)] = None
+
+
+@receiver(post_save, sender='workspace.Task')
+def _email_on_assignment(sender, instance, created, **kwargs):
+    try:
+        prev_id = _ASSIGNEE_CACHE.pop(id(instance), None)
+        new_id = instance.assigned_to_id
+        # Only fire when assignee actually changed to a real user.
+        if not new_id or new_id == prev_id:
+            return
+        user = instance.assigned_to
+        if not user or not getattr(user, 'email', None):
+            return
+        subject = f"New task: {instance.title[:80]}"
+        due = instance.due_date.strftime('%Y-%m-%d %H:%M') if instance.due_date else 'No due date'
+        priority = (instance.priority or 'MEDIUM').title()
+        lines = [
+            f"Hi {user.get_full_name() or user.username},",
+            '',
+            f"You've been assigned a new task:",
+            '',
+            f"  {instance.title}",
+            f"  Priority: {priority}",
+            f"  Due: {due}",
+        ]
+        if instance.description:
+            lines += ['', instance.description.strip()[:600]]
+        if instance.require_completion_note:
+            lines += ['', '🔒 This task requires a completion note / proof when you mark it done.']
+        lines += ['', 'Open the Task Board to act on it.']
+        send_mail(
+            subject,
+            '\n'.join(lines),
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@tsfsystem.local'),
+            [user.email],
+            fail_silently=True,
+        )
+    except Exception as e:
+        logger.warning(f"[task-assignment-email] Failed to notify: {e}")
 
 
 def create_auto_task(organization, rule, context_label='', context_type='', context_id=None):

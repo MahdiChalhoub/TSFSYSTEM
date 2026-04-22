@@ -490,6 +490,12 @@ class Task(TenantModel):
     require_completion_note = models.BooleanField(default=False,
         help_text='If true, the UI forces the assignee to explain their work before marking done.',
     )
+    # Checklist proof: each item is {"label": "...", "checked": false}.
+    # Copied from the rule's conditions.checklist_items when the task is
+    # generated. Empty list = no checklist required.
+    completion_checklist = models.JSONField(default=list, blank=True,
+        help_text='List of {label, checked} items the assignee ticks off before closing.',
+    )
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 

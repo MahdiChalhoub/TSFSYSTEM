@@ -238,20 +238,28 @@ export default function ManagerDashboardPage() {
 
     return (
         <div className="flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300">
-            {/* Header */}
-            <div className="flex items-center gap-2 flex-shrink-0 mb-3">
-                <div className="page-header-icon bg-app-primary"
-                    style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                    <LayoutDashboard size={20} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Manager Dashboard</h1>
-                    <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
-                        What needs attention · who's on top of it
-                    </p>
+            {/* ── Hero header ── */}
+            <div className="flex items-center justify-between gap-3 flex-shrink-0 mb-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                        style={{
+                            background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 75%, #8b5cf6))',
+                            boxShadow: '0 6px 18px color-mix(in srgb, var(--app-primary) 35%, transparent)',
+                        }}>
+                        <LayoutDashboard size={20} className="text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl md:text-2xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>Today at a glance</h1>
+                        <p className="text-tp-sm font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                            {loading ? 'Loading…'
+                                : stats.overdue === 0 && stats.unassigned === 0 && stats.urgent === 0
+                                    ? '✅ Everything on track — no fires to fight right now.'
+                                    : `${stats.overdue + stats.unassigned + stats.urgent} item${(stats.overdue + stats.unassigned + stats.urgent) === 1 ? '' : 's'} need${(stats.overdue + stats.unassigned + stats.urgent) === 1 ? 's' : ''} attention.`}
+                        </p>
+                    </div>
                 </div>
                 <button onClick={() => load(true)} disabled={refreshing}
-                    className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                    className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-2 rounded-xl transition-all disabled:opacity-50"
                     style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
                     {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
                     Refresh
@@ -264,22 +272,27 @@ export default function ManagerDashboardPage() {
                 </div>
             ) : (
                 <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-4">
-                    {/* KPI strip */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+                    {/* ── KPI strip — taller, colored accent bar top ── */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
                         {kpis.map(k => (
                             <div key={k.label}
-                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+                                className="relative overflow-hidden px-4 py-3 rounded-2xl transition-all hover:translate-y-[-2px]"
                                 style={{
-                                    background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
-                                    border: `1px solid color-mix(in srgb, ${k.color} 25%, transparent)`,
+                                    background: 'var(--app-surface)',
+                                    border: `1px solid color-mix(in srgb, ${k.color} 20%, transparent)`,
+                                    boxShadow: '0 2px 10px color-mix(in srgb, #000 4%, transparent)',
                                 }}>
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{ background: `color-mix(in srgb, ${k.color} 12%, transparent)`, color: k.color }}>
-                                    {k.icon}
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
-                                    <div className="text-lg font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
+                                {/* Accent bar */}
+                                <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: k.color }} />
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                                        style={{ background: `color-mix(in srgb, ${k.color} 14%, transparent)`, color: k.color }}>
+                                        {k.icon}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
+                                        <div className="text-2xl font-black tabular-nums leading-tight" style={{ color: k.value > 0 ? k.color : 'var(--app-foreground)' }}>{k.value}</div>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -313,43 +326,90 @@ export default function ManagerDashboardPage() {
                         </div>
                     )}
 
-                    {/* Leaderboard — weekly top performers */}
-                    {leaderboard.length > 0 && leaderboard.some(r => r.points7d > 0 || r.completed7d > 0) && (
-                        <div className="rounded-2xl overflow-hidden"
-                            style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
-                            <div className="flex items-center gap-2 px-3 py-2.5"
-                                style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)' }}>
-                                <Trophy size={13} style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                <span className="text-tp-sm font-bold uppercase tracking-wide" style={{ color: 'var(--app-foreground)' }}>Leaderboard · last 7 days</span>
-                                <span className="text-tp-xxs font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>score = points earned − (overdue × 2)</span>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }} className="p-3">
-                                {leaderboard.map((r, i) => {
-                                    const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣']
-                                    const accent = i === 0 ? 'var(--app-warning)' : i === 1 ? 'var(--app-muted-foreground)' : i === 2 ? '#d97706' : 'var(--app-muted-foreground)'
-                                    return (
-                                        <div key={r.user?.id ?? i} className="px-3 py-2.5 rounded-xl flex items-center gap-3"
-                                            style={{ background: 'var(--app-surface)', border: `1px solid color-mix(in srgb, ${accent} 30%, transparent)` }}>
-                                            <div className="text-lg flex-shrink-0" style={{ width: 24, textAlign: 'center' }}>{medals[i]}</div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-tp-md font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
-                                                    {fullName(r.user)}
+                    {/* Leaderboard — podium for top 3, row for 4-5 */}
+                    {leaderboard.length > 0 && leaderboard.some(r => r.points7d > 0 || r.completed7d > 0) && (() => {
+                        const top3 = leaderboard.slice(0, 3)
+                        const rest = leaderboard.slice(3)
+                        const podiumOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]]
+                            : top3.length === 2 ? [top3[1], top3[0]]
+                            : top3
+                        const podiumHeights = top3.length >= 3 ? ['70px', '110px', '55px']
+                            : top3.length === 2 ? ['70px', '100px']
+                            : ['90px']
+                        const rankColors = ['#f59e0b', '#94a3b8', '#d97706']
+                        const medals = ['🥇', '🥈', '🥉']
+                        return (
+                            <div className="rounded-2xl overflow-hidden"
+                                style={{ background: 'linear-gradient(180deg, color-mix(in srgb, var(--app-warning, #f59e0b) 7%, var(--app-surface)), var(--app-surface))', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)' }}>
+                                <div className="flex items-center gap-2 px-4 py-3"
+                                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 15%, transparent)' }}>
+                                    <Trophy size={15} style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                    <span className="text-tp-sm font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>This week's top performers</span>
+                                    <span className="text-tp-xxs font-medium ml-auto hidden sm:inline" style={{ color: 'var(--app-muted-foreground)' }}>score = points − (overdue × 2)</span>
+                                </div>
+
+                                <div className="p-5">
+                                    <div className="flex items-end justify-center gap-3 md:gap-5">
+                                        {podiumOrder.map((r, i) => {
+                                            if (!r) return null
+                                            const actualRank = top3.indexOf(r)
+                                            const rankColor = rankColors[actualRank] || 'var(--app-muted-foreground)'
+                                            return (
+                                                <div key={r.user?.id ?? actualRank} className="flex flex-col items-center gap-2 flex-1 max-w-[200px]">
+                                                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-black"
+                                                        style={{
+                                                            background: `linear-gradient(135deg, ${rankColor}, color-mix(in srgb, ${rankColor} 70%, #fff))`,
+                                                            color: 'white',
+                                                            boxShadow: `0 4px 14px color-mix(in srgb, ${rankColor} 35%, transparent)`,
+                                                            border: `3px solid color-mix(in srgb, ${rankColor} 40%, transparent)`,
+                                                        }}>
+                                                        {fullName(r.user).charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="text-tp-md font-black truncate max-w-full text-center" style={{ color: 'var(--app-foreground)' }}>
+                                                        {fullName(r.user)}
+                                                    </div>
+                                                    <div className="text-tp-xs font-medium text-center" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                        {r.completed7d} done · {r.points7d} pts
+                                                    </div>
+                                                    <div className="relative w-full rounded-t-xl flex items-center justify-center"
+                                                        style={{
+                                                            height: podiumHeights[i],
+                                                            background: `linear-gradient(180deg, color-mix(in srgb, ${rankColor} 22%, var(--app-surface)), color-mix(in srgb, ${rankColor} 8%, var(--app-surface)))`,
+                                                            border: `1px solid color-mix(in srgb, ${rankColor} 35%, transparent)`,
+                                                            borderBottom: 'none',
+                                                        }}>
+                                                        <div className="flex flex-col items-center gap-0.5">
+                                                            <span className="text-2xl md:text-3xl">{medals[actualRank]}</span>
+                                                            <span className="text-tp-lg font-black tabular-nums"
+                                                                style={{ color: r.score > 0 ? 'var(--app-success, #22c55e)' : r.score < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                                                                {r.score > 0 ? '+' : ''}{r.score}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="text-tp-xs font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
-                                                    {r.completed7d} done · {r.points7d} pts
-                                                    {r.overdue > 0 && <span style={{ color: 'var(--app-error, #ef4444)' }}> · −{r.overdue * 2} overdue</span>}
+                                            )
+                                        })}
+                                    </div>
+
+                                    {rest.length > 0 && (
+                                        <div className="mt-5 pt-4 flex flex-wrap gap-2 justify-center"
+                                            style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                                            {rest.map((r, i) => (
+                                                <div key={r.user?.id ?? `r-${i}`} className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+                                                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                                                    <span className="text-tp-xxs font-black" style={{ color: 'var(--app-muted-foreground)' }}>#{4 + i}</span>
+                                                    <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{fullName(r.user)}</span>
+                                                    <span className="text-tp-xs font-bold" style={{ color: r.score > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
+                                                        {r.score > 0 ? '+' : ''}{r.score}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                            <div className="text-[14px] font-bold tabular-nums flex-shrink-0"
-                                                style={{ color: r.score > 0 ? 'var(--app-success, #22c55e)' : r.score < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
-                                                {r.score > 0 ? '+' : ''}{r.score}
-                                            </div>
+                                            ))}
                                         </div>
-                                    )
-                                })}
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )
+                    })()}
 
                     {/* Overdue breakdown */}
                     {stats.overdue > 0 && (

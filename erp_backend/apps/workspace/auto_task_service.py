@@ -191,11 +191,17 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
             if rule.assign_to_user_group_id and not rule.assign_to_user_id:
                 members = rule.assign_to_user_group.members.filter(is_active=True)
                 for user in members:
+                    _checklist_items = cond.get('checklist_items') or []
+                    _initial_checklist = [
+                        {'label': str(item).strip(), 'checked': False}
+                        for item in _checklist_items if str(item).strip()
+                    ]
                     task = Task.objects.create(
                         organization=organization,
                         category=auto_category,
                         reminder_at=timezone.now(),
                         require_completion_note=bool(cond.get('require_completion_note')),
+                        completion_checklist=_initial_checklist,
                         title=f"🤖 {tmpl.name}" if tmpl.name else f"Auto: {rule.get_trigger_event_display()}",
                         description="\n".join(description_lines),
                         priority=priority,
@@ -222,11 +228,17 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
                     is_active=True,
                 )
                 for user in users:
+                    _checklist_items = cond.get('checklist_items') or []
+                    _initial_checklist = [
+                        {'label': str(item).strip(), 'checked': False}
+                        for item in _checklist_items if str(item).strip()
+                    ]
                     task = Task.objects.create(
                         organization=organization,
                         category=auto_category,
                         reminder_at=timezone.now(),
                         require_completion_note=bool(cond.get('require_completion_note')),
+                        completion_checklist=_initial_checklist,
                         title=f"🤖 {tmpl.name}" if tmpl.name else f"Auto: {rule.get_trigger_event_display()}",
                         description="\n".join(description_lines),
                         priority=priority,

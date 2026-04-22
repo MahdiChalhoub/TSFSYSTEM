@@ -1219,6 +1219,24 @@ export default function AutoTaskRulesPage() {
                                             </span>
                                         </label>
                                     </div>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label className={labelCls}>Checklist items (optional — one per line)</label>
+                                        <textarea
+                                            value={((editingRule.conditions as any)?.checklist_items || []).join('\n')}
+                                            onChange={e => setEditingRule({
+                                                ...editingRule,
+                                                conditions: {
+                                                    ...editingRule.conditions,
+                                                    checklist_items: e.target.value.split('\n').map(s => s.trim()).filter(Boolean),
+                                                } as any,
+                                            })}
+                                            rows={4}
+                                            placeholder={'Check the shelf is tidy\nPhoto attached\nLabel matches new price'}
+                                            className={`${inputCls} resize-none`} />
+                                        <p className="text-tp-xs font-medium mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Each line becomes a checkbox the assignee must tick before closing the task.
+                                        </p>
+                                    </div>
                                     <div>
                                         <label className={labelCls}>Est. minutes to complete</label>
                                         <input

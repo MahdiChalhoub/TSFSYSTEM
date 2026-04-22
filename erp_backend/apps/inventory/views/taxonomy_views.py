@@ -797,6 +797,73 @@ class CategoryViewSet(TenantModelViewSet):
     serializer_class = CategorySerializer
     pagination_class = None  # Tree data — must return all categories for hierarchy building
 
+    def get_queryset(self):
+        """Hide archived categories by default. Pass ?include_archived=1 to
+        fetch everything (used by the Archive view), or ?archived_only=1 to
+        get just the archived list."""
+        qs = super().get_queryset()
+        params = self.request.query_params
+        archived_only = str(params.get('archived_only', '')).lower() in ('1', 'true', 'yes')
+        include_archived = str(params.get('include_archived', '')).lower() in ('1', 'true', 'yes')
+        if archived_only:
+            return qs.filter(is_archived=True)
+        if not include_archived:
+            return qs.filter(is_archived=False)
+        return qs
+
+    @action(detail=True, methods=['post'])
+    def archive(self, request, pk=None):
+        """Soft-delete: flag the category as archived. Preserves products + children."""
+        from django.utils import timezone
+        instance = self.get_object()
+        if instance.is_archived:
+            return Response({'detail': 'Already archived.'}, status=status.HTTP_400_BAD_REQUEST)
+        instance.is_archived = True
+        instance.archived_at = timezone.now()
+        instance.save(update_fields=['is_archived', 'archived_at'])
+        return Response(self.get_serializer(instance).data)
+
+    @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None):
+        """Undo archive."""
+        # Use original_objects to find archived items (get_queryset filters them out)
+        try:
+            instance = Category.original_objects.get(pk=pk, organization_id=request.user.organization_id)
+        except Category.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        if not instance.is_archived:
+            return Response({'detail': 'Not archived.'}, status=status.HTTP_400_BAD_REQUEST)
+        instance.is_archived = False
+        instance.archived_at = None
+        instance.save(update_fields=['is_archived', 'archived_at'])
+        return Response(self.get_serializer(instance).data)
+
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        """Clone the category — same attributes/brands/parent, name suffixed with " (Copy)".
+        Does NOT copy products or sub-categories. Idempotent-ish: if "X (Copy)" exists,
+        tries "X (Copy 2)", "X (Copy 3)"…"""
+        src = self.get_object()
+        base_name = f'{src.name} (Copy)'
+        candidate = base_name
+        i = 2
+        while Category.objects.filter(name=candidate, organization=src.organization).exists():
+            candidate = f'{src.name} (Copy {i})'
+            i += 1
+            if i > 50:
+                return Response({'detail': 'Too many copies exist.'}, status=status.HTTP_400_BAD_REQUEST)
+        clone = Category.objects.create(
+            organization=src.organization,
+            name=candidate,
+            code=None,          # short code must be unique per-tenant, let user re-assign
+            short_name=src.short_name,
+            parent=src.parent,
+        )
+        # Copy the M2M attribute links
+        if src.attributes.exists():
+            clone.attributes.set(src.attributes.all())
+        return Response(self.get_serializer(clone).data, status=201)
+
     def destroy(self, request, *args, **kwargs):
         """Guard: block delete when products reference this category OR child
         categories exist. Bypass with ?force=1 (still leaves children orphaned

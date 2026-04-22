@@ -236,11 +236,31 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
     def complete(self, request, pk=None):
         task = self.get_object()
         note = (request.data.get('completion_note') or '').strip() if hasattr(request, 'data') else ''
+        checklist = request.data.get('completion_checklist') if hasattr(request, 'data') else None
+
         if task.require_completion_note and not note:
             return Response(
                 {'error': 'This task requires a completion note.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Checklist validation: if the task has checklist items, every one
+        # must be ticked before it can be closed. The client should send the
+        # full list back with updated `checked` flags.
+        if task.completion_checklist:
+            received = checklist if isinstance(checklist, list) else None
+            if not received:
+                return Response(
+                    {'error': 'This task has a checklist — submit it with all items ticked.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            incomplete = [i for i in received if not i.get('checked')]
+            if incomplete:
+                return Response(
+                    {'error': f'Tick every checklist item before closing ({len(incomplete)} unchecked).'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         task.status = 'COMPLETED'
         task.completed_at = timezone.now()
         task.completed_by = request.user
@@ -248,6 +268,9 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
         if note:
             task.completion_note = note
             fields.append('completion_note')
+        if isinstance(checklist, list):
+            task.completion_checklist = checklist
+            fields.append('completion_checklist')
         task.save(update_fields=fields)
         return Response({'status': 'completed'})
 

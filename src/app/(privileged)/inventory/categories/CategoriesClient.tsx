@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
-import { deleteCategory, moveProducts } from '@/app/actions/inventory/categories'
+import { deleteCategory, moveProducts, archiveCategory, restoreCategory, duplicateCategory } from '@/app/actions/inventory/categories'
 import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
@@ -133,6 +133,41 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             toast.error(e?.message || 'Migration failed')
         }
     }
+
+    // ── Archive + Duplicate handlers ──
+    const handleDuplicate = useCallback(async (cat: CategoryNode) => {
+        const res = await duplicateCategory(cat.id)
+        if (res?.success) {
+            toast.success(`"${(res as any).category?.name || cat.name}" duplicated`)
+            router.refresh()
+        } else {
+            toast.error(res?.message || 'Failed to duplicate')
+        }
+    }, [router])
+
+    const handleArchive = useCallback(async (cat: CategoryNode) => {
+        if (!confirm(`Archive "${cat.name}"? It will be hidden from the tree but can be restored later.`)) return
+        const res = await archiveCategory(cat.id)
+        if (res?.success) {
+            toast.success(`"${cat.name}" archived`, {
+                description: 'Restore from the Archive view if needed.',
+                duration: 6000,
+            })
+            router.refresh()
+        } else {
+            toast.error(res?.message || 'Failed to archive')
+        }
+    }, [router])
+
+    const handleRestore = useCallback(async (cat: CategoryNode) => {
+        const res = await restoreCategory(cat.id)
+        if (res?.success) {
+            toast.success(`"${cat.name}" restored`)
+            router.refresh()
+        } else {
+            toast.error(res?.message || 'Failed to restore')
+        }
+    }, [router])
 
     const handleForceDelete = async () => {
         const source = deleteConflict?.source
@@ -308,6 +343,9 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                 onEdit={openEditModal}
                                 onAdd={openAddModal}
                                 onDelete={requestDelete}
+                                onDuplicate={handleDuplicate}
+                                onArchive={handleArchive}
+                                onRestore={handleRestore}
                                 onSelect={(n) => {
                                     if (splitPanel || pinnedSidebar) { setSelectedNode(n) }
                                     else { setSidebarNode(n); setSidebarTab('overview') }

@@ -15,11 +15,15 @@ import type { CategoryNode } from './types'
 export const CategoryRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
     onViewProducts, onViewBrands, onViewAttributes, onSelect,
+    onDuplicate, onArchive, onRestore,
 }: {
     node: CategoryNode; level: number; searchQuery: string; forceExpanded?: boolean;
     onEdit: (n: CategoryNode) => void; onAdd: (parentId?: number) => void; onDelete: (n: CategoryNode) => void;
     onViewProducts: (n: CategoryNode) => void; onViewBrands: (n: CategoryNode) => void; onViewAttributes: (n: CategoryNode) => void;
     onSelect?: (n: CategoryNode) => void;
+    onDuplicate?: (n: CategoryNode) => void;
+    onArchive?: (n: CategoryNode) => void;
+    onRestore?: (n: CategoryNode) => void;
 }) => {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)

@@ -195,6 +195,11 @@ class Category(AuditLogMixin, TenantOwnedModel):
         'ProductAttribute', blank=True, related_name='categories',
         help_text='Attribute groups relevant for products in this category (e.g. Size, Color, Parfum)'
     )
+    # Soft delete — archived categories are hidden by default but preserved.
+    # Restore via POST /categories/{id}/restore/.
+    is_archived = models.BooleanField(default=False, db_index=True,
+        help_text='Soft-deleted categories are hidden from default listings')
+    archived_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'category'

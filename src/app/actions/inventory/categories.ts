@@ -128,6 +128,61 @@ export async function deleteCategory(id: number, options: { force?: boolean } = 
     }
 }
 
+/* ═══════════════════════════════════════════════════════════
+ *  ARCHIVE / RESTORE / DUPLICATE — soft-delete + clone
+ * ═══════════════════════════════════════════════════════════ */
+
+export async function archiveCategory(id: number) {
+    try {
+        const result = await erpFetch(`inventory/categories/${id}/archive/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+        });
+        revalidatePath('/inventory/categories');
+        return { success: true, category: result };
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to archive' };
+    }
+}
+
+export async function restoreCategory(id: number) {
+    try {
+        const result = await erpFetch(`inventory/categories/${id}/restore/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+        });
+        revalidatePath('/inventory/categories');
+        return { success: true, category: result };
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to restore' };
+    }
+}
+
+export async function duplicateCategory(id: number) {
+    try {
+        const result = await erpFetch(`inventory/categories/${id}/duplicate/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+        });
+        revalidatePath('/inventory/categories');
+        return { success: true, category: result };
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to duplicate' };
+    }
+}
+
+export async function listArchivedCategories() {
+    try {
+        const data = await erpFetch('inventory/categories/?archived_only=1', { cache: 'no-store' } as any);
+        return Array.isArray(data) ? data : (data?.results ?? []);
+    } catch {
+        return [];
+    }
+}
+
 export async function getCategoryWithCounts() {
  try {
  // Try namespaced first (new standard)

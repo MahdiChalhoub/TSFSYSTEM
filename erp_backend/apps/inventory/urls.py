@@ -14,6 +14,7 @@ from apps.inventory.views import (
     StockAlertViewSet,
 )
 from apps.inventory.views.taxonomy_views import ProductPackagingViewSet
+from apps.inventory.views.attribute_views import ProductAttributeViewSet
 from apps.inventory.views.counting_views import (
     InventorySessionViewSet, InventorySessionLineViewSet,
 )
@@ -27,6 +28,7 @@ router.register(r'products', ProductViewSet)
 router.register(r'units', UnitViewSet)
 router.register(r'unit-packages', UnitPackageViewSet, basename='unit-packages')
 router.register(r'product-packaging', ProductPackagingViewSet, basename='product-packaging')
+router.register(r'product-attributes', ProductAttributeViewSet, basename='product-attributes')
 router.register(r'packaging-suggestions', PackagingSuggestionRuleViewSet, basename='packaging-suggestions')
 router.register(r'warehouses', WarehouseViewSet)
 router.register(r'inventory', InventoryViewSet)
