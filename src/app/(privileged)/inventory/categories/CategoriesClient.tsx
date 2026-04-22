@@ -32,14 +32,48 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [deleteConflict, setDeleteConflict] = useState<any>(null)  // { conflict, source } when backend 409s
     const data = initialCategories
 
-    // Compute stats for KPIs
+    // Track search query + active KPI filter from TreeMasterPage.
+    const [filterQuery, setFilterQuery] = useState('')
+    const [kpiFilter, setKpiFilter] = useState<string | null>(null)
+
+    const kpiPredicate = useCallback((c: any, allData: any[]): boolean => {
+        if (!kpiFilter) return true
+        if (kpiFilter === 'root') return !c.parent
+        if (kpiFilter === 'leaf') return !allData.some((child: any) => child.parent === c.id)
+        if (kpiFilter === 'products') return (c.product_count || 0) > 0
+        if (kpiFilter === 'brands') return (c.brand_count || 0) > 0
+        return true
+    }, [kpiFilter])
+
+    const filteredData = useMemo(() => {
+        const q = filterQuery.trim().toLowerCase()
+        return data.filter((c: any) => {
+            const searchMatch = !q
+                || (c.name || '').toLowerCase().includes(q)
+                || (c.code || '').toLowerCase().includes(q)
+                || (c.short_name || '').toLowerCase().includes(q)
+                || (c.full_path || '').toLowerCase().includes(q)
+            return searchMatch && kpiPredicate(c, data)
+        })
+    }, [data, filterQuery, kpiPredicate])
+
+    // Compute stats for KPIs — the "total" stays global, the rest reflect the filter.
     const stats = useMemo(() => {
-        const tree = buildTree(data)
-        const leafCount = data.filter((d: any) => !data.some((c: any) => c.parent === d.id)).length
-        const totalProducts = data.reduce((sum: number, d: any) => sum + (d.product_count || 0), 0)
-        const totalBrands = data.reduce((sum: number, d: any) => sum + (d.brand_count || 0), 0)
-        return { total: data.length, roots: tree.length, leafCount, totalProducts, totalBrands }
-    }, [data])
+        const source = filteredData
+        const tree = buildTree(source)
+        const leafCount = source.filter((d: any) => !source.some((c: any) => c.parent === d.id)).length
+        const totalProducts = source.reduce((sum: number, d: any) => sum + (d.product_count || 0), 0)
+        const totalBrands = source.reduce((sum: number, d: any) => sum + (d.brand_count || 0), 0)
+        return {
+            total: data.length,
+            showing: source.length,
+            roots: tree.length,
+            leafCount,
+            totalProducts,
+            totalBrands,
+            isFiltered: filterQuery.trim().length > 0 || kpiFilter !== null,
+        }
+    }, [data, filteredData, filterQuery, kpiFilter])
 
     // Actions
     const openAddModal = useCallback((parentId?: number) => { setModalState({ open: true, parentId }) }, [])
@@ -142,6 +176,12 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 icon: <FolderTree size={20} />,
                 iconColor: 'var(--app-primary)',
                 tourId: 'inventory-categories',
+                onSearchChange: setFilterQuery,
+                onKpiFilterChange: (key) => {
+                    // Special 'all' key means "clear all filters"
+                    if (key === 'all') { setKpiFilter(null); setFilterQuery(''); return }
+                    setKpiFilter(key)
+                },
                 treeTourId: 'category-tree',
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
                 primaryAction: {
@@ -165,12 +205,21 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
                 ],
                 kpis: [
-                    { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)' },
-                    { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-success)' },
-                    { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: '#8b5cf6' },
-                    { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-info)' },
-                    { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: 'var(--app-warning)' },
-                    { label: 'Showing', value: stats.total, icon: <Search size={11} />, color: 'var(--app-muted-foreground)' },
+                    {
+                        label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)',
+                        filterKey: 'all', active: kpiFilter === null && filterQuery.trim().length === 0,
+                        hint: 'Show all categories (clear filters)',
+                    },
+                    { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-success)', filterKey: 'root', active: kpiFilter === 'root', hint: 'Show only top-level categories' },
+                    { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: '#8b5cf6', filterKey: 'leaf', active: kpiFilter === 'leaf', hint: 'Show only leaf categories (no children)' },
+                    { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-info)', filterKey: 'products', active: kpiFilter === 'products', hint: 'Show only categories with products' },
+                    { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: 'var(--app-warning)', filterKey: 'brands', active: kpiFilter === 'brands', hint: 'Show only categories with brands' },
+                    {
+                        label: stats.isFiltered ? 'Showing' : 'All',
+                        value: stats.isFiltered ? `${stats.showing}/${stats.total}` : stats.total,
+                        icon: <Search size={11} />,
+                        color: stats.isFiltered ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                    },
                 ],
                 footerLeft: (
                     <div className="flex items-center gap-3 flex-wrap">
@@ -227,13 +276,18 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 const { searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar, selectedNode, setSelectedNode, sidebarNode, setSidebarNode, sidebarTab, setSidebarTab, panelTab, setPanelTab, setExpandAll, setExpandKey } = renderProps
                 renderPropsRef.current = renderProps
 
-                // Build tree with search filter
-                const filtered = searchQuery.trim()
-                    ? data.filter((a: any) => {
-                        const q = searchQuery.toLowerCase()
-                        return a.name?.toLowerCase().includes(q) || a.code?.toLowerCase().includes(q) || a.short_name?.toLowerCase().includes(q)
-                    })
-                    : data
+                // Build tree with search + KPI filter
+                let filtered = data
+                if (searchQuery.trim()) {
+                    const q = searchQuery.toLowerCase()
+                    filtered = filtered.filter((a: any) =>
+                        a.name?.toLowerCase().includes(q)
+                        || a.code?.toLowerCase().includes(q)
+                        || a.short_name?.toLowerCase().includes(q)
+                    )
+                }
+                // Apply KPI filter (click-to-filter from the KPI strip)
+                filtered = filtered.filter((c: any) => kpiPredicate(c, data))
 
                 const tree = buildTree(filtered)
                 const leafCount = filtered.filter((d: any) => !filtered.some((c: any) => c.parent === d.id)).length

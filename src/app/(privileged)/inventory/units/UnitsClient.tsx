@@ -695,13 +695,50 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
             .map((u: any) => ({ id: u.id, name: u.name, code: u.code }))
     }, [data, deleteConflict])
 
+    // Track search query + active KPI filter from TreeMasterPage.
+    const [filterQuery, setFilterQuery] = useState('')
+    const [kpiFilter, setKpiFilter] = useState<string | null>(null)
+
+    const matches = useCallback((u: any, q: string) => {
+        const needle = q.trim().toLowerCase()
+        if (!needle) return true
+        return (u.name || '').toLowerCase().includes(needle)
+            || (u.code || '').toLowerCase().includes(needle)
+            || (u.short_name || '').toLowerCase().includes(needle)
+            || (u.type || '').toLowerCase().includes(needle)
+    }, [])
+
+    // KPI filter predicates — click a KPI, this filter applies.
+    const kpiPredicate = useCallback((u: any): boolean => {
+        if (!kpiFilter) return true
+        if (kpiFilter === 'base') return !u.base_unit
+        if (kpiFilter === 'derived') return !!u.base_unit
+        if (kpiFilter === 'products') return (u.product_count || 0) > 0
+        if (kpiFilter === 'scale') return !!u.needs_balance
+        return true
+    }, [kpiFilter])
+
+    const filteredData = useMemo(
+        () => data.filter((u: any) => matches(u, filterQuery) && kpiPredicate(u)),
+        [data, filterQuery, matches, kpiPredicate]
+    )
+
     const stats = useMemo(() => {
-        const baseCount = data.filter((u: any) => !u.base_unit).length
-        const derivedCount = data.filter((u: any) => u.base_unit).length
-        const totalProducts = data.reduce((s: number, u: any) => s + (u.product_count || 0), 0)
-        const scaleUnits = data.filter((u: any) => u.needs_balance).length
-        return { total: data.length, base: baseCount, derived: derivedCount, totalProducts, scaleUnits }
-    }, [data])
+        const source = filteredData
+        const baseCount = source.filter((u: any) => !u.base_unit).length
+        const derivedCount = source.filter((u: any) => u.base_unit).length
+        const totalProducts = source.reduce((s: number, u: any) => s + (u.product_count || 0), 0)
+        const scaleUnits = source.filter((u: any) => u.needs_balance).length
+        return {
+            total: data.length,
+            showing: source.length,
+            base: baseCount,
+            derived: derivedCount,
+            totalProducts,
+            scaleUnits,
+            isFiltered: filterQuery.trim().length > 0 || kpiFilter !== null,
+        }
+    }, [data, filteredData, filterQuery, kpiFilter])
 
     // Tour step actions — programmatic interactions wired to the tree state
     const renderPropsRef = useRef<any>(null)
@@ -725,13 +762,28 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 icon: <Ruler size={20} />,
                 iconColor: 'var(--app-info)',
                 tourId: 'inventory-units',
+                onSearchChange: setFilterQuery,
+                onKpiFilterChange: (key) => {
+                    // Special 'all' key means "clear all filters"
+                    if (key === 'all') { setKpiFilter(null); setFilterQuery(''); return }
+                    setKpiFilter(key)
+                },
                 kpis: [
-                    { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)' },
-                    { label: 'Base', value: stats.base, icon: <Ruler size={11} />, color: 'var(--app-info)' },
-                    { label: 'Derived', value: stats.derived, icon: <GitBranch size={11} />, color: '#8b5cf6' },
-                    { label: 'Products', value: stats.totalProducts, icon: <Package size={11} />, color: 'var(--app-success)' },
-                    { label: 'Scale', value: stats.scaleUnits, icon: <Scale size={11} />, color: 'var(--app-warning)' },
-                    { label: 'Showing', value: stats.total, icon: <Search size={11} />, color: 'var(--app-muted-foreground)' },
+                    {
+                        label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)',
+                        filterKey: 'all', active: kpiFilter === null && filterQuery.trim().length === 0,
+                        hint: 'Show all units (clear filters)',
+                    },
+                    { label: 'Base', value: stats.base, icon: <Ruler size={11} />, color: 'var(--app-info)', filterKey: 'base', active: kpiFilter === 'base', hint: 'Show only base units' },
+                    { label: 'Derived', value: stats.derived, icon: <GitBranch size={11} />, color: '#8b5cf6', filterKey: 'derived', active: kpiFilter === 'derived', hint: 'Show only derived units' },
+                    { label: 'Products', value: stats.totalProducts, icon: <Package size={11} />, color: 'var(--app-success)', filterKey: 'products', active: kpiFilter === 'products', hint: 'Show only units with products' },
+                    { label: 'Scale', value: stats.scaleUnits, icon: <Scale size={11} />, color: 'var(--app-warning)', filterKey: 'scale', active: kpiFilter === 'scale', hint: 'Show only balance-connected units' },
+                    {
+                        label: stats.isFiltered ? 'Showing' : 'All',
+                        value: stats.isFiltered ? `${stats.showing}/${stats.total}` : stats.total,
+                        icon: <Search size={11} />,
+                        color: stats.isFiltered ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                    },
                 ],
                 searchPlaceholder: 'Search by name, code, or type... (Ctrl+K)',
                 primaryAction: { label: 'New Unit', icon: <Plus size={14} />, onClick: () => openForm() },
@@ -777,6 +829,8 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     const q = searchQuery.toLowerCase()
                     filtered = filtered.filter((u: any) => u.name?.toLowerCase().includes(q) || u.code?.toLowerCase().includes(q) || u.short_name?.toLowerCase().includes(q) || u.type?.toLowerCase().includes(q))
                 }
+                // Apply KPI filter (click-to-filter from the KPI strip)
+                filtered = filtered.filter(kpiPredicate)
                 const tree = buildTree(filtered, 'base_unit')
                 return tree.length > 0 ? (
                     tree.map((node: any) => (

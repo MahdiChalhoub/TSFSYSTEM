@@ -12,6 +12,17 @@ export interface KPI {
     value: number | string
     icon: ReactNode
     color: string
+    /**
+     * Optional filter key. When set, the KPI renders as a clickable button.
+     * Clicking it calls config.onKpiFilterChange(filterKey) on the master
+     * shell — toggling the filter on/off. Parent is responsible for applying
+     * the actual filter to its data.
+     */
+    filterKey?: string
+    /** True when this KPI is the currently-active filter. Controlled by parent. */
+    active?: boolean
+    /** Optional tooltip hint. */
+    hint?: string
 }
 
 export interface ActionButton {
@@ -46,4 +57,9 @@ export interface MasterPageConfig {
      * desktop shell renders a refresh button in the header.
      */
     onRefresh?: () => void | Promise<void>
+    /**
+     * Fires when the user clicks a KPI whose `filterKey` is set. Returns
+     * the clicked key, or `null` when the same KPI is clicked again (toggle off).
+     */
+    onKpiFilterChange?: (key: string | null) => void
 }

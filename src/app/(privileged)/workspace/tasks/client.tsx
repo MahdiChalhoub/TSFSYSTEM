@@ -4,7 +4,7 @@ import { useState, useTransition, useRef, useEffect, useCallback } from 'react';
 import {
     Plus, Search, Play, CheckCircle2, Clock, AlertTriangle,
     ClipboardList, Loader2, Maximize2, Minimize2,
-    FolderKanban, ChevronRight, Filter, Menu, Calendar,
+    FolderKanban, ChevronRight, Filter, Menu, Calendar, Settings2,
 } from 'lucide-react';
 
 import type { Task, Category, UserItem, Dashboard, CategorySelection, StatusFilter } from './types';
@@ -13,6 +13,16 @@ import CategorySidebar from './CategorySidebar';
 import TaskCard from './TaskCard';
 import TaskModal from './TaskModal';
 import CategoryManagementModal from './CategoryManagementModal';
+import {
+    TaskCustomizePanel,
+    loadProfiles as loadTaskProfiles,
+    saveProfiles as saveTaskProfiles,
+    loadActiveProfileId as loadTaskActiveId,
+    saveActiveProfileId as saveTaskActiveId,
+    DEFAULT_VISIBLE_FILTERS as DEFAULT_TASK_FILTERS,
+    type TaskViewProfile,
+    type FilterKey,
+} from './TaskCustomizePanel';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PROPS
@@ -47,9 +57,36 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
     /* ── Filter state ─────────────────────────────────────────────── */
     const [filterStatus, setFilterStatus] = useState<StatusFilter>('ALL');
     const [filterPriority, setFilterPriority] = useState('ALL');
-    const [filterStartDate, setFilterStartDate] = useState('');
-    const [filterEndDate, setFilterEndDate] = useState('');
+    // Default window: one month back to one month forward, centered on today.
+    const _toIso = (d: Date) => d.toISOString().split('T')[0];
+    const _shiftDays = (d: Date, n: number) => { const c = new Date(d); c.setDate(c.getDate() + n); return c };
+    const _today = new Date();
+    const [filterStartDate, setFilterStartDate] = useState(_toIso(_shiftDays(_today, -30)));
+    const [filterEndDate, setFilterEndDate] = useState(_toIso(_shiftDays(_today, 30)));
+    const [filterAssignee, setFilterAssignee] = useState<number | 'ALL'>('ALL');
+    const [filterCreator, setFilterCreator] = useState<number | 'ALL'>('ALL');
+    const [filterSource, setFilterSource] = useState<'ALL' | 'SYSTEM' | 'MANUAL'>('ALL');
+    const [customRanges, setCustomRanges] = useState<{ name: string; daysBefore: number; daysAfter: number }[]>(() => {
+        if (typeof window === 'undefined') return [];
+        try { return JSON.parse(localStorage.getItem('tsf_task_custom_ranges') || '[]') } catch { return [] }
+    });
     const [showFilters, setShowFilters] = useState(false);
+    const [showFilterCustomize, setShowFilterCustomize] = useState(false);
+    const [filterOverdueOnly, setFilterOverdueOnly] = useState(false);
+    const [filterHasLink, setFilterHasLink] = useState<'ALL' | 'YES' | 'NO'>('ALL');
+
+    // Per-filter visibility + named profiles (mirrors /inventory/products).
+    const [profiles, setProfiles] = useState<TaskViewProfile[]>(() => loadTaskProfiles());
+    const [activeProfileId, setActiveProfileId] = useState<string>(() => loadTaskActiveId());
+    const _activeProfile = profiles.find(p => p.id === activeProfileId);
+    const [visibleFilters, setVisibleFilters] = useState<Record<FilterKey, boolean>>(
+        _activeProfile?.filters ?? DEFAULT_TASK_FILTERS,
+    );
+    const _setVisibleFiltersPersisted = (next: Record<FilterKey, boolean>) => {
+        setVisibleFilters(next);
+        const updated = profiles.map(p => p.id === activeProfileId ? { ...p, filters: next } : p);
+        setProfiles(updated); saveTaskProfiles(updated);
+    };
     const [showCompletedTasks, setShowCompletedTasks] = useState(false);
     const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
 
@@ -124,9 +161,28 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
         // Priority
         if (filterPriority !== 'ALL') filtered = filtered.filter(t => t.priority === filterPriority);
 
-        // Date range
-        if (filterStartDate) filtered = filtered.filter(t => t.due_date && t.due_date >= filterStartDate);
-        if (filterEndDate) filtered = filtered.filter(t => t.due_date && t.due_date <= filterEndDate);
+        // Date range — matches against due_date OR created_at so an un-dated task
+        // still shows in a "last month" window based on when it was created.
+        const inRange = (dateStr?: string) =>
+            !!dateStr && (!filterStartDate || dateStr >= filterStartDate) && (!filterEndDate || dateStr <= filterEndDate);
+        if (filterStartDate || filterEndDate) {
+            filtered = filtered.filter(t => inRange(t.due_date) || inRange((t.created_at || '').slice(0, 10)));
+        }
+
+        // Assignee / Creator / Source
+        if (filterAssignee !== 'ALL') filtered = filtered.filter(t => t.assigned_to === filterAssignee);
+        if (filterCreator !== 'ALL') filtered = filtered.filter(t => t.assigned_by === filterCreator);
+        if (filterSource !== 'ALL') {
+            filtered = filtered.filter(t => filterSource === 'SYSTEM'
+                ? (t.source === 'SYSTEM' || t.source === 'AUTO')
+                : t.source === filterSource);
+        }
+
+        // Overdue + source-link filters
+        if (filterOverdueOnly) filtered = filtered.filter(t => !!t.is_overdue);
+        if (filterHasLink !== 'ALL') {
+            filtered = filtered.filter(t => filterHasLink === 'YES' ? !!t.related_object_type : !t.related_object_type);
+        }
 
         return filtered;
     };
@@ -134,7 +190,27 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
     const filteredTasks = getFilteredTasks();
     const activeTasks = filteredTasks.filter(t => t.status !== 'COMPLETED');
     const completedTasks = filteredTasks.filter(t => t.status === 'COMPLETED');
-    const hasActiveFilters = filterStatus !== 'ALL' || filterPriority !== 'ALL' || filterStartDate || filterEndDate;
+
+    // KPIs reflect the current filter — so every chip and the header count
+    // update live when the user narrows/widens the view.
+    const _todayIso = _toIso(_today);
+    const kpiStats = {
+        total: filteredTasks.length,
+        today: filteredTasks.filter(t =>
+            (t.due_date && t.due_date.slice(0, 10) === _todayIso) ||
+            (t.created_at && t.created_at.slice(0, 10) === _todayIso)
+        ).length,
+        pending: filteredTasks.filter(t => t.status === 'PENDING').length,
+        in_progress: filteredTasks.filter(t => t.status === 'IN_PROGRESS').length,
+        completed: completedTasks.length,
+        overdue: filteredTasks.filter(t => t.is_overdue).length,
+    };
+    const defaultStart = _toIso(_shiftDays(_today, -30));
+    const defaultEnd = _toIso(_shiftDays(_today, 30));
+    const hasActiveFilters = filterStatus !== 'ALL' || filterPriority !== 'ALL'
+        || filterStartDate !== defaultStart || filterEndDate !== defaultEnd
+        || filterAssignee !== 'ALL' || filterCreator !== 'ALL' || filterSource !== 'ALL'
+        || filterOverdueOnly || filterHasLink !== 'ALL';
 
     /* ── Quick-complete toggle ─────────────────────────────────────── */
     function handleQuickComplete(taskId: number, currentStatus: string, e: React.MouseEvent) {
@@ -169,8 +245,49 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
     const clearFilters = () => {
         setFilterStatus('ALL');
         setFilterPriority('ALL');
-        setFilterStartDate('');
-        setFilterEndDate('');
+        setFilterStartDate(defaultStart);
+        setFilterEndDate(defaultEnd);
+        setFilterAssignee('ALL');
+        setFilterCreator('ALL');
+        setFilterSource('ALL');
+        setFilterOverdueOnly(false);
+        setFilterHasLink('ALL');
+    };
+
+    /** Apply a date preset by offsets relative to today. */
+    const applyDatePreset = (startOffset: number, endOffset: number) => {
+        setFilterStartDate(_toIso(_shiftDays(_today, startOffset)));
+        setFilterEndDate(_toIso(_shiftDays(_today, endOffset)));
+    };
+
+    const DATE_PRESETS: { label: string; start: number; end: number }[] = [
+        { label: 'Today', start: 0, end: 0 },
+        { label: 'Yesterday', start: -1, end: -1 },
+        { label: 'Tomorrow', start: 1, end: 1 },
+        { label: 'Last week', start: -7, end: 0 },
+        { label: 'Next week', start: 0, end: 7 },
+        { label: 'Last month', start: -30, end: 0 },
+        { label: 'Next month', start: 0, end: 30 },
+        { label: '±30d', start: -30, end: 30 },
+    ];
+
+    const saveCustomRange = () => {
+        const name = window.prompt('Name this date range (e.g. 15-period)');
+        if (!name) return;
+        const daysBefore = window.prompt('Days before today (e.g. 15)', '15');
+        const daysAfter = window.prompt('Days after today (e.g. 15)', '15');
+        const b = Number(daysBefore), a = Number(daysAfter);
+        if (!Number.isFinite(b) || !Number.isFinite(a)) return;
+        const next = [...customRanges.filter(r => r.name !== name), { name, daysBefore: b, daysAfter: a }];
+        setCustomRanges(next);
+        try { localStorage.setItem('tsf_task_custom_ranges', JSON.stringify(next)) } catch {}
+        applyDatePreset(-b, a);
+    };
+
+    const deleteCustomRange = (name: string) => {
+        const next = customRanges.filter(r => r.name !== name);
+        setCustomRanges(next);
+        try { localStorage.setItem('tsf_task_custom_ranges', JSON.stringify(next)) } catch {}
     };
 
     /* ═══════════════════════════════════════════════════════════════
@@ -188,7 +305,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                 <div className="flex-1 min-w-0">
                     <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Task Board</h1>
                     <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                        {dashboard?.total_assigned ?? 0} Tasks · {dashboard?.pending ?? 0} Pending · {dashboard?.overdue ?? 0} Overdue
+                        {kpiStats.total} Tasks · {kpiStats.pending} Pending · {kpiStats.overdue} Overdue
                     </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -221,34 +338,82 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
             </div>
 
             {/* ── KPI Strip ──────────────────────────────────────── */}
-            {!focusMode && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}
-                     className="flex-shrink-0 mb-4">
-                    {[
-                        { label: 'Assigned', value: dashboard?.total_assigned ?? 0, color: 'var(--app-primary)', icon: <ClipboardList size={14} /> },
-                        { label: 'Pending', value: dashboard?.pending ?? 0, color: 'var(--app-warning, #f59e0b)', icon: <Clock size={14} /> },
-                        { label: 'In Progress', value: dashboard?.in_progress ?? 0, color: 'var(--app-info, #3b82f6)', icon: <Play size={14} /> },
-                        { label: 'Done', value: dashboard?.completed ?? 0, color: 'var(--app-success, #22c55e)', icon: <CheckCircle2 size={14} /> },
-                        { label: 'Overdue', value: dashboard?.overdue ?? 0, color: 'var(--app-error, #ef4444)', icon: <AlertTriangle size={14} /> },
-                    ].map(k => (
-                        <div key={k.label}
-                             className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                             style={{
-                                 background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                 border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                             }}>
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                 style={{ background: `color-mix(in srgb, ${k.color} 10%, transparent)`, color: k.color }}>
-                                {k.icon}
-                            </div>
-                            <div className="min-w-0">
-                                <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
-                                <div className="text-sm font-black text-app-foreground tabular-nums">{k.value}</div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+            {!focusMode && (() => {
+                const isToday = filterStartDate === _todayIso && filterEndDate === _todayIso;
+                const isAll = filterStatus === 'ALL' && !isToday && filterSource === 'ALL';
+                const kpis = [
+                    {
+                        label: 'All',
+                        value: kpiStats.total,
+                        color: 'var(--app-primary)',
+                        icon: <ClipboardList size={14} />,
+                        active: isAll,
+                        onClick: () => { clearFilters(); },
+                    },
+                    {
+                        label: 'Today',
+                        value: kpiStats.today,
+                        color: 'var(--app-info, #3b82f6)',
+                        icon: <Calendar size={14} />,
+                        active: isToday,
+                        onClick: () => { setFilterStartDate(_todayIso); setFilterEndDate(_todayIso); },
+                    },
+                    {
+                        label: 'Pending',
+                        value: kpiStats.pending,
+                        color: 'var(--app-warning, #f59e0b)',
+                        icon: <Clock size={14} />,
+                        active: filterStatus === 'PENDING',
+                        onClick: () => setFilterStatus(filterStatus === 'PENDING' ? 'ALL' : 'PENDING'),
+                    },
+                    {
+                        label: 'In Progress',
+                        value: kpiStats.in_progress,
+                        color: 'var(--app-info, #3b82f6)',
+                        icon: <Play size={14} />,
+                        active: filterStatus === 'IN_PROGRESS',
+                        onClick: () => setFilterStatus(filterStatus === 'IN_PROGRESS' ? 'ALL' : 'IN_PROGRESS'),
+                    },
+                    {
+                        label: 'Done',
+                        value: kpiStats.completed,
+                        color: 'var(--app-success, #22c55e)',
+                        icon: <CheckCircle2 size={14} />,
+                        active: filterStatus === 'COMPLETED',
+                        onClick: () => setFilterStatus(filterStatus === 'COMPLETED' ? 'ALL' : 'COMPLETED'),
+                    },
+                    {
+                        label: 'Overdue',
+                        value: kpiStats.overdue,
+                        color: 'var(--app-error, #ef4444)',
+                        icon: <AlertTriangle size={14} />,
+                        active: false,
+                        onClick: () => { /* visual-only — overdue chips already show red */ },
+                    },
+                ];
+                return (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}
+                         className="flex-shrink-0 mb-4">
+                        {kpis.map(k => (
+                            <button key={k.label} onClick={k.onClick}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                                style={{
+                                    background: k.active ? `color-mix(in srgb, ${k.color} 10%, var(--app-surface))` : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                    border: `1px solid ${k.active ? k.color : 'color-mix(in srgb, var(--app-border) 50%, transparent)'}`,
+                                }}>
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ background: `color-mix(in srgb, ${k.color} ${k.active ? 18 : 10}%, transparent)`, color: k.color }}>
+                                    {k.icon}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: k.active ? k.color : 'var(--app-muted-foreground)' }}>{k.label}</div>
+                                    <div className="text-sm font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                );
+            })()}
 
             {/* ── Main Layout: Sidebar + Tasks ───────────────────── */}
             <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4">
@@ -338,52 +503,143 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                         </div>
                     </div>
 
-                    {/* Filter panel */}
-                    {showFilters && (
-                        <div className="mb-3 p-3 rounded-xl border"
+                    {/* Filter panel — grid of all enabled filters (products-style) */}
+                    {showFilters && (() => {
+                        const fieldLabelCls = "text-[9px] font-black uppercase tracking-widest mb-1 block";
+                        const fieldSelectCls = "w-full px-2.5 py-2 text-[12px] font-bold rounded-xl outline-none";
+                        const fieldSelectStyle = { background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' };
+                        return (
+                        <div className="mb-3 p-3 rounded-xl border space-y-3"
                              style={{ background: 'var(--app-surface)', borderColor: 'color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                                <div>
-                                    <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Status</label>
-                                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as StatusFilter)}
-                                            className="w-full px-2.5 py-2 text-[12px] font-bold rounded-xl outline-none"
-                                            style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
-                                        <option value="ALL">All Status</option>
-                                        <option value="PENDING">Pending</option>
-                                        <option value="IN_PROGRESS">In Progress</option>
-                                        <option value="COMPLETED">Completed</option>
-                                        <option value="CANCELLED">Cancelled</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Priority</label>
-                                    <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
-                                            className="w-full px-2.5 py-2 text-[12px] font-bold rounded-xl outline-none"
-                                            style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
-                                        <option value="ALL">All Priorities</option>
-                                        <option value="LOW">Low</option>
-                                        <option value="MEDIUM">Medium</option>
-                                        <option value="HIGH">High</option>
-                                        <option value="URGENT">Urgent</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-black uppercase tracking-widest mb-1 block flex items-center gap-1" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        <Calendar size={9} /> Start Date
-                                    </label>
-                                    <input type="date" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)}
-                                           className="w-full px-2.5 py-2 text-[12px] font-bold rounded-xl outline-none"
-                                           style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-black uppercase tracking-widest mb-1 block flex items-center gap-1" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        <Calendar size={9} /> End Date
-                                    </label>
-                                    <input type="date" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)}
-                                           className="w-full px-2.5 py-2 text-[12px] font-bold rounded-xl outline-none"
-                                           style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                                </div>
+                            {/* Customize toolbar — opens slide-in side panel (products-style) */}
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Filters · {Object.values(visibleFilters).filter(Boolean).length} shown · View: {profiles.find(p => p.id === activeProfileId)?.name || 'Default'}
+                                </span>
+                                <button onClick={() => setShowFilterCustomize(true)}
+                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                    <Settings2 size={11} /> Customize
+                                </button>
                             </div>
+
+                            {/* Filter grid — as many columns as fit */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                                {visibleFilters.status && (
+                                    <div>
+                                        <label className={fieldLabelCls} style={{ color: 'var(--app-muted-foreground)' }}>Status</label>
+                                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as StatusFilter)} className={fieldSelectCls} style={fieldSelectStyle}>
+                                            <option value="ALL">All Status</option>
+                                            <option value="PENDING">Pending</option>
+                                            <option value="IN_PROGRESS">In Progress</option>
+                                            <option value="COMPLETED">Completed</option>
+                                            <option value="CANCELLED">Cancelled</option>
+                                        </select>
+                                    </div>
+                                )}
+                                {visibleFilters.priority && (
+                                    <div>
+                                        <label className={fieldLabelCls} style={{ color: 'var(--app-muted-foreground)' }}>Priority</label>
+                                        <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)} className={fieldSelectCls} style={fieldSelectStyle}>
+                                            <option value="ALL">All Priorities</option>
+                                            <option value="LOW">Low</option>
+                                            <option value="MEDIUM">Medium</option>
+                                            <option value="HIGH">High</option>
+                                            <option value="URGENT">Urgent</option>
+                                        </select>
+                                    </div>
+                                )}
+                                {visibleFilters.source && (
+                                    <div>
+                                        <label className={fieldLabelCls} style={{ color: 'var(--app-muted-foreground)' }}>Source</label>
+                                        <select value={filterSource} onChange={e => setFilterSource(e.target.value as any)} className={fieldSelectCls} style={fieldSelectStyle}>
+                                            <option value="ALL">Auto + Manual</option>
+                                            <option value="SYSTEM">Auto (rules)</option>
+                                            <option value="MANUAL">Manual only</option>
+                                        </select>
+                                    </div>
+                                )}
+                                {visibleFilters.assignee && (
+                                    <div>
+                                        <label className={fieldLabelCls} style={{ color: 'var(--app-muted-foreground)' }}>Assigned to</label>
+                                        <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))} className={fieldSelectCls} style={fieldSelectStyle}>
+                                            <option value="ALL">Anyone</option>
+                                            {users.map(u => <option key={u.id} value={u.id}>{getUserName(u)}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                                {visibleFilters.creator && (
+                                    <div>
+                                        <label className={fieldLabelCls} style={{ color: 'var(--app-muted-foreground)' }}>Created by</label>
+                                        <select value={filterCreator} onChange={e => setFilterCreator(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))} className={fieldSelectCls} style={fieldSelectStyle}>
+                                            <option value="ALL">Anyone</option>
+                                            {users.map(u => <option key={u.id} value={u.id}>{getUserName(u)}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                                {visibleFilters.overdue && (
+                                    <div>
+                                        <label className={fieldLabelCls} style={{ color: 'var(--app-muted-foreground)' }}>Overdue</label>
+                                        <select value={filterOverdueOnly ? 'YES' : 'ALL'} onChange={e => setFilterOverdueOnly(e.target.value === 'YES')} className={fieldSelectCls} style={fieldSelectStyle}>
+                                            <option value="ALL">All tasks</option>
+                                            <option value="YES">Overdue only</option>
+                                        </select>
+                                    </div>
+                                )}
+                                {visibleFilters.hasLink && (
+                                    <div>
+                                        <label className={fieldLabelCls} style={{ color: 'var(--app-muted-foreground)' }}>Has source link</label>
+                                        <select value={filterHasLink} onChange={e => setFilterHasLink(e.target.value as any)} className={fieldSelectCls} style={fieldSelectStyle}>
+                                            <option value="ALL">All</option>
+                                            <option value="YES">With link</option>
+                                            <option value="NO">Without link</option>
+                                        </select>
+                                    </div>
+                                )}
+                                {visibleFilters.dateRange && (
+                                    <>
+                                        <div>
+                                            <label className={`${fieldLabelCls} flex items-center gap-1`} style={{ color: 'var(--app-muted-foreground)' }}>
+                                                <Calendar size={9} /> Start Date
+                                            </label>
+                                            <input type="date" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} className={fieldSelectCls} style={fieldSelectStyle} />
+                                        </div>
+                                        <div>
+                                            <label className={`${fieldLabelCls} flex items-center gap-1`} style={{ color: 'var(--app-muted-foreground)' }}>
+                                                <Calendar size={9} /> End Date
+                                            </label>
+                                            <input type="date" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} className={fieldSelectCls} style={fieldSelectStyle} />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Date presets row — always shown when Date range is visible */}
+                            {visibleFilters.dateRange && (
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                    {DATE_PRESETS.map(p => (
+                                        <button key={p.label} onClick={() => applyDatePreset(p.start, p.end)}
+                                                className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                                                style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
+                                            {p.label}
+                                        </button>
+                                    ))}
+                                    {customRanges.map(r => (
+                                        <span key={r.name} className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg"
+                                              style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
+                                            <button onClick={() => applyDatePreset(-r.daysBefore, r.daysAfter)} className="font-bold" title={`−${r.daysBefore} / +${r.daysAfter}`}>
+                                                {r.name}
+                                            </button>
+                                            <button onClick={() => deleteCustomRange(r.name)} title="Delete" className="opacity-70 hover:opacity-100">×</button>
+                                        </span>
+                                    ))}
+                                    <button onClick={saveCustomRange}
+                                            className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                                            style={{ background: 'transparent', color: 'var(--app-muted-foreground)', border: '1px dashed var(--app-border)' }}>
+                                        + Save range
+                                    </button>
+                                </div>
+                            )}
                             {hasActiveFilters && (
                                 <div className="mt-2 flex justify-end">
                                     <button onClick={clearFilters} className="text-[11px] font-bold" style={{ color: 'var(--app-primary)' }}>
@@ -392,7 +648,8 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                 </div>
                             )}
                         </div>
-                    )}
+                        );
+                    })()}
 
                     {/* Task list container */}
                     <div className="flex-1 min-h-0 rounded-2xl border overflow-hidden flex flex-col relative"
@@ -499,6 +756,17 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     onUpdate={() => { setShowCategoryManagement(false); reload(); }}
                 />
             )}
+
+            <TaskCustomizePanel
+                isOpen={showFilterCustomize}
+                onClose={() => setShowFilterCustomize(false)}
+                visibleFilters={visibleFilters}
+                setVisibleFilters={_setVisibleFiltersPersisted}
+                profiles={profiles}
+                setProfiles={setProfiles}
+                activeProfileId={activeProfileId}
+                setActiveProfileId={id => { setActiveProfileId(id); saveTaskActiveId(id); }}
+            />
         </div>
     );
 }

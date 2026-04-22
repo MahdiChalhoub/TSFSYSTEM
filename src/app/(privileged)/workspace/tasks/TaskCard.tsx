@@ -44,18 +44,18 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
     if (compact) {
         return (
             <div onClick={() => onEdit(t)}
-                 className="group flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-150 cursor-pointer hover:bg-app-surface/70"
+                 className="group flex items-center gap-2.5 px-3 py-3 rounded-lg border transition-all duration-150 cursor-pointer hover:bg-app-surface/70"
                  style={{
                      background: 'var(--app-surface)',
                      borderColor: 'var(--app-border)',
                      borderLeft: `3px solid ${statusColor}`,
                      opacity: isCompleted ? 0.55 : 1,
                  }}>
-                <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
                      style={{ background: `color-mix(in srgb, ${statusColor} 10%, transparent)`, color: statusColor }}>
-                    <StatusIcon size={11} />
+                    <StatusIcon size={13} />
                 </div>
-                <span className={`text-[12px] font-bold truncate flex-1 min-w-0 ${isCompleted ? 'line-through' : ''}`}
+                <span className={`text-[13px] font-bold truncate flex-1 min-w-0 ${isCompleted ? 'line-through' : ''}`}
                       style={{ color: isCompleted ? 'var(--app-muted-foreground)' : 'var(--app-foreground)' }}>
                     {t.title}
                 </span>

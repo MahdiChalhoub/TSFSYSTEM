@@ -29,6 +29,8 @@ export interface TreeMasterConfig extends MasterPageConfig {
     contentHeader?: string
     tourId?: string  // If set, renders a Tour button in the header
     treeTourId?: string  // Custom data-tour for the tree container (default: 'tree-container')
+    /** Fires on every search-input change. Use to recompute KPIs against the filtered view. */
+    onSearchChange?: (query: string) => void
 }
 
 export interface TreeMasterRenderProps {
@@ -67,6 +69,11 @@ interface TreeMasterPageProps {
  * ═══════════════════════════════════════════════════════════ */
 export function TreeMasterPage({ config, children, detailPanel, modals, aboveTree }: TreeMasterPageProps) {
     const [searchQuery, setSearchQuery] = useState('')
+
+    // Notify parent on search — used by consumers to filter their data + recompute KPIs.
+    useEffect(() => {
+        config.onSearchChange?.(searchQuery)
+    }, [searchQuery, config.onSearchChange])
     const [focusMode, setFocusMode] = useState(false)
     const [splitPanel, setSplitPanel] = useState(false)
     const [pinnedSidebar, setPinnedSidebar] = useState(false)
@@ -210,22 +217,48 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                             </div>
                         </div>
 
-                        {/* ── KPI Strip ── */}
+                        {/* ── KPI Strip — each card becomes a click-to-filter button when `filterKey` is set ── */}
                         <div data-tour="kpi-strip" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
-                            {config.kpis.map(s => (
-                                <div key={s.label}
-                                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all text-left"
-                                    style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                        style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
-                                        {s.icon}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                        <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
-                                    </div>
-                                </div>
-                            ))}
+                            {config.kpis.map(s => {
+                                const isClickable = !!s.filterKey && !!config.onKpiFilterChange
+                                const isActive = !!s.active
+                                // Tag element chooses button vs div based on whether the KPI is wired
+                                const Tag: any = isClickable ? 'button' : 'div'
+                                return (
+                                    <Tag key={s.label}
+                                        {...(isClickable ? {
+                                            type: 'button',
+                                            onClick: () => config.onKpiFilterChange?.(isActive ? null : s.filterKey!),
+                                            title: s.hint || (isActive ? 'Click to clear filter' : `Filter by ${s.label}`),
+                                        } : {})}
+                                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all text-left ${isClickable ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.99]' : ''}`}
+                                        style={isActive ? {
+                                            background: `color-mix(in srgb, ${s.color} 14%, transparent)`,
+                                            border: `1.5px solid ${s.color}`,
+                                            boxShadow: `0 2px 10px color-mix(in srgb, ${s.color} 25%, transparent)`,
+                                        } : {
+                                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                        }}>
+                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                                            style={{
+                                                background: isActive
+                                                    ? s.color
+                                                    : `color-mix(in srgb, ${s.color} 10%, transparent)`,
+                                                color: isActive ? 'white' : s.color,
+                                            }}>
+                                            {s.icon}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: isActive ? s.color : 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                            <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                                        </div>
+                                        {isClickable && isActive && (
+                                            <X size={11} className="ml-auto flex-shrink-0" style={{ color: s.color }} />
+                                        )}
+                                    </Tag>
+                                )
+                            })}
                         </div>
 
                         {/* ── Search Bar ── */}
