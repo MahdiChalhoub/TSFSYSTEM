@@ -824,7 +824,12 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 <ConfirmDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }} onConfirm={handleConfirmDelete}
                     title={`Delete "${deleteTarget?.name}"?`} description="This will permanently remove this unit. Make sure no products are using it." confirmText="Delete" variant="danger" />
             </>}
-            aboveTree={showCalc ? (<div className="animate-in slide-in-from-top-2 duration-200 px-4 pt-3"><UnitCalculator units={data} /></div>) : undefined}
+            aboveTree={showCalc ? (
+                <div className="animate-in slide-in-from-top-2 duration-200 px-4 pt-3 pb-2"
+                    style={{ borderBottom: '1px solid var(--app-border)' }}>
+                    <UnitCalculator units={data} variant="embedded" />
+                </div>
+            ) : undefined}
             detailPanel={(node, { tab, onClose, onPin }) => (
                 <UnitDetailPanel node={node} onEdit={openEditForm} onAdd={openForm} onDelete={(n: any) => setDeleteTarget(n)} allUnits={data} initialTab={tab} onClose={onClose} onPin={onPin} />
             )}

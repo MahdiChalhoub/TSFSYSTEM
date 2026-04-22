@@ -188,9 +188,9 @@ export default function LeaderTreePage() {
                     <Crown size={20} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Leader Tree</h1>
+                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Team Structure</h1>
                     <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                        Hierarchy of reporters · tasks assigned to descendants are visible to ancestors
+                        Who reports to whom · managers see their team's work
                     </p>
                 </div>
             </div>

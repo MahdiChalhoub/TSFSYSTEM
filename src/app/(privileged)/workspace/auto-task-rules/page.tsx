@@ -316,7 +316,7 @@ export default function AutoTaskRulesPage() {
                         <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
                             <Zap size={14} className="text-white" />
                         </div>
-                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Auto-Task Rules</span>
+                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Automations</span>
                         <span className="text-[10px] font-bold text-app-muted-foreground">{filteredRules.length}/{rules.length}</span>
                     </div>
                     <div className="flex-1 relative">
@@ -341,9 +341,9 @@ export default function AutoTaskRulesPage() {
                         <Zap size={20} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Auto-Task Rules</h1>
+                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Automations</h1>
                         <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                            {rules.length} Rules · Auto-create tasks from system events
+                            {rules.length} Automations · Turn business events into tracked work
                         </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -353,7 +353,7 @@ export default function AutoTaskRulesPage() {
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                         >
                             <Plus size={14} />
-                            <span className="hidden sm:inline">New Rule</span>
+                            <span className="hidden sm:inline">New Automation</span>
                         </button>
                         <button
                             onClick={() => setFocusMode(true)}
@@ -556,9 +556,9 @@ export default function AutoTaskRulesPage() {
                                         )}
                                         <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5"
                                             style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)', color: 'var(--app-success, #22c55e)' }}>
-                                            {rule.assign_to_user ? '👤 user'
-                                                : rule.assign_to_user_group ? '👥 group'
-                                                : rule.template?.assign_to_role ? '🏷 role'
+                                            {rule.assign_to_user ? '👤 person'
+                                                : rule.assign_to_user_group ? '👥 team'
+                                                : rule.template?.assign_to_role ? '⚙️ auto'
                                                 : '⚠️ unassigned'}
                                         </span>
                                     </div>
@@ -679,10 +679,10 @@ export default function AutoTaskRulesPage() {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-black text-app-foreground">
-                                        {isNew ? 'New Auto-Task Rule' : 'Edit Rule'}
+                                        {isNew ? 'New Automation' : 'Edit Automation'}
                                     </h3>
                                     <p className="text-[10px] font-bold text-app-muted-foreground">
-                                        Trigger · conditions · task
+                                        Where · when · what happens
                                     </p>
                                 </div>
                             </div>
@@ -698,9 +698,9 @@ export default function AutoTaskRulesPage() {
                         <div className="flex items-center justify-center gap-2 px-5 py-2 flex-shrink-0"
                             style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 90%, var(--app-bg))' }}>
                             {([
-                                { n: 1, label: 'Module', done: !!editingRule.module },
-                                { n: 2, label: 'Event', done: !!editingRule.trigger_event },
-                                { n: 3, label: 'Settings', done: wizardStep >= 3 && !!editingRule.name && !!editingRule.template_data?.title },
+                                { n: 1, label: 'Where', done: !!editingRule.module },
+                                { n: 2, label: 'When', done: !!editingRule.trigger_event },
+                                { n: 3, label: 'What', done: wizardStep >= 3 && !!editingRule.name && !!editingRule.template_data?.title },
                             ] as const).map((step, i) => {
                                 const isActive = wizardStep === step.n;
                                 const clickable = step.n < wizardStep || step.n === wizardStep;
@@ -730,7 +730,7 @@ export default function AutoTaskRulesPage() {
                         {wizardStep === 1 && (
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3">
                                 <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                                    Choose which part of the system this rule reacts to.
+                                    Where in your business does this happen?
                                 </p>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
                                     {MODULES.map(m => {
@@ -765,7 +765,7 @@ export default function AutoTaskRulesPage() {
                         {wizardStep === 2 && (
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3">
                                 <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                                    Pick the event that should fire this rule.
+                                    When should this automation run?
                                 </p>
                                 {(() => {
                                     const mod = moduleMeta(editingRule.module);
@@ -810,7 +810,7 @@ export default function AutoTaskRulesPage() {
                             {/* Name + Code */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
                                 <div style={{ gridColumn: 'span 2' }}>
-                                    <label className={labelCls}>Rule Name *</label>
+                                    <label className={labelCls}>Automation name *</label>
                                     <input
                                         value={editingRule.name}
                                         onChange={e => setEditingRule({ ...editingRule, name: e.target.value })}
@@ -929,7 +929,7 @@ export default function AutoTaskRulesPage() {
                                 const moduleEvents = TRIGGER_EVENTS.filter(t => t.group === mod.group);
                                 return (
                                     <div>
-                                        <label className={labelCls}>Trigger Event (in {mod.label}) *</label>
+                                        <label className={labelCls}>When this happens (in {mod.label}) *</label>
                                         <select
                                             value={editingRule.trigger_event}
                                             onChange={e => setEditingRule({ ...editingRule, trigger_event: e.target.value })}
@@ -1104,28 +1104,56 @@ export default function AutoTaskRulesPage() {
                             </div>
 
                             {/* Assignment */}
-                            <div
-                                className="p-4 rounded-xl"
+                            {(() => {
+                                // Which assignment mode is currently in effect?
+                                const mode: 'user' | 'team' | 'auto' =
+                                    editingRule.assign_to_user_id ? 'user'
+                                    : editingRule.assign_to_user_group_id ? 'team'
+                                    : 'auto';
+                                const setMode = (next: 'user' | 'team' | 'auto') => {
+                                    if (next === 'auto') {
+                                        setEditingRule({ ...editingRule, assign_to_user_id: null, assign_to_user_group_id: null });
+                                    } else if (next === 'user') {
+                                        setEditingRule({ ...editingRule, assign_to_user_group_id: null });
+                                    } else {
+                                        setEditingRule({ ...editingRule, assign_to_user_id: null });
+                                    }
+                                };
+                                return (
+                            <div className="p-4 rounded-xl"
                                 style={{
                                     background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                                }}
-                            >
-                                <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2">Assignment</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                                }}>
+                                <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2">Who should do this?</h4>
+                                <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                                    {([
+                                        { v: 'user' as const, icon: <User size={12} />, label: 'One person' },
+                                        { v: 'team' as const, icon: <Users size={12} />, label: 'A team' },
+                                        { v: 'auto' as const, icon: <Zap size={12} />, label: 'Automatically' },
+                                    ]).map(o => (
+                                        <button key={o.v} type="button"
+                                            onClick={() => setMode(o.v)}
+                                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                                            style={{
+                                                background: mode === o.v ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                                color: mode === o.v ? 'white' : 'var(--app-muted-foreground)',
+                                            }}>
+                                            {o.icon} {o.label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {mode === 'user' && (
                                     <div>
-                                        <label className={`${labelCls} flex items-center gap-1`}>
-                                            <User size={10} /> Specific User
-                                        </label>
-                                        <select
-                                            value={editingRule.assign_to_user_id ?? ''}
+                                        <label className={labelCls}>Choose the person</label>
+                                        <select value={editingRule.assign_to_user_id ?? ''}
                                             onChange={e => setEditingRule({
                                                 ...editingRule,
                                                 assign_to_user_id: e.target.value ? Number(e.target.value) : null,
                                             })}
-                                            className={inputCls}
-                                        >
-                                            <option value="">— none —</option>
+                                            className={inputCls}>
+                                            <option value="">— pick a person —</option>
                                             {users.map((u: any) => (
                                                 <option key={u.id} value={u.id}>
                                                     {u.first_name} {u.last_name} ({u.username})
@@ -1133,53 +1161,55 @@ export default function AutoTaskRulesPage() {
                                             ))}
                                         </select>
                                     </div>
+                                )}
+
+                                {mode === 'team' && (
                                     <div>
-                                        <label className={`${labelCls} flex items-center gap-1`}>
-                                            <Users size={10} /> Role Group
-                                        </label>
-                                        <select
-                                            value={editingRule.assign_to_role_id ?? ''}
-                                            onChange={e => setEditingRule({
-                                                ...editingRule,
-                                                assign_to_role_id: e.target.value ? Number(e.target.value) : null,
-                                            })}
-                                            className={inputCls}
-                                        >
-                                            <option value="">— none —</option>
-                                            {roles.map((r: any) => (
-                                                <option key={r.id} value={r.id}>{r.name}</option>
-                                            ))}
-                                        </select>
-                                        <p className="text-[10px] font-medium text-app-muted-foreground mt-1">User overrides Role.</p>
-                                    </div>
-                                    <div>
-                                        <label className={`${labelCls} flex items-center gap-1`}>
-                                            <Users size={10} /> User Group (Team)
-                                        </label>
-                                        <select
-                                            value={editingRule.assign_to_user_group_id ?? ''}
+                                        <label className={labelCls}>Choose the team</label>
+                                        <select value={editingRule.assign_to_user_group_id ?? ''}
                                             onChange={e => setEditingRule({
                                                 ...editingRule,
                                                 assign_to_user_group_id: e.target.value ? Number(e.target.value) : null,
                                             })}
-                                            className={inputCls}
-                                        >
-                                            <option value="">— none —</option>
+                                            className={inputCls}>
+                                            <option value="">— pick a team —</option>
                                             {userGroups.map((g: any) => (
                                                 <option key={g.id} value={g.id}>
-                                                    {g.name} ({g.member_count ?? 0} members)
+                                                    {g.name} · {g.member_count ?? 0} {(g.member_count ?? 0) === 1 ? 'member' : 'members'}
                                                 </option>
                                             ))}
                                         </select>
-                                        <p className="text-[10px] font-medium text-app-muted-foreground mt-1">Fans out — one task per member.</p>
+                                        <p className="text-[10px] font-medium text-app-muted-foreground mt-1">Every member of the team gets the task.</p>
                                     </div>
-                                </div>
+                                )}
+
+                                {mode === 'auto' && (
+                                    <div>
+                                        <label className={labelCls}>Fallback role (advanced)</label>
+                                        <select value={editingRule.assign_to_role_id ?? ''}
+                                            onChange={e => setEditingRule({
+                                                ...editingRule,
+                                                assign_to_role_id: e.target.value ? Number(e.target.value) : null,
+                                            })}
+                                            className={inputCls}>
+                                            <option value="">— anyone with the right permission —</option>
+                                            {roles.map((r: any) => (
+                                                <option key={r.id} value={r.id}>{r.name}</option>
+                                            ))}
+                                        </select>
+                                        <p className="text-[10px] font-medium text-app-muted-foreground mt-1">
+                                            The system picks who gets the task based on roles. Leave blank to let it auto-route.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
+                                );
+                            })()}
 
                             {/* Active toggle */}
                             <div className="flex items-center justify-between px-1">
                                 <div>
-                                    <p className="text-[12px] font-bold text-app-foreground">Rule Active</p>
+                                    <p className="text-[12px] font-bold text-app-foreground">Active</p>
                                     <p className="text-[10px] font-medium text-app-muted-foreground">Disable to pause without deleting.</p>
                                 </div>
                                 <button

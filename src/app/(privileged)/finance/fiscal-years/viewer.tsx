@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Calendar, Plus, Zap, Bell, Loader2, X, ExternalLink, Check, Pencil } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
+import { reopenPeriod } from '@/app/actions/finance/fiscal-year'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import PeriodEditor from './period-editor'
 import { WizardModal } from './_components/WizardModal'
@@ -160,10 +162,10 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                                             <span className="text-[12px] font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{r.name}</span>
                                         </div>
                                         <div className="text-[10px] font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            {r.assign_to_user ? 'Routed to a specific user'
-                                                : r.assign_to_user_group ? 'Routed to a user group'
-                                                : r.template?.assign_to_role ? 'Routed to a role'
-                                                : 'No assignee configured yet'}
+                                            {r.assign_to_user ? 'Goes to one person'
+                                                : r.assign_to_user_group ? 'Goes to a team'
+                                                : r.template?.assign_to_role ? 'Routed automatically'
+                                                : 'No-one assigned yet'}
                                         </div>
                                     </div>
                                     <button onClick={() => toggleRule(r)} disabled={togglingId === r.id}
@@ -209,6 +211,74 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
 export default function FiscalYearsViewer({ initialYears }: { initialYears: Record<string, any>[] }) {
     const fy = useFiscalYears(initialYears)
     const [showTaskSettings, setShowTaskSettings] = useState(false)
+
+    /** Deep-link from a task: /finance/fiscal-years?from_task=<taskId>&period=<periodId>
+     *  Finds the period, expands its year, scrolls to it, offers one-click reopen,
+     *  and closes the source task on success. One-shot — runs once per mount. */
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const pathname = usePathname()
+    const deepLinkHandled = useRef(false)
+    const [pendingReopen, setPendingReopen] = useState<{ periodId: number; periodName: string; yearName: string; fromTask: number | null } | null>(null)
+
+    useEffect(() => {
+        if (deepLinkHandled.current) return
+        const fromTaskRaw = searchParams?.get('from_task')
+        const periodRaw = searchParams?.get('period')
+        if (!periodRaw) return
+        const periodId = Number(periodRaw)
+        if (!Number.isFinite(periodId)) return
+
+        const year = initialYears.find((y: any) =>
+            (y.periods || []).some((p: any) => Number(p.id) === periodId)
+        )
+        if (!year) return
+        const period = (year.periods || []).find((p: any) => Number(p.id) === periodId)
+        if (!period) return
+        deepLinkHandled.current = true
+
+        // Expand the year panel so the period is visible.
+        fy.setExpandedYear(year.id)
+
+        // Scroll to the row after the panel expands.
+        setTimeout(() => {
+            const node = document.querySelector(`[data-period-id="${periodId}"]`)
+            if (node) (node as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 150)
+
+        // Only offer reopen for periods that are actually closed/locked.
+        const isClosed = period.status && period.status !== 'OPEN'
+        if (isClosed) {
+            setPendingReopen({
+                periodId,
+                periodName: period.name || `Period #${periodId}`,
+                yearName: year.name || '',
+                fromTask: fromTaskRaw ? Number(fromTaskRaw) : null,
+            })
+        }
+    }, [searchParams, initialYears, fy])
+
+    const confirmReopen = async () => {
+        if (!pendingReopen) return
+        const { periodId, periodName, fromTask } = pendingReopen
+        const res = await reopenPeriod(periodId)
+        if (res.success) {
+            toast.success(`${periodName} reopened`)
+            // If we came from a task, close it automatically — this is the
+            // reusable "task follows the user through the action" hook.
+            if (fromTask) {
+                try {
+                    await erpFetch(`tasks/${fromTask}/complete/`, { method: 'POST' })
+                } catch { /* non-blocking */ }
+            }
+            fy.refreshData()
+        } else {
+            toast.error(res.error || `Failed to reopen ${periodName}`)
+        }
+        setPendingReopen(null)
+        // Strip the query params so a browser back/refresh doesn't re-trigger.
+        try { router.replace(pathname) } catch { /* noop */ }
+    }
 
     return (
         <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300 overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
@@ -322,6 +392,16 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             )}
 
             {showTaskSettings && <TaskSettingsModal onClose={() => setShowTaskSettings(false)} />}
+
+            <ConfirmDialog open={pendingReopen !== null}
+                onOpenChange={o => { if (!o) setPendingReopen(null) }}
+                onConfirm={confirmReopen}
+                title={pendingReopen ? `Reopen ${pendingReopen.periodName}?` : ''}
+                description={pendingReopen
+                    ? `You came from a task linked to this ${pendingReopen.yearName} period. Reopen it now${pendingReopen.fromTask ? ' — the linked task will be marked done' : ''}?`
+                    : ''}
+                confirmText="Reopen Period"
+                variant="warning" />
         </div>
     )
 }

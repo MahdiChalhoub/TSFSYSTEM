@@ -153,9 +153,9 @@ export default function UserGroupsPage() {
                     <Users size={20} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">User Groups</h1>
+                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Teams</h1>
                     <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                        {groups.length} Ad-hoc teams · Assignable from auto-task rules
+                        {groups.length} Teams · Assign work to a group of people at once
                     </p>
                 </div>
                 <button

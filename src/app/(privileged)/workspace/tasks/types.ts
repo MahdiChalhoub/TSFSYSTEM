@@ -34,39 +34,55 @@ export interface Task {
 
 /** Maps a task's related_object_type to an in-app deep link so the assignee
  * can jump from the task straight to the source record (invoice, product,
- * fiscal period, etc.). Returns null for unknown types. */
+ * fiscal period, etc.).
+ *
+ * Every link carries `?from_task=<task_id>` so the destination page can
+ * 1) highlight the target record,
+ * 2) open the relevant action modal (e.g. the Reopen Period confirm),
+ * 3) call `POST /api/tasks/{id}/complete/` after the native action succeeds,
+ *    auto-closing the task without the user needing a separate click.
+ *
+ * Returns null for unknown types. */
 export function resolveTaskSourceLink(t: Task): { href: string; label: string } | null {
     const type = (t.related_object_type || '').toLowerCase()
     const id = t.related_object_id
     if (!type) return null
+    const q = (extra: Record<string, string | number | undefined>): string => {
+        const parts: string[] = []
+        parts.push(`from_task=${t.id}`)
+        for (const [k, v] of Object.entries(extra)) {
+            if (v !== undefined && v !== null && v !== '') parts.push(`${k}=${encodeURIComponent(String(v))}`)
+        }
+        return '?' + parts.join('&')
+    }
     switch (type) {
         case 'fiscalperiod':
         case 'fiscal_period':
-            return { href: '/finance/fiscal-years', label: 'Open Fiscal Year' }
+            return { href: `/finance/fiscal-years${q({ period: id })}`, label: 'Open Fiscal Year' }
         case 'fiscalyear':
         case 'fiscal_year':
-            return { href: '/finance/fiscal-years', label: 'Open Fiscal Year' }
+            return { href: `/finance/fiscal-years${q({ year: id })}`, label: 'Open Fiscal Year' }
         case 'journalentry':
         case 'journal_entry':
-            return { href: id ? `/finance/ledger?focus=${id}` : '/finance/ledger', label: 'Open Journal Entry' }
+            return { href: `/finance/ledger${q({ focus: id })}`, label: 'Open Journal Entry' }
         case 'invoice':
-            return { href: id ? `/finance/invoices/${id}` : '/finance/invoices', label: 'Open Invoice' }
+            return { href: id ? `/finance/invoices/${id}${q({})}` : `/finance/invoices${q({})}`, label: 'Open Invoice' }
         case 'product':
-            return { href: id ? `/inventory/products/${id}` : '/inventory/products', label: 'Open Product' }
+            return { href: id ? `/inventory/products/${id}${q({})}` : `/inventory/products${q({})}`, label: 'Open Product' }
         case 'purchaseorder':
         case 'purchase_order':
-            return { href: id ? `/purchases/${id}` : '/purchases', label: 'Open Purchase Order' }
+            return { href: id ? `/purchases/${id}${q({})}` : `/purchases${q({})}`, label: 'Open Purchase Order' }
         case 'customer':
         case 'contact':
-            return { href: id ? `/crm/contacts/${id}` : '/crm/contacts', label: 'Open Customer' }
+            return { href: id ? `/crm/contacts/${id}${q({})}` : `/crm/contacts${q({})}`, label: 'Open Customer' }
         case 'supplier':
-            return { href: id ? `/crm/suppliers/${id}` : '/crm/suppliers', label: 'Open Supplier' }
+            return { href: id ? `/crm/suppliers/${id}${q({})}` : `/crm/suppliers${q({})}`, label: 'Open Supplier' }
         case 'stockledger':
         case 'stock_ledger':
-            return { href: '/inventory/stock-matrix', label: 'Open Stock' }
+            return { href: `/inventory/stock-matrix${q({})}`, label: 'Open Stock' }
         case 'order':
         case 'sale':
-            return { href: id ? `/sales/orders/${id}` : '/sales/orders', label: 'Open Order' }
+            return { href: id ? `/sales/orders/${id}${q({})}` : `/sales/orders${q({})}`, label: 'Open Order' }
         default:
             return null
     }

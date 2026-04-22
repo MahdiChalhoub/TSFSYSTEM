@@ -16,9 +16,9 @@ export const workspaceInProgress: MenuItem = {
     stage: 'in-progress',
     children: [
         { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
-        { title: 'Auto Task Rules', path: '/workspace/auto-task-rules', icon: Zap },
-        { title: 'User Groups', path: '/workspace/user-groups', icon: Users },
-        { title: 'Leader Tree', path: '/workspace/leader-tree', icon: Crown },
+        { title: 'Automations', path: '/workspace/auto-task-rules', icon: Zap },
+        { title: 'Teams', path: '/workspace/user-groups', icon: Users },
+        { title: 'Team Structure', path: '/workspace/leader-tree', icon: Crown },
     ],
 };
 

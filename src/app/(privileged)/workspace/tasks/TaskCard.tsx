@@ -3,8 +3,6 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Clock, Calendar, Star, User, FolderKanban, ExternalLink, Check, CheckCheck } from 'lucide-react';
-import { erpFetch } from '@/lib/erp-api';
-import { toast } from 'sonner';
 import type { Task, UserItem } from './types';
 import { STATUS_ICONS, STATUS_COLOR, PRIORITY_COLOR, getUserName, resolveTaskSourceLink } from './types';
 
@@ -14,22 +12,6 @@ interface TaskCardProps {
     compact?: boolean;
     onEdit: (task: Task) => void;
     onQuickComplete: (taskId: number, currentStatus: string, e: React.MouseEvent) => void;
-}
-
-/** Resolve & Open — flips the task to COMPLETED (tracking who completed it)
- *  and navigates to the source object in one click. Idempotent for already-
- *  completed tasks: just navigates. */
-async function resolveAndOpen(task: Task, href: string, router: ReturnType<typeof useRouter>) {
-    const alreadyDone = task.status === 'COMPLETED';
-    if (!alreadyDone) {
-        try {
-            await erpFetch(`tasks/${task.id}/resolve-and-complete/`, { method: 'POST' });
-            toast.success('Task marked done and opened');
-        } catch (e: unknown) {
-            toast.error(e instanceof Error ? e.message : 'Could not mark done — opening anyway');
-        }
-    }
-    router.push(href);
 }
 
 /** Smart relative date formatting */
@@ -108,17 +90,18 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                     </span>
                 )}
                 {sourceLink && (
-                    <button onClick={e => { e.stopPropagation(); resolveAndOpen(t, sourceLink.href, router); }}
-                          title={`${isCompleted ? sourceLink.label : `Resolve & ${sourceLink.label}`}${t.related_object_label ? ` — ${t.related_object_label}` : ''}`}
+                    <Link href={sourceLink.href}
+                          onClick={e => e.stopPropagation()}
+                          title={t.related_object_label ? `${sourceLink.label} — ${t.related_object_label}` : sourceLink.label}
                           className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all flex-shrink-0"
                           style={{
                               background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                               color: 'var(--app-primary)',
                               border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
                           }}>
-                        {isCompleted ? <ExternalLink size={10} /> : <CheckCheck size={10} />}
-                        <span className="hidden md:inline">{isCompleted ? sourceLink.label.replace(/^Open /, '') : 'Resolve'}</span>
-                    </button>
+                        <ExternalLink size={10} />
+                        <span className="hidden md:inline">{sourceLink.label.replace(/^Open /, '')}</span>
+                    </Link>
                 )}
                 <button onClick={e => onQuickComplete(t.id, t.status, e)}
                         title={isCompleted ? 'Reopen' : 'Mark done'}
@@ -221,21 +204,18 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
 
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                     {sourceLink && (
-                        <button onClick={e => { e.stopPropagation(); resolveAndOpen(t, sourceLink.href, router); }}
-                              title={t.related_object_label ? `${isCompleted ? sourceLink.label : `Resolve & ${sourceLink.label}`} — ${t.related_object_label}` : (isCompleted ? sourceLink.label : `Resolve & ${sourceLink.label}`)}
+                        <Link href={sourceLink.href}
+                              onClick={e => e.stopPropagation()}
+                              title={t.related_object_label ? `${sourceLink.label} — ${t.related_object_label}` : sourceLink.label}
                               className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
-                              style={isCompleted ? {
-                                  background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                              style={{
+                                  background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                                   color: 'var(--app-primary)',
                                   border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
-                              } : {
-                                  background: 'var(--app-primary)',
-                                  color: 'white',
-                                  boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 30%, transparent)',
                               }}>
-                            {isCompleted ? <ExternalLink size={11} /> : <CheckCheck size={11} />}
-                            <span className="hidden sm:inline">{isCompleted ? sourceLink.label : `Resolve & ${sourceLink.label}`}</span>
-                        </button>
+                            <ExternalLink size={11} />
+                            <span className="hidden sm:inline">{sourceLink.label}</span>
+                        </Link>
                     )}
                     <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                         <span className="text-[10px] font-bold hidden sm:inline"
