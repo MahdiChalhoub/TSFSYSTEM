@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from 'react'
 import {
     ChevronRight, Plus, Folder, FolderOpen,
-    Pencil, Trash2, Bookmark, AlertCircle, Copy, Archive, RotateCcw,
+    Pencil, Trash2, AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CategoryNode } from './types'
@@ -15,15 +15,11 @@ import type { CategoryNode } from './types'
 export const CategoryRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
     onViewProducts, onViewBrands, onViewAttributes, onSelect,
-    onDuplicate, onArchive, onRestore,
 }: {
     node: CategoryNode; level: number; searchQuery: string; forceExpanded?: boolean;
     onEdit: (n: CategoryNode) => void; onAdd: (parentId?: number) => void; onDelete: (n: CategoryNode) => void;
     onViewProducts: (n: CategoryNode) => void; onViewBrands: (n: CategoryNode) => void; onViewAttributes: (n: CategoryNode) => void;
     onSelect?: (n: CategoryNode) => void;
-    onDuplicate?: (n: CategoryNode) => void;
-    onArchive?: (n: CategoryNode) => void;
-    onRestore?: (n: CategoryNode) => void;
 }) => {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
@@ -191,56 +187,21 @@ export const CategoryRow = ({
 
                 {/* Actions — appear on hover */}
                 <div className="flex items-center justify-end gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    {/* If archived — show Restore instead of Edit */}
-                    {node.is_archived ? (
-                        <>
-                            {onRestore && (
-                                <button onClick={(e) => { e.stopPropagation(); onRestore(node) }}
-                                    className="p-1.5 hover:bg-app-border/40 rounded-lg transition-colors"
-                                    style={{ color: 'var(--app-success)' }}
-                                    title="Restore from archive">
-                                    <RotateCcw size={12} />
-                                </button>
-                            )}
-                            <button
-                                onClick={(e) => { e.stopPropagation(); if (isParent) { toast.error('Delete sub-categories first.'); return; } onDelete(node); }}
-                                className="p-1.5 hover:bg-app-border/40 rounded-lg transition-colors"
-                                style={{ color: isParent ? 'var(--app-border)' : 'var(--app-muted-foreground)', cursor: isParent ? 'not-allowed' : 'pointer' }}
-                                title={isParent ? 'Delete sub-categories first' : 'Delete permanently'}>
-                                {isParent ? <AlertCircle size={12} /> : <Trash2 size={12} />}
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <button onClick={(e) => { e.stopPropagation(); onEdit(node) }}
-                                className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Edit">
-                                <Pencil size={12} />
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); onAdd(node.id) }}
-                                className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-primary transition-colors" title="Add sub-category">
-                                <Plus size={13} />
-                            </button>
-                            {onDuplicate && (
-                                <button onClick={(e) => { e.stopPropagation(); onDuplicate(node) }}
-                                    className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-info transition-colors" title="Duplicate">
-                                    <Copy size={12} />
-                                </button>
-                            )}
-                            {onArchive && (
-                                <button onClick={(e) => { e.stopPropagation(); onArchive(node) }}
-                                    className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-warning transition-colors" title="Archive (soft-delete)">
-                                    <Archive size={12} />
-                                </button>
-                            )}
-                            <button
-                                onClick={(e) => { e.stopPropagation(); if (isParent) { toast.error('Delete sub-categories first.'); return; } onDelete(node); }}
-                                className="p-1.5 hover:bg-app-border/40 rounded-lg transition-colors"
-                                style={{ color: isParent ? 'var(--app-border)' : 'var(--app-muted-foreground)', cursor: isParent ? 'not-allowed' : 'pointer' }}
-                                title={isParent ? 'Delete sub-categories first' : 'Delete'}>
-                                {isParent ? <AlertCircle size={12} /> : <Trash2 size={12} />}
-                            </button>
-                        </>
-                    )}
+                    <button onClick={(e) => { e.stopPropagation(); onEdit(node) }}
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Edit">
+                        <Pencil size={12} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); onAdd(node.id) }}
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-primary transition-colors" title="Add sub-category">
+                        <Plus size={13} />
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); if (isParent) { toast.error('Delete sub-categories first.'); return; } onDelete(node); }}
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg transition-colors"
+                        style={{ color: isParent ? 'var(--app-border)' : 'var(--app-muted-foreground)', cursor: isParent ? 'not-allowed' : 'pointer' }}
+                        title={isParent ? 'Delete sub-categories first' : 'Delete'}>
+                        {isParent ? <AlertCircle size={12} /> : <Trash2 size={12} />}
+                    </button>
                 </div>
             </div>
 
@@ -255,9 +216,6 @@ export const CategoryRow = ({
                             onEdit={onEdit}
                             onAdd={onAdd}
                             onDelete={onDelete}
-                            onDuplicate={onDuplicate}
-                            onArchive={onArchive}
-                            onRestore={onRestore}
                             onViewProducts={onViewProducts}
                             onViewBrands={onViewBrands}
                             onViewAttributes={onViewAttributes}
