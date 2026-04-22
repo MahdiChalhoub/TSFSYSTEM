@@ -8,7 +8,7 @@ import {
     Plus, Trash2, Edit3, Check, X, Zap, Filter, User, Users,
     DollarSign, MapPin, CreditCard, Search, Loader2, Maximize2, Minimize2,
     ChevronRight, ChevronDown, Package, ShoppingCart, Landmark, Heart,
-    Receipt, UserCircle, Settings2, ArrowLeft, ArrowRight, Sparkles,
+    Receipt, UserCircle, Settings2, ArrowLeft, ArrowRight, Sparkles, Star,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -1220,6 +1220,22 @@ export default function AutoTaskRulesPage() {
                                         </label>
                                     </div>
                                     <div style={{ gridColumn: '1 / -1' }}>
+                                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                                            <input type="checkbox"
+                                                checked={!!(editingRule.conditions as any)?.remind_until_done}
+                                                onChange={e => setEditingRule({
+                                                    ...editingRule,
+                                                    conditions: { ...editingRule.conditions, remind_until_done: e.target.checked } as any,
+                                                })} />
+                                            <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                                🔁 Keep reminding until the task is done
+                                            </span>
+                                        </label>
+                                        <p className="text-tp-xs font-medium mt-1 ml-6" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            The popup will keep returning on every page refresh — assignee can only snooze, not permanently dismiss.
+                                        </p>
+                                    </div>
+                                    <div style={{ gridColumn: '1 / -1' }}>
                                         <label className={labelCls}>Checklist items (optional — one per line)</label>
                                         <textarea
                                             value={((editingRule.conditions as any)?.checklist_items || []).join('\n')}
@@ -1241,6 +1257,7 @@ export default function AutoTaskRulesPage() {
                                         <label className={labelCls}>Est. minutes to complete</label>
                                         <input
                                             type="number"
+                                            min={1}
                                             value={editingRule.template_data.estimated_minutes}
                                             onChange={e => setEditingRule({
                                                 ...editingRule,
@@ -1248,6 +1265,46 @@ export default function AutoTaskRulesPage() {
                                             })}
                                             className={inputCls}
                                         />
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>
+                                            <Star size={11} className="inline mb-0.5 mr-1" style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                            Points (effort/reward)
+                                        </label>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            {[1, 2, 3, 5, 8, 13].map(n => (
+                                                <button key={n} type="button"
+                                                        onClick={() => setEditingRule({
+                                                            ...editingRule,
+                                                            template_data: { ...editingRule.template_data, default_points: n },
+                                                        })}
+                                                        className="w-9 h-9 rounded-lg text-tp-sm font-bold transition-all"
+                                                        style={{
+                                                            background: editingRule.template_data.default_points === n
+                                                                ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 15%, transparent)'
+                                                                : 'var(--app-bg)',
+                                                            border: `1px solid ${editingRule.template_data.default_points === n
+                                                                ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 40%, transparent)'
+                                                                : 'var(--app-border)'}`,
+                                                            color: editingRule.template_data.default_points === n
+                                                                ? 'var(--app-warning, #f59e0b)'
+                                                                : 'var(--app-foreground)',
+                                                        }}>
+                                                    {n}
+                                                </button>
+                                            ))}
+                                            <input type="number" min={1} max={99}
+                                                   value={editingRule.template_data.default_points}
+                                                   onChange={e => setEditingRule({
+                                                       ...editingRule,
+                                                       template_data: { ...editingRule.template_data, default_points: Math.max(1, Number(e.target.value) || 1) },
+                                                   })}
+                                                   className="w-16 px-2 py-1.5 text-tp-sm font-bold rounded-lg outline-none text-center"
+                                                   style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                        </div>
+                                        <p className="text-tp-xs font-medium mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            How much this task counts toward weekly goal / leaderboard.
+                                        </p>
                                     </div>
                                 </div>
                             </div>

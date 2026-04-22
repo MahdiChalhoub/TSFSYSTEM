@@ -23,7 +23,7 @@ import {
     Loader2, RefreshCcw, Flame, Clock, Calendar, Archive, CheckCircle2,
     UserX, Zap, User as UserIcon, ArrowRight, AlertTriangle, Users,
     Building2, Trophy, TrendingUp, TrendingDown, Minus, Flag, Target,
-    Activity, Sparkles,
+    Activity, Sparkles, LayoutDashboard,
 } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
 
@@ -353,33 +353,33 @@ export default function RichOverviewPage() {
     /* ─────────────────────────────── render ─────────────────────────────── */
 
     return (
-        <div className="flex flex-col h-full" style={{ background: 'var(--app-bg)' }}>
-            <header className="flex-shrink-0 px-5 md:px-8 py-3 flex items-center gap-4 flex-wrap border-b"
-                    style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
-                <div className="flex items-baseline gap-3">
-                    <h1 className="text-tp-2xl md:text-tp-3xl font-bold leading-none" style={{ color: 'var(--app-foreground)' }}>
+        <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
+            <div className="flex items-center gap-3 mb-3 flex-shrink-0 px-4 md:px-6 pt-4 md:pt-6">
+                <div className="page-header-icon bg-app-primary">
+                    <LayoutDashboard size={20} className="text-white" />
+                </div>
+                <div className="min-w-0">
+                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
                         {tab === 'me' ? `Hi, ${me?.first_name || me?.username || 'there'}`
-                         : tab === 'team' ? 'Team'
-                         : 'Company'}
+                         : tab === 'team' ? 'Team Dashboard'
+                         : 'Company Dashboard'}
                     </h1>
-                    <span className="text-tp-xs hidden md:inline" style={{ color: 'var(--app-muted-foreground)' }}>
-                        {today.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                    </span>
+                    <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
+                        {today.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                    </p>
                 </div>
 
                 {availableTabs.length > 1 && (
-                    <div className="flex items-center gap-1 mx-auto p-1 rounded-xl"
-                         style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                    <div className="flex items-center gap-1 mx-auto p-1 rounded-xl border border-app-border bg-app-surface/50">
                         {availableTabs.map(t => {
                             const active = tab === t.key
                             return (
                                 <button key={t.key} onClick={() => { setTab(t.key); setTabManuallyChosen(true) }}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-sm font-bold transition-all"
-                                        style={{
-                                            background: active ? 'var(--app-surface)' : 'transparent',
-                                            color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                            boxShadow: active ? '0 1px 3px color-mix(in srgb, #000 8%, transparent)' : 'none',
-                                        }}>
+                                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-tp-xs md:text-tp-sm font-bold transition-all ${
+                                            active
+                                                ? 'text-app-primary bg-app-surface shadow-sm'
+                                                : 'text-app-muted-foreground hover:text-app-foreground'
+                                        }`}>
                                     <t.Icon size={13} /> {t.label}
                                 </button>
                             )
@@ -388,26 +388,27 @@ export default function RichOverviewPage() {
                 )}
 
                 <button onClick={() => load(true)} disabled={refreshing}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-tp-sm font-bold transition-all disabled:opacity-50"
-                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}>
-                    {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
-                    Refresh
+                        className="toolbar-btn text-app-muted-foreground disabled:opacity-50">
+                    {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={13} />}
+                    <span className="hidden sm:inline">Refresh</span>
                 </button>
-            </header>
+                <style jsx>{`
+                    .toolbar-btn { display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; font-weight: 700; border: 1px solid var(--app-border); padding: 0.375rem 0.625rem; border-radius: 0.75rem; transition: all 0.2s; }
+                    .toolbar-btn:hover { background: var(--app-surface); color: var(--app-foreground); }
+                `}</style>
+            </div>
 
             {loading ? (
                 <div className="flex-1 flex items-center justify-center">
                     <Loader2 size={24} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
                 </div>
             ) : (
-                <div className="flex-1 min-h-0 overflow-hidden px-5 md:px-8 py-4"
+                <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6 pb-4 md:pb-6"
                      style={{
                          display: 'grid',
-                         gridTemplateRows: tab === 'me' ? 'auto auto minmax(0, 1fr)'
-                             : tab === 'team' ? 'auto auto minmax(0, 1fr)'
-                             : 'auto auto minmax(0, 1fr)',
+                         gridTemplateRows: 'auto auto minmax(0, 1fr)',
                          alignContent: 'start',
-                         gap: '12px',
+                         gap: '10px',
                      }}>
 
                     {/* ═════════════════ ME TAB ═════════════════ */}

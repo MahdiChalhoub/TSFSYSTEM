@@ -327,39 +327,72 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                         </select>
                     </div>
 
-                    {/* Per-value mapping */}
+                    {/* Per-value mapping — chip pickers instead of <select> so there's
+                        no native dropdown latency inside the drawer + backdrop-blur stack. */}
                     {migrateLoading ? (
                         <div className="flex items-center justify-center py-4"><Loader2 size={16} className="animate-spin" style={{ color: 'var(--app-primary)' }} /></div>
                     ) : migratePreview?.source_values?.length > 0 ? (
-                        <div className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar mb-2">
-                            {migratePreview.source_values.map((sv: any) => (
-                                <div key={sv.id} className="flex items-center gap-2 p-1.5 rounded-lg"
-                                    style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-tp-xs font-bold text-app-foreground truncate">{sv.name}</span>
-                                            {sv.product_count > 0 && (
-                                                <span className="text-tp-xxs font-bold px-1 py-0.5 rounded-full flex-shrink-0"
-                                                    style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
-                                                    <Package size={8} className="inline mr-0.5" />{sv.product_count}
+                        <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar mb-2">
+                            {migratePreview.source_values.map((sv: any) => {
+                                const picked = migrateMapping[sv.id]
+                                const setPick = (v: number | '') =>
+                                    setMigrateMapping(prev => ({ ...prev, [sv.id]: v }))
+                                const dropActive = picked === '' || picked === undefined
+                                return (
+                                    <div key={sv.id} className="p-1.5 rounded-lg"
+                                        style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-tp-xs font-bold text-app-foreground truncate">{sv.name}</span>
+                                                    {sv.product_count > 0 && (
+                                                        <span className="text-tp-xxs font-bold px-1 py-0.5 rounded-full flex-shrink-0"
+                                                            style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                                            <Package size={8} className="inline mr-0.5" />{sv.product_count}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {sv.code && <span className="text-tp-xxs font-mono text-app-muted-foreground">{sv.code}</span>}
+                                            </div>
+                                            <ArrowRight size={12} className="text-app-muted-foreground flex-shrink-0" />
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            <button type="button" onClick={() => setPick('')}
+                                                className="text-tp-xxs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full transition-all"
+                                                style={dropActive ? {
+                                                    background: 'var(--app-error)', color: 'white',
+                                                } : {
+                                                    background: 'color-mix(in srgb, var(--app-error) 8%, transparent)',
+                                                    color: 'var(--app-error)',
+                                                    border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)',
+                                                }}>
+                                                Drop
+                                            </button>
+                                            {(migratePreview?.target_values || []).map((tv: any) => {
+                                                const on = picked === tv.id
+                                                return (
+                                                    <button type="button" key={tv.id} onClick={() => setPick(tv.id)}
+                                                        className="text-tp-xxs font-bold px-2 py-0.5 rounded-full transition-all"
+                                                        style={on ? {
+                                                            background: 'var(--app-primary)', color: 'white',
+                                                        } : {
+                                                            background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                                                            color: 'var(--app-primary)',
+                                                            border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                                        }}>
+                                                        {tv.name}
+                                                    </button>
+                                                )
+                                            })}
+                                            {!migratePreview?.target_values?.length && (
+                                                <span className="text-tp-xxs text-app-muted-foreground italic px-1">
+                                                    pick a target group first
                                                 </span>
                                             )}
                                         </div>
-                                        {sv.code && <span className="text-tp-xxs font-mono text-app-muted-foreground">{sv.code}</span>}
                                     </div>
-                                    <ArrowRight size={12} className="text-app-muted-foreground flex-shrink-0" />
-                                    <select value={migrateMapping[sv.id] ?? ''}
-                                        onChange={e => setMigrateMapping(prev => ({ ...prev, [sv.id]: e.target.value ? Number(e.target.value) : '' }))}
-                                        disabled={!migratePreview?.target_values?.length}
-                                        className="text-tp-xs font-bold px-1.5 py-1 rounded-lg outline-none flex-1 min-w-0"
-                                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
-                                        <option value="">— drop —</option>
-                                        {(migratePreview?.target_values || []).map((tv: any) => (
-                                            <option key={tv.id} value={tv.id}>{tv.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     ) : (
                         <p className="text-tp-xs text-app-muted-foreground py-2">No products currently use values from this group — a direct unlink will succeed.</p>

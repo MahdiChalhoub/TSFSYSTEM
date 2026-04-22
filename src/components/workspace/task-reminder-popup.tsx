@@ -25,7 +25,7 @@ import type { Task } from '@/app/(privileged)/workspace/tasks/types'
 
 type Reminder = Pick<Task,
     'id' | 'title' | 'priority' | 'due_date' | 'related_object_type' | 'related_object_id' | 'related_object_label' | 'category_name' | 'source'
-> & { reminder_at?: string | null }
+> & { reminder_at?: string | null; remind_until_done?: boolean }
 
 const DISMISSED_KEY = 'tsf_dismissed_reminders_v1'
 const SNOOZE_KEY = 'tsf_snoozed_reminders_v1'
@@ -137,11 +137,19 @@ export function TaskReminderPopup() {
                                     </div>
                                 )}
                             </div>
-                            <button onClick={() => dismiss(r.id)} title="Dismiss"
-                                    className="p-1 rounded-lg hover:bg-app-border/50 transition-all"
-                                    style={{ color: 'var(--app-muted-foreground)' }}>
-                                <X size={13} />
-                            </button>
+                            {r.remind_until_done ? (
+                                <button onClick={() => snooze(r.id)} title="Snooze 10 min — this reminder keeps coming back until the task is done"
+                                        className="p-1 rounded-lg hover:bg-app-border/50 transition-all"
+                                        style={{ color: pColor }}>
+                                    <Clock size={13} />
+                                </button>
+                            ) : (
+                                <button onClick={() => dismiss(r.id)} title="Dismiss"
+                                        className="p-1 rounded-lg hover:bg-app-border/50 transition-all"
+                                        style={{ color: 'var(--app-muted-foreground)' }}>
+                                    <X size={13} />
+                                </button>
+                            )}
                         </div>
                         <div className="px-3 py-2.5">
                             <div className="text-[12px] font-bold mb-1 break-words" style={{ color: 'var(--app-foreground)' }}>
@@ -154,13 +162,13 @@ export function TaskReminderPopup() {
                             )}
                             <div className="flex items-center gap-1.5 flex-wrap">
                                 {link && (
-                                    <Link href={link.href} onClick={() => dismiss(r.id)}
+                                    <Link href={link.href} onClick={() => snooze(r.id)}
                                           className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
                                           style={{ background: pColor, color: 'white' }}>
                                         <ExternalLink size={10} /> {link.label.replace(/^Open /, '')}
                                     </Link>
                                 )}
-                                <Link href={`/workspace/tasks`} onClick={() => dismiss(r.id)}
+                                <Link href={`/workspace/tasks?focus=${r.id}`} onClick={() => snooze(r.id)}
                                       className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
                                       style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                     Open task

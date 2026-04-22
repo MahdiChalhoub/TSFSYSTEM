@@ -984,27 +984,48 @@ class CategoryViewSet(TenantModelViewSet):
         explicit_brands = {}
         for bid, cid in Brand.categories.through.objects.filter(category__organization=organization).values_list('brand_id', 'category_id'):
             explicit_brands.setdefault(cid, set()).add(bid)
-            
+
         explicit_parfums = {}
         for pid, cid in Parfum.categories.through.objects.filter(category__organization=organization).values_list('parfum_id', 'category_id'):
             explicit_parfums.setdefault(cid, set()).add(pid)
+
+        # ── Attribute groups: union of auto-derived (via product attribute_values)
+        # + explicit M2M links. Matches the /linked_attributes/ endpoint so the
+        # row badge and detail-tab badge report the same number. ──
+        from apps.inventory.models import ProductAttribute
+        # Auto-derived: for each (product, leaf value) pair, the leaf's parent
+        # is the attribute group; the product's category scopes it.
+        auto_attrs = {}  # {cat_id: set(group_ids)}
+        for cat_id, group_id in Product.attribute_values.through.objects.filter(
+            product__organization=organization,
+            product__category__isnull=False,
+            productattribute__parent_id__isnull=False,
+        ).values_list('product__category_id', 'productattribute__parent_id'):
+            if group_id is not None:
+                auto_attrs.setdefault(cat_id, set()).add(group_id)
+        # Explicit: category.attributes M2M (pre-registered groups)
+        explicit_attrs = {}
+        for aid, cid in ProductAttribute.categories.through.objects.filter(
+            productattribute__organization=organization,
+            productattribute__parent__isnull=True,
+        ).values_list('productattribute_id', 'category_id'):
+            explicit_attrs.setdefault(cid, set()).add(aid)
 
         # 4. Construct response data
         data = []
         for cat in categories:
             cat_data = CategorySerializer(cat).data
-            
+
             # Combine sets for union count
             all_brands = derived_brands.get(cat.id, set()) | explicit_brands.get(cat.id, set())
             all_parfums = derived_parfums.get(cat.id, set()) | explicit_parfums.get(cat.id, set())
-            
+            all_attrs = auto_attrs.get(cat.id, set()) | explicit_attrs.get(cat.id, set())
+
             cat_data["product_count"] = prod_counts.get(cat.id, 0)
             cat_data["brand_count"] = len(all_brands)
             cat_data["parfum_count"] = len(all_parfums)
-            
-            # Attribute count - fallback to explicit M2M if product-level attributes are complex
-            cat_data["attribute_count"] = cat.attributes.count() if hasattr(cat, 'attributes') else 0
-            
+            cat_data["attribute_count"] = len(all_attrs)
+
             data.append(cat_data)
 
         return Response(data)

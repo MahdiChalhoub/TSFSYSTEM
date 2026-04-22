@@ -331,7 +331,7 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
             reminder_at__isnull=False,
             reminder_at__lte=now,
         ).exclude(status__in=['COMPLETED', 'CANCELLED'])
-        qs = qs.order_by('-reminder_at')[:50]
+        qs = qs.select_related('auto_rule', 'category').order_by('-reminder_at')[:50]
         data = [{
             'id': t.id,
             'title': t.title,
@@ -343,6 +343,12 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
             'related_object_label': t.related_object_label,
             'category_name': t.category.name if t.category else None,
             'source': t.source,
+            # When the rule asked for "keep reminding until done", the popup
+            # should not allow permanent dismissal — only snooze.
+            'remind_until_done': bool(
+                t.auto_rule and isinstance(t.auto_rule.conditions, dict)
+                and t.auto_rule.conditions.get('remind_until_done')
+            ),
         } for t in qs]
         return Response({'results': data, 'count': len(data)})
 
