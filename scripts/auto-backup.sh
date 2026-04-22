@@ -40,6 +40,16 @@ git -c user.name="TSF Agent" \
 HASH=$(git rev-parse --short HEAD)
 log "OK: Committed ${CHANGED} file(s) as ${HASH}. ${STAT}"
 
+# ── Push to origin/main ───────────────────────────────────
+# Push after every successful commit so GitHub stays in sync with
+# the local auto-backup stream. If the remote is unreachable we log
+# and continue — a failed push must never block future backups.
+if git push --quiet origin HEAD:main 2>>"$LOG"; then
+    log "PUSH: ${HASH} → origin/main"
+else
+    log "PUSH FAIL: ${HASH} stayed local; will retry on next run."
+fi
+
 # ── Health check: restart frontend if stuck ───────────────
 FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 8 http://127.0.0.1:3000/ 2>/dev/null || echo "000")
 if [[ "$FRONTEND_STATUS" == "000" || "$FRONTEND_STATUS" == "502" || "$FRONTEND_STATUS" == "504" ]]; then
