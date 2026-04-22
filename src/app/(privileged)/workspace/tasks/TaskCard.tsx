@@ -1,7 +1,10 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Clock, Calendar, Star, User, FolderKanban, ExternalLink, Check } from 'lucide-react';
+import { Clock, Calendar, Star, User, FolderKanban, ExternalLink, Check, CheckCheck } from 'lucide-react';
+import { erpFetch } from '@/lib/erp-api';
+import { toast } from 'sonner';
 import type { Task, UserItem } from './types';
 import { STATUS_ICONS, STATUS_COLOR, PRIORITY_COLOR, getUserName, resolveTaskSourceLink } from './types';
 
@@ -11,6 +14,22 @@ interface TaskCardProps {
     compact?: boolean;
     onEdit: (task: Task) => void;
     onQuickComplete: (taskId: number, currentStatus: string, e: React.MouseEvent) => void;
+}
+
+/** Resolve & Open — flips the task to COMPLETED (tracking who completed it)
+ *  and navigates to the source object in one click. Idempotent for already-
+ *  completed tasks: just navigates. */
+async function resolveAndOpen(task: Task, href: string, router: ReturnType<typeof useRouter>) {
+    const alreadyDone = task.status === 'COMPLETED';
+    if (!alreadyDone) {
+        try {
+            await erpFetch(`tasks/${task.id}/resolve-and-complete/`, { method: 'POST' });
+            toast.success('Task marked done and opened');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Could not mark done — opening anyway');
+        }
+    }
+    router.push(href);
 }
 
 /** Smart relative date formatting */
@@ -31,6 +50,7 @@ function formatDueDate(dateStr: string): string {
 }
 
 export default function TaskCard({ task: t, users, compact = false, onEdit, onQuickComplete }: TaskCardProps) {
+    const router = useRouter();
     const StatusIcon = STATUS_ICONS[t.status] ?? Clock;
     const statusColor = STATUS_COLOR[t.status] ?? 'var(--app-muted-foreground)';
     const priorityColor = PRIORITY_COLOR[t.priority] ?? 'var(--app-muted-foreground)';
@@ -40,6 +60,8 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
     // Resolve assigned user from users array
     const assignedUser = t.assigned_to ? users.find(u => u.id === t.assigned_to) : null;
     const assignedName = assignedUser ? getUserName(assignedUser) : t.assigned_to_name;
+    const completedUser = t.completed_by ? users.find(u => u.id === t.completed_by) : null;
+    const completedByName = completedUser ? getUserName(completedUser) : t.completed_by_name;
 
     if (compact) {
         return (
@@ -86,16 +108,17 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                     </span>
                 )}
                 {sourceLink && (
-                    <Link href={sourceLink.href}
-                          onClick={e => e.stopPropagation()}
-                          title={t.related_object_label ? `${sourceLink.label} — ${t.related_object_label}` : sourceLink.label}
-                          className="flex items-center p-1 rounded-lg transition-all flex-shrink-0"
+                    <button onClick={e => { e.stopPropagation(); resolveAndOpen(t, sourceLink.href, router); }}
+                          title={`${isCompleted ? sourceLink.label : `Resolve & ${sourceLink.label}`}${t.related_object_label ? ` — ${t.related_object_label}` : ''}`}
+                          className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all flex-shrink-0"
                           style={{
-                              background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                              background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                               color: 'var(--app-primary)',
+                              border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
                           }}>
-                        <ExternalLink size={11} />
-                    </Link>
+                        {isCompleted ? <ExternalLink size={10} /> : <CheckCheck size={10} />}
+                        <span className="hidden md:inline">{isCompleted ? sourceLink.label.replace(/^Open /, '') : 'Resolve'}</span>
+                    </button>
                 )}
                 <button onClick={e => onQuickComplete(t.id, t.status, e)}
                         title={isCompleted ? 'Reopen' : 'Mark done'}
@@ -184,22 +207,35 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                             <Star size={10} /> {t.points}
                         </span>
                     )}
+                    {isCompleted && completedByName && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold"
+                              style={{ color: 'var(--app-success, #22c55e)' }}
+                              title={t.completed_at ? `Resolved ${new Date(t.completed_at).toLocaleString()}` : undefined}>
+                            <CheckCheck size={10} /> {completedByName}
+                            {t.completed_at && (
+                                <span className="opacity-70">· {new Date(t.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                            )}
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                     {sourceLink && (
-                        <Link href={sourceLink.href}
-                              onClick={e => e.stopPropagation()}
-                              title={t.related_object_label ? `${sourceLink.label} — ${t.related_object_label}` : sourceLink.label}
-                              className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
-                              style={{
+                        <button onClick={e => { e.stopPropagation(); resolveAndOpen(t, sourceLink.href, router); }}
+                              title={t.related_object_label ? `${isCompleted ? sourceLink.label : `Resolve & ${sourceLink.label}`} — ${t.related_object_label}` : (isCompleted ? sourceLink.label : `Resolve & ${sourceLink.label}`)}
+                              className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
+                              style={isCompleted ? {
                                   background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
                                   color: 'var(--app-primary)',
-                                  border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                  border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                              } : {
+                                  background: 'var(--app-primary)',
+                                  color: 'white',
+                                  boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 30%, transparent)',
                               }}>
-                            <ExternalLink size={10} />
-                            <span className="hidden sm:inline">{sourceLink.label.replace(/^Open /, '')}</span>
-                        </Link>
+                            {isCompleted ? <ExternalLink size={11} /> : <CheckCheck size={11} />}
+                            <span className="hidden sm:inline">{isCompleted ? sourceLink.label : `Resolve & ${sourceLink.label}`}</span>
+                        </button>
                     )}
                     <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                         <span className="text-[10px] font-bold hidden sm:inline"

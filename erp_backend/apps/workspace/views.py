@@ -191,6 +191,22 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
             assigned_by=self.request.user,
         )
 
+    def perform_update(self, serializer):
+        """Auto-stamp completed_by / completed_at when a task is marked
+        COMPLETED, and clear them when the task is reopened. This is the
+        audit trail requested by users — whoever flips the toggle or
+        resolves the source action is recorded against the task."""
+        prev_status = serializer.instance.status if serializer.instance else None
+        new_status = serializer.validated_data.get('status', prev_status)
+        extra: dict = {}
+        if new_status == 'COMPLETED' and prev_status != 'COMPLETED':
+            extra['completed_by'] = self.request.user
+            extra['completed_at'] = timezone.now()
+        elif prev_status == 'COMPLETED' and new_status != 'COMPLETED':
+            extra['completed_by'] = None
+            extra['completed_at'] = None
+        serializer.save(**extra)
+
     @action(detail=True, methods=['post'])
     def start(self, request, pk=None):
         task = self.get_object()
@@ -200,8 +216,30 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def complete(self, request, pk=None):
         task = self.get_object()
-        task.complete()
+        task.status = 'COMPLETED'
+        task.completed_at = timezone.now()
+        task.completed_by = request.user
+        task.save(update_fields=['status', 'completed_at', 'completed_by', 'updated_at'])
         return Response({'status': 'completed'})
+
+    @action(detail=True, methods=['post'], url_path='resolve-and-complete')
+    def resolve_and_complete(self, request, pk=None):
+        """Called when the user clicks 'Resolve' on a task's deep-link
+        button — marks the task done and returns the source object's URL
+        so the client can navigate. Tracks who completed it."""
+        task = self.get_object()
+        task.status = 'COMPLETED'
+        task.completed_at = timezone.now()
+        task.completed_by = request.user
+        task.save(update_fields=['status', 'completed_at', 'completed_by', 'updated_at'])
+        return Response({
+            'status': 'completed',
+            'completed_by': request.user.id,
+            'completed_at': task.completed_at,
+            'related_object_type': task.related_object_type,
+            'related_object_id': task.related_object_id,
+            'related_object_label': task.related_object_label,
+        })
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):

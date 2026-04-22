@@ -24,6 +24,9 @@ export interface Task {
     related_object_label?: string;
     related_object_type?: string;
     related_object_id?: number;
+    completed_at?: string | null;
+    completed_by?: number | null;
+    completed_by_name?: string | null;
     is_recurring?: boolean;
     recurrence_days?: number;
     created_at: string;

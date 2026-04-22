@@ -3,29 +3,61 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowRightLeft, Calculator, Scale, Ruler, Info } from 'lucide-react';
 
-type Unit = {
+// The backend serializes units as snake_case (`base_unit`, `conversion_factor`)
+// but some callers pass camelCase. Tolerate both: these helpers look up
+// either form and normalize on read.
+type RawUnit = {
     id: number;
     name: string;
     code: string;
-    conversionFactor: number;
-    baseUnitId: number | null;
+    // snake_case (what the API actually returns)
+    base_unit?: number | null;
+    conversion_factor?: number | string;
+    // camelCase fallback (older client-side normalizations)
+    baseUnitId?: number | null;
+    conversionFactor?: number | string;
+};
+type Unit = RawUnit;
+
+const getBaseUnitId = (u: RawUnit | undefined): number | null => {
+    if (!u) return null;
+    const v = u.base_unit ?? u.baseUnitId;
+    return v == null ? null : Number(v);
+};
+const getFactor = (u: RawUnit | undefined): number => {
+    if (!u) return 1;
+    const v = u.conversion_factor ?? u.conversionFactor ?? 1;
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : 1;
 };
 
-export function UnitCalculator({ units = [], defaultUnit }: { units?: Unit[]; defaultUnit?: any }) {
+export function UnitCalculator({
+    units = [],
+    defaultUnit,
+    variant = 'card',
+}: {
+    units?: Unit[];
+    defaultUnit?: any;
+    /** 'card' = self-contained card with header (default).
+     *  'embedded' = no outer card or header — blends into its host container
+     *  (e.g. the detail panel's Calculator tab, which already provides a card). */
+    variant?: 'card' | 'embedded';
+}) {
     const [quantity, setQuantity] = useState<number>(1);
     const [fromUnitId, setFromUnitId] = useState<string>('');
     const [toUnitId, setToUnitId] = useState<string>('');
     const [result, setResult] = useState<string>('—');
 
-    // Returns { rootId, totalFactor } — walks the base_unit chain to the absolute root
+    // Returns { rootId, totalFactor } — walks the base_unit chain to the absolute root.
     const getRootInfo = useCallback((unitId: number): { rootId: number; totalFactor: number } => {
         const unit = units.find(u => u.id === unitId);
         if (!unit) return { rootId: -1, totalFactor: 0 };
-        if (!unit.baseUnitId) return { rootId: unit.id, totalFactor: 1 };
-        const parentInfo = getRootInfo(unit.baseUnitId);
+        const parentId = getBaseUnitId(unit);
+        if (parentId == null) return { rootId: unit.id, totalFactor: 1 };
+        const parentInfo = getRootInfo(parentId);
         return {
             rootId: parentInfo.rootId,
-            totalFactor: Number(unit.conversionFactor) * parentInfo.totalFactor,
+            totalFactor: getFactor(unit) * parentInfo.totalFactor,
         };
     }, [units]);
 
@@ -36,8 +68,8 @@ export function UnitCalculator({ units = [], defaultUnit }: { units?: Unit[]; de
                 setFromUnitId(defaultUnit.id.toString());
                 return;
             }
-            const root = units.find(u => !u.baseUnitId);
-            const child = units.find(u => u.baseUnitId === root?.id);
+            const root = units.find(u => getBaseUnitId(u) == null);
+            const child = units.find(u => root && getBaseUnitId(u) === root.id);
             setFromUnitId((child || root || units[0]).id.toString());
         }
     }, [units, fromUnitId, defaultUnit]);
@@ -54,7 +86,7 @@ export function UnitCalculator({ units = [], defaultUnit }: { units?: Unit[]; de
         if (compatibleUnits.length > 0) {
             const isCurrentValid = compatibleUnits.some(u => u.id.toString() === toUnitId);
             if (!isCurrentValid || !toUnitId) {
-                const root = compatibleUnits.find(u => !u.baseUnitId);
+                const root = compatibleUnits.find(u => getBaseUnitId(u) == null);
                 setToUnitId((root || compatibleUnits[0]).id.toString());
             }
         } else {
@@ -107,48 +139,57 @@ export function UnitCalculator({ units = [], defaultUnit }: { units?: Unit[]; de
 
     const isSelfConversion = compatibleUnits.length <= 1;
     const hasMeaningfulResult = fromUnit && toUnit && !Number.isNaN(total);
+    const isEmbedded = variant === 'embedded';
 
-    return (
-        <div className="space-y-3">
-            {/* ══ Hero Equation Card ══════════════════════════════════════════
-              * Reads left-to-right like a real formula:
-              *    [Qty][From]  ⇄  [To]  =  RESULT
-              * The result lives INSIDE the card, inline — no separate panel.
-              */}
+    // Wrapper that disappears when embedded (host provides the card).
+    const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) =>
+        isEmbedded ? (
+            <>{children}</>
+        ) : (
             <div className="rounded-2xl overflow-hidden"
                 style={{
                     background: 'var(--app-surface)',
                     border: '1px solid var(--app-border)',
                     boxShadow: '0 1px 3px color-mix(in srgb, var(--app-foreground) 4%, transparent)',
                 }}>
-                {/* Compact header — matches Packages exactly */}
-                <div className="flex items-center justify-between px-4 py-2.5"
-                    style={{
-                        background: 'color-mix(in srgb, var(--app-primary) 5%, var(--app-surface))',
-                        borderBottom: '1px solid var(--app-border)',
-                    }}>
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
-                                color: 'var(--app-primary)',
-                            }}>
-                            <Calculator size={13} />
-                        </div>
-                        <div>
-                            <div className="text-[13px] font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
-                                Conversion Calculator
+                {children}
+            </div>
+        );
+
+    return (
+        <div className="space-y-3">
+            {/* ══ Equation block — wrapper disappears in `embedded` mode ══════════ */}
+            <Shell>
+                {/* Header — skipped in embedded mode (host already titled the section) */}
+                {!isEmbedded && (
+                    <div className="flex items-center justify-between px-4 py-2.5"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-primary) 5%, var(--app-surface))',
+                            borderBottom: '1px solid var(--app-border)',
+                        }}>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                                    color: 'var(--app-primary)',
+                                }}>
+                                <Calculator size={13} />
                             </div>
-                            <div className="text-[9px] font-black uppercase tracking-widest"
-                                style={{ color: 'var(--app-muted-foreground)' }}>
-                                {compatibleUnits.length} Compatible Unit{compatibleUnits.length !== 1 ? 's' : ''}
+                            <div>
+                                <div className="text-[13px] font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                                    Conversion Calculator
+                                </div>
+                                <div className="text-[9px] font-black uppercase tracking-widest"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                    {compatibleUnits.length} Compatible Unit{compatibleUnits.length !== 1 ? 's' : ''}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Equation Body — compact, same font scale as Packages form */}
-                <div className="p-3">
+                <div className={isEmbedded ? '' : 'p-3'}>
                     <div className="flex items-center flex-wrap gap-1.5">
                         {/* Quantity */}
                         <input type="number" min="0" value={quantity}
@@ -226,7 +267,7 @@ export function UnitCalculator({ units = [], defaultUnit }: { units?: Unit[]; de
                         </div>
                     )}
                 </div>
-            </div>
+            </Shell>
 
             {/* ── Hint strip — self-conversion edge case ── */}
             {isSelfConversion && (

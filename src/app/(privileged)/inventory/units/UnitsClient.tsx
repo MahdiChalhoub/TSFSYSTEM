@@ -612,7 +612,8 @@ function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, 
                 {/* ─── CALCULATOR TAB ─── */}
                 {activeTab === 'calculator' && (
                     <div className="p-3 animate-in fade-in duration-150">
-                        <UnitCalculator units={allUnits} defaultUnit={node} />
+                        {/* Embedded — no nested card. Just the equation row + hint. */}
+                        <UnitCalculator units={allUnits} defaultUnit={node} variant="embedded" />
                     </div>
                 )}
             </div>

@@ -113,6 +113,7 @@ class TaskSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True, default=None)
     assigned_by_name = serializers.SerializerMethodField()
     assigned_to_name = serializers.SerializerMethodField()
+    completed_by_name = serializers.SerializerMethodField()
     is_overdue = serializers.BooleanField(read_only=True)
     subtask_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
@@ -121,7 +122,13 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
-        read_only_fields = ('organization', 'assigned_by', 'completed_at')
+        read_only_fields = ('organization', 'assigned_by', 'completed_at', 'completed_by', 'completed_by_name')
+
+    def get_completed_by_name(self, obj):
+        u = getattr(obj, 'completed_by', None)
+        if not u:
+            return None
+        return (u.get_full_name() or '').strip() or u.email or u.username
 
     def get_assigned_by_name(self, obj):
         if obj.assigned_by:
@@ -145,6 +152,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True, default=None)
     assigned_to_name = serializers.SerializerMethodField()
     assigned_by_name = serializers.SerializerMethodField()
+    completed_by_name = serializers.SerializerMethodField()
     is_overdue = serializers.BooleanField(read_only=True)
     subtask_count = serializers.SerializerMethodField()
 
@@ -153,9 +161,17 @@ class TaskListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'status', 'priority', 'source', 'category', 'category_name',
             'assigned_to', 'assigned_to_name', 'assigned_by', 'assigned_by_name',
+            'completed_by', 'completed_by_name', 'completed_at',
             'points', 'due_date', 'is_overdue',
-            'subtask_count', 'related_object_label', 'created_at',
+            'subtask_count', 'related_object_label', 'related_object_type', 'related_object_id',
+            'created_at',
         ]
+
+    def get_completed_by_name(self, obj):
+        u = getattr(obj, 'completed_by', None)
+        if not u:
+            return None
+        return (u.get_full_name() or '').strip() or u.email or u.username
 
     def get_assigned_to_name(self, obj):
         if obj.assigned_to:

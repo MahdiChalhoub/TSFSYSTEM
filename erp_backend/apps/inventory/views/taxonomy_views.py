@@ -1540,10 +1540,28 @@ class CategoryViewSet(TenantModelViewSet):
             })
 
         # ── Execute Move with Reconciliation ──
-        auto_link_brands = reconciliation.get('auto_link_brands', [])
-        reassign_brands = reconciliation.get('reassign_brands', {})  # {old_brand_id: new_brand_id}
-        auto_link_attrs = reconciliation.get('auto_link_attributes', [])
-        reassign_attrs = reconciliation.get('reassign_attributes', {})  # {old_attr_id: new_attr_id}
+        # When the client sends NO reconciliation key (not even an empty object),
+        # treat it as "resolve by auto-linking everything" — the ergonomic default.
+        # This fixes the ugly "Unresolved brand conflicts: X" error when a caller
+        # (e.g. the bulk source_category_id migrate path) forgets to pass it.
+        # If the client sends reconciliation={} (explicit empty), we also auto-link
+        # to keep the UX friendly; the UI can override by passing explicit choices.
+        reconciliation_is_explicit = bool(
+            reconciliation.get('auto_link_brands')
+            or reconciliation.get('reassign_brands')
+            or reconciliation.get('auto_link_attributes')
+            or reconciliation.get('reassign_attributes')
+        )
+        if not reconciliation_is_explicit:
+            auto_link_brands = list(brand_conflicts)
+            auto_link_attrs = list(attr_conflicts)
+            reassign_brands = {}
+            reassign_attrs = {}
+        else:
+            auto_link_brands = reconciliation.get('auto_link_brands', [])
+            reassign_brands = reconciliation.get('reassign_brands', {})  # {old_brand_id: new_brand_id}
+            auto_link_attrs = reconciliation.get('auto_link_attributes', [])
+            reassign_attrs = reconciliation.get('reassign_attributes', {})  # {old_attr_id: new_attr_id}
 
         # Validate: every conflicting brand must be either auto-linked or reassigned
         if brand_conflicts:
