@@ -649,7 +649,14 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 setDeleteConflict({ conflict: (result as any).conflict, source })
                 return
             }
-            toast.error(result?.message || 'Failed to delete')
+            // Rich error toast with an action hint when available
+            const msg = result?.message || 'Failed to delete'
+            const hint = (result as any)?.actionHint
+            if (hint) {
+                toast.error(msg, { description: hint, duration: 8000 })
+            } else {
+                toast.error(msg, { duration: 6000 })
+            }
         })
     }
 

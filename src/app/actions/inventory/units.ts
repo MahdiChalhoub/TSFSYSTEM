@@ -46,17 +46,35 @@ export async function updateUnit(id: string | number, data: any) {
  * dialog and re-call with { force: true } on confirmation.
  */
 export async function deleteUnit(id: string | number, options: { force?: boolean } = {}) {
- try {
- const url = options.force ? `/units/${id}/?force=1` : `/units/${id}/`
- await erpFetch(url, { method: 'DELETE' })
- revalidatePath('/inventory/units')
- return { success: true }
- } catch (e: any) {
- if (e?.status === 409 && e?.data) {
- return { success: false, conflict: e.data, message: e.data.message || 'Cannot delete: products assigned' }
- }
- return { success: false, message: e?.message || 'Failed to delete unit' }
- }
+    try {
+        const url = options.force ? `/units/${id}/?force=1` : `/units/${id}/`
+        await erpFetch(url, { method: 'DELETE' })
+        revalidatePath('/inventory/units')
+        return { success: true }
+    } catch (e: any) {
+        // 409 = conflict (products assigned) — caller shows the migrate dialog
+        if (e?.status === 409 && e?.data) {
+            return {
+                success: false,
+                conflict: e.data,
+                message: e.data.message || 'Cannot delete: products are assigned to this unit',
+            }
+        }
+        // 500 / generic server error — try to give the user something actionable
+        const raw = e?.message || ''
+        const isGenericServer = e?.status === 500 || raw.includes('Server error')
+        if (isGenericServer) {
+            return {
+                success: false,
+                message: 'The server refused to delete this unit. This usually means products, packages, or derived units are still linked to it. Migrate them first, then try again.',
+                actionHint: 'Open the unit → Products tab → move them to another unit, then delete.',
+            }
+        }
+        if (e?.status === 403 || e?.status === 401) {
+            return { success: false, message: 'You don\'t have permission to delete units.' }
+        }
+        return { success: false, message: e?.message || 'Failed to delete unit' }
+    }
 }
 
 /**

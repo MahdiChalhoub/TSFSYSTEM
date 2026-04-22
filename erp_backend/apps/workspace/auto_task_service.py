@@ -194,6 +194,7 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
                     task = Task.objects.create(
                         organization=organization,
                         category=auto_category,
+                        reminder_at=timezone.now(),
                         title=f"🤖 {tmpl.name}" if tmpl.name else f"Auto: {rule.get_trigger_event_display()}",
                         description="\n".join(description_lines),
                         priority=priority,
@@ -223,6 +224,7 @@ def _fire_auto_tasks_inner(organization, trigger_event, context):
                     task = Task.objects.create(
                         organization=organization,
                         category=auto_category,
+                        reminder_at=timezone.now(),
                         title=f"🤖 {tmpl.name}" if tmpl.name else f"Auto: {rule.get_trigger_event_display()}",
                         description="\n".join(description_lines),
                         priority=priority,

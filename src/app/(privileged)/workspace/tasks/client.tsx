@@ -4,7 +4,7 @@ import { useState, useTransition, useRef, useEffect, useCallback } from 'react';
 import {
     Plus, Search, Play, CheckCircle2, Clock, AlertTriangle,
     ClipboardList, Loader2, Maximize2, Minimize2,
-    FolderKanban, ChevronRight, Filter, Menu, Calendar, Settings2,
+    FolderKanban, ChevronRight, Filter, Menu, Calendar, Settings2, Bell,
 } from 'lucide-react';
 
 import type { Task, Category, UserItem, Dashboard, CategorySelection, StatusFilter } from './types';
@@ -309,6 +309,12 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('tsf:test-reminder', { detail: { title: '🧪 Test reminder — pretend a rule just fired', priority: 'URGENT', related_object_label: 'Click "Open task" to land on the Task Board' } }))}
+                        title="Fire a simulated reminder popup (this browser only)"
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all"
+                        style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
+                        <Bell size={13} /> Test Reminder
+                    </button>
                     <div className="flex items-center gap-0.5 p-0.5 rounded-xl border border-app-border"
                         style={{ background: 'color-mix(in srgb, var(--app-bg) 40%, transparent)' }}
                         title="Switch between list and card view">

@@ -95,20 +95,37 @@ export async function reparentCategory(id: number, newParentId: number | null) {
 }
 
 export async function deleteCategory(id: number, options: { force?: boolean } = {}) {
- try {
- const url = options.force
- ? `inventory/categories/${id}/?force=1`
- : `inventory/categories/${id}/`;
- await erpFetch(url, { method: 'DELETE' });
- revalidatePath('/inventory/categories');
- return { success: true };
- } catch (e: any) {
- // Surface backend 409 guard payload so the UI can offer Migrate / Force
- if (e?.status === 409 && e?.data) {
- return { success: false, conflict: e.data, message: e.data.message || 'Cannot delete: products or sub-categories assigned' };
- }
- return { success: false, message: e?.message || 'Failed to delete category' };
- }
+    try {
+        const url = options.force
+            ? `inventory/categories/${id}/?force=1`
+            : `inventory/categories/${id}/`;
+        await erpFetch(url, { method: 'DELETE' });
+        revalidatePath('/inventory/categories');
+        return { success: true };
+    } catch (e: any) {
+        // 409 = conflict (products or sub-categories) — caller shows migrate dialog
+        if (e?.status === 409 && e?.data) {
+            return {
+                success: false,
+                conflict: e.data,
+                message: e.data.message || 'Cannot delete: products or sub-categories assigned',
+            };
+        }
+        // 500 / generic server error — turn into actionable guidance
+        const raw = e?.message || '';
+        const isGenericServer = e?.status === 500 || raw.includes('Server error');
+        if (isGenericServer) {
+            return {
+                success: false,
+                message: 'The server refused to delete this category. Products or sub-categories are likely still linked.',
+                actionHint: 'Open the category → Products tab → move products to another category, and re-parent any sub-categories, then delete.',
+            };
+        }
+        if (e?.status === 403 || e?.status === 401) {
+            return { success: false, message: "You don't have permission to delete categories." };
+        }
+        return { success: false, message: e?.message || 'Failed to delete category' };
+    }
 }
 
 export async function getCategoryWithCounts() {

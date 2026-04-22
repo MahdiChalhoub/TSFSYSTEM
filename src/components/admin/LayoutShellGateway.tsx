@@ -21,6 +21,7 @@ import { Sidebar } from '@/components/admin/Sidebar'
 import { TopHeader } from '@/components/admin/TopHeader'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { PeriodWarningBanner } from '@/components/finance/period-warning-banner'
+import { TaskReminderPopup } from '@/components/workspace/task-reminder-popup'
 import { MobileAdminShell } from '@/components/mobile/shell/MobileAdminShell'
 
 interface Props {
@@ -61,6 +62,7 @@ export function LayoutShellGateway(props: Props) {
                 currentSlug={props.currentSlug}>
                 <PeriodWarningBanner isSuperuser={!!props.user?.is_superuser} />
                 {props.children}
+                <TaskReminderPopup />
             </MobileAdminShell>
         )
     }
@@ -80,6 +82,7 @@ export function LayoutShellGateway(props: Props) {
                 <PeriodWarningBanner isSuperuser={!!props.user?.is_superuser} />
                 <AdminShell>{props.children}</AdminShell>
             </div>
+            <TaskReminderPopup />
         </div>
     )
 }

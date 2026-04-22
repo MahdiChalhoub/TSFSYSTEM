@@ -23,10 +23,57 @@ from rest_framework.exceptions import (
     Throttled,
 )
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.utils import IntegrityError
 from django.http import Http404
 from django.conf import settings
+from rest_framework.response import Response
+from rest_framework import status as drf_status
+import re
 
 logger = logging.getLogger('erp')
+
+
+def _integrity_error_message(raw: str) -> str:
+    """Turn a raw Postgres IntegrityError into a friendly one-liner.
+
+    Examples handled:
+      - unique_violation on UNIQUE(name, tenant_id):
+          Key (name, tenant_id)=(test, xxx) already exists.
+        → "A record named 'test' already exists. Pick a different name."
+      - foreign_key_violation
+      - NOT NULL violation
+    """
+    # UNIQUE constraint violations (most common — duplicate name/code)
+    m = re.search(r'Key \(([^)]+)\)=\(([^)]+)\) already exists', raw)
+    if m:
+        fields = [f.strip() for f in m.group(1).split(',')]
+        values = [v.strip() for v in m.group(2).split(',')]
+        # Drop the tenant_id pair — it's internal
+        pairs = [(f, v) for f, v in zip(fields, values) if f != 'tenant_id']
+        if pairs:
+            if len(pairs) == 1:
+                f, v = pairs[0]
+                return f'A record with {f} "{v}" already exists. Pick a different {f} or edit the existing one.'
+            label = ', '.join(f'{f}="{v}"' for f, v in pairs)
+            return f'A record with {label} already exists. Pick different values or edit the existing one.'
+        return 'That record already exists.'
+
+    # Foreign key violations
+    if 'foreign key constraint' in raw.lower() or 'violates foreign key' in raw.lower():
+        m = re.search(r'table "([^"]+)"', raw)
+        table = m.group(1) if m else 'another record'
+        return f'Cannot complete — this record is referenced by {table}. Remove the references first.'
+
+    # NOT NULL violations
+    m = re.search(r'null value in column "([^"]+)"', raw)
+    if m:
+        return f'The "{m.group(1)}" field is required.'
+
+    # Check constraint
+    if 'check constraint' in raw.lower():
+        return 'A value is out of the allowed range. Please review your input.'
+
+    return 'The database rejected this operation because it conflicts with existing data.'
 
 # Map DRF exception classes to machine-readable codes
 ERROR_CODES = {
@@ -56,6 +103,24 @@ def tsf_exception_handler(exc, context):
     # Convert Http404 to DRF NotFound
     if isinstance(exc, Http404):
         exc = NotFound(detail=str(exc) or 'Resource not found.')
+
+    # Convert DB IntegrityError (unique/FK violations) to a friendly 409 conflict
+    # instead of a bare 500. Parses Postgres DETAIL lines like:
+    #   Key (name, tenant_id)=(test, xxx) already exists.
+    if isinstance(exc, IntegrityError):
+        raw = str(exc)
+        friendly = _integrity_error_message(raw)
+        response = Response(
+            {
+                'status': 'error',
+                'code': 'CONFLICT',
+                'message': friendly,
+                'request_id': str(uuid.uuid4())[:8],
+            },
+            status=drf_status.HTTP_409_CONFLICT,
+        )
+        logger.warning('API IntegrityError → 409: %s', raw[:300])
+        return response
 
     # Let DRF handle the response generation
     response = exception_handler(exc, context)

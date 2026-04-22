@@ -225,6 +225,37 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
         )
         return Response(TaskCommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['get'], url_path='my-reminders')
+    def my_reminders(self, request):
+        """Active reminders for the current user — powers the global reminder
+        popup that follows the user across every page. Returns tasks where
+        `reminder_at` has already passed, task is still open, and the user
+        hasn't dismissed the reminder locally.
+
+        The client is expected to track dismissed IDs in localStorage; this
+        endpoint intentionally returns everything past its reminder timestamp
+        so a page reload can surface un-dismissed reminders from any device."""
+        now = timezone.now()
+        qs = self.get_queryset().filter(
+            assigned_to=request.user,
+            reminder_at__isnull=False,
+            reminder_at__lte=now,
+        ).exclude(status__in=['COMPLETED', 'CANCELLED'])
+        qs = qs.order_by('-reminder_at')[:50]
+        data = [{
+            'id': t.id,
+            'title': t.title,
+            'priority': t.priority,
+            'due_date': t.due_date,
+            'reminder_at': t.reminder_at,
+            'related_object_type': t.related_object_type,
+            'related_object_id': t.related_object_id,
+            'related_object_label': t.related_object_label,
+            'category_name': t.category.name if t.category else None,
+            'source': t.source,
+        } for t in qs]
+        return Response({'results': data, 'count': len(data)})
+
     @action(detail=False, methods=['get'])
     def dashboard(self, request):
         """Task dashboard KPIs for the current user."""

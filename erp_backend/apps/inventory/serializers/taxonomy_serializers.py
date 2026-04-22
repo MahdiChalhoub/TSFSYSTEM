@@ -42,11 +42,28 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = [
-            'id', 'name', 'code', 'short_name', 'parent', 
+            'id', 'name', 'code', 'short_name', 'parent',
             'level', 'full_path', 'product_count',
             'brand_count', 'parfum_count', 'organization'
         ]
         read_only_fields = ['organization', 'level', 'full_path']
+
+    def validate_name(self, value):
+        """Pre-flight duplicate check so the DB UNIQUE constraint doesn't
+        bubble up as a 500. DRF turns ValidationError into 400 with a clean
+        field-level message the frontend can render."""
+        from erp.middleware import get_current_tenant_id
+        tenant_id = get_current_tenant_id()
+        if not tenant_id:
+            return value
+        qs = Category.original_objects.filter(name__iexact=value, organization_id=tenant_id)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError(
+                f'A category named "{value}" already exists. Pick a different name or edit the existing one.'
+            )
+        return value
 
     def get_product_count(self, obj):
         return Product.objects.filter(category=obj).count()

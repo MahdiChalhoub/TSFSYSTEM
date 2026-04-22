@@ -46,17 +46,27 @@ from erp.mixins import UDLEViewSetMixin
 # confirms in a warning dialog).
 
 def _build_destroy_conflict(entity_name: str, products_qs, *, preview_limit: int = 20) -> dict | None:
-    """Return a 409 payload dict if any products are linked, else None."""
+    """Return a 409 payload dict if any products are linked, else None.
+
+    NOTE: Django refuses `.filter()` on a sliced queryset (`TypeError:
+    Cannot filter a query once a slice has been taken.`). Compute every
+    filtered subset BEFORE slicing, then slice at the end.
+    """
     count = products_qs.count()
     if count == 0:
         return None
     barcode_count = products_qs.filter(barcodes__is_active=True).distinct().count()
-    preview = list(products_qs[:preview_limit].values('id', 'sku', 'name', 'barcode'))
-    barcode_ids = set(
-        products_qs[:preview_limit].filter(barcodes__is_active=True).values_list('id', flat=True)
+    # Preview = first N products. Filter full qs for barcodes FIRST, then slice.
+    preview_ids = list(products_qs.values_list('id', flat=True)[:preview_limit])
+    preview = list(
+        products_qs.filter(id__in=preview_ids).values('id', 'sku', 'name', 'barcode')
+    )
+    barcode_ids_in_preview = set(
+        products_qs.filter(id__in=preview_ids, barcodes__is_active=True)
+        .values_list('id', flat=True)
     )
     for p in preview:
-        p['has_barcode'] = p['id'] in barcode_ids
+        p['has_barcode'] = p['id'] in barcode_ids_in_preview
     msg_suffix = f'{barcode_count} have active barcodes. ' if barcode_count else ''
     return {
         'error': 'conflict',
