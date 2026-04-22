@@ -14,6 +14,7 @@ import { getUserName } from './types';
 import CategorySidebar from './CategorySidebar';
 import TaskCard from './TaskCard';
 import TaskModal from './TaskModal';
+import NewTaskChooser from './NewTaskChooser';
 import CategoryManagementModal from './CategoryManagementModal';
 import {
     TaskCustomizePanel,
@@ -818,7 +819,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
 
             {/* ═══ MODALS ═══════════════════════════════════════════ */}
             {showCreateTask && (
-                <TaskModal
+                <NewTaskChooser
                     categories={categories} users={users}
                     defaultCategoryId={typeof selectedCategoryId === 'number' ? selectedCategoryId : undefined}
                     onClose={() => setShowCreateTask(false)}
