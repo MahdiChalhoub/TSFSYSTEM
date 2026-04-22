@@ -48,7 +48,7 @@ export function MobileBreadcrumb({ path, onNavigate }: Props) {
                                 ? '1px solid color-mix(in srgb, var(--app-primary) 28%, transparent)'
                                 : '1px solid transparent',
                         }}>
-                        <span className="text-tp-md font-black truncate max-w-[140px] leading-none">{n.name}</span>
+                        <span className="text-tp-md font-bold truncate max-w-[140px] leading-none">{n.name}</span>
                     </button>
                 </div>
             ))}

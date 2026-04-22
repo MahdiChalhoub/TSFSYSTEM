@@ -47,13 +47,13 @@ export function YearPanel({
                 style={{ background: isExpanded ? 'var(--app-surface)' : 'transparent' }}>
                 {isExpanded ? <ChevronDown size={14} style={{ color: 'var(--app-muted-foreground)' }} /> : <ChevronRight size={14} style={{ color: 'var(--app-muted-foreground)' }} />}
                 <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-black" style={{ color: 'var(--app-foreground)' }}>{year.name}</div>
-                    <div className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                    <div className="text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>{year.name}</div>
+                    <div className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                         {new Date(year.startDate).toLocaleDateString()} — {new Date(year.endDate).toLocaleDateString()}
                     </div>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: ss.bg, color: ss.color }}>{ss.label}</span>
-                <span className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{periods.length} periods · {openCount} open</span>
+                <span className="text-tp-xxs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: ss.bg, color: ss.color }}>{ss.label}</span>
+                <span className="text-tp-xs font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{periods.length} periods · {openCount} open</span>
             </button>
 
             {/* Expanded content */}
@@ -63,7 +63,7 @@ export function YearPanel({
                     <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid var(--app-border)' }}>
                         {TABS.map(t => (
                             <button key={t.id} onClick={() => onTabChange(t.id)}
-                                className="text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all"
+                                className="text-tp-xs font-bold px-2.5 py-1 rounded-lg transition-all"
                                 style={{ background: activeTab === t.id ? 'var(--app-primary)' : 'transparent', color: activeTab === t.id ? 'white' : 'var(--app-muted-foreground)' }}>
                                 {t.label}
                             </button>
@@ -71,21 +71,21 @@ export function YearPanel({
                         <div className="flex-1" />
                         {yearStatus === 'OPEN' && (
                             <button onClick={onSoftClose} disabled={isPending}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
+                                className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg border transition-all"
                                 style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
                                 <Lock size={11} /> Soft Close
                             </button>
                         )}
                         {yearStatus === 'OPEN' && (
                             <button onClick={onYearEndClose} disabled={isPending}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all"
+                                className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg border transition-all"
                                 title={isPartial ? 'Year not finished yet — will perform partial close and auto-create remainder year' : 'Close fiscal year and post P&L to Retained Earnings'}
                                 style={{ color: isPartial ? 'var(--app-warning, #f59e0b)' : 'var(--app-error, #ef4444)', borderColor: isPartial ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' : 'color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>
                                 {isPending && closingYearId === year.id ? <Loader2 size={11} className="animate-spin" /> : <ShieldCheck size={11} />} {isPartial ? 'Partial Close' : 'Year-End Close'}
                             </button>
                         )}
                         {year.isHardLocked && (
-                            <span className="flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded"
+                            <span className="flex items-center gap-1 text-tp-xxs font-bold uppercase px-2 py-0.5 rounded"
                                 style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', color: 'var(--app-error, #ef4444)' }}>
                                 <ShieldCheck size={10} /> Immutable
                             </span>

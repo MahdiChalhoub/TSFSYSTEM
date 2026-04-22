@@ -17,7 +17,7 @@ export default function CategoryManagementModal({
 }: CategoryManagementModalProps) {
     const [cats, setCats] = useState(initialCategories);
     const [newName, setNewName] = useState('');
-    const [newColor, setNewColor] = useState('#6366f1');
+    const [newColor, setNewColor] = useState('var(--app-info)');
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editName, setEditName] = useState('');
     const [editColor, setEditColor] = useState('');
@@ -35,7 +35,7 @@ export default function CategoryManagementModal({
                 if (result?.id) {
                     setCats(prev => [...prev, result]);
                     setNewName('');
-                    setNewColor('#6366f1');
+                    setNewColor('var(--app-info)');
                     onUpdate();
                 }
             } catch { setError('Failed to create category'); }
@@ -84,7 +84,7 @@ export default function CategoryManagementModal({
                              style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                             <FolderKanban size={16} className="text-white" />
                         </div>
-                        <h2 className="text-base font-black" style={{ color: 'var(--app-foreground)' }}>Manage Categories</h2>
+                        <h2 className="text-base font-bold" style={{ color: 'var(--app-foreground)' }}>Manage Categories</h2>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-xl transition-colors hover:opacity-70"
                             style={{ color: 'var(--app-muted-foreground)' }}>
@@ -94,7 +94,7 @@ export default function CategoryManagementModal({
 
                 <div className="p-5 space-y-5">
                     {error && (
-                        <div className="px-3 py-2 rounded-xl text-[12px] font-bold"
+                        <div className="px-3 py-2 rounded-xl text-tp-md font-bold"
                              style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)', border: '1px solid color-mix(in srgb, var(--app-error) 30%, transparent)' }}>
                             {error}
                         </div>
@@ -104,7 +104,7 @@ export default function CategoryManagementModal({
                     <form onSubmit={handleCreate}
                           className="p-4 rounded-xl border"
                           style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))', borderColor: 'color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
-                        <h3 className="text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-foreground)' }}>
+                        <h3 className="text-tp-sm font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--app-foreground)' }}>
                             New Category
                         </h3>
                         <div className="flex gap-2">
@@ -112,10 +112,10 @@ export default function CategoryManagementModal({
                                    className="w-10 h-10 rounded-lg cursor-pointer border-0" />
                             <input type="text" value={newName} onChange={e => setNewName(e.target.value)}
                                    placeholder="Category name"
-                                   className="flex-1 px-3 py-2 text-[13px] font-bold rounded-xl outline-none transition-all"
+                                   className="flex-1 px-3 py-2 text-tp-lg font-bold rounded-xl outline-none transition-all"
                                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
                             <button type="submit" disabled={isPending}
-                                    className="flex items-center gap-1 px-4 py-2 text-[11px] font-bold text-white rounded-xl transition-all disabled:opacity-50"
+                                    className="flex items-center gap-1 px-4 py-2 text-tp-sm font-bold text-white rounded-xl transition-all disabled:opacity-50"
                                     style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                 <Plus size={14} /> Create
                             </button>
@@ -132,20 +132,20 @@ export default function CategoryManagementModal({
                                         <input type="color" value={editColor} onChange={e => setEditColor(e.target.value)}
                                                className="w-8 h-8 rounded cursor-pointer border-0" />
                                         <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
-                                               className="flex-1 min-w-[120px] px-2 py-1.5 text-[13px] font-bold rounded-lg outline-none"
+                                               className="flex-1 min-w-[120px] px-2 py-1.5 text-tp-lg font-bold rounded-lg outline-none"
                                                style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
                                         <button onClick={() => handleUpdate(cat.id)}
-                                                className="px-3 py-1.5 text-[11px] font-bold text-white rounded-lg"
+                                                className="px-3 py-1.5 text-tp-sm font-bold text-white rounded-lg"
                                                 style={{ background: 'var(--app-primary)' }}>Save</button>
                                         <button onClick={() => setEditingId(null)}
-                                                className="px-3 py-1.5 text-[11px] font-bold rounded-lg border"
+                                                className="px-3 py-1.5 text-tp-sm font-bold rounded-lg border"
                                                 style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>Cancel</button>
                                     </div>
                                 ) : (
                                     <>
                                         <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: cat.color || 'var(--app-primary)' }} />
-                                        <span className="flex-1 text-[13px] font-bold" style={{ color: 'var(--app-foreground)' }}>{cat.name}</span>
-                                        <button onClick={() => { setEditingId(cat.id); setEditName(cat.name); setEditColor(cat.color || '#6366f1'); }}
+                                        <span className="flex-1 text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>{cat.name}</span>
+                                        <button onClick={() => { setEditingId(cat.id); setEditName(cat.name); setEditColor(cat.color || 'var(--app-info)'); }}
                                                 className="p-1.5 rounded-lg transition-colors hover:opacity-70" style={{ color: 'var(--app-primary)' }}>
                                             <Edit2 size={13} />
                                         </button>
@@ -160,7 +160,7 @@ export default function CategoryManagementModal({
                         {cats.length === 0 && (
                             <div className="text-center py-8">
                                 <FolderKanban size={28} className="mx-auto mb-2" style={{ color: 'var(--app-muted-foreground)', opacity: 0.4 }} />
-                                <p className="text-[12px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>No categories yet</p>
+                                <p className="text-tp-md font-bold" style={{ color: 'var(--app-muted-foreground)' }}>No categories yet</p>
                             </div>
                         )}
                     </div>

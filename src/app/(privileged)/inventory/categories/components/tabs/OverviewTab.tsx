@@ -54,7 +54,7 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
                 {[
                     { label: 'Children', value: childCount, icon: <GitBranch size={13} />, color: 'var(--app-primary)', tab: null as PanelTab | null },
                     { label: 'Products', value: productCount, icon: <Package size={13} />, color: 'var(--app-success, #22c55e)', tab: 'products' as PanelTab },
-                    { label: 'Brands', value: brandCount, icon: <Paintbrush size={13} />, color: '#8b5cf6', tab: 'brands' as PanelTab },
+                    { label: 'Brands', value: brandCount, icon: <Paintbrush size={13} />, color: 'var(--app-info)', tab: 'brands' as PanelTab },
                     { label: 'Attributes', value: attributeCount, icon: <Tag size={13} />, color: 'var(--app-warning, #f59e0b)', tab: 'attributes' as PanelTab },
                 ].map(s => (
                     <button key={s.label}
@@ -108,7 +108,7 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
                                     style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 12%, transparent)' }}>
                                     <Folder size={12} style={{ color: 'var(--app-muted-foreground)', flexShrink: 0 }} />
                                     <span className="flex-1 text-tp-md font-medium text-app-foreground truncate">{child.name}</span>
-                                    {cb > 0 && <span className="text-tp-xs font-semibold tabular-nums" style={{ color: '#8b5cf6' }}>{cb}b</span>}
+                                    {cb > 0 && <span className="text-tp-xs font-semibold tabular-nums" style={{ color: 'var(--app-info)' }}>{cb}b</span>}
                                     {cp > 0 && <span className="text-tp-xs font-semibold tabular-nums" style={{ color: 'var(--app-success, #22c55e)' }}>{cp}p</span>}
                                 </div>
                             )

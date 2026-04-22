@@ -82,9 +82,9 @@ export default function TaskModal({
         });
     }
 
-    const inputCls = 'w-full text-[13px] font-bold px-3 py-2.5 rounded-xl outline-none transition-all';
+    const inputCls = 'w-full text-tp-lg font-bold px-3 py-2.5 rounded-xl outline-none transition-all';
     const inputStyle = { background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' };
-    const labelCls = 'text-[10px] font-black uppercase tracking-widest mb-1.5 block';
+    const labelCls = 'text-tp-xs font-bold uppercase tracking-wide mb-1.5 block';
     const labelStyle = { color: 'var(--app-muted-foreground)' };
 
     const getUserDisplayName = (u: UserItem) =>
@@ -101,7 +101,7 @@ export default function TaskModal({
                 {/* Header */}
                 <div className="sticky top-0 z-10 px-5 py-4 flex items-center justify-between border-b"
                      style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)' }}>
-                    <h2 className="text-base font-black" style={{ color: 'var(--app-foreground)' }}>
+                    <h2 className="text-base font-bold" style={{ color: 'var(--app-foreground)' }}>
                         {isEdit ? 'Edit Task' : 'Create New Task'}
                     </h2>
                     <button onClick={onClose} className="p-2 rounded-xl transition-colors hover:opacity-70"
@@ -112,7 +112,7 @@ export default function TaskModal({
 
                 <form onSubmit={handleSubmit} className="p-5 space-y-4">
                     {error && (
-                        <div className="px-3 py-2 rounded-xl text-[12px] font-bold"
+                        <div className="px-3 py-2 rounded-xl text-tp-md font-bold"
                              style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)', border: '1px solid color-mix(in srgb, var(--app-error) 30%, transparent)' }}>
                             {error}
                         </div>
@@ -197,7 +197,7 @@ export default function TaskModal({
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)}
                                    className="w-4 h-4 rounded" style={{ accentColor: 'var(--app-primary)' }} />
-                            <span className="text-[12px] font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            <span className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
                                 Make this a recurring task
                             </span>
                         </label>
@@ -215,19 +215,19 @@ export default function TaskModal({
                     <div className="flex items-center gap-2 pt-3 border-t" style={{ borderColor: 'var(--app-border)' }}>
                         {isEdit && (
                             <button type="button" onClick={handleDelete} disabled={isPending}
-                                    className="flex items-center gap-1 px-3 py-2 text-[11px] font-bold rounded-xl transition-colors disabled:opacity-50 border"
+                                    className="flex items-center gap-1 px-3 py-2 text-tp-sm font-bold rounded-xl transition-colors disabled:opacity-50 border"
                                     style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 30%, transparent)' }}>
                                 <Trash2 size={13} /> Delete
                             </button>
                         )}
                         <div className="flex-1" />
                         <button type="button" onClick={onClose}
-                                className="px-4 py-2.5 text-[11px] font-bold rounded-xl transition-colors border"
+                                className="px-4 py-2.5 text-tp-sm font-bold rounded-xl transition-colors border"
                                 style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                             Cancel
                         </button>
                         <button type="submit" disabled={isPending}
-                                className="px-5 py-2.5 text-[11px] font-bold text-white rounded-xl transition-all disabled:opacity-50"
+                                className="px-5 py-2.5 text-tp-sm font-bold text-white rounded-xl transition-all disabled:opacity-50"
                                 style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                             {isPending ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save Changes' : 'Create Task')}
                         </button>

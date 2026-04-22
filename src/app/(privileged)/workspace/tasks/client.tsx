@@ -231,6 +231,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
     /* ── Quick-complete toggle ─────────────────────────────────────── */
     const [proofTask, setProofTask] = useState<Task | null>(null);
     const [proofNote, setProofNote] = useState('');
+    const [proofFile, setProofFile] = useState<File | null>(null);
 
     function handleQuickComplete(taskId: number, currentStatus: string, e: React.MouseEvent) {
         e.stopPropagation();
@@ -241,6 +242,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
         if (newStatus === 'COMPLETED' && task?.require_completion_note) {
             setProofTask(task);
             setProofNote('');
+            setProofFile(null);
             return;
         }
         startTransition(async () => {
@@ -263,16 +265,31 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
         if (!note) return;
         startTransition(async () => {
             try {
+                // 1. Mark task complete with the text note.
                 await erpFetch(`tasks/${proofTask.id}/complete/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ completion_note: note }),
                 });
+                // 2. If a photo was attached, upload it as a TaskAttachment.
+                //    Non-blocking — task is already marked done; if upload
+                //    fails we surface a warning but keep the completion.
+                if (proofFile) {
+                    const fd = new FormData();
+                    fd.append('task', String(proofTask.id));
+                    fd.append('file', proofFile);
+                    fd.append('filename', proofFile.name);
+                    try {
+                        await erpFetch('task-attachments/', { method: 'POST', body: fd });
+                    } catch (upErr: unknown) {
+                        toast.error('Task closed, but photo upload failed: ' + (upErr instanceof Error ? upErr.message : 'unknown'));
+                    }
+                }
                 setTasks(prev => prev.map(t => t.id === proofTask.id
                     ? { ...t, status: 'COMPLETED', completion_note: note }
                     : t));
-                toast.success('Task marked done with your note');
-                setProofTask(null); setProofNote('');
+                toast.success(proofFile ? 'Task closed with note + photo' : 'Task marked done with your note');
+                setProofTask(null); setProofNote(''); setProofFile(null);
             } catch (err: unknown) {
                 toast.error(err instanceof Error ? err.message : 'Failed to save note');
             }
@@ -352,15 +369,15 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     <ClipboardList size={20} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Task Board</h1>
-                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Task Board</h1>
+                    <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                         {kpiStats.total} Tasks · {kpiStats.pending} Pending · {kpiStats.overdue} Overdue
                     </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={() => window.dispatchEvent(new CustomEvent('tsf:test-reminder', { detail: { title: '🧪 Test reminder — pretend a rule just fired', priority: 'URGENT', related_object_label: 'Click "Open task" to land on the Task Board' } }))}
                         title="Fire a simulated reminder popup (this browser only)"
-                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all"
+                        className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl transition-all"
                         style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
                         <Bell size={13} /> Test Reminder
                     </button>
@@ -368,7 +385,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                         style={{ background: 'color-mix(in srgb, var(--app-bg) 40%, transparent)' }}
                         title="Switch between list and card view">
                         <button onClick={() => setViewMode('list')}
-                            className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                            className="text-tp-xs font-bold px-2 py-1 rounded-lg transition-all"
                             style={{
                                 background: viewMode === 'list' ? 'var(--app-primary)' : 'transparent',
                                 color: viewMode === 'list' ? 'white' : 'var(--app-muted-foreground)',
@@ -376,7 +393,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                             List
                         </button>
                         <button onClick={() => setViewMode('card')}
-                            className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                            className="text-tp-xs font-bold px-2 py-1 rounded-lg transition-all"
                             style={{
                                 background: viewMode === 'card' ? 'var(--app-primary)' : 'transparent',
                                 color: viewMode === 'card' ? 'white' : 'var(--app-muted-foreground)',
@@ -385,7 +402,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                         </button>
                     </div>
                     <button onClick={() => setFocusMode(prev => !prev)}
-                            className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all"
+                            className="flex items-center gap-1 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl transition-all"
                             title="Focus Mode: only Today · Overdue · Urgent (Ctrl+Q)"
                             style={focusMode ? {
                                 background: 'var(--app-error, #ef4444)',
@@ -470,8 +487,8 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                     {k.icon}
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: k.active ? k.color : 'var(--app-muted-foreground)' }}>{k.label}</div>
-                                    <div className="text-sm font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
+                                    <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: k.active ? k.color : 'var(--app-muted-foreground)' }}>{k.label}</div>
+                                    <div className="text-sm font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
                                 </div>
                             </button>
                         ))}
@@ -486,7 +503,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                         className="lg:hidden flex items-center justify-center gap-2 px-3 py-2 rounded-xl border transition-colors"
                         style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)', color: 'var(--app-foreground)' }}>
                     <Menu size={15} style={{ color: 'var(--app-primary)' }} />
-                    <span className="text-[12px] font-bold">Categories</span>
+                    <span className="text-tp-md font-bold">Categories</span>
                 </button>
 
                 {/* Mobile sidebar overlay */}
@@ -527,10 +544,10 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     {/* Tasks header bar */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                         <div>
-                            <h2 className="text-base sm:text-lg font-black" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 className="text-base sm:text-lg font-bold" style={{ color: 'var(--app-foreground)' }}>
                                 {getDisplayTitle()}
                             </h2>
-                            <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {activeTasks.length} active, {completedTasks.length} completed
                             </p>
                         </div>
@@ -540,13 +557,13 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--app-muted-foreground)' }} />
                                 <input ref={searchRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
                                        placeholder="Search… (⌘K)"
-                                       className="w-full pl-8 pr-3 py-1.5 text-[12px] font-bold rounded-xl outline-none transition-all"
+                                       className="w-full pl-8 pr-3 py-1.5 text-tp-md font-bold rounded-xl outline-none transition-all"
                                        style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }} />
                             </div>
 
                             {/* Filter button */}
                             <button onClick={() => setShowFilters(!showFilters)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-xl border transition-all"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-tp-sm font-bold rounded-xl border transition-all"
                                     style={{
                                         background: hasActiveFilters ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent',
                                         borderColor: hasActiveFilters ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)' : 'var(--app-border)',
@@ -559,7 +576,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
 
                             {/* New Task */}
                             <button onClick={() => setShowCreateTask(true)}
-                                    className="flex items-center gap-1.5 text-[11px] font-bold text-white px-3 py-1.5 rounded-xl transition-all hover:brightness-110"
+                                    className="flex items-center gap-1.5 text-tp-sm font-bold text-white px-3 py-1.5 rounded-xl transition-all hover:brightness-110"
                                     style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                 <Plus size={14} />
                                 <span className="hidden sm:inline">New Task</span>
@@ -569,19 +586,19 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
 
                     {/* Filter panel — grid of all enabled filters (products-style) */}
                     {showFilters && (() => {
-                        const fieldLabelCls = "text-[9px] font-black uppercase tracking-widest mb-1 block";
-                        const fieldSelectCls = "w-full px-2.5 py-2 text-[12px] font-bold rounded-xl outline-none";
+                        const fieldLabelCls = "text-tp-xxs font-bold uppercase tracking-wide mb-1 block";
+                        const fieldSelectCls = "w-full px-2.5 py-2 text-tp-md font-bold rounded-xl outline-none";
                         const fieldSelectStyle = { background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' };
                         return (
                         <div className="mb-3 p-3 rounded-xl border space-y-3"
                              style={{ background: 'var(--app-surface)', borderColor: 'color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
                             {/* Customize toolbar — opens slide-in side panel (products-style) */}
                             <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                                <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
                                     Filters · {Object.values(visibleFilters).filter(Boolean).length} shown · View: {profiles.find(p => p.id === activeProfileId)?.name || 'Default'}
                                 </span>
                                 <button onClick={() => setShowFilterCustomize(true)}
-                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                                    className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all"
                                     style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                     <Settings2 size={11} /> Customize
                                 </button>
@@ -683,13 +700,13 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                 <div className="flex flex-wrap items-center gap-1.5">
                                     {DATE_PRESETS.map(p => (
                                         <button key={p.label} onClick={() => applyDatePreset(p.start, p.end)}
-                                                className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                                                className="text-tp-xs font-bold px-2 py-1 rounded-lg transition-all"
                                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
                                             {p.label}
                                         </button>
                                     ))}
                                     {customRanges.map(r => (
-                                        <span key={r.name} className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg"
+                                        <span key={r.name} className="inline-flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg"
                                               style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
                                             <button onClick={() => applyDatePreset(-r.daysBefore, r.daysAfter)} className="font-bold" title={`−${r.daysBefore} / +${r.daysAfter}`}>
                                                 {r.name}
@@ -698,7 +715,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                         </span>
                                     ))}
                                     <button onClick={saveCustomRange}
-                                            className="text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                                            className="text-tp-xs font-bold px-2 py-1 rounded-lg transition-all"
                                             style={{ background: 'transparent', color: 'var(--app-muted-foreground)', border: '1px dashed var(--app-border)' }}>
                                         + Save range
                                     </button>
@@ -706,7 +723,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                             )}
                             {hasActiveFilters && (
                                 <div className="mt-2 flex justify-end">
-                                    <button onClick={clearFilters} className="text-[11px] font-bold" style={{ color: 'var(--app-primary)' }}>
+                                    <button onClick={clearFilters} className="text-tp-sm font-bold" style={{ color: 'var(--app-primary)' }}>
                                         Clear all filters
                                     </button>
                                 </div>
@@ -724,7 +741,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-lg"
                                      style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)' }}>
                                     <Loader2 size={14} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
-                                    <span className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>Saving…</span>
+                                    <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Saving…</span>
                                 </div>
                             </div>
                         )}
@@ -737,7 +754,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                         <FolderKanban size={24} style={{ color: 'var(--app-primary)' }} />
                                     </div>
                                     <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--app-foreground)' }}>No tasks found</h3>
-                                    <p className="text-[11px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>Create a task to get started</p>
+                                    <p className="text-tp-sm font-medium" style={{ color: 'var(--app-muted-foreground)' }}>Create a task to get started</p>
                                 </div>
                             ) : (
                                 <>
@@ -757,8 +774,8 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                                 <div className="flex items-center gap-2">
                                                     <ChevronRight size={14} className="transition-transform"
                                                                   style={{ color: 'var(--app-muted-foreground)', transform: showCompletedTasks ? 'rotate(90deg)' : 'none' }} />
-                                                    <span className="text-[12px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Completed Tasks</span>
-                                                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                                                    <span className="text-tp-md font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Completed Tasks</span>
+                                                    <span className="text-tp-xs font-bold px-1.5 py-0.5 rounded-full"
                                                           style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
                                                         {completedTasks.length}
                                                     </span>
@@ -781,7 +798,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     </div>
 
                     {/* Footer */}
-                    <p className="flex-shrink-0 text-center text-[10px] font-bold uppercase tracking-widest mt-2"
+                    <p className="flex-shrink-0 text-center text-tp-xs font-bold uppercase tracking-wide mt-2"
                        style={{ color: 'var(--app-muted-foreground)' }}>
                         {filteredTasks.length} / {tasks.length} Tasks
                     </p>
@@ -846,36 +863,67 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                 <CheckCircle2 size={15} className="text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-black" style={{ color: 'var(--app-foreground)' }}>Before we mark this done</h3>
-                                <p className="text-[11px] font-bold truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                                <h3 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Before we mark this done</h3>
+                                <p className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-muted-foreground)' }}>
                                     {proofTask.title}
                                 </p>
                             </div>
                         </div>
                         <div className="p-4 space-y-3">
                             <label className="block">
-                                <span className="text-[10px] font-black uppercase tracking-widest block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                <span className="text-tp-xs font-bold uppercase tracking-wide block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
                                     What did you do? *
                                 </span>
                                 <textarea rows={4} value={proofNote} autoFocus disabled={isPending}
                                     onChange={e => setProofNote(e.target.value)}
                                     placeholder="Describe the action you took to resolve this task..."
-                                    className="w-full text-[12px] px-3 py-2 rounded-lg outline-none resize-none disabled:opacity-60"
+                                    className="w-full text-tp-md px-3 py-2 rounded-lg outline-none resize-none disabled:opacity-60"
                                     style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
                             </label>
-                            <p className="text-[10px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+
+                            {/* Optional photo attachment */}
+                            <div>
+                                <span className="text-tp-xs font-bold uppercase tracking-wide block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Photo (optional)
+                                </span>
+                                {proofFile ? (
+                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                                        style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)' }}>
+                                        <CheckCircle2 size={13} style={{ color: 'var(--app-success, #22c55e)' }} />
+                                        <span className="text-tp-sm font-bold truncate flex-1" style={{ color: 'var(--app-foreground)' }}>
+                                            {proofFile.name}
+                                        </span>
+                                        <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            {(proofFile.size / 1024).toFixed(0)} KB
+                                        </span>
+                                        <button onClick={() => setProofFile(null)} disabled={isPending}
+                                            className="p-1 rounded hover:bg-app-border/50 transition-all"
+                                            style={{ color: 'var(--app-muted-foreground)' }}>×</button>
+                                    </div>
+                                ) : (
+                                    <label className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all hover:bg-app-surface/70"
+                                        style={{ background: 'var(--app-bg)', border: '1px dashed var(--app-border)', color: 'var(--app-muted-foreground)' }}>
+                                        <span className="text-base">📷</span>
+                                        <span className="text-tp-sm font-bold">Attach a photo (shelf, receipt, etc.)</span>
+                                        <input type="file" accept="image/*,application/pdf" className="hidden"
+                                            onChange={e => { const f = e.target.files?.[0]; if (f) setProofFile(f) }} />
+                                    </label>
+                                )}
+                            </div>
+
+                            <p className="text-tp-xs font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
                                 This becomes permanent proof on the task — visible to anyone who opens it.
                             </p>
                         </div>
                         <div className="px-4 py-3 flex items-center justify-end gap-2"
                             style={{ borderTop: '1px solid var(--app-border)' }}>
-                            <button onClick={() => { setProofTask(null); setProofNote(''); }} disabled={isPending}
-                                className="text-[11px] font-bold px-3 py-1.5 rounded-lg"
+                            <button onClick={() => { setProofTask(null); setProofNote(''); setProofFile(null); }} disabled={isPending}
+                                className="text-tp-sm font-bold px-3 py-1.5 rounded-lg"
                                 style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
                                 Cancel
                             </button>
                             <button onClick={submitProof} disabled={isPending || !proofNote.trim()}
-                                className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                                className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
                                 style={{ background: 'var(--app-success, #22c55e)', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }}>
                                 {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
                                 Submit & mark done

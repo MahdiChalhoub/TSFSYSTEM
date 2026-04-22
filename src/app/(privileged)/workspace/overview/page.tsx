@@ -231,7 +231,7 @@ export default function ManagerDashboardPage() {
         { label: 'Due today', value: stats.dueToday, color: 'var(--app-primary)', icon: <Calendar size={14} /> },
         { label: 'Overdue', value: stats.overdue, color: 'var(--app-error, #ef4444)', icon: <AlertTriangle size={14} /> },
         { label: 'Urgent', value: stats.urgent, color: 'var(--app-warning, #f59e0b)', icon: <Flame size={14} /> },
-        { label: 'Unassigned', value: stats.unassigned, color: '#8b5cf6', icon: <User size={14} /> },
+        { label: 'Unassigned', value: stats.unassigned, color: 'var(--app-info)', icon: <User size={14} /> },
         { label: 'Auto-created', value: stats.autoTasks, color: 'var(--app-info, #3b82f6)', icon: <Zap size={14} /> },
         { label: 'Done · 7d', value: stats.completedThisWeek, color: 'var(--app-success, #22c55e)', icon: <CheckCircle2 size={14} /> },
     ]
@@ -245,13 +245,13 @@ export default function ManagerDashboardPage() {
                     <LayoutDashboard size={20} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Manager Dashboard</h1>
-                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Manager Dashboard</h1>
+                    <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                         What needs attention · who's on top of it
                     </p>
                 </div>
                 <button onClick={() => load(true)} disabled={refreshing}
-                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                    className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
                     style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
                     {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
                     Refresh
@@ -278,8 +278,8 @@ export default function ManagerDashboardPage() {
                                     {k.icon}
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
-                                    <div className="text-lg font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
+                                    <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
+                                    <div className="text-lg font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
                                 </div>
                             </div>
                         ))}
@@ -292,8 +292,8 @@ export default function ManagerDashboardPage() {
                             <div className="flex items-center gap-2 px-3 py-2.5"
                                 style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 6%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)' }}>
                                 <Lightbulb size={13} style={{ color: 'var(--app-info, #3b82f6)' }} />
-                                <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>Insights</span>
-                                <span className="text-[9px] font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>signals worth noticing</span>
+                                <span className="text-tp-sm font-bold uppercase tracking-wide" style={{ color: 'var(--app-foreground)' }}>Insights</span>
+                                <span className="text-tp-xxs font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>signals worth noticing</span>
                             </div>
                             <div className="p-3 space-y-1.5">
                                 {insights.map((ins, i) => {
@@ -305,7 +305,7 @@ export default function ManagerDashboardPage() {
                                         <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded-xl"
                                             style={{ background: 'var(--app-surface)', border: `1px solid color-mix(in srgb, ${c} 20%, transparent)` }}>
                                             <span className="text-sm flex-shrink-0" style={{ width: 20, textAlign: 'center' }}>{emoji}</span>
-                                            <span className="text-[11px] font-bold leading-relaxed" style={{ color: 'var(--app-foreground)' }}>{ins.text}</span>
+                                            <span className="text-tp-sm font-bold leading-relaxed" style={{ color: 'var(--app-foreground)' }}>{ins.text}</span>
                                         </div>
                                     )
                                 })}
@@ -320,27 +320,27 @@ export default function ManagerDashboardPage() {
                             <div className="flex items-center gap-2 px-3 py-2.5"
                                 style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)' }}>
                                 <Trophy size={13} style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>Leaderboard · last 7 days</span>
-                                <span className="text-[9px] font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>score = points earned − (overdue × 2)</span>
+                                <span className="text-tp-sm font-bold uppercase tracking-wide" style={{ color: 'var(--app-foreground)' }}>Leaderboard · last 7 days</span>
+                                <span className="text-tp-xxs font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>score = points earned − (overdue × 2)</span>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }} className="p-3">
                                 {leaderboard.map((r, i) => {
                                     const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣']
-                                    const accent = i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#d97706' : 'var(--app-muted-foreground)'
+                                    const accent = i === 0 ? 'var(--app-warning)' : i === 1 ? 'var(--app-muted-foreground)' : i === 2 ? '#d97706' : 'var(--app-muted-foreground)'
                                     return (
                                         <div key={r.user?.id ?? i} className="px-3 py-2.5 rounded-xl flex items-center gap-3"
                                             style={{ background: 'var(--app-surface)', border: `1px solid color-mix(in srgb, ${accent} 30%, transparent)` }}>
                                             <div className="text-lg flex-shrink-0" style={{ width: 24, textAlign: 'center' }}>{medals[i]}</div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[12px] font-black truncate" style={{ color: 'var(--app-foreground)' }}>
+                                                <div className="text-tp-md font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
                                                     {fullName(r.user)}
                                                 </div>
-                                                <div className="text-[10px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                <div className="text-tp-xs font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
                                                     {r.completed7d} done · {r.points7d} pts
                                                     {r.overdue > 0 && <span style={{ color: 'var(--app-error, #ef4444)' }}> · −{r.overdue * 2} overdue</span>}
                                                 </div>
                                             </div>
-                                            <div className="text-[14px] font-black tabular-nums flex-shrink-0"
+                                            <div className="text-[14px] font-bold tabular-nums flex-shrink-0"
                                                 style={{ color: r.score > 0 ? 'var(--app-success, #22c55e)' : r.score < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
                                                 {r.score > 0 ? '+' : ''}{r.score}
                                             </div>
@@ -357,18 +357,18 @@ export default function ManagerDashboardPage() {
                             style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)' }}>
                             <div className="flex items-center gap-2 mb-2">
                                 <AlertTriangle size={13} style={{ color: 'var(--app-error, #ef4444)' }} />
-                                <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--app-error, #ef4444)' }}>Overdue breakdown</span>
+                                <span className="text-tp-sm font-bold uppercase tracking-wide" style={{ color: 'var(--app-error, #ef4444)' }}>Overdue breakdown</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 {([
-                                    { label: '1–2 days late', value: stats.daysOverdueBuckets['1-2'], color: '#f59e0b' },
-                                    { label: '3–7 days late', value: stats.daysOverdueBuckets['3-7'], color: '#f97316' },
+                                    { label: '1–2 days late', value: stats.daysOverdueBuckets['1-2'], color: 'var(--app-warning)' },
+                                    { label: '3–7 days late', value: stats.daysOverdueBuckets['3-7'], color: 'var(--app-warning)' },
                                     { label: '> 7 days late', value: stats.daysOverdueBuckets['>7'], color: 'var(--app-error, #ef4444)' },
                                 ]).map(b => (
                                     <div key={b.label} className="px-3 py-2 rounded-xl"
                                         style={{ background: 'var(--app-surface)', border: `1px solid color-mix(in srgb, ${b.color} 30%, transparent)` }}>
-                                        <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{b.label}</div>
-                                        <div className="text-base font-black tabular-nums" style={{ color: b.color }}>{b.value}</div>
+                                        <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{b.label}</div>
+                                        <div className="text-base font-bold tabular-nums" style={{ color: b.color }}>{b.value}</div>
                                     </div>
                                 ))}
                             </div>
@@ -382,10 +382,10 @@ export default function ManagerDashboardPage() {
                             <div className="flex items-center gap-2 px-3 py-2.5"
                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                                 <TrendingUp size={13} style={{ color: 'var(--app-primary)' }} />
-                                <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>Team performance</span>
-                                <span className="text-[9px] font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>sorted by overdue · last 7 days</span>
+                                <span className="text-tp-sm font-bold uppercase tracking-wide" style={{ color: 'var(--app-foreground)' }}>Team performance</span>
+                                <span className="text-tp-xxs font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>sorted by overdue · last 7 days</span>
                             </div>
-                            <div className="grid grid-cols-[minmax(0,1fr)_60px_60px_60px] gap-2 px-3 py-2 text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)', background: 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}>
+                            <div className="grid grid-cols-[minmax(0,1fr)_60px_60px_60px] gap-2 px-3 py-2 text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)', background: 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}>
                                 <div>User</div>
                                 <div className="text-center">Pending</div>
                                 <div className="text-center">Overdue</div>
@@ -393,23 +393,23 @@ export default function ManagerDashboardPage() {
                             </div>
                             <div>
                                 {teamRows.length === 0 ? (
-                                    <div className="p-5 text-[11px] text-center" style={{ color: 'var(--app-muted-foreground)' }}>No assignable tasks yet.</div>
+                                    <div className="p-5 text-tp-sm text-center" style={{ color: 'var(--app-muted-foreground)' }}>No assignable tasks yet.</div>
                                 ) : teamRows.map((row, i) => (
                                     <div key={row.user?.id ?? `un-${i}`}
                                         className="grid grid-cols-[minmax(0,1fr)_60px_60px_60px] gap-2 px-3 py-2 items-center"
                                         style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                                         <div className="flex items-center gap-2 min-w-0">
                                             <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                                style={{ background: row.user ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: row.user ? 'var(--app-primary)' : '#8b5cf6' }}>
+                                                style={{ background: row.user ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: row.user ? 'var(--app-primary)' : 'var(--app-info)' }}>
                                                 <User size={11} />
                                             </div>
-                                            <span className="text-[12px] font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
+                                            <span className="text-tp-md font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
                                                 {fullName(row.user)}
                                             </span>
                                         </div>
-                                        <div className="text-center text-[12px] font-bold tabular-nums" style={{ color: row.pending > 0 ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{row.pending}</div>
-                                        <div className="text-center text-[12px] font-black tabular-nums" style={{ color: row.overdue > 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>{row.overdue}</div>
-                                        <div className="text-center text-[12px] font-black tabular-nums" style={{ color: row.completed7d > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>{row.completed7d}</div>
+                                        <div className="text-center text-tp-md font-bold tabular-nums" style={{ color: row.pending > 0 ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{row.pending}</div>
+                                        <div className="text-center text-tp-md font-bold tabular-nums" style={{ color: row.overdue > 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>{row.overdue}</div>
+                                        <div className="text-center text-tp-md font-bold tabular-nums" style={{ color: row.completed7d > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>{row.completed7d}</div>
                                     </div>
                                 ))}
                             </div>
@@ -421,15 +421,15 @@ export default function ManagerDashboardPage() {
                             <div className="flex items-center gap-2 px-3 py-2.5"
                                 style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                                 <AlertTriangle size={13} style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>Alerts</span>
-                                <span className="text-[9px] font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>top {alerts.length}</span>
+                                <span className="text-tp-sm font-bold uppercase tracking-wide" style={{ color: 'var(--app-foreground)' }}>Alerts</span>
+                                <span className="text-tp-xxs font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>top {alerts.length}</span>
                             </div>
                             <div className="max-h-[360px] overflow-y-auto custom-scrollbar">
                                 {alerts.length === 0 ? (
-                                    <div className="p-5 text-[11px] text-center" style={{ color: 'var(--app-muted-foreground)' }}>Nothing urgent — you're caught up. 🎉</div>
+                                    <div className="p-5 text-tp-sm text-center" style={{ color: 'var(--app-muted-foreground)' }}>Nothing urgent — you're caught up. 🎉</div>
                                 ) : alerts.map(a => {
                                     const c = a.kind === 'overdue' ? 'var(--app-error, #ef4444)'
-                                        : a.kind === 'unassigned' ? '#8b5cf6'
+                                        : a.kind === 'unassigned' ? 'var(--app-info)'
                                         : 'var(--app-warning, #f59e0b)'
                                     const Icon = a.kind === 'overdue' ? Clock : a.kind === 'unassigned' ? User : Flame
                                     return (
@@ -441,8 +441,8 @@ export default function ManagerDashboardPage() {
                                                 <Icon size={11} />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[12px] font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{a.task.title}</div>
-                                                <div className="text-[10px] font-medium truncate" style={{ color: c }}>{a.detail}</div>
+                                                <div className="text-tp-md font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{a.task.title}</div>
+                                                <div className="text-tp-xs font-medium truncate" style={{ color: c }}>{a.detail}</div>
                                             </div>
                                             <ChevronRight size={13} className="flex-shrink-0 mt-1" style={{ color: 'var(--app-muted-foreground)' }} />
                                         </Link>
@@ -454,16 +454,16 @@ export default function ManagerDashboardPage() {
 
                     <div className="rounded-2xl p-3 flex items-center gap-2 flex-wrap"
                         style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)' }}>
-                        <span className="text-[11px] font-medium" style={{ color: 'var(--app-foreground)' }}>
+                        <span className="text-tp-sm font-medium" style={{ color: 'var(--app-foreground)' }}>
                             Want to act on something?
                         </span>
-                        <Link href="/workspace/tasks" className="text-[11px] font-black" style={{ color: 'var(--app-info, #3b82f6)' }}>
+                        <Link href="/workspace/tasks" className="text-tp-sm font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>
                             → Open Tasks
                         </Link>
-                        <Link href="/workspace/auto-task-rules?module=finance" className="text-[11px] font-black" style={{ color: 'var(--app-info, #3b82f6)' }}>
+                        <Link href="/workspace/auto-task-rules?module=finance" className="text-tp-sm font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>
                             → Configure Automations
                         </Link>
-                        <Link href="/workspace/leader-tree" className="text-[11px] font-black" style={{ color: 'var(--app-info, #3b82f6)' }}>
+                        <Link href="/workspace/leader-tree" className="text-tp-sm font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>
                             → Manage Team Structure
                         </Link>
                     </div>

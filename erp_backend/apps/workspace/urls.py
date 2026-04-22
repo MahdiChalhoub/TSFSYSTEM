@@ -17,6 +17,7 @@ router.register(r'tasks', views.TaskViewSet, basename='task')
 router.register(r'comments', views.TaskCommentViewSet, basename='task-comment')
 router.register(r'requests', views.EmployeeRequestViewSet, basename='employee-request')
 router.register(r'user-groups', views.UserGroupViewSet, basename='user-group')
+router.register(r'task-attachments', views.TaskAttachmentViewSet, basename='task-attachment')
 router.register(r'user-hierarchy', views.UserHierarchyViewSet, basename='user-hierarchy')
 
 # Checklists

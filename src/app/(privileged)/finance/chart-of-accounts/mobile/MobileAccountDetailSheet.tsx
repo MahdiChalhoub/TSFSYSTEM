@@ -14,7 +14,7 @@ import Link from 'next/link'
 const TYPE_CONFIG: Record<string, { color: string; icon: any; label: string }> = {
     ASSET:     { color: 'var(--app-info, #3B82F6)',    icon: Wallet,       label: 'Asset' },
     LIABILITY: { color: 'var(--app-error, #EF4444)',   icon: TrendingDown, label: 'Liability' },
-    EQUITY:    { color: '#8b5cf6',                     icon: Scale,        label: 'Equity' },
+    EQUITY:    { color: 'var(--app-info)',                     icon: Scale,        label: 'Equity' },
     INCOME:    { color: 'var(--app-success, #10B981)', icon: TrendingUp,   label: 'Income' },
     EXPENSE:   { color: 'var(--app-warning, #F59E0B)', icon: BarChart3,    label: 'Expense' },
     REVENUE:   { color: 'var(--app-success, #10B981)', icon: TrendingUp,   label: 'Revenue' },
@@ -60,14 +60,14 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                     <TypeIcon size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
+                    <h3 className="font-bold text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
                         {node.name}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
-                        <span className="font-mono font-black" style={{ fontSize: 'var(--tp-sm)', color: typeConf.color }}>
+                        <span className="font-mono font-bold" style={{ fontSize: 'var(--tp-sm)', color: typeConf.color }}>
                             {node.code}
                         </span>
-                        <span className="font-black uppercase tracking-widest rounded-full px-2 py-0.5"
+                        <span className="font-bold uppercase tracking-wide rounded-full px-2 py-0.5"
                             style={{
                                 fontSize: 'var(--tp-xxs)',
                                 background: `color-mix(in srgb, ${typeConf.color} 14%, transparent)`,
@@ -76,7 +76,7 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                             {typeConf.label}
                         </span>
                         {isInactive && (
-                            <span className="flex items-center gap-1 font-black uppercase tracking-widest rounded-full px-2 py-0.5"
+                            <span className="flex items-center gap-1 font-bold uppercase tracking-wide rounded-full px-2 py-0.5"
                                 style={{
                                     fontSize: 'var(--tp-xxs)',
                                     background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
@@ -109,11 +109,11 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                             background: `color-mix(in srgb, ${typeConf.color} 6%, var(--app-surface))`,
                             border: `1px solid color-mix(in srgb, ${typeConf.color} 20%, transparent)`,
                         }}>
-                        <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                        <div className="font-bold uppercase tracking-wide text-app-muted-foreground"
                             style={{ fontSize: 'var(--tp-xxs)' }}>
                             Direct Balance
                         </div>
-                        <div className="font-mono font-black tabular-nums text-app-foreground mt-1"
+                        <div className="font-mono font-bold tabular-nums text-app-foreground mt-1"
                             style={{ fontSize: 'var(--tp-stat)' }}>
                             {fmt(directBalance)}
                         </div>
@@ -123,11 +123,11 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                             background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                         }}>
-                        <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                        <div className="font-bold uppercase tracking-wide text-app-muted-foreground"
                             style={{ fontSize: 'var(--tp-xxs)' }}>
                             Rollup Balance
                         </div>
-                        <div className="font-mono font-black tabular-nums text-app-foreground mt-1"
+                        <div className="font-mono font-bold tabular-nums text-app-foreground mt-1"
                             style={{ fontSize: 'var(--tp-stat)' }}>
                             {fmt(rollupBalance)}
                         </div>
@@ -151,7 +151,7 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                         <div key={label}
                             className="flex items-center justify-between gap-3 px-3 py-2.5"
                             style={{ borderTop: i === 0 ? undefined : '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
-                            <span className="font-black uppercase tracking-widest text-app-muted-foreground"
+                            <span className="font-bold uppercase tracking-wide text-app-muted-foreground"
                                 style={{ fontSize: 'var(--tp-xxs)' }}>
                                 {label}
                             </span>
@@ -175,7 +175,7 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                             minHeight: 48,
                         }}>
                         <BookOpen size={15} style={{ color: 'var(--app-info, #3b82f6)' }} />
-                        <span className="flex-1 font-black text-app-foreground" style={{ fontSize: 'var(--tp-lg)' }}>
+                        <span className="flex-1 font-bold text-app-foreground" style={{ fontSize: 'var(--tp-lg)' }}>
                             Full statement & detail
                         </span>
                     </Link>
@@ -190,7 +190,7 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                 }}>
                 <button
                     onClick={() => onAddChild(node.id)}
-                    className="flex items-center justify-center gap-1.5 rounded-xl active:scale-[0.97] transition-transform font-black flex-shrink-0"
+                    className="flex items-center justify-center gap-1.5 rounded-xl active:scale-[0.97] transition-transform font-bold flex-shrink-0"
                     style={{
                         fontSize: 'var(--tp-md)',
                         height: 42, padding: '0 14px',
@@ -203,7 +203,7 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                 {onRecalc && (
                     <button
                         onClick={() => onRecalc(node)}
-                        className="flex items-center justify-center gap-1.5 rounded-xl active:scale-[0.97] transition-transform font-black flex-shrink-0"
+                        className="flex items-center justify-center gap-1.5 rounded-xl active:scale-[0.97] transition-transform font-bold flex-shrink-0"
                         style={{
                             fontSize: 'var(--tp-md)',
                             height: 42, width: 42,
@@ -217,7 +217,7 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                 {isInactive ? (
                     <button
                         onClick={() => onReactivate?.(node)}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-black"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-bold"
                         style={{
                             fontSize: 'var(--tp-md)',
                             height: 42,
@@ -230,7 +230,7 @@ export function MobileAccountDetailSheet({ node, onEdit, onAddChild, onReactivat
                 ) : (
                     <button
                         onClick={() => onEdit(node)}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-black"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-bold"
                         style={{
                             fontSize: 'var(--tp-md)',
                             height: 42,

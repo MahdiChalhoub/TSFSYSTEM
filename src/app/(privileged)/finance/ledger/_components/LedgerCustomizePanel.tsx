@@ -91,26 +91,26 @@ export function LedgerCustomizePanel({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-app-border/50">
           <div className="flex items-center gap-2"><Settings2 size={16} className="text-app-primary" />
-            <span className="text-[13px] font-black text-app-foreground">Customize View</span></div>
+            <span className="text-tp-lg font-bold text-app-foreground">Customize View</span></div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface transition-colors text-app-muted-foreground hover:text-app-foreground"><X size={14} /></button>
         </div>
         {/* Profile Selector */}
         <div className="px-4 py-3 border-b border-app-border/50 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Profile</span>
-            <span className="text-[9px] font-bold text-app-muted-foreground">{profiles.length}/{MAX_PROFILES}</span>
+            <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">Profile</span>
+            <span className="text-tp-xxs font-bold text-app-muted-foreground">{profiles.length}/{MAX_PROFILES}</span>
           </div>
           {isRenaming ? (
             <div className="flex gap-1.5">
               <input type="text" value={renameValue} onChange={e => setRenameValue(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') finishRename(); if (e.key === 'Escape') setIsRenaming(false) }}
-                autoFocus className="flex-1 text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-app-bg border border-app-primary/50 text-app-foreground outline-none" />
+                autoFocus className="flex-1 text-tp-md font-bold px-2.5 py-1.5 rounded-lg bg-app-bg border border-app-primary/50 text-app-foreground outline-none" />
               <button onClick={finishRename} className="p-1.5 rounded-lg bg-app-primary text-white hover:brightness-110 transition-all"><Save size={12} /></button>
             </div>
           ) : (
             <div className="flex gap-1.5">
               <select value={activeProfileId} onChange={e => switchProfile(e.target.value)}
-                className="flex-1 text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-app-surface/50 border border-app-border/50 text-app-foreground outline-none">
+                className="flex-1 text-tp-md font-bold px-2.5 py-1.5 rounded-lg bg-app-surface/50 border border-app-border/50 text-app-foreground outline-none">
                 {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
               <button onClick={startRename} title="Rename" className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all"><Edit size={12} /></button>
@@ -121,7 +121,7 @@ export function LedgerCustomizePanel({
             </div>
           )}
           <button onClick={createProfile} disabled={profiles.length >= MAX_PROFILES}
-            className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold py-1.5 rounded-lg border border-dashed border-app-border text-app-muted-foreground hover:text-app-primary hover:border-app-primary/40 transition-all disabled:opacity-30">
+            className="w-full flex items-center justify-center gap-1.5 text-tp-sm font-bold py-1.5 rounded-lg border border-dashed border-app-border text-app-muted-foreground hover:text-app-primary hover:border-app-primary/40 transition-all disabled:opacity-30">
             <Plus size={12} /> New Profile
           </button>
         </div>
@@ -130,7 +130,7 @@ export function LedgerCustomizePanel({
           {[{ key: 'layout' as const, label: 'Columns', icon: <SlidersHorizontal size={12} /> },
             { key: 'filter' as const, label: 'Filters', icon: <Filter size={12} /> }].map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${tab === t.key ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface'}`}>
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-sm font-bold transition-all ${tab === t.key ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface'}`}>
               {t.icon} {t.label}
             </button>
           ))}
@@ -159,15 +159,15 @@ export function LedgerCustomizePanel({
           )}
           {/* SaaS Note */}
           <div className="rounded-xl border border-dashed border-app-border/60 p-3">
-            <div className="text-[10px] font-black text-app-primary uppercase tracking-widest mb-1">SaaS Governed</div>
-            <p className="text-[10px] text-app-muted-foreground leading-relaxed">
+            <div className="text-tp-xs font-bold text-app-primary uppercase tracking-wide mb-1">SaaS Governed</div>
+            <p className="text-tp-xs text-app-muted-foreground leading-relaxed">
               Column layouts, filters, and action availability are configurable per-organization from the SaaS admin panel.
             </p>
           </div>
         </div>
         {/* Footer */}
         <div className="flex-shrink-0 px-4 py-3 border-t border-app-border/50">
-          <div className="text-[10px] font-bold text-app-muted-foreground text-center">
+          <div className="text-tp-xs font-bold text-app-muted-foreground text-center">
             {ap?.name} · {Object.values(visibleColumns).filter(Boolean).length} columns · {Object.values(visibleFilters).filter(Boolean).length} filters
           </div>
         </div>

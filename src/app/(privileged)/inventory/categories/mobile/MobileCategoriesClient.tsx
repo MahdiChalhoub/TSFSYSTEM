@@ -203,7 +203,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                 kpis: [
                     { label: 'Total', value: stats.total, icon: <Layers size={13} />, color: 'var(--app-primary)' },
                     { label: 'Root', value: stats.roots, icon: <FolderTree size={13} />, color: 'var(--app-success, #10b981)' },
-                    { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={13} />, color: '#8b5cf6' },
+                    { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={13} />, color: 'var(--app-info)' },
                     { label: 'Products', value: stats.totalProducts, icon: <Box size={13} />, color: 'var(--app-info, #3b82f6)' },
                     { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={13} />, color: 'var(--app-warning, #f59e0b)' },
                     { label: 'Showing', value: stats.total, icon: <Search size={13} />, color: 'var(--app-muted-foreground)' },
@@ -327,11 +327,11 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                                     border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
                                 }}>
                                 <span className="text-tp-md font-bold text-app-foreground truncate">
-                                    <span className="font-black tabular-nums" style={{ color: 'var(--app-info, #3b82f6)' }}>
+                                    <span className="font-bold tabular-nums" style={{ color: 'var(--app-info, #3b82f6)' }}>
                                         {filtered.length}
                                     </span>
                                     <span className="text-app-muted-foreground"> of {source.length} · matches "</span>
-                                    <span className="font-black text-app-foreground">{searchQuery}</span>
+                                    <span className="font-bold text-app-foreground">{searchQuery}</span>
                                     <span className="text-app-muted-foreground">"</span>
                                 </span>
                             </div>

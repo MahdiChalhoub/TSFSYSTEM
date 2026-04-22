@@ -196,7 +196,7 @@ export function MobileLedgerClient() {
                     { label: 'Draft', value: stats.draft, icon: <Clock size={13} />, color: 'var(--app-warning, #f59e0b)' },
                     { label: 'Reversed', value: stats.reversed, icon: <RotateCcw size={13} />, color: 'var(--app-error, #ef4444)' },
                     { label: 'Total Debit', value: formatAmount(stats.totalDebit, fmt), icon: <Zap size={13} />, color: 'var(--app-info, #3b82f6)' },
-                    { label: 'Total Credit', value: formatAmount(stats.totalCredit, fmt), icon: <Zap size={13} />, color: '#8b5cf6' },
+                    { label: 'Total Credit', value: formatAmount(stats.totalCredit, fmt), icon: <Zap size={13} />, color: 'var(--app-info)' },
                 ],
                 footerLeft: (
                     <>
@@ -277,7 +277,7 @@ export function MobileLedgerClient() {
                                     <button
                                         key={f.label}
                                         onClick={() => setStatusFilter(f.key)}
-                                        className="flex-shrink-0 flex items-center gap-1.5 font-black uppercase tracking-widest rounded-full px-3 py-1.5 active:scale-95 transition-all"
+                                        className="flex-shrink-0 flex items-center gap-1.5 font-bold uppercase tracking-wide rounded-full px-3 py-1.5 active:scale-95 transition-all"
                                         style={{
                                             fontSize: 'var(--tp-xxs)',
                                             minHeight: 32,
@@ -288,7 +288,7 @@ export function MobileLedgerClient() {
                                             border: `1px solid color-mix(in srgb, ${f.color} ${active ? 50 : 25}%, transparent)`,
                                         }}>
                                         {f.label}
-                                        <span className="font-black tabular-nums rounded-full px-1.5 py-0.5"
+                                        <span className="font-bold tabular-nums rounded-full px-1.5 py-0.5"
                                             style={{
                                                 fontSize: 'var(--tp-xxs)',
                                                 background: active ? 'rgba(255,255,255,0.2)' : `color-mix(in srgb, ${f.color} 16%, transparent)`,
@@ -316,7 +316,7 @@ export function MobileLedgerClient() {
                                 return (
                                     <button key={r.key}
                                         onClick={() => setDateRange(r.key as any)}
-                                        className="flex-shrink-0 flex items-center gap-1 font-black rounded-lg px-3 py-1.5 active:scale-95 transition-transform"
+                                        className="flex-shrink-0 flex items-center gap-1 font-bold rounded-lg px-3 py-1.5 active:scale-95 transition-transform"
                                         style={{
                                             fontSize: 'var(--tp-xxs)',
                                             minHeight: 30,
@@ -379,11 +379,11 @@ export function MobileLedgerClient() {
                                         }}>
                                         {/* Line 1: reference + status */}
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="font-mono font-black tabular-nums text-app-foreground flex-1 truncate"
+                                            <span className="font-mono font-bold tabular-nums text-app-foreground flex-1 truncate"
                                                 style={{ fontSize: 'var(--tp-lg)' }}>
                                                 {e.reference || `#${e.id}`}
                                             </span>
-                                            <span className="flex items-center gap-1 font-black uppercase tracking-widest rounded-full px-2 py-0.5"
+                                            <span className="flex items-center gap-1 font-bold uppercase tracking-wide rounded-full px-2 py-0.5"
                                                 style={{
                                                     fontSize: 'var(--tp-xxs)',
                                                     background: `color-mix(in srgb, ${status.color} 14%, transparent)`,
@@ -399,13 +399,13 @@ export function MobileLedgerClient() {
                                                 <Calendar size={10} /> {formatDate(e.date)}
                                             </span>
                                             {srcModule && (
-                                                <span className="font-mono font-black uppercase tracking-wider text-app-muted-foreground rounded px-1.5"
+                                                <span className="font-mono font-bold uppercase tracking-wider text-app-muted-foreground rounded px-1.5"
                                                     style={{ fontSize: 'var(--tp-xxs)', background: 'color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
                                                     {srcModule}
                                                 </span>
                                             )}
                                             {scope === 'OFFICIAL' && (
-                                                <span className="flex items-center gap-0.5 font-black uppercase tracking-widest rounded-full px-1.5 py-0.5"
+                                                <span className="flex items-center gap-0.5 font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5"
                                                     style={{
                                                         fontSize: 'var(--tp-xxs)',
                                                         background: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)',
@@ -424,7 +424,7 @@ export function MobileLedgerClient() {
                                         {/* Line 3: amounts + line count */}
                                         <div className="flex items-center gap-2">
                                             <div className="flex-1 flex items-center gap-2 min-w-0">
-                                                <span className="flex items-center gap-1 font-mono font-black tabular-nums rounded-lg px-2 py-1"
+                                                <span className="flex items-center gap-1 font-mono font-bold tabular-nums rounded-lg px-2 py-1"
                                                     style={{
                                                         fontSize: 'var(--tp-sm)',
                                                         color: 'var(--app-info, #3b82f6)',
@@ -432,11 +432,11 @@ export function MobileLedgerClient() {
                                                     }}>
                                                     Dr {formatAmount(debit, fmt)}
                                                 </span>
-                                                <span className="flex items-center gap-1 font-mono font-black tabular-nums rounded-lg px-2 py-1"
+                                                <span className="flex items-center gap-1 font-mono font-bold tabular-nums rounded-lg px-2 py-1"
                                                     style={{
                                                         fontSize: 'var(--tp-sm)',
-                                                        color: '#8b5cf6',
-                                                        background: 'color-mix(in srgb, #8b5cf6 8%, transparent)',
+                                                        color: 'var(--app-info)',
+                                                        background: 'color-mix(in srgb, var(--app-info) 8%, transparent)',
                                                     }}>
                                                     Cr {formatAmount(credit, fmt)}
                                                 </span>
@@ -484,12 +484,12 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                     <SIcon size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-mono font-black text-app-foreground truncate leading-tight"
+                    <h3 className="font-mono font-bold text-app-foreground truncate leading-tight"
                         style={{ fontSize: 'var(--tp-xl)' }}>
                         {entry.reference || `#${entry.id}`}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
-                        <span className="font-black uppercase tracking-widest rounded-full px-2 py-0.5"
+                        <span className="font-bold uppercase tracking-wide rounded-full px-2 py-0.5"
                             style={{
                                 fontSize: 'var(--tp-xxs)',
                                 background: `color-mix(in srgb, ${status.color} 14%, transparent)`,
@@ -523,22 +523,22 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                             background: 'color-mix(in srgb, var(--app-info, #3b82f6) 6%, var(--app-surface))',
                             border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
                         }}>
-                        <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                        <div className="font-bold uppercase tracking-wide text-app-muted-foreground"
                             style={{ fontSize: 'var(--tp-xxs)' }}>Debit</div>
-                        <div className="font-mono font-black tabular-nums mt-1"
+                        <div className="font-mono font-bold tabular-nums mt-1"
                             style={{ fontSize: 'var(--tp-stat)', color: 'var(--app-info, #3b82f6)' }}>
                             {formatAmount(debit, fmt)}
                         </div>
                     </div>
                     <div className="rounded-2xl px-3 py-3"
                         style={{
-                            background: 'color-mix(in srgb, #8b5cf6 6%, var(--app-surface))',
-                            border: '1px solid color-mix(in srgb, #8b5cf6 20%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-info) 6%, var(--app-surface))',
+                            border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)',
                         }}>
-                        <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                        <div className="font-bold uppercase tracking-wide text-app-muted-foreground"
                             style={{ fontSize: 'var(--tp-xxs)' }}>Credit</div>
-                        <div className="font-mono font-black tabular-nums mt-1"
-                            style={{ fontSize: 'var(--tp-stat)', color: '#8b5cf6' }}>
+                        <div className="font-mono font-bold tabular-nums mt-1"
+                            style={{ fontSize: 'var(--tp-stat)', color: 'var(--app-info)' }}>
                             {formatAmount(credit, fmt)}
                         </div>
                     </div>
@@ -551,7 +551,7 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                             border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)',
                         }}>
                         <ShieldCheck size={14} style={{ color: 'var(--app-error, #ef4444)' }} />
-                        <span className="font-black" style={{ fontSize: 'var(--tp-md)', color: 'var(--app-error, #ef4444)' }}>
+                        <span className="font-bold" style={{ fontSize: 'var(--tp-md)', color: 'var(--app-error, #ef4444)' }}>
                             Unbalanced — Δ {formatAmount(Math.abs(debit - credit), fmt)}
                         </span>
                     </div>
@@ -580,7 +580,7 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                         <div key={label}
                             className="flex items-center justify-between gap-3 px-3 py-2.5"
                             style={{ borderTop: i === 0 ? undefined : '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
-                            <span className="font-black uppercase tracking-widest text-app-muted-foreground"
+                            <span className="font-bold uppercase tracking-wide text-app-muted-foreground"
                                 style={{ fontSize: 'var(--tp-xxs)' }}>{label}</span>
                             <span className="font-bold text-app-foreground truncate text-right"
                                 style={{ fontSize: 'var(--tp-md)' }}>{value}</span>
@@ -591,7 +591,7 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                 {/* Lines */}
                 {lines.length > 0 && (
                     <div>
-                        <div className="font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 px-1"
+                        <div className="font-bold uppercase tracking-wide text-app-muted-foreground mb-1.5 px-1"
                             style={{ fontSize: 'var(--tp-xs)' }}>
                             Journal Lines ({lines.length})
                         </div>
@@ -607,7 +607,7 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                                     <div key={l.id || i} className="px-3 py-2.5"
                                         style={{ borderTop: i === 0 ? undefined : '1px dashed color-mix(in srgb, var(--app-border) 22%, transparent)' }}>
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="font-mono font-black tabular-nums"
+                                            <span className="font-mono font-bold tabular-nums"
                                                 style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-primary)', minWidth: 46 }}>
                                                 {l.account_code || l.accountCode || '—'}
                                             </span>
@@ -624,7 +624,7 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                                         )}
                                         <div className="flex items-center gap-2">
                                             {ld > 0 && (
-                                                <span className="font-mono font-black tabular-nums rounded-lg px-2 py-0.5"
+                                                <span className="font-mono font-bold tabular-nums rounded-lg px-2 py-0.5"
                                                     style={{
                                                         fontSize: 'var(--tp-xs)',
                                                         color: 'var(--app-info, #3b82f6)',
@@ -634,11 +634,11 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                                                 </span>
                                             )}
                                             {lc > 0 && (
-                                                <span className="font-mono font-black tabular-nums rounded-lg px-2 py-0.5"
+                                                <span className="font-mono font-bold tabular-nums rounded-lg px-2 py-0.5"
                                                     style={{
                                                         fontSize: 'var(--tp-xs)',
-                                                        color: '#8b5cf6',
-                                                        background: 'color-mix(in srgb, #8b5cf6 8%, transparent)',
+                                                        color: 'var(--app-info)',
+                                                        background: 'color-mix(in srgb, var(--app-info) 8%, transparent)',
                                                     }}>
                                                     Cr {formatAmount(lc, fmt)}
                                                 </span>
@@ -674,7 +674,7 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                 </button>
                 <button
                     onClick={onEdit}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-black"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-bold"
                     style={{
                         fontSize: 'var(--tp-md)', height: 46,
                         color: '#fff',

@@ -204,7 +204,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 columnHeaders: [
                     { label: 'Category', width: 'auto' },
                     { label: 'Sub', width: '48px', hideOnMobile: true },
-                    { label: 'Brands', width: '56px', color: '#8b5cf6', hideOnMobile: true },
+                    { label: 'Brands', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
                     { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true },
                     { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
                 ],
@@ -215,7 +215,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         hint: 'Show all categories (clear filters)',
                     },
                     { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-success)', filterKey: 'root', active: kpiFilter === 'root', hint: 'Show only top-level categories' },
-                    { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: '#8b5cf6', filterKey: 'leaf', active: kpiFilter === 'leaf', hint: 'Show only leaf categories (no children)' },
+                    { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: 'var(--app-info)', filterKey: 'leaf', active: kpiFilter === 'leaf', hint: 'Show only leaf categories (no children)' },
                     { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-info)', filterKey: 'products', active: kpiFilter === 'products', hint: 'Show only categories with products' },
                     { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: 'var(--app-warning)', filterKey: 'brands', active: kpiFilter === 'brands', hint: 'Show only categories with brands' },
                     {

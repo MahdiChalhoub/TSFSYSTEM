@@ -31,9 +31,9 @@ export function KpiStrip({ kpis, statusFilter, setStatusFilter }: KpiStripProps)
                             <Icon size={14} />
                         </div>
                         <div className="min-w-0">
-                            <div className="text-[9px] font-bold uppercase tracking-wider truncate"
+                            <div className="text-tp-xxs font-bold uppercase tracking-wider truncate"
                                 style={{ color: isActive ? k.color : 'var(--app-muted-foreground)' }}>{k.label}</div>
-                            <div className="text-sm font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
+                            <div className="text-sm font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
                         </div>
                     </button>
                 )

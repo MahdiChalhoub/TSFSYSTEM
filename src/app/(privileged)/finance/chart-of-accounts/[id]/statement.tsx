@@ -121,7 +121,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
                                     <td className="px-6 py-3 text-app-foreground font-medium">
                                         {line.description || line.journalEntry.description}
                                         {line.journalEntry.reference && (
-                                            <span className="ml-2 bg-app-surface-2 text-app-muted-foreground px-1.5 py-0.5 rounded text-[10px] font-mono">
+                                            <span className="ml-2 bg-app-surface-2 text-app-muted-foreground px-1.5 py-0.5 rounded text-tp-xs font-mono">
                                                 {line.journalEntry.reference}
                                             </span>
                                         )}

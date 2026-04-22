@@ -72,27 +72,27 @@ export const AccountNode = ({
                 {/* Code + Name */}
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                     <span
-                        className="font-mono text-[11px] font-bold flex-shrink-0"
+                        className="font-mono text-tp-sm font-bold flex-shrink-0"
                         style={{ color: 'var(--app-muted-foreground, #94A3B8)' }}
                     >
                         {node.code}
                     </span>
                     <span
-                        className={`truncate text-[13px] ${isRoot ? 'font-bold' : 'font-medium'}`}
+                        className={`truncate text-tp-lg ${isRoot ? 'font-bold' : 'font-medium'}`}
                         style={{ color: 'var(--app-foreground, var(--app-text, #F1F5F9))' }}
                     >
                         {node.name}
                     </span>
                     {node.subType && (
                         <span
-                            className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hidden md:inline"
+                            className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hidden md:inline"
                             style={{ background: typeConf.bg, color: typeConf.color, border: `1px solid ${typeConf.bg}` }}
                         >
                             {node.subType}
                         </span>
                     )}
                     {!node.isActive && (
-                        <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded flex-shrink-0"
+                        <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded flex-shrink-0"
                             style={{ background: 'var(--app-error-bg, rgba(239,68,68,0.12))', color: 'var(--app-error, #EF4444)' }}>
                             Inactive
                         </span>
@@ -104,7 +104,7 @@ export const AccountNode = ({
                     {node.syscohadaCode && (
                         <>
                             <span
-                                className="text-[9px] font-black px-1.5 py-0.5 rounded"
+                                className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
                                 style={{
                                     background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
                                     color: 'var(--app-muted-foreground, #94A3B8)',
@@ -114,7 +114,7 @@ export const AccountNode = ({
                                 {node.syscohadaCode}
                             </span>
                             {node.syscohadaClass && (
-                                <span className="text-[9px] truncate max-w-[80px]"
+                                <span className="text-tp-xxs truncate max-w-[80px]"
                                     style={{ color: 'var(--app-muted-foreground, #94A3B8)' }}>
                                     {node.syscohadaClass}
                                 </span>
@@ -126,7 +126,7 @@ export const AccountNode = ({
                 {/* Type Badge */}
                 <div className="w-24 flex-shrink-0 hidden sm:flex items-center">
                     <span
-                        className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1"
+                        className="text-tp-xxs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1"
                         style={{ background: typeConf.bg, color: typeConf.color, border: `1px solid ${typeConf.bg}` }}
                     >
                         {typeConf.icon}
@@ -136,7 +136,7 @@ export const AccountNode = ({
 
                 {/* Balance */}
                 <div
-                    className="w-28 text-right font-mono text-[12px] font-bold flex-shrink-0 tabular-nums"
+                    className="w-28 text-right font-mono text-tp-md font-bold flex-shrink-0 tabular-nums"
                     style={{ color: node.balance < 0 ? 'var(--app-error, #EF4444)' : 'var(--app-foreground, var(--app-text, #F1F5F9))' }}
                 >
                     {node.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}

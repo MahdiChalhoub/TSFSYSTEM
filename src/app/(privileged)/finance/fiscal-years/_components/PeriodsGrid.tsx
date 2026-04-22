@@ -19,11 +19,11 @@ export function PeriodsGrid({ periods, year, isPending, handlePeriodStatus, hand
                 const monthLabel = p.start_date ? new Date(p.start_date).toLocaleDateString('en', { month: 'short', year: '2-digit' }) : ''
                 return (
                     <div key={p.id} data-period-id={p.id} className="rounded-xl p-2.5 text-center transition-all" style={{ background: ps.bg, border: `1px solid ${ps.color}20` }}>
-                        <div className="text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{pLabel}</div>
-                        <div className="text-[11px] font-bold mt-0.5" style={{ color: 'var(--app-foreground)' }}>{monthLabel}</div>
-                        <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full mt-1 inline-block" style={{ background: ps.bg, color: ps.color, border: `1px solid ${ps.color}30` }}>{pStatus}</span>
+                        <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{pLabel}</div>
+                        <div className="text-tp-sm font-bold mt-0.5" style={{ color: 'var(--app-foreground)' }}>{monthLabel}</div>
+                        <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded-full mt-1 inline-block" style={{ background: ps.bg, color: ps.color, border: `1px solid ${ps.color}30` }}>{pStatus}</span>
                         {(p.journal_entry_count || 0) > 0 && (
-                            <div className="text-[8px] font-bold mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{p.journal_entry_count} JEs</div>
+                            <div className="text-tp-xxs font-bold mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{p.journal_entry_count} JEs</div>
                         )}
                         {!year.isHardLocked && (
                             <div className="flex items-center justify-center gap-1 mt-1.5 flex-wrap">

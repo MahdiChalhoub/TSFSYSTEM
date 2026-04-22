@@ -48,21 +48,37 @@ class Unit(AuditLogMixin, TenantOwnedModel):
 
 class UnitPackage(AuditLogMixin, TenantOwnedModel):
     """
-    Per-UNIT package TEMPLATE — just the shape (name + ratio + unit).
+    Per-UNIT package TEMPLATE — a step in a packaging pipeline.
 
-    Templates DON'T carry barcode / price / image — those are per-product
-    and live on ProductPackaging. When a product adopts this template,
-    its own ProductPackaging row gets the barcode and price specific to
-    THAT product (e.g. Coca Cola Pack of 6 has barcode b1 and price p1,
-    while Sprite Pack of 6 has barcode b2 and price p2 — same template,
-    different product-level data).
+    Templates form a chain: pc → pack → box → pallet → TC. Each template
+    points at its `parent` (the previous step) and specifies how many of
+    the parent it contains via `parent_ratio`. Example:
+
+        pc                  ratio=1    parent=None
+        Pack of 6           ratio=6    parent=pc      parent_ratio=6
+        Box of 24           ratio=24   parent=Pack    parent_ratio=4
+        Pallet of 144       ratio=144  parent=Box     parent_ratio=6
+        TC of 2880          ratio=2880 parent=Pallet  parent_ratio=20
+
+    `ratio` is still the total BASE units in this package (pre-computable
+    from the chain) — kept for fast scan/sort. Templates DON'T carry
+    barcode / price / image — those are per-product on ProductPackaging.
     """
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='unit_packages')
+    parent = models.ForeignKey(
+        'self', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='children',
+        help_text='Previous step in the packaging chain (None for base-level)',
+    )
+    parent_ratio = models.DecimalField(
+        max_digits=15, decimal_places=4, null=True, blank=True,
+        help_text='How many of `parent` this package contains (e.g. 4 boxes per pallet)',
+    )
     name = models.CharField(max_length=120, help_text='Display name, e.g. "Pack of 6"')
     code = models.CharField(max_length=50, null=True, blank=True, help_text='Short code, e.g. "PK6"')
     ratio = models.DecimalField(
         max_digits=15, decimal_places=4, default=Decimal('1.0'),
-        help_text='How many base UNITS this package contains'
+        help_text='How many base UNITS this package contains (parent.ratio × parent_ratio when chained)',
     )
     is_default = models.BooleanField(default=False, help_text='Primary package for this unit')
     order = models.PositiveIntegerField(default=0, help_text='Display order (ascending)')

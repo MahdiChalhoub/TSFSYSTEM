@@ -212,8 +212,8 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                   <FolderTree size={18} className="text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-app-foreground">Browse Chart of Accounts</h3>
-                  <p className="text-[10px] text-app-muted-foreground">
+                  <h3 className="text-sm font-bold text-app-foreground">Browse Chart of Accounts</h3>
+                  <p className="text-tp-xs text-app-muted-foreground">
                     {rootAccounts.length} top-level · Select step by step
                   </p>
                 </div>
@@ -228,7 +228,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
             <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
               {/* Breadcrumb Trail */}
               {selections.filter(s => s != null).length > 0 && (
-                <div className="flex items-center gap-1 flex-wrap text-[10px] px-1">
+                <div className="flex items-center gap-1 flex-wrap text-tp-xs px-1">
                   <span className="text-app-muted-foreground font-bold">Path:</span>
                   {selections.filter(s => s != null).map((id, i) => {
                     const acc = accounts.find(a => a.id === id)
@@ -255,7 +255,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                   <div key={`lvl-${level}-${parentId || 'root'}`}
                     className={`animate-in fade-in slide-in-from-top-2 duration-300 ${level > 0 ? 'ml-3 pl-3 border-l-2 border-emerald-500/20' : ''}`}>
                     {/* Label */}
-                    <label className="block text-[10px] font-black text-app-muted-foreground uppercase tracking-wider mb-1.5">
+                    <label className="block text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-1.5">
                       {level === 0 ? (
                         <span>Step 1 — Select Account Group</span>
                       ) : (
@@ -296,7 +296,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                       if (!acc) return null
                       const isLeaf = !hasChildren(acc.id)
                       return (
-                        <div className={`mt-1.5 flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold ${
+                        <div className={`mt-1.5 flex items-center gap-2 px-3 py-1.5 rounded-lg text-tp-xs font-bold ${
                           isLeaf ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/8 text-amber-700'
                         }`}>
                           {isLeaf ? <Check size={10} /> : <FolderTree size={10} />}
@@ -317,15 +317,15 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                 if (!acc || hasChildren(acc.id)) return null
                 return (
                   <div className="mt-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 animate-in fade-in duration-300">
-                    <div className="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-2">✓ Account Selected</div>
+                    <div className="text-tp-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">✓ Account Selected</div>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
                         <FileText size={18} className="text-emerald-600" />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-base font-black text-app-foreground">{acc.code}</div>
+                        <div className="text-base font-bold text-app-foreground">{acc.code}</div>
                         <div className="text-sm text-app-foreground truncate">{acc.name}</div>
-                        <div className="text-[10px] text-app-muted-foreground font-mono mt-0.5">{acc.type}</div>
+                        <div className="text-tp-xs text-app-muted-foreground font-mono mt-0.5">{acc.type}</div>
                       </div>
                     </div>
                   </div>

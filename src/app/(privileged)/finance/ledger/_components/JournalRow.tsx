@@ -49,26 +49,26 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
             <FileText size={15} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-bold text-app-foreground truncate">{entry.description || 'Journal Entry'}</div>
-            <div className="text-[11px] font-mono text-app-muted-foreground mt-0.5">{entry.reference || `JV #${entry.id}`}</div>
+            <div className="text-tp-lg font-bold text-app-foreground truncate">{entry.description || 'Journal Entry'}</div>
+            <div className="text-tp-sm font-mono text-app-muted-foreground mt-0.5">{entry.reference || `JV #${entry.id}`}</div>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
+              <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded"
                 style={{ color: sc.color, background: `color-mix(in srgb, ${sc.color} 10%, transparent)` }}>
                 {sc.label}
               </span>
-              <span className="text-[10px] font-bold text-app-muted-foreground">{dateStr}</span>
+              <span className="text-tp-xs font-bold text-app-muted-foreground">{dateStr}</span>
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <div className="text-[13px] font-mono font-bold tabular-nums" style={{ color: 'var(--app-primary)' }}>
+            <div className="text-tp-lg font-mono font-bold tabular-nums" style={{ color: 'var(--app-primary)' }}>
               {fmt(totalDebit)}
             </div>
-            <div className="text-[11px] font-bold text-app-muted-foreground mt-0.5">{lines.length} lines</div>
+            <div className="text-tp-sm font-bold text-app-muted-foreground mt-0.5">{lines.length} lines</div>
           </div>
         </div>
         {isOpen && <div className="flex items-center gap-2 mt-2 pt-2 border-t border-app-border/20">
           <button onClick={e => { e.stopPropagation(); onView(entry.id) }}
-            className="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold text-app-primary py-2 rounded-xl border border-app-primary/30 hover:bg-app-primary/5 transition-all">
+            className="flex-1 flex items-center justify-center gap-1.5 text-tp-sm font-bold text-app-primary py-2 rounded-xl border border-app-primary/30 hover:bg-app-primary/5 transition-all">
             <Eye size={13} /> View Details
           </button>
         </div>}
@@ -101,12 +101,12 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
                 <div className="absolute left-0 top-full mt-1 z-50 w-48 py-1 rounded-xl border border-app-border shadow-xl animate-in fade-in slide-in-from-top-1 duration-150"
                   style={{ background: 'var(--app-surface)' }}>
                   <button onClick={() => { onView(entry.id); setShowMenu(false) }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
+                    className="w-full flex items-center gap-2 px-3 py-2 text-tp-sm font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
                     <Eye size={12} className="text-app-primary" /> View Details
                   </button>
                   {entry.status !== 'REVERSED' && !isLocked && (
                     <button onClick={() => { window.location.href = `/finance/ledger/${entry.id}/edit`; setShowMenu(false) }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
+                      className="w-full flex items-center gap-2 px-3 py-2 text-tp-sm font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
                       <Edit size={12} className="text-app-muted-foreground" /> Edit Entry
                     </button>
                   )}
@@ -129,11 +129,11 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
 
         {/* Description */}
         <div className="flex-1 min-w-0 max-w-[280px]">
-          <div className="truncate text-[12px] font-bold text-app-foreground">{entry.description || '—'}</div>
+          <div className="truncate text-tp-md font-bold text-app-foreground">{entry.description || '—'}</div>
           <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="text-[10px] font-mono text-app-muted-foreground">#{entry.id}</span>
+            <span className="text-tp-xs font-mono text-app-muted-foreground">#{entry.id}</span>
             {entry.reference?.startsWith('OPEN-') && (
-              <span className="text-[8px] font-black uppercase px-1 py-0.5 rounded"
+              <span className="text-tp-xxs font-bold uppercase px-1 py-0.5 rounded"
                 style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 10%, transparent)' }}>Opening</span>
             )}
           </div>
@@ -146,9 +146,9 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
           const w = COLUMN_WIDTHS[col.key] || 'w-16'
           const align = RIGHT_COLS.has(col.key) ? ' text-right' : CENTER_COLS.has(col.key) ? ' text-center' : ''
           let cellContent: any = '—'
-          if (col.key === 'reference') cellContent = <span className="font-mono text-[10px]">{entry.reference || '—'}</span>
-          else if (col.key === 'journalType') cellContent = <span className="text-[10px]">{(entry.journal_type || entry.journalType || '—')}</span>
-          else if (col.key === 'scope') cellContent = entry.scope === 'OFFICIAL' ? <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded" style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 10%, transparent)' }}>OFF</span> : <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded" style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 10%, transparent)' }}>INT</span>
+          if (col.key === 'reference') cellContent = <span className="font-mono text-tp-xs">{entry.reference || '—'}</span>
+          else if (col.key === 'journalType') cellContent = <span className="text-tp-xs">{(entry.journal_type || entry.journalType || '—')}</span>
+          else if (col.key === 'scope') cellContent = entry.scope === 'OFFICIAL' ? <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded" style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 10%, transparent)' }}>OFF</span> : <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded" style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 10%, transparent)' }}>INT</span>
           else if (col.key === 'sourceModule') cellContent = entry.source_module || '—'
           else if (col.key === 'sourceModel') cellContent = <span className="truncate">{entry.source_model || '—'}</span>
           else if (col.key === 'sourceId') cellContent = entry.source_id || '—'
@@ -157,10 +157,10 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
           else if (col.key === 'lineCount') cellContent = lines.length
           else if (col.key === 'currency') cellContent = entry.currency || '—'
           else if (col.key === 'exchangeRate') cellContent = entry.exchange_rate ? Number(entry.exchange_rate).toFixed(4) : '—'
-          else if (col.key === 'status') cellContent = <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded" style={{ color: sc.color, background: `color-mix(in srgb, ${sc.color} 10%, transparent)` }}>{sc.label}</span>
+          else if (col.key === 'status') cellContent = <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded" style={{ color: sc.color, background: `color-mix(in srgb, ${sc.color} 10%, transparent)` }}>{sc.label}</span>
           else if (col.key === 'isLocked') cellContent = entry.is_locked ? <Lock size={11} className="text-app-warning mx-auto" /> : <Unlock size={11} className="text-app-muted-foreground opacity-30 mx-auto" />
           else if (col.key === 'isVerified') cellContent = entry.is_verified ? <ShieldCheck size={11} className="text-app-success mx-auto" /> : <span className="opacity-30">—</span>
-          else if (col.key === 'date') cellContent = <>{dateStr}{entry.fiscalYear && <div className="text-[9px] text-app-muted-foreground">{entry.fiscalYear.name}</div>}</>
+          else if (col.key === 'date') cellContent = <>{dateStr}{entry.fiscalYear && <div className="text-tp-xxs text-app-muted-foreground">{entry.fiscalYear.name}</div>}</>
           else if (col.key === 'fiscalYear') cellContent = entry.fiscal_year?.name || entry.fiscalYear?.name || '—'
           else if (col.key === 'fiscalPeriod') cellContent = entry.fiscal_period?.name || '—'
           else if (col.key === 'postedAt') cellContent = entry.posted_at ? new Date(entry.posted_at).toLocaleDateString('en-GB') : '—'
@@ -168,9 +168,9 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
           else if (col.key === 'updatedAt') cellContent = entry.updated_at ? new Date(entry.updated_at).toLocaleDateString('en-GB') : '—'
           else if (col.key === 'createdBy') cellContent = <span className="truncate">{entry.created_by?.first_name || entry.created_by?.username || '—'}</span>
           else if (col.key === 'postedBy') cellContent = <span className="truncate">{entry.posted_by?.first_name || entry.posted_by?.username || '—'}</span>
-          else if (col.key === 'entryHash') cellContent = entry.entry_hash ? <span className="font-mono text-[8px] truncate opacity-60">{entry.entry_hash.slice(0, 12)}…</span> : '—'
+          else if (col.key === 'entryHash') cellContent = entry.entry_hash ? <span className="font-mono text-tp-xxs truncate opacity-60">{entry.entry_hash.slice(0, 12)}…</span> : '—'
           else if (col.key === 'site') cellContent = <span className="truncate">{entry.site?.name || '—'}</span>
-          return <div key={col.key} className={`${w} flex-shrink-0${align} text-[11px] font-bold text-app-foreground`}>{cellContent}</div>
+          return <div key={col.key} className={`${w} flex-shrink-0${align} text-tp-sm font-bold text-app-foreground`}>{cellContent}</div>
         })}
       </div>
 
@@ -182,12 +182,12 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
             {/* Action bar */}
             <div className="flex items-center gap-2 mb-3">
               <button onClick={() => onView(entry.id)}
-                className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg bg-app-primary text-white hover:brightness-110 transition-all">
+                className="flex items-center gap-1.5 text-tp-xs font-bold px-3 py-1.5 rounded-lg bg-app-primary text-white hover:brightness-110 transition-all">
                 <Eye size={11} /> View Details
               </button>
               {entry.status !== 'REVERSED' && !isLocked && (
                 <button onClick={() => { window.location.href = `/finance/ledger/${entry.id}/edit` }}
-                  className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
+                  className="flex items-center gap-1.5 text-tp-xs font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
                   <Edit size={11} /> Edit
                 </button>
               )}
@@ -201,9 +201,9 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
                 <div className="px-3 py-1.5 flex items-center gap-2 border-b border-app-border/30"
                   style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)' }}>
                   <div className="w-1 h-3 rounded-full bg-app-primary" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-app-primary">Summary</span>
+                  <span className="text-tp-xxs font-bold uppercase tracking-wide text-app-primary">Summary</span>
                 </div>
-                <div className="px-3 py-2 grid grid-cols-3 gap-x-3 gap-y-1.5 text-[10px]">
+                <div className="px-3 py-2 grid grid-cols-3 gap-x-3 gap-y-1.5 text-tp-xs">
                   <DCell label="JV ID" value={`#${entry.id}`} mono color="var(--app-primary)" />
                   <DCell label="Reference" value={entry.reference} mono />
                   <DCell label="Status" value={sc.label} color={sc.color} />
@@ -218,9 +218,9 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
                 <div className="px-3 py-1.5 flex items-center gap-2 border-b border-app-border/30"
                   style={{ background: 'color-mix(in srgb, var(--app-success) 6%, transparent)' }}>
                   <div className="w-1 h-3 rounded-full" style={{ background: 'var(--app-success)' }} />
-                  <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success)' }}>Totals</span>
+                  <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-success)' }}>Totals</span>
                 </div>
-                <div className="px-3 py-2 grid grid-cols-3 gap-x-3 gap-y-1.5 text-[10px]">
+                <div className="px-3 py-2 grid grid-cols-3 gap-x-3 gap-y-1.5 text-tp-xs">
                   <DCell label="Total Debit" value={fmt(totalDebit)} mono color="var(--app-primary)" />
                   <DCell label="Total Credit" value={fmt(totalCredit)} mono color="var(--app-error)" />
                   <DCell label="Balance" value={fmt(Math.abs(totalDebit - totalCredit))} mono
@@ -235,9 +235,9 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
                 <div className="px-3 py-1.5 flex items-center gap-2 border-b border-app-border/30"
                   style={{ background: 'color-mix(in srgb, var(--app-info) 6%, transparent)' }}>
                   <div className="w-1 h-3 rounded-full" style={{ background: 'var(--app-info)' }} />
-                  <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-info)' }}>Financial Vectors</span>
+                  <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-info)' }}>Financial Vectors</span>
                 </div>
-                <div className="flex items-center gap-3 px-3 py-1.5 border-b border-app-border/20 text-[8px] font-black uppercase tracking-widest text-app-muted-foreground">
+                <div className="flex items-center gap-3 px-3 py-1.5 border-b border-app-border/20 text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground">
                   <div className="w-16">Code</div>
                   <div className="flex-1">Account</div>
                   <div className="w-24 text-right">Debit</div>
@@ -246,17 +246,17 @@ export const JournalRow = React.memo(function JournalRow({ entry, onView, fmt, i
                 {lines.map((l: any, i: number) => (
                   <div key={i} className="flex items-center gap-3 px-3 py-1.5 border-b border-app-border/10 hover:bg-app-surface/40 transition-all">
                     <div className="w-16">
-                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
+                      <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
                         style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
                         {l.account?.code}
                       </span>
                     </div>
-                    <div className="flex-1 text-[11px] font-bold text-app-foreground truncate">{l.account?.name}</div>
-                    <div className="w-24 text-right text-[11px] font-mono font-bold tabular-nums"
+                    <div className="flex-1 text-tp-sm font-bold text-app-foreground truncate">{l.account?.name}</div>
+                    <div className="w-24 text-right text-tp-sm font-mono font-bold tabular-nums"
                       style={{ color: Number(l.debit) > 0 ? 'var(--app-primary)' : 'transparent' }}>
                       {Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}
                     </div>
-                    <div className="w-24 text-right text-[11px] font-mono font-bold tabular-nums"
+                    <div className="w-24 text-right text-tp-sm font-mono font-bold tabular-nums"
                       style={{ color: Number(l.credit) > 0 ? 'var(--app-error)' : 'transparent' }}>
                       {Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}
                     </div>

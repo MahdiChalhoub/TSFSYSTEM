@@ -99,7 +99,7 @@ export default function CoaMigrationTool({
                         </div>
                         <div>
                             <h2 className="text-xl font-bold font-serif italic">Step 1: Choose Your Destination</h2>
-                            <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Select the standard you want to migrate to</p>
+                            <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-wide mt-1">Select the standard you want to migrate to</p>
                         </div>
                     </div>
                 </div>
@@ -163,7 +163,7 @@ export default function CoaMigrationTool({
             <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="bg-app-bg text-app-muted-foreground uppercase text-[10px] tracking-widest font-bold">
+                        <tr className="bg-app-bg text-app-muted-foreground uppercase text-tp-xs tracking-wide font-bold">
                             <th className="p-5 text-left w-1/2">Current Layout (Source)</th>
                             <th className="p-5 text-center w-12"></th>
                             <th className="p-5 text-left w-1/2">New Layout (Destination)</th>
@@ -174,10 +174,10 @@ export default function CoaMigrationTool({
                             <tr key={acc.id} className="hover:bg-app-surface/50 transition-colors">
                                 <td className="p-5">
                                     <div className="flex flex-col">
-                                        <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-tighter mb-1 font-mono">{acc.code}</div>
+                                        <div className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-tighter mb-1 font-mono">{acc.code}</div>
                                         <div className="font-bold text-app-foreground">{acc.name}</div>
                                         <div className="mt-1 flex items-center gap-2">
-                                            <span className="text-[10px] font-black bg-app-surface-2 text-app-muted-foreground px-1.5 py-0.5 rounded">{acc.type}</span>
+                                            <span className="text-tp-xs font-bold bg-app-surface-2 text-app-muted-foreground px-1.5 py-0.5 rounded">{acc.type}</span>
                                             <span className="text-sm font-mono text-emerald-600 font-bold">
                                                 {typeof acc.balance === 'number' ? acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
                                             </span>
@@ -234,7 +234,7 @@ export default function CoaMigrationTool({
                 </div>
             </div>
 
-            <p className="text-[10px] text-app-muted-foreground font-bold text-center uppercase tracking-widest">
+            <p className="text-tp-xs text-app-muted-foreground font-bold text-center uppercase tracking-wide">
                 Warning: This process will post a Reclassification Journal Entry and deactivate mapped accounts.
             </p>
         </div>

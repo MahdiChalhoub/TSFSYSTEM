@@ -152,7 +152,7 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 kpis: [
                     { label: 'Total', value: stats.total, icon: <Layers size={13} />, color: 'var(--app-primary)' },
                     { label: 'Base', value: stats.base, icon: <Ruler size={13} />, color: 'var(--app-info, #3b82f6)' },
-                    { label: 'Derived', value: stats.derived, icon: <GitBranch size={13} />, color: '#8b5cf6' },
+                    { label: 'Derived', value: stats.derived, icon: <GitBranch size={13} />, color: 'var(--app-info)' },
                     { label: 'Products', value: stats.totalProducts, icon: <Package size={13} />, color: 'var(--app-success, #10b981)' },
                     { label: 'Scale', value: stats.scaleUnits, icon: <Scale size={13} />, color: 'var(--app-warning, #f59e0b)' },
                     { label: 'Showing', value: stats.total, icon: <Search size={13} />, color: 'var(--app-muted-foreground)' },
@@ -307,17 +307,17 @@ function MobileUnitDetail({ node, onEdit, onAdd, onDelete, onClose }: any) {
                     <Ruler size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
+                    <h3 className="font-bold text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
                         {node.name}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
                         {node.code && (
-                            <span className="font-mono font-black" style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-info, #3b82f6)' }}>
+                            <span className="font-mono font-bold" style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-info, #3b82f6)' }}>
                                 {node.code}
                             </span>
                         )}
                         {isBase && (
-                            <span className="font-black uppercase tracking-widest rounded-full px-2 py-0.5"
+                            <span className="font-bold uppercase tracking-wide rounded-full px-2 py-0.5"
                                 style={{
                                     fontSize: 'var(--tp-xxs)',
                                     background: 'color-mix(in srgb, var(--app-info, #3b82f6) 14%, transparent)',
@@ -357,7 +357,7 @@ function MobileUnitDetail({ node, onEdit, onAdd, onDelete, onClose }: any) {
                         <div key={label}
                             className="flex items-center justify-between gap-3 px-3 py-2.5"
                             style={{ borderTop: i === 0 ? undefined : '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
-                            <span className="font-black uppercase tracking-widest text-app-muted-foreground"
+                            <span className="font-bold uppercase tracking-wide text-app-muted-foreground"
                                 style={{ fontSize: 'var(--tp-xxs)' }}>{label}</span>
                             <span className="font-bold text-app-foreground truncate text-right"
                                 style={{ fontSize: 'var(--tp-md)' }}>{value}</span>
@@ -373,7 +373,7 @@ function MobileUnitDetail({ node, onEdit, onAdd, onDelete, onClose }: any) {
                 }}>
                 <button
                     onClick={() => onAdd(node.id)}
-                    className="flex items-center justify-center gap-1.5 rounded-xl active:scale-[0.97] transition-transform font-black flex-shrink-0"
+                    className="flex items-center justify-center gap-1.5 rounded-xl active:scale-[0.97] transition-transform font-bold flex-shrink-0"
                     style={{
                         fontSize: 'var(--tp-md)',
                         height: 42, padding: '0 14px',
@@ -385,7 +385,7 @@ function MobileUnitDetail({ node, onEdit, onAdd, onDelete, onClose }: any) {
                 </button>
                 <button
                     onClick={() => onEdit(node)}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-black"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-bold"
                     style={{
                         fontSize: 'var(--tp-md)',
                         height: 42,

@@ -154,7 +154,7 @@ export const CategoryRow = ({
                     <button
                         onClick={(e) => { e.stopPropagation(); onViewBrands(node) }}
                         className="text-tp-xs font-semibold tabular-nums transition-colors hover:underline"
-                        style={{ color: brandCount > 0 ? '#8b5cf6' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
+                        style={{ color: brandCount > 0 ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
                         title={`${brandCount} brand${brandCount !== 1 ? 's' : ''}`}
                     >
                         {brandCount}

@@ -153,14 +153,14 @@ export default function UserGroupsPage() {
                     <Users size={20} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Teams</h1>
-                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Teams</h1>
+                    <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                         {groups.length} Teams · Assign work to a group of people at once
                     </p>
                 </div>
                 <button
                     onClick={() => setEditing(emptyEdit())}
-                    className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                    className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                     style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                 >
                     <Plus size={14} /> <span className="hidden sm:inline">New Group</span>
@@ -172,12 +172,12 @@ export default function UserGroupsPage() {
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <input value={listSearch} onChange={e => setListSearch(e.target.value)}
                         placeholder="Search groups…"
-                        className="w-full pl-9 pr-3 py-2 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface outline-none transition-all" />
+                        className="w-full pl-9 pr-3 py-2 text-tp-md bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface outline-none transition-all" />
                 </div>
             </div>
 
             <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
-                <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+                <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider">
                     <div className="w-7 flex-shrink-0" />
                     <div className="flex-1 min-w-0">Group</div>
                     <div className="hidden md:block w-40 flex-shrink-0">Leader</div>
@@ -199,7 +199,7 @@ export default function UserGroupsPage() {
                             </p>
                             {groups.length === 0 && (
                                 <button onClick={() => setEditing(emptyEdit())}
-                                    className="mt-3 flex items-center gap-1.5 text-[11px] font-bold bg-app-primary text-white px-3 py-1.5 rounded-xl">
+                                    className="mt-3 flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary text-white px-3 py-1.5 rounded-xl">
                                     <UserPlus size={13} /> Create first group
                                 </button>
                             )}
@@ -213,23 +213,23 @@ export default function UserGroupsPage() {
                                 <Users size={13} />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <div className="truncate text-[13px] font-bold text-app-foreground">{g.name}</div>
+                                <div className="truncate text-tp-lg font-bold text-app-foreground">{g.name}</div>
                                 {g.description && (
-                                    <div className="truncate text-[11px] font-medium text-app-muted-foreground">{g.description}</div>
+                                    <div className="truncate text-tp-sm font-medium text-app-muted-foreground">{g.description}</div>
                                 )}
                             </div>
                             <div className="hidden md:flex w-40 flex-shrink-0 items-center gap-1.5">
                                 {g.leader ? (
                                     <>
-                                        <Crown size={11} style={{ color: '#f59e0b' }} />
-                                        <span className="text-[11px] font-bold text-app-foreground truncate">{g.leader_name || nameById(g.leader)}</span>
+                                        <Crown size={11} style={{ color: 'var(--app-warning)' }} />
+                                        <span className="text-tp-sm font-bold text-app-foreground truncate">{g.leader_name || nameById(g.leader)}</span>
                                     </>
                                 ) : (
-                                    <span className="text-[10px] text-app-muted-foreground">— none —</span>
+                                    <span className="text-tp-xs text-app-muted-foreground">— none —</span>
                                 )}
                             </div>
                             <div className="w-20 flex justify-center flex-shrink-0">
-                                <span className="text-[11px] font-black tabular-nums px-1.5 py-0.5 rounded"
+                                <span className="text-tp-sm font-bold tabular-nums px-1.5 py-0.5 rounded"
                                     style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
                                     {g.member_count ?? g.members?.length ?? 0}
                                 </span>
@@ -267,8 +267,8 @@ export default function UserGroupsPage() {
                                     <Users size={15} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-app-foreground">{editing.id ? 'Edit Group' : 'New User Group'}</h3>
-                                    <p className="text-[10px] font-bold text-app-muted-foreground">Team · members · leader</p>
+                                    <h3 className="text-sm font-bold text-app-foreground">{editing.id ? 'Edit Group' : 'New User Group'}</h3>
+                                    <p className="text-tp-xs font-bold text-app-muted-foreground">Team · members · leader</p>
                                 </div>
                             </div>
                             <button onClick={() => !saving && setEditing(null)}
@@ -280,35 +280,35 @@ export default function UserGroupsPage() {
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
                                 <div style={{ gridColumn: 'span 2' }}>
-                                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Name *</label>
+                                    <label className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide mb-1 block">Name *</label>
                                     <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })}
                                         placeholder="e.g. Finance Approvers"
-                                        className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/20 transition-all" />
+                                        className="w-full text-tp-md font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/20 transition-all" />
                                 </div>
                                 <div style={{ gridColumn: 'span 2' }}>
-                                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Description</label>
+                                    <label className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide mb-1 block">Description</label>
                                     <input value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })}
                                         placeholder="What is this group for?"
-                                        className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/20 transition-all" />
+                                        className="w-full text-tp-md font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/20 transition-all" />
                                 </div>
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
+                                    <label className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">
                                         Members · {editing.members.length} selected
                                     </label>
                                     <div className="relative w-56">
                                         <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                         <input value={memberSearch} onChange={e => setMemberSearch(e.target.value)}
                                             placeholder="Filter users…"
-                                            className="w-full pl-7 pr-2 py-1 text-[11px] bg-app-bg border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground outline-none" />
+                                            className="w-full pl-7 pr-2 py-1 text-tp-sm bg-app-bg border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground outline-none" />
                                     </div>
                                 </div>
                                 <div className="rounded-xl max-h-64 overflow-y-auto custom-scrollbar"
                                     style={{ border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
                                     {filteredUsers.length === 0 ? (
-                                        <div className="p-4 text-[11px] text-center text-app-muted-foreground">No users match.</div>
+                                        <div className="p-4 text-tp-sm text-center text-app-muted-foreground">No users match.</div>
                                     ) : filteredUsers.map(u => {
                                         const checked = editing.members.includes(u.id)
                                         const isLeader = editing.leader === u.id
@@ -321,15 +321,15 @@ export default function UserGroupsPage() {
                                                     {checked && <Check size={10} className="text-white" />}
                                                 </button>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-[12px] font-bold text-app-foreground truncate">{fullName(u)}</div>
-                                                    <div className="text-[10px] text-app-muted-foreground truncate">@{u.username}</div>
+                                                    <div className="text-tp-md font-bold text-app-foreground truncate">{fullName(u)}</div>
+                                                    <div className="text-tp-xs text-app-muted-foreground truncate">@{u.username}</div>
                                                 </div>
                                                 {checked && (
                                                     <button onClick={() => setEditing({ ...editing, leader: isLeader ? null : u.id })}
-                                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all"
+                                                        className="flex items-center gap-1 text-tp-xs font-bold px-2 py-0.5 rounded-lg transition-all"
                                                         style={{
-                                                            background: isLeader ? 'color-mix(in srgb, #f59e0b 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
-                                                            color: isLeader ? '#f59e0b' : 'var(--app-muted-foreground)',
+                                                            background: isLeader ? 'color-mix(in srgb, var(--app-warning) 15%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                            color: isLeader ? 'var(--app-warning)' : 'var(--app-muted-foreground)',
                                                         }}
                                                         title={isLeader ? 'Unset leader' : 'Make leader'}>
                                                         <Crown size={10} /> {isLeader ? 'Leader' : 'Make leader'}
@@ -343,8 +343,8 @@ export default function UserGroupsPage() {
 
                             <div className="flex items-center justify-between px-1">
                                 <div>
-                                    <p className="text-[12px] font-bold text-app-foreground">Active</p>
-                                    <p className="text-[10px] font-medium text-app-muted-foreground">Inactive groups can't receive new tasks.</p>
+                                    <p className="text-tp-md font-bold text-app-foreground">Active</p>
+                                    <p className="text-tp-xs font-medium text-app-muted-foreground">Inactive groups can't receive new tasks.</p>
                                 </div>
                                 <button onClick={() => setEditing({ ...editing, is_active: !editing.is_active })}
                                     className={`w-11 h-6 rounded-full relative transition-all ${editing.is_active ? 'bg-app-primary' : 'bg-app-border'}`}>
@@ -356,11 +356,11 @@ export default function UserGroupsPage() {
                         <div className="px-5 py-3 flex items-center justify-end gap-2 flex-shrink-0"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-bg))', borderTop: '1px solid var(--app-border)' }}>
                             <button onClick={() => !saving && setEditing(null)}
-                                className="text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                                className="text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                 Cancel
                             </button>
                             <button onClick={save} disabled={saving}
-                                className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
                                 style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                 {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={13} />}
                                 {saving ? 'Saving…' : 'Save Group'}

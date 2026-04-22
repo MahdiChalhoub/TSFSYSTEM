@@ -102,7 +102,7 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                                 <ArrowLeft size={18} />
                             </button>
                             <div className="flex-1 min-w-0">
-                                <div className="text-tp-lg font-black text-app-foreground truncate">Move "{node.name}"</div>
+                                <div className="text-tp-lg font-bold text-app-foreground truncate">Move "{node.name}"</div>
                                 <div className="text-tp-sm font-bold text-app-muted-foreground">Pick a new parent</div>
                             </div>
                             <button onClick={onClose} className="p-2 rounded-lg active:scale-95 transition-transform"
@@ -147,7 +147,7 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                                     <FolderTree size={16} />
                                 </div>
                                 <div className="flex-1 text-left min-w-0">
-                                    <div className="text-tp-xl font-black text-app-foreground">Make Root</div>
+                                    <div className="text-tp-xl font-bold text-app-foreground">Make Root</div>
                                     <div className="text-tp-sm font-bold text-app-muted-foreground">No parent · top-level category</div>
                                 </div>
                                 {node.parent === null && <Check size={16} style={{ color: 'var(--app-primary)' }} />}
@@ -187,7 +187,7 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                                             )}
                                         </div>
                                         {isCurrent && (
-                                            <span className="text-tp-xxs font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                                            <span className="text-tp-xxs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
                                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
                                                 Current
                                             </span>

@@ -182,10 +182,14 @@ class UnitPackageSerializer(serializers.ModelSerializer):
     unit_code = serializers.ReadOnlyField(source='unit.code')
     unit_type = serializers.ReadOnlyField(source='unit.type')
 
+    parent_name = serializers.ReadOnlyField(source='parent.name', default=None)
+    parent_ratio = serializers.DecimalField(max_digits=15, decimal_places=4, allow_null=True, required=False)
+
     class Meta:
         model = UnitPackage
         fields = [
             'id', 'unit', 'unit_name', 'unit_code', 'unit_type',
+            'parent', 'parent_name', 'parent_ratio',
             'name', 'code', 'ratio', 'is_default', 'order', 'notes',
             'created_at', 'updated_at', 'organization',
         ]

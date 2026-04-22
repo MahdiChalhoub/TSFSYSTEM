@@ -25,10 +25,10 @@ export function DraftAuditModal({ data, onClose }: { data: DraftAuditData; onClo
                             <AlertTriangle size={16} style={{ color: 'var(--app-error, #ef4444)' }} />
                         </div>
                         <div>
-                            <h2 className="text-[13px] font-black" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 className="text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>
                                 Cannot Close {data.periodName}
                             </h2>
-                            <p className="text-[10px] font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
+                            <p className="text-tp-xs font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
                                 {data.total} draft journal {data.total === 1 ? 'entry' : 'entries'} must be posted or deleted
                             </p>
                         </div>
@@ -46,19 +46,19 @@ export function DraftAuditModal({ data, onClose }: { data: DraftAuditData; onClo
                                     <AlertTriangle size={13} style={{ color: 'var(--app-warning, #f59e0b)' }} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>{d.reference}</div>
-                                    <div className="text-[9px] font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>{d.description}</div>
+                                    <div className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{d.reference}</div>
+                                    <div className="text-tp-xxs font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>{d.description}</div>
                                 </div>
                                 <div className="text-right flex-shrink-0">
-                                    <div className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>
+                                    <div className="text-tp-xs font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>
                                         {d.total_debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </div>
-                                    <div className="text-[9px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>{d.date}</div>
+                                    <div className="text-tp-xxs font-mono" style={{ color: 'var(--app-muted-foreground)' }}>{d.date}</div>
                                 </div>
                             </div>
                         ))}
                         {data.total > data.drafts.length && (
-                            <div className="text-[10px] font-bold text-center py-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <div className="text-tp-xs font-bold text-center py-2" style={{ color: 'var(--app-muted-foreground)' }}>
                                 ... and {data.total - data.drafts.length} more
                             </div>
                         )}
@@ -66,7 +66,7 @@ export function DraftAuditModal({ data, onClose }: { data: DraftAuditData; onClo
                 </div>
                 <div className="px-5 py-3" style={{ borderTop: '1px solid var(--app-border)' }}>
                     <button onClick={onClose}
-                        className="w-full py-2 text-[11px] font-bold rounded-xl border transition-all"
+                        className="w-full py-2 text-tp-sm font-bold rounded-xl border transition-all"
                         style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                         Close
                     </button>

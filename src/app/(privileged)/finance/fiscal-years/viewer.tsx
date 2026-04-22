@@ -91,8 +91,8 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                             <Zap size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">Task Settings · Finance</h3>
-                            <p className="text-[10px] font-bold text-app-muted-foreground">Reminders · auto-task rules · routing</p>
+                            <h3 className="text-sm font-bold text-app-foreground">Task Settings · Finance</h3>
+                            <p className="text-tp-xs font-bold text-app-muted-foreground">Reminders · auto-task rules · routing</p>
                         </div>
                     </div>
                     <button onClick={onClose}
@@ -106,9 +106,9 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                         style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
                         <div className="flex items-center gap-2 mb-2">
                             <Bell size={13} style={{ color: 'var(--app-primary)' }} />
-                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)' }}>Reminder Lead-Time</span>
+                            <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-primary)' }}>Reminder Lead-Time</span>
                         </div>
-                        <p className="text-[11px] font-medium mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <p className="text-tp-sm font-medium mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
                             How many days before a period's end/start the reminder task fires.
                         </p>
                         <div className="flex items-center gap-2">
@@ -116,20 +116,20 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                                 disabled={loadingSettings || savingSettings}
                                 onChange={e => { const n = Math.max(1, Math.min(60, Number(e.target.value) || 1)); setDays(n) }}
                                 onBlur={() => { if (!loadingSettings) saveLead(days) }}
-                                className="w-20 text-[13px] font-black tabular-nums px-2 py-1.5 rounded-lg outline-none"
+                                className="w-20 text-tp-lg font-bold tabular-nums px-2 py-1.5 rounded-lg outline-none"
                                 style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                            <span className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>days</span>
+                            <span className="text-tp-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>days</span>
                             {savingSettings && <Loader2 size={13} className="animate-spin" style={{ color: 'var(--app-primary)' }} />}
                         </div>
                     </div>
 
                     <div>
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
                                 Finance auto-task rules · {rules.length}
                             </span>
                             <Link href="/workspace/auto-task-rules?module=finance" onClick={onClose}
-                                className="flex items-center gap-1 text-[10px] font-bold transition-all"
+                                className="flex items-center gap-1 text-tp-xs font-bold transition-all"
                                 style={{ color: 'var(--app-primary)' }}>
                                 Open full editor <ExternalLink size={10} />
                             </Link>
@@ -141,10 +141,10 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                                     <Loader2 size={18} className="animate-spin text-app-primary" />
                                 </div>
                             ) : rules.length === 0 ? (
-                                <div className="p-4 text-[11px] text-center" style={{ color: 'var(--app-muted-foreground)' }}>
+                                <div className="p-4 text-tp-sm text-center" style={{ color: 'var(--app-muted-foreground)' }}>
                                     No finance rules yet.{' '}
                                     <Link href="/workspace/auto-task-rules?module=finance" onClick={onClose}
-                                        className="font-black underline" style={{ color: 'var(--app-primary)' }}>
+                                        className="font-bold underline" style={{ color: 'var(--app-primary)' }}>
                                         Create one
                                     </Link>.
                                 </div>
@@ -154,14 +154,14 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5 mb-0.5">
                                             {r.code && (
-                                                <span className="text-[9px] font-black font-mono px-1.5 py-0.5 rounded"
+                                                <span className="text-tp-xxs font-bold font-mono px-1.5 py-0.5 rounded"
                                                     style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>
                                                     {r.code}
                                                 </span>
                                             )}
-                                            <span className="text-[12px] font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{r.name}</span>
+                                            <span className="text-tp-md font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{r.name}</span>
                                         </div>
-                                        <div className="text-[10px] font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        <div className="text-tp-xs font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>
                                             {r.assign_to_user ? 'Goes to one person'
                                                 : r.assign_to_user_group ? 'Goes to a team'
                                                 : r.template?.assign_to_role ? 'Routed automatically'
@@ -186,9 +186,9 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                     <div className="rounded-xl p-3 flex items-center gap-2"
                         style={{ background: 'color-mix(in srgb, var(--app-info) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 15%, transparent)' }}>
                         <Check size={13} style={{ color: 'var(--app-info)' }} />
-                        <span className="text-[10px] font-medium" style={{ color: 'var(--app-foreground)' }}>
+                        <span className="text-tp-xs font-medium" style={{ color: 'var(--app-foreground)' }}>
                             For ad-hoc teams, visit{' '}
-                            <Link href="/workspace/user-groups" onClick={onClose} className="font-black underline" style={{ color: 'var(--app-info)' }}>
+                            <Link href="/workspace/user-groups" onClick={onClose} className="font-bold underline" style={{ color: 'var(--app-info)' }}>
                                 User Groups
                             </Link>.
                         </span>
@@ -198,7 +198,7 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                 <div className="px-5 py-3 flex items-center justify-end flex-shrink-0"
                     style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-bg))', borderTop: '1px solid var(--app-border)' }}>
                     <button onClick={onClose}
-                        className="text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                        className="text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                         style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                         Done
                     </button>
@@ -291,19 +291,19 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                             <Calendar size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Fiscal Years</h1>
-                            <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Accounting Periods & Closing Cycles</p>
+                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Fiscal Years</h1>
+                            <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">Accounting Periods & Closing Cycles</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={() => setShowTaskSettings(true)}
                             title="Reminders, routing & auto-task rules for Finance"
-                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"
                             style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
                             <Zap size={13} /> Task Settings
                         </button>
                         <button onClick={fy.openWizard} disabled={fy.isPending}
-                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"
                             style={{ background: 'var(--app-primary)', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                             <Plus size={13} /> Create Fiscal Year
                         </button>
@@ -327,13 +327,13 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                 {fy.filteredYears.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <Calendar size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-                        <p className="text-[13px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <p className="text-tp-lg font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                             {fy.years.length === 0 ? 'No fiscal years configured' : fy.searchQuery || fy.statusFilter ? 'No matching fiscal years' : 'No fiscal years'}
                         </p>
                         {fy.years.length === 0 && (
                             <>
-                                <p className="text-[11px] mt-1" style={{ color: 'var(--app-muted-foreground)' }}>Create a year to start recording transactions</p>
-                                <button onClick={fy.openWizard} className="mt-4 flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                <p className="text-tp-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>Create a year to start recording transactions</p>
+                                <button onClick={fy.openWizard} className="mt-4 flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl" style={{ background: 'var(--app-primary)', color: 'white' }}>
                                     <Plus size={13} /> Create First Year
                                 </button>
                             </>
@@ -367,10 +367,10 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             {/* ── Stats Footer ── */}
             <div className="flex-shrink-0 flex items-center justify-between gap-4 px-4 py-2.5"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', marginTop: '-1px', borderBottomLeftRadius: '1rem', borderBottomRightRadius: '1rem' }}>
-                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-foreground)' }}>
                     {fy.filteredYears.length === fy.years.length ? `${fy.years.length} fiscal years` : `${fy.filteredYears.length} of ${fy.years.length} fiscal years`}
                 </span>
-                <span className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{fy.stats.totalPeriods} periods · {fy.stats.openPeriods} open</span>
+                <span className="text-tp-xs font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{fy.stats.totalPeriods} periods · {fy.stats.openPeriods} open</span>
             </div>
 
             {/* ── Modals ── */}

@@ -234,13 +234,13 @@ function JournalImport() {
                                             <td className="px-3 py-2 text-app-foreground max-w-[160px] truncate">{row.description}</td>
                                             <td className="px-3 py-2">
                                                 <div className="font-mono text-app-foreground">{row.debit_code}</div>
-                                                {row.debit_account && <div className="text-app-muted-foreground text-[10px] truncate max-w-[110px]">{row.debit_account.name}</div>}
-                                                {!row.debit_account && row.debit_code && <div className="text-rose-500 text-[10px] italic">not found</div>}
+                                                {row.debit_account && <div className="text-app-muted-foreground text-tp-xs truncate max-w-[110px]">{row.debit_account.name}</div>}
+                                                {!row.debit_account && row.debit_code && <div className="text-rose-500 text-tp-xs italic">not found</div>}
                                             </td>
                                             <td className="px-3 py-2">
                                                 <div className="font-mono text-app-foreground">{row.credit_code}</div>
-                                                {row.credit_account && <div className="text-app-muted-foreground text-[10px] truncate max-w-[110px]">{row.credit_account.name}</div>}
-                                                {!row.credit_account && row.credit_code && <div className="text-rose-500 text-[10px] italic">not found</div>}
+                                                {row.credit_account && <div className="text-app-muted-foreground text-tp-xs truncate max-w-[110px]">{row.credit_account.name}</div>}
+                                                {!row.credit_account && row.credit_code && <div className="text-rose-500 text-tp-xs italic">not found</div>}
                                             </td>
                                             <td className="px-3 py-2 text-right font-mono font-bold text-app-foreground">
                                                 {row.amount > 0 ? row.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) : <span className="text-rose-400">—</span>}
@@ -249,7 +249,7 @@ function JournalImport() {
                                                 {row.valid ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mx-auto" /> : (
                                                     <div className="group relative inline-block">
                                                         <XCircle className="h-3.5 w-3.5 text-rose-500 mx-auto cursor-help" />
-                                                        <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-app-bg text-white text-[10px] rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
+                                                        <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-app-bg text-white text-tp-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
                                                             {row.errors.join('; ')}
                                                         </div>
                                                     </div>
@@ -518,13 +518,13 @@ function OpeningBalanceImport() {
                                             </td>
                                             <td className="px-3 py-2">
                                                 {row.account?.type && (
-                                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-app-surface-2 text-app-muted-foreground">{row.account.type}</span>
+                                                    <span className="px-1.5 py-0.5 rounded text-tp-xs font-bold bg-app-surface-2 text-app-muted-foreground">{row.account.type}</span>
                                                 )}
                                             </td>
                                             <td className="px-3 py-2 text-right font-mono text-app-foreground">{row.balance !== 0 ? row.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'}</td>
                                             <td className="px-3 py-2 text-center">
                                                 {row.side && (
-                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${row.side === 'Dr' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{row.side}</span>
+                                                    <span className={`px-1.5 py-0.5 rounded text-tp-xs font-bold ${row.side === 'Dr' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{row.side}</span>
                                                 )}
                                             </td>
                                             <td className="px-3 py-2 text-right font-mono text-app-foreground">{row.debit > 0 ? row.debit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
@@ -533,7 +533,7 @@ function OpeningBalanceImport() {
                                                 {row.valid ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mx-auto" /> : (
                                                     <div className="group relative inline-block">
                                                         <XCircle className="h-3.5 w-3.5 text-rose-500 mx-auto cursor-help" />
-                                                        <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-app-bg text-white text-[10px] rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
+                                                        <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-app-bg text-white text-tp-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
                                                             {row.errors.join('; ')}
                                                         </div>
                                                     </div>

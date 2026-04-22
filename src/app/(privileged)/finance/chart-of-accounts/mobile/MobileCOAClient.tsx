@@ -144,7 +144,7 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                     { label: 'Total', value: stats.total, icon: <Library size={13} />, color: 'var(--app-primary)' },
                     { label: 'Assets', value: stats.byType.ASSET, icon: <Wallet size={13} />, color: 'var(--app-info, #3B82F6)' },
                     { label: 'Liabilities', value: stats.byType.LIABILITY, icon: <TrendingDown size={13} />, color: 'var(--app-error, #EF4444)' },
-                    { label: 'Equity', value: stats.byType.EQUITY, icon: <Scale size={13} />, color: '#8b5cf6' },
+                    { label: 'Equity', value: stats.byType.EQUITY, icon: <Scale size={13} />, color: 'var(--app-info)' },
                     { label: 'Income', value: stats.byType.INCOME, icon: <TrendingUp size={13} />, color: 'var(--app-success, #10B981)' },
                     { label: 'Expenses', value: stats.byType.EXPENSE, icon: <BarChart3 size={13} />, color: 'var(--app-warning, #F59E0B)' },
                 ],
@@ -242,7 +242,7 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                                 { key: null, label: 'All', color: 'var(--app-primary)' },
                                 { key: 'ASSET', label: 'Assets', color: 'var(--app-info, #3B82F6)' },
                                 { key: 'LIABILITY', label: 'Liabilities', color: 'var(--app-error, #EF4444)' },
-                                { key: 'EQUITY', label: 'Equity', color: '#8b5cf6' },
+                                { key: 'EQUITY', label: 'Equity', color: 'var(--app-info)' },
                                 { key: 'INCOME', label: 'Income', color: 'var(--app-success, #10B981)' },
                                 { key: 'EXPENSE', label: 'Expenses', color: 'var(--app-warning, #F59E0B)' },
                             ].map(f => {
@@ -251,7 +251,7 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                                     <button
                                         key={f.label}
                                         onClick={() => setTypeFilter(active ? null : f.key)}
-                                        className="flex-shrink-0 font-black uppercase tracking-widest rounded-full px-3 py-1.5 active:scale-95 transition-transform"
+                                        className="flex-shrink-0 font-bold uppercase tracking-wide rounded-full px-3 py-1.5 active:scale-95 transition-transform"
                                         style={{
                                             fontSize: 'var(--tp-xxs)',
                                             background: active

@@ -48,7 +48,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
             { label: 'Total Accounts', value: active.length, color: 'var(--app-primary)', icon: <BookOpen size={14} />, filterKey: null },
             { label: 'Assets', value: byType('ASSET').length, color: 'var(--app-info)', icon: <BookOpen size={14} />, filterKey: 'ASSET' },
             { label: 'Liabilities', value: byType('LIABILITY').length, color: 'var(--app-error)', icon: <BookOpen size={14} />, filterKey: 'LIABILITY' },
-            { label: 'Equity', value: byType('EQUITY').length, color: '#8b5cf6', icon: <BookOpen size={14} />, filterKey: 'EQUITY' },
+            { label: 'Equity', value: byType('EQUITY').length, color: 'var(--app-info)', icon: <BookOpen size={14} />, filterKey: 'EQUITY' },
             { label: 'Income', value: byType('INCOME').length, color: 'var(--app-success)', icon: <BookOpen size={14} />, filterKey: 'INCOME' },
             { label: 'Expenses', value: byType('EXPENSE').length, color: 'var(--app-warning)', icon: <BookOpen size={14} />, filterKey: 'EXPENSE' },
         ]
@@ -149,8 +149,8 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                             <BookOpen size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Chart of Accounts</h1>
-                            <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">{accounts.length} Accounts</p>
+                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Chart of Accounts</h1>
+                            <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">{accounts.length} Accounts</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -182,7 +182,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
             )}
 
             <div data-tour="account-tree" className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col mx-4 md:mx-6 border border-app-border bg-app-surface/30">
-                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 border-b border-app-border/50 text-[10px] font-black uppercase tracking-wider text-app-muted-foreground bg-app-surface/60">
+                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 border-b border-app-border/50 text-tp-xs font-bold uppercase tracking-wider text-app-muted-foreground bg-app-surface/60">
                     <div className="w-5 flex-shrink-0" /><div className="w-7 flex-shrink-0" /><div className="flex-1">Account</div><div className="w-36 hidden lg:block text-app-success">SYSCOHADA</div><div className="w-24 hidden sm:block">Type</div><div className="w-28 text-right">Balance</div><div className="w-16 flex-shrink-0" />
                 </div>
                 <div className="flex-1 overflow-y-auto overscroll-contain">
@@ -190,9 +190,9 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                 </div>
             </div>
 
-            <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-[11px] font-bold mx-4 md:mx-6 rounded-b-2xl border border-app-border border-t-0 bg-app-surface/70 text-app-muted-foreground mb-2">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold mx-4 md:mx-6 rounded-b-2xl border border-app-border border-t-0 bg-app-surface/70 text-app-muted-foreground mb-2">
                 <div>{footerStats.totalActive} active · {footerStats.withBalance} with balance</div>
-                <div className="font-black text-app-foreground">Net: {footerStats.totalBalance.toLocaleString('en', { minimumFractionDigits: 2 })}</div>
+                <div className="font-bold text-app-foreground">Net: {footerStats.totalBalance.toLocaleString('en', { minimumFractionDigits: 2 })}</div>
             </div>
 
             {editingAccount && (

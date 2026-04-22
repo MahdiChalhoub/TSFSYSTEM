@@ -178,17 +178,17 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
             {/* ── Header: Template Selection ── */}
             {!session && (
                 <div className="rounded-2xl border border-app-border bg-app-surface/60 p-6">
-                    <h2 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
                         <Database size={16} className="text-app-primary" />
                         Create Migration Session
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label className="block text-[9px] text-app-muted-foreground uppercase tracking-widest mb-1.5 font-black">Source Template</label>
+                            <label className="block text-tp-xxs text-app-muted-foreground uppercase tracking-wide mb-1.5 font-bold">Source Template</label>
                             <select
                                 value={sourceKey}
                                 onChange={(e) => setSourceKey(e.target.value)}
-                                className="w-full px-3 py-2.5 rounded-xl border border-app-border bg-app-surface text-app-foreground text-[13px] font-bold focus:border-app-primary focus:ring-1 focus:ring-app-primary/30 transition-all"
+                                className="w-full px-3 py-2.5 rounded-xl border border-app-border bg-app-surface text-app-foreground text-tp-lg font-bold focus:border-app-primary focus:ring-1 focus:ring-app-primary/30 transition-all"
                             >
                                 <option value="">Select source...</option>
                                 {templates.map(t => (
@@ -197,11 +197,11 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                             </select>
                         </div>
                         <div>
-                            <label className="block text-[9px] text-app-muted-foreground uppercase tracking-widest mb-1.5 font-black">Target Template</label>
+                            <label className="block text-tp-xxs text-app-muted-foreground uppercase tracking-wide mb-1.5 font-bold">Target Template</label>
                             <select
                                 value={targetKey}
                                 onChange={(e) => setTargetKey(e.target.value)}
-                                className="w-full px-3 py-2.5 rounded-xl border border-app-border bg-app-surface text-app-foreground text-[13px] font-bold focus:border-app-primary focus:ring-1 focus:ring-app-primary/30 transition-all"
+                                className="w-full px-3 py-2.5 rounded-xl border border-app-border bg-app-surface text-app-foreground text-tp-lg font-bold focus:border-app-primary focus:ring-1 focus:ring-app-primary/30 transition-all"
                             >
                                 <option value="">Select target...</option>
                                 {templates.filter(t => t.key !== sourceKey).map(t => (
@@ -213,7 +213,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                     <button
                         onClick={handleCreateSession}
                         disabled={!sourceKey || !targetKey || isPending}
-                        className="w-full py-3 rounded-xl bg-app-primary text-white font-black text-[11px] uppercase tracking-widest hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3 rounded-xl bg-app-primary text-white font-bold text-tp-sm uppercase tracking-wide hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                         style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                     >
                         {isPending ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
@@ -227,7 +227,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                 <div className="rounded-xl border bg-app-surface/50 p-4 flex items-start gap-3"
                     style={{ borderColor: 'color-mix(in srgb, var(--app-error) 30%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
                     <AlertCircle size={16} className="text-app-error mt-0.5 shrink-0" />
-                    <p className="text-[13px] font-bold text-app-error">{error}</p>
+                    <p className="text-tp-lg font-bold text-app-error">{error}</p>
                     <button onClick={() => setError('')} className="ml-auto text-app-error hover:text-app-error/80">✕</button>
                 </div>
             )}
@@ -241,10 +241,10 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                                 <statusStyle.icon size={18} className={statusStyle.text} />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider">
+                                <h3 className="text-sm font-bold text-app-foreground uppercase tracking-wider">
                                     Session #{session.id} — <span className={statusStyle.text}>{session.status}</span>
                                 </h3>
-                                <p className="text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                <p className="text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                                     {session.source_name || session.source_key} → {session.target_name || session.target_key}
                                     {session.is_locked && <span className="ml-2 text-app-warning">🔒 Org Frozen</span>}
                                 </p>
@@ -273,7 +273,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                             )
                         })}
                     </div>
-                    <div className="flex justify-between text-[10px] text-app-muted-foreground uppercase tracking-wider">
+                    <div className="flex justify-between text-tp-xs text-app-muted-foreground uppercase tracking-wider">
                         <span>Draft</span><span>Dry-Run</span><span>Approved</span><span>Executing</span><span>Complete</span>
                     </div>
                 </div>
@@ -284,7 +284,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                 <div className="flex flex-wrap gap-2">
                     {session.status === 'DRAFT' && (
                         <button onClick={handleDryRun} disabled={isPending}
-                            className="flex-1 min-w-[200px] py-2.5 rounded-xl bg-app-info text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:brightness-110"
+                            className="flex-1 min-w-[200px] py-2.5 rounded-xl bg-app-info text-white font-bold text-tp-sm uppercase tracking-wide flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:brightness-110"
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-info) 25%, transparent)' }}>
                             {isPending ? <Loader2 size={14} className="animate-spin" /> : <BarChart3 size={14} />}
                             Run Dry-Run Analysis
@@ -293,11 +293,11 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                     {session.status === 'DRY_RUN' && (
                         <>
                             <button onClick={handleDryRun} disabled={isPending}
-                                className="flex-1 min-w-[160px] py-2.5 rounded-xl border border-app-border hover:bg-app-surface text-app-foreground font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 transition-all">
+                                className="flex-1 min-w-[160px] py-2.5 rounded-xl border border-app-border hover:bg-app-surface text-app-foreground font-bold text-tp-sm uppercase tracking-wide flex items-center justify-center gap-2 disabled:opacity-40 transition-all">
                                 <RefreshCcw size={14} /> Re-Run
                             </button>
                             <button onClick={handleApprove} disabled={isPending || !canProceed}
-                                className="flex-1 min-w-[160px] py-2.5 rounded-xl bg-app-success text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:brightness-110"
+                                className="flex-1 min-w-[160px] py-2.5 rounded-xl bg-app-success text-white font-bold text-tp-sm uppercase tracking-wide flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:brightness-110"
                                 style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-success) 25%, transparent)' }}
                                 title={!canProceed ? 'Resolve blockers first' : 'Approve for execution'}>
                                 {isPending ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />}
@@ -307,7 +307,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                     )}
                     {session.status === 'APPROVED' && (
                         <button onClick={handleExecute} disabled={isPending}
-                            className="flex-1 min-w-[200px] py-2.5 rounded-xl bg-app-error text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:brightness-110"
+                            className="flex-1 min-w-[200px] py-2.5 rounded-xl bg-app-error text-white font-bold text-tp-sm uppercase tracking-wide flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:brightness-110"
                             style={{ boxShadow: '0 4px 12px color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
                             {isPending ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
                             Execute Migration
@@ -315,7 +315,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                     )}
                     {session.status === 'PARTIAL' && (
                         <button onClick={handleExecute} disabled={isPending}
-                            className="flex-1 min-w-[200px] py-2.5 rounded-xl bg-app-warning text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:brightness-110">
+                            className="flex-1 min-w-[200px] py-2.5 rounded-xl bg-app-warning text-white font-bold text-tp-sm uppercase tracking-wide flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:brightness-110">
                             {isPending ? <Loader2 size={14} className="animate-spin" /> : <RefreshCcw size={14} />}
                             Retry Phase B
                         </button>
@@ -328,10 +328,10 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                 <div className="rounded-2xl border border-app-border bg-app-surface/60 backdrop-blur-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-app-border flex items-center gap-2">
                         <AlertTriangle size={14} className="text-app-warning" />
-                        <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider">
+                        <h3 className="text-sm font-bold text-app-foreground uppercase tracking-wider">
                             Pre-Execution Checks
                         </h3>
-                        <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${canProceed ? 'bg-app-success/15 text-app-success' : 'bg-app-error/15 text-app-error'
+                        <span className={`ml-auto px-2.5 py-0.5 rounded-full text-tp-xs font-bold uppercase tracking-wide ${canProceed ? 'bg-app-success/15 text-app-success' : 'bg-app-error/15 text-app-error'
                             }`}>
                             {canProceed ? '✓ All Clear' : `${blockers.filter(b => b.severity === 'BLOCKER').length} Blockers`}
                         </span>
@@ -344,8 +344,8 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                                     : <AlertCircle size={14} className="text-app-warning mt-0.5 shrink-0" />
                                 }
                                 <div className="min-w-0">
-                                    <p className="text-[11px] font-mono font-bold text-app-muted-foreground">{b.type}</p>
-                                    <p className="text-[13px] font-bold text-app-foreground">{b.message}</p>
+                                    <p className="text-tp-sm font-mono font-bold text-app-muted-foreground">{b.type}</p>
+                                    <p className="text-tp-lg font-bold text-app-foreground">{b.message}</p>
                                     {b.accounts && b.accounts.length > 0 && (
                                         <p className="text-xs text-app-muted-foreground mt-1 font-mono">
                                             {b.accounts.slice(0, 5).join(', ')}{b.accounts.length > 5 ? ` +${b.accounts.length - 5} more` : ''}
@@ -362,7 +362,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
             {session?.dry_run_report?.stats && (
                 <div className="rounded-2xl border border-app-border bg-app-surface/60 backdrop-blur-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-app-border">
-                        <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-app-foreground uppercase tracking-wider flex items-center gap-2">
                             <BarChart3 size={16} className="text-app-primary" />
                             Dry-Run Summary — {session.dry_run_report.stats.total} Accounts
                         </h3>
@@ -373,7 +373,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                             return (
                                 <div key={mode} className="p-4 text-center">
                                     <div className={`text-2xl font-bold ${style.text}`}>{count}</div>
-                                    <div className="text-[10px] uppercase tracking-wider text-app-muted-foreground mt-1">{style.label}</div>
+                                    <div className="text-tp-xs uppercase tracking-wider text-app-muted-foreground mt-1">{style.label}</div>
                                 </div>
                             )
                         })}
@@ -385,7 +385,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
             {plans.length > 0 && (
                 <div className="rounded-2xl border border-app-border bg-app-surface/60 backdrop-blur-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-app-border">
-                        <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-app-foreground uppercase tracking-wider flex items-center gap-2">
                             <Database size={16} className="text-app-primary" />
                             Account Migration Plans — {plans.length} total
                         </h3>
@@ -408,7 +408,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
                                             {style.label}
                                         </span>
-                                        <span className="text-sm font-black text-app-foreground">{modePlans.length} accounts</span>
+                                        <span className="text-sm font-bold text-app-foreground">{modePlans.length} accounts</span>
                                         <span className="ml-auto text-xs text-app-muted-foreground">
                                             {modePlans.filter(p => p.historically_locked).length > 0 && (
                                                 <span className="mr-2">🔒 {modePlans.filter(p => p.historically_locked).length} locked</span>
@@ -489,8 +489,8 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                 <div className="rounded-2xl border p-6 text-center"
                     style={{ borderColor: 'color-mix(in srgb, var(--app-success) 30%, transparent)', background: 'color-mix(in srgb, var(--app-success) 5%, transparent)' }}>
                     <CheckCircle2 size={36} className="text-app-success mx-auto mb-3" />
-                    <h3 className="text-lg font-black text-app-success mb-1">Migration Completed</h3>
-                    <p className="text-[13px] font-bold text-app-muted-foreground">
+                    <h3 className="text-lg font-bold text-app-success mb-1">Migration Completed</h3>
+                    <p className="text-tp-lg font-bold text-app-muted-foreground">
                         All account plans have been executed. Your Chart of Accounts is now on the new template.
                     </p>
                 </div>
@@ -500,8 +500,8 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                 <div className="rounded-2xl border p-6 text-center"
                     style={{ borderColor: 'color-mix(in srgb, var(--app-error) 30%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
                     <XCircle size={36} className="text-app-error mx-auto mb-3" />
-                    <h3 className="text-lg font-black text-app-error mb-1">Migration Failed</h3>
-                    <p className="text-[13px] font-bold text-app-muted-foreground">
+                    <h3 className="text-lg font-bold text-app-error mb-1">Migration Failed</h3>
+                    <p className="text-tp-lg font-bold text-app-muted-foreground">
                         Check the error report for details. The organization has been unfrozen.
                     </p>
                     {session.dry_run_report?.error && (

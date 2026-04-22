@@ -233,7 +233,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                             }}>
                             <SlidersHorizontal size={14} />
                             {activeFilterCount > 0 && (
-                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-app-primary text-white text-tp-xxs font-black flex items-center justify-center">{activeFilterCount}</span>
+                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-app-primary text-white text-tp-xxs font-bold flex items-center justify-center">{activeFilterCount}</span>
                             )}
                         </button>
 
@@ -248,8 +248,8 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                         style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
                                         <div className="flex items-center gap-2">
                                             <SlidersHorizontal size={13} className="text-app-primary" />
-                                            <span className="text-tp-sm font-black uppercase tracking-wider text-app-foreground">Filters</span>
-                                            {activeFilterCount > 0 && <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded-full bg-app-primary text-white">{activeFilterCount}</span>}
+                                            <span className="text-tp-sm font-bold uppercase tracking-wider text-app-foreground">Filters</span>
+                                            {activeFilterCount > 0 && <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-full bg-app-primary text-white">{activeFilterCount}</span>}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {activeFilterCount > 0 && <button onClick={clearAllFilters} className="text-tp-xs font-bold text-app-error hover:underline">Clear all</button>}
@@ -373,14 +373,14 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                 <Package size={16} />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-tp-lg font-black text-app-foreground truncate">{previewProduct.name}</p>
+                                <p className="text-tp-lg font-bold text-app-foreground truncate">{previewProduct.name}</p>
                                 {previewProduct.sku && <p className="text-tp-xs font-mono font-bold text-app-muted-foreground">{previewProduct.sku}</p>}
                             </div>
                             <button onClick={() => setPreviewProduct(null)} className="p-1 rounded-lg hover:bg-app-border/50 text-app-muted-foreground hover:text-app-foreground transition-all"><X size={14} /></button>
                         </div>
                         <div className="p-4 space-y-2">
                             {[
-                                { label: 'Brand', value: previewProduct.brand_name, color: '#8b5cf6' },
+                                { label: 'Brand', value: previewProduct.brand_name, color: 'var(--app-info)' },
                                 { label: 'Type', value: previewProduct.product_type },
                                 { label: 'Status', value: previewProduct.status?.toUpperCase() },
                                 { label: 'Unit', value: previewProduct.unit_code },
@@ -392,7 +392,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                 { label: 'Margin', value: previewProduct.margin_pct != null ? `${previewProduct.margin_pct}%` : null, color: (previewProduct.margin_pct ?? 0) > 0 ? 'var(--app-success)' : 'var(--app-error)' },
                             ].filter(r => r.value).map(r => (
                                 <div key={r.label} className="flex items-center justify-between">
-                                    <span className="text-tp-xs font-black uppercase tracking-widest text-app-muted-foreground">{r.label}</span>
+                                    <span className="text-tp-xs font-bold uppercase tracking-wide text-app-muted-foreground">{r.label}</span>
                                     <span className="text-tp-md font-bold" style={{ color: r.color || 'var(--app-foreground)' }}>{r.value}</span>
                                 </div>
                             ))}
@@ -425,7 +425,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                     <ArrowRightLeft size={15} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-app-foreground">Move Products</h3>
+                                    <h3 className="text-sm font-bold text-app-foreground">Move Products</h3>
                                     <p className="text-tp-sm text-app-muted-foreground">{selected.size} product{selected.size > 1 ? 's' : ''} from &ldquo;{categoryName}&rdquo;</p>
                                 </div>
                             </div>
@@ -436,7 +436,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                         <div className="px-5 py-4" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
                             {moveStep === 'picking' && (
                                 <div className="space-y-3">
-                                    <p className="text-tp-xs font-black uppercase tracking-widest text-app-muted-foreground">Select target category</p>
+                                    <p className="text-tp-xs font-bold uppercase tracking-wide text-app-muted-foreground">Select target category</p>
                                     <div className="relative">
                                         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                         <input value={catSearch} onChange={e => setCatSearch(e.target.value)} placeholder="Search categories..." autoFocus
@@ -474,7 +474,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                         </div>
                                         <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)' }}><ArrowRightLeft size={11} className="text-app-primary" /></div>
                                         <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
-                                            <span className="text-tp-md font-black text-app-primary truncate">{movePreview.target_category?.name}</span>
+                                            <span className="text-tp-md font-bold text-app-primary truncate">{movePreview.target_category?.name}</span>
                                             <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)' }}><Folder size={12} className="text-app-primary" /></div>
                                         </div>
                                     </div>
@@ -497,7 +497,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                             {movePreview.conflict_brands?.length > 0 && (
                                                 <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
                                                     <div className="px-3 py-2 flex items-center justify-between" style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
-                                                        <div className="flex items-center gap-1.5"><Paintbrush size={11} style={{ color: '#8b5cf6' }} /><span className="text-tp-xs font-black uppercase tracking-widest" style={{ color: '#8b5cf6' }}>Brand Conflicts</span></div>
+                                                        <div className="flex items-center gap-1.5"><Paintbrush size={11} style={{ color: 'var(--app-info)' }} /><span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-info)' }}>Brand Conflicts</span></div>
                                                         <span className="text-tp-xxs font-bold text-app-muted-foreground">{movePreview.conflict_brands.length} to resolve</span>
                                                     </div>
                                                     <div className="divide-y divide-app-border/30">
@@ -513,7 +513,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                                                             <span className="text-tp-md font-bold text-app-foreground">{b.name}</span>
                                                                             <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>{b.affected_count} product{b.affected_count > 1 ? 's' : ''}</span>
                                                                         </div>
-                                                                        <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded" style={{ background: resolved ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: resolved ? 'var(--app-success)' : 'var(--app-error)' }}>
+                                                                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded" style={{ background: resolved ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: resolved ? 'var(--app-success)' : 'var(--app-error)' }}>
                                                                             {isLinked ? '✓ Will link' : isReassigned ? `→ ${reassignedTo}` : '⚠ Unresolved'}
                                                                         </span>
                                                                     </div>
@@ -543,7 +543,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                             {movePreview.conflict_attributes?.length > 0 && (
                                                 <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
                                                     <div className="px-3 py-2 flex items-center justify-between" style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
-                                                        <div className="flex items-center gap-1.5"><Tag size={11} style={{ color: 'var(--app-warning)' }} /><span className="text-tp-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>Attribute Conflicts</span></div>
+                                                        <div className="flex items-center gap-1.5"><Tag size={11} style={{ color: 'var(--app-warning)' }} /><span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-warning)' }}>Attribute Conflicts</span></div>
                                                         <span className="text-tp-xxs font-bold text-app-muted-foreground">{movePreview.conflict_attributes.length} to resolve</span>
                                                     </div>
                                                     <div className="divide-y divide-app-border/30">
@@ -559,7 +559,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                                                             <span className="text-tp-md font-bold text-app-foreground">{a.name}</span>
                                                                             {a.code && <span className="text-tp-xs font-mono text-app-muted-foreground">{a.code}</span>}
                                                                         </div>
-                                                                        <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded" style={{ background: resolved ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: resolved ? 'var(--app-success)' : 'var(--app-error)' }}>
+                                                                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded" style={{ background: resolved ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: resolved ? 'var(--app-success)' : 'var(--app-error)' }}>
                                                                             {isLinked ? '✓ Will link' : isReassigned ? `→ ${reassignedTo}` : '⚠ Unresolved'}
                                                                         </span>
                                                                     </div>

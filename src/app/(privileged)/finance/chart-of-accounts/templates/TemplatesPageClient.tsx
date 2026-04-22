@@ -28,7 +28,7 @@ function resolveIcon(name?: string) {
 // ── Accent color map ───────────────────────────────
 const ACCENT_MAP: Record<string, string> = {
     IFRS_COA: 'var(--app-info, #3b82f6)',
-    USA_GAAP: '#8b5cf6',
+    USA_GAAP: 'var(--app-info)',
     FRENCH_PCG: 'var(--app-primary)',
     SYSCOHADA_REVISED: 'var(--app-warning, #f59e0b)',
     LEBANESE_PCN: 'var(--app-error, #ef4444)',
@@ -191,7 +191,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
     const kpis = [
         { label: 'Templates', value: templates.length, icon: <Library size={14} />, color: 'var(--app-primary)' },
         { label: 'Total Accounts', value: totalAccounts.toLocaleString(), icon: <TreePine size={14} />, color: 'var(--app-info, #3b82f6)' },
-        { label: 'Posting Rules', value: totalRules.toLocaleString(), icon: <GitBranch size={14} />, color: '#8b5cf6' },
+        { label: 'Posting Rules', value: totalRules.toLocaleString(), icon: <GitBranch size={14} />, color: 'var(--app-info)' },
         { label: 'Migrations', value: Object.keys(migrationMaps).length, icon: <ArrowRightLeft size={14} />, color: 'var(--app-warning, #f59e0b)' },
         { label: 'System', value: templates.filter(t => t.is_system).length, icon: <ShieldCheck size={14} />, color: 'var(--app-success, #22c55e)' },
     ]
@@ -221,7 +221,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                         {cameFromCOA && (
                             <button
                                 onClick={() => router.push('/finance/chart-of-accounts')}
-                                className="flex items-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-xl border transition-all mr-1"
+                                className="flex items-center gap-1 text-tp-sm font-bold px-2 py-1.5 rounded-xl border transition-all mr-1"
                                 style={{
                                     color: 'var(--app-muted-foreground)',
                                     borderColor: 'var(--app-border)',
@@ -237,10 +237,10 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                             <Library size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
                                 Accounting Standards Library
                             </h1>
-                            <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                            <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                                 {templates.length} Templates · Compare, Migrate & Import
                             </p>
                         </div>
@@ -252,7 +252,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                 const Icon = tab.icon
                                 return (
                                     <button key={tab.id} onClick={() => setActiveView(tab.id)}
-                                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
+                                        className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-lg transition-all"
                                         style={{
                                             background: activeView === tab.id ? 'var(--app-primary)' : 'transparent',
                                             color: activeView === tab.id ? '#fff' : 'var(--app-muted-foreground)',
@@ -263,7 +263,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                             })}
                         </div>
                         <button data-tour="templates-focus-mode-btn" onClick={() => setFocusMode(true)}
-                            className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                            className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                             <Maximize2 size={13} />
                         </button>
                     </div>
@@ -284,8 +284,8 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                 {s.icon}
                             </div>
                             <div className="min-w-0">
-                                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                                <div className="text-tp-xs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                <div className="text-sm font-bold text-app-foreground tabular-nums">{s.value}</div>
                             </div>
                         </div>
                     ))}
@@ -300,7 +300,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                             <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
                                 <Library size={14} className="text-white" />
                             </div>
-                            <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Standards Library</span>
+                            <span className="text-tp-md font-bold text-app-foreground hidden sm:inline">Standards Library</span>
                         </div>
                         <div className="flex items-center gap-1 p-0.5 rounded-lg flex-shrink-0"
                             style={{ background: 'var(--app-surface)' }}>
@@ -308,7 +308,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                 const Icon = tab.icon
                                 return (
                                     <button key={tab.id} onClick={() => setActiveView(tab.id)}
-                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md transition-all"
+                                        className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-md transition-all"
                                         style={{
                                             background: activeView === tab.id ? 'var(--app-primary)' : 'transparent',
                                             color: activeView === tab.id ? '#fff' : 'var(--app-muted-foreground)',
@@ -324,7 +324,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                         placeholder="Search by name, region, key... (Ctrl+K)"
-                        className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
+                        className="w-full pl-9 pr-3 py-2 text-tp-md md:text-tp-lg bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
                 </div>
                 <PageTour tourId="finance-coa-templates" stepActions={tourStepActions} />
                 {focusMode && (
@@ -408,21 +408,21 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                     borderBottomRightRadius: '1rem',
                 }}>
                 <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest"
+                    <span className="text-tp-xs font-bold uppercase tracking-wide"
                         style={{ color: 'var(--app-foreground)' }}>
                         {filteredTemplates.length} of {templates.length} templates
                     </span>
-                    <span className="text-[10px] font-bold tabular-nums"
+                    <span className="text-tp-xs font-bold tabular-nums"
                         style={{ color: 'var(--app-muted-foreground)' }}>
                         {totalAccounts.toLocaleString()} accounts
                     </span>
-                    <span className="text-[10px] font-bold tabular-nums"
+                    <span className="text-tp-xs font-bold tabular-nums"
                         style={{ color: 'var(--app-muted-foreground)' }}>
                         {totalRules.toLocaleString()} posting rules
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                    <span className="text-tp-xxs font-bold uppercase tracking-wider px-2 py-0.5 rounded"
                         style={{
                             color: 'var(--app-primary)',
                             background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
@@ -470,7 +470,7 @@ function GalleryView({
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
                 <Library size={36} className="text-app-muted-foreground mb-3 opacity-40" />
                 <p className="text-sm font-bold text-app-muted-foreground">No templates found</p>
-                <p className="text-[11px] text-app-muted-foreground mt-1">
+                <p className="text-tp-sm text-app-muted-foreground mt-1">
                     Run <code className="font-mono bg-app-surface px-1 rounded">python manage.py seed_coa_templates</code>
                 </p>
             </div>
@@ -499,8 +499,8 @@ function GalleryView({
                                         {(() => { const I = resolveIcon(t.icon); return <I size={14} /> })()}
                                     </div>
                                     <div className="min-w-0">
-                                        <div className="text-[12px] font-bold text-app-foreground truncate">{t.name}</div>
-                                        <div className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">{t.region}</div>
+                                        <div className="text-tp-md font-bold text-app-foreground truncate">{t.name}</div>
+                                        <div className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider">{t.region}</div>
                                     </div>
                                 </div>
                             </button>
@@ -539,15 +539,15 @@ function GalleryView({
                                         {(() => { const I = resolveIcon(t.icon); return <I size={20} /> })()}
                                     </div>
                                     <div>
-                                        <h3 className="text-[14px] font-black text-app-foreground">{t.name}</h3>
+                                        <h3 className="text-[14px] font-bold text-app-foreground">{t.name}</h3>
                                         <div className="flex items-center gap-1.5 mt-0.5">
                                             <MapPin size={10} style={{ color: accent }} />
-                                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: accent }}>{t.region}</span>
+                                            <span className="text-tp-xs font-bold uppercase tracking-wider" style={{ color: accent }}>{t.region}</span>
                                         </div>
                                     </div>
                                 </div>
                                 {t.is_system && (
-                                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                    <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                                         style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
                                             color: 'var(--app-success, #22c55e)', border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 20%, transparent)' }}>
                                         System
@@ -556,23 +556,23 @@ function GalleryView({
                             </div>
                         </div>
                         <div className="p-4 pt-3">
-                            <p className="text-[11px] font-medium text-app-muted-foreground line-clamp-2 mb-3 min-h-[2rem]">
+                            <p className="text-tp-sm font-medium text-app-muted-foreground line-clamp-2 mb-3 min-h-[2rem]">
                                 {t.description || 'Standard accounting template'}
                             </p>
                             <div className="flex items-center gap-3 flex-wrap">
                                 <div className="flex items-center gap-1.5">
                                     <TreePine size={12} style={{ color: accent }} />
-                                    <span className="text-[11px] font-bold text-app-foreground tabular-nums">{t.account_count}</span>
-                                    <span className="text-[10px] font-bold text-app-muted-foreground">accounts</span>
+                                    <span className="text-tp-sm font-bold text-app-foreground tabular-nums">{t.account_count}</span>
+                                    <span className="text-tp-xs font-bold text-app-muted-foreground">accounts</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <Workflow size={12} className="text-app-muted-foreground" />
-                                    <span className="text-[11px] font-bold text-app-foreground tabular-nums">{t.posting_rule_count}</span>
-                                    <span className="text-[10px] font-bold text-app-muted-foreground">rules</span>
+                                    <span className="text-tp-sm font-bold text-app-foreground tabular-nums">{t.posting_rule_count}</span>
+                                    <span className="text-tp-xs font-bold text-app-muted-foreground">rules</span>
                                 </div>
                             </div>
                             <div className="flex items-center justify-end mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1" style={{ color: accent }}>
+                                <span className="text-tp-xs font-bold uppercase tracking-wider flex items-center gap-1" style={{ color: accent }}>
                                     View Details <ArrowRight size={12} />
                                 </span>
                             </div>
@@ -633,15 +633,15 @@ function TemplateDetail({
                         {(() => { const I = resolveIcon(template.icon); return <I size={16} className="text-white" /> })()}
                     </div>
                     <div>
-                        <h3 className="text-sm font-black text-app-foreground">{template.name}</h3>
-                        <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
+                        <h3 className="text-sm font-bold text-app-foreground">{template.name}</h3>
+                        <p className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider">
                             {template.region} · {accounts.length} accts · {postingRules.length} rules
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <button disabled={isPending} onClick={() => onImport(template.key)}
-                        className="flex items-center gap-1.5 text-[11px] font-bold text-white px-3 py-1.5 rounded-xl transition-all hover:brightness-110"
+                        className="flex items-center gap-1.5 text-tp-sm font-bold text-white px-3 py-1.5 rounded-xl transition-all hover:brightness-110"
                         style={{ background: accent, boxShadow: `0 2px 8px color-mix(in srgb, ${accent} 25%, transparent)` }}>
                         {isPending ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
                         <span className="hidden sm:inline">Import</span>
@@ -653,20 +653,20 @@ function TemplateDetail({
             <div className="flex-shrink-0 flex items-center gap-1 px-4 py-2"
                 style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
                 <button onClick={() => setDetailTab('accounts')}
-                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                    className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-lg transition-all"
                     style={{ background: detailTab === 'accounts' ? `color-mix(in srgb, ${accent} 10%, transparent)` : 'transparent',
                         color: detailTab === 'accounts' ? accent : 'var(--app-muted-foreground)' }}>
                     <TreePine size={13} /> Accounts ({accounts.length})
                 </button>
                 <button onClick={() => setDetailTab('rules')}
-                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                    className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-lg transition-all"
                     style={{ background: detailTab === 'rules' ? `color-mix(in srgb, ${accent} 10%, transparent)` : 'transparent',
                         color: detailTab === 'rules' ? accent : 'var(--app-muted-foreground)' }}>
                     <Workflow size={13} /> Posting Rules ({postingRules.length})
                 </button>
                 {detailTab === 'accounts' && (
                     <button onClick={() => setExpandAll(!expandAll)}
-                        className="ml-auto flex items-center gap-1 text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1 rounded-lg transition-all">
+                        className="ml-auto flex items-center gap-1 text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1 rounded-lg transition-all">
                         <Layers size={12} /> {expandAll ? 'Collapse' : 'Expand'}
                     </button>
                 )}
@@ -675,7 +675,7 @@ function TemplateDetail({
                         <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input type="text" value={ruleSearch} onChange={e => setRuleSearch(e.target.value)}
                             placeholder="Filter rules..."
-                            className="pl-7 pr-2 py-1 text-[11px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground outline-none w-40" />
+                            className="pl-7 pr-2 py-1 text-tp-sm bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground outline-none w-40" />
                     </div>
                 )}
             </div>
@@ -731,14 +731,14 @@ function PostingRulesPanel({ groupedRules, accent }: { groupedRules: Record<stri
                             {openModules.has(mod) ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                         </div>
                         <BookMarked size={13} style={{ color: accent }} />
-                        <span className="text-[12px] font-bold text-app-foreground uppercase">{mod}</span>
-                        <span className="text-[10px] font-bold text-app-muted-foreground ml-auto">{rules.length} rules</span>
+                        <span className="text-tp-md font-bold text-app-foreground uppercase">{mod}</span>
+                        <span className="text-tp-xs font-bold text-app-muted-foreground ml-auto">{rules.length} rules</span>
                     </button>
                     {/* Rules list */}
                     {openModules.has(mod) && (
                         <div className="animate-in fade-in duration-150">
                             {/* Column header */}
-                            <div className="flex items-center gap-2 px-3 py-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-wider"
+                            <div className="flex items-center gap-2 px-3 py-1.5 text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider"
                                 style={{ background: 'var(--app-surface)', borderTop: '1px solid var(--app-border)' }}>
                                 <div className="flex-1 min-w-0">Event Code</div>
                                 <div className="w-16 flex-shrink-0 text-center">Account</div>
@@ -748,16 +748,16 @@ function PostingRulesPanel({ groupedRules, accent }: { groupedRules: Record<stri
                                 <div key={i} className="flex items-center gap-2 px-3 py-1.5 transition-all hover:bg-app-surface/40"
                                     style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                                     <div className="flex-1 min-w-0">
-                                        <span className="text-[11px] font-mono font-bold text-app-foreground">{r.event_code}</span>
+                                        <span className="text-tp-sm font-mono font-bold text-app-foreground">{r.event_code}</span>
                                     </div>
                                     <div className="w-16 flex-shrink-0 text-center">
-                                        <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded tabular-nums"
+                                        <span className="text-tp-sm font-mono font-bold px-1.5 py-0.5 rounded tabular-nums"
                                             style={{ background: `color-mix(in srgb, ${accent} 8%, transparent)`, color: accent }}>
                                             {r.account_code}
                                         </span>
                                     </div>
                                     <div className="flex-1 min-w-0 hidden md:block">
-                                        <span className="text-[11px] font-medium text-app-muted-foreground truncate block">
+                                        <span className="text-tp-sm font-medium text-app-muted-foreground truncate block">
                                             {r.description || '—'}
                                         </span>
                                     </div>
@@ -782,7 +782,7 @@ function AccountTreeNode({ item, level, accent, expandAll }: { item: any; level:
 
     const typeColor: Record<string, string> = {
         ASSET: 'var(--app-info, #3b82f6)', LIABILITY: 'var(--app-error, #ef4444)',
-        EQUITY: '#8b5cf6', INCOME: 'var(--app-success, #22c55e)', EXPENSE: 'var(--app-warning, #f59e0b)',
+        EQUITY: 'var(--app-info)', INCOME: 'var(--app-success, #22c55e)', EXPENSE: 'var(--app-warning, #f59e0b)',
     }
     const tc = typeColor[item.type] || 'var(--app-muted-foreground)'
     const reportTag = ['ASSET', 'LIABILITY', 'EQUITY'].includes(item.type) ? 'BS' : 'P&L'
@@ -806,20 +806,20 @@ function AccountTreeNode({ item, level, accent, expandAll }: { item: any; level:
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: tc }} />
                     )}
                 </div>
-                <span className="w-16 flex-shrink-0 font-mono text-[11px] font-bold tabular-nums"
+                <span className="w-16 flex-shrink-0 font-mono text-tp-sm font-bold tabular-nums"
                     style={{ color: isRoot ? accent : 'var(--app-muted-foreground)' }}>{item.code}</span>
-                <span className={`flex-1 min-w-0 truncate text-[13px] ${isRoot ? 'font-bold text-app-foreground' : 'font-medium text-app-foreground'}`}>
+                <span className={`flex-1 min-w-0 truncate text-tp-lg ${isRoot ? 'font-bold text-app-foreground' : 'font-medium text-app-foreground'}`}>
                     {item.name}
                 </span>
                 {item.type && (
-                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hidden sm:block"
+                    <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hidden sm:block"
                         style={{ background: `color-mix(in srgb, ${tc} 10%, transparent)`, color: tc,
                             border: `1px solid color-mix(in srgb, ${tc} 20%, transparent)` }}>
                         {item.type}
                     </span>
                 )}
                 {item.type && (
-                    <span className="text-[8px] font-black px-1 rounded flex-shrink-0 hidden md:block"
+                    <span className="text-tp-xxs font-bold px-1 rounded flex-shrink-0 hidden md:block"
                         style={{ background: `color-mix(in srgb, ${rc} 10%, transparent)`, color: rc }}>
                         [{reportTag}]
                     </span>
@@ -863,11 +863,11 @@ function CompareView({
                                 border: `1px solid ${isSelected ? `color-mix(in srgb, ${accent} 40%, transparent)` : 'var(--app-border)'}`,
                             }}>
                             {isSelected ? <CheckCircle2 size={14} style={{ color: accent }} /> : <Library size={14} className="text-app-muted-foreground" />}
-                            <span className="text-[12px] font-bold whitespace-nowrap"
+                            <span className="text-tp-md font-bold whitespace-nowrap"
                                 style={{ color: isSelected ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
                                 {t.name}
                             </span>
-                            <span className="text-[10px] font-bold tabular-nums text-app-muted-foreground">{t.account_count}</span>
+                            <span className="text-tp-xs font-bold tabular-nums text-app-muted-foreground">{t.account_count}</span>
                         </button>
                     )
                 })}
@@ -881,13 +881,13 @@ function CompareView({
                     <div className="flex items-center gap-1 mb-3 p-1 rounded-xl w-fit"
                         style={{ background: 'var(--app-surface-2, var(--app-surface))' }}>
                         <button onClick={() => setCompareTab('accounts')}
-                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-lg transition-all"
                             style={{ background: compareTab === 'accounts' ? 'var(--app-primary)' : 'transparent',
                                 color: compareTab === 'accounts' ? '#fff' : 'var(--app-muted-foreground)' }}>
                             <TreePine size={13} /> Account Trees
                         </button>
                         <button onClick={() => setCompareTab('rules')}
-                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-lg transition-all"
                             style={{ background: compareTab === 'rules' ? 'var(--app-primary)' : 'transparent',
                                 color: compareTab === 'rules' ? '#fff' : 'var(--app-muted-foreground)' }}>
                             <Workflow size={13} /> Posting Rules
@@ -917,13 +917,13 @@ function CompareView({
                                         style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 8%, var(--app-surface)), var(--app-surface))`,
                                             borderBottom: '1px solid var(--app-border)' }}>
                                         <div>
-                                            <h3 className="text-[13px] font-black text-app-foreground">{t?.name || key}</h3>
-                                            <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-0.5">
+                                            <h3 className="text-tp-lg font-bold text-app-foreground">{t?.name || key}</h3>
+                                            <p className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider mt-0.5">
                                                 {t?.region} · {compareTab === 'accounts' ? `${accounts.length} accts` : `${rules.length} rules`}
                                             </p>
                                         </div>
                                         <button disabled={isPending} onClick={() => onImport(key)}
-                                            className="flex items-center gap-1 text-[10px] font-bold text-white px-2.5 py-1.5 rounded-lg transition-all hover:brightness-110"
+                                            className="flex items-center gap-1 text-tp-xs font-bold text-white px-2.5 py-1.5 rounded-lg transition-all hover:brightness-110"
                                             style={{ background: accent }}>
                                             <Zap size={12} /> Import
                                         </button>
@@ -938,7 +938,7 @@ function CompareView({
                                         )}
                                     </div>
                                     <div className="p-3 text-center" style={{ borderTop: '1px solid var(--app-border)' }}>
-                                        <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                        <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">
                                             {compareTab === 'accounts' ? `${accounts.length} root classes` : `${rules.length} posting rules`}
                                         </span>
                                     </div>
@@ -1210,9 +1210,9 @@ function MigrationView({
     const LEVEL_COLORS: Record<string, string> = {
         HINT: 'var(--app-success, #22c55e)',
         CODE: 'var(--app-info, #3b82f6)',
-        NAME: '#8b5cf6',
+        NAME: 'var(--app-info)',
         MERGE: 'var(--app-warning, #f59e0b)',
-        SPLIT: '#ec4899',
+        SPLIT: 'var(--app-error)',
     }
 
     const LEVEL_LABELS: Record<string, string> = {
@@ -1225,11 +1225,11 @@ function MigrationView({
             {/* Source/Target selectors */}
             <div className="flex items-center gap-3 mb-4 flex-wrap">
                 <div className="flex-1 min-w-[200px]">
-                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">
+                    <label className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide mb-1 block">
                         Source Template
                     </label>
                     <select value={sourceKey} onChange={e => { setSourceKey(e.target.value); setTargetKey('') }}
-                        className="w-full text-[12px] font-bold px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
+                        className="w-full text-tp-md font-bold px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                         <option value="">Select source...</option>
                         {templates.map(t => <option key={t.key} value={t.key}>{t.name} ({t.region})</option>)}
                     </select>
@@ -1238,12 +1238,12 @@ function MigrationView({
                     <ArrowRightLeft size={20} className="text-app-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-[200px]">
-                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">
+                    <label className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide mb-1 block">
                         Target Template
                     </label>
                     <select value={targetKey} onChange={e => setTargetKey(e.target.value)}
                         disabled={!sourceKey}
-                        className="w-full text-[12px] font-bold px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none disabled:opacity-40">
+                        className="w-full text-tp-md font-bold px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none disabled:opacity-40">
                         <option value="">Select target...</option>
                         {availableTargets.map(t => <option key={t.key} value={t.key}>{t.name} ({t.region})</option>)}
                     </select>
@@ -1263,8 +1263,8 @@ function MigrationView({
                                 background: filterLevel === 'ALL' ? 'color-mix(in srgb, var(--app-primary) 8%, var(--app-surface))' : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                                 border: filterLevel === 'ALL' ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                             }}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">All</div>
-                            <div className="text-sm font-black text-app-foreground tabular-nums ml-auto">{fullMapping.length}</div>
+                            <div className="text-tp-xs font-bold uppercase tracking-wider text-app-muted-foreground">All</div>
+                            <div className="text-sm font-bold text-app-foreground tabular-nums ml-auto">{fullMapping.length}</div>
                         </button>
                         {(['HINT', 'CODE', 'NAME', 'MERGE', 'SPLIT'] as const).map(level => (
                             <button key={level} onClick={() => setFilterLevel(filterLevel === level ? 'ALL' : level)}
@@ -1274,8 +1274,8 @@ function MigrationView({
                                     border: filterLevel === level ? `1px solid color-mix(in srgb, ${LEVEL_COLORS[level]} 30%, transparent)` : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                 }}>
                                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: LEVEL_COLORS[level] }} />
-                                <div className="text-[9px] font-bold uppercase tracking-wider text-app-muted-foreground">{LEVEL_LABELS[level]}</div>
-                                <div className="text-sm font-black text-app-foreground tabular-nums ml-auto">{stats[level] || 0}</div>
+                                <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">{LEVEL_LABELS[level]}</div>
+                                <div className="text-sm font-bold text-app-foreground tabular-nums ml-auto">{stats[level] || 0}</div>
                             </button>
                         ))}
                     </div>
@@ -1292,7 +1292,7 @@ function MigrationView({
                                         style={{ background: `color-mix(in srgb, ${sourceAccent} 15%, transparent)`, color: sourceAccent }}>
                                         {(() => { const t = templates.find(t => t.key === sourceKey); const I = resolveIcon(t?.icon); return <I size={13} /> })()}
                                     </div>
-                                    <span className="text-[12px] font-bold text-app-foreground">{templates.find(t => t.key === sourceKey)?.name}</span>
+                                    <span className="text-tp-md font-bold text-app-foreground">{templates.find(t => t.key === sourceKey)?.name}</span>
                                 </div>
                                 <ArrowRight size={16} className="text-app-muted-foreground" />
                                 <div className="flex items-center gap-2">
@@ -1300,19 +1300,19 @@ function MigrationView({
                                         style={{ background: `color-mix(in srgb, ${targetAccent} 15%, transparent)`, color: targetAccent }}>
                                         {(() => { const t = templates.find(t => t.key === targetKey); const I = resolveIcon(t?.icon); return <I size={13} /> })()}
                                     </div>
-                                    <span className="text-[12px] font-bold text-app-foreground">{templates.find(t => t.key === targetKey)?.name}</span>
+                                    <span className="text-tp-md font-bold text-app-foreground">{templates.find(t => t.key === targetKey)?.name}</span>
                                 </div>
                             </div>
                             <div className="relative">
                                 <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type="text" value={migSearch} onChange={e => setMigSearch(e.target.value)}
                                     placeholder="Filter mappings..."
-                                    className="pl-7 pr-2 py-1 text-[11px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground outline-none w-44" />
+                                    className="pl-7 pr-2 py-1 text-tp-sm bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground outline-none w-44" />
                             </div>
                         </div>
 
                         {/* Column headers */}
-                        <div className="flex items-center gap-2 px-4 py-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-wider"
+                        <div className="flex items-center gap-2 px-4 py-1.5 text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider"
                             style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
                             <div className="w-16 flex-shrink-0">Source</div>
                             <div className="flex-1 min-w-0">Source Account</div>
@@ -1388,30 +1388,30 @@ function MigrationView({
                                                     }}>
                                                     <div className="w-16 flex-shrink-0" />
                                                     <div className="flex-1 min-w-0">
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider"
+                                                        <span className="text-tp-xs font-bold uppercase tracking-wider"
                                                             style={{ color: mergeColor }}>
                                                             {sources.length} accounts merge into ↓
                                                         </span>
                                                     </div>
                                                     <div className="w-20 flex-shrink-0" />
                                                     <div className="w-16 flex-shrink-0 text-center">
-                                                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                        <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
                                                             style={{ background: `color-mix(in srgb, ${mergeColor} 12%, transparent)`, color: mergeColor,
                                                                 border: `1px solid color-mix(in srgb, ${mergeColor} 25%, transparent)` }}>
                                                             MERGE {sources.length}→1
                                                         </span>
                                                     </div>
                                                     <div className="w-16 flex-shrink-0">
-                                                        <span className="text-[11px] font-mono font-black tabular-nums px-1 py-0.5 rounded"
+                                                        <span className="text-tp-sm font-mono font-bold tabular-nums px-1 py-0.5 rounded"
                                                             style={{ background: `color-mix(in srgb, ${targetAccent} 12%, transparent)`, color: targetAccent }}>
                                                             {targetCode}
                                                         </span>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <span className="text-[11px] font-black text-app-foreground truncate block">{targetName}</span>
+                                                        <span className="text-tp-sm font-bold text-app-foreground truncate block">{targetName}</span>
                                                     </div>
                                                     <div className="w-10 flex-shrink-0 text-center hidden sm:block">
-                                                        <span className="text-[10px] font-black tabular-nums"
+                                                        <span className="text-tp-xs font-bold tabular-nums"
                                                             style={{ color: mergeColor }}>100%</span>
                                                     </div>
                                                 </div>
@@ -1426,32 +1426,32 @@ function MigrationView({
                                                             background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 2%, transparent)',
                                                         }}>
                                                         <div className="w-16 flex-shrink-0">
-                                                            <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                            <span className="text-tp-sm font-mono font-bold tabular-nums px-1 py-0.5 rounded"
                                                                 style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
                                                                 {src.srcCode}
                                                             </span>
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <span className="text-[11px] font-medium text-app-foreground truncate block">{src.srcName}</span>
+                                                            <span className="text-tp-sm font-medium text-app-foreground truncate block">{src.srcName}</span>
                                                         </div>
                                                         <div className="w-20 flex-shrink-0 text-right">
                                                             {(() => { const bal = balanceMap[src.srcCode]; return bal !== undefined && bal !== 0 ? (
-                                                                <span className="text-[10px] font-black tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-danger, #ef4444)' }}>
+                                                                <span className="text-tp-xs font-bold tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-danger, #ef4444)' }}>
                                                                     {bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                                 </span>
-                                                            ) : <span className="text-[10px] text-app-muted-foreground">—</span> })()}
+                                                            ) : <span className="text-tp-xs text-app-muted-foreground">—</span> })()}
                                                         </div>
                                                         <div className="w-16 flex-shrink-0 text-center">
-                                                            <span className="text-[9px] font-bold" style={{ color: mergeColor }}>├─</span>
+                                                            <span className="text-tp-xxs font-bold" style={{ color: mergeColor }}>├─</span>
                                                         </div>
                                                         <div className="w-16 flex-shrink-0">
-                                                            <span className="text-[10px] font-mono font-bold tabular-nums text-app-muted-foreground">{targetCode}</span>
+                                                            <span className="text-tp-xs font-mono font-bold tabular-nums text-app-muted-foreground">{targetCode}</span>
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <span className="text-[10px] text-app-muted-foreground truncate block italic">{targetName}</span>
+                                                            <span className="text-tp-xs text-app-muted-foreground truncate block italic">{targetName}</span>
                                                         </div>
                                                         <div className="w-10 flex-shrink-0 text-center hidden sm:block">
-                                                            <span className="text-[10px] font-bold tabular-nums text-app-muted-foreground">100%</span>
+                                                            <span className="text-tp-xs font-bold tabular-nums text-app-muted-foreground">100%</span>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -1467,34 +1467,34 @@ function MigrationView({
                                                 <div className="flex items-center gap-2 px-4 py-1.5 transition-all"
                                                     style={{
                                                         borderBottom: '1px solid color-mix(in srgb, var(--app-border) 15%, transparent)',
-                                                        background: 'color-mix(in srgb, #ec4899 3%, var(--app-surface))',
+                                                        background: 'color-mix(in srgb, var(--app-error) 3%, var(--app-surface))',
                                                     }}>
                                                     <div className="w-16 flex-shrink-0">
-                                                        <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                        <span className="text-tp-sm font-mono font-bold tabular-nums px-1 py-0.5 rounded"
                                                             style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
                                                             {entry.srcCode}
                                                         </span>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <span className="text-[11px] font-bold text-app-foreground truncate block">{entry.srcName}</span>
+                                                        <span className="text-tp-sm font-bold text-app-foreground truncate block">{entry.srcName}</span>
                                                     </div>
                                                     <div className="w-20 flex-shrink-0 text-right">
                                                         {(() => { const bal = balanceMap[entry.srcCode]; return bal !== undefined && bal !== 0 ? (
-                                                            <span className="text-[10px] font-black tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-danger, #ef4444)' }}>
+                                                            <span className="text-tp-xs font-bold tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-danger, #ef4444)' }}>
                                                                 {bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                             </span>
-                                                        ) : <span className="text-[10px] text-app-muted-foreground">—</span> })()}
+                                                        ) : <span className="text-tp-xs text-app-muted-foreground">—</span> })()}
                                                     </div>
                                                     <div className="w-16 flex-shrink-0 text-center">
-                                                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-                                                            style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899',
-                                                                border: '1px solid color-mix(in srgb, #ec4899 20%, transparent)' }}>
+                                                        <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                            style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)',
+                                                                border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)' }}>
                                                             SPLIT 1→{entry.targets.length}
                                                         </span>
                                                     </div>
                                                     <div className="w-16 flex-shrink-0" />
                                                     <div className="flex-1 min-w-0">
-                                                        <span className="text-[10px] font-bold text-app-muted-foreground italic">
+                                                        <span className="text-tp-xs font-bold text-app-muted-foreground italic">
                                                             Split across {entry.targets.length} accounts ↓
                                                         </span>
                                                     </div>
@@ -1505,27 +1505,27 @@ function MigrationView({
                                                         className="flex items-center gap-2 pl-6 pr-4 py-1 transition-all hover:bg-app-surface/40"
                                                         style={{
                                                             borderBottom: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)',
-                                                            borderLeft: '3px solid #ec4899',
+                                                            borderLeft: '3px solid var(--app-error)',
                                                             marginLeft: '8px',
                                                         }}>
                                                         <div className="w-16 flex-shrink-0" />
                                                         <div className="flex-1 min-w-0" />
                                                         <div className="w-20 flex-shrink-0" />
                                                         <div className="w-16 flex-shrink-0 text-center">
-                                                            <span className="text-[9px] font-bold" style={{ color: '#ec4899' }}>├─</span>
+                                                            <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-error)' }}>├─</span>
                                                         </div>
                                                         <div className="w-16 flex-shrink-0">
-                                                            <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                            <span className="text-tp-sm font-mono font-bold tabular-nums px-1 py-0.5 rounded"
                                                                 style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
                                                                 {tgt.code}
                                                             </span>
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <span className="text-[11px] font-medium text-app-foreground truncate block">{tgt.name}</span>
+                                                            <span className="text-tp-sm font-medium text-app-foreground truncate block">{tgt.name}</span>
                                                         </div>
                                                         <div className="w-10 flex-shrink-0 text-center hidden sm:block">
-                                                            <span className="text-[10px] font-black tabular-nums px-1 py-0.5 rounded"
-                                                                style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899' }}>
+                                                            <span className="text-tp-xs font-bold tabular-nums px-1 py-0.5 rounded"
+                                                                style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
                                                                 {tgt.pct}%
                                                             </span>
                                                         </div>
@@ -1543,23 +1543,23 @@ function MigrationView({
                                         <div key={`s-${i}`} className="flex items-center gap-2 px-4 py-1.5 transition-all hover:bg-app-surface/40"
                                             style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                                             <div className="w-16 flex-shrink-0">
-                                                <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                <span className="text-tp-sm font-mono font-bold tabular-nums px-1 py-0.5 rounded"
                                                     style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
                                                     {entry.srcCode}
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <span className="text-[11px] font-medium text-app-foreground truncate block">{entry.srcName}</span>
+                                                <span className="text-tp-sm font-medium text-app-foreground truncate block">{entry.srcName}</span>
                                             </div>
                                             <div className="w-20 flex-shrink-0 text-right">
                                                 {(() => { const bal = balanceMap[entry.srcCode]; return bal !== undefined && bal !== 0 ? (
-                                                    <span className="text-[10px] font-black tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : bal < 0 ? 'var(--app-danger, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                                                    <span className="text-tp-xs font-bold tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : bal < 0 ? 'var(--app-danger, #ef4444)' : 'var(--app-muted-foreground)' }}>
                                                         {bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                     </span>
-                                                ) : <span className="text-[10px] text-app-muted-foreground">—</span> })()}
+                                                ) : <span className="text-tp-xs text-app-muted-foreground">—</span> })()}
                                             </div>
                                             <div className="w-16 flex-shrink-0 text-center">
-                                                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
                                                     style={{
                                                         background: `color-mix(in srgb, ${levelColor} 10%, transparent)`,
                                                         color: levelColor,
@@ -1570,21 +1570,21 @@ function MigrationView({
                                             </div>
                                             <div className="w-16 flex-shrink-0">
                                                 {tgt ? (
-                                                    <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                    <span className="text-tp-sm font-mono font-bold tabular-nums px-1 py-0.5 rounded"
                                                         style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
                                                         {tgt.code}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-[10px] font-bold text-app-muted-foreground">—</span>
+                                                    <span className="text-tp-xs font-bold text-app-muted-foreground">—</span>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <span className="text-[11px] font-medium text-app-foreground truncate block">
+                                                <span className="text-tp-sm font-medium text-app-foreground truncate block">
                                                     {tgt?.name || '—'}
                                                 </span>
                                             </div>
                                             <div className="w-10 flex-shrink-0 text-center hidden sm:block">
-                                                <span className="text-[10px] font-bold tabular-nums text-app-muted-foreground">100%</span>
+                                                <span className="text-tp-xs font-bold tabular-nums text-app-muted-foreground">100%</span>
                                             </div>
                                         </div>
                                     )
@@ -1596,23 +1596,23 @@ function MigrationView({
                         <div className="px-4 py-3 flex items-center justify-between"
                             style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
                             <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">
                                     {filteredEntries.length} of {fullMapping.length} mappings
                                 </span>
                                 {(stats['MERGE'] || 0) > 0 && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
                                         style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)',
                                             color: 'var(--app-warning, #f59e0b)' }}>
                                         {stats['MERGE']} merges
                                     </span>
                                 )}
                                 {(stats['SPLIT'] || 0) > 0 && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-                                        style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899' }}>
+                                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                                        style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
                                         {stats['SPLIT']} splits
                                     </span>
                                 )}
-                                <span className="text-[11px] font-black tabular-nums px-2 py-0.5 rounded"
+                                <span className="text-tp-sm font-bold tabular-nums px-2 py-0.5 rounded"
                                     style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
                                         color: 'var(--app-success, #22c55e)' }}>
                                     100% mapped
@@ -1632,7 +1632,7 @@ function MigrationView({
                                         onApplyImport(targetKey, mapping)
                                     }}
                                     disabled={isPending || fullMapping.length === 0}
-                                    className="flex items-center gap-2 px-5 py-2 rounded-xl text-[12px] font-black uppercase tracking-wider transition-all"
+                                    className="flex items-center gap-2 px-5 py-2 rounded-xl text-tp-md font-bold uppercase tracking-wider transition-all"
                                     style={{
                                         background: isPending ? 'var(--app-muted)' : 'var(--app-success, #22c55e)',
                                         color: 'white',
@@ -1740,14 +1740,14 @@ function MigrationExecutionView({
                             <h2 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
                                 Migration Execution
                             </h2>
-                            <p className="text-[11px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <p className="text-tp-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {sourceTemplateKey.replace(/_/g, ' ')} → {targetTemplateKey.replace(/_/g, ' ')}
                             </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={onCancel}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-xl border transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-tp-sm font-bold rounded-xl border transition-all"
                             style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                             <X size={13} /> Cancel
                         </button>
@@ -1762,7 +1762,7 @@ function MigrationExecutionView({
                                 }
                                 onApply(mapping)
                             }} disabled={isPending}
-                            className="flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-bold rounded-xl transition-all"
+                            className="flex items-center gap-1.5 px-4 py-1.5 text-tp-sm font-bold rounded-xl transition-all"
                             style={{
                                 background: isPending ? 'var(--app-muted)' : 'var(--app-primary)',
                                 color: 'white',
@@ -1787,14 +1787,14 @@ function MigrationExecutionView({
                         { label: 'Custom', value: preview.summary.custom_accounts, color: 'var(--app-info, #3b82f6)' },
                         { label: 'Clean', value: cleanAccounts.length, color: 'var(--app-success, #22c55e)' },
                     ].map(stat => (
-                        <div key={stat.label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px]"
+                        <div key={stat.label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-tp-xs"
                             style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
                             <span className="font-bold" style={{ color: stat.color }}>{stat.value}</span>
                             <span style={{ color: 'var(--app-muted-foreground)' }}>{stat.label}</span>
                         </div>
                     ))}
                     {preview.summary.total_balance !== 0 && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px]"
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-tp-xs"
                             style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
                             <span className="font-bold" style={{
                                 color: preview.summary.total_balance > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-danger, #ef4444)',
@@ -1820,16 +1820,16 @@ function MigrationExecutionView({
                                 style={{ background: section.bgColor }}>
                                 <div className="flex items-center gap-2">
                                     <span style={{ color: section.color }}>{section.icon}</span>
-                                    <span className="text-[12px] font-bold" style={{ color: section.color }}>
+                                    <span className="text-tp-md font-bold" style={{ color: section.color }}>
                                         {section.label}
                                     </span>
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                                    <span className="text-tp-xs px-1.5 py-0.5 rounded-full font-bold"
                                         style={{ background: section.color, color: 'white' }}>
                                         {section.accounts.length}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
                                         {section.description}
                                     </span>
                                     <ChevronDown size={14}
@@ -1845,7 +1845,7 @@ function MigrationExecutionView({
                             {expandedSections[section.key] && (
                                 <div style={{ background: 'var(--app-background)' }}>
                                     {/* Table Header */}
-                                    <div className="grid gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-wider"
+                                    <div className="grid gap-2 px-4 py-2 text-tp-xs font-bold uppercase tracking-wider"
                                         style={{
                                             gridTemplateColumns: '80px 1fr 100px 80px 1fr 100px',
                                             color: 'var(--app-muted-foreground)',
@@ -1861,7 +1861,7 @@ function MigrationExecutionView({
                                     {/* Rows */}
                                     {section.accounts.map(acc => (
                                         <div key={acc.code}
-                                            className="grid gap-2 px-4 py-2 text-[11px] items-center transition-colors hover:bg-[var(--app-surface)]"
+                                            className="grid gap-2 px-4 py-2 text-tp-sm items-center transition-colors hover:bg-[var(--app-surface)]"
                                             style={{
                                                 gridTemplateColumns: '80px 1fr 100px 80px 1fr 100px',
                                                 borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -1874,7 +1874,7 @@ function MigrationExecutionView({
                                             <div className="truncate">
                                                 <span style={{ color: 'var(--app-foreground)' }}>{acc.name}</span>
                                                 {acc.parent_code && (
-                                                    <span className="text-[9px] ml-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                    <span className="text-tp-xxs ml-1" style={{ color: 'var(--app-muted-foreground)' }}>
                                                         ← {acc.parent_code} {acc.parent_name}
                                                     </span>
                                                 )}
@@ -1898,7 +1898,7 @@ function MigrationExecutionView({
                                                 <select
                                                     value={getTargetCode(acc.code, acc.suggested_target)}
                                                     onChange={(e) => setOverrides(p => ({ ...p, [acc.code]: e.target.value }))}
-                                                    className="flex-1 text-[11px] px-2 py-1 rounded-lg border bg-transparent truncate"
+                                                    className="flex-1 text-tp-sm px-2 py-1 rounded-lg border bg-transparent truncate"
                                                     style={{
                                                         color: 'var(--app-foreground)',
                                                         borderColor: 'var(--app-border)',
@@ -1915,7 +1915,7 @@ function MigrationExecutionView({
                                             {/* Match Badge */}
                                             <div className="flex justify-center">
                                                 {acc.suggestion_reason ? (
-                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{
+                                                    <span className="text-tp-xxs px-1.5 py-0.5 rounded-full font-bold" style={{
                                                         background: acc.suggestion_reason === 'EXACT_MATCH'
                                                             ? 'color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)'
                                                             : acc.suggestion_reason === 'PARENT_MATCH'
@@ -1932,7 +1932,7 @@ function MigrationExecutionView({
                                                                 : '~ Type'}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                                                    <span className="text-tp-xxs px-1.5 py-0.5 rounded-full font-bold"
                                                         style={{
                                                             background: 'color-mix(in srgb, var(--app-danger, #ef4444) 12%, transparent)',
                                                             color: 'var(--app-danger, #ef4444)',
@@ -1957,10 +1957,10 @@ function MigrationExecutionView({
                     }}>
                         <div className="flex items-center gap-2">
                             <CheckCircle2 size={15} style={{ color: 'var(--app-success, #22c55e)' }} />
-                            <span className="text-[12px] font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>
+                            <span className="text-tp-md font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>
                                 {cleanAccounts.length} Clean Accounts
                             </span>
-                            <span className="text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
                                 — No data, exist in both templates. Will be migrated automatically.
                             </span>
                         </div>
@@ -1990,7 +1990,7 @@ function EmptyState({ icon: Icon, text, subtitle }: { icon: any; text: string; s
         <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
             <Icon size={36} className="text-app-muted-foreground mb-3 opacity-40" />
             <p className="text-sm font-bold text-app-muted-foreground">{text}</p>
-            {subtitle && <p className="text-[11px] text-app-muted-foreground mt-1">{subtitle}</p>}
+            {subtitle && <p className="text-tp-sm text-app-muted-foreground mt-1">{subtitle}</p>}
         </div>
     )
 }

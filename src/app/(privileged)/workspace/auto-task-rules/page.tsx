@@ -8,7 +8,7 @@ import {
     Plus, Trash2, Edit3, Check, X, Zap, Filter, User, Users,
     DollarSign, MapPin, CreditCard, Search, Loader2, Maximize2, Minimize2,
     ChevronRight, ChevronDown, Package, ShoppingCart, Landmark, Heart,
-    Receipt, UserCircle, Settings2, ArrowLeft, ArrowRight,
+    Receipt, UserCircle, Settings2, ArrowLeft, ArrowRight, Sparkles,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -67,11 +67,11 @@ const TRIGGER_EVENTS = [
 
 const MODULES = [
     { value: 'inventory', label: 'Inventory', icon: Package, color: 'var(--app-info, #3b82f6)', group: 'Inventory' },
-    { value: 'purchasing', label: 'Purchasing', icon: ShoppingCart, color: '#f59e0b', group: 'Purchasing' },
+    { value: 'purchasing', label: 'Purchasing', icon: ShoppingCart, color: 'var(--app-warning)', group: 'Purchasing' },
     { value: 'finance', label: 'Finance', icon: Landmark, color: 'var(--app-primary)', group: 'Finance' },
-    { value: 'crm', label: 'CRM', icon: Heart, color: '#ec4899', group: 'CRM' },
-    { value: 'sales', label: 'Sales / POS', icon: Receipt, color: '#8b5cf6', group: 'Finance' },
-    { value: 'hr', label: 'HR', icon: UserCircle, color: '#10b981', group: 'HR' },
+    { value: 'crm', label: 'CRM', icon: Heart, color: 'var(--app-error)', group: 'CRM' },
+    { value: 'sales', label: 'Sales / POS', icon: Receipt, color: 'var(--app-info)', group: 'Finance' },
+    { value: 'hr', label: 'HR', icon: UserCircle, color: 'var(--app-success)', group: 'HR' },
     { value: 'system', label: 'System', icon: Settings2, color: 'var(--app-muted-foreground)', group: 'System' },
 ];
 
@@ -138,10 +138,63 @@ const emptyRule = (): AutoTaskRule => ({
     is_active: true,
 });
 
-const inputCls =
-    'w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/20 transition-all';
+/** Smart defaults per trigger event — when the user picks an event in Step 2,
+ *  we pre-fill sensible starter values so Step 3 is ~half-written already.
+ *  The user can always override; this just saves clicks. */
+const SMART_DEFAULTS: Record<string, { title?: string; priority?: string; minutes?: number; days_before?: number; require_completion_note?: boolean }> = {
+    PRICE_CHANGE: { title: 'Update shelf label for {reference}', priority: 'MEDIUM', minutes: 10, require_completion_note: true },
+    LOW_STOCK: { title: 'Reorder {reference}', priority: 'HIGH', minutes: 15 },
+    NEGATIVE_STOCK: { title: 'Investigate negative stock: {reference}', priority: 'URGENT', minutes: 20, require_completion_note: true },
+    EXPIRY_APPROACHING: { title: 'Rotate / discount product approaching expiry: {reference}', priority: 'HIGH', minutes: 15 },
+    PRODUCT_EXPIRED: { title: 'Remove expired product: {reference}', priority: 'URGENT', minutes: 10, require_completion_note: true },
+    PRODUCT_CREATED: { title: 'Review new product setup: {reference}', priority: 'MEDIUM', minutes: 20 },
+    PO_APPROVED: { title: 'Prepare to receive PO {reference}', priority: 'MEDIUM', minutes: 30 },
+    NEW_INVOICE: { title: 'Review incoming invoice {reference}', priority: 'HIGH', minutes: 15 },
+    OVERDUE_INVOICE: { title: 'Chase overdue invoice {reference}', priority: 'URGENT', minutes: 15, require_completion_note: true },
+    LATE_PAYMENT: { title: 'Follow up on late payment: {reference}', priority: 'URGENT', minutes: 15 },
+    PAYMENT_DUE_SUPPLIER: { title: 'Pay supplier {reference}', priority: 'HIGH', minutes: 10 },
+    NEW_SUPPLIER: { title: 'Onboard supplier {reference}', priority: 'MEDIUM', minutes: 45 },
+    NEW_CLIENT: { title: 'Welcome new customer {reference}', priority: 'MEDIUM', minutes: 20 },
+    CLIENT_COMPLAINT: { title: 'Handle complaint: {reference}', priority: 'URGENT', minutes: 30, require_completion_note: true },
+    DELIVERY_COMPLETED: { title: 'Confirm delivery completed: {reference}', priority: 'MEDIUM', minutes: 10 },
+    ORDER_COMPLETED: { title: 'Post-order follow-up: {reference}', priority: 'LOW', minutes: 10 },
+    INVENTORY_COUNT: { title: 'Run inventory count', priority: 'MEDIUM', minutes: 60 },
+    BANK_STATEMENT: { title: 'Reconcile bank statement', priority: 'HIGH', minutes: 45 },
+    MONTH_END: { title: 'Month-end close checklist', priority: 'URGENT', minutes: 120, require_completion_note: true },
+    PERIOD_CLOSING_SOON: { title: 'Prepare to close {reference}', priority: 'HIGH', minutes: 20, days_before: 7 },
+    PERIOD_STARTING_SOON: { title: 'Open {reference}', priority: 'MEDIUM', minutes: 15, days_before: 3 },
+    PERIOD_REOPEN_REQUEST: { title: 'Review period reopen request — {reference}', priority: 'URGENT', minutes: 10, require_completion_note: true },
+    LEAVE_REQUEST: { title: 'Review leave request from {reference}', priority: 'MEDIUM', minutes: 10 },
+    EMPLOYEE_ONBOARD: { title: 'Onboard {reference}', priority: 'HIGH', minutes: 60 },
+    CASHIER_DISCOUNT: { title: 'Review discount applied by {reference}', priority: 'MEDIUM', minutes: 10, require_completion_note: true },
+    HIGH_VALUE_SALE: { title: 'Follow up on high-value sale: {reference}', priority: 'HIGH', minutes: 15 },
+    DAILY_SUMMARY: { title: 'Review end-of-day summary', priority: 'MEDIUM', minutes: 15 },
+};
+function applySmartDefaults(rule: AutoTaskRule, trigger: string): AutoTaskRule {
+    const d = SMART_DEFAULTS[trigger];
+    if (!d) return { ...rule, trigger_event: trigger };
+    // Only fill fields the user hasn't already touched — respect any explicit input.
+    return {
+        ...rule,
+        trigger_event: trigger,
+        template_data: {
+            title: rule.template_data.title || d.title || rule.template_data.title,
+            priority: rule.template_data.priority === 'HIGH' && d.priority ? d.priority : rule.template_data.priority,
+            estimated_minutes: rule.template_data.estimated_minutes === 30 && d.minutes ? d.minutes : rule.template_data.estimated_minutes,
+            default_points: rule.template_data.default_points,
+        },
+        conditions: {
+            ...rule.conditions,
+            ...(d.days_before !== undefined && (rule.conditions as any).days_before === undefined ? { days_before: d.days_before } : {}),
+            ...(d.require_completion_note && !(rule.conditions as any).require_completion_note ? { require_completion_note: true } : {}),
+        },
+    };
+}
 
-const labelCls = 'text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block';
+const inputCls =
+    'w-full text-tp-md font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/20 transition-all';
+
+const labelCls = 'text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide mb-1 block';
 
 export default function AutoTaskRulesPage() {
     const [rules, setRules] = useState<any[]>([]);
@@ -155,6 +208,8 @@ export default function AutoTaskRulesPage() {
     const [search, setSearch] = useState('');
     const [focusMode, setFocusMode] = useState(false);
     const [selectedModule, setSelectedModule] = useState<string>('inventory');
+    const [showTemplates, setShowTemplates] = useState(false);
+    const [installingTrigger, setInstallingTrigger] = useState<string | null>(null);
     const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
     const searchParams = useSearchParams();
     const searchRef = useRef<HTMLInputElement>(null);
@@ -248,6 +303,53 @@ export default function AutoTaskRulesPage() {
         }
     };
 
+    /** One-click install of a pre-built automation from the Template Library.
+     *  Creates both a TaskTemplate and an AutoTaskRule in one go, applying the
+     *  same SMART_DEFAULTS the wizard would prefill. Assignment stays blank so
+     *  the admin picks their own person/team afterwards. */
+    const installTemplate = async (trigger: string) => {
+        setInstallingTrigger(trigger);
+        try {
+            const seed = applySmartDefaults(emptyRule(), trigger);
+            const triggerMeta = TRIGGER_EVENTS.find(t => t.value === trigger);
+            const moduleMatch = MODULES.find(m => m.group === triggerMeta?.group);
+            seed.module = moduleMatch?.value || seed.module;
+            seed.name = triggerMeta?.label || seed.name;
+            const tmpl: any = await erpFetch('task-templates/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: seed.template_data.title || seed.name,
+                    default_priority: seed.template_data.priority,
+                    estimated_minutes: seed.template_data.estimated_minutes,
+                    default_points: seed.template_data.default_points,
+                    is_active: true,
+                }),
+            });
+            await erpFetch('auto-task-rules/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: seed.name,
+                    trigger_event: trigger,
+                    rule_type: 'EVENT',
+                    module: seed.module,
+                    priority: seed.template_data.priority,
+                    template: tmpl.id,
+                    conditions: seed.conditions,
+                    is_active: true,
+                }),
+            });
+            toast.success(`Installed: ${triggerMeta?.label}`);
+            setSelectedModule(seed.module);
+            load();
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Install failed');
+        } finally {
+            setInstallingTrigger(null);
+        }
+    };
+
     const deleteRule = async (id: number) => {
         if (!confirm('Delete this auto-task rule?')) return;
         try {
@@ -316,8 +418,8 @@ export default function AutoTaskRulesPage() {
                         <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
                             <Zap size={14} className="text-white" />
                         </div>
-                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Automations</span>
-                        <span className="text-[10px] font-bold text-app-muted-foreground">{filteredRules.length}/{rules.length}</span>
+                        <span className="text-tp-md font-bold text-app-foreground hidden sm:inline">Automations</span>
+                        <span className="text-tp-xs font-bold text-app-muted-foreground">{filteredRules.length}/{rules.length}</span>
                     </div>
                     <div className="flex-1 relative">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
@@ -327,7 +429,7 @@ export default function AutoTaskRulesPage() {
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Search… (Ctrl+K)"
-                            className="w-full pl-9 pr-3 py-1.5 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                            className="w-full pl-9 pr-3 py-1.5 text-tp-md md:text-tp-lg bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
                         />
                     </div>
                     <button onClick={() => setFocusMode(false)} className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
@@ -341,15 +443,24 @@ export default function AutoTaskRulesPage() {
                         <Zap size={20} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Automations</h1>
-                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                        <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Automations</h1>
+                        <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                             {rules.length} Automations · Turn business events into tracked work
                         </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <button
+                            onClick={() => setShowTemplates(true)}
+                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"
+                            style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}
+                            title="Browse pre-built automations you can install in one click"
+                        >
+                            <Sparkles size={14} />
+                            <span className="hidden sm:inline">Templates</span>
+                        </button>
+                        <button
                             onClick={() => { setEditingRule(emptyRule()); setIsNew(true); setWizardStep(1); }}
-                            className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                            className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                         >
                             <Plus size={14} />
@@ -357,7 +468,7 @@ export default function AutoTaskRulesPage() {
                         </button>
                         <button
                             onClick={() => setFocusMode(true)}
-                            className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                            className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
                             title="Focus Mode (Ctrl+Q)"
                         >
                             <Maximize2 size={13} />
@@ -376,7 +487,7 @@ export default function AutoTaskRulesPage() {
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Search rules… (Ctrl+K)"
-                            className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                            className="w-full pl-9 pr-3 py-2 text-tp-md md:text-tp-lg bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
                         />
                     </div>
                 </div>
@@ -387,7 +498,7 @@ export default function AutoTaskRulesPage() {
                 {/* Vertical Module Nav */}
                 <div className="w-48 md:w-56 flex-shrink-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
                     <div className="px-3 py-2 bg-app-surface/60 border-b border-app-border/50">
-                        <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Modules</span>
+                        <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">Modules</span>
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
                         {MODULES.map(m => {
@@ -412,15 +523,15 @@ export default function AutoTaskRulesPage() {
                                         <Icon size={13} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-[12px] font-black truncate" style={{ color: isSelected ? m.color : 'var(--app-foreground)' }}>
+                                        <div className="text-tp-md font-bold truncate" style={{ color: isSelected ? m.color : 'var(--app-foreground)' }}>
                                             {m.label}
                                         </div>
-                                        <div className="text-[9px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        <div className="text-tp-xxs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                             {count} rule{count === 1 ? '' : 's'}
                                         </div>
                                     </div>
                                     {count > 0 && (
-                                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded tabular-nums flex-shrink-0"
+                                        <span className="text-tp-xs font-bold px-1.5 py-0.5 rounded tabular-nums flex-shrink-0"
                                             style={{
                                                 background: isSelected ? 'white' : `color-mix(in srgb, ${m.color} 15%, transparent)`,
                                                 color: m.color,
@@ -441,10 +552,10 @@ export default function AutoTaskRulesPage() {
                             style={{ background: `color-mix(in srgb, ${selectedMeta.color} 12%, transparent)`, color: selectedMeta.color }}>
                             {(() => { const I = selectedMeta.icon; return <I size={13} />; })()}
                         </div>
-                        <span className="text-[12px] font-black uppercase tracking-wider" style={{ color: 'var(--app-foreground)' }}>
+                        <span className="text-tp-md font-bold uppercase tracking-wider" style={{ color: 'var(--app-foreground)' }}>
                             {selectedMeta.label}
                         </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                        <span className="text-tp-xs font-bold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: 'var(--app-muted-foreground)' }}>
                             {currentRules.length}
                         </span>
                         <div className="flex-1" />
@@ -455,13 +566,13 @@ export default function AutoTaskRulesPage() {
                             setIsNew(true);
                             setWizardStep(1);
                         }}
-                            className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
+                            className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all"
                             style={{ background: selectedMeta.color, color: 'white' }}>
                             <Plus size={11} /> Rule
                         </button>
                     </div>
 
-                    <div className="hidden md:flex flex-shrink-0 items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/40 border-b border-app-border/30 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+                    <div className="hidden md:flex flex-shrink-0 items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/40 border-b border-app-border/30 text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider">
                         <div className="w-7 flex-shrink-0" />
                         <div className="flex-1 min-w-0">Rule</div>
                         <div className="hidden md:block w-36 flex-shrink-0">Trigger</div>
@@ -489,7 +600,7 @@ export default function AutoTaskRulesPage() {
                                         setIsNew(true);
                                         setWizardStep(1);
                                     }}
-                                        className="mt-3 flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                                        className="mt-3 flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"
                                         style={{ background: selectedMeta.color, color: 'white' }}>
                                         <Plus size={12} /> Add first rule
                                     </button>
@@ -521,7 +632,7 @@ export default function AutoTaskRulesPage() {
                                     <div className="flex items-center gap-1.5 mb-0.5">
                                         {rule.code && (
                                             <span
-                                                className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded flex-shrink-0"
+                                                className="text-tp-xs font-bold font-mono px-1.5 py-0.5 rounded flex-shrink-0"
                                                 style={{
                                                     background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
                                                     color: 'var(--app-muted-foreground)',
@@ -530,31 +641,31 @@ export default function AutoTaskRulesPage() {
                                                 {rule.code}
                                             </span>
                                         )}
-                                        <div className="truncate text-[13px] font-bold text-app-foreground">{rule.name}</div>
+                                        <div className="truncate text-tp-lg font-bold text-app-foreground">{rule.name}</div>
                                     </div>
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded md:hidden"
+                                        <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded md:hidden"
                                             style={{ background: `color-mix(in srgb, ${mod.color} 10%, transparent)`, color: mod.color }}>
                                             {getTriggerLabel(rule.trigger_event)}
                                         </span>
                                         {rule.rule_type === 'RECURRING' ? (
-                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5"
+                                            <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5"
                                                 style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)' }}>
                                                 🔁 {(rule.recurrence_interval || 'RECURRING').toLowerCase()}
                                             </span>
                                         ) : (
-                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
+                                            <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
                                                 style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>
                                                 ⚡ once per event
                                             </span>
                                         )}
                                         {(rule.conditions?.days_before !== undefined && rule.conditions?.days_before !== null) && (
-                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5"
+                                            <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5"
                                                 style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
                                                 🔔 {rule.conditions.days_before}d before
                                             </span>
                                         )}
-                                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5"
+                                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5"
                                             style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)', color: 'var(--app-success, #22c55e)' }}>
                                             {rule.assign_to_user ? '👤 person'
                                                 : rule.assign_to_user_group ? '👥 team'
@@ -565,7 +676,7 @@ export default function AutoTaskRulesPage() {
                                 </div>
                                 <div className="hidden md:block w-36 flex-shrink-0">
                                     <span
-                                        className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded inline-flex items-center"
+                                        className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded inline-flex items-center"
                                         style={{
                                             background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                                             color: 'var(--app-primary)',
@@ -575,7 +686,7 @@ export default function AutoTaskRulesPage() {
                                         {getTriggerLabel(rule.trigger_event)}
                                     </span>
                                 </div>
-                                <div className="hidden lg:block w-40 flex-shrink-0 text-[11px] font-medium text-app-muted-foreground space-y-0.5">
+                                <div className="hidden lg:block w-40 flex-shrink-0 text-tp-sm font-medium text-app-muted-foreground space-y-0.5">
                                     {rule.conditions?.min_amount && (
                                         <div className="flex items-center gap-1">
                                             <DollarSign size={10} /> ≥ {Number(rule.conditions.min_amount).toLocaleString()}
@@ -678,10 +789,10 @@ export default function AutoTaskRulesPage() {
                                     <Zap size={15} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-app-foreground">
+                                    <h3 className="text-sm font-bold text-app-foreground">
                                         {isNew ? 'New Automation' : 'Edit Automation'}
                                     </h3>
-                                    <p className="text-[10px] font-bold text-app-muted-foreground">
+                                    <p className="text-tp-xs font-bold text-app-muted-foreground">
                                         Where · when · what happens
                                     </p>
                                 </div>
@@ -714,11 +825,11 @@ export default function AutoTaskRulesPage() {
                                                 background: isActive ? 'var(--app-primary)' : step.done ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
                                                 color: isActive ? 'white' : step.done ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                                             }}>
-                                            <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black"
+                                            <span className="w-4 h-4 rounded-full flex items-center justify-center text-tp-xxs font-bold"
                                                 style={{ background: isActive ? 'white' : step.done ? 'var(--app-primary)' : 'transparent', color: isActive ? 'var(--app-primary)' : step.done ? 'white' : 'inherit' }}>
                                                 {step.done && !isActive ? <Check size={9} /> : step.n}
                                             </span>
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{step.label}</span>
+                                            <span className="text-tp-xs font-bold uppercase tracking-wide">{step.label}</span>
                                         </button>
                                         {i < 2 && <div className="w-6 h-px" style={{ background: 'var(--app-border)' }} />}
                                     </div>
@@ -729,7 +840,7 @@ export default function AutoTaskRulesPage() {
                         {/* ── Step 1: Module Picker ─────────────────────── */}
                         {wizardStep === 1 && (
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3">
-                                <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                <p className="text-tp-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                     Where in your business does this happen?
                                 </p>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
@@ -749,8 +860,8 @@ export default function AutoTaskRulesPage() {
                                                     <Icon size={16} />
                                                 </div>
                                                 <div>
-                                                    <div className="text-[12px] font-black" style={{ color: 'var(--app-foreground)' }}>{m.label}</div>
-                                                    <div className="text-[10px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                    <div className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>{m.label}</div>
+                                                    <div className="text-tp-xs font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
                                                         {TRIGGER_EVENTS.filter(t => t.group === m.group).length} events
                                                     </div>
                                                 </div>
@@ -764,7 +875,7 @@ export default function AutoTaskRulesPage() {
                         {/* ── Step 2: Event Picker ──────────────────────── */}
                         {wizardStep === 2 && (
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3">
-                                <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                <p className="text-tp-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                     When should this automation run?
                                 </p>
                                 {(() => {
@@ -772,7 +883,7 @@ export default function AutoTaskRulesPage() {
                                     const events = TRIGGER_EVENTS.filter(t => t.group === mod.group);
                                     if (events.length === 0) {
                                         return (
-                                            <div className="p-4 rounded-xl text-[11px] font-medium text-center"
+                                            <div className="p-4 rounded-xl text-tp-sm font-medium text-center"
                                                 style={{ background: 'color-mix(in srgb, var(--app-warning) 6%, transparent)', color: 'var(--app-warning)' }}>
                                                 No predefined events for this module. Use a Custom Event instead.
                                             </div>
@@ -784,7 +895,7 @@ export default function AutoTaskRulesPage() {
                                                 const selected = editingRule.trigger_event === t.value;
                                                 return (
                                                     <button key={t.value} type="button"
-                                                        onClick={() => setEditingRule({ ...editingRule, trigger_event: t.value })}
+                                                        onClick={() => setEditingRule(applySmartDefaults(editingRule, t.value))}
                                                         className="flex items-center gap-2 p-2.5 rounded-xl transition-all text-left"
                                                         style={{
                                                             background: selected ? `color-mix(in srgb, ${mod.color} 10%, transparent)` : 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
@@ -794,7 +905,7 @@ export default function AutoTaskRulesPage() {
                                                             style={{ background: selected ? mod.color : 'transparent', border: `2px solid ${selected ? mod.color : 'var(--app-border)'}` }}>
                                                             {selected && <Check size={10} className="text-white" />}
                                                         </div>
-                                                        <span className="text-[12px] font-bold flex-1 min-w-0 truncate" style={{ color: 'var(--app-foreground)' }}>{t.label}</span>
+                                                        <span className="text-tp-md font-bold flex-1 min-w-0 truncate" style={{ color: 'var(--app-foreground)' }}>{t.label}</span>
                                                     </button>
                                                 );
                                             })}
@@ -813,7 +924,7 @@ export default function AutoTaskRulesPage() {
                                     background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                 }}>
-                                <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2">Name this automation</h4>
+                                <h4 className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide mb-2">Name this automation</h4>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
                                     <div style={{ gridColumn: 'span 2' }}>
                                         <label className={labelCls}>What will this do? *</label>
@@ -845,7 +956,7 @@ export default function AutoTaskRulesPage() {
                                     border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)',
                                     borderLeft: '3px solid var(--app-primary)',
                                 }}>
-                                <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)' }}>
+                                <h4 className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-primary)' }}>
                                     When should this run?
                                 </h4>
 
@@ -866,7 +977,7 @@ export default function AutoTaskRulesPage() {
                                                         rule_type: o.v,
                                                         recurrence_interval: o.v === 'EVENT' ? null : (editingRule.recurrence_interval || 'DAILY'),
                                                     })}
-                                                    className="text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                                                    className="text-tp-sm font-bold px-3 py-1.5 rounded-lg transition-all"
                                                     style={{
                                                         background: active ? 'var(--app-primary)' : 'transparent',
                                                         color: active ? 'white' : 'var(--app-muted-foreground)',
@@ -898,7 +1009,7 @@ export default function AutoTaskRulesPage() {
                                                 onChange={e => setEditingRule({ ...editingRule, stale_threshold_days: Number(e.target.value) })}
                                                 className={inputCls}
                                             />
-                                            <p className="text-[9px] font-medium mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            <p className="text-tp-xxs font-medium mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                                                 Item flagged stale after this many days without progress.
                                             </p>
                                         </div>
@@ -920,11 +1031,11 @@ export default function AutoTaskRulesPage() {
                                                 } as any,
                                             })}
                                             className={`${inputCls} max-w-[130px]`} />
-                                        <span className="text-[11px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        <span className="text-tp-sm font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
                                             days before the target date
                                         </span>
                                     </div>
-                                    <p className="text-[10px] font-medium mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    <p className="text-tp-xs font-medium mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
                                         Used by triggers that have a target date (period close, due invoice, expiry, follow-up). Leave blank to fall back to the tenant-wide lead-time.
                                     </p>
                                 </div>
@@ -939,7 +1050,7 @@ export default function AutoTaskRulesPage() {
                                         <label className={labelCls}>When this happens (in {mod.label}) *</label>
                                         <select
                                             value={editingRule.trigger_event}
-                                            onChange={e => setEditingRule({ ...editingRule, trigger_event: e.target.value })}
+                                            onChange={e => setEditingRule(applySmartDefaults(editingRule, e.target.value))}
                                             className={inputCls}
                                         >
                                             {moduleEvents.length === 0 ? (
@@ -950,7 +1061,7 @@ export default function AutoTaskRulesPage() {
                                                 ))
                                             )}
                                         </select>
-                                        <p className="text-[9px] font-medium mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        <p className="text-tp-xxs font-medium mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
                                             Change the module in Step 1 to pick from other event groups.
                                         </p>
                                     </div>
@@ -967,11 +1078,11 @@ export default function AutoTaskRulesPage() {
                             >
                                 <div className="flex items-center gap-2 mb-2">
                                     <Filter size={13} style={{ color: 'var(--app-primary)' }} />
-                                    <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
+                                    <h4 className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">
                                         Only when… (optional filters)
                                     </h4>
                                 </div>
-                                <p className="text-[10px] font-medium text-app-muted-foreground mb-3">
+                                <p className="text-tp-xs font-medium text-app-muted-foreground mb-3">
                                     Narrow down when the automation fires. Leave everything blank to always run.
                                 </p>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
@@ -1066,7 +1177,7 @@ export default function AutoTaskRulesPage() {
                                     borderLeft: '3px solid var(--app-primary)',
                                 }}
                             >
-                                <h4 className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-primary)' }}>
+                                <h4 className="text-tp-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-primary)' }}>
                                     What task gets created?
                                 </h4>
                                 <div>
@@ -1103,7 +1214,7 @@ export default function AutoTaskRulesPage() {
                                                     ...editingRule,
                                                     conditions: { ...editingRule.conditions, require_completion_note: e.target.checked } as any,
                                                 })} />
-                                            <span className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                            <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
                                                 Require proof — ask the assignee to describe their work before closing the task
                                             </span>
                                         </label>
@@ -1145,7 +1256,7 @@ export default function AutoTaskRulesPage() {
                                     background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                 }}>
-                                <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2">Who should do this?</h4>
+                                <h4 className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide mb-2">Who should do this?</h4>
                                 <div className="flex items-center gap-1.5 mb-3 flex-wrap">
                                     {([
                                         { v: 'user' as const, icon: <User size={12} />, label: 'One person' },
@@ -1154,7 +1265,7 @@ export default function AutoTaskRulesPage() {
                                     ]).map(o => (
                                         <button key={o.v} type="button"
                                             onClick={() => setMode(o.v)}
-                                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"
                                             style={{
                                                 background: mode === o.v ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
                                                 color: mode === o.v ? 'white' : 'var(--app-muted-foreground)',
@@ -1199,7 +1310,7 @@ export default function AutoTaskRulesPage() {
                                                 </option>
                                             ))}
                                         </select>
-                                        <p className="text-[10px] font-medium text-app-muted-foreground mt-1">Every member of the team gets the task.</p>
+                                        <p className="text-tp-xs font-medium text-app-muted-foreground mt-1">Every member of the team gets the task.</p>
                                     </div>
                                 )}
 
@@ -1217,7 +1328,7 @@ export default function AutoTaskRulesPage() {
                                                 <option key={r.id} value={r.id}>{r.name}</option>
                                             ))}
                                         </select>
-                                        <p className="text-[10px] font-medium text-app-muted-foreground mt-1">
+                                        <p className="text-tp-xs font-medium text-app-muted-foreground mt-1">
                                             The system picks who gets the task based on roles. Leave blank to let it auto-route.
                                         </p>
                                     </div>
@@ -1229,8 +1340,8 @@ export default function AutoTaskRulesPage() {
                             {/* Active toggle */}
                             <div className="flex items-center justify-between px-1">
                                 <div>
-                                    <p className="text-[12px] font-bold text-app-foreground">Active</p>
-                                    <p className="text-[10px] font-medium text-app-muted-foreground">Disable to pause without deleting.</p>
+                                    <p className="text-tp-md font-bold text-app-foreground">Active</p>
+                                    <p className="text-tp-xs font-medium text-app-muted-foreground">Disable to pause without deleting.</p>
                                 </div>
                                 <button
                                     onClick={() => setEditingRule({ ...editingRule, is_active: !editingRule.is_active })}
@@ -1252,7 +1363,7 @@ export default function AutoTaskRulesPage() {
                         >
                             <button
                                 onClick={() => setEditingRule(null)}
-                                className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                                className="flex items-center gap-1.5 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all"
                             >
                                 Cancel
                             </button>
@@ -1260,7 +1371,7 @@ export default function AutoTaskRulesPage() {
                                 {wizardStep > 1 && (
                                     <button
                                         onClick={() => setWizardStep((wizardStep - 1) as 1 | 2 | 3)}
-                                        className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                                        className="flex items-center gap-1.5 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all"
                                     >
                                         <ArrowLeft size={12} /> Back
                                     </button>
@@ -1269,7 +1380,7 @@ export default function AutoTaskRulesPage() {
                                     <button
                                         onClick={() => setWizardStep((wizardStep + 1) as 1 | 2 | 3)}
                                         disabled={(wizardStep === 1 && !editingRule.module) || (wizardStep === 2 && !editingRule.trigger_event)}
-                                        className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                        className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
                                         style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                                     >
                                         Next <ArrowRight size={12} />
@@ -1278,13 +1389,138 @@ export default function AutoTaskRulesPage() {
                                     <button
                                         onClick={saveRule}
                                         disabled={saving}
-                                        className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                        className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
                                         style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                                     >
                                         {saving ? 'Saving…' : (<><Check size={13} /> Save Rule</>)}
                                     </button>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══ Template Library Modal ═══ */}
+            {showTemplates && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+                    onClick={e => { if (e.target === e.currentTarget && !installingTrigger) setShowTemplates(false) }}>
+                    <div className="w-full max-w-3xl rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                        <div className="px-5 py-3 flex items-center gap-2.5 flex-shrink-0"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, var(--app-surface))' }}>
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                style={{ background: 'var(--app-warning, #f59e0b)' }}>
+                                <Sparkles size={15} className="text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Template Library</h3>
+                                <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Pre-built automations · click to install · assign later
+                                </p>
+                            </div>
+                            <button onClick={() => !installingTrigger && setShowTemplates(false)}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-app-border/50"
+                                style={{ color: 'var(--app-muted-foreground)' }}>
+                                <X size={15} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+                            {MODULES.map(mod => {
+                                const events = TRIGGER_EVENTS.filter(t => t.group === mod.group && (SMART_DEFAULTS as any)[t.value])
+                                if (events.length === 0) return null
+                                const Icon = mod.icon
+                                return (
+                                    <div key={mod.value}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                style={{ background: `color-mix(in srgb, ${mod.color} 12%, transparent)`, color: mod.color }}>
+                                                <Icon size={12} />
+                                            </div>
+                                            <span className="text-tp-xs font-bold uppercase tracking-widest"
+                                                style={{ color: mod.color }}>
+                                                {mod.label} · {events.length} {events.length === 1 ? 'template' : 'templates'}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '8px' }}>
+                                            {events.map(t => {
+                                                const d = (SMART_DEFAULTS as any)[t.value]
+                                                const isInstalling = installingTrigger === t.value
+                                                const alreadyInstalled = rules.some(r => r.trigger_event === t.value)
+                                                return (
+                                                    <div key={t.value} className="p-3 rounded-xl transition-all"
+                                                        style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: `1px solid color-mix(in srgb, ${mod.color} 20%, transparent)` }}>
+                                                        <div className="flex items-start justify-between gap-2 mb-1">
+                                                            <div className="text-tp-md font-bold min-w-0 flex-1 truncate" style={{ color: 'var(--app-foreground)' }}>
+                                                                {t.label}
+                                                            </div>
+                                                            <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                                                style={{
+                                                                    background: `color-mix(in srgb, ${d.priority === 'URGENT' ? 'var(--app-error, #ef4444)' : d.priority === 'HIGH' ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)'} 12%, transparent)`,
+                                                                    color: d.priority === 'URGENT' ? 'var(--app-error, #ef4444)' : d.priority === 'HIGH' ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)',
+                                                                }}>
+                                                                {d.priority?.toLowerCase()}
+                                                            </span>
+                                                        </div>
+                                                        {d.title && (
+                                                            <div className="text-tp-xs font-medium mb-2 truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                                → {d.title}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-center gap-1 mb-2 flex-wrap">
+                                                            <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                                                                style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                                                {d.minutes || 30}m
+                                                            </span>
+                                                            {d.days_before !== undefined && (
+                                                                <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                                                                    style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+                                                                    🔔 {d.days_before}d before
+                                                                </span>
+                                                            )}
+                                                            {d.require_completion_note && (
+                                                                <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                                                                    style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)' }}>
+                                                                    🔒 proof
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <button onClick={() => installTemplate(t.value)}
+                                                            disabled={isInstalling || !!installingTrigger}
+                                                            className="w-full flex items-center justify-center gap-1.5 text-tp-sm font-bold px-2 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                                                            style={alreadyInstalled ? {
+                                                                background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                                                color: 'var(--app-success, #22c55e)',
+                                                                border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)',
+                                                            } : {
+                                                                background: mod.color,
+                                                                color: 'white',
+                                                            }}>
+                                                            {isInstalling ? <Loader2 size={12} className="animate-spin" />
+                                                                : alreadyInstalled ? <><Check size={12} /> Installed</>
+                                                                : <><Plus size={12} /> Install</>}
+                                                        </button>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        <div className="px-5 py-3 flex items-center justify-between flex-shrink-0"
+                            style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-bg))' }}>
+                            <span className="text-tp-xs font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                After install, open the rule to pick an assignee.
+                            </span>
+                            <button onClick={() => !installingTrigger && setShowTemplates(false)}
+                                className="text-tp-sm font-bold px-3 py-1.5 rounded-xl"
+                                style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                Done
+                            </button>
                         </div>
                     </div>
                 </div>

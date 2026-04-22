@@ -154,18 +154,18 @@ export default function LeaderTreePage() {
                         {depth === 0 ? <Crown size={12} /> : <UsersIcon size={12} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <div className="text-[12px] font-black truncate" style={{ color: 'var(--app-foreground)' }}>
+                        <div className="text-tp-md font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
                             {fullName(u)}
                         </div>
-                        <div className="text-[10px] font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <div className="text-tp-xs font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>
                             @{u.username} · {kids.length} direct report{kids.length === 1 ? '' : 's'}
                         </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Reports to</span>
+                        <span className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Reports to</span>
                         <select value={currentParent ?? ''} disabled={isSaving}
                                 onChange={e => saveParent(userId, e.target.value ? Number(e.target.value) : null)}
-                                className="text-[11px] font-bold px-2 py-1 rounded-lg outline-none"
+                                className="text-tp-sm font-bold px-2 py-1 rounded-lg outline-none"
                                 style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                             <option value="">— root (no leader) —</option>
                             {opts.map(p => (
@@ -188,8 +188,8 @@ export default function LeaderTreePage() {
                     <Crown size={20} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Team Structure</h1>
-                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Team Structure</h1>
+                    <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                         Who reports to whom · managers see their team's work
                     </p>
                 </div>
@@ -200,7 +200,7 @@ export default function LeaderTreePage() {
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <input value={search} onChange={e => setSearch(e.target.value)}
                         placeholder="Filter by name…"
-                        className="w-full pl-9 pr-3 py-2 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface outline-none transition-all" />
+                        className="w-full pl-9 pr-3 py-2 text-tp-md bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface outline-none transition-all" />
                 </div>
             </div>
 

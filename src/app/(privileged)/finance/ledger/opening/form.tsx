@@ -40,7 +40,7 @@ type EntryRow = {
 const TYPE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   ASSET: { bg: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', text: 'var(--app-primary)', border: 'color-mix(in srgb, var(--app-primary) 20%, transparent)' },
   LIABILITY: { bg: 'color-mix(in srgb, var(--app-error) 8%, transparent)', text: 'var(--app-error)', border: 'color-mix(in srgb, var(--app-error) 20%, transparent)' },
-  EQUITY: { bg: 'color-mix(in srgb, #8b5cf6 8%, transparent)', text: '#8b5cf6', border: 'color-mix(in srgb, #8b5cf6 20%, transparent)' },
+  EQUITY: { bg: 'color-mix(in srgb, var(--app-info) 8%, transparent)', text: 'var(--app-info)', border: 'color-mix(in srgb, var(--app-info) 20%, transparent)' },
   INCOME: { bg: 'color-mix(in srgb, var(--app-success) 8%, transparent)', text: 'var(--app-success)', border: 'color-mix(in srgb, var(--app-success) 20%, transparent)' },
   EXPENSE: { bg: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', text: 'var(--app-warning)', border: 'color-mix(in srgb, var(--app-warning) 20%, transparent)' },
 }
@@ -187,15 +187,15 @@ export default function OpeningBalanceForm({ accounts }: Props) {
               <BookOpen size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Opening Balances</h1>
-              <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+              <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Opening Balances</h1>
+              <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                 Set initial account balances for your fiscal year
               </p>
             </div>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <Link href="/finance/opening-balances"
-              className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+              className="flex items-center gap-1.5 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
               <ArrowLeft size={13} /> Back to List
             </Link>
           </div>
@@ -214,8 +214,8 @@ export default function OpeningBalanceForm({ accounts }: Props) {
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>{s.icon}</div>
               <div className="min-w-0">
-                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                <div className="text-tp-xs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                <div className="text-sm font-bold text-app-foreground tabular-nums">{s.value}</div>
               </div>
             </div>
           ))}
@@ -231,21 +231,21 @@ export default function OpeningBalanceForm({ accounts }: Props) {
           <div className="px-4 py-2 border-b border-app-border/30 flex items-center gap-2"
             style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)' }}>
             <div className="w-1 h-3 rounded-full bg-app-primary" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-app-primary">Entry Details</span>
+            <span className="text-tp-xxs font-bold uppercase tracking-wide text-app-primary">Entry Details</span>
           </div>
           <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">
+              <label className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide mb-1.5 block">
                 <Calendar size={10} className="inline mr-1" />Opening Date
               </label>
               <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                className="w-full px-3 py-2 text-[12px] font-bold bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground outline-none focus:border-app-primary/50 focus:ring-2 focus:ring-app-primary/10 transition-all" />
+                className="w-full px-3 py-2 text-tp-md font-bold bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground outline-none focus:border-app-primary/50 focus:ring-2 focus:ring-app-primary/10 transition-all" />
             </div>
             <div>
-              <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Description</label>
+              <label className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide mb-1.5 block">Description</label>
               <input type="text" value={description} onChange={e => setDescription(e.target.value)}
                 placeholder="Opening Balance Import..."
-                className="w-full px-3 py-2 text-[12px] font-bold bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary/50 focus:ring-2 focus:ring-app-primary/10 transition-all" />
+                className="w-full px-3 py-2 text-tp-md font-bold bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary/50 focus:ring-2 focus:ring-app-primary/10 transition-all" />
             </div>
           </div>
         </div>
@@ -257,18 +257,18 @@ export default function OpeningBalanceForm({ accounts }: Props) {
             style={{ background: 'color-mix(in srgb, var(--app-info) 4%, transparent)' }}>
             <div className="flex items-center gap-2">
               <div className="w-1 h-3 rounded-full" style={{ background: 'var(--app-info)' }} />
-              <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-info)' }}>Account Balances</span>
-              <span className="text-[9px] font-bold text-app-muted-foreground">· {rows.length} lines</span>
+              <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-info)' }}>Account Balances</span>
+              <span className="text-tp-xxs font-bold text-app-muted-foreground">· {rows.length} lines</span>
             </div>
             <button onClick={addRow}
-              className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all hover:brightness-110 text-white"
+              className="flex items-center gap-1 text-tp-xs font-bold px-2.5 py-1 rounded-lg transition-all hover:brightness-110 text-white"
               style={{ background: 'var(--app-primary)', boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
               <Plus size={11} /> Add Line
             </button>
           </div>
 
           {/* ── Table Header ── */}
-          <div className="flex-shrink-0 hidden sm:flex items-center gap-2 px-4 py-2 border-b border-app-border/30 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest"
+          <div className="flex-shrink-0 hidden sm:flex items-center gap-2 px-4 py-2 border-b border-app-border/30 text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide"
             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)' }}>
             <div className="w-8 text-center">#</div>
             <div className="flex-1 min-w-0">Account</div>
@@ -294,7 +294,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                 <div key={row.id}
                   className="flex items-center gap-2 px-4 py-2 border-b border-app-border/20 hover:bg-app-surface/40 transition-all group">
                   {/* # */}
-                  <div className="w-8 text-center text-[10px] font-bold text-app-muted-foreground">{idx + 1}</div>
+                  <div className="w-8 text-center text-tp-xs font-bold text-app-muted-foreground">{idx + 1}</div>
 
                   {/* Account selector */}
                   <div className="flex-1 min-w-0 relative" id={`dropdown-${row.id}`}>
@@ -312,7 +312,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                         }}
                         onChange={e => setAccountSearch(prev => ({ ...prev, [row.id]: e.target.value }))}
                         placeholder="Search account..."
-                        className="w-full pl-8 pr-8 py-1.5 text-[11px] font-bold bg-transparent border border-app-border/40 rounded-lg text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary/50 focus:ring-1 focus:ring-app-primary/10 transition-all"
+                        className="w-full pl-8 pr-8 py-1.5 text-tp-sm font-bold bg-transparent border border-app-border/40 rounded-lg text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary/50 focus:ring-1 focus:ring-app-primary/10 transition-all"
                       />
                       {selectedAcc && activeDropdown !== row.id && (
                         <button onClick={() => { updateRow(row.id, 'accountId', ''); setActiveDropdown(row.id) }}
@@ -330,7 +330,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                       <div className="absolute left-0 top-full mt-1 w-full z-50 max-h-48 overflow-auto rounded-xl border border-app-border/60 shadow-2xl custom-scrollbar"
                         style={{ background: 'var(--app-bg)', backdropFilter: 'blur(20px)' }}>
                         {filteredAccs.length === 0 ? (
-                          <div className="px-3 py-4 text-center text-[10px] text-app-muted-foreground">No accounts match</div>
+                          <div className="px-3 py-4 text-center text-tp-xs text-app-muted-foreground">No accounts match</div>
                         ) : filteredAccs.map(acc => {
                           const tc = TYPE_COLORS[acc.type] || TYPE_COLORS.ASSET
                           return (
@@ -343,12 +343,12 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                                 setTimeout(() => inputRefs.current[row.id]?.focus(), 50)
                               }}
                               className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-app-surface/60 transition-all">
-                              <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
+                              <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
                                 style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}>
                                 {acc.code}
                               </span>
-                              <span className="text-[11px] font-bold text-app-foreground truncate flex-1">{acc.name}</span>
-                              <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded"
+                              <span className="text-tp-sm font-bold text-app-foreground truncate flex-1">{acc.name}</span>
+                              <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded"
                                 style={{ background: tc.bg, color: tc.text }}>
                                 {acc.type}
                               </span>
@@ -362,19 +362,19 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                   {/* Type badge */}
                   <div className="w-20 text-center hidden sm:block">
                     {selectedAcc && typeColor ? (
-                      <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full"
+                      <span className="text-tp-xxs font-bold uppercase px-2 py-0.5 rounded-full"
                         style={{ background: typeColor.bg, color: typeColor.text, border: `1px solid ${typeColor.border}` }}>
                         {selectedAcc.type}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-app-muted-foreground">—</span>
+                      <span className="text-tp-xs text-app-muted-foreground">—</span>
                     )}
                   </div>
 
                   {/* Side indicator */}
                   <div className="w-20 text-center hidden sm:block">
                     {side ? (
-                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded"
+                      <span className="text-tp-xxs font-bold uppercase px-2 py-0.5 rounded"
                         style={{
                           background: side === 'Dr' ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)',
                           color: side === 'Dr' ? 'var(--app-primary)' : 'var(--app-error)',
@@ -382,7 +382,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                         {side === 'Dr' ? '↗ Debit' : '↙ Credit'}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-app-muted-foreground">—</span>
+                      <span className="text-tp-xs text-app-muted-foreground">—</span>
                     )}
                   </div>
 
@@ -405,7 +405,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                           }
                         }
                       }}
-                      className="w-full text-right py-1.5 px-2.5 text-[12px] font-mono font-bold bg-transparent border border-app-border/40 rounded-lg text-app-foreground outline-none focus:border-app-primary/50 focus:ring-1 focus:ring-app-primary/10 transition-all tabular-nums"
+                      className="w-full text-right py-1.5 px-2.5 text-tp-md font-mono font-bold bg-transparent border border-app-border/40 rounded-lg text-app-foreground outline-none focus:border-app-primary/50 focus:ring-1 focus:ring-app-primary/10 transition-all tabular-nums"
                     />
                   </div>
 
@@ -422,7 +422,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
 
             {/* Add row button (bottom) */}
             <button onClick={addRow}
-              className="w-full py-3 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface/40 border-b border-app-border/10 transition-all flex items-center justify-center gap-1.5">
+              className="w-full py-3 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface/40 border-b border-app-border/10 transition-all flex items-center justify-center gap-1.5">
               <Plus size={12} /> Add another line
             </button>
           </div>
@@ -436,12 +436,12 @@ export default function OpeningBalanceForm({ accounts }: Props) {
             <div className="px-4 py-2 border-b border-app-border/30 flex items-center gap-2"
               style={{ background: 'color-mix(in srgb, var(--app-warning) 4%, transparent)' }}>
               <div className="w-1 h-3 rounded-full" style={{ background: 'var(--app-warning)' }} />
-              <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>Auto-Balancing</span>
+              <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-warning)' }}>Auto-Balancing</span>
             </div>
             <div className="p-4">
               <div className="flex items-start gap-2">
                 <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-warning)' }} />
-                <p className="text-[11px] text-app-muted-foreground leading-relaxed">
+                <p className="text-tp-sm text-app-muted-foreground leading-relaxed">
                   Double-entry accounting requires <strong className="text-app-foreground">Debits = Credits</strong>.
                   If your inputs don't match, the system will automatically create an entry in
                   <strong className="text-app-foreground"> "Opening Balance Equity"</strong> to make up the difference.
@@ -456,22 +456,22 @@ export default function OpeningBalanceForm({ accounts }: Props) {
             <div className="px-4 py-2 border-b border-app-border/30 flex items-center gap-2"
               style={{ background: isBalanced ? 'color-mix(in srgb, var(--app-success) 4%, transparent)' : 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
               <div className="w-1 h-3 rounded-full" style={{ background: isBalanced ? 'var(--app-success)' : 'var(--app-error)' }} />
-              <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: isBalanced ? 'var(--app-success)' : 'var(--app-error)' }}>
+              <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: isBalanced ? 'var(--app-success)' : 'var(--app-error)' }}>
                 {isBalanced ? 'Balanced' : 'Out of Balance'}
               </span>
             </div>
             <div className="p-4 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Assets/Expenses (Dr)</span>
-                <span className="text-[13px] font-mono font-black tabular-nums" style={{ color: 'var(--app-primary)' }}>{fmt(preview.totalDebit)}</span>
+                <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider">Assets/Expenses (Dr)</span>
+                <span className="text-tp-lg font-mono font-bold tabular-nums" style={{ color: 'var(--app-primary)' }}>{fmt(preview.totalDebit)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Liabilities/Equity/Income (Cr)</span>
-                <span className="text-[13px] font-mono font-black tabular-nums" style={{ color: 'var(--app-error)' }}>{fmt(preview.totalCredit)}</span>
+                <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider">Liabilities/Equity/Income (Cr)</span>
+                <span className="text-tp-lg font-mono font-bold tabular-nums" style={{ color: 'var(--app-error)' }}>{fmt(preview.totalCredit)}</span>
               </div>
               <div className="border-t border-app-border/30 pt-2 flex justify-between items-center">
-                <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">Auto-Adjustment</span>
-                <span className="text-[14px] font-mono font-black tabular-nums"
+                <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider">Auto-Adjustment</span>
+                <span className="text-[14px] font-mono font-bold tabular-nums"
                   style={{ color: isBalanced ? 'var(--app-success)' : 'var(--app-warning)' }}>
                   {isBalanced ? '✓ Balanced' : `${fmt(Math.abs(preview.diff))} → Equity`}
                 </span>
@@ -483,11 +483,11 @@ export default function OpeningBalanceForm({ accounts }: Props) {
         {/* Submit */}
         <div className="flex-shrink-0 flex items-center justify-between pb-2">
           <Link href="/finance/opening-balances"
-            className="text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all">
+            className="text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-all">
             ← Cancel
           </Link>
           <button onClick={handleSubmit} disabled={isPending || preview.filledRows === 0}
-            className="flex items-center gap-2 text-[12px] font-bold px-6 py-2.5 rounded-xl text-white transition-all disabled:opacity-50 hover:brightness-110"
+            className="flex items-center gap-2 text-tp-md font-bold px-6 py-2.5 rounded-xl text-white transition-all disabled:opacity-50 hover:brightness-110"
             style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
             {isPending ? (
               <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing...</>

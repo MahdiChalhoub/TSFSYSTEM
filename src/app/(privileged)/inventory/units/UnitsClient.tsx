@@ -179,7 +179,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                         hint: 'Show all units (clear filters)',
                     },
                     { label: 'Base', value: stats.base, icon: <Ruler size={12} />, color: 'var(--app-info)', filterKey: 'base', active: kpiFilter === 'base', hint: 'Show only base units' },
-                    { label: 'Derived', value: stats.derived, icon: <GitBranch size={12} />, color: '#8b5cf6', filterKey: 'derived', active: kpiFilter === 'derived', hint: 'Show only derived units' },
+                    { label: 'Derived', value: stats.derived, icon: <GitBranch size={12} />, color: 'var(--app-info)', filterKey: 'derived', active: kpiFilter === 'derived', hint: 'Show only derived units' },
                     { label: 'Products', value: stats.totalProducts, icon: <Package size={12} />, color: 'var(--app-success)', filterKey: 'products', active: kpiFilter === 'products', hint: 'Show only units with products' },
                     { label: 'Scale', value: stats.scaleUnits, icon: <Scale size={12} />, color: 'var(--app-warning)', filterKey: 'scale', active: kpiFilter === 'scale', hint: 'Show only balance-connected units' },
                     {
@@ -199,7 +199,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 columnHeaders: [
                     { label: 'Unit', width: 'auto' },
                     { label: 'Sub', width: '40px', hideOnMobile: true },
-                    { label: 'Conv.', width: '56px', color: '#8b5cf6', hideOnMobile: true },
+                    { label: 'Conv.', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
                     { label: 'Products', width: '48px', color: 'var(--app-success)', hideOnMobile: true },
                 ],
                 footerLeft: (<><span>{stats.total} defined units</span><span style={{ color: 'var(--app-border)' }}>·</span><span>{stats.base} base</span><span style={{ color: 'var(--app-border)' }}>·</span><span>{stats.derived} derived</span></>),

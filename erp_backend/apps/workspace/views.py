@@ -47,6 +47,25 @@ class TaskTemplateViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSe
     permission_classes = [IsAuthenticated]
 
 
+class TaskAttachmentViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
+    """Files attached to a task — typically used as proof-of-work (photos,
+    signed documents). Upload as multipart/form-data: field `file`, plus
+    `task` (task id) and optional `filename`. The endpoint stamps
+    `uploaded_by` automatically."""
+    queryset = TaskAttachment.objects.select_related('task', 'uploaded_by').all()
+    serializer_class = TaskAttachmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        f = self.request.FILES.get('file')
+        filename = self.request.data.get('filename') or (f.name if f else 'attachment')
+        serializer.save(
+            organization=self.request.user.organization,
+            uploaded_by=self.request.user,
+            filename=filename,
+        )
+
+
 class UserGroupViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
     """Ad-hoc user groups (teams) — assignable from AutoTaskRule + Task."""
     queryset = UserGroup.objects.prefetch_related('members').select_related('leader').all()

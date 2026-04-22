@@ -33,7 +33,7 @@ export function MobileOverviewTab({
     const statCards = [
         { key: 'children', label: 'Children', value: childCount, icon: <GitBranch size={16} />, color: 'var(--app-primary)', tab: null as PanelTab | null },
         { key: 'products', label: 'Products', value: productCount, icon: <Package size={16} />, color: 'var(--app-success, #10b981)', tab: 'products' as PanelTab },
-        { key: 'brands', label: 'Brands', value: brandCount, icon: <Paintbrush size={16} />, color: '#8b5cf6', tab: 'brands' as PanelTab },
+        { key: 'brands', label: 'Brands', value: brandCount, icon: <Paintbrush size={16} />, color: 'var(--app-info)', tab: 'brands' as PanelTab },
         { key: 'attrs', label: 'Attributes', value: attributeCount, icon: <Tag size={16} />, color: 'var(--app-warning, #f59e0b)', tab: 'attributes' as PanelTab },
     ]
 
@@ -43,7 +43,7 @@ export function MobileOverviewTab({
             {/* ── Meta strip ── */}
             <div className="flex items-center gap-2 flex-wrap">
                 {node.code && (
-                    <span className="font-mono font-black rounded-lg px-2.5 py-1"
+                    <span className="font-mono font-bold rounded-lg px-2.5 py-1"
                         style={{
                             fontSize: 'var(--tp-md)',
                             background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
@@ -53,7 +53,7 @@ export function MobileOverviewTab({
                     </span>
                 )}
                 {node.short_name && (
-                    <span className="font-black uppercase tracking-wider rounded-lg px-2.5 py-1"
+                    <span className="font-bold uppercase tracking-wider rounded-lg px-2.5 py-1"
                         style={{
                             fontSize: 'var(--tp-sm)',
                             background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
@@ -62,7 +62,7 @@ export function MobileOverviewTab({
                         {node.short_name}
                     </span>
                 )}
-                <span className="font-black uppercase tracking-widest rounded-full px-2.5 py-1"
+                <span className="font-bold uppercase tracking-wide rounded-full px-2.5 py-1"
                     style={{
                         fontSize: 'var(--tp-xs)',
                         background: isRoot
@@ -109,11 +109,11 @@ export function MobileOverviewTab({
                                 {s.icon}
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="font-black tabular-nums leading-none"
+                                <div className="font-bold tabular-nums leading-none"
                                     style={{ fontSize: 'var(--tp-stat)', color: hot ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
                                     {s.value}
                                 </div>
-                                <div className="font-bold uppercase tracking-widest mt-0.5"
+                                <div className="font-bold uppercase tracking-wide mt-0.5"
                                     style={{ fontSize: 'var(--tp-xs)', color: 'var(--app-muted-foreground)' }}>
                                     {s.label}
                                 </div>
@@ -131,7 +131,7 @@ export function MobileOverviewTab({
             {childCount > 0 && (
                 <div>
                     <div className="flex items-center justify-between mb-1.5 px-1">
-                        <p className="font-black uppercase tracking-widest"
+                        <p className="font-bold uppercase tracking-wide"
                             style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-muted-foreground)' }}>
                             Sub-categories
                         </p>
@@ -164,13 +164,13 @@ export function MobileOverviewTab({
                                         {child.name}
                                     </span>
                                     {cb > 0 && (
-                                        <span className="font-black tabular-nums px-1.5 py-0.5 rounded-md"
-                                            style={{ fontSize: 'var(--tp-sm)', color: '#8b5cf6', background: 'color-mix(in srgb, #8b5cf6 10%, transparent)' }}>
+                                        <span className="font-bold tabular-nums px-1.5 py-0.5 rounded-md"
+                                            style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 10%, transparent)' }}>
                                             {cb}b
                                         </span>
                                     )}
                                     {cp > 0 && (
-                                        <span className="font-black tabular-nums px-1.5 py-0.5 rounded-md"
+                                        <span className="font-bold tabular-nums px-1.5 py-0.5 rounded-md"
                                             style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-success, #10b981)', background: 'color-mix(in srgb, var(--app-success, #10b981) 10%, transparent)' }}>
                                             {cp}p
                                         </span>
@@ -194,7 +194,7 @@ export function MobileOverviewTab({
                         Leaf · no sub-categories
                     </p>
                     <button onClick={() => onAdd(node.id)}
-                        className="inline-flex items-center gap-1.5 font-black px-4 py-2 rounded-xl active:scale-95 transition-all"
+                        className="inline-flex items-center gap-1.5 font-bold px-4 py-2 rounded-xl active:scale-95 transition-all"
                         style={{
                             fontSize: 'var(--tp-lg)',
                             color: '#fff',
@@ -209,7 +209,7 @@ export function MobileOverviewTab({
             {/* ── Delete (only for leaves) ── */}
             {!isParent && (
                 <button onClick={() => onDelete(node)}
-                    className="w-full flex items-center justify-center gap-2 font-black px-3 py-3 rounded-xl active:scale-[0.98] transition-all"
+                    className="w-full flex items-center justify-center gap-2 font-bold px-3 py-3 rounded-xl active:scale-[0.98] transition-all"
                     style={{
                         fontSize: 'var(--tp-lg)',
                         color: 'var(--app-error, #ef4444)',

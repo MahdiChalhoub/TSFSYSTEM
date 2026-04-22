@@ -122,7 +122,7 @@ export function MobileUnitRow({
                         <Ruler size={isBase ? 13 : 12} />
                     </div>
 
-                    <span className="flex-1 truncate font-black text-app-foreground"
+                    <span className="flex-1 truncate font-bold text-app-foreground"
                         style={{ fontSize: 'var(--tp-lg)', fontWeight: isBase ? 900 : 600 }}>
                         {node.name}
                     </span>
@@ -132,7 +132,7 @@ export function MobileUnitRow({
                     )}
 
                     {isBase && (
-                        <span className="flex-shrink-0 font-black uppercase tracking-widest rounded-full"
+                        <span className="flex-shrink-0 font-bold uppercase tracking-wide rounded-full"
                             style={{
                                 fontSize: 'var(--tp-xxs)', padding: '2px 7px',
                                 background: 'color-mix(in srgb, var(--app-info, #3b82f6) 14%, transparent)',
@@ -147,18 +147,18 @@ export function MobileUnitRow({
                 <div className="flex items-center gap-1.5 mt-2" style={{ paddingLeft: 36 }}>
                     <div className="flex items-center gap-1.5 flex-1 flex-wrap min-w-0">
                         {node.code && (
-                            <span className="font-mono font-black text-app-muted-foreground px-1.5"
+                            <span className="font-mono font-bold text-app-muted-foreground px-1.5"
                                 style={{ fontSize: 'var(--tp-sm)' }}>
                                 {node.code}
                             </span>
                         )}
                         {!isBase && (
-                            <span className="flex items-center gap-1 font-black tabular-nums rounded-lg px-2 py-0.5"
+                            <span className="flex items-center gap-1 font-bold tabular-nums rounded-lg px-2 py-0.5"
                                 style={{
                                     fontSize: 'var(--tp-xs)',
-                                    color: '#8b5cf6',
-                                    background: 'color-mix(in srgb, #8b5cf6 10%, transparent)',
-                                    border: '1px solid color-mix(in srgb, #8b5cf6 20%, transparent)',
+                                    color: 'var(--app-info)',
+                                    background: 'color-mix(in srgb, var(--app-info) 10%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)',
                                 }}>
                                 <ArrowRightLeft size={10} /> ×{convFactor}
                             </span>
@@ -166,7 +166,7 @@ export function MobileUnitRow({
                         <button
                             onClick={(e) => { e.stopPropagation(); onOpenSheet(node) }}
                             disabled={productCount === 0}
-                            className="flex items-center gap-1 font-black tabular-nums rounded-lg px-2 active:scale-95 transition-transform"
+                            className="flex items-center gap-1 font-bold tabular-nums rounded-lg px-2 active:scale-95 transition-transform"
                             style={{
                                 height: 26,
                                 fontSize: 'var(--tp-xs)',

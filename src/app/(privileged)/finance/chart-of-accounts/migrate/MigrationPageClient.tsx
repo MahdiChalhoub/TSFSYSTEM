@@ -245,7 +245,7 @@ export default function MigrationPageClient({
                         {cameFromCOA && (
                             <button
                                 onClick={() => router.push('/finance/chart-of-accounts')}
-                                className="flex items-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-xl border transition-all mr-1"
+                                className="flex items-center gap-1 text-tp-sm font-bold px-2 py-1.5 rounded-xl border transition-all mr-1"
                                 style={{
                                     color: 'var(--app-muted-foreground)',
                                     borderColor: 'var(--app-border)',
@@ -261,10 +261,10 @@ export default function MigrationPageClient({
                             <ArrowRightLeft size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
                                 Account Migration
                             </h1>
-                            <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                            <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                                 Transform Your Chart of Accounts · No History Lost
                             </p>
                         </div>
@@ -273,7 +273,7 @@ export default function MigrationPageClient({
                         <PageTour tourId="finance-coa-migrate" stepActions={tourStepActions} />
                         {preview && (
                             <button data-tour="migrate-apply-btn" onClick={handleExecute} disabled={executing}
-                                className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                                className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"
                                 style={{
                                     background: executing ? 'var(--app-muted)' : 'var(--app-primary)',
                                     color: 'white',
@@ -289,7 +289,7 @@ export default function MigrationPageClient({
                             </button>
                         )}
                         <button onClick={() => setFocusMode(true)} title="Focus mode (Ctrl+Q)"
-                            className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                            className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                             <Maximize2 size={13} />
                         </button>
                     </div>
@@ -310,8 +310,8 @@ export default function MigrationPageClient({
                                 {s.icon}
                             </div>
                             <div className="min-w-0">
-                                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                <div className="text-sm font-black text-app-foreground tabular-nums truncate">{s.value}</div>
+                                <div className="text-tp-xs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                <div className="text-sm font-bold text-app-foreground tabular-nums truncate">{s.value}</div>
                             </div>
                         </div>
                     ))}
@@ -325,7 +325,7 @@ export default function MigrationPageClient({
                         <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
                             <ArrowRightLeft size={14} className="text-white" />
                         </div>
-                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Migration</span>
+                        <span className="text-tp-md font-bold text-app-foreground hidden sm:inline">Migration</span>
                     </div>
                 )}
                 <div data-tour="migrate-target-select" className="flex items-center gap-2 flex-1 min-w-[180px]">
@@ -333,7 +333,7 @@ export default function MigrationPageClient({
                     <select
                         value={targetKey}
                         onChange={(e) => { setTargetKey(e.target.value); setPreview(null) }}
-                        className="flex-1 text-[12px] md:text-[13px] font-bold px-3 py-2 rounded-xl outline-none transition-all"
+                        className="flex-1 text-tp-md md:text-tp-lg font-bold px-3 py-2 rounded-xl outline-none transition-all"
                         style={{
                             color: 'var(--app-foreground)',
                             background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
@@ -349,7 +349,7 @@ export default function MigrationPageClient({
                     data-tour="migrate-analyze-btn"
                     onClick={handleLoadPreview}
                     disabled={!targetKey || loading}
-                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl border transition-all flex-shrink-0"
+                    className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-2 rounded-xl border transition-all flex-shrink-0"
                     style={{
                         background: targetKey ? (loading ? 'var(--app-muted)' : 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)') : 'transparent',
                         color: targetKey ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)',
@@ -373,13 +373,13 @@ export default function MigrationPageClient({
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search accounts... (Ctrl+K)"
-                                className="w-full md:w-[180px] pl-8 pr-3 py-2 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
+                                className="w-full md:w-[180px] pl-8 pr-3 py-2 text-tp-md bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
                             />
                         </div>
                         <select
                             value={filterCategory}
                             onChange={e => setFilterCategory(e.target.value)}
-                            className="text-[11px] font-bold px-2.5 py-2 rounded-xl border flex-shrink-0"
+                            className="text-tp-sm font-bold px-2.5 py-2 rounded-xl border flex-shrink-0"
                             style={{
                                 color: 'var(--app-foreground)',
                                 background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
@@ -414,7 +414,7 @@ export default function MigrationPageClient({
                         <p className="text-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                             Select a target template and click &quot;Analyze Migration&quot;
                         </p>
-                        <p className="text-[11px] mt-1 max-w-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <p className="text-tp-sm mt-1 max-w-xs" style={{ color: 'var(--app-muted-foreground)' }}>
                             The system will scan all accounts and show what needs attention before migration.
                         </p>
                     </div>
@@ -431,16 +431,16 @@ export default function MigrationPageClient({
                                         style={{ background: section.bgColor }}>
                                         <div className="flex items-center gap-2">
                                             <span style={{ color: section.color }}>{section.icon}</span>
-                                            <span className="text-[12px] font-bold" style={{ color: section.color }}>
+                                            <span className="text-tp-md font-bold" style={{ color: section.color }}>
                                                 {section.label}
                                             </span>
-                                            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                                            <span className="text-tp-xs px-1.5 py-0.5 rounded-full font-bold"
                                                 style={{ background: section.color, color: 'white' }}>
                                                 {section.accounts.length}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[10px] hidden lg:inline" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            <span className="text-tp-xs hidden lg:inline" style={{ color: 'var(--app-muted-foreground)' }}>
                                                 {section.description}
                                             </span>
                                             <ChevronDown size={14}
@@ -456,7 +456,7 @@ export default function MigrationPageClient({
                                     {expandedSections[section.key] && (
                                         <div style={{ background: 'var(--app-surface)' }}>
                                             {/* Table Header */}
-                                            <div className="grid gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-wider"
+                                            <div className="grid gap-2 px-4 py-2 text-tp-xs font-bold uppercase tracking-wider"
                                                 style={{
                                                     gridTemplateColumns: '80px 1fr 100px 70px 1fr 90px',
                                                     color: 'var(--app-muted-foreground)',
@@ -493,10 +493,10 @@ export default function MigrationPageClient({
                             }}>
                                 <div className="flex items-center gap-2">
                                     <CheckCircle2 size={15} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                    <span className="text-[12px] font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>
+                                    <span className="text-tp-md font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>
                                         {cleanAccounts.length} Clean Accounts
                                     </span>
-                                    <span className="text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
                                         — No data, exist in both templates. Will be migrated automatically.
                                     </span>
                                 </div>
@@ -507,7 +507,7 @@ export default function MigrationPageClient({
             </div>
 
             {/* ── Footer ── */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-[11px] font-bold rounded-b-2xl"
+            <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold rounded-b-2xl"
                 style={{
                     background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -529,7 +529,7 @@ export default function MigrationPageClient({
                         </>
                     )}
                 </div>
-                <div className="tabular-nums font-black" style={{ color: 'var(--app-foreground)' }}>
+                <div className="tabular-nums font-bold" style={{ color: 'var(--app-foreground)' }}>
                     Status: <span style={{ color: preview ? 'var(--app-info, #3b82f6)' : hasData ? 'var(--app-warning, #f59e0b)' : 'var(--app-success)' }}>
                         {preview ? 'Preview Loaded' : hasData ? 'Migration Required' : 'Ready'}
                     </span>
@@ -555,7 +555,7 @@ function AccountRow({
     onOverride: (code: string, value: string) => void
 }) {
     return (
-        <div className="grid gap-2 px-4 py-2 text-[11px] items-center transition-colors hover:brightness-95"
+        <div className="grid gap-2 px-4 py-2 text-tp-sm items-center transition-colors hover:brightness-95"
             style={{
                 gridTemplateColumns: '80px 1fr 100px 70px 1fr 90px',
                 borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -568,7 +568,7 @@ function AccountRow({
             <div className="truncate">
                 <span style={{ color: 'var(--app-foreground)' }}>{acc.name}</span>
                 {acc.parent_code && (
-                    <span className="text-[9px] ml-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                    <span className="text-tp-xxs ml-1" style={{ color: 'var(--app-muted-foreground)' }}>
                         ← {acc.parent_code}
                     </span>
                 )}
@@ -591,7 +591,7 @@ function AccountRow({
             <select
                 value={targetCode}
                 onChange={(e) => onOverride(acc.code, e.target.value)}
-                className="text-[11px] px-2 py-1 rounded-lg border bg-transparent truncate"
+                className="text-tp-sm px-2 py-1 rounded-lg border bg-transparent truncate"
                 style={{
                     color: 'var(--app-foreground)',
                     borderColor: 'var(--app-border)',
@@ -607,7 +607,7 @@ function AccountRow({
             {/* Match Badge */}
             <div className="flex justify-center">
                 {acc.suggestion_reason ? (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{
+                    <span className="text-tp-xxs px-1.5 py-0.5 rounded-full font-bold" style={{
                         background: acc.suggestion_reason === 'EXACT_MATCH'
                             ? 'color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)'
                             : acc.suggestion_reason === 'PARENT_MATCH'
@@ -624,7 +624,7 @@ function AccountRow({
                                 : '~ Type'}
                     </span>
                 ) : (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                    <span className="text-tp-xxs px-1.5 py-0.5 rounded-full font-bold"
                         style={{
                             background: 'color-mix(in srgb, var(--app-danger, #ef4444) 12%, transparent)',
                             color: 'var(--app-danger, #ef4444)',

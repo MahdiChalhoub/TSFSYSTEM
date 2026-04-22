@@ -16,7 +16,7 @@ import { useRowGestures } from '@/hooks/use-row-gestures'
 const TYPE_CONFIG: Record<string, { color: string; icon: any; label: string }> = {
     ASSET:     { color: 'var(--app-info, #3B82F6)',    icon: Wallet,       label: 'Asset' },
     LIABILITY: { color: 'var(--app-error, #EF4444)',   icon: TrendingDown, label: 'Liability' },
-    EQUITY:    { color: '#8b5cf6',                     icon: Scale,        label: 'Equity' },
+    EQUITY:    { color: 'var(--app-info)',                     icon: Scale,        label: 'Equity' },
     INCOME:    { color: 'var(--app-success, #10B981)', icon: TrendingUp,   label: 'Income' },
     EXPENSE:   { color: 'var(--app-warning, #F59E0B)', icon: BarChart3,    label: 'Expense' },
     REVENUE:   { color: 'var(--app-success, #10B981)', icon: TrendingUp,   label: 'Revenue' },
@@ -114,7 +114,7 @@ export function MobileAccountRow({
                 )}
 
                 {deepCap && (
-                    <div className="absolute font-black"
+                    <div className="absolute font-bold"
                         style={{ left: indentPx, top: 10, fontSize: 'var(--tp-xs)', color: 'color-mix(in srgb, var(--app-muted-foreground) 50%, transparent)' }}>
                         └─
                     </div>
@@ -152,7 +152,7 @@ export function MobileAccountRow({
                         <TypeIcon size={13} />
                     </div>
 
-                    <span className="font-mono font-black tabular-nums text-app-foreground flex-shrink-0"
+                    <span className="font-mono font-bold tabular-nums text-app-foreground flex-shrink-0"
                         style={{ fontSize: 'var(--tp-md)' }}>
                         {node.code}
                     </span>
@@ -163,7 +163,7 @@ export function MobileAccountRow({
                     </span>
 
                     {isRoot && (
-                        <span className="flex-shrink-0 font-black uppercase tracking-widest rounded-full"
+                        <span className="flex-shrink-0 font-bold uppercase tracking-wide rounded-full"
                             style={{
                                 fontSize: 'var(--tp-xxs)', padding: '2px 7px',
                                 background: `color-mix(in srgb, ${typeConf.color} 14%, transparent)`,
@@ -176,7 +176,7 @@ export function MobileAccountRow({
 
                 {/* Line 2 */}
                 <div className="flex items-center gap-2 mt-1.5" style={{ paddingLeft: 62 }}>
-                    <span className="flex-1 font-mono font-black tabular-nums truncate"
+                    <span className="flex-1 font-mono font-bold tabular-nums truncate"
                         style={{
                             fontSize: 'var(--tp-md)',
                             color: balance < 0
@@ -189,7 +189,7 @@ export function MobileAccountRow({
                     </span>
 
                     {node.isActive === false && (
-                        <span className="flex items-center gap-1 font-black uppercase tracking-wider rounded-md px-2 py-0.5"
+                        <span className="flex items-center gap-1 font-bold uppercase tracking-wider rounded-md px-2 py-0.5"
                             style={{
                                 fontSize: 'var(--tp-xxs)',
                                 color: 'var(--app-muted-foreground)',

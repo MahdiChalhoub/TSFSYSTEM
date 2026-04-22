@@ -128,17 +128,17 @@ export default function SuggestionsManager({
                         <Sparkles size={16} />
                     </div>
                     <div>
-                        <h1 className="text-[18px] md:text-[20px] font-black tracking-tight leading-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 className="text-[18px] md:text-[20px] font-bold tracking-tight leading-tight" style={{ color: 'var(--app-foreground)' }}>
                             Packaging Suggestions
                         </h1>
-                        <p className="text-[10px] font-black uppercase tracking-widest mt-0.5"
+                        <p className="text-tp-xs font-bold uppercase tracking-wide mt-0.5"
                             style={{ color: 'var(--app-primary)' }}>
                             Smart Engine · Rules
                         </p>
                     </div>
                 </div>
                 <button type="button" onClick={() => setShowForm(v => !v)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-tp-sm font-bold uppercase tracking-wide transition-all"
                     style={{
                         background: showForm ? 'var(--app-surface)' : 'var(--app-primary)',
                         color: showForm ? 'var(--app-muted-foreground)' : 'white',
@@ -173,7 +173,7 @@ export default function SuggestionsManager({
                     }}>
                     <div className="flex items-start gap-2 mb-1">
                         <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--app-primary)' }} />
-                        <p className="text-[11px] font-semibold" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <p className="text-tp-sm font-semibold" style={{ color: 'var(--app-muted-foreground)' }}>
                             Any combination of <strong>Category + Brand + Attribute</strong> — more dimensions = higher priority (auto).
                             Leave a dimension empty to act as a wildcard.
                         </p>
@@ -196,25 +196,25 @@ export default function SuggestionsManager({
 
                     {attributeId && (
                         <div className="animate-in fade-in">
-                            <label className="block text-[9px] font-black uppercase tracking-widest mb-1"
+                            <label className="block text-tp-xxs font-bold uppercase tracking-wide mb-1"
                                 style={{ color: 'var(--app-primary)' }}>
                                 Attribute Value (optional)
                             </label>
                             <input value={attributeValue} onChange={e => setAttributeValue(e.target.value)}
                                 placeholder="e.g. Big, Red, XL — leave blank to match any value"
-                                className="w-full px-3 py-2 rounded-lg text-[12px] font-bold outline-none"
+                                className="w-full px-3 py-2 rounded-lg text-tp-md font-bold outline-none"
                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
                         </div>
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-2">
                         <div>
-                            <label className="block text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1"
+                            <label className="block text-tp-xxs font-bold uppercase tracking-wide mb-1 flex items-center gap-1"
                                 style={{ color: 'var(--app-primary)' }}>
                                 <Box size={11} /> Suggest Packaging *
                             </label>
                             <select value={packagingId} onChange={e => setPackagingId(e.target.value)} required
-                                className="w-full px-3 py-2 rounded-lg text-[12px] font-bold outline-none"
+                                className="w-full px-3 py-2 rounded-lg text-tp-md font-bold outline-none"
                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                                 <option value="">— Select a package template —</option>
                                 {Object.entries(groupedPackages).map(([unitCode, pkgs]) => (
@@ -229,20 +229,20 @@ export default function SuggestionsManager({
                             </select>
                         </div>
                         <div>
-                            <label className="block text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1"
+                            <label className="block text-tp-xxs font-bold uppercase tracking-wide mb-1 flex items-center gap-1"
                                 style={{ color: 'var(--app-primary)' }}>
                                 <Zap size={11} /> Priority (manual)
                             </label>
                             <input type="number" min="0" value={priority} onChange={e => setPriority(e.target.value)}
                                 placeholder={`Auto: ${specificity * 10}`}
-                                className="w-full px-3 py-2 rounded-lg text-[12px] font-mono font-bold text-center outline-none"
+                                className="w-full px-3 py-2 rounded-lg text-tp-md font-mono font-bold text-center outline-none"
                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
                         </div>
                     </div>
 
                     {/* Live preview */}
                     {(categoryId || brandId || attributeId) && packagingId && (
-                        <div className="px-3 py-2 rounded-lg text-[11px] font-bold flex items-center gap-2"
+                        <div className="px-3 py-2 rounded-lg text-tp-sm font-bold flex items-center gap-2"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                                 color: 'var(--app-primary)',
@@ -261,12 +261,12 @@ export default function SuggestionsManager({
                     <div className="flex justify-end gap-2 pt-1">
                         <button type="button" onClick={() => { resetForm(); setShowForm(false) }}
                             disabled={saving}
-                            className="px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all"
+                            className="px-4 py-2 rounded-lg text-tp-sm font-bold uppercase tracking-wide transition-all"
                             style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
                             Cancel
                         </button>
                         <button type="button" onClick={handleSave} disabled={saving || !packagingId}
-                            className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-tp-sm font-bold uppercase tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{
                                 background: 'var(--app-primary)', color: 'white',
                                 boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
@@ -285,10 +285,10 @@ export default function SuggestionsManager({
                         border: '1px dashed var(--app-border)',
                     }}>
                     <Sparkles size={32} className="mx-auto mb-3 opacity-40" style={{ color: 'var(--app-muted-foreground)' }} />
-                    <h3 className="text-sm font-black mb-1" style={{ color: 'var(--app-foreground)' }}>
+                    <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--app-foreground)' }}>
                         No suggestion rules yet
                     </h3>
-                    <p className="text-[11px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                    <p className="text-tp-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                         Create rules to make the system auto-suggest packaging when users create products.
                     </p>
                 </div>
@@ -296,7 +296,7 @@ export default function SuggestionsManager({
                 <div className="rounded-2xl overflow-hidden"
                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                     {/* Header row */}
-                    <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto_auto_auto] gap-3 items-center px-4 py-2.5 text-[9px] font-black uppercase tracking-widest"
+                    <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto_auto_auto] gap-3 items-center px-4 py-2.5 text-tp-xxs font-bold uppercase tracking-wide"
                         style={{
                             color: 'var(--app-muted-foreground)',
                             background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
@@ -325,25 +325,25 @@ export default function SuggestionsManager({
                                     {r.brand_name && <Chip tone="amber">{r.brand_name}</Chip>}
                                     {r.attribute_name && <Chip tone="info">{r.attribute_name}{r.attribute_value ? `=${r.attribute_value}` : ''}</Chip>}
                                     {!r.category_name && !r.brand_name && !r.attribute_name && (
-                                        <span className="text-[10px] italic" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        <span className="text-tp-xs italic" style={{ color: 'var(--app-muted-foreground)' }}>
                                             (global — no dimensions)
                                         </span>
                                     )}
                                 </div>
 
-                                <div className="flex items-center gap-1.5 text-[12px] font-bold" style={{ color: 'var(--app-foreground)' }}>
-                                    <Box size={11} style={{ color: '#8b5cf6' }} />
+                                <div className="flex items-center gap-1.5 text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                    <Box size={11} style={{ color: 'var(--app-info)' }} />
                                     {r.packaging_name}
                                 </div>
 
-                                <div className="text-right text-[11px] font-mono tabular-nums font-bold"
+                                <div className="text-right text-tp-sm font-mono tabular-nums font-bold"
                                     style={{ color: 'var(--app-primary)' }}>
                                     ×{Number(r.packaging_ratio).toLocaleString(undefined, { maximumFractionDigits: 4 })}
-                                    <span className="text-[9px] ml-1" style={{ color: 'var(--app-muted-foreground)' }}>{r.packaging_unit_code}</span>
+                                    <span className="text-tp-xxs ml-1" style={{ color: 'var(--app-muted-foreground)' }}>{r.packaging_unit_code}</span>
                                 </div>
 
                                 <div className="w-[70px] text-center">
-                                    <span className="inline-flex items-center justify-center min-w-[26px] px-1.5 py-0.5 rounded-full text-[10px] font-black"
+                                    <span className="inline-flex items-center justify-center min-w-[26px] px-1.5 py-0.5 rounded-full text-tp-xs font-bold"
                                         style={{
                                             background: r.priority > 0
                                                 ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)'
@@ -355,7 +355,7 @@ export default function SuggestionsManager({
                                     </span>
                                 </div>
 
-                                <div className="w-[60px] text-center text-[10px] font-mono tabular-nums"
+                                <div className="w-[60px] text-center text-tp-xs font-mono tabular-nums"
                                     style={{ color: r.usage_count > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
                                     {r.usage_count || 0}
                                 </div>
@@ -383,13 +383,13 @@ function KpiCard({ label, value, hint, icon }: { label: string; value: any; hint
     return (
         <div className="px-3 py-2.5 rounded-xl"
             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest"
+            <div className="flex items-center gap-1.5 text-tp-xxs font-bold uppercase tracking-wide"
                 style={{ color: 'var(--app-muted-foreground)' }}>
                 {icon}{label}
             </div>
-            <div className="text-[18px] font-black font-mono tabular-nums mt-0.5" style={{ color: 'var(--app-foreground)' }}>
+            <div className="text-[18px] font-bold font-mono tabular-nums mt-0.5" style={{ color: 'var(--app-foreground)' }}>
                 {value}
-                {hint && <span className="text-[9px] font-bold ml-1" style={{ color: 'var(--app-muted-foreground)' }}>{hint}</span>}
+                {hint && <span className="text-tp-xxs font-bold ml-1" style={{ color: 'var(--app-muted-foreground)' }}>{hint}</span>}
             </div>
         </div>
     )
@@ -403,7 +403,7 @@ function Chip({ children, tone = 'primary' }: { children: React.ReactNode; tone?
     }
     const p = palette[tone]
     return (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-tp-xs font-bold uppercase tracking-wider"
             style={{ background: p.bg, color: p.fg }}>
             {children}
         </span>
@@ -416,12 +416,12 @@ function FieldSelect({ label, icon, value, onChange, options, placeholder }: {
 }) {
     return (
         <div>
-            <label className="block text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1"
+            <label className="block text-tp-xxs font-bold uppercase tracking-wide mb-1 flex items-center gap-1"
                 style={{ color: 'var(--app-primary)' }}>
                 {icon}{label}
             </label>
             <select value={value} onChange={e => onChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg text-[12px] font-bold outline-none"
+                className="w-full px-3 py-2 rounded-lg text-tp-md font-bold outline-none"
                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                 <option value="">{placeholder}</option>
                 {options.map(o => (

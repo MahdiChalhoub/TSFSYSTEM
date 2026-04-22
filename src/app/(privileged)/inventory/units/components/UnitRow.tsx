@@ -87,7 +87,7 @@ export const UnitRow = ({ node, level, onEdit, onAdd, onDelete, searchQuery, for
                 {/* Conversion */}
                 <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
                     <span className="text-tp-xs font-semibold tabular-nums flex items-center gap-0.5"
-                        style={{ color: !isBase ? '#8b5cf6' : 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)' }}>
+                        style={{ color: !isBase ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)' }}>
                         {isBase ? '1:1' : `×${convFactor}`}
                     </span>
                 </div>

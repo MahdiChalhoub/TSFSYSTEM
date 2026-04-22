@@ -41,7 +41,7 @@ export function MobileCategoryDetailSheet({
     const tabs: { key: PanelTab; label: string; icon: any; count?: number; color?: string }[] = [
         { key: 'overview', label: 'Overview', icon: <Eye size={14} /> },
         { key: 'products', label: 'Products', icon: <Package size={14} />, count: productCount, color: 'var(--app-success, #10b981)' },
-        { key: 'brands', label: 'Brands', icon: <Paintbrush size={14} />, count: brandCount, color: '#8b5cf6' },
+        { key: 'brands', label: 'Brands', icon: <Paintbrush size={14} />, count: brandCount, color: 'var(--app-info)' },
         { key: 'attributes', label: 'Attrs', icon: <Tag size={14} />, count: attributeCount, color: 'var(--app-warning, #f59e0b)' },
     ]
 
@@ -62,7 +62,7 @@ export function MobileCategoryDetailSheet({
                     <Bookmark size={16} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
+                    <h3 className="font-bold text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
                         {node.name}
                     </h3>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -112,7 +112,7 @@ export function MobileCategoryDetailSheet({
                     return (
                         <button key={t.key}
                             onClick={() => setTab(t.key)}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl font-black transition-all active:scale-95"
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold transition-all active:scale-95"
                             style={{
                                 minHeight: 38, fontSize: 'var(--tp-md)',
                                 background: active
@@ -126,7 +126,7 @@ export function MobileCategoryDetailSheet({
                             {t.icon}
                             <span>{t.label}</span>
                             {t.count != null && t.count > 0 && (
-                                <span className="font-black tabular-nums rounded-full px-1.5 py-0.5"
+                                <span className="font-bold tabular-nums rounded-full px-1.5 py-0.5"
                                     style={{
                                         fontSize: 'var(--tp-xs)', minWidth: 18, textAlign: 'center',
                                         background: active

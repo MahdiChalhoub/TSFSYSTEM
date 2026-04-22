@@ -17,8 +17,8 @@ export function LedgerFiltersPanel({ filters, setFilters, isOpen, lookups, visib
 }) {
   if (!isOpen) return null
   const vf = visibleFilters || DEFAULT_VISIBLE_FILTERS
-  const sel = "w-full text-[11px] font-bold px-2.5 py-2 rounded-xl border border-app-border/50 bg-app-surface/50 text-app-foreground outline-none transition-all cursor-pointer appearance-none"
-  const lbl = "text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block"
+  const sel = "w-full text-tp-sm font-bold px-2.5 py-2 rounded-xl border border-app-border/50 bg-app-surface/50 text-app-foreground outline-none transition-all cursor-pointer appearance-none"
+  const lbl = "text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wide mb-1 block"
   return (
     <div className="animate-in slide-in-from-top-2 fade-in duration-200 p-3 rounded-2xl border border-app-border/50"
       style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}>

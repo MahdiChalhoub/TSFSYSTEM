@@ -65,14 +65,14 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                 </p>
                 <button onClick={() => setShowLink(!showLink)}
                     className="flex items-center gap-1 text-tp-xs font-bold uppercase tracking-wide px-2 py-1 rounded-lg transition-colors"
-                    style={showLink ? { background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' } : { color: 'var(--app-muted-foreground)' }}>
+                    style={showLink ? { background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' } : { color: 'var(--app-muted-foreground)' }}>
                     <Plus size={11} /> Pre-register
                 </button>
             </div>
 
             {showLink && (
                 <div className="flex-shrink-0 px-4 py-2.5 animate-in slide-in-from-top-2 duration-200"
-                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, #8b5cf6 3%, var(--app-surface))' }}>
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-info) 3%, var(--app-surface))' }}>
                     <p className="text-tp-xs font-bold uppercase tracking-wide text-app-muted-foreground mb-1.5">Available ({unlinkedBrands.length})</p>
                     {unlinkedBrands.length === 0 ? (
                         <p className="text-tp-sm text-app-muted-foreground">All brands are already linked.</p>
@@ -81,7 +81,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                             {unlinkedBrands.map(b => (
                                 <button key={b.id} onClick={() => linkBrand(b.id)} disabled={linking}
                                     className="flex items-center gap-1 text-tp-sm font-semibold px-2 py-1 rounded-lg transition-colors hover:brightness-110 disabled:opacity-50"
-                                    style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)', color: '#8b5cf6', border: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)' }}>
+                                    style={{ background: 'color-mix(in srgb, var(--app-info) 8%, transparent)', color: 'var(--app-info)', border: '1px solid color-mix(in srgb, var(--app-info) 15%, transparent)' }}>
                                     <Plus size={10} />{b.name}
                                 </button>
                             ))}
@@ -146,7 +146,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {loading ? (
-                    <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: '#8b5cf6' }} /></div>
+                    <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: 'var(--app-info)' }} /></div>
                 ) : linkedBrands.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <Paintbrush size={32} className="text-app-muted-foreground mb-2 opacity-40" />
@@ -157,12 +157,12 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                     <div className="divide-y divide-app-border/30">
                         {linkedBrands.map((b: any) => (
                             <div key={b.id} className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}><Paintbrush size={13} /></div>
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}><Paintbrush size={13} /></div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5">
                                         <p className="text-tp-md font-semibold text-app-foreground truncate">{b.name}</p>
                                         <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0"
-                                            style={b.source === 'auto' || b.source === 'both' ? { background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' } : { background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                                            style={b.source === 'auto' || b.source === 'both' ? { background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' } : { background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
                                             {b.source === 'auto' ? 'AUTO' : b.source === 'both' ? 'AUTO' : 'PRE-REG'}
                                         </span>
                                     </div>

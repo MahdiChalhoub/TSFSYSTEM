@@ -208,10 +208,10 @@ export default function JournalEntryForm({
                         <FileText size={20} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                        <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
                             Post Manual Journal
                         </h1>
-                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                        <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                             General Ledger · Dimensional Engine
                         </p>
                     </div>
@@ -227,7 +227,7 @@ export default function JournalEntryForm({
                                     key={scope}
                                     type="button"
                                     onClick={() => setViewScope(scope)}
-                                    className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all"
+                                    className="px-2.5 py-1.5 text-tp-xs font-bold uppercase tracking-wider transition-all"
                                     style={{
                                         background: isActive ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
                                         color: isActive ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
@@ -271,9 +271,9 @@ export default function JournalEntryForm({
                             {s.icon}
                         </div>
                         <div className="min-w-0">
-                            <div className="text-[10px] font-bold uppercase tracking-wider"
+                            <div className="text-tp-xs font-bold uppercase tracking-wider"
                                 style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                            <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                            <div className="text-sm font-bold text-app-foreground tabular-nums">{s.value}</div>
                         </div>
                     </div>
                 ))}
@@ -288,7 +288,7 @@ export default function JournalEntryForm({
                         required
                         value={header.transactionDate}
                         onChange={e => setHeader({ ...header, transactionDate: e.target.value })}
-                        className="w-full pl-3 pr-2 py-2 text-[12px] md:text-[13px] font-bold rounded-xl outline-none transition-all"
+                        className="w-full pl-3 pr-2 py-2 text-tp-md md:text-tp-lg font-bold rounded-xl outline-none transition-all"
                         style={{
                             background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -306,7 +306,7 @@ export default function JournalEntryForm({
                         value={header.description}
                         onChange={e => setHeader({ ...header, description: e.target.value })}
                         placeholder="Journal description..."
-                        className="w-full pl-3 pr-3 py-2 text-[12px] md:text-[13px] rounded-xl outline-none transition-all"
+                        className="w-full pl-3 pr-3 py-2 text-tp-md md:text-tp-lg rounded-xl outline-none transition-all"
                         style={{
                             background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -323,7 +323,7 @@ export default function JournalEntryForm({
                         value={header.reference}
                         onChange={e => setHeader({ ...header, reference: e.target.value })}
                         placeholder="Reference..."
-                        className="w-full pl-3 pr-2 py-2 text-[11px] font-mono rounded-xl outline-none transition-all"
+                        className="w-full pl-3 pr-2 py-2 text-tp-sm font-mono rounded-xl outline-none transition-all"
                         style={{
                             background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -336,7 +336,7 @@ export default function JournalEntryForm({
 
                 {/* Fiscal Badge */}
                 {fiscalContext.yearId ? (
-                    <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[11px] font-bold flex-shrink-0"
+                    <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-tp-sm font-bold flex-shrink-0"
                         style={{
                             background: 'color-mix(in srgb, var(--app-success) 6%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)',
@@ -346,7 +346,7 @@ export default function JournalEntryForm({
                         <span className="hidden lg:inline">{activeYear?.name}</span>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[10px] font-bold flex-shrink-0"
+                    <div className="flex items-center gap-1 px-2.5 py-2 rounded-xl text-tp-xs font-bold flex-shrink-0"
                         style={{
                             background: 'color-mix(in srgb, var(--app-error) 6%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)',
@@ -364,14 +364,14 @@ export default function JournalEntryForm({
                         <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
                             <FileText size={14} className="text-white" />
                         </div>
-                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Post Manual Journal</span>
+                        <span className="text-tp-md font-bold text-app-foreground hidden sm:inline">Post Manual Journal</span>
                     </div>
 
                     {/* Mini KPIs in focus mode */}
                     <div className="flex items-center gap-3 ml-auto mr-2">
-                        <span className="text-[11px] font-black font-mono tabular-nums" style={{ color: 'var(--app-primary)' }}>Dr {totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        <span className="text-[11px] font-black font-mono tabular-nums" style={{ color: 'var(--app-error)' }}>Cr {totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        <span className={`text-[11px] font-black font-mono tabular-nums`} style={{ color: isBalanced ? 'var(--app-success)' : 'var(--app-warning)' }}>
+                        <span className="text-tp-sm font-bold font-mono tabular-nums" style={{ color: 'var(--app-primary)' }}>Dr {totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className="text-tp-sm font-bold font-mono tabular-nums" style={{ color: 'var(--app-error)' }}>Cr {totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className={`text-tp-sm font-bold font-mono tabular-nums`} style={{ color: isBalanced ? 'var(--app-success)' : 'var(--app-warning)' }}>
                             {isBalanced ? '✓ BAL' : `Δ ${Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                         </span>
                     </div>
@@ -380,7 +380,7 @@ export default function JournalEntryForm({
                         type="button"
                         onClick={() => setFocusMode(false)}
                         title="Exit Focus Mode (Ctrl+Q)"
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all flex-shrink-0 text-[11px] font-bold"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all flex-shrink-0 text-tp-sm font-bold"
                         style={{
                             color: 'var(--app-primary)',
                             borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)',
@@ -402,7 +402,7 @@ export default function JournalEntryForm({
             >
                 {/* Column Headers */}
                 <div
-                    className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 border-b text-[10px] font-black uppercase tracking-wider"
+                    className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 border-b text-tp-xs font-bold uppercase tracking-wider"
                     style={{
                         background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
                         borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -420,12 +420,12 @@ export default function JournalEntryForm({
                         <table className="w-full text-sm">
                             <thead>
                                 <tr style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                                    <th className="px-3 py-2 text-[9px] font-black uppercase tracking-wider text-left min-w-[200px]" style={{ color: 'var(--app-muted-foreground)' }}>Ledger Account</th>
-                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-left w-36" style={{ color: 'var(--app-muted-foreground)' }}>Subledger</th>
-                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-left w-28" style={{ color: 'var(--app-muted-foreground)' }}>Cost Center</th>
-                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-left min-w-[160px]" style={{ color: 'var(--app-muted-foreground)' }}>Description</th>
-                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-right w-32" style={{ color: 'var(--app-primary)' }}>Debit</th>
-                                    <th className="px-2 py-2 text-[9px] font-black uppercase tracking-wider text-right w-32" style={{ color: 'var(--app-error)' }}>Credit</th>
+                                    <th className="px-3 py-2 text-tp-xxs font-bold uppercase tracking-wider text-left min-w-[200px]" style={{ color: 'var(--app-muted-foreground)' }}>Ledger Account</th>
+                                    <th className="px-2 py-2 text-tp-xxs font-bold uppercase tracking-wider text-left w-36" style={{ color: 'var(--app-muted-foreground)' }}>Subledger</th>
+                                    <th className="px-2 py-2 text-tp-xxs font-bold uppercase tracking-wider text-left w-28" style={{ color: 'var(--app-muted-foreground)' }}>Cost Center</th>
+                                    <th className="px-2 py-2 text-tp-xxs font-bold uppercase tracking-wider text-left min-w-[160px]" style={{ color: 'var(--app-muted-foreground)' }}>Description</th>
+                                    <th className="px-2 py-2 text-tp-xxs font-bold uppercase tracking-wider text-right w-32" style={{ color: 'var(--app-primary)' }}>Debit</th>
+                                    <th className="px-2 py-2 text-tp-xxs font-bold uppercase tracking-wider text-right w-32" style={{ color: 'var(--app-error)' }}>Credit</th>
                                     <th className="px-2 py-2 w-8"></th>
                                 </tr>
                             </thead>
@@ -444,7 +444,7 @@ export default function JournalEntryForm({
                                             placeholder="Code or name..."
                                             value={line.searchString}
                                             onChange={e => updateLine(idx, 'searchString', e.target.value)}
-                                            className="w-full px-2.5 py-1.5 rounded-lg text-[12px] font-bold outline-none transition-all"
+                                            className="w-full px-2.5 py-1.5 rounded-lg text-tp-md font-bold outline-none transition-all"
                                             style={{
                                                 background: line.accountId ? 'color-mix(in srgb, var(--app-success) 4%, transparent)' : 'transparent',
                                                 border: line.accountId ? '1px solid color-mix(in srgb, var(--app-success) 25%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
@@ -464,7 +464,7 @@ export default function JournalEntryForm({
                                             ))}
                                         </datalist>
                                         {!line.accountId && line.searchString && (
-                                            <div className="absolute left-3 top-[calc(100%-2px)] z-10 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                                            <div className="absolute left-3 top-[calc(100%-2px)] z-10 text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
                                                 style={{ background: 'var(--app-error)', color: '#fff' }}>
                                                 Unknown
                                             </div>
@@ -478,7 +478,7 @@ export default function JournalEntryForm({
                                             <select
                                                 value={line.contactId}
                                                 onChange={e => updateLine(idx, 'contactId', e.target.value)}
-                                                className="w-full pl-6 pr-1 py-1.5 rounded-lg text-[11px] font-medium outline-none appearance-none transition-all"
+                                                className="w-full pl-6 pr-1 py-1.5 rounded-lg text-tp-sm font-medium outline-none appearance-none transition-all"
                                                 style={{
                                                     background: 'transparent',
                                                     border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
@@ -503,7 +503,7 @@ export default function JournalEntryForm({
                                                 value={line.costCenter}
                                                 onChange={e => updateLine(idx, 'costCenter', e.target.value)}
                                                 placeholder="e.g. MARKE"
-                                                className="w-full pl-6 pr-1 py-1.5 rounded-lg text-[11px] font-bold uppercase outline-none transition-all placeholder:normal-case placeholder:font-medium"
+                                                className="w-full pl-6 pr-1 py-1.5 rounded-lg text-tp-sm font-bold uppercase outline-none transition-all placeholder:normal-case placeholder:font-medium"
                                                 style={{
                                                     background: 'transparent',
                                                     border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
@@ -522,7 +522,7 @@ export default function JournalEntryForm({
                                                 value={line.description}
                                                 onChange={e => updateLine(idx, 'description', e.target.value)}
                                                 onKeyDown={e => handleKeyDown(e, idx, 'description')}
-                                                className="w-full px-2.5 py-1.5 rounded-lg text-[11px] outline-none transition-all"
+                                                className="w-full px-2.5 py-1.5 rounded-lg text-tp-sm outline-none transition-all"
                                                 placeholder={header.description || "Specific text..."}
                                                 style={{
                                                     background: 'transparent',
@@ -551,7 +551,7 @@ export default function JournalEntryForm({
                                             value={line.debit}
                                             onKeyDown={e => handleKeyDown(e, idx, 'debit')}
                                             onChange={e => updateLine(idx, 'debit', e.target.value)}
-                                            className="w-full px-2.5 py-1.5 rounded-lg text-right font-mono font-bold text-[12px] outline-none transition-all tabular-nums"
+                                            className="w-full px-2.5 py-1.5 rounded-lg text-right font-mono font-bold text-tp-md outline-none transition-all tabular-nums"
                                             placeholder="0.00"
                                             style={{
                                                 background: 'transparent',
@@ -570,7 +570,7 @@ export default function JournalEntryForm({
                                             value={line.credit}
                                             onKeyDown={e => handleKeyDown(e, idx, 'credit')}
                                             onChange={e => updateLine(idx, 'credit', e.target.value)}
-                                            className="w-full px-2.5 py-1.5 rounded-lg text-right font-mono font-bold text-[12px] outline-none transition-all tabular-nums"
+                                            className="w-full px-2.5 py-1.5 rounded-lg text-right font-mono font-bold text-tp-md outline-none transition-all tabular-nums"
                                             placeholder="0.00"
                                             style={{
                                                 background: 'transparent',
@@ -600,14 +600,14 @@ export default function JournalEntryForm({
                             <tr style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)' }}>
                                 <td colSpan={4} className="px-5 py-2.5 text-right">
                                     {isBalanced ? (
-                                        <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                                        <div className="inline-flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
                                             style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-success) 15%, transparent)' }}>
                                             <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                                             Trial Balance Zeroed
                                         </div>
                                     ) : (
                                         <div className="inline-flex items-center gap-2">
-                                            <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                                            <div className="inline-flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
                                                 style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error) 15%, transparent)' }}>
                                                 <div className="w-1.5 h-1.5 rounded-full bg-current" />
                                                 Diff: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -615,11 +615,11 @@ export default function JournalEntryForm({
                                         </div>
                                     )}
                                 </td>
-                                <td className="px-4 py-2.5 text-right font-mono font-bold text-[13px] tabular-nums"
+                                <td className="px-4 py-2.5 text-right font-mono font-bold text-tp-lg tabular-nums"
                                     style={{ color: totalDebit > 0 ? 'var(--app-primary)' : 'var(--app-muted-foreground)', borderTop: '2px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
                                     {totalDebit > 0 ? totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
                                 </td>
-                                <td className="px-4 py-2.5 text-right font-mono font-bold text-[13px] tabular-nums"
+                                <td className="px-4 py-2.5 text-right font-mono font-bold text-tp-lg tabular-nums"
                                     style={{ color: totalCredit > 0 ? 'var(--app-error)' : 'var(--app-muted-foreground)', borderTop: '2px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
                                     {totalCredit > 0 ? totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
                                 </td>
@@ -633,7 +633,7 @@ export default function JournalEntryForm({
                         <button
                             type="button"
                             onClick={addLine}
-                            className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                            className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-tp-xs font-bold uppercase tracking-wide transition-all"
                             style={{
                                 border: '1px dashed color-mix(in srgb, var(--app-border) 60%, transparent)',
                                 color: 'var(--app-muted-foreground)',
@@ -652,13 +652,13 @@ export default function JournalEntryForm({
                         <div key={idx} className="bg-app-surface p-3 rounded-xl border border-app-border/50 shadow-sm flex flex-col gap-3 relative">
                             {/* Account Picker */}
                             <div>
-                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Ledger Account</label>
+                                <label className="block text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground mb-1">Ledger Account</label>
                                 <input
                                     list={`accounts-list-mob-${idx}`}
                                     placeholder="Code or name..."
                                     value={line.searchString}
                                     onChange={e => updateLine(idx, 'searchString', e.target.value)}
-                                    className={`w-full p-2 border rounded-lg text-[12px] font-bold focus:ring-1 focus:ring-app-primary/20 outline-none transition-all shadow-sm ${
+                                    className={`w-full p-2 border rounded-lg text-tp-md font-bold focus:ring-1 focus:ring-app-primary/20 outline-none transition-all shadow-sm ${
                                         line.accountId 
                                         ? 'border-emerald-500/30 bg-emerald-500/5 text-app-foreground' 
                                         : 'border-app-border/60 bg-app-surface text-app-foreground'
@@ -672,42 +672,42 @@ export default function JournalEntryForm({
                                     ))}
                                 </datalist>
                                 {!line.accountId && line.searchString && (
-                                    <div className="text-[9px] text-rose-500 font-bold uppercase tracking-widest mt-1">Unknown Account</div>
+                                    <div className="text-tp-xxs text-rose-500 font-bold uppercase tracking-wide mt-1">Unknown Account</div>
                                 )}
                             </div>
                             
                             {/* Details Row */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Subledger</label>
+                                    <label className="block text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground mb-1">Subledger</label>
                                     <select
                                         value={line.contactId}
                                         onChange={e => updateLine(idx, 'contactId', e.target.value)}
-                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-[11px] font-medium focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground h-[32px] shadow-sm appearance-none"
+                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-tp-sm font-medium focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground h-[32px] shadow-sm appearance-none"
                                     >
                                         <option value="">None</option>
                                         {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Cost Center</label>
+                                    <label className="block text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground mb-1">Cost Center</label>
                                     <input
                                         value={line.costCenter}
                                         onChange={e => updateLine(idx, 'costCenter', e.target.value)}
                                         placeholder="EX: MKTG"
-                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-[11px] font-bold uppercase focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground h-[32px] shadow-sm"
+                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-tp-sm font-bold uppercase focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground h-[32px] shadow-sm"
                                     />
                                 </div>
                             </div>
                             
                             {/* Description */}
                             <div>
-                                <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Line Description</label>
+                                <label className="block text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground mb-1">Line Description</label>
                                 <div className="flex gap-2 items-center">
                                     <input
                                         value={line.description}
                                         onChange={e => updateLine(idx, 'description', e.target.value)}
-                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-[12px] font-bold focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground shadow-sm"
+                                        className="w-full px-2 py-1.5 border border-app-border/60 rounded-lg text-tp-md font-bold focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface text-app-foreground shadow-sm"
                                         placeholder={header.description || "Specific text..."}
                                     />
                                     <button
@@ -723,20 +723,20 @@ export default function JournalEntryForm({
                             {/* Amount Row */}
                             <div className="grid grid-cols-2 gap-3 pb-8">
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Debit (Dr)</label>
+                                    <label className="block text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground mb-1">Debit (Dr)</label>
                                     <input
                                         type="number" step="0.01" min="0" value={line.debit}
                                         onChange={e => updateLine(idx, 'debit', e.target.value)}
-                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-[12px] focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface shadow-sm transition-all text-app-primary placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
+                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-tp-md focus:ring-1 focus:ring-app-primary/20 outline-none bg-app-surface shadow-sm transition-all text-app-primary placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
                                         placeholder="0.00"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Credit (Cr)</label>
+                                    <label className="block text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground mb-1">Credit (Cr)</label>
                                     <input
                                         type="number" step="0.01" min="0" value={line.credit}
                                         onChange={e => updateLine(idx, 'credit', e.target.value)}
-                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-[12px] focus:ring-1 focus:ring-rose-500/20 outline-none bg-app-surface shadow-sm transition-all focus:border-rose-500/50 text-rose-500 placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
+                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-tp-md focus:ring-1 focus:ring-rose-500/20 outline-none bg-app-surface shadow-sm transition-all focus:border-rose-500/50 text-rose-500 placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -756,14 +756,14 @@ export default function JournalEntryForm({
                     {/* Mobile summary */}
                     <div className="p-3 flex flex-col gap-1.5 rounded-xl font-mono"
                         style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                        <div className="flex justify-between items-center text-[12px] font-bold">
+                        <div className="flex justify-between items-center text-tp-md font-bold">
                             <span style={{ color: 'var(--app-primary)' }}>Dr: {totalDebit > 0 ? totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</span>
                             <span style={{ color: 'var(--app-error)' }}>Cr: {totalCredit > 0 ? totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</span>
                         </div>
                         {isBalanced ? (
-                            <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success)' }}>Trial Balance Zeroed</div>
+                            <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-success)' }}>Trial Balance Zeroed</div>
                         ) : (
-                            <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-error)' }}>Diff: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                            <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-error)' }}>Diff: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                         )}
                     </div>
 
@@ -771,7 +771,7 @@ export default function JournalEntryForm({
                     <button
                         type="button"
                         onClick={addLine}
-                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-tp-xs font-bold uppercase tracking-wide transition-all"
                         style={{
                             border: '1px dashed color-mix(in srgb, var(--app-border) 60%, transparent)',
                             color: 'var(--app-muted-foreground)',
@@ -798,7 +798,7 @@ export default function JournalEntryForm({
                 <button
                     type="button"
                     onClick={() => router.back()}
-                    className="text-[11px] font-bold transition-colors"
+                    className="text-tp-sm font-bold transition-colors"
                     style={{ color: 'var(--app-muted-foreground)' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
@@ -810,7 +810,7 @@ export default function JournalEntryForm({
                         type="button"
                         onClick={() => handleAction('DRAFT')}
                         disabled={isPending}
-                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-all disabled:opacity-50"
+                        className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl border transition-all disabled:opacity-50"
                         style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
@@ -821,7 +821,7 @@ export default function JournalEntryForm({
                         type="button"
                         onClick={() => handleAction('POSTED')}
                         disabled={isPending || !isBalanced}
-                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{
                             background: 'var(--app-primary)',
                             color: '#fff',

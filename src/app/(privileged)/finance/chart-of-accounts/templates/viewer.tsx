@@ -54,7 +54,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                         </button>
                         <div>
                             <h1 className="text-xl font-bold text-app-foreground font-serif">Accounting Standards Library</h1>
-                            <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Compare and select your operational layout</p>
+                            <p className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">Compare and select your operational layout</p>
                         </div>
                     </div>
 
@@ -78,13 +78,13 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                         <ShieldCheck className="text-emerald-400" size={32} />
                         <div>
                             <h4 className="font-bold text-sm">Financial Integrity Guide</h4>
-                            <p className="text-[10px] text-emerald-300 uppercase tracking-widest">How your reports are calculated</p>
+                            <p className="text-tp-xs text-emerald-300 uppercase tracking-wide">How your reports are calculated</p>
                         </div>
                     </div>
 
                     <div className="flex gap-6">
                         <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-emerald-400 uppercase">Balance Sheet [BS]</span>
+                            <span className="text-tp-xs font-bold text-emerald-400 uppercase">Balance Sheet [BS]</span>
                             <div className="flex items-center gap-2 text-xs font-medium">
                                 <span className="p-1 bg-emerald-800 rounded">Assets</span>
                                 <span>=</span>
@@ -95,7 +95,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                         </div>
 
                         <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-amber-400 uppercase">Profit & Loss [P&L]</span>
+                            <span className="text-tp-xs font-bold text-amber-400 uppercase">Profit & Loss [P&L]</span>
                             <div className="flex items-center gap-2 text-xs font-medium">
                                 <span className="p-1 bg-amber-800 rounded">Revenue</span>
                                 <span>-</span>
@@ -106,7 +106,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                         </div>
                     </div>
 
-                    <div className="ml-auto flex items-center gap-4 text-[10px] text-emerald-300 font-bold uppercase tracking-widest bg-emerald-950/50 px-4 py-2 rounded-full">
+                    <div className="ml-auto flex items-center gap-4 text-tp-xs text-emerald-300 font-bold uppercase tracking-wide bg-emerald-950/50 px-4 py-2 rounded-full">
                         <span className="flex items-center gap-1"><CheckCircle2 size={12} /> Auto-Rollup Logic</span>
                         <span className="opacity-30">|</span>
                         <span className="flex items-center gap-1"><FileText size={12} /> Double Entry (GAAP/IFRS)</span>
@@ -145,7 +145,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                                 <div className="p-6 border-b border-app-border flex justify-between items-start bg-app-surface/50">
                                     <div>
                                         <h3 className="font-bold text-app-foreground text-lg">{key.replace('_', ' ')}</h3>
-                                        <p className="text-[10px] font-bold text-app-muted-foreground uppercase mt-1 tracking-tight">Official Standard Structure</p>
+                                        <p className="text-tp-xs font-bold text-app-muted-foreground uppercase mt-1 tracking-tight">Official Standard Structure</p>
                                     </div>
                                     <button
                                         disabled={isPending}
@@ -163,7 +163,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                                     </div>
                                 </div>
                                 <div className="p-4 bg-app-surface border-t border-app-border text-center">
-                                    <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                    <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">
                                         Total Root Classes: {templates[key].length}
                                     </span>
                                 </div>
@@ -214,7 +214,7 @@ function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
                         open ? <ChevronDown size={12} className="text-app-muted-foreground" /> : <ChevronRight size={12} className="text-app-faint" />
                     )}
                 </div>
-                <span className={`text-[10px] font-mono font-bold w-12 text-left ${level === 0 ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>
+                <span className={`text-tp-xs font-mono font-bold w-12 text-left ${level === 0 ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>
                     {item.code}
                 </span>
                 <span className={`text-xs text-left flex-1 truncate ${level === 0 ? 'font-bold text-app-foreground' : 'font-medium text-app-muted-foreground'}`}>
@@ -225,12 +225,12 @@ function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
                 {item.type && (
                     <div className="flex items-center gap-1.5 mr-2">
                         {['ASSET', 'LIABILITY', 'EQUITY'].includes(item.type) ? (
-                            <span className="text-[8px] font-black bg-blue-100 text-blue-700 px-1 rounded" title="Goes to Balance Sheet">[BS]</span>
+                            <span className="text-tp-xxs font-bold bg-blue-100 text-blue-700 px-1 rounded" title="Goes to Balance Sheet">[BS]</span>
                         ) : (
-                            <span className="text-[8px] font-black bg-amber-100 text-amber-700 px-1 rounded" title="Goes to Profit & Loss">[P&L]</span>
+                            <span className="text-tp-xxs font-bold bg-amber-100 text-amber-700 px-1 rounded" title="Goes to Profit & Loss">[P&L]</span>
                         )}
 
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${item.type === 'ASSET' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                        <span className={`text-tp-xxs font-bold px-1.5 py-0.5 rounded uppercase ${item.type === 'ASSET' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
                             item.type === 'LIABILITY' ? 'bg-red-50 text-red-600 border border-red-100' :
                                 item.type === 'EQUITY' ? 'bg-app-surface-2 text-app-muted-foreground' :
                                     item.type === 'INCOME' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :

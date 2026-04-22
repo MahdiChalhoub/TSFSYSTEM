@@ -37,7 +37,7 @@ export default async function OpeningBalancesListPage() {
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <h3 className="font-bold text-app-foreground">Opening Balance #{entry.id}</h3>
-                                            <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase">Locked</span>
+                                            <span className="bg-emerald-100 text-emerald-700 text-tp-xs px-2 py-0.5 rounded font-bold uppercase">Locked</span>
                                         </div>
                                         <p className="text-xs text-app-muted-foreground flex items-center gap-1 mt-0.5">
                                             <Calendar size={12} /> {(entry.transactionDate || entry.transaction_date) ? new Date(entry.transactionDate || entry.transaction_date).toLocaleDateString('en-GB') : '—'}
@@ -45,7 +45,7 @@ export default async function OpeningBalancesListPage() {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest mb-1">Total Value</div>
+                                    <div className="text-tp-xs font-bold uppercase text-app-muted-foreground tracking-wide mb-1">Total Value</div>
                                     <div className="font-mono font-bold text-app-foreground text-lg">
                                         {totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                     </div>

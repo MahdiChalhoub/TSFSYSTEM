@@ -42,7 +42,7 @@ function flattenTree(items: any[], result: FlatAccount[] = []): FlatAccount[] {
 const TYPE_COLORS: Record<string, string> = {
     ASSET: 'var(--app-info)',
     LIABILITY: 'var(--app-error)',
-    EQUITY: '#8b5cf6',
+    EQUITY: 'var(--app-info)',
     INCOME: 'var(--app-success)',
     EXPENSE: 'var(--app-warning)',
 }
@@ -367,18 +367,18 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                 )}
                 <div className="h-4 w-px bg-app-border hidden sm:block" />
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)' }}>
-                    <span className="text-[9px] font-black px-1 rounded" style={{ background: 'color-mix(in srgb, var(--app-success) 18%, transparent)', color: 'var(--app-success)' }}>1:1</span>
+                    <span className="text-tp-xxs font-bold px-1 rounded" style={{ background: 'color-mix(in srgb, var(--app-success) 18%, transparent)', color: 'var(--app-success)' }}>1:1</span>
                     <span className="font-bold text-app-foreground">{stats.oneToOne}</span>
                 </div>
                 {stats.merges > 0 && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: 'color-mix(in srgb, #f59e0b 8%, transparent)' }}>
-                        <span className="text-[9px] font-black px-1 rounded" style={{ background: 'color-mix(in srgb, #f59e0b 18%, transparent)', color: '#f59e0b' }}>⊕ N:1</span>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)' }}>
+                        <span className="text-tp-xxs font-bold px-1 rounded" style={{ background: 'color-mix(in srgb, var(--app-warning) 18%, transparent)', color: 'var(--app-warning)' }}>⊕ N:1</span>
                         <span className="font-bold text-app-foreground">{stats.merges}</span>
                     </div>
                 )}
                 {stats.splits > 0 && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)' }}>
-                        <span className="text-[9px] font-black px-1 rounded" style={{ background: 'color-mix(in srgb, #8b5cf6 18%, transparent)', color: '#8b5cf6' }}>⊗ 1:N</span>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-info) 8%, transparent)' }}>
+                        <span className="text-tp-xxs font-bold px-1 rounded" style={{ background: 'color-mix(in srgb, var(--app-info) 18%, transparent)', color: 'var(--app-info)' }}>⊗ 1:N</span>
                         <span className="font-bold text-app-foreground">{stats.splits}</span>
                     </div>
                 )}
@@ -409,7 +409,7 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                         toast.success(`Status → ${s}`)
                                     })
                                 }}
-                                    className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${mapStatus === s
+                                    className={`px-2 py-1 rounded text-tp-xxs font-bold uppercase tracking-wider transition-all ${mapStatus === s
                                         ? s === 'PUBLISHED' ? 'bg-green-500/20 text-green-400 ring-1 ring-green-500/30'
                                             : s === 'APPROVED' ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/30'
                                                 : 'bg-app-primary/20 text-app-primary ring-1 ring-app-primary/30'
@@ -429,14 +429,14 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Overall Score */}
                         <div className="flex items-center gap-2">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black ${qualityReport.quality_score >= 80 ? 'bg-green-500/15 text-green-400' :
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${qualityReport.quality_score >= 80 ? 'bg-green-500/15 text-green-400' :
                                 qualityReport.quality_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
                                     'bg-red-500/15 text-red-400'
                                 }`}>
                                 {Math.round(qualityReport.quality_score)}
                             </div>
                             <div>
-                                <div className="text-[10px] uppercase tracking-wider text-app-muted-foreground font-medium">Quality</div>
+                                <div className="text-tp-xs uppercase tracking-wider text-app-muted-foreground font-medium">Quality</div>
                                 <div className={`text-xs font-bold ${qualityReport.risk.risk_level === 'LOW' ? 'text-green-400' :
                                     qualityReport.risk.risk_level === 'MEDIUM' ? 'text-amber-400' : 'text-red-400'
                                     }`}>{qualityReport.risk.risk_level} Risk</div>
@@ -446,13 +446,13 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                         {/* Coverage */}
                         <div className="text-center">
                             <div className="text-sm font-bold text-app-foreground">{qualityReport.coverage.source_pct}%</div>
-                            <div className="text-[9px] text-app-muted-foreground">Coverage</div>
+                            <div className="text-tp-xxs text-app-muted-foreground">Coverage</div>
                         </div>
                         {/* Confidence */}
                         <div className="flex items-center gap-1">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-500/15 text-green-400">{qualityReport.confidence.high} hi</span>
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-400">{qualityReport.confidence.medium} md</span>
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">{qualityReport.confidence.low} lo</span>
+                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-green-500/15 text-green-400">{qualityReport.confidence.high} hi</span>
+                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-amber-500/15 text-amber-400">{qualityReport.confidence.medium} md</span>
+                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-red-500/15 text-red-400">{qualityReport.confidence.low} lo</span>
                         </div>
                         <div className="h-8 w-px bg-app-border/50 hidden sm:block" />
                         {/* Critical Roles */}
@@ -464,9 +464,9 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                         {/* Match Levels */}
                         <div className="ml-auto flex items-center gap-1 flex-wrap">
                             {Object.entries(qualityReport.match_levels).map(([level, count]) => {
-                                const colors: Record<string, string> = { ROLE: '#22c55e', CODE: '#3b82f6', NAME: '#8b5cf6', TYPE_SUBTYPE: '#f59e0b', MANUAL: '#64748b', UNMAPPED: '#ef4444' }
+                                const colors: Record<string, string> = { ROLE: 'var(--app-success)', CODE: 'var(--app-info)', NAME: 'var(--app-info)', TYPE_SUBTYPE: 'var(--app-warning)', MANUAL: 'var(--app-muted-foreground)', UNMAPPED: 'var(--app-error)' }
                                 return (
-                                    <span key={level} className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                                    <span key={level} className="px-1.5 py-0.5 rounded-full text-tp-xxs font-bold"
                                         style={{ background: `color-mix(in srgb, ${colors[level] || '#888'} 15%, transparent)`, color: colors[level] || '#888' }}>
                                         {level}: {count as number}
                                     </span>
@@ -488,8 +488,8 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                 <select value={filterType} onChange={e => { setFilterType(e.target.value); setPage(0) }}
                     className="text-xs font-bold px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground">
                     <option value="ALL">All ({mappings.length})</option>
-                    <option value="MAPPED" style={{ color: '#22c55e' }}>✓ Mapped ({mappings.filter(m => !!m.target_account_code).length})</option>
-                    <option value="UNMAPPED" style={{ color: '#ef4444' }}>✗ Unmapped ({mappings.filter(m => !m.target_account_code).length})</option>
+                    <option value="MAPPED" style={{ color: 'var(--app-success)' }}>✓ Mapped ({mappings.filter(m => !!m.target_account_code).length})</option>
+                    <option value="UNMAPPED" style={{ color: 'var(--app-error)' }}>✗ Unmapped ({mappings.filter(m => !m.target_account_code).length})</option>
                     <option disabled>──── Mapping Type ────</option>
                     <option value="ONE_TO_ONE">🔗 1:1 Direct ({stats.oneToOne})</option>
                     <option value="MERGE">⊕ N:1 Merge ({stats.merges})</option>
@@ -515,13 +515,13 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                     <table className="w-full text-xs" style={{ minWidth: '700px' }}>
                         <thead style={{ background: 'var(--app-surface)' }}>
                             <tr className="border-b border-app-border">
-                                <th className="text-left px-3 py-2.5 font-black text-[10px] uppercase tracking-wider text-app-muted-foreground" style={{ width: '5%' }}>Type</th>
-                                <th className="text-left px-3 py-2.5 font-black text-[10px] uppercase tracking-wider text-app-muted-foreground" style={{ width: '25%' }}>Source Account</th>
+                                <th className="text-left px-3 py-2.5 font-bold text-tp-xs uppercase tracking-wider text-app-muted-foreground" style={{ width: '5%' }}>Type</th>
+                                <th className="text-left px-3 py-2.5 font-bold text-tp-xs uppercase tracking-wider text-app-muted-foreground" style={{ width: '25%' }}>Source Account</th>
                                 <th className="text-center px-1 py-2.5" style={{ width: '3%' }}></th>
-                                <th className="text-left px-3 py-2.5 font-black text-[10px] uppercase tracking-wider text-app-muted-foreground" style={{ width: '27%' }}>Target Account</th>
-                                <th className="text-left px-2 py-2.5 font-black text-[10px] uppercase tracking-wider text-app-muted-foreground" style={{ width: '8%' }}>Level</th>
-                                <th className="text-left px-2 py-2.5 font-black text-[10px] uppercase tracking-wider text-app-muted-foreground" style={{ width: '7%' }}>Split %</th>
-                                <th className="text-left px-3 py-2.5 font-black text-[10px] uppercase tracking-wider text-app-muted-foreground" style={{ width: '25%' }}>Notes</th>
+                                <th className="text-left px-3 py-2.5 font-bold text-tp-xs uppercase tracking-wider text-app-muted-foreground" style={{ width: '27%' }}>Target Account</th>
+                                <th className="text-left px-2 py-2.5 font-bold text-tp-xs uppercase tracking-wider text-app-muted-foreground" style={{ width: '8%' }}>Level</th>
+                                <th className="text-left px-2 py-2.5 font-bold text-tp-xs uppercase tracking-wider text-app-muted-foreground" style={{ width: '7%' }}>Split %</th>
+                                <th className="text-left px-3 py-2.5 font-bold text-tp-xs uppercase tracking-wider text-app-muted-foreground" style={{ width: '25%' }}>Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -569,16 +569,16 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                         rows.push(
                                             <tr key={`split-parent-${m.source_account_code}`}
                                                 className="border-b border-app-border/50"
-                                                style={{ borderLeft: '3px solid #8b5cf6', background: 'color-mix(in srgb, #8b5cf6 3%, transparent)' }}>
+                                                style={{ borderLeft: '3px solid var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 3%, transparent)' }}>
                                                 <td className="px-2 py-2.5 text-center">
-                                                    <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
-                                                        style={{ background: 'color-mix(in srgb, #8b5cf6 18%, transparent)', color: '#8b5cf6' }}>
+                                                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-full"
+                                                        style={{ background: 'color-mix(in srgb, var(--app-info) 18%, transparent)', color: 'var(--app-info)' }}>
                                                         ⊗ 1:N
                                                     </span>
                                                 </td>
                                                 <td className="px-3 py-2.5" colSpan={2}>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded"
+                                                        <span className="font-mono font-bold text-tp-sm px-1.5 py-0.5 rounded"
                                                             style={{
                                                                 background: `color-mix(in srgb, ${TYPE_COLORS[srcAcc?.type || ''] || 'var(--app-muted)'} 12%, transparent)`,
                                                                 color: TYPE_COLORS[srcAcc?.type || ''] || 'var(--app-muted-foreground)',
@@ -586,11 +586,11 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                                             {m.source_account_code}
                                                         </span>
                                                         <span className="font-semibold text-app-foreground">{srcAcc?.name || m.source_account_code || 'Unknown'}</span>
-                                                        <span className="text-[9px] text-app-muted-foreground ml-1">→ split into {splitGroup.length} accounts</span>
+                                                        <span className="text-tp-xxs text-app-muted-foreground ml-1">→ split into {splitGroup.length} accounts</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-3 py-2.5">
-                                                    <span className="text-[10px] font-bold" style={{ color: isValid ? 'var(--app-success)' : '#ef4444' }}>
+                                                    <span className="text-tp-xs font-bold" style={{ color: isValid ? 'var(--app-success)' : 'var(--app-error)' }}>
                                                         Total: {splitTotal.toFixed(1)}%
                                                     </span>
                                                 </td>
@@ -606,21 +606,21 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                             rows.push(
                                                 <tr key={`split-child-${s.mapping.source_account_code}-${s.mapping.target_account_code}-${si}`}
                                                     className="border-b border-app-border/30 hover:bg-app-hover/20 transition-colors"
-                                                    style={{ borderLeft: '3px solid #8b5cf6' }}>
+                                                    style={{ borderLeft: '3px solid var(--app-info)' }}>
                                                     <td></td>
                                                     <td className="pl-6 pr-3 py-1.5" colSpan={2}>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-app-muted-foreground font-mono text-[10px] select-none" style={{ color: '#8b5cf6' }}>
+                                                            <span className="text-app-muted-foreground font-mono text-tp-xs select-none" style={{ color: 'var(--app-info)' }}>
                                                                 {isLast ? '└──' : '├──'}
                                                             </span>
-                                                            <span className="font-mono font-bold text-[10px] px-1 py-0.5 rounded"
+                                                            <span className="font-mono font-bold text-tp-xs px-1 py-0.5 rounded"
                                                                 style={{
                                                                     background: `color-mix(in srgb, ${TYPE_COLORS[tgtAcc?.type || ''] || 'var(--app-muted)'} 10%, transparent)`,
                                                                     color: TYPE_COLORS[tgtAcc?.type || ''] || 'var(--app-muted-foreground)',
                                                                 }}>
                                                                 {s.mapping.target_account_code}
                                                             </span>
-                                                            <span className="text-app-foreground text-[11px] truncate">{tgtAcc?.name || s.mapping.target_account_code || 'Unknown'}</span>
+                                                            <span className="text-app-foreground text-tp-sm truncate">{tgtAcc?.name || s.mapping.target_account_code || 'Unknown'}</span>
                                                         </div>
                                                     </td>
                                                     <td className="px-2 py-1.5">
@@ -636,9 +636,9 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                                             placeholder="%"
                                                             className="w-16 text-xs px-1.5 py-1 rounded-md border text-center font-bold"
                                                             style={{
-                                                                borderColor: 'color-mix(in srgb, #8b5cf6 40%, transparent)',
-                                                                background: 'color-mix(in srgb, #8b5cf6 5%, transparent)',
-                                                                color: '#8b5cf6',
+                                                                borderColor: 'color-mix(in srgb, var(--app-info) 40%, transparent)',
+                                                                background: 'color-mix(in srgb, var(--app-info) 5%, transparent)',
+                                                                color: 'var(--app-info)',
                                                             }} />
                                                     </td>
                                                     <td></td>
@@ -654,11 +654,11 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                         rendered.add(i)
                                         const typeColors: Record<string, { bg: string; label: string; icon: string }> = {
                                             'ONE_TO_ONE': { bg: 'var(--app-success)', label: '1:1', icon: '' },
-                                            'MANY_TO_ONE': { bg: '#f59e0b', label: 'N:1', icon: '⊕' },
-                                            'ONE_TO_MANY': { bg: '#8b5cf6', label: '1:N', icon: '⊗' },
+                                            'MANY_TO_ONE': { bg: 'var(--app-warning)', label: 'N:1', icon: '⊕' },
+                                            'ONE_TO_MANY': { bg: 'var(--app-info)', label: '1:N', icon: '⊗' },
                                         }
                                         const tc = typeColors[mType] || typeColors['ONE_TO_ONE']
-                                        const borderColor = mType === 'MANY_TO_ONE' ? '#f59e0b' : mType === 'ONE_TO_MANY' ? '#8b5cf6' : ''
+                                        const borderColor = mType === 'MANY_TO_ONE' ? 'var(--app-warning)' : mType === 'ONE_TO_MANY' ? 'var(--app-info)' : ''
 
                                         rows.push(
                                             <tr key={`row-${m.source_account_code}-${m.target_account_code}-${i}`}
@@ -666,7 +666,7 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                                 style={borderColor ? { borderLeft: `3px solid ${borderColor}` } : undefined}>
                                                 <td className="px-2 py-2 text-center">
                                                     {isMapped && (
-                                                        <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                                                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-full"
                                                             style={{ background: `color-mix(in srgb, ${tc.bg} 18%, transparent)`, color: tc.bg }}>
                                                             {tc.icon}{tc.label}
                                                         </span>
@@ -674,7 +674,7 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                                 </td>
                                                 <td className="px-3 py-2">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded"
+                                                        <span className="font-mono font-bold text-tp-sm px-1.5 py-0.5 rounded"
                                                             style={{
                                                                 background: `color-mix(in srgb, ${TYPE_COLORS[srcAcc?.type || ''] || 'var(--app-muted)'} 12%, transparent)`,
                                                                 color: TYPE_COLORS[srcAcc?.type || ''] || 'var(--app-muted-foreground)',
@@ -699,10 +699,10 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                                 <td className="px-2 py-1.5">
                                                     {(() => {
                                                         const lvl = m.match_level || ''
-                                                        const colors: Record<string, string> = { ROLE: '#22c55e', CODE: '#3b82f6', NAME: '#8b5cf6', TYPE_SUBTYPE: '#f59e0b', MANUAL: '#64748b', UNMAPPED: '#ef4444' }
+                                                        const colors: Record<string, string> = { ROLE: 'var(--app-success)', CODE: 'var(--app-info)', NAME: 'var(--app-info)', TYPE_SUBTYPE: 'var(--app-warning)', MANUAL: 'var(--app-muted-foreground)', UNMAPPED: 'var(--app-error)' }
                                                         const labels: Record<string, string> = { ROLE: 'Role', CODE: 'Code', NAME: 'Name', TYPE_SUBTYPE: 'Type', MANUAL: 'Manual', UNMAPPED: '—' }
                                                         return lvl ? (
-                                                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${colors[lvl] || '#888'} 15%, transparent)`, color: colors[lvl] || '#888' }}>
+                                                            <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${colors[lvl] || '#888'} 15%, transparent)`, color: colors[lvl] || '#888' }}>
                                                                 {labels[lvl] || lvl}
                                                             </span>
                                                         ) : null
@@ -710,7 +710,7 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                                 </td>
                                                 <td className="px-2 py-1.5">
                                                     {mType === 'MANY_TO_ONE' && (
-                                                        <span className="text-[9px] text-app-muted-foreground italic">merge</span>
+                                                        <span className="text-tp-xxs text-app-muted-foreground italic">merge</span>
                                                     )}
                                                 </td>
                                                 <td className="px-3 py-1.5">
@@ -773,7 +773,7 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
             {/* ── Coverage bar ── */}
             {stats.total > 0 && (
                 <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">Coverage</span>
+                    <span className="text-tp-xs font-bold uppercase tracking-wider text-app-muted-foreground">Coverage</span>
                     <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'color-mix(in srgb, var(--app-muted) 20%, transparent)' }}>
                         <div className="h-full rounded-full transition-all duration-500"
                             style={{

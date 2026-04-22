@@ -82,7 +82,7 @@ export default function CategorySidebar({
     };
 
     const countBadge = (count: number) => (
-        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full"
+        <span className="text-tp-xs font-bold px-1.5 py-0.5 rounded-full"
               style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
             {count}
         </span>
@@ -100,7 +100,7 @@ export default function CategorySidebar({
             {/* Header */}
             <div className="px-4 py-3 border-b flex items-center justify-between"
                  style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, var(--app-surface))', borderColor: 'color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
-                <h3 className="text-[12px] font-black flex items-center gap-2" style={{ color: 'var(--app-foreground)' }}>
+                <h3 className="text-tp-md font-bold flex items-center gap-2" style={{ color: 'var(--app-foreground)' }}>
                     <FolderKanban size={15} style={{ color: 'var(--app-primary)' }} />
                     Categories
                 </h3>
@@ -123,7 +123,7 @@ export default function CategorySidebar({
                 <button onClick={() => onSelectCategory('all')}
                         className="w-full px-4 py-2.5 flex items-center justify-between transition-colors border-b text-left"
                         style={activeStyle(selectedCategoryId === 'all' && !selectedUserId)}>
-                    <span className="text-[12px] font-bold" style={{ color: 'var(--app-foreground)' }}>All Tasks</span>
+                    <span className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>All Tasks</span>
                     {countBadge(tasks.length)}
                 </button>
 
@@ -132,7 +132,7 @@ export default function CategorySidebar({
                     <button onClick={() => onSelectCategory(null)}
                             className="w-full px-4 py-2.5 flex items-center justify-between transition-colors border-b text-left"
                             style={activeStyle(selectedCategoryId === null && !selectedUserId)}>
-                        <span className="text-[12px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Uncategorized</span>
+                        <span className="text-tp-md font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Uncategorized</span>
                         {countBadge(getTaskCountForCategory(null))}
                     </button>
                 )}
@@ -164,10 +164,10 @@ export default function CategorySidebar({
                                                       style={{ color: 'var(--app-muted-foreground)', opacity: 0.5 }} />
                                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cat.color || 'var(--app-primary)' }} />
                                         <div className="flex-1 min-w-0">
-                                            <span className="text-[12px] font-bold truncate block" style={{ color: 'var(--app-foreground)' }}>{cat.name}</span>
+                                            <span className="text-tp-md font-bold truncate block" style={{ color: 'var(--app-foreground)' }}>{cat.name}</span>
                                             <div className="flex items-center gap-1 mt-0.5">
                                                 <Crown size={9} className="flex-shrink-0" style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                                <span className="text-[9px] font-bold truncate" style={{ color: catLeader ? 'var(--app-muted-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 60%, transparent)' }}>
+                                                <span className="text-tp-xxs font-bold truncate" style={{ color: catLeader ? 'var(--app-muted-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 60%, transparent)' }}>
                                                     {catLeader ? getUserName(catLeader) : (cat.leader_name || 'No leader')}
                                                 </span>
                                                 <span onClick={e => { e.stopPropagation(); setEditingLeaderCatId(isEditingLeader ? null : cat.id); }}
@@ -193,7 +193,7 @@ export default function CategorySidebar({
                                         value={cat.leader ?? ''}
                                         disabled={isSavingLeader}
                                         onChange={e => saveLeader(cat, e.target.value ? Number(e.target.value) : null)}
-                                        className="flex-1 text-[11px] font-bold px-2 py-1 rounded-lg outline-none"
+                                        className="flex-1 text-tp-sm font-bold px-2 py-1 rounded-lg outline-none"
                                         style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                                         <option value="">— no leader —</option>
                                         {users.map(u => (
@@ -227,11 +227,11 @@ export default function CategorySidebar({
                                                     }}>
                                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                                     <User size={12} className="flex-shrink-0" style={{ color: 'var(--app-muted-foreground)' }} />
-                                                    <span className="text-[11px] font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
+                                                    <span className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
                                                         {getUserName(u)}
                                                     </span>
                                                 </div>
-                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full ml-2"
+                                                <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-full ml-2"
                                                       style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
                                                     {userTaskCount}
                                                 </span>
@@ -250,12 +250,12 @@ export default function CategorySidebar({
                              style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
                             <FolderKanban size={18} style={{ color: 'var(--app-primary)' }} />
                         </div>
-                        <p className="text-[11px] font-bold mb-1" style={{ color: 'var(--app-muted-foreground)' }}>No categories yet</p>
-                        <p className="text-[10px] mb-3" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <p className="text-tp-sm font-bold mb-1" style={{ color: 'var(--app-muted-foreground)' }}>No categories yet</p>
+                        <p className="text-tp-xs mb-3" style={{ color: 'var(--app-muted-foreground)' }}>
                             Create categories to organize your tasks
                         </p>
                         <button onClick={onManageCategories}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold text-white rounded-xl transition-all"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-tp-sm font-bold text-white rounded-xl transition-all"
                                 style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                             <Edit2 size={12} /> Create Categories
                         </button>
@@ -266,7 +266,7 @@ export default function CategorySidebar({
             {/* Persistent footer button */}
             <div className="px-3 py-3 border-t" style={{ borderColor: 'var(--app-border)' }}>
                 <button onClick={onManageCategories}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[11px] font-bold rounded-xl border transition-all hover:brightness-95"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-tp-sm font-bold rounded-xl border transition-all hover:brightness-95"
                         style={{
                             background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
                             borderColor: 'color-mix(in srgb, var(--app-primary) 20%, transparent)',

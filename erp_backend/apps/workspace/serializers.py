@@ -118,6 +118,7 @@ class TaskSerializer(serializers.ModelSerializer):
     subtask_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
     comments = TaskCommentSerializer(many=True, read_only=True)
+    attachments = TaskAttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Task

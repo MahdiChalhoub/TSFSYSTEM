@@ -129,7 +129,7 @@ export function TaskCustomizePanel({
                 <div className="flex items-center justify-between px-4 py-3 border-b border-app-border/50">
                     <div className="flex items-center gap-2">
                         <Settings2 size={16} className="text-app-primary" />
-                        <span className="text-[13px] font-black text-app-foreground">Customize View</span>
+                        <span className="text-tp-lg font-bold text-app-foreground">Customize View</span>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface transition-colors text-app-muted-foreground hover:text-app-foreground">
                         <X size={14} />
@@ -149,7 +149,7 @@ export function TaskCustomizePanel({
                 <div className="px-4 pt-3 pb-1 flex gap-1">
                     {TABS.map(tab => (
                         <button key={tab.key} onClick={() => setCustomizeTab(tab.key)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${customizeTab === tab.key
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-sm font-bold transition-all ${customizeTab === tab.key
                                 ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface'}`}>
                             {tab.icon} {tab.label}
                         </button>
@@ -175,8 +175,8 @@ export function TaskCustomizePanel({
                     {customizeTab === 'other' && (
                         <div className="space-y-6">
                             <div>
-                                <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest block mb-3">Row Actions</span>
-                                <p className="text-[10px] text-app-muted-foreground mb-3">Choose which actions appear directly on each task row. Others go into the overflow menu.</p>
+                                <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide block mb-3">Row Actions</span>
+                                <p className="text-tp-xs text-app-muted-foreground mb-3">Choose which actions appear directly on each task row. Others go into the overflow menu.</p>
                                 <div className="space-y-1">
                                     {[
                                         { label: 'Open source object', role: 'Primary' },
@@ -185,30 +185,30 @@ export function TaskCustomizePanel({
                                         { label: 'Delete', role: 'Dropdown' },
                                     ].map(action => (
                                         <div key={action.label} className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-app-surface/60 transition-all">
-                                            <span className="text-[12px] font-bold text-app-foreground">{action.label}</span>
-                                            <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">{action.role}</span>
+                                            <span className="text-tp-md font-bold text-app-foreground">{action.label}</span>
+                                            <span className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider">{action.role}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
                             <div>
-                                <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest block mb-3">Display</span>
+                                <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide block mb-3">Display</span>
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-app-surface/60 transition-all">
-                                        <span className="text-[12px] font-bold text-app-foreground">Show completed by default</span>
+                                        <span className="text-tp-md font-bold text-app-foreground">Show completed by default</span>
                                         <ToggleSwitch on={false} />
                                     </div>
                                     <div className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-app-surface/60 transition-all">
-                                        <span className="text-[12px] font-bold text-app-foreground">Expand on Click</span>
+                                        <span className="text-tp-md font-bold text-app-foreground">Expand on Click</span>
                                         <ToggleSwitch on={true} />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="rounded-xl border border-dashed border-app-border/60 p-3">
-                                <div className="text-[10px] font-black text-app-primary uppercase tracking-widest mb-1">Local Only</div>
-                                <p className="text-[10px] text-app-muted-foreground leading-relaxed">
+                                <div className="text-tp-xs font-bold text-app-primary uppercase tracking-wide mb-1">Local Only</div>
+                                <p className="text-tp-xs text-app-muted-foreground leading-relaxed">
                                     Profiles and filter visibility are stored in this browser's localStorage. Backend sync lands with the shared profile service.
                                 </p>
                             </div>
@@ -218,7 +218,7 @@ export function TaskCustomizePanel({
 
                 {/* Footer */}
                 <div className="flex-shrink-0 px-4 py-3 border-t border-app-border/50">
-                    <div className="text-[10px] font-bold text-app-muted-foreground text-center">
+                    <div className="text-tp-xs font-bold text-app-muted-foreground text-center">
                         {activeProfile?.name ?? 'Default'} · {Object.values(visibleFilters).filter(Boolean).length} filters
                     </div>
                 </div>
@@ -283,20 +283,20 @@ function TaskProfileManager({
     return (
         <div className="px-4 py-3 border-b border-app-border/50 space-y-2">
             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Profile</span>
-                <span className="text-[9px] font-bold text-app-muted-foreground">{profiles.length}/{MAX_PROFILES}</span>
+                <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">Profile</span>
+                <span className="text-tp-xxs font-bold text-app-muted-foreground">{profiles.length}/{MAX_PROFILES}</span>
             </div>
             {isRenaming ? (
                 <div className="flex gap-1.5">
                     <input type="text" value={renameValue} onChange={e => setRenameValue(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') finishRename(); if (e.key === 'Escape') setIsRenaming(false) }}
-                        autoFocus className="flex-1 text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-app-bg border border-app-primary/50 text-app-foreground outline-none" />
+                        autoFocus className="flex-1 text-tp-md font-bold px-2.5 py-1.5 rounded-lg bg-app-bg border border-app-primary/50 text-app-foreground outline-none" />
                     <button onClick={finishRename} className="p-1.5 rounded-lg bg-app-primary text-white hover:brightness-110 transition-all"><Save size={12} /></button>
                 </div>
             ) : (
                 <div className="flex gap-1.5">
                     <select value={activeProfileId} onChange={e => switchProfile(e.target.value)}
-                        className="flex-1 text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-app-surface border border-app-border text-app-foreground outline-none">
+                        className="flex-1 text-tp-md font-bold px-2.5 py-1.5 rounded-lg bg-app-surface border border-app-border text-app-foreground outline-none">
                         {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                     <button onClick={startRename} className="p-1.5 rounded-lg bg-app-surface border border-app-border hover:border-app-primary/50 text-app-muted-foreground hover:text-app-primary transition-all" title="Rename">
@@ -306,17 +306,17 @@ function TaskProfileManager({
             )}
             <div className="grid grid-cols-3 gap-1.5">
                 <button onClick={createProfile} disabled={profiles.length >= MAX_PROFILES}
-                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-app-primary text-white text-[10px] font-bold hover:brightness-110 transition-all disabled:opacity-40"
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-app-primary text-white text-tp-xs font-bold hover:brightness-110 transition-all disabled:opacity-40"
                     title="New profile">
                     <Plus size={10} /> New
                 </button>
                 <button onClick={duplicateProfile} disabled={profiles.length >= MAX_PROFILES}
-                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-app-surface border border-app-border text-app-foreground text-[10px] font-bold hover:bg-app-surface/70 transition-all disabled:opacity-40"
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-app-surface border border-app-border text-app-foreground text-tp-xs font-bold hover:bg-app-surface/70 transition-all disabled:opacity-40"
                     title="Duplicate current">
                     <Copy size={10} /> Copy
                 </button>
                 <button onClick={deleteProfile} disabled={profiles.length <= 1}
-                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-app-surface border border-app-border text-app-muted-foreground text-[10px] font-bold hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-all disabled:opacity-40"
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-app-surface border border-app-border text-app-muted-foreground text-tp-xs font-bold hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-all disabled:opacity-40"
                     title="Delete profile">
                     <Trash2 size={10} /> Delete
                 </button>

@@ -29,6 +29,7 @@ export interface Task {
     completed_by_name?: string | null;
     completion_note?: string | null;
     require_completion_note?: boolean;
+    attachments?: TaskAttachmentShort[];
     is_recurring?: boolean;
     recurrence_days?: number;
     created_at: string;
@@ -96,6 +97,14 @@ export interface Category {
     color: string;
     leader?: number | null;
     leader_name?: string | null;
+}
+
+export interface TaskAttachmentShort {
+    id: number;
+    filename: string;
+    file: string; // URL path returned by DRF FileField
+    uploaded_by?: number | null;
+    created_at?: string | null;
 }
 
 export interface UserItem {

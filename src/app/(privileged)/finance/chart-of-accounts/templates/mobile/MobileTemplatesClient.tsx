@@ -33,7 +33,7 @@ function resolveIcon(name?: string) {
 
 const ACCENT_MAP: Record<string, string> = {
     IFRS_COA: 'var(--app-info, #3b82f6)',
-    USA_GAAP: '#8b5cf6',
+    USA_GAAP: 'var(--app-info)',
     FRENCH_PCG: 'var(--app-primary)',
     SYSCOHADA_REVISED: 'var(--app-warning, #f59e0b)',
     LEBANESE_PCN: 'var(--app-error, #ef4444)',
@@ -117,7 +117,7 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                 kpis: [
                     { label: 'Templates', value: stats.templates, icon: <Library size={13} />, color: 'var(--app-primary)' },
                     { label: 'Total Accounts', value: stats.totalAccounts, icon: <Hash size={13} />, color: 'var(--app-info, #3b82f6)' },
-                    { label: 'Posting Rules', value: stats.totalRules, icon: <GitMerge size={13} />, color: '#8b5cf6' },
+                    { label: 'Posting Rules', value: stats.totalRules, icon: <GitMerge size={13} />, color: 'var(--app-info)' },
                     { label: 'System', value: stats.system, icon: <CheckCircle2 size={13} />, color: 'var(--app-success, #10b981)' },
                 ],
                 footerLeft: (
@@ -215,18 +215,18 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                                     <Icon size={18} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="font-black text-app-foreground truncate leading-tight"
+                                    <div className="font-bold text-app-foreground truncate leading-tight"
                                         style={{ fontSize: 'var(--tp-xl)' }}>
                                         {tpl.name}
                                     </div>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <MapPin size={10} style={{ color: accent }} />
-                                        <span className="font-black uppercase tracking-widest truncate"
+                                        <span className="font-bold uppercase tracking-wide truncate"
                                             style={{ fontSize: 'var(--tp-xxs)', color: accent }}>
                                             {tpl.region}
                                         </span>
                                         {tpl.is_system && (
-                                            <span className="font-black uppercase tracking-widest rounded-full px-2 py-0.5 ml-1"
+                                            <span className="font-bold uppercase tracking-wide rounded-full px-2 py-0.5 ml-1"
                                                 style={{
                                                     fontSize: 'var(--tp-xxs)',
                                                     background: 'color-mix(in srgb, var(--app-success, #10b981) 14%, transparent)',
@@ -246,7 +246,7 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                                 </p>
                             )}
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className="flex items-center gap-1 font-black tabular-nums rounded-lg px-2 py-1"
+                                <span className="flex items-center gap-1 font-bold tabular-nums rounded-lg px-2 py-1"
                                     style={{
                                         fontSize: 'var(--tp-xs)',
                                         background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)',
@@ -254,11 +254,11 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                                     }}>
                                     <Hash size={10} /> {tpl.account_count} accounts
                                 </span>
-                                <span className="flex items-center gap-1 font-black tabular-nums rounded-lg px-2 py-1"
+                                <span className="flex items-center gap-1 font-bold tabular-nums rounded-lg px-2 py-1"
                                     style={{
                                         fontSize: 'var(--tp-xs)',
-                                        background: 'color-mix(in srgb, #8b5cf6 10%, transparent)',
-                                        color: '#8b5cf6',
+                                        background: 'color-mix(in srgb, var(--app-info) 10%, transparent)',
+                                        color: 'var(--app-info)',
                                     }}>
                                     <GitMerge size={10} /> {tpl.posting_rule_count} rules
                                 </span>
@@ -267,7 +267,7 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                                     tabIndex={0}
                                     onClick={(e) => { e.stopPropagation(); setImportTarget(tpl) }}
                                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); setImportTarget(tpl) } }}
-                                    className="ml-auto flex items-center gap-1 font-black rounded-lg px-3 py-1 active:scale-95 transition-transform cursor-pointer"
+                                    className="ml-auto flex items-center gap-1 font-bold rounded-lg px-3 py-1 active:scale-95 transition-transform cursor-pointer"
                                     style={{
                                         fontSize: 'var(--tp-xs)',
                                         color: '#fff',
@@ -329,7 +329,7 @@ function AccountTreeRow({ node, level, accent, defaultOpen }: {
                     }} />
                 )}
                 {/* Code */}
-                <span className="font-mono font-black tabular-nums flex-shrink-0"
+                <span className="font-mono font-bold tabular-nums flex-shrink-0"
                     style={{
                         fontSize: 'var(--tp-md)',
                         color: accent,
@@ -338,20 +338,20 @@ function AccountTreeRow({ node, level, accent, defaultOpen }: {
                     {node.code}
                 </span>
                 {/* Name */}
-                <span className={`flex-1 truncate ${level === 0 ? 'font-black' : 'font-bold'} text-app-foreground`}
+                <span className={`flex-1 truncate ${level === 0 ? 'font-bold' : 'font-bold'} text-app-foreground`}
                     style={{ fontSize: 'var(--tp-md)' }}>
                     {node.name}
                 </span>
                 {/* Type badge (only root) */}
                 {level === 0 && node.type && (
-                    <span className="font-black uppercase tracking-widest text-app-muted-foreground flex-shrink-0"
+                    <span className="font-bold uppercase tracking-wide text-app-muted-foreground flex-shrink-0"
                         style={{ fontSize: 'var(--tp-xxs)' }}>
                         {node.type}
                     </span>
                 )}
                 {/* Leaf child count hint */}
                 {hasChildren && (
-                    <span className="font-black tabular-nums flex-shrink-0 rounded-full px-1.5 py-0.5"
+                    <span className="font-bold tabular-nums flex-shrink-0 rounded-full px-1.5 py-0.5"
                         style={{
                             fontSize: 'var(--tp-xxs)',
                             background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
@@ -401,11 +401,11 @@ function TemplateDetail({ template, full, onImport, onClose }: any) {
                     <Icon size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
+                    <h3 className="font-bold text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
                         {template.name}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
-                        <span className="font-black uppercase tracking-widest" style={{ fontSize: 'var(--tp-xxs)', color: accent }}>
+                        <span className="font-bold uppercase tracking-wide" style={{ fontSize: 'var(--tp-xxs)', color: accent }}>
                             {template.region}
                         </span>
                         {template.version && (
@@ -441,9 +441,9 @@ function TemplateDetail({ template, full, onImport, onClose }: any) {
                             background: `color-mix(in srgb, ${accent} 6%, var(--app-surface))`,
                             border: `1px solid color-mix(in srgb, ${accent} 20%, transparent)`,
                         }}>
-                        <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                        <div className="font-bold uppercase tracking-wide text-app-muted-foreground"
                             style={{ fontSize: 'var(--tp-xxs)' }}>Accounts</div>
-                        <div className="font-black tabular-nums" style={{ fontSize: 'var(--tp-stat)' }}>
+                        <div className="font-bold tabular-nums" style={{ fontSize: 'var(--tp-stat)' }}>
                             {template.account_count}
                         </div>
                     </div>
@@ -452,9 +452,9 @@ function TemplateDetail({ template, full, onImport, onClose }: any) {
                             background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                         }}>
-                        <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                        <div className="font-bold uppercase tracking-wide text-app-muted-foreground"
                             style={{ fontSize: 'var(--tp-xxs)' }}>Posting Rules</div>
-                        <div className="font-black tabular-nums" style={{ fontSize: 'var(--tp-stat)' }}>
+                        <div className="font-bold tabular-nums" style={{ fontSize: 'var(--tp-stat)' }}>
                             {template.posting_rule_count}
                         </div>
                     </div>
@@ -464,7 +464,7 @@ function TemplateDetail({ template, full, onImport, onClose }: any) {
                 {roots.length > 0 && (
                     <div>
                         <div className="flex items-center justify-between mb-1.5 px-1">
-                            <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                            <div className="font-bold uppercase tracking-wide text-app-muted-foreground"
                                 style={{ fontSize: 'var(--tp-xs)' }}>
                                 Account Structure
                             </div>
@@ -507,7 +507,7 @@ function TemplateDetail({ template, full, onImport, onClose }: any) {
                 </button>
                 <button
                     onClick={onImport}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-black"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-bold"
                     style={{
                         fontSize: 'var(--tp-md)', height: 42,
                         color: '#fff',

@@ -57,7 +57,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
     const tabs = [
         { key: 'overview' as PanelTab, label: 'Overview', icon: <Layers size={13} />, color: 'var(--app-info)' },
         { key: 'products' as PanelTab, label: 'Products', icon: <Package size={13} />, count: productCount, color: 'var(--app-success)' },
-        { key: 'packages' as PanelTab, label: 'Packages', icon: <Box size={13} />, count: packages.length || undefined, color: '#8b5cf6' },
+        { key: 'packages' as PanelTab, label: 'Packages', icon: <Box size={13} />, count: packages.length || undefined, color: 'var(--app-info)' },
         { key: 'calculator' as PanelTab, label: 'Calculator', icon: <Calculator size={13} />, color: 'var(--app-warning)' },
     ]
 
@@ -132,7 +132,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                             {[
                                 { label: 'Derived', value: childCount, icon: <GitBranch size={13} />, color: 'var(--app-info)', tab: null },
                                 { label: 'Products', value: productCount, icon: <Package size={13} />, color: 'var(--app-success)', tab: 'products' as PanelTab },
-                                { label: 'Factor', value: `×${node.conversion_factor || 1}`, icon: <ArrowRightLeft size={13} />, color: '#8b5cf6', tab: null },
+                                { label: 'Factor', value: `×${node.conversion_factor || 1}`, icon: <ArrowRightLeft size={13} />, color: 'var(--app-info)', tab: null },
                                 { label: 'Type', value: node.type || 'Standard', icon: <Ruler size={13} />, color: 'var(--app-warning)', tab: null },
                             ].map(s => (
                                 <button key={s.label} onClick={() => s.tab && setActiveTab(s.tab)}
@@ -166,16 +166,16 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
 
                         {/* Derived units */}
                         {childCount > 0 && (
-                            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, #8b5cf6 20%, transparent)' }}>
-                                <div className="flex items-center justify-between px-4 py-2" style={{ background: 'color-mix(in srgb, #8b5cf6 4%, transparent)', borderBottom: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)' }}>
-                                    <div className="flex items-center gap-2"><GitBranch size={12} style={{ color: '#8b5cf6' }} /><span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: '#8b5cf6' }}>Derived Units</span></div>
-                                    <span className="text-tp-xs font-semibold" style={{ color: '#8b5cf6' }}>{childCount}</span>
+                            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+                                <div className="flex items-center justify-between px-4 py-2" style={{ background: 'color-mix(in srgb, var(--app-info) 4%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-info) 15%, transparent)' }}>
+                                    <div className="flex items-center gap-2"><GitBranch size={12} style={{ color: 'var(--app-info)' }} /><span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-info)' }}>Derived Units</span></div>
+                                    <span className="text-tp-xs font-semibold" style={{ color: 'var(--app-info)' }}>{childCount}</span>
                                 </div>
                                 <div className="divide-y divide-app-border/30">
                                     {children.map((child: any) => (
                                         <div key={child.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-app-surface-hover transition-colors">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-tp-xxs font-bold" style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)', color: '#8b5cf6' }}>
+                                                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-tp-xxs font-bold" style={{ background: 'color-mix(in srgb, var(--app-info) 8%, transparent)', color: 'var(--app-info)' }}>
                                                     {child.short_name?.substring(0, 2) || child.name?.substring(0, 2)}
                                                 </div>
                                                 <div><span className="text-tp-md font-semibold text-app-foreground">{child.name}</span>{child.code && <span className="text-tp-xxs font-mono text-app-muted-foreground ml-1.5">{child.code}</span>}</div>

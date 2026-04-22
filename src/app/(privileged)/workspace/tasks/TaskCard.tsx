@@ -59,17 +59,17 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                      style={{ background: `color-mix(in srgb, ${statusColor} 10%, transparent)`, color: statusColor }}>
                     <StatusIcon size={13} />
                 </div>
-                <span className={`text-[13px] font-bold truncate flex-1 min-w-0 ${isCompleted ? 'line-through' : ''}`}
+                <span className={`text-tp-lg font-bold truncate flex-1 min-w-0 ${isCompleted ? 'line-through' : ''}`}
                       style={{ color: isCompleted ? 'var(--app-muted-foreground)' : 'var(--app-foreground)' }}>
                     {t.title}
                 </span>
                 {t.category_name && (
-                    <span className="hidden md:inline text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                    <span className="hidden md:inline text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                           style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
                         {t.category_name}
                     </span>
                 )}
-                <span className="hidden lg:inline text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                <span className="hidden lg:inline text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                       style={{
                           background: `color-mix(in srgb, ${priorityColor} 10%, transparent)`,
                           color: priorityColor,
@@ -78,13 +78,13 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                     {t.priority?.toLowerCase()}
                 </span>
                 {t.due_date && (
-                    <span className="hidden md:inline text-[10px] font-bold flex-shrink-0"
+                    <span className="hidden md:inline text-tp-xs font-bold flex-shrink-0"
                           style={t.is_overdue ? { color: 'var(--app-error)' } : { color: 'var(--app-muted-foreground)' }}>
                         {formatDueDate(t.due_date)}
                     </span>
                 )}
                 {assignedName && (
-                    <span className="hidden lg:flex items-center gap-0.5 text-[10px] font-bold truncate flex-shrink-0 max-w-[120px]"
+                    <span className="hidden lg:flex items-center gap-0.5 text-tp-xs font-bold truncate flex-shrink-0 max-w-[120px]"
                           style={{ color: 'var(--app-muted-foreground)' }}>
                         <User size={10} /> {assignedName}
                     </span>
@@ -93,7 +93,7 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                     <Link href={sourceLink.href}
                           onClick={e => e.stopPropagation()}
                           title={t.related_object_label ? `${sourceLink.label} — ${t.related_object_label}` : sourceLink.label}
-                          className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all flex-shrink-0"
+                          className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all flex-shrink-0"
                           style={{
                               background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                               color: 'var(--app-primary)',
@@ -135,19 +135,19 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                         <StatusIcon size={13} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h3 className={`text-[13px] font-bold mb-0.5 ${isCompleted ? 'line-through' : ''}`}
+                        <h3 className={`text-tp-lg font-bold mb-0.5 ${isCompleted ? 'line-through' : ''}`}
                             style={{ color: isCompleted ? 'var(--app-muted-foreground)' : 'var(--app-foreground)' }}>
                             {t.title}
                         </h3>
                         {t.description && (
-                            <p className="text-[11px] font-medium line-clamp-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <p className="text-tp-sm font-medium line-clamp-2" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {t.description}
                             </p>
                         )}
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5 ml-3 flex-shrink-0">
-                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                    <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
                           style={{
                               background: `color-mix(in srgb, ${priorityColor} 10%, transparent)`,
                               color: priorityColor,
@@ -155,7 +155,7 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                           }}>
                         {t.priority?.toLowerCase()}
                     </span>
-                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                    <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
                           style={{
                               background: `color-mix(in srgb, ${statusColor} 10%, transparent)`,
                               color: statusColor,
@@ -168,7 +168,7 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
 
             {/* Bottom row: Metadata + Toggle */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-[11px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                <div className="flex items-center gap-3 text-tp-sm font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
                     {t.category_name && (
                         <span className="flex items-center gap-1">
                             <FolderKanban size={10} /> {t.category_name}
@@ -191,7 +191,7 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                         </span>
                     )}
                     {isCompleted && completedByName && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold"
+                        <span className="flex items-center gap-1 text-tp-xs font-bold"
                               style={{ color: 'var(--app-success, #22c55e)' }}
                               title={t.completed_at ? `Resolved ${new Date(t.completed_at).toLocaleString()}` : undefined}>
                             <CheckCheck size={10} /> {completedByName}
@@ -201,18 +201,39 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                         </span>
                     )}
                     {t.require_completion_note && !isCompleted && (
-                        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                        <span className="flex items-center gap-1 text-tp-xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
                               style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)' }}
                               title="You'll be asked to describe your work before marking this done">
                             🔒 Proof required
                         </span>
                     )}
                 </div>
-                {isCompleted && t.completion_note && (
-                    <div className="mt-2 pt-2 flex items-start gap-2 text-[11px] font-medium"
-                         style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)', color: 'var(--app-foreground)' }}>
-                        <CheckCheck size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-success, #22c55e)' }} />
-                        <span className="whitespace-pre-wrap break-words">{t.completion_note}</span>
+                {isCompleted && (t.completion_note || (t.attachments && t.attachments.length > 0)) && (
+                    <div className="mt-2 pt-2 space-y-2"
+                         style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }}>
+                        {t.completion_note && (
+                            <div className="flex items-start gap-2 text-tp-sm font-medium"
+                                 style={{ color: 'var(--app-foreground)' }}>
+                                <CheckCheck size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-success, #22c55e)' }} />
+                                <span className="whitespace-pre-wrap break-words">{t.completion_note}</span>
+                            </div>
+                        )}
+                        {t.attachments && t.attachments.length > 0 && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {t.attachments.map(a => {
+                                    const isImg = /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(a.filename || '')
+                                    return (
+                                        <a key={a.id} href={a.file} target="_blank" rel="noopener noreferrer"
+                                           onClick={e => e.stopPropagation()}
+                                           className="flex items-center gap-1.5 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all hover:brightness-110"
+                                           style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)', border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)' }}>
+                                            <span className="text-xs">{isImg ? '📷' : '📎'}</span>
+                                            <span className="truncate max-w-[140px]">{a.filename}</span>
+                                        </a>
+                                    )
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -221,7 +242,7 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                         <Link href={sourceLink.href}
                               onClick={e => e.stopPropagation()}
                               title={t.related_object_label ? `${sourceLink.label} — ${t.related_object_label}` : sourceLink.label}
-                              className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
+                              className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-lg transition-all"
                               style={{
                                   background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                                   color: 'var(--app-primary)',
@@ -232,7 +253,7 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                         </Link>
                     )}
                     <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                        <span className="text-[10px] font-bold hidden sm:inline"
+                        <span className="text-tp-xs font-bold hidden sm:inline"
                               style={{ color: isCompleted ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
                             {isCompleted ? 'Done' : 'Open'}
                         </span>

@@ -83,7 +83,7 @@ export default function CategoriesDetailPage() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black theme-text">
+            <h1 className="text-3xl md:text-4xl font-bold theme-text">
               {item.name || item.title || `Categories #${item.id}`}
             </h1>
             <p className="theme-text-muted mt-1">

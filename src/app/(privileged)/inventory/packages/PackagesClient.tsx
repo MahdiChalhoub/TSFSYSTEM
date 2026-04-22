@@ -45,6 +45,9 @@ type Template = {
     unit: number
     unit_name?: string
     unit_code?: string
+    parent?: number | null
+    parent_name?: string | null
+    parent_ratio?: number | null
     name: string
     code?: string | null
     ratio: number
@@ -91,27 +94,52 @@ export default function PackagesClient({ initialTemplates, units, categories, br
         return { total: templates.length, defaults, unitsUsed, avgRatio, distinctRatios: ratios.size }
     }, [templates])
 
-    /* ── Tree of Units → Templates ────────────────────────── */
+    /* ── Tree of Units → Packaging CHAIN (pc → pack → box → pallet → TC) ────
+     *  Each unit family groups its templates; within that group we build a
+     *  parent→child tree using UnitPackage.parent. Roots (parent=null) sit
+     *  at the top of the chain for each unit. Orphans (parent set but parent
+     *  deleted) get surfaced at the unit root to avoid hiding them.
+     */
     const tree = useMemo(() => {
         const byUnit: Record<string, any> = {}
         units.forEach((u: any) => {
             byUnit[u.id] = { id: `unit-${u.id}`, _type: 'unit', _unit: u, name: u.name, code: u.code, children: [] }
         })
-        const orphans: any[] = []
+        // Index templates by id for child lookup
+        const tplById = new Map<number, Template>()
+        templates.forEach(t => tplById.set(t.id, t))
+
+        // Build node for each template and link parent→children within the same unit
+        const nodesById: Record<number, any> = {}
         templates.forEach(t => {
-            const node = { id: `tpl-${t.id}`, _type: 'template', _tpl: t, name: t.name, code: t.code }
-            if (byUnit[t.unit]) byUnit[t.unit].children.push(node)
-            else orphans.push(node)
+            nodesById[t.id] = { id: `tpl-${t.id}`, _type: 'template', _tpl: t, name: t.name, code: t.code, children: [] }
         })
+
+        templates.forEach(t => {
+            const node = nodesById[t.id]
+            if (t.parent && nodesById[t.parent] && tplById.get(t.parent)?.unit === t.unit) {
+                nodesById[t.parent].children.push(node)
+            } else if (byUnit[t.unit]) {
+                // No valid parent within this unit → root under the unit
+                byUnit[t.unit].children.push(node)
+            }
+        })
+
+        // Sort: each level by ratio ascending (so the chain reads pc→pack→box)
+        const sortChildren = (n: any) => {
+            n.children.sort((a: any, b: any) => Number(a._tpl?.ratio || 0) - Number(b._tpl?.ratio || 0))
+            n.children.forEach(sortChildren)
+        }
+        Object.values(byUnit).forEach(sortChildren)
+
         const populated = Object.values(byUnit).filter((u: any) => u.children.length > 0)
-        populated.forEach((u: any) => u.children.sort((a: any, b: any) => Number(a._tpl.ratio) - Number(b._tpl.ratio)))
         populated.sort((a: any, b: any) => {
             const aBase = !a._unit?.base_unit
             const bBase = !b._unit?.base_unit
             if (aBase !== bBase) return aBase ? -1 : 1
             return (a.name || '').localeCompare(b.name || '')
         })
-        return [...populated, ...orphans]
+        return populated
     }, [templates, units])
 
     /* ── Handlers ─────────────────────────────────────────── */
@@ -161,7 +189,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                 kpis: [
                     { label: 'Templates', value: stats.total, icon: <Box size={11} />, color: 'var(--app-primary)' },
                     { label: 'Unit Families', value: stats.unitsUsed, icon: <Ruler size={11} />, color: 'var(--app-info, #3b82f6)' },
-                    { label: 'Defaults', value: stats.defaults, icon: <Sparkles size={11} />, color: '#8b5cf6' },
+                    { label: 'Defaults', value: stats.defaults, icon: <Sparkles size={11} />, color: 'var(--app-info)' },
                     { label: 'Distinct Ratios', value: stats.distinctRatios, icon: <ArrowRightLeft size={11} />, color: 'var(--app-warning, #f59e0b)' },
                     { label: 'Avg Ratio', value: `×${stats.avgRatio}`, icon: <TrendingUp size={11} />, color: 'var(--app-muted-foreground)' },
                 ],
@@ -174,7 +202,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                 columnHeaders: [
                     { label: 'Template', width: 'auto' },
                     { label: 'Ratio', width: '60px', color: 'var(--app-info)', hideOnMobile: true },
-                    { label: 'Links', width: '48px', color: '#8b5cf6', hideOnMobile: true },
+                    { label: 'Links', width: '48px', color: 'var(--app-info)', hideOnMobile: true },
                     { label: 'Used By', width: '60px', color: 'var(--app-success)', hideOnMobile: true },
                 ],
                 footerLeft: (
@@ -193,6 +221,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                     <TemplateFormModal
                         tpl={editing}
                         units={units}
+                        allTemplates={templates}
                         onSave={handleSave}
                         onClose={closeForm}
                     />
@@ -280,99 +309,150 @@ function UnitGroup({ node, forceExpanded, selectedId, onOpenTemplate, onEdit, on
     const unit = node._unit
     const kids = node.children
     const isBase = unit && !unit.base_unit
+    const unitType = unit?.type || (unit?.needs_balance ? 'Weight' : isBase ? 'Base' : 'Derived')
 
     return (
         <div>
             <div onClick={() => setOpen(o => !o)}
-                className="group flex items-center gap-2.5 cursor-pointer py-2.5 md:py-3 hover:brightness-105 relative"
+                className="group flex items-center gap-2.5 cursor-pointer py-2.5 md:py-3 hover:bg-app-surface-hover relative transition-colors"
                 style={{
                     paddingLeft: 12, paddingRight: 12,
-                    background: 'linear-gradient(90deg, color-mix(in srgb, var(--app-info) 6%, var(--app-surface)) 0%, var(--app-surface) 100%)',
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
                 }}>
-                <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
-                    style={{ background: 'linear-gradient(180deg, var(--app-info), color-mix(in srgb, var(--app-info) 40%, transparent))' }} />
+                <div className="absolute left-0 top-2 bottom-2 w-[2px] rounded-r-full"
+                    style={{ background: 'var(--app-info)' }} />
                 <button className="w-5 h-5 flex items-center justify-center rounded-md">
-                    <div className={`w-2 h-2 rounded-sm transition-all duration-200 ${open ? 'rotate-45 scale-110' : ''}`}
-                        style={{ background: open ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-muted-foreground) 60%, transparent)' }} />
+                    <ChevronRight size={14}
+                        className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+                        style={{ color: open ? 'var(--app-info)' : 'var(--app-muted-foreground)' }} />
                 </button>
-                <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 text-white"
-                    style={{ background: 'linear-gradient(135deg, var(--app-info), color-mix(in srgb, var(--app-info) 70%, #6366f1))' }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-info) 15%, transparent)', color: 'var(--app-info)' }}>
                     <Ruler size={13} />
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                         <span className="text-tp-lg font-bold text-app-foreground truncate">{unit?.name || node.name}</span>
-                        {isBase && (
-                            <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full"
-                                style={{ background: 'linear-gradient(135deg, var(--app-info), color-mix(in srgb, var(--app-info) 70%, #6366f1))', color: '#fff' }}>BASE</span>
-                        )}
-                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md tabular-nums"
-                            style={{ background: 'color-mix(in srgb, var(--app-foreground) 6%, transparent)' }}>
-                            {kids.length} template{kids.length !== 1 ? 's' : ''}
+                        <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full"
+                            style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>
+                            {unitType}
                         </span>
                     </div>
-                    {unit?.code && <span className="font-mono text-tp-xxs font-bold text-app-muted-foreground">{unit.code}</span>}
+                    <div className="flex items-center gap-2 mt-0.5">
+                        {unit?.code && <span className="font-mono text-tp-xxs font-semibold text-app-muted-foreground">{unit.code}</span>}
+                        <span className="text-tp-xs font-semibold tabular-nums" style={{ color: 'var(--app-primary)' }}>
+                            {kids.length} package{kids.length !== 1 ? 's' : ''}
+                        </span>
+                        {unit?.conversion_factor && unit.conversion_factor !== 1 && (
+                            <span className="text-tp-xs font-semibold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                                ×{unit.conversion_factor}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {open && kids.map((c: any) => (
                 <TemplateRow key={c.id}
                     node={c}
-                    selected={selectedId === c.id}
-                    onOpen={() => onOpenTemplate(c)}
-                    onEdit={() => onEdit(c._tpl)}
-                    onDelete={() => onDelete(c._tpl)}
+                    depth={0}
+                    forceExpanded={forceExpanded}
+                    selectedId={selectedId}
+                    onOpenTemplate={onOpenTemplate}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                 />
             ))}
         </div>
     )
 }
 
-function TemplateRow({ node, selected, onOpen, onEdit, onDelete }: any) {
+function TemplateRow({ node, depth, forceExpanded, selectedId, onOpenTemplate, onEdit, onDelete }: any) {
     const t: Template = node._tpl
     const ratio = Number(t.ratio ?? 1)
+    const parentRatio = t.parent_ratio != null ? Number(t.parent_ratio) : null
+    const hasChildren = node.children?.length > 0
+    const [expanded, setExpanded] = useState(forceExpanded ?? true)
+    useEffect(() => { if (forceExpanded !== undefined) setExpanded(forceExpanded) }, [forceExpanded])
+    const selected = selectedId === node.id
+    const indent = 30 + depth * 24
+
     return (
-        <div onClick={onOpen} onDoubleClick={onOpen}
-            className={`group flex items-center gap-2.5 py-1.5 md:py-2 hover:brightness-105 cursor-pointer transition-all relative ${selected ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03]' : ''}`}
-            style={{
-                paddingLeft: 30, paddingRight: 12,
-                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
-            }}>
-            <div className="absolute top-0 bottom-0" style={{ left: 20, width: '1px', background: 'color-mix(in srgb, var(--app-border) 20%, transparent)' }} />
-            <div className="w-5 h-5 flex items-center justify-center">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-primary) 35%, transparent)' }} />
-            </div>
-            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
-                <Box size={12} />
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                    <span className="text-tp-lg font-semibold text-app-foreground truncate">{t.name}</span>
-                    {t.is_default && (
-                        <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full"
-                            style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: '#fff' }}>Default</span>
-                    )}
+        <div>
+            <div onDoubleClick={() => onOpenTemplate(node)}
+                className={`group flex items-center gap-2.5 py-1.5 md:py-2 hover:bg-app-surface-hover cursor-pointer transition-all relative ${selected ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03]' : ''}`}
+                onClick={() => (hasChildren ? setExpanded(e => !e) : onOpenTemplate(node))}
+                style={{
+                    paddingLeft: indent, paddingRight: 12,
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
+                }}>
+                {/* Indent guide lines */}
+                {Array.from({ length: depth + 1 }).map((_, i) => (
+                    <div key={i} className="absolute top-0 bottom-0"
+                        style={{ left: 20 + i * 24, width: '1px', background: 'color-mix(in srgb, var(--app-border) 20%, transparent)' }} />
+                ))}
+
+                <button onClick={(e) => { e.stopPropagation(); if (hasChildren) setExpanded(x => !x) }}
+                    className="w-5 h-5 flex items-center justify-center rounded-md flex-shrink-0">
+                    {hasChildren ? (
+                        <ChevronRight size={14}
+                            className={`transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
+                            style={{ color: expanded ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
+                    ) : <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-primary) 35%, transparent)' }} />}
+                </button>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                    <Box size={12} />
                 </div>
-                {t.code && <span className="font-mono text-tp-xxs font-bold text-app-muted-foreground">{t.code}</span>}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-tp-lg font-semibold text-app-foreground truncate">{t.name}</span>
+                        {t.is_default && (
+                            <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full"
+                                style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>Default</span>
+                        )}
+                        {/* Chain hint: "×6 pc" (parent step) */}
+                        {parentRatio != null && t.parent_name && (
+                            <span className="text-tp-xxs font-bold flex items-center gap-0.5"
+                                style={{ color: '#8b5cf6' }}
+                                title={`This contains ${parentRatio} × ${t.parent_name}`}>
+                                <ArrowRight size={9} />×{parentRatio} {t.parent_name}
+                            </span>
+                        )}
+                    </div>
+                    {t.code && <span className="font-mono text-tp-xxs font-bold text-app-muted-foreground">{t.code}</span>}
+                </div>
+                <div className="hidden sm:flex w-[60px] flex-shrink-0 justify-center">
+                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
+                        style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 8%, transparent)' }}
+                        title={`Total base units: ${ratio}`}>
+                        <ArrowRightLeft size={9} />×{ratio}
+                    </span>
+                </div>
+                <div className="hidden sm:flex w-[48px] flex-shrink-0 justify-center">
+                    <LinksCountBadge tplId={t.id} />
+                </div>
+                <div className="hidden sm:flex w-[60px] flex-shrink-0 justify-center">
+                    <UsageCountBadge tpl={t} />
+                </div>
+                <div className="w-[68px] flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+                    <button onClick={(e) => { e.stopPropagation(); onEdit(t) }} className="p-1.5 hover:bg-app-border/40 rounded-lg" title="Edit"><Pencil size={11} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); onDelete(t) }} className="p-1.5 hover:bg-app-border/40 rounded-lg" title="Delete"><Trash2 size={11} style={{ color: 'var(--app-error)' }} /></button>
+                </div>
             </div>
-            <div className="hidden sm:flex w-[60px] flex-shrink-0 justify-center">
-                <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
-                    style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 8%, transparent)' }}>
-                    <ArrowRightLeft size={9} />×{ratio}
-                </span>
-            </div>
-            <div className="hidden sm:flex w-[48px] flex-shrink-0 justify-center">
-                <LinksCountBadge tplId={t.id} />
-            </div>
-            <div className="hidden sm:flex w-[60px] flex-shrink-0 justify-center">
-                <UsageCountBadge tpl={t} />
-            </div>
-            <div className="w-[68px] flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
-                <button onClick={(e) => { e.stopPropagation(); onEdit() }} className="p-1.5 hover:bg-app-border/40 rounded-lg" title="Edit"><Pencil size={11} /></button>
-                <button onClick={(e) => { e.stopPropagation(); onDelete() }} className="p-1.5 hover:bg-app-border/40 rounded-lg" title="Delete"><Trash2 size={11} style={{ color: 'var(--app-error)' }} /></button>
-            </div>
+
+            {/* Recursive children — chain continues (pack → box → pallet → TC) */}
+            {expanded && hasChildren && node.children.map((child: any) => (
+                <TemplateRow key={child.id}
+                    node={child}
+                    depth={depth + 1}
+                    forceExpanded={forceExpanded}
+                    selectedId={selectedId}
+                    onOpenTemplate={onOpenTemplate}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                />
+            ))}
         </div>
     )
 }
@@ -390,7 +470,7 @@ function LinksCountBadge({ tplId }: { tplId: number }) {
     if (n === 0) return <span className="text-tp-xxs" style={{ color: 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)' }}>0</span>
     return (
         <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 tabular-nums"
-            style={{ color: '#8b5cf6', background: 'color-mix(in srgb, #8b5cf6 10%, transparent)' }}>
+            style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 10%, transparent)' }}>
             <GitBranch size={9} />{n}
         </span>
     )
@@ -488,7 +568,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, onEdit, onDe
 
     const tabs: { key: DetailTab; label: string; icon: any; count?: number; color: string }[] = [
         { key: 'overview', label: 'Overview', icon: <Layers size={12} />, color: 'var(--app-info)' },
-        { key: 'links', label: 'Links', icon: <GitBranch size={12} />, count: rulesLoaded ? rules.length : undefined, color: '#8b5cf6' },
+        { key: 'links', label: 'Links', icon: <GitBranch size={12} />, count: rulesLoaded ? rules.length : undefined, color: 'var(--app-info)' },
         { key: 'usage', label: 'Usage', icon: <Package size={12} />, count: productsLoaded ? products.length : undefined, color: 'var(--app-success)' },
     ]
 
@@ -498,8 +578,8 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, onEdit, onDe
             <div className="flex-shrink-0 px-4 py-3 flex items-center justify-between"
                 style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
                 <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-white"
-                        style={{ background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))' }}>
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', color: 'var(--app-primary)' }}>
                         <Package size={15} />
                     </div>
                     <div className="min-w-0">
@@ -512,7 +592,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, onEdit, onDe
                             </span>
                             {tpl.is_default && (
                                 <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
-                                    style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: '#fff' }}>Default</span>
+                                    style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>Default</span>
                             )}
                         </div>
                     </div>
@@ -567,7 +647,7 @@ function OverviewTab({ tpl }: any) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
                 <StatTile label="Ratio" value={`×${Number(tpl.ratio).toLocaleString()}`} icon={<ArrowRightLeft size={12} />} color="var(--app-info)" />
                 <StatTile label="Unit" value={tpl.unit_code || tpl.unit_name || '—'} icon={<Ruler size={12} />} color="var(--app-primary)" />
-                <StatTile label="Default" value={tpl.is_default ? 'Yes' : '—'} icon={<Sparkles size={12} />} color={tpl.is_default ? '#8b5cf6' : 'var(--app-muted-foreground)'} />
+                <StatTile label="Default" value={tpl.is_default ? 'Yes' : '—'} icon={<Sparkles size={12} />} color={tpl.is_default ? 'var(--app-info)' : 'var(--app-muted-foreground)'} />
                 <StatTile label="Order" value={tpl.order ?? 0} icon={<TrendingUp size={12} />} color="var(--app-muted-foreground)" />
             </div>
             <div className="rounded-xl px-3 py-2.5 flex items-start gap-2"
@@ -649,7 +729,7 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
                             style={{ background: 'color-mix(in srgb, var(--app-border) 15%, transparent)' }}>
                             <div className="flex-1 min-w-0 flex items-center gap-1 flex-wrap">
                                 {r.category_name && <Chip icon={<FolderTree size={9} />} color="var(--app-success)">{r.category_name}</Chip>}
-                                {r.brand_name && <Chip icon={<Tag size={9} />} color="#8b5cf6">{r.brand_name}</Chip>}
+                                {r.brand_name && <Chip icon={<Tag size={9} />} color="var(--app-info)">{r.brand_name}</Chip>}
                                 {r.attribute_name && <Chip icon={<Layers size={9} />} color="var(--app-warning)">{r.attribute_name}{r.attribute_value ? `=${r.attribute_value}` : ''}</Chip>}
                             </div>
                             <span className="text-tp-xxs font-mono flex items-center gap-0.5" title={`Priority: ${r.effective_priority}`}
@@ -756,9 +836,11 @@ function StatTile({ label, value, icon, color }: any) {
 /* ═══════════════════════════════════════════════════════════
  *  FORM MODAL — shape only (no barcode / price)
  * ═══════════════════════════════════════════════════════════ */
-function TemplateFormModal({ tpl, units, onSave, onClose }: any) {
+function TemplateFormModal({ tpl, units, onSave, onClose, allTemplates }: any) {
     const [form, setForm] = useState<any>({
         unit: tpl?.unit ?? units[0]?.id ?? 0,
+        parent: tpl?.parent ?? null,
+        parent_ratio: tpl?.parent_ratio ?? null,
         name: tpl?.name ?? '',
         code: tpl?.code ?? '',
         ratio: tpl?.ratio ?? 1,
@@ -768,10 +850,40 @@ function TemplateFormModal({ tpl, units, onSave, onClose }: any) {
     })
     const [saving, setSaving] = useState(false)
 
+    // Candidate parents: same-unit templates, excluding self + descendants (no loops)
+    const candidateParents = useMemo(() => {
+        const all: Template[] = allTemplates || []
+        const myId = tpl?.id
+        if (!form.unit) return []
+        const descendants = new Set<number>()
+        if (myId) {
+            const gather = (pid: number) => {
+                all.filter(t => t.parent === pid).forEach(c => { descendants.add(c.id); gather(c.id) })
+            }
+            gather(myId)
+        }
+        return all.filter(t => t.unit === form.unit && t.id !== myId && !descendants.has(t.id))
+            .sort((a, b) => Number(a.ratio) - Number(b.ratio))
+    }, [allTemplates, form.unit, tpl?.id])
+
+    // Auto-compute total ratio from parent chain
+    const parentTpl = candidateParents.find((t: Template) => t.id === form.parent)
+    const computedRatio = parentTpl && form.parent_ratio
+        ? Number(parentTpl.ratio) * Number(form.parent_ratio)
+        : null
+    useEffect(() => {
+        if (computedRatio != null && !isNaN(computedRatio) && computedRatio > 0) {
+            setForm((f: any) => ({ ...f, ratio: computedRatio }))
+        }
+    }, [computedRatio])
+
     const submit = async () => {
         if (!form.name?.trim()) { toast.error('Name required'); return }
         if (!form.unit) { toast.error('Pick a unit'); return }
         if (!form.ratio || form.ratio < 1) { toast.error('Ratio must be ≥ 1'); return }
+        if (form.parent && (!form.parent_ratio || form.parent_ratio < 1)) {
+            toast.error('Parent ratio required when parent is set'); return
+        }
         setSaving(true)
         try { await onSave(form) } finally { setSaving(false) }
     }
@@ -811,14 +923,61 @@ function TemplateFormModal({ tpl, units, onSave, onClose }: any) {
                         <FormField label="Code" value={form.code} onChange={(v: string) => setForm({ ...form, code: v })} placeholder="PK6" mono />
                         <div>
                             <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Unit *</label>
-                            <select value={form.unit} onChange={e => setForm({ ...form, unit: Number(e.target.value) })}
+                            <select value={form.unit}
+                                onChange={e => setForm({ ...form, unit: Number(e.target.value), parent: null, parent_ratio: null })}
                                 className="w-full px-3 py-2 rounded-xl outline-none text-tp-md font-bold"
                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                                 {units.map((u: any) => <option key={u.id} value={u.id}>{u.name}{u.code ? ` (${u.code})` : ''}</option>)}
                             </select>
                         </div>
-                        <FormField label="Ratio (base units) *" value={String(form.ratio)} onChange={(v: string) => setForm({ ...form, ratio: Number(v) || 1 })} mono placeholder="6" />
                         <FormField label="Order" value={String(form.order)} onChange={(v: string) => setForm({ ...form, order: Number(v) || 0 })} mono placeholder="0" />
+                    </div>
+
+                    {/* ── Chain picker: parent + parent_ratio ── */}
+                    <div className="rounded-xl p-3 space-y-2"
+                        style={{ background: 'color-mix(in srgb, #8b5cf6 5%, transparent)', border: '1px solid color-mix(in srgb, #8b5cf6 25%, transparent)' }}>
+                        <div className="flex items-center gap-1.5 text-tp-xxs font-bold uppercase tracking-wide" style={{ color: '#8b5cf6' }}>
+                            <ArrowRight size={11} /> Packaging Chain (pipeline step)
+                        </div>
+                        <p className="text-tp-sm leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
+                            Build a chain: <strong>pc → pack → box → pallet → TC</strong>. Pick the previous step in the chain and how many of it this level contains. Total base units will auto-compute.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-2">
+                            <div>
+                                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Parent step</label>
+                                <select value={form.parent ?? ''}
+                                    onChange={e => setForm({ ...form, parent: e.target.value ? Number(e.target.value) : null })}
+                                    className="w-full px-3 py-2 rounded-xl outline-none text-tp-md font-bold"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                    <option value="">— No parent (base-level / stand-alone) —</option>
+                                    {candidateParents.map((p: Template) => (
+                                        <option key={p.id} value={p.id}>{p.name} (×{Number(p.ratio).toLocaleString()} {p.unit_code || ''})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <FormField
+                                label={`× Parent${parentTpl ? ` (${parentTpl.name})` : ''}`}
+                                value={form.parent_ratio != null ? String(form.parent_ratio) : ''}
+                                onChange={(v: string) => setForm({ ...form, parent_ratio: v ? Number(v) : null })}
+                                mono placeholder="6"
+                            />
+                        </div>
+                        {parentTpl && form.parent_ratio ? (
+                            <div className="text-tp-sm font-mono px-2 py-1.5 rounded-lg tabular-nums"
+                                style={{ background: 'var(--app-background)', color: 'var(--app-foreground)' }}>
+                                <span style={{ color: 'var(--app-muted-foreground)' }}>This level =</span>{' '}
+                                <span style={{ color: '#8b5cf6' }}>{form.parent_ratio}</span> ×{' '}
+                                <span>{parentTpl.name}</span>{' '}
+                                <span style={{ color: 'var(--app-muted-foreground)' }}>×</span>{' '}
+                                <span style={{ color: 'var(--app-info)' }}>{Number(parentTpl.ratio).toLocaleString()}</span>{' '}
+                                <span style={{ color: 'var(--app-muted-foreground)' }}>base/parent =</span>{' '}
+                                <span style={{ color: 'var(--app-warning)', fontWeight: 900 }}>{Number(form.ratio).toLocaleString()}</span> base units
+                            </div>
+                        ) : null}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <FormField label="Total ratio (base units) *" value={String(form.ratio)} onChange={(v: string) => setForm({ ...form, ratio: Number(v) || 1 })} mono placeholder="6" />
                         <label className="flex items-center gap-2 text-tp-sm font-bold cursor-pointer mt-5">
                             <input type="checkbox" checked={form.is_default} onChange={e => setForm({ ...form, is_default: e.target.checked })} />
                             Default for this unit

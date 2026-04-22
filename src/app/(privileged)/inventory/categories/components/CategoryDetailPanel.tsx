@@ -32,7 +32,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
     const tabs: { key: PanelTab; label: string; icon: any; count?: number; color?: string }[] = [
         { key: 'overview', label: 'Overview', icon: <Bookmark size={13} /> },
         { key: 'products', label: 'Products', icon: <Package size={13} />, count: productCount, color: 'var(--app-success)' },
-        { key: 'brands', label: 'Brands', icon: <Paintbrush size={13} />, count: brandCount, color: '#8b5cf6' },
+        { key: 'brands', label: 'Brands', icon: <Paintbrush size={13} />, count: brandCount, color: 'var(--app-info)' },
         { key: 'attributes', label: 'Attributes', icon: <Tag size={13} />, count: attributeCount, color: 'var(--app-warning)' },
     ]
 

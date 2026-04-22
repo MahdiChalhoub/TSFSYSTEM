@@ -39,7 +39,7 @@ interface Props {
 const CATEGORY_CONFIG: Record<string, { label: string; color: string; icon: any; hint: string }> = {
     HAS_BALANCE: { label: 'With balance', color: 'var(--app-warning, #f59e0b)', icon: DollarSign, hint: 'Non-zero balance; mapping preserves it' },
     HAS_TRANSACTIONS: { label: 'With transactions', color: 'var(--app-info, #3b82f6)', icon: FileText, hint: 'Has journal entries; mapping will remap them' },
-    CUSTOM: { label: 'Custom accounts', color: '#8b5cf6', icon: UserPlus, hint: 'Not in target template — you choose where to map' },
+    CUSTOM: { label: 'Custom accounts', color: 'var(--app-info)', icon: UserPlus, hint: 'Not in target template — you choose where to map' },
     CLEAN: { label: 'Clean', color: 'var(--app-success, #10b981)', icon: CheckCircle2, hint: 'No balance, no transactions — safe to replace' },
 }
 
@@ -208,12 +208,12 @@ export function MobileMigrateClient({
                         }}>
                         <div className="flex items-center gap-2 mb-2">
                             <Database size={14} style={{ color: 'var(--app-primary)' }} />
-                            <span className="font-black uppercase tracking-widest text-app-muted-foreground"
+                            <span className="font-bold uppercase tracking-wide text-app-muted-foreground"
                                 style={{ fontSize: 'var(--tp-xxs)' }}>
                                 Current Template
                             </span>
                         </div>
-                        <div className="font-black text-app-foreground" style={{ fontSize: 'var(--tp-2xl)' }}>
+                        <div className="font-bold text-app-foreground" style={{ fontSize: 'var(--tp-2xl)' }}>
                             {currentName}
                         </div>
                         {hasData && (
@@ -254,13 +254,13 @@ export function MobileMigrateClient({
                         }}>
                         <div className="flex items-center gap-2 mb-2">
                             <ArrowRight size={14} style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                            <span className="font-black uppercase tracking-widest text-app-muted-foreground"
+                            <span className="font-bold uppercase tracking-wide text-app-muted-foreground"
                                 style={{ fontSize: 'var(--tp-xxs)' }}>
                                 Target Template
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <div className="font-black text-app-foreground truncate" style={{ fontSize: 'var(--tp-2xl)' }}>
+                            <div className="font-bold text-app-foreground truncate" style={{ fontSize: 'var(--tp-2xl)' }}>
                                 {targetKey ? targetName : 'Tap to pick target'}
                             </div>
                             <ChevronRight size={18} className="text-app-muted-foreground flex-shrink-0" />
@@ -277,7 +277,7 @@ export function MobileMigrateClient({
                     <button
                         onClick={handleAnalyze}
                         disabled={!targetKey || loading}
-                        className="w-full rounded-2xl p-4 flex items-center justify-center gap-2 font-black active:scale-[0.98] transition-transform"
+                        className="w-full rounded-2xl p-4 flex items-center justify-center gap-2 font-bold active:scale-[0.98] transition-transform"
                         style={{
                             fontSize: 'var(--tp-lg)',
                             minHeight: 52,
@@ -309,7 +309,7 @@ export function MobileMigrateClient({
                             }}>
                             <CheckCircle2 size={20} style={{ color: 'var(--app-info, #3b82f6)', flexShrink: 0 }} />
                             <div className="flex-1 min-w-0 text-left">
-                                <div className="font-black text-app-foreground" style={{ fontSize: 'var(--tp-lg)' }}>
+                                <div className="font-bold text-app-foreground" style={{ fontSize: 'var(--tp-lg)' }}>
                                     Preview ready — {preview.summary.total_accounts} accounts
                                 </div>
                                 <div className="text-app-muted-foreground" style={{ fontSize: 'var(--tp-xs)' }}>
@@ -335,7 +335,7 @@ export function MobileMigrateClient({
                                 }}>
                                 <ArrowRightLeft size={24} />
                             </div>
-                            <p className="font-black text-app-foreground mb-1" style={{ fontSize: 'var(--tp-lg)' }}>
+                            <p className="font-bold text-app-foreground mb-1" style={{ fontSize: 'var(--tp-lg)' }}>
                                 Select a target template
                             </p>
                             <p className="text-app-muted-foreground max-w-xs mx-auto"
@@ -386,7 +386,7 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                     <BarChart3 size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
+                    <h3 className="font-bold text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
                         Migration Preview
                     </h3>
                     <div className="font-bold text-app-muted-foreground truncate" style={{ fontSize: 'var(--tp-sm)' }}>
@@ -413,18 +413,18 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                         { key: 'clean_count', label: 'Clean', color: 'var(--app-success, #10b981)' },
                         { key: 'has_balance_count', label: 'With Balance', color: 'var(--app-warning, #f59e0b)' },
                         { key: 'has_transactions_count', label: 'With Transactions', color: 'var(--app-info, #3b82f6)' },
-                        { key: 'custom_count', label: 'Custom', color: '#8b5cf6' },
+                        { key: 'custom_count', label: 'Custom', color: 'var(--app-info)' },
                     ].map(s => (
                         <div key={s.key} className="rounded-2xl px-3 py-3"
                             style={{
                                 background: `color-mix(in srgb, ${s.color} 6%, var(--app-surface))`,
                                 border: `1px solid color-mix(in srgb, ${s.color} 20%, transparent)`,
                             }}>
-                            <div className="font-black uppercase tracking-widest text-app-muted-foreground"
+                            <div className="font-bold uppercase tracking-wide text-app-muted-foreground"
                                 style={{ fontSize: 'var(--tp-xxs)' }}>
                                 {s.label}
                             </div>
-                            <div className="font-black tabular-nums" style={{ fontSize: 'var(--tp-stat)', color: s.color }}>
+                            <div className="font-bold tabular-nums" style={{ fontSize: 'var(--tp-stat)', color: s.color }}>
                                 {summary[s.key] ?? 0}
                             </div>
                         </div>
@@ -450,14 +450,14 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                                 style={{ borderBottom: isOpen && items.length > 0 ? `1px solid color-mix(in srgb, ${cfg.color} 15%, transparent)` : 'none' }}>
                                 <CatIcon size={14} style={{ color: cfg.color, flexShrink: 0 }} />
                                 <div className="flex-1 text-left min-w-0">
-                                    <div className="font-black text-app-foreground truncate" style={{ fontSize: 'var(--tp-md)' }}>
+                                    <div className="font-bold text-app-foreground truncate" style={{ fontSize: 'var(--tp-md)' }}>
                                         {cfg.label}
                                     </div>
                                     <div className="font-medium text-app-muted-foreground truncate" style={{ fontSize: 'var(--tp-xxs)' }}>
                                         {cfg.hint}
                                     </div>
                                 </div>
-                                <span className="font-black tabular-nums rounded-full px-2 py-0.5 flex-shrink-0"
+                                <span className="font-bold tabular-nums rounded-full px-2 py-0.5 flex-shrink-0"
                                     style={{
                                         fontSize: 'var(--tp-xs)',
                                         background: `color-mix(in srgb, ${cfg.color} 14%, transparent)`,
@@ -486,7 +486,7 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                                                 }}>
                                                 {/* Source: code · name */}
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-mono font-black tabular-nums flex-shrink-0"
+                                                    <span className="font-mono font-bold tabular-nums flex-shrink-0"
                                                         style={{ fontSize: 'var(--tp-sm)', color: cfg.color, minWidth: 46 }}>
                                                         {acc.code}
                                                     </span>
@@ -499,7 +499,7 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                                                 {hasTarget && (
                                                     <div className="flex items-center gap-2 mt-1" style={{ paddingLeft: 46 + 8 }}>
                                                         <ArrowRight size={11} style={{ color: 'var(--app-muted-foreground)', flexShrink: 0 }} />
-                                                        <span className="font-mono font-black tabular-nums flex-shrink-0"
+                                                        <span className="font-mono font-bold tabular-nums flex-shrink-0"
                                                             style={{ fontSize: 'var(--tp-xs)', color: 'var(--app-muted-foreground)', minWidth: 42 }}>
                                                             {acc.suggested_target.code}
                                                         </span>
@@ -545,7 +545,7 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                 <button
                     onClick={onApply}
                     disabled={executing}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-black"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl active:scale-[0.98] transition-transform font-bold"
                     style={{
                         fontSize: 'var(--tp-md)', height: 46,
                         color: '#fff',
