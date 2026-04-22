@@ -12,10 +12,9 @@ import { toast } from 'sonner'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
-    getAttributeTree, createAttribute, updateAttribute,
+    createAttribute, updateAttribute,
     deleteAttribute, addAttributeValue,
     linkCategories, linkBrands,
-    getAllCategories, getAllBrands,
 } from '@/app/actions/inventory/attributes'
 import {
     AddGroupForm, AddValueForm, EditModal,
@@ -44,35 +43,32 @@ type AttributeGroup = {
  *  The full nested node is carried through so the row & detail
  *  panel have all the metadata without extra fetches.
  * ═══════════════════════════════════════════════════════════ */
-export function AttributesClient() {
+type Props = {
+    initialTree: AttributeGroup[]
+    initialCategories: any[]
+    initialBrands: any[]
+}
+
+export function AttributesClient({ initialTree, initialCategories, initialBrands }: Props) {
     const router = useRouter()
     const [, startTransition] = useTransition()
-    const [tree, setTree] = useState<AttributeGroup[]>([])
-    const [loading, setLoading] = useState(true)
+    const [tree, setTree] = useState<AttributeGroup[]>(initialTree)
     const [showAddGroup, setShowAddGroup] = useState(false)
     const [addingValueTo, setAddingValueTo] = useState<AttributeGroup | null>(null)
     const [editingItem, setEditingItem] = useState<{ id: number; parentId: number | null } | null>(null)
     const [linkingCategoryFor, setLinkingCategoryFor] = useState<AttributeGroup | null>(null)
     const [linkingBrandFor, setLinkingBrandFor] = useState<AttributeGroup | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string; isRoot: boolean } | null>(null)
-    const [allCategories, setAllCategories] = useState<any[]>([])
-    const [allBrands, setAllBrands] = useState<any[]>([])
+    const [allCategories] = useState<any[]>(initialCategories)
+    const [allBrands] = useState<any[]>(initialBrands)
 
-    const fetchTree = useCallback(async () => {
-        try {
-            const data = await getAttributeTree()
-            setTree(Array.isArray(data) ? data : [])
-        } catch { toast.error('Failed to load attributes') }
-        setLoading(false)
-    }, [])
+    // Re-sync state when the server re-renders with fresh data (router.refresh()).
+    useEffect(() => { setTree(initialTree) }, [initialTree])
 
-    useEffect(() => { fetchTree() }, [fetchTree])
-    useEffect(() => {
-        Promise.all([getAllCategories(), getAllBrands()]).then(([cats, brands]) => {
-            setAllCategories(Array.isArray(cats) ? cats : [])
-            setAllBrands(Array.isArray(brands) ? brands : [])
-        })
-    }, [])
+    const fetchTree = useCallback(() => {
+        // Trigger a server re-render; the SSR fetch above pulls latest data.
+        router.refresh()
+    }, [router])
 
     /* ── Flatten nested tree into items-with-parent so TreeMasterPage's
      * buildTree can rebuild the hierarchy using treeParentKey='parent'.

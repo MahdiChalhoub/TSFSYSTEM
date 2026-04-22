@@ -10,6 +10,7 @@ import {
     Sparkles,
     Award,
     Tags,
+    Globe,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -22,6 +23,7 @@ export const inventoryInProgress: MenuItem = {
         { title: 'Categories', path: '/inventory/categories', icon: FolderTree },
         { title: 'Brands', path: '/inventory/brands', icon: Award },
         { title: 'Attributes', path: '/inventory/attributes', icon: Tags },
+        { title: 'Sourcing Countries', path: '/inventory/countries', icon: Globe },
         { title: 'Units & Packaging', path: '/inventory/units', icon: Warehouse },
         { title: 'Packages', path: '/inventory/packages', icon: Box },
         { title: 'Packaging Rules', path: '/inventory/packaging-suggestions', icon: Sparkles },
@@ -109,7 +111,6 @@ export const inventory: MenuItem = {
                 { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
                 { title: 'Category Rules', path: '/inventory/category-rules' },
                 { title: 'Packaging', path: '/inventory/packaging' },
-                { title: 'Countries', path: '/inventory/countries' },
                 { title: 'Fresh Produce', path: '/inventory/fresh' },
                 { title: 'Fresh Profiles', path: '/inventory/fresh-profiles' },
             ],

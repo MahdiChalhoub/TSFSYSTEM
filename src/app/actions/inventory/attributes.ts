@@ -20,10 +20,10 @@ const BASE = 'inventory/product-attributes'
 export async function getAttributeTree() {
     try {
         const res = await erpFetch(`${BASE}/tree/`)
-        console.log('[getAttributeTree]',
-            Array.isArray(res) ? `array len=${res.length}` : typeof res,
-            res && typeof res === 'object' && !Array.isArray(res) ? `keys=${Object.keys(res).slice(0, 6).join(',')}` : '')
-        return res
+        // Some endpoints are paginated; unwrap `results` when present.
+        if (Array.isArray(res)) return res
+        if (res && typeof res === 'object' && Array.isArray((res as any).results)) return (res as any).results
+        return []
     } catch (e) {
         console.error('Failed to fetch attribute tree', e)
         return []
@@ -260,7 +260,7 @@ export async function linkBrands(attributeId: number, brandIds: number[]) {
  */
 export async function getAllCategories() {
     try {
-        const data = await erpFetch('inventory/categories/')
+        const data = await erpFetch('categories/')
         return Array.isArray(data) ? data : data?.results || []
     } catch (e) {
         console.error('Failed to fetch categories', e)
@@ -273,7 +273,7 @@ export async function getAllCategories() {
  */
 export async function getAllBrands() {
     try {
-        const data = await erpFetch('inventory/brands/?page_size=9999')
+        const data = await erpFetch('brands/?page_size=9999')
         return Array.isArray(data) ? data : data?.results || []
     } catch (e) {
         console.error('Failed to fetch brands', e)

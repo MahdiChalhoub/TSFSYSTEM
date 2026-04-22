@@ -1,611 +1,995 @@
+// @ts-nocheck
 'use client'
 
-/**
- * SOURCING COUNTRIES — V5 Premium Redesign
- * ==========================================
- * Same V4 data model (server-enriched). Full Tailwind + theme-variable UI.
- */
-
-import { useState, useMemo, useTransition, useCallback, useEffect } from 'react'
+import { useState, useMemo, useTransition, useEffect } from 'react'
 import {
-    Globe, Search, Plus, X, Check, Trash2,
-    Package, ChevronRight, Tag, MapPin, TrendingUp,
-    Star, Boxes, BarChart3, Loader2
+    Globe, Plus, Trash2, X, MapPin, Bookmark, Check, Pencil,
+    Coins, Layers, Power, Search, Tag, Package, Boxes, ChevronRight,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     disableSourcingCountry,
     bulkEnableSourcingCountries,
 } from '@/app/actions/reference'
-import { getCountryProducts } from '@/app/actions/inventory/countries'
-import { useRouter } from 'next/navigation'
+import { erpFetch } from '@/lib/erp-api'
 
-/* ─── TYPES ── */
-interface InventoryCountry {
-    id: number; name: string; iso2: string; iso3?: string;
-    region?: string; phone_code?: string; currency_code?: string;
-    flag: string; productCount: number; brandCount: number; isDefault: boolean;
+/* ─── Region colour palette (from the original sourcing design) ─── */
+const REGION_CSS_VAR: Record<string, string> = {
+    Africa: '--app-warning',
+    Americas: '--app-success',
+    Asia: '--app-error',
+    Europe: '--app-primary',
+    Oceania: '--app-info',
 }
-interface RefCountry {
-    id: number; iso2: string; iso3?: string; name: string;
-    phone_code?: string; region?: string; subregion?: string;
-    default_currency?: number; default_currency_code?: string;
+const regionVar = (r?: string | null) => REGION_CSS_VAR[r || ''] || '--app-muted-foreground'
+const regionColor = (r?: string | null) => `var(${regionVar(r)})`
+
+/* ─── Parfum dot colours (from the original) ─── */
+const PARFUM_COLORS: Record<string, string> = {
+    Rose: '#ff6b9d', Citron: '#fbbf24', Menthe: '#10b981',
+    Lavande: '#a78bfa', Original: '#3b82f6', Jasmin: '#f97316',
+    Vanille: '#fde047', Ocean: '#06b6d4',
 }
-interface DrillProduct {
-    id: number; name: string; sku?: string; brand?: string; category?: string;
+const parfumColor = (name?: string) => (name && PARFUM_COLORS[name]) || '#6b7280'
+
+type Product = {
+    id: number; name: string; sku: string
+    brand?: number | null; brand_name?: string
+    parfum?: number | null; parfum_name?: string
+    size?: number | null; size_unit?: string | null
+}
+type ProductVariant = {
+    parfum_name: string; size_label: string
+    size_value: number | null; count: number; products: Product[]
+}
+type BrandGroup = {
+    brand_id: number | null; brand_name: string
+    total_products: number; variants: ProductVariant[]
 }
 
-/* ─── HELPERS ── */
-function FlagImg({ iso2, size = 28 }: { iso2: string; size?: number }) {
-    if (!iso2) return <span style={{ fontSize: size * 0.8 }}>🏳️</span>
-    const code = iso2.toLowerCase()
+type RefCountry = {
+    id: number; iso2: string; iso3?: string; name: string
+    region?: string | null; subregion?: string | null
+    default_currency?: number | null
+    default_currency_code?: string | null
+}
+type SourcingCountry = {
+    id: number
+    country: number
+    country_iso2: string; country_iso3?: string
+    country_name: string
+    country_region?: string | null
+    default_currency_code?: string | null
+    is_enabled: boolean
+    notes?: string
+    display_order?: number
+}
+
+type Props = {
+    initialSourcing: SourcingCountry[]
+    initialRefCountries: RefCountry[]
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  CountriesClient — tenant-curated sourcing countries.
+ *  Tree: Region → Country. Adding pulls from the global
+ *  reference list (RefCountry); removing only detaches from
+ *  this tenant's sourcing list.
+ * ═══════════════════════════════════════════════════════════ */
+export function CountriesClient({ initialSourcing, initialRefCountries }: Props) {
+    const router = useRouter()
+    const [, startTransition] = useTransition()
+    const [pickerOpen, setPickerOpen] = useState(false)
+    const [deleteTarget, setDeleteTarget] = useState<SourcingCountry | null>(null)
+    const [editingNotes, setEditingNotes] = useState<SourcingCountry | null>(null)
+
+    const sourcing = initialSourcing
+    const refCountries = initialRefCountries
+    const enabledCountryIds = useMemo(
+        () => new Set(sourcing.map(s => s.country)),
+        [sourcing]
+    )
+
+    /* ── Build flat [regionRoot, ...countries] list so TreeMasterPage's
+     * buildTree turns regions into collapsible parents. ── */
+    const data = useMemo(() => {
+        const rows: any[] = []
+        const seenRegions = new Set<string>()
+        for (const sc of sourcing) {
+            const region = sc.country_region || 'Unassigned'
+            if (!seenRegions.has(region)) {
+                seenRegions.add(region)
+                rows.push({
+                    id: `region:${region}`, parent: null, _type: 'region',
+                    name: region, country_region: region,
+                })
+            }
+        }
+        for (const sc of sourcing) {
+            rows.push({
+                ...sc,
+                id: `sc:${sc.id}`, _pk: sc.id,
+                parent: `region:${sc.country_region || 'Unassigned'}`,
+                _type: 'country',
+                name: sc.country_name,
+            })
+        }
+        return rows
+    }, [sourcing])
+
+    /* ── Handlers ─────────────────────────────────────────── */
+    const handleAdd = async (countryIds: number[]) => {
+        if (countryIds.length === 0) { setPickerOpen(false); return }
+        const res = await bulkEnableSourcingCountries(countryIds)
+        if (res?.success) {
+            toast.success(`${countryIds.length} countr${countryIds.length === 1 ? 'y' : 'ies'} added`)
+            setPickerOpen(false)
+            router.refresh()
+        } else {
+            toast.error(res?.error || 'Failed to enable sourcing countries')
+        }
+    }
+
+    const handleRemove = () => {
+        const t = deleteTarget
+        if (!t) return
+        setDeleteTarget(null)
+        startTransition(async () => {
+            const res = await disableSourcingCountry(t.id)
+            if (res?.success) { toast.success(`"${t.country_name}" removed from sourcing`); router.refresh() }
+            else { toast.error(res?.error || 'Failed to remove') }
+        })
+    }
+
+    const handleToggleEnabled = async (sc: SourcingCountry) => {
+        try {
+            await erpFetch(`reference/sourcing-countries/${sc.id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_enabled: !sc.is_enabled }),
+            })
+            toast.success(!sc.is_enabled ? 'Enabled' : 'Paused')
+            router.refresh()
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to toggle')
+        }
+    }
+
+    const handleSaveNotes = async (sc: SourcingCountry, notes: string) => {
+        try {
+            await erpFetch(`reference/sourcing-countries/${sc.id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes }),
+            })
+            toast.success('Notes saved')
+            setEditingNotes(null)
+            router.refresh()
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to save notes')
+        }
+    }
+
     return (
-        <img src={`https://flagcdn.com/w80/${code}.png`}
-            srcSet={`https://flagcdn.com/w160/${code}.png 2x`}
-            alt={iso2} width={size} height={Math.round(size * 0.75)}
-            className="rounded object-cover shadow-sm"
-            style={{ border: '1px solid rgba(0,0,0,0.08)' }}
-            loading="lazy" />
+        <TreeMasterPage
+            config={{
+                title: 'Sourcing Countries',
+                subtitle: (_, all) => {
+                    const countries = all.filter((n: any) => n._type === 'country').length
+                    const regions = all.filter((n: any) => n._type === 'region').length
+                    return `${countries} active · ${regions} region${regions !== 1 ? 's' : ''}`
+                },
+                icon: <Globe size={20} />,
+                iconColor: 'var(--app-primary)',
+                searchPlaceholder: 'Search country or ISO code… (Ctrl+K)',
+                primaryAction: { label: 'Add Sourcing', icon: <Plus size={14} />, onClick: () => setPickerOpen(true) },
+                columnHeaders: [
+                    { label: 'Country', width: 'auto' },
+                    { label: 'ISO', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
+                    { label: 'Currency', width: '72px', color: 'var(--app-warning)', hideOnMobile: true },
+                    { label: 'Status', width: '64px', color: 'var(--app-success)', hideOnMobile: true },
+                ],
+
+                // ── Template-owned filtering ──
+                data,
+                searchFields: ['name', 'country_name', 'country_iso2', 'country_iso3', 'country_region'],
+                treeParentKey: 'parent',
+                kpiPredicates: {
+                    regions: (n) => n._type === 'region',
+                    countries: (n) => n._type === 'country',
+                    active: (n) => n._type === 'country' && n.is_enabled,
+                    paused: (n) => n._type === 'country' && !n.is_enabled,
+                    withNotes: (n) => n._type === 'country' && !!n.notes,
+                },
+
+                kpis: [
+                    {
+                        label: 'Total', icon: <Layers size={11} />, color: 'var(--app-primary)',
+                        filterKey: 'all', hint: 'Show everything (clear filters)',
+                        value: (_, all) => all.filter((n: any) => n._type === 'country').length,
+                    },
+                    {
+                        label: 'Regions', icon: <MapPin size={11} />, color: 'var(--app-info)',
+                        filterKey: 'regions', hint: 'Show only region groupings',
+                        value: (_, all) => all.filter((n: any) => n._type === 'region').length,
+                    },
+                    {
+                        label: 'Active', icon: <Power size={11} />, color: 'var(--app-success)',
+                        filterKey: 'active', hint: 'Currently enabled for sourcing',
+                        value: (filtered) => filtered.filter((n: any) => n._type === 'country' && n.is_enabled).length,
+                    },
+                    {
+                        label: 'Paused', icon: <X size={11} />, color: 'var(--app-warning)',
+                        filterKey: 'paused', hint: 'Disabled without removing',
+                        value: (filtered) => filtered.filter((n: any) => n._type === 'country' && !n.is_enabled).length,
+                    },
+                    {
+                        label: 'With Notes', icon: <Pencil size={11} />, color: 'var(--app-muted-foreground)',
+                        filterKey: 'withNotes', hint: 'Countries with sourcing notes',
+                        value: (filtered) => filtered.filter((n: any) => n._type === 'country' && n.notes).length,
+                    },
+                ],
+
+                emptyState: {
+                    icon: <Globe size={36} />,
+                    title: (hasSearch) => hasSearch ? 'No matching countries' : 'No sourcing countries yet',
+                    subtitle: (hasSearch) => hasSearch
+                        ? 'Try a different search or clear filters.'
+                        : 'Pick the countries you source products from. You can enable any country from the global list.',
+                    actionLabel: 'Add Sourcing Countries',
+                },
+                footerLeft: (filtered, all) => {
+                    const countries = all.filter((n: any) => n._type === 'country').length
+                    const active = all.filter((n: any) => n._type === 'country' && n.is_enabled).length
+                    return (
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <span>{countries} sourcing countries</span>
+                            <span style={{ color: 'var(--app-border)' }}>·</span>
+                            <span>{active} active</span>
+                            {filtered.length < all.length && (
+                                <>
+                                    <span style={{ color: 'var(--app-border)' }}>·</span>
+                                    <span style={{ color: 'var(--app-info)' }}>{filtered.length} showing</span>
+                                </>
+                            )}
+                        </div>
+                    )
+                },
+            }}
+            modals={
+                <>
+                    {pickerOpen && (
+                        <SourcingPicker
+                            allCountries={refCountries}
+                            enabledIds={enabledCountryIds}
+                            onClose={() => setPickerOpen(false)}
+                            onSubmit={handleAdd}
+                        />
+                    )}
+                    {editingNotes && (
+                        <NotesModal
+                            country={editingNotes}
+                            onCancel={() => setEditingNotes(null)}
+                            onSave={(n: string) => handleSaveNotes(editingNotes, n)}
+                        />
+                    )}
+                    <ConfirmDialog
+                        open={deleteTarget !== null}
+                        onOpenChange={(o) => { if (!o) setDeleteTarget(null) }}
+                        onConfirm={handleRemove}
+                        title={`Remove "${deleteTarget?.country_name}"?`}
+                        description="This country will no longer be available as a product-origin option. Existing products that already reference it are not affected."
+                        confirmText="Remove"
+                        variant="danger"
+                    />
+                </>
+            }
+            detailPanel={(node, { onClose, onPin }) => (
+                <CountryDetailPanel
+                    node={node}
+                    onToggleEnabled={handleToggleEnabled}
+                    onEditNotes={(sc: SourcingCountry) => setEditingNotes(sc)}
+                    onRemove={(sc: SourcingCountry) => setDeleteTarget(sc)}
+                    onClose={onClose}
+                    onPin={onPin ? () => onPin(node) : undefined}
+                />
+            )}
+        >
+            {({ tree, expandKey, expandAll, searchQuery, isSelected, openNode }) => (
+                tree.map((node: any) => (
+                    <div key={`${node.id}-${expandKey}`}
+                        className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
+                        <CountryRow
+                            node={node}
+                            level={0}
+                            forceExpanded={expandAll}
+                            searchQuery={searchQuery}
+                            onSelect={(n: any) => openNode(n, 'overview')}
+                            onToggleEnabled={handleToggleEnabled}
+                            onEditNotes={(sc: SourcingCountry) => setEditingNotes(sc)}
+                            onRemove={(sc: SourcingCountry) => setDeleteTarget(sc)}
+                        />
+                    </div>
+                ))
+            )}
+        </TreeMasterPage>
     )
 }
 
-const REGION_COLORS: Record<string, string> = {
-    'Africa': 'var(--app-warning)', 'Americas': 'var(--app-success)',
-    'Asia': 'var(--app-error)', 'Europe': 'var(--app-primary)', 'Oceania': 'var(--app-info)',
-}
-function rc(r?: string) { return REGION_COLORS[r || ''] || 'var(--app-muted-foreground)' }
+/* ═══════════════════════════════════════════════════════════
+ *  ROW — region group or country leaf
+ * ═══════════════════════════════════════════════════════════ */
+function CountryRow({
+    node, level, forceExpanded, searchQuery,
+    onSelect, onToggleEnabled, onEditNotes, onRemove,
+}: any) {
+    const isRegion = node._type === 'region'
+    const [isOpen, setIsOpen] = useState(forceExpanded ?? true)
 
-const HIDDEN_ISO2 = new Set(['IL'])
-
-/* ═══════════════════════════════════════════════════════════════════
- *  MAIN
- * ═══════════════════════════════════════════════════════════════════ */
-export default function CountriesClient({
-    inventoryCountries: initial,
-    allRefCountries,
-}: {
-    inventoryCountries: InventoryCountry[]
-    allRefCountries: RefCountry[]
-}) {
-    const router = useRouter()
-    const [countries, setCountries] = useState(initial)
-    const [search, setSearch] = useState('')
-    const [regionFilter, setRegionFilter] = useState<string | null>(null)
-    const [expandedId, setExpandedId] = useState<number | null>(null)
-    const [showPicker, setShowPicker] = useState(false)
-    const [isPending, startTransition] = useTransition()
-
-    const sourcedIds = useMemo(() => new Set(countries.map(c => c.id)), [countries])
-    const totalProducts = useMemo(() => countries.reduce((s, c) => s + c.productCount, 0), [countries])
-    const totalBrands = useMemo(() => countries.reduce((s, c) => s + c.brandCount, 0), [countries])
-    const topRegion = useMemo(() => {
-        const m = new Map<string, number>()
-        countries.forEach(c => m.set(c.region || 'Other', (m.get(c.region || 'Other') || 0) + c.productCount))
-        let top = '—'; let max = 0
-        m.forEach((v, k) => { if (v > max) { max = v; top = k } })
-        return top
-    }, [countries])
-
-    const regions = useMemo(() => {
-        const set = new Set<string>()
-        countries.forEach(c => { if (c.region) set.add(c.region) })
-        return Array.from(set).sort()
-    }, [countries])
-
-    const filtered = useMemo(() => {
-        let list = countries
-        if (search) {
-            const q = search.toLowerCase()
-            list = list.filter(c => c.name.toLowerCase().includes(q) || c.iso2.toLowerCase().includes(q) || (c.region || '').toLowerCase().includes(q))
-        }
-        if (regionFilter) list = list.filter(c => c.region === regionFilter)
-        return list
-    }, [countries, search, regionFilter])
-
-    const byRegion = useMemo(() => {
-        const map: Record<string, InventoryCountry[]> = {}
-        for (const c of filtered) {
-            const r = c.region || 'Other'
-            if (!map[r]) map[r] = []
-            map[r].push(c)
-        }
-        return Object.entries(map)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([r, cs]) => [r, cs.sort((a, b) => b.productCount - a.productCount)] as [string, InventoryCountry[]])
-    }, [filtered])
-
-    const handleRemove = useCallback((c: InventoryCountry) => {
-        startTransition(async () => {
-            const res = await disableSourcingCountry(c.id)
-            if (res.success) { setCountries(prev => prev.filter(x => x.id !== c.id)); setExpandedId(null); toast.success(`${c.name} removed`); router.refresh() }
-            else toast.error(res.error || 'Failed to remove')
-        })
-    }, [router])
-
-    const handleAdded = useCallback(() => { router.refresh(); window.location.reload() }, [router])
-
-    return (
-        <div className="space-y-5">
-            {/* ═══ HEADER ═══ */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-                        style={{ background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 60%, black))', boxShadow: '0 8px 24px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                        <Globe size={26} className="text-white" />
+    if (isRegion) {
+        const count = node.children?.length || 0
+        return (
+            <div>
+                <div
+                    className="group flex items-center gap-2 py-2 hover:bg-app-surface-hover cursor-pointer relative"
+                    onClick={() => setIsOpen(o => !o)}
+                    style={{
+                        paddingLeft: 12, paddingRight: 12,
+                        borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
+                    }}>
+                    <div className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full"
+                        style={{ background: 'var(--app-primary)' }} />
+                    <button className="w-5 h-5 flex items-center justify-center rounded-md flex-shrink-0">
+                        <svg width="10" height="10" viewBox="0 0 10 10" style={{
+                            transition: 'transform 200ms', transform: isOpen ? 'rotate(90deg)' : 'none',
+                            color: isOpen ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                        }}>
+                            <path d="M3 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                        </svg>
+                    </button>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', color: 'var(--app-primary)' }}>
+                        <MapPin size={13} />
                     </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Inventory</p>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground italic">
-                            Sourcing <span style={{ color: 'var(--app-primary)' }}>Countries</span>
-                        </h1>
-                        <p className="text-xs font-bold text-app-muted-foreground mt-0.5">
-                            {countries.length} {countries.length === 1 ? 'country' : 'countries'} · {totalProducts} products · {totalBrands} brands
-                        </p>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-tp-lg font-bold text-app-foreground truncate">{node.name}</span>
+                            <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full"
+                                style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                Region
+                            </span>
+                        </div>
+                    </div>
+                    <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
+                        <span className="text-tp-xs font-semibold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                            {count}
+                        </span>
                     </div>
                 </div>
-                <button onClick={() => setShowPicker(true)}
-                    className="flex items-center gap-2 text-[12px] font-black text-white px-5 py-2.5 rounded-xl transition-all hover:brightness-110"
-                    style={{ background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 60%, black))', boxShadow: '0 4px 16px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                    <Plus size={16} strokeWidth={2.5} /> Add Countries
-                </button>
-            </div>
-
-            {/* ═══ STATS RIBBON ═══ */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                {[
-                    { icon: Globe, label: 'Countries', value: countries.length, color: 'var(--app-primary)' },
-                    { icon: Package, label: 'Products', value: totalProducts, color: 'var(--app-success)' },
-                    { icon: Tag, label: 'Brands', value: totalBrands, color: 'var(--app-info)' },
-                    { icon: MapPin, label: 'Regions', value: regions.length, color: 'var(--app-warning)' },
-                    { icon: BarChart3, label: 'Top Region', value: topRegion, color: 'var(--app-error)', small: true },
-                    { icon: Star, label: 'Default', value: countries.find(c => c.isDefault)?.iso2 || '—', color: 'var(--app-primary)', small: true },
-                ].map(s => (
-                    <div key={s.label} className="relative overflow-hidden rounded-2xl border p-3.5"
-                        style={{ background: 'var(--app-surface)', borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                                style={{ background: `color-mix(in srgb, ${s.color} 12%, transparent)` }}>
-                                <s.icon size={16} style={{ color: s.color }} />
-                            </div>
-                            <div>
-                                <p className="text-[8px] font-black uppercase tracking-widest text-app-muted-foreground">{s.label}</p>
-                                <p className="font-black tabular-nums mt-0.5" style={{ fontSize: s.small ? 13 : 18, color: s.color, letterSpacing: '-0.02em' }}>{s.value}</p>
-                            </div>
-                        </div>
-                        <div className="absolute -top-4 -right-4 w-14 h-14 rounded-full opacity-[0.06]" style={{ background: s.color }} />
-                    </div>
+                {isOpen && node.children?.map((c: any) => (
+                    <CountryRow
+                        key={c.id} node={c} level={level + 1}
+                        forceExpanded={forceExpanded} searchQuery={searchQuery}
+                        onSelect={onSelect}
+                        onToggleEnabled={onToggleEnabled}
+                        onEditNotes={onEditNotes}
+                        onRemove={onRemove}
+                    />
                 ))}
             </div>
+        )
+    }
 
-            {/* ═══ SEARCH + REGION FILTER ═══ */}
-            <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--app-surface)', borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 border-b"
-                    style={{ borderColor: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                    {/* Search */}
-                    <div className="relative flex-1 min-w-[200px]">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                        <input type="text" placeholder="Search countries…" value={search} onChange={e => setSearch(e.target.value)}
-                            className="w-full text-[12px] font-medium pl-9 pr-8 py-2.5 rounded-xl border outline-none transition-all"
-                            style={{ background: 'var(--app-background)', borderColor: 'var(--app-border)', color: 'var(--app-foreground)' }} />
-                        {search && (
-                            <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-foreground">
-                                <X size={12} />
-                            </button>
-                        )}
-                    </div>
-                    {/* Region pills */}
-                    {regions.length > 1 && (
-                        <div className="flex gap-1.5 flex-wrap">
-                            <RegionPill label="All" active={!regionFilter} onClick={() => setRegionFilter(null)} color="var(--app-primary)" />
-                            {regions.map(r => (
-                                <RegionPill key={r} label={r} active={regionFilter === r}
-                                    onClick={() => setRegionFilter(regionFilter === r ? null : r)} color={rc(r)} />
-                            ))}
-                        </div>
-                    )}
-                </div>
+    // Country leaf
+    const sc: SourcingCountry = node
+    const color = regionColor(sc.country_region)
+    return (
+        <div
+            className="group flex items-center gap-2 py-2 hover:bg-app-surface-hover cursor-pointer relative"
+            onClick={() => onSelect(sc)}
+            onDoubleClick={() => onSelect(sc)}
+            style={{
+                paddingLeft: `${12 + level * 20}px`, paddingRight: 12,
+                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
+                opacity: sc.is_enabled ? 1 : 0.6,
+            }}>
+            <div className="w-5 flex-shrink-0" />
 
-                {/* ═══ TABLE ═══ */}
-                <div className="p-3">
-                    {filtered.length === 0 ? (
-                        <div className="text-center py-16">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl border-2 border-dashed flex items-center justify-center"
-                                style={{ borderColor: 'var(--app-border)' }}>
-                                <Globe size={28} className="text-app-muted-foreground opacity-30" />
-                            </div>
-                            <p className="text-sm font-bold text-app-foreground">{search || regionFilter ? 'No matching countries' : 'No sourcing countries yet'}</p>
-                            <p className="text-[11px] text-app-muted-foreground mt-1">{search || regionFilter ? 'Try a different search or filter' : 'Click "Add Countries" to get started'}</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-5">
-                            {byRegion.map(([region, list]) => (
-                                <div key={region}>
-                                    {/* Region header */}
-                                    <div className="flex items-center gap-2.5 mb-2.5 px-1">
-                                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: rc(region) }} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: rc(region) }}>{region}</span>
-                                        <span className="text-[8px] font-black px-2 py-0.5 rounded-full"
-                                            style={{ background: `color-mix(in srgb, ${rc(region)} 12%, transparent)`, color: rc(region) }}>
-                                            {list.length}
-                                        </span>
-                                        <span className="text-[9px] font-bold text-app-muted-foreground">
-                                            · {list.reduce((s, c) => s + c.productCount, 0)} products
-                                        </span>
-                                        <div className="flex-1 h-px" style={{ background: 'var(--app-border)' }} />
-                                    </div>
-
-                                    {/* Country rows */}
-                                    <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
-                                        {/* Table header */}
-                                        <div className="hidden sm:grid grid-cols-[2fr_80px_80px_70px_40px] gap-2 px-4 py-2 text-[8px] font-black uppercase tracking-widest text-app-muted-foreground"
-                                            style={{ background: 'var(--app-background)', borderBottom: '1px solid var(--app-border)' }}>
-                                            <span>Country</span>
-                                            <span className="text-center">Products</span>
-                                            <span className="text-center">Brands</span>
-                                            <span className="text-center">Currency</span>
-                                            <span />
-                                        </div>
-
-                                        {list.map((c, i) => {
-                                            const isExp = expandedId === c.id
-                                            return (
-                                                <div key={c.id}>
-                                                    <div onClick={() => setExpandedId(isExp ? null : c.id)}
-                                                        className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_80px_80px_70px_40px] gap-2 items-center px-4 py-2.5 cursor-pointer transition-colors hover:bg-app-background"
-                                                        style={{
-                                                            background: isExp ? 'color-mix(in srgb, var(--app-primary) 5%, var(--app-surface))' : 'var(--app-surface)',
-                                                            borderBottom: i < list.length - 1 || isExp ? '1px solid var(--app-border)' : 'none',
-                                                        }}>
-                                                        {/* Country info */}
-                                                        <div className="flex items-center gap-3 min-w-0">
-                                                            <FlagImg iso2={c.iso2} size={28} />
-                                                            <div className="min-w-0">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-[13px] font-black text-app-foreground truncate">{c.name}</span>
-                                                                    {c.isDefault && (
-                                                                        <span className="text-[7px] font-black px-1.5 py-0.5 rounded text-white shrink-0"
-                                                                            style={{ background: 'var(--app-primary)' }}>DEFAULT</span>
-                                                                    )}
-                                                                </div>
-                                                                <span className="text-[10px] font-medium text-app-muted-foreground">
-                                                                    {c.iso2}{c.region ? ` · ${c.region}` : ''}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Products — hidden on mobile, shown in mobile row below */}
-                                                        <div className="hidden sm:block text-center">
-                                                            <span className="inline-block min-w-[32px] px-2 py-1 rounded-lg text-[11px] font-black"
-                                                                style={{
-                                                                    background: c.productCount > 0 ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'transparent',
-                                                                    color: c.productCount > 0 ? 'var(--app-success)' : 'var(--app-muted-foreground)',
-                                                                }}>
-                                                                {c.productCount}
-                                                            </span>
-                                                        </div>
-
-                                                        {/* Brands */}
-                                                        <div className="hidden sm:block text-center">
-                                                            <span className="inline-block min-w-[32px] px-2 py-1 rounded-lg text-[11px] font-black"
-                                                                style={{
-                                                                    background: c.brandCount > 0 ? 'color-mix(in srgb, var(--app-info) 10%, transparent)' : 'transparent',
-                                                                    color: c.brandCount > 0 ? 'var(--app-info)' : 'var(--app-muted-foreground)',
-                                                                }}>
-                                                                {c.brandCount}
-                                                            </span>
-                                                        </div>
-
-                                                        {/* Currency */}
-                                                        <div className="hidden sm:block text-center text-[10px] font-bold text-app-muted-foreground">
-                                                            {c.currency_code || '—'}
-                                                        </div>
-
-                                                        {/* Chevron */}
-                                                        <div className="text-center">
-                                                            <ChevronRight size={14} className="text-app-muted-foreground transition-transform duration-200"
-                                                                style={{ transform: isExp ? 'rotate(90deg)' : 'none' }} />
-                                                        </div>
-
-                                                        {/* Mobile-only badges */}
-                                                        <div className="col-span-2 flex gap-3 sm:hidden -mt-1">
-                                                            <span className="text-[9px] font-black" style={{ color: 'var(--app-success)' }}>{c.productCount} products</span>
-                                                            <span className="text-[9px] font-black" style={{ color: 'var(--app-info)' }}>{c.brandCount} brands</span>
-                                                            {c.currency_code && <span className="text-[9px] font-bold text-app-muted-foreground">{c.currency_code}</span>}
-                                                        </div>
-                                                    </div>
-
-                                                    {isExp && <CountryDrillDown country={c} onRemove={() => handleRemove(c)} isPending={isPending} />}
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-lg"
+                style={{
+                    background: `color-mix(in srgb, ${color} 12%, transparent)`,
+                    border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+                }}
+                title={`${sc.country_iso2} · ${sc.country_region || 'Unassigned'}`}>
+                {flagEmoji(sc.country_iso2)}
             </div>
 
-            {/* ═══ PICKER ═══ */}
-            {showPicker && (
-                <Picker allCountries={allRefCountries} sourcedIds={sourcedIds}
-                    onClose={() => setShowPicker(false)} onAdded={handleAdded} />
-            )}
-        </div>
-    )
-}
-
-/* ═══════════════════════════════════════════════════════════════════
- *  COUNTRY DRILL-DOWN
- * ═══════════════════════════════════════════════════════════════════ */
-function CountryDrillDown({ country, onRemove, isPending }: {
-    country: InventoryCountry; onRemove: () => void; isPending: boolean
-}) {
-    const [products, setProducts] = useState<DrillProduct[]>([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        let cancelled = false
-        getCountryProducts(country.id).then(p => { if (!cancelled) { setProducts(p); setLoading(false) } })
-        return () => { cancelled = true }
-    }, [country.id])
-
-    const byBrand = useMemo(() => {
-        const m = new Map<string, DrillProduct[]>()
-        products.forEach(p => { const k = p.brand || 'No Brand'; if (!m.has(k)) m.set(k, []); m.get(k)!.push(p) })
-        return Array.from(m.entries()).sort((a, b) => b[1].length - a[1].length)
-    }, [products])
-
-    return (
-        <div className="px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-150"
-            style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
-            {loading ? (
-                <div className="flex items-center justify-center gap-2 py-4">
-                    <Loader2 size={14} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
-                    <span className="text-[11px] font-bold text-app-muted-foreground">Loading product details…</span>
-                </div>
-            ) : products.length === 0 ? (
-                <div className="text-center py-4">
-                    <Package size={18} className="mx-auto mb-1 text-app-muted-foreground opacity-30" />
-                    <p className="text-[11px] font-bold text-app-muted-foreground">No products linked to this country</p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {/* Mini summary */}
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl border text-[10px]"
-                        style={{ background: 'var(--app-background)', borderColor: 'var(--app-border)' }}>
-                        <span className="font-black" style={{ color: 'var(--app-success)' }}>{products.length} products</span>
-                        <div className="w-px h-3.5" style={{ background: 'var(--app-border)' }} />
-                        <span className="font-black" style={{ color: 'var(--app-info)' }}>{byBrand.length} brands</span>
-                        <div className="w-px h-3.5" style={{ background: 'var(--app-border)' }} />
-                        <span className="font-bold text-app-muted-foreground">top: {byBrand[0]?.[0] || '—'} ({byBrand[0]?.[1].length || 0})</span>
-                    </div>
-
-                    {/* Brand grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
-                        {byBrand.slice(0, 8).map(([brand, prods]) => (
-                            <div key={brand} className="flex items-center gap-2 px-3 py-2 rounded-lg border"
-                                style={{ background: 'var(--app-surface)', borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                                <Tag size={10} style={{ color: 'var(--app-primary)' }} className="shrink-0" />
-                                <span className="text-[11px] font-bold text-app-foreground flex-1 truncate">{brand}</span>
-                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
-                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
-                                    {prods.length}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                    {byBrand.length > 8 && (
-                        <p className="text-[9px] font-bold text-app-muted-foreground text-center">+{byBrand.length - 8} more brands</p>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-tp-lg font-medium text-app-foreground truncate">{sc.country_name}</span>
+                    {!sc.is_enabled && (
+                        <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full flex-shrink-0"
+                            style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>
+                            Paused
+                        </span>
                     )}
                 </div>
-            )}
+                {sc.notes && (
+                    <div className="text-tp-xxs text-app-muted-foreground truncate mt-0.5">{sc.notes}</div>
+                )}
+            </div>
 
-            {/* Remove action */}
-            <div className="flex justify-end mt-3 pt-3 border-t" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                <button onClick={onRemove} disabled={isPending}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide px-3 py-1.5 rounded-lg transition-all disabled:opacity-40"
-                    style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)', border: '1px solid color-mix(in srgb, var(--app-error) 18%, transparent)' }}>
-                    <Trash2 size={11} /> Remove
+            <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
+                <span className="font-mono text-tp-xs font-bold" style={{ color: 'var(--app-info)' }}>{sc.country_iso2}</span>
+            </div>
+            <div className="hidden sm:flex w-[72px] flex-shrink-0 justify-center">
+                <span className="font-mono text-tp-xs font-semibold" style={{ color: sc.default_currency_code ? 'var(--app-warning)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
+                    {sc.default_currency_code || '—'}
+                </span>
+            </div>
+            <div className="hidden sm:flex w-16 flex-shrink-0 justify-center">
+                <span className="text-tp-xxs font-bold uppercase tracking-wide"
+                    style={{ color: sc.is_enabled ? 'var(--app-success)' : 'var(--app-warning)' }}>
+                    {sc.is_enabled ? 'Active' : 'Paused'}
+                </span>
+            </div>
+
+            <div className="flex items-center justify-end gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={(e) => { e.stopPropagation(); onToggleEnabled(sc) }}
+                    className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"
+                    title={sc.is_enabled ? 'Pause sourcing' : 'Resume sourcing'}>
+                    <Power size={12} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onEditNotes(sc) }}
+                    className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Edit notes">
+                    <Pencil size={12} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onRemove(sc) }}
+                    className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors" title="Remove from sourcing">
+                    <Trash2 size={12} />
                 </button>
             </div>
         </div>
     )
 }
 
-/* ═══════════════════════════════════════════════════════════════════
- *  REGION PILL
- * ═══════════════════════════════════════════════════════════════════ */
-function RegionPill({ label, active, onClick, color }: {
-    label: string; active: boolean; onClick: () => void; color: string
+/* ═══════════════════════════════════════════════════════════
+ *  PICKER MODAL — select from global RefCountries
+ * ═══════════════════════════════════════════════════════════ */
+function SourcingPicker({
+    allCountries, enabledIds, onClose, onSubmit,
+}: {
+    allCountries: RefCountry[]
+    enabledIds: Set<number>
+    onClose: () => void
+    onSubmit: (ids: number[]) => void
 }) {
-    return (
-        <button onClick={onClick}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wide whitespace-nowrap transition-all"
-            style={{
-                background: active ? color : 'var(--app-background)',
-                color: active ? 'white' : color,
-                border: `1px solid ${active ? color : 'var(--app-border)'}`,
-            }}>
-            <div className="w-1.5 h-1.5 rounded-full" style={{ background: active ? 'white' : color }} />
-            {label}
-        </button>
+    const [q, setQ] = useState('')
+    const [picked, setPicked] = useState<Set<number>>(new Set())
+
+    const available = useMemo(
+        () => allCountries.filter(c => !enabledIds.has(c.id)),
+        [allCountries, enabledIds]
     )
-}
-
-/* ═══════════════════════════════════════════════════════════════════
- *  PICKER MODAL
- * ═══════════════════════════════════════════════════════════════════ */
-function Picker({ allCountries, sourcedIds, onClose, onAdded }: {
-    allCountries: RefCountry[]; sourcedIds: Set<number>;
-    onClose: () => void; onAdded: () => void;
-}) {
-    const [search, setSearch] = useState('')
-    const [selected, setSelected] = useState<Set<number>>(new Set())
-    const [isPending, startTransition] = useTransition()
-    const [activeRegion, setActiveRegion] = useState<string | null>(null)
-
-    const available = useMemo(() => {
-        let list = allCountries.filter(c => !sourcedIds.has(c.id) && !HIDDEN_ISO2.has(c.iso2))
-        if (search) {
-            const q = search.toLowerCase()
-            list = list.filter(c => c.name.toLowerCase().includes(q) || c.iso2.toLowerCase().includes(q) || (c.region || '').toLowerCase().includes(q))
+    const byRegion = useMemo(() => {
+        const needle = q.trim().toLowerCase()
+        const filtered = needle
+            ? available.filter(c =>
+                c.name.toLowerCase().includes(needle)
+                || c.iso2.toLowerCase().includes(needle)
+                || (c.iso3 || '').toLowerCase().includes(needle)
+                || (c.region || '').toLowerCase().includes(needle))
+            : available
+        const groups = new Map<string, RefCountry[]>()
+        for (const c of filtered) {
+            const r = c.region || 'Unassigned'
+            if (!groups.has(r)) groups.set(r, [])
+            groups.get(r)!.push(c)
         }
-        if (activeRegion) list = list.filter(c => c.region === activeRegion)
-        return list.sort((a, b) => a.name.localeCompare(b.name))
-    }, [allCountries, sourcedIds, search, activeRegion])
+        return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b))
+    }, [available, q])
 
-    const regionList = useMemo(() => {
-        const m: Record<string, number> = {}
-        allCountries.filter(c => !sourcedIds.has(c.id) && !HIDDEN_ISO2.has(c.iso2)).forEach(c => {
-            const r = c.region || 'Other'; m[r] = (m[r] || 0) + 1
+    const toggle = (id: number) => {
+        setPicked(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id); else next.add(id)
+            return next
         })
-        return Object.entries(m).sort(([a], [b]) => a.localeCompare(b))
-    }, [allCountries, sourcedIds])
-
-    const toggle = (id: number) => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
-
-    const handleAdd = () => {
-        if (selected.size === 0) return
-        startTransition(async () => {
-            const res = await bulkEnableSourcingCountries(Array.from(selected))
-            if (res.success) { toast.success(`${selected.size} ${selected.size === 1 ? 'country' : 'countries'} added`); onAdded(); onClose() }
-            else toast.error(res.error || 'Failed to add')
+    }
+    const toggleRegion = (countries: RefCountry[]) => {
+        const ids = countries.map(c => c.id)
+        const allPicked = ids.every(id => picked.has(id))
+        setPicked(prev => {
+            const next = new Set(prev)
+            if (allPicked) ids.forEach(id => next.delete(id))
+            else ids.forEach(id => next.add(id))
+            return next
         })
     }
 
     return (
-        <div onClick={e => { if (e.target === e.currentTarget) onClose() }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div onClick={e => e.stopPropagation()}
-                className="w-full max-w-[900px] max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl border-2 animate-in fade-in zoom-in-95 duration-200"
-                style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)' }}>
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b"
-                    style={{ background: 'var(--app-background)', borderColor: 'var(--app-border)' }}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                            style={{ background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, black))' }}>
-                            <Globe size={18} className="text-white" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+            <div className="w-full max-w-2xl rounded-2xl overflow-hidden max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200"
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+                <div className="px-5 py-3.5 flex items-center justify-between flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--app-primary)' }}>
+                            <Globe size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-[15px] font-black text-app-foreground">Add Sourcing Countries</h3>
-                            <div className="flex items-center gap-2.5 mt-0.5">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-app-muted-foreground">{available.length} available</span>
-                                {selected.size > 0 && (
-                                    <span className="flex items-center gap-1 text-[10px] font-black text-white px-2 py-0.5 rounded-full"
-                                        style={{ background: 'var(--app-primary)' }}>
-                                        <Check size={10} strokeWidth={3} />{selected.size} selected
-                                    </span>
-                                )}
-                            </div>
+                            <h3 className="text-sm font-bold">Add Sourcing Countries</h3>
+                            <p className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
+                                {available.length} available · {picked.size} selected
+                            </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border text-app-muted-foreground hover:text-app-foreground transition-colors"
-                        style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)' }}>
-                        <X size={16} />
-                    </button>
+                    <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-app-border/30"><X size={16} /></button>
                 </div>
 
-                {/* Search */}
-                <div className="px-6 py-3 border-b" style={{ background: 'var(--app-background)', borderColor: 'var(--app-border)' }}>
+                <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--app-border)' }}>
                     <div className="relative">
-                        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                        <input type="text" placeholder="Search countries…" value={search} onChange={e => setSearch(e.target.value)} autoFocus
-                            className="w-full text-[12px] font-medium pl-10 pr-8 py-2.5 rounded-xl border outline-none"
-                            style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)', color: 'var(--app-foreground)' }} />
-                        {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground"><X size={12} /></button>}
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input autoFocus value={q} onChange={e => setQ(e.target.value)}
+                            placeholder="Search country or region…"
+                            className="w-full pl-9 pr-3 py-2 rounded-xl text-tp-md bg-app-background border border-app-border outline-none" />
                     </div>
                 </div>
 
-                {/* Region tabs */}
-                {regionList.length > 1 && (
-                    <div className="flex gap-1.5 px-6 py-2 overflow-x-auto border-b" style={{ borderColor: 'var(--app-border)' }}>
-                        <RegionPill label="All" active={!activeRegion} onClick={() => setActiveRegion(null)} color="var(--app-primary)" />
-                        {regionList.map(([r, n]) => (
-                            <RegionPill key={r} label={`${r} (${n})`} active={activeRegion === r}
-                                onClick={() => setActiveRegion(activeRegion === r ? null : r)} color={rc(r)} />
-                        ))}
-                    </div>
-                )}
-
-                {/* Grid */}
-                <div className="flex-1 overflow-y-auto px-6 py-4 min-h-[200px] custom-scrollbar">
-                    {available.length === 0 ? (
-                        <div className="text-center py-16">
-                            <Globe size={28} className="mx-auto mb-3 text-app-muted-foreground opacity-30" />
-                            <p className="text-sm font-bold text-app-foreground">{search ? 'No matching countries' : 'All countries added'}</p>
-                            <p className="text-[11px] text-app-muted-foreground mt-1">{search ? 'Try a different search' : 'You\'ve sourced from every country!'}</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {available.map(c => {
-                                const sel = selected.has(c.id)
-                                return (
-                                    <button key={c.id} onClick={() => toggle(c.id)}
-                                        className="text-left flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
-                                        style={{
-                                            background: sel ? 'var(--app-primary)' : 'var(--app-surface)',
-                                            border: `2px solid ${sel ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-border) 60%, transparent)'}`,
-                                            boxShadow: sel ? '0 4px 12px color-mix(in srgb, var(--app-primary) 20%, transparent)' : 'none',
-                                        }}>
-                                        <FlagImg iso2={c.iso2} size={24} />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[11px] font-bold truncate" style={{ color: sel ? 'white' : 'var(--app-foreground)' }}>{c.name}</p>
-                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                <span className="text-[9px] font-bold" style={{ color: sel ? 'rgba(255,255,255,0.7)' : 'var(--app-muted-foreground)' }}>{c.iso2}</span>
-                                                {c.default_currency_code && (
-                                                    <>
-                                                        <div className="w-1 h-1 rounded-full" style={{ background: sel ? 'rgba(255,255,255,0.5)' : 'var(--app-muted-foreground)' }} />
-                                                        <span className="text-[9px] font-bold" style={{ color: sel ? 'rgba(255,255,255,0.8)' : 'var(--app-muted-foreground)' }}>{c.default_currency_code}</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all"
-                                            style={{
-                                                background: sel ? 'white' : 'transparent',
-                                                border: sel ? 'none' : '2px solid var(--app-border)',
-                                            }}>
-                                            {sel && <Check size={12} style={{ color: 'var(--app-primary)' }} strokeWidth={3} />}
-                                        </div>
-                                    </button>
-                                )
-                            })}
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-2 space-y-3">
+                    {byRegion.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <Globe size={28} className="text-app-muted-foreground mb-2 opacity-40" />
+                            <p className="text-tp-md font-bold text-app-muted-foreground">No more countries available</p>
+                            <p className="text-tp-sm text-app-muted-foreground mt-0.5">Every country is already in your sourcing list.</p>
                         </div>
                     )}
+                    {byRegion.map(([region, countries]) => {
+                        const ids = countries.map(c => c.id)
+                        const allOn = ids.every(id => picked.has(id))
+                        const someOn = ids.some(id => picked.has(id))
+                        return (
+                            <div key={region}>
+                                <button onClick={() => toggleRegion(countries)}
+                                    className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-app-surface transition-colors">
+                                    <div className="flex items-center gap-1.5">
+                                        <MapPin size={12} style={{ color: 'var(--app-primary)' }} />
+                                        <span className="text-tp-xxs font-black uppercase tracking-wider"
+                                            style={{ color: 'var(--app-muted-foreground)' }}>{region}</span>
+                                        <span className="text-tp-xxs font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            ({countries.length})
+                                        </span>
+                                    </div>
+                                    <span className="text-tp-xxs font-bold uppercase tracking-wide"
+                                        style={{ color: allOn ? 'var(--app-primary)' : someOn ? 'var(--app-info)' : 'var(--app-muted-foreground)' }}>
+                                        {allOn ? 'All selected' : someOn ? 'Some' : 'Select all'}
+                                    </span>
+                                </button>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 mt-1">
+                                    {countries.map(c => {
+                                        const on = picked.has(c.id)
+                                        return (
+                                            <button key={c.id} onClick={() => toggle(c.id)}
+                                                className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left"
+                                                style={on ? {
+                                                    background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                                                    border: '1px solid color-mix(in srgb, var(--app-primary) 35%, transparent)',
+                                                } : {
+                                                    background: 'color-mix(in srgb, var(--app-border) 10%, transparent)',
+                                                    border: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)',
+                                                }}>
+                                                <span className="text-base leading-none">{flagEmoji(c.iso2)}</span>
+                                                <span className="flex-1 min-w-0 text-tp-sm font-medium text-app-foreground truncate">{c.name}</span>
+                                                <span className="font-mono text-tp-xxs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>{c.iso2}</span>
+                                                {on && <Check size={12} style={{ color: 'var(--app-primary)' }} />}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
 
-                {/* Footer */}
-                <div className="flex items-center justify-between px-6 py-3.5 border-t"
-                    style={{ background: 'var(--app-background)', borderColor: 'var(--app-border)' }}>
-                    <div className="flex items-center gap-3">
-                        {selected.size > 0 ? (
-                            <>
-                                <span className="text-[11px] font-black text-app-foreground">{selected.size} {selected.size === 1 ? 'country' : 'countries'}</span>
-                                <button onClick={() => setSelected(new Set())} className="text-[10px] font-bold uppercase text-app-muted-foreground hover:text-app-foreground bg-transparent border-none cursor-pointer">Clear</button>
-                            </>
-                        ) : (
-                            <span className="text-[11px] font-bold text-app-muted-foreground">Select countries to add</span>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-[12px] font-bold border transition-all"
-                            style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}>
-                            Cancel
-                        </button>
-                        <button onClick={handleAdd} disabled={selected.size === 0 || isPending}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-black text-white border-none transition-all disabled:opacity-40"
-                            style={{
-                                background: selected.size > 0 ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 60%, black))' : 'var(--app-border)',
-                                cursor: selected.size === 0 || isPending ? 'not-allowed' : 'pointer',
-                            }}>
-                            {isPending ? <><Loader2 size={14} className="animate-spin" /> Adding…</>
-                                : <><Plus size={14} strokeWidth={2.5} /> Add {selected.size > 0 ? `${selected.size} ` : ''}{selected.size === 1 ? 'Country' : 'Countries'}</>}
-                        </button>
-                    </div>
+                <div className="px-5 py-3 flex items-center justify-end gap-2 flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)', borderTop: '1px solid var(--app-border)' }}>
+                    <button onClick={onClose} className="text-tp-sm font-bold px-3 py-2 rounded-xl" style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
+                    <button onClick={() => onSubmit(Array.from(picked))} disabled={picked.size === 0}
+                        className="flex items-center gap-1.5 text-tp-sm font-bold uppercase tracking-wider px-4 py-2 rounded-xl disabled:opacity-50"
+                        style={{ background: 'var(--app-primary)', color: '#fff', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                        <Check size={12} /> Add {picked.size > 0 ? `(${picked.size})` : ''}
+                    </button>
                 </div>
             </div>
         </div>
     )
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  NOTES MODAL — edit sourcing notes
+ * ═══════════════════════════════════════════════════════════ */
+function NotesModal({ country, onCancel, onSave }: any) {
+    const [text, setText] = useState(country.notes || '')
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}>
+            <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                <div className="px-5 py-3 flex items-center justify-between"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
+                    <div className="flex items-center gap-2">
+                        <span className="text-base">{flagEmoji(country.country_iso2)}</span>
+                        <h3 className="text-sm font-bold">Notes · {country.country_name}</h3>
+                    </div>
+                    <button onClick={onCancel} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-app-border/30"><X size={16} /></button>
+                </div>
+                <div className="p-4">
+                    <textarea autoFocus value={text} onChange={e => setText(e.target.value)} rows={4}
+                        placeholder="e.g. Preferred supplier, lead time, notes…"
+                        className="w-full px-3 py-2 rounded-xl text-tp-md bg-app-background border border-app-border outline-none resize-none" />
+                </div>
+                <div className="px-5 py-3 flex items-center justify-end gap-2"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)', borderTop: '1px solid var(--app-border)' }}>
+                    <button onClick={onCancel} className="text-tp-sm font-bold px-3 py-2 rounded-xl" style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
+                    <button onClick={() => onSave(text)}
+                        className="flex items-center gap-1.5 text-tp-sm font-bold uppercase tracking-wider px-4 py-2 rounded-xl"
+                        style={{ background: 'var(--app-primary)', color: '#fff' }}>
+                        <Check size={12} /> Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  DETAIL PANEL
+ * ═══════════════════════════════════════════════════════════ */
+function CountryDetailPanel({ node, onToggleEnabled, onEditNotes, onRemove, onClose, onPin }: any) {
+    if (node._type === 'region') {
+        return (
+            <div className="flex flex-col h-full" style={{ background: 'var(--app-surface)' }}>
+                <div className="flex-shrink-0 px-4 py-3 flex items-center justify-between"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', color: 'var(--app-primary)' }}>
+                            <MapPin size={16} />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-bold truncate">{node.name}</h2>
+                            <p className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-primary)' }}>
+                                {node.children?.length || 0} countr{node.children?.length === 1 ? 'y' : 'ies'}
+                            </p>
+                        </div>
+                    </div>
+                    {onClose && <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg"><X size={14} /></button>}
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-1.5">
+                    {node.children?.map((c: any) => (
+                        <div key={c.id} className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
+                            style={{ background: 'color-mix(in srgb, var(--app-border) 12%, transparent)' }}>
+                            <span className="text-base">{flagEmoji(c.country_iso2)}</span>
+                            <span className="flex-1 text-tp-sm font-bold truncate">{c.country_name}</span>
+                            <span className="font-mono text-tp-xxs font-bold" style={{ color: 'var(--app-info)' }}>{c.country_iso2}</span>
+                            <span className="text-tp-xxs font-bold uppercase" style={{ color: c.is_enabled ? 'var(--app-success)' : 'var(--app-warning)' }}>
+                                {c.is_enabled ? 'ON' : 'OFF'}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    const sc: SourcingCountry = node
+    const color = regionColor(sc.country_region)
+    return (
+        <div className="flex flex-col h-full" style={{ background: 'var(--app-surface)' }}>
+            <div className="flex-shrink-0 px-4 py-3 flex items-center justify-between"
+                style={{
+                    background: `color-mix(in srgb, ${color} 6%, var(--app-surface))`,
+                    borderBottom: `1px solid color-mix(in srgb, ${color} 30%, var(--app-border))`,
+                }}>
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl"
+                        style={{
+                            background: `color-mix(in srgb, ${color} 15%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
+                        }}>
+                        {flagEmoji(sc.country_iso2)}
+                    </div>
+                    <div className="min-w-0">
+                        <h2 className="text-sm font-bold tracking-tight truncate" style={{ color }}>{sc.country_name}</h2>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
+                                style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}>
+                                {sc.country_iso2}
+                            </span>
+                            {sc.country_region && (
+                                <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color }}>
+                                    {sc.country_region}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                    {onPin && <button onClick={onPin} className="p-1.5 hover:bg-app-border/50 rounded-lg" title="Pin"><Bookmark size={13} /></button>}
+                    <button onClick={() => onEditNotes(sc)} className="p-1.5 hover:bg-app-border/50 rounded-lg" title="Edit notes"><Pencil size={13} /></button>
+                    <button onClick={() => onRemove(sc)} className="p-1.5 hover:bg-app-border/50 rounded-lg" title="Remove"><Trash2 size={13} style={{ color: 'var(--app-error)' }} /></button>
+                    {onClose && <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg ml-1"><X size={14} /></button>}
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-1.5">
+                    <StatTile label="Status" value={sc.is_enabled ? 'Active' : 'Paused'}
+                        color={sc.is_enabled ? 'var(--app-success)' : 'var(--app-warning)'}
+                        icon={<Power size={12} />} />
+                    <StatTile label="Currency" value={sc.default_currency_code || '—'}
+                        color="var(--app-warning)" icon={<Coins size={12} />} />
+                    <StatTile label="ISO-2" value={sc.country_iso2} color="var(--app-info)"
+                        icon={<Globe size={12} />} mono />
+                    <StatTile label="ISO-3" value={sc.country_iso3 || '—'} color="var(--app-info)"
+                        icon={<Globe size={12} />} mono />
+                </div>
+
+                <button onClick={() => onToggleEnabled(sc)}
+                    className="w-full flex items-center justify-center gap-1.5 text-tp-sm font-bold uppercase tracking-wider py-2.5 rounded-xl transition-all"
+                    style={{
+                        background: sc.is_enabled
+                            ? 'color-mix(in srgb, var(--app-warning) 10%, transparent)'
+                            : 'color-mix(in srgb, var(--app-success) 10%, transparent)',
+                        border: `1px solid color-mix(in srgb, ${sc.is_enabled ? 'var(--app-warning)' : 'var(--app-success)'} 30%, transparent)`,
+                        color: sc.is_enabled ? 'var(--app-warning)' : 'var(--app-success)',
+                    }}>
+                    <Power size={12} /> {sc.is_enabled ? 'Pause Sourcing' : 'Resume Sourcing'}
+                </button>
+
+                {/* ── Products sourced from this country, grouped by Brand → Parfum/Size ── */}
+                <CountryProductDrilldown country={sc} />
+
+                <div className="rounded-xl p-3"
+                    style={{ background: 'color-mix(in srgb, var(--app-border) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5 text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <Pencil size={12} /> Notes
+                        </div>
+                        <button onClick={() => onEditNotes(sc)}
+                            className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-primary)' }}>
+                            Edit
+                        </button>
+                    </div>
+                    <p className="text-tp-sm text-app-foreground whitespace-pre-wrap">
+                        {sc.notes || <span className="text-app-muted-foreground italic">No notes yet.</span>}
+                    </p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  COUNTRY PRODUCT DRILLDOWN
+ *  Ported from the original SourcingCountriesClient: load products
+ *  for this country, group by Brand → Parfum + Size.
+ * ═══════════════════════════════════════════════════════════ */
+function CountryProductDrilldown({ country }: { country: SourcingCountry }) {
+    const [loading, setLoading] = useState(true)
+    const [products, setProducts] = useState<Product[]>([])
+    const [groups, setGroups] = useState<BrandGroup[]>([])
+    const [expanded, setExpanded] = useState<Set<number | null>>(new Set())
+
+    useEffect(() => {
+        let alive = true
+        setLoading(true)
+        erpFetch(`inventory/products/?country_of_origin=${country.country}&page_size=1000`)
+            .then(res => {
+                if (!alive) return
+                const list: Product[] = Array.isArray(res) ? res : (res?.results ?? [])
+                setProducts(list)
+                setGroups(groupByBrandAndVariant(list))
+            })
+            .catch(() => { if (alive) { setProducts([]); setGroups([]) } })
+            .finally(() => { if (alive) setLoading(false) })
+        return () => { alive = false }
+    }, [country.country])
+
+    const toggle = (bid: number | null) => setExpanded(p => {
+        const n = new Set(p); n.has(bid) ? n.delete(bid) : n.add(bid); return n
+    })
+
+    return (
+        <div className="rounded-xl p-3"
+            style={{ background: 'color-mix(in srgb, var(--app-info) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+            <div className="flex items-center gap-4 mb-2 text-tp-xxs">
+                <div className="flex items-center gap-1.5">
+                    <Tag size={11} style={{ color: 'var(--app-info)' }} />
+                    <span className="font-bold text-app-muted-foreground">Brands:</span>
+                    <span className="font-black text-app-foreground tabular-nums">{groups.length}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <Package size={11} style={{ color: 'var(--app-success)' }} />
+                    <span className="font-bold text-app-muted-foreground">SKUs:</span>
+                    <span className="font-black text-app-foreground tabular-nums">{products.length}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <Boxes size={11} style={{ color: 'var(--app-warning)' }} />
+                    <span className="font-bold text-app-muted-foreground">Variants:</span>
+                    <span className="font-black text-app-foreground tabular-nums">
+                        {groups.reduce((s, g) => s + g.variants.length, 0)}
+                    </span>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="py-4 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-app-info/30 border-t-app-info" />
+                </div>
+            ) : groups.length === 0 ? (
+                <div className="py-5 text-center">
+                    <Package size={20} className="mx-auto mb-1.5 text-app-muted-foreground opacity-40" />
+                    <p className="text-tp-sm font-bold text-app-muted-foreground">No products sourced from here yet</p>
+                    <p className="text-tp-xxs text-app-muted-foreground mt-0.5">Set a product's "Country of Origin" to link it here.</p>
+                </div>
+            ) : (
+                <div className="space-y-1.5 mt-1">
+                    {groups.map(g => (
+                        <BrandGroupCard
+                            key={g.brand_id ?? 'none'}
+                            group={g}
+                            open={expanded.has(g.brand_id)}
+                            onToggle={() => toggle(g.brand_id)}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+function BrandGroupCard({ group, open, onToggle }: { group: BrandGroup; open: boolean; onToggle: () => void }) {
+    return (
+        <div className="rounded-lg overflow-hidden transition-all"
+            style={{ background: 'var(--app-surface)', border: `1px solid ${open ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-border) 50%, transparent)'}` }}>
+            <div className="px-2.5 py-2 flex items-center justify-between cursor-pointer hover:bg-app-surface-hover transition-colors"
+                onClick={onToggle}
+                style={{ borderBottom: open ? '1px solid var(--app-border)' : 'none' }}>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <ChevronRight size={12} className="text-app-muted-foreground transition-transform flex-shrink-0"
+                        style={{ transform: open ? 'rotate(90deg)' : '' }} />
+                    <Tag size={11} style={{ color: 'var(--app-primary)' }} />
+                    <span className="text-tp-sm font-bold text-app-foreground truncate">{group.brand_name}</span>
+                    <span className="px-1.5 py-0.5 rounded text-tp-xxs font-black tabular-nums"
+                        style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                        {group.total_products}
+                    </span>
+                </div>
+                <span className="text-tp-xxs font-bold text-app-muted-foreground flex-shrink-0">
+                    {group.variants.length} variant{group.variants.length !== 1 ? 's' : ''}
+                </span>
+            </div>
+            {open && (
+                <div className="px-2.5 py-2 space-y-0.5">
+                    <div className="grid grid-cols-12 gap-2 px-1.5 py-1 text-tp-xxs font-black uppercase tracking-wider text-app-muted-foreground"
+                        style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                        <div className="col-span-5">Parfum</div>
+                        <div className="col-span-3">Size</div>
+                        <div className="col-span-2 text-center">Qty</div>
+                        <div className="col-span-2 text-right">Sample</div>
+                    </div>
+                    {group.variants.map((v, i) => (
+                        <div key={i}
+                            className="grid grid-cols-12 gap-2 px-1.5 py-1.5 rounded hover:bg-app-surface-hover transition-colors"
+                            style={{ borderLeft: `3px solid ${parfumColor(v.parfum_name)}` }}>
+                            <div className="col-span-5 flex items-center gap-1.5 min-w-0">
+                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: parfumColor(v.parfum_name) }} />
+                                <span className="text-tp-sm font-bold text-app-foreground truncate">{v.parfum_name}</span>
+                            </div>
+                            <div className="col-span-3 flex items-center">
+                                <span className="text-tp-xxs font-mono text-app-muted-foreground truncate">{v.size_label}</span>
+                            </div>
+                            <div className="col-span-2 flex items-center justify-center">
+                                <span className="px-2 py-0.5 rounded-full text-tp-xxs font-black tabular-nums"
+                                    style={{ background: `color-mix(in srgb, ${parfumColor(v.parfum_name)} 15%, transparent)`, color: parfumColor(v.parfum_name) }}>
+                                    {v.count}
+                                </span>
+                            </div>
+                            <div className="col-span-2 flex items-center justify-end">
+                                <span className="text-tp-xxs font-mono text-app-muted-foreground truncate" title={v.products.map(p => p.sku).join(', ')}>
+                                    {v.products[0]?.sku || '—'}
+                                    {v.count > 1 && <span className="ml-1 opacity-60">+{v.count - 1}</span>}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+/* ─── Brand→Parfum/Size grouping (ported from SourcingCountriesClient) ─── */
+function groupByBrandAndVariant(products: Product[]): BrandGroup[] {
+    const byBrand = new Map<number | null, Product[]>()
+    for (const p of products) {
+        const k = p.brand ?? null
+        if (!byBrand.has(k)) byBrand.set(k, [])
+        byBrand.get(k)!.push(p)
+    }
+    const variantKey = (p: Product) => {
+        const pk = p.parfum ?? 'none'
+        const sk = p.size != null ? `${p.size}-${p.size_unit || 'u'}` : 'none'
+        return `${pk}:${sk}`
+    }
+    const sizeLabel = (p: Product) => {
+        if (p.size == null) return 'Standard'
+        const val = Number(p.size)
+        const unit = p.size_unit || 'unit'
+        if (unit === 'ml' || unit === 'g') {
+            if (val < 300) return `Small (${val}${unit})`
+            if (val < 600) return `Medium (${val}${unit})`
+            return `Large (${val}${unit})`
+        }
+        return `${val}${unit}`
+    }
+    const groups: BrandGroup[] = []
+    for (const [brandId, list] of byBrand) {
+        const brandName = list[0]?.brand_name || (brandId ? `Brand #${brandId}` : 'No Brand')
+        const byVariant = new Map<string, Product[]>()
+        for (const p of list) {
+            const k = variantKey(p)
+            if (!byVariant.has(k)) byVariant.set(k, [])
+            byVariant.get(k)!.push(p)
+        }
+        const variants: ProductVariant[] = []
+        for (const [, vlist] of byVariant) {
+            const first = vlist[0]
+            variants.push({
+                parfum_name: first.parfum_name || 'Original',
+                size_label: sizeLabel(first),
+                size_value: first.size != null ? Number(first.size) : null,
+                count: vlist.length,
+                products: vlist.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+            })
+        }
+        variants.sort((a, b) => {
+            const p = a.parfum_name.localeCompare(b.parfum_name)
+            if (p !== 0) return p
+            if (a.size_value == null) return 1
+            if (b.size_value == null) return -1
+            return a.size_value - b.size_value
+        })
+        groups.push({ brand_id: brandId, brand_name: brandName, total_products: list.length, variants })
+    }
+    return groups.sort((a, b) => b.total_products - a.total_products)
+}
+
+function StatTile({ label, value, color, icon, mono }: any) {
+    return (
+        <div className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
+            style={{ background: `color-mix(in srgb, ${color} 5%, var(--app-surface))`, border: `1px solid color-mix(in srgb, ${color} 15%, transparent)` }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>{icon}</div>
+            <div className="min-w-0">
+                <div className={`text-sm font-bold ${mono ? 'font-mono' : ''} tabular-nums truncate`} style={{ color: 'var(--app-foreground)' }}>{value}</div>
+                <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
+            </div>
+        </div>
+    )
+}
+
+/* Utility: ISO-2 → emoji flag. Invalid / missing codes fall back to globe. */
+function flagEmoji(iso2?: string | null): string {
+    if (!iso2 || iso2.length !== 2) return '🌐'
+    const A = 0x1f1e6
+    const a = 'A'.charCodeAt(0)
+    const chars = iso2.toUpperCase().split('').map(c => String.fromCodePoint(A + (c.charCodeAt(0) - a)))
+    return chars.join('')
 }
