@@ -471,6 +471,36 @@ class UnitPackageViewSet(TenantModelViewSet):
         return qs.order_by('unit_id', 'order', 'ratio')
 
 
+class ProductPackagingViewSet(TenantModelViewSet):
+    """Flat list of ProductPackaging rows across ALL products.
+
+    Each row is a first-class packaging (barcode, price, product) —
+    e.g. "Coca Cola — Pack of 6" with its own barcode + price.
+    Filterable by ?product=<id>, ?unit=<id>, ?has_barcode=1.
+    """
+    pagination_class = None
+
+    def get_serializer_class(self):
+        from apps.inventory.serializers import ProductPackagingSerializer
+        return ProductPackagingSerializer
+
+    def get_queryset(self):
+        from apps.inventory.models import ProductPackaging
+        qs = ProductPackaging.objects.select_related(
+            'product', 'product__category', 'product__brand',
+            'unit',
+        )
+        for key in ('product', 'unit', 'level'):
+            v = self.request.query_params.get(key)
+            if v:
+                qs = qs.filter(**{f'{key}_id' if key in ('product', 'unit') else key: v})
+        if self.request.query_params.get('has_barcode') == '1':
+            qs = qs.exclude(barcode__isnull=True).exclude(barcode='')
+        if self.request.query_params.get('active') == '1':
+            qs = qs.filter(is_active=True)
+        return qs.order_by('product__name', 'level', 'ratio')
+
+
 # =============================================================================
 # PACKAGING SUGGESTION RULE — smart engine
 # =============================================================================

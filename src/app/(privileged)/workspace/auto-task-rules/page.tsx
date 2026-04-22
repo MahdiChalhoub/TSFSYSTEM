@@ -807,31 +807,38 @@ export default function AutoTaskRulesPage() {
                         {/* ── Step 3: Details ──────────────────────────── */}
                         {wizardStep === 3 && (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
-                            {/* Name + Code */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
-                                <div style={{ gridColumn: 'span 2' }}>
-                                    <label className={labelCls}>Automation name *</label>
-                                    <input
-                                        value={editingRule.name}
-                                        onChange={e => setEditingRule({ ...editingRule, name: e.target.value })}
-                                        className={inputCls}
-                                        placeholder="e.g. Print price tag on price change"
-                                    />
-                                </div>
-                                <div>
-                                    <label className={labelCls}>Code</label>
-                                    <input
-                                        value={editingRule.code || ''}
-                                        onChange={e => setEditingRule({ ...editingRule, code: e.target.value })}
-                                        className={`${inputCls} font-mono`}
-                                        placeholder="INV-01"
-                                    />
+                            {/* Section: Name the automation */}
+                            <div className="p-4 rounded-xl"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                }}>
+                                <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2">Name this automation</h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                                    <div style={{ gridColumn: 'span 2' }}>
+                                        <label className={labelCls}>What will this do? *</label>
+                                        <input
+                                            value={editingRule.name}
+                                            onChange={e => setEditingRule({ ...editingRule, name: e.target.value })}
+                                            className={inputCls}
+                                            placeholder="e.g. Print price tag on price change"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>Short code (optional)</label>
+                                        <input
+                                            value={editingRule.code || ''}
+                                            onChange={e => setEditingRule({ ...editingRule, code: e.target.value })}
+                                            className={`${inputCls} font-mono`}
+                                            placeholder="INV-01"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Module hidden — it's chosen in Step 1 of the wizard. */}
 
-                            {/* Timing: Repeats? · Every? · Reminder before? */}
+                            {/* Section: Timing — renamed to "When should this run?" */}
                             <div className="p-4 rounded-xl space-y-3"
                                 style={{
                                     background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)',
@@ -839,7 +846,7 @@ export default function AutoTaskRulesPage() {
                                     borderLeft: '3px solid var(--app-primary)',
                                 }}>
                                 <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)' }}>
-                                    Timing
+                                    When should this run?
                                 </h4>
 
                                 {/* Repeats? Yes/No segmented */}
@@ -885,7 +892,7 @@ export default function AutoTaskRulesPage() {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className={labelCls}>Stale after (days)</label>
+                                            <label className={labelCls}>Flag as stale after (days)</label>
                                             <input type="number" min={1}
                                                 value={editingRule.stale_threshold_days || 3}
                                                 onChange={e => setEditingRule({ ...editingRule, stale_threshold_days: Number(e.target.value) })}
@@ -900,7 +907,7 @@ export default function AutoTaskRulesPage() {
 
                                 {/* Reminder before — applies to both EVENT and RECURRING for time-bound triggers */}
                                 <div>
-                                    <label className={labelCls}>Remind before (days)</label>
+                                    <label className={labelCls}>Reminder timing — fire N days before</label>
                                     <div className="flex items-center gap-2">
                                         <input type="number" min={0} max={90}
                                             value={(editingRule.conditions as any)?.days_before ?? ''}
@@ -961,11 +968,11 @@ export default function AutoTaskRulesPage() {
                                 <div className="flex items-center gap-2 mb-2">
                                     <Filter size={13} style={{ color: 'var(--app-primary)' }} />
                                     <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
-                                        Conditions (all optional)
+                                        Only when… (optional filters)
                                     </h4>
                                 </div>
                                 <p className="text-[10px] font-medium text-app-muted-foreground mb-3">
-                                    Only fire when ALL conditions match. Leave blank to match everything.
+                                    Narrow down when the automation fires. Leave everything blank to always run.
                                 </p>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
                                     <div>
@@ -1060,10 +1067,10 @@ export default function AutoTaskRulesPage() {
                                 }}
                             >
                                 <h4 className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-primary)' }}>
-                                    Task to Create
+                                    What task gets created?
                                 </h4>
                                 <div>
-                                    <label className={labelCls}>Task Title Template *</label>
+                                    <label className={labelCls}>Task title the assignee will see *</label>
                                     <input
                                         value={editingRule.template_data.title}
                                         onChange={e => setEditingRule({
@@ -1076,7 +1083,7 @@ export default function AutoTaskRulesPage() {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginTop: 8 }}>
                                     <div>
-                                        <label className={labelCls}>Priority</label>
+                                        <label className={labelCls}>How urgent?</label>
                                         <select
                                             value={editingRule.template_data.priority}
                                             onChange={e => setEditingRule({
@@ -1088,8 +1095,21 @@ export default function AutoTaskRulesPage() {
                                             {PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                                         </select>
                                     </div>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label className="flex items-center gap-2 cursor-pointer select-none mt-2 mb-1">
+                                            <input type="checkbox"
+                                                checked={!!(editingRule.conditions as any)?.require_completion_note}
+                                                onChange={e => setEditingRule({
+                                                    ...editingRule,
+                                                    conditions: { ...editingRule.conditions, require_completion_note: e.target.checked } as any,
+                                                })} />
+                                            <span className="text-[11px] font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                                Require proof — ask the assignee to describe their work before closing the task
+                                            </span>
+                                        </label>
+                                    </div>
                                     <div>
-                                        <label className={labelCls}>Est. Minutes</label>
+                                        <label className={labelCls}>Est. minutes to complete</label>
                                         <input
                                             type="number"
                                             value={editingRule.template_data.estimated_minutes}

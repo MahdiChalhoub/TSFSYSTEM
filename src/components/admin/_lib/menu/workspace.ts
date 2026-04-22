@@ -6,6 +6,7 @@ import {
     Settings,
     Users,
     Crown,
+    LayoutDashboard,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -15,6 +16,7 @@ export const workspaceInProgress: MenuItem = {
     module: 'workspace',
     stage: 'in-progress',
     children: [
+        { title: 'Manager Dashboard', path: '/workspace/overview', icon: LayoutDashboard },
         { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
         { title: 'Automations', path: '/workspace/auto-task-rules', icon: Zap },
         { title: 'Teams', path: '/workspace/user-groups', icon: Users },

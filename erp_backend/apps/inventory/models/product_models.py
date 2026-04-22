@@ -48,14 +48,14 @@ class Unit(AuditLogMixin, TenantOwnedModel):
 
 class UnitPackage(AuditLogMixin, TenantOwnedModel):
     """
-    Per-UNIT package template — a first-class reusable entity like a
-    mini-product. Defines standard packaging configurations (Pack of 6,
-    Carton 24, Pallet 144) that can have their own barcode, price, image,
-    and be linked to categories / brands / attributes via
-    PackagingSuggestionRule.
+    Per-UNIT package TEMPLATE — just the shape (name + ratio + unit).
 
-    When a product adopts this unit, these templates can seed its
-    product-level ProductPackaging entries.
+    Templates DON'T carry barcode / price / image — those are per-product
+    and live on ProductPackaging. When a product adopts this template,
+    its own ProductPackaging row gets the barcode and price specific to
+    THAT product (e.g. Coca Cola Pack of 6 has barcode b1 and price p1,
+    while Sprite Pack of 6 has barcode b2 and price p2 — same template,
+    different product-level data).
     """
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='unit_packages')
     name = models.CharField(max_length=120, help_text='Display name, e.g. "Pack of 6"')
@@ -64,17 +64,6 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
         max_digits=15, decimal_places=4, default=Decimal('1.0'),
         help_text='How many base UNITS this package contains'
     )
-    # Product-like fields — each package can be scanned, priced, and pictured.
-    barcode = models.CharField(
-        max_length=100, null=True, blank=True,
-        help_text='Optional barcode for this package template',
-    )
-    selling_price = models.DecimalField(
-        max_digits=15, decimal_places=2, null=True, blank=True,
-        help_text='Default selling price for products adopting this package',
-    )
-    image_url = models.CharField(max_length=500, null=True, blank=True)
-    is_active = models.BooleanField(default=True, help_text='Inactive packages are hidden from product forms')
     is_default = models.BooleanField(default=False, help_text='Primary package for this unit')
     order = models.PositiveIntegerField(default=0, help_text='Display order (ascending)')
     notes = models.TextField(null=True, blank=True)

@@ -186,9 +186,7 @@ class UnitPackageSerializer(serializers.ModelSerializer):
         model = UnitPackage
         fields = [
             'id', 'unit', 'unit_name', 'unit_code', 'unit_type',
-            'name', 'code', 'ratio',
-            'barcode', 'selling_price', 'image_url', 'is_active',
-            'is_default', 'order', 'notes',
+            'name', 'code', 'ratio', 'is_default', 'order', 'notes',
             'created_at', 'updated_at', 'organization',
         ]
         read_only_fields = ['organization', 'created_at', 'updated_at']

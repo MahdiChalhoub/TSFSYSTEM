@@ -479,6 +479,17 @@ class Task(TenantModel):
         related_name='tasks_completed',
         help_text='User who marked the task as done / resolved its source action',
     )
+    # ── Proof of Work ───────────────────────────────────────────────
+    # Simple first cut: an optional free-text note the completer leaves
+    # explaining what they did. `require_completion_note` forces the UI
+    # to ask before the user can mark the task done. Photo / checklist
+    # variants will layer on top of this later.
+    completion_note = models.TextField(null=True, blank=True,
+        help_text='What did you do? Captured when the task is completed.',
+    )
+    require_completion_note = models.BooleanField(default=False,
+        help_text='If true, the UI forces the assignee to explain their work before marking done.',
+    )
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 

@@ -60,11 +60,11 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-200">
             <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                <p className="text-tp-xs font-bold text-app-muted-foreground">
+                <p className="text-tp-sm font-medium text-app-muted-foreground">
                     {loading ? 'Loading...' : `${linkedBrands.length} brand${linkedBrands.length !== 1 ? 's' : ''} linked`}
                 </p>
                 <button onClick={() => setShowLink(!showLink)}
-                    className="flex items-center gap-1 text-tp-xxs font-black uppercase tracking-widest px-2 py-1 rounded-lg transition-all"
+                    className="flex items-center gap-1 text-tp-xs font-bold uppercase tracking-wide px-2 py-1 rounded-lg transition-colors"
                     style={showLink ? { background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' } : { color: 'var(--app-muted-foreground)' }}>
                     <Plus size={11} /> Pre-register
                 </button>
@@ -73,16 +73,16 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
             {showLink && (
                 <div className="flex-shrink-0 px-4 py-2.5 animate-in slide-in-from-top-2 duration-200"
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, #8b5cf6 3%, var(--app-surface))' }}>
-                    <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">Available ({unlinkedBrands.length})</p>
+                    <p className="text-tp-xs font-bold uppercase tracking-wide text-app-muted-foreground mb-1.5">Available ({unlinkedBrands.length})</p>
                     {unlinkedBrands.length === 0 ? (
                         <p className="text-tp-sm text-app-muted-foreground">All brands are already linked.</p>
                     ) : (
                         <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar">
                             {unlinkedBrands.map(b => (
                                 <button key={b.id} onClick={() => linkBrand(b.id)} disabled={linking}
-                                    className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all hover:brightness-110 disabled:opacity-50"
+                                    className="flex items-center gap-1 text-tp-sm font-semibold px-2 py-1 rounded-lg transition-colors hover:brightness-110 disabled:opacity-50"
                                     style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)', color: '#8b5cf6', border: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)' }}>
-                                    <Plus size={9} />{b.name}
+                                    <Plus size={10} />{b.name}
                                 </button>
                             ))}
                         </div>
@@ -96,13 +96,13 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                     style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))' }}>
                     <div className="flex items-center gap-2 mb-2">
                         <AlertTriangle size={14} style={{ color: 'var(--app-error)' }} />
-                        <span className="text-tp-sm font-black text-app-error">Cannot Unlink — {conflict.affected_count} product{conflict.affected_count !== 1 ? 's' : ''} affected</span>
+                        <span className="text-tp-md font-bold text-app-error">Cannot Unlink — {conflict.affected_count} product{conflict.affected_count !== 1 ? 's' : ''} affected</span>
                     </div>
-                    <p className="text-tp-xs text-app-muted-foreground mb-2">{conflict.message}</p>
+                    <p className="text-tp-sm text-app-muted-foreground mb-2">{conflict.message}</p>
                     <div className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg"
                         style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
-                        <span className="text-tp-xs font-bold text-app-foreground whitespace-nowrap">Reassign all to:</span>
-                        <select id="bulk-brand-select" className="flex-1 text-tp-xs font-bold rounded-md px-2 py-1 bg-transparent border border-app-border text-app-foreground" defaultValue="">
+                        <span className="text-tp-sm font-semibold text-app-foreground whitespace-nowrap">Reassign all to:</span>
+                        <select id="bulk-brand-select" className="flex-1 text-tp-sm font-semibold rounded-md px-2 py-1 bg-transparent border border-app-border text-app-foreground" defaultValue="">
                             <option value="" disabled>Select brand...</option>
                             {allBrands.filter(b => b.id !== conflict._brandId).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
@@ -113,16 +113,16 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                             setLinking(true); let ok = 0
                             for (const p of conflict.products || []) { try { await erpFetch(`inventory/products/${p.id}/`, { method: 'PATCH', body: JSON.stringify({ brand: newBrandId }) }); ok++ } catch {} }
                             toast.success(`${ok} product${ok !== 1 ? 's' : ''} reassigned`); setConflict(null); setLinking(false); loadData(); router.refresh()
-                        }} disabled={linking} className="text-tp-xxs font-black uppercase tracking-wider px-2 py-1 rounded-lg transition-all disabled:opacity-50" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                        }} disabled={linking} className="text-tp-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50" style={{ background: 'var(--app-primary)', color: 'white' }}>
                             {linking ? 'Working...' : 'Reassign All'}
                         </button>
                     </div>
                     <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
                         {(conflict.products || []).map((p: any) => (
-                            <div key={p.id} className="flex items-center gap-2 text-tp-xs py-1.5 px-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
-                                <span className="font-mono font-bold text-app-muted-foreground flex-shrink-0">{p.sku}</span>
-                                <span className="font-bold text-app-foreground truncate flex-1">{p.name}</span>
-                                <select id={`brand-sel-${p.id}`} className="text-tp-xs font-bold rounded-md px-1.5 py-0.5 bg-transparent border border-app-border text-app-foreground max-w-[100px]" defaultValue="">
+                            <div key={p.id} className="flex items-center gap-2 text-tp-sm py-1.5 px-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
+                                <span className="font-mono font-semibold text-app-muted-foreground flex-shrink-0">{p.sku}</span>
+                                <span className="font-medium text-app-foreground truncate flex-1">{p.name}</span>
+                                <select id={`brand-sel-${p.id}`} className="text-tp-sm font-semibold rounded-md px-1.5 py-0.5 bg-transparent border border-app-border text-app-foreground max-w-[100px]" defaultValue="">
                                     <option value="" disabled>Brand...</option>
                                     {allBrands.filter(b => b.id !== conflict._brandId).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
                                 </select>
@@ -135,12 +135,12 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                                         toast.success(`${p.name} reassigned`)
                                         setConflict((prev: any) => { if (!prev) return null; const remaining = prev.products.filter((x: any) => x.id !== p.id); if (remaining.length === 0) { loadData(); return null }; return { ...prev, products: remaining, affected_count: remaining.length } })
                                     } catch (e: any) { toast.error(e?.message || 'Failed to reassign') }
-                                }} className="text-tp-xxs font-black px-1.5 py-0.5 rounded transition-all flex-shrink-0" style={{ background: 'var(--app-primary)', color: 'white' }}>✓</button>
+                                }} className="text-tp-xs font-bold px-1.5 py-0.5 rounded transition-colors flex-shrink-0" style={{ background: 'var(--app-primary)', color: 'white' }}>✓</button>
                             </div>
                         ))}
-                        {conflict.affected_count > 20 && <p className="text-tp-xs font-bold text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>}
+                        {conflict.affected_count > 20 && <p className="text-tp-sm font-medium text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>}
                     </div>
-                    <button onClick={() => setConflict(null)} className="mt-2 text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground transition-all">Dismiss</button>
+                    <button onClick={() => setConflict(null)} className="mt-2 text-tp-sm font-medium text-app-muted-foreground hover:text-app-foreground transition-colors">Dismiss</button>
                 </div>
             )}
 
@@ -150,28 +150,28 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                 ) : linkedBrands.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <Paintbrush size={32} className="text-app-muted-foreground mb-2 opacity-40" />
-                        <p className="text-sm font-bold text-app-muted-foreground">No brands linked</p>
+                        <p className="text-tp-md font-semibold text-app-muted-foreground">No brands linked</p>
                         <p className="text-tp-sm text-app-muted-foreground mt-1">Brands appear automatically when products use them.</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
                         {linkedBrands.map((b: any) => (
-                            <div key={b.id} className="flex items-center gap-3 px-4 py-2 group transition-all hover:bg-app-surface/50">
-                                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}><Paintbrush size={12} /></div>
+                            <div key={b.id} className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}><Paintbrush size={13} /></div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                        <p className="text-tp-md font-bold text-app-foreground truncate">{b.name}</p>
-                                        <span className="text-tp-xxs font-black px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
+                                        <p className="text-tp-md font-semibold text-app-foreground truncate">{b.name}</p>
+                                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0"
                                             style={b.source === 'auto' || b.source === 'both' ? { background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' } : { background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
                                             {b.source === 'auto' ? 'AUTO' : b.source === 'both' ? 'AUTO' : 'PRE-REG'}
                                         </span>
                                     </div>
-                                    {b.product_count != null && <p className="text-tp-xs font-bold text-app-muted-foreground">{b.product_count} product{b.product_count !== 1 ? 's' : ''}</p>}
+                                    {b.product_count != null && <p className="text-tp-sm font-medium text-app-muted-foreground">{b.product_count} product{b.product_count !== 1 ? 's' : ''}</p>}
                                 </div>
                                 <button onClick={() => unlinkBrand(b.id)} disabled={linking}
-                                    className="flex items-center gap-1 text-tp-xxs font-bold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                                    className="flex items-center gap-1 text-tp-xs font-semibold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
                                     style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
-                                    <Unlink size={10} />Unlink
+                                    <Unlink size={11} />Unlink
                                 </button>
                             </div>
                         ))}

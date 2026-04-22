@@ -27,6 +27,8 @@ export interface Task {
     completed_at?: string | null;
     completed_by?: number | null;
     completed_by_name?: string | null;
+    completion_note?: string | null;
+    require_completion_note?: boolean;
     is_recurring?: boolean;
     recurrence_days?: number;
     created_at: string;

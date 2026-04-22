@@ -216,10 +216,20 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def complete(self, request, pk=None):
         task = self.get_object()
+        note = (request.data.get('completion_note') or '').strip() if hasattr(request, 'data') else ''
+        if task.require_completion_note and not note:
+            return Response(
+                {'error': 'This task requires a completion note.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         task.status = 'COMPLETED'
         task.completed_at = timezone.now()
         task.completed_by = request.user
-        task.save(update_fields=['status', 'completed_at', 'completed_by', 'updated_at'])
+        fields = ['status', 'completed_at', 'completed_by', 'updated_at']
+        if note:
+            task.completion_note = note
+            fields.append('completion_note')
+        task.save(update_fields=fields)
         return Response({'status': 'completed'})
 
     @action(detail=True, methods=['post'], url_path='resolve-and-complete')

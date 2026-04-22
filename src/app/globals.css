@@ -146,12 +146,12 @@
    --tp-* vars only — never hardcoded px.
    ═══════════════════════════════════════════════════════════ */
 :root {
-  --tp-xxs: 9px;    /* root badges, smallest meta */
-  --tp-xs:  10px;   /* uppercase tiny labels, secondary counts */
-  --tp-sm:  11px;   /* labels, compact meta */
-  --tp-md:  12px;   /* body-compact, chip counts */
-  --tp-lg:  13px;   /* body, row names */
-  --tp-xl:  14px;   /* primary body, inputs */
+  --tp-xxs: 10px;   /* badges, smallest meta — was 9px, below accessibility minimum */
+  --tp-xs:  11px;   /* tiny labels, secondary counts */
+  --tp-sm:  12px;   /* labels, compact meta */
+  --tp-md:  13px;   /* body-compact, chip counts */
+  --tp-lg:  14px;   /* body, row names */
+  --tp-xl:  15px;   /* primary body, inputs */
   --tp-2xl: 16px;   /* section headers */
   --tp-3xl: 18px;   /* page titles */
   --tp-stat: 18px;  /* stat values, tabular */

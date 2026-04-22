@@ -7,6 +7,8 @@ import {
     FolderKanban, ChevronRight, Filter, Menu, Calendar, Settings2, Bell,
 } from 'lucide-react';
 
+import { toast } from 'sonner';
+import { erpFetch } from '@/lib/erp-api';
 import type { Task, Category, UserItem, Dashboard, CategorySelection, StatusFilter } from './types';
 import { getUserName } from './types';
 import CategorySidebar from './CategorySidebar';
@@ -184,6 +186,20 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
             filtered = filtered.filter(t => filterHasLink === 'YES' ? !!t.related_object_type : !t.related_object_type);
         }
 
+        // ── Focus Mode: auto-narrow to what's urgent + done today ──
+        // When the user flips Focus on, we surface only the work that
+        // genuinely demands attention right now — no configuration needed.
+        if (focusMode) {
+            const today = _todayIso;
+            filtered = filtered.filter(t => {
+                if (t.status === 'COMPLETED' || t.status === 'CANCELLED') return false;
+                if (t.is_overdue) return true;
+                if (t.priority === 'URGENT' || t.priority === 'HIGH') return true;
+                if (t.due_date && t.due_date.slice(0, 10) === today) return true;
+                return false;
+            });
+        }
+
         return filtered;
     };
 
@@ -213,9 +229,20 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
         || filterOverdueOnly || filterHasLink !== 'ALL';
 
     /* ── Quick-complete toggle ─────────────────────────────────────── */
+    const [proofTask, setProofTask] = useState<Task | null>(null);
+    const [proofNote, setProofNote] = useState('');
+
     function handleQuickComplete(taskId: number, currentStatus: string, e: React.MouseEvent) {
         e.stopPropagation();
         const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+        const task = tasks.find(t => t.id === taskId);
+        // If the task demands a completion note, open the proof dialog instead of
+        // flipping immediately — the /complete endpoint rejects empty notes.
+        if (newStatus === 'COMPLETED' && task?.require_completion_note) {
+            setProofTask(task);
+            setProofNote('');
+            return;
+        }
         startTransition(async () => {
             try {
                 if (newStatus === 'COMPLETED') {
@@ -227,6 +254,28 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                 }
                 setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
             } catch { /* silent */ }
+        });
+    }
+
+    async function submitProof() {
+        if (!proofTask) return;
+        const note = proofNote.trim();
+        if (!note) return;
+        startTransition(async () => {
+            try {
+                await erpFetch(`tasks/${proofTask.id}/complete/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ completion_note: note }),
+                });
+                setTasks(prev => prev.map(t => t.id === proofTask.id
+                    ? { ...t, status: 'COMPLETED', completion_note: note }
+                    : t));
+                toast.success('Task marked done with your note');
+                setProofTask(null); setProofNote('');
+            } catch (err: unknown) {
+                toast.error(err instanceof Error ? err.message : 'Failed to save note');
+            }
         });
     }
 
@@ -336,9 +385,18 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                         </button>
                     </div>
                     <button onClick={() => setFocusMode(prev => !prev)}
-                            className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
-                            title="Focus Mode (Ctrl+Q)">
-                        {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                            className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all"
+                            title="Focus Mode: only Today · Overdue · Urgent (Ctrl+Q)"
+                            style={focusMode ? {
+                                background: 'var(--app-error, #ef4444)',
+                                color: 'white',
+                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)',
+                            } : {
+                                background: 'transparent',
+                                color: 'var(--app-muted-foreground)',
+                                border: '1px solid var(--app-border)',
+                            }}>
+                        {focusMode ? <><Minimize2 size={13} /> <span className="hidden sm:inline">Focus</span></> : <Maximize2 size={13} />}
                     </button>
                 </div>
             </div>
@@ -773,6 +831,59 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                 activeProfileId={activeProfileId}
                 setActiveProfileId={id => { setActiveProfileId(id); saveTaskActiveId(id); }}
             />
+
+            {/* ── Proof-of-Work dialog ── forces a note before the task closes */}
+            {proofTask && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+                    onClick={e => { if (e.target === e.currentTarget && !isPending) { setProofTask(null); setProofNote(''); } }}>
+                    <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                        <div className="px-4 py-3 flex items-center gap-2.5"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-success, #22c55e) 6%, var(--app-surface))' }}>
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                style={{ background: 'var(--app-success, #22c55e)' }}>
+                                <CheckCircle2 size={15} className="text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-sm font-black" style={{ color: 'var(--app-foreground)' }}>Before we mark this done</h3>
+                                <p className="text-[11px] font-bold truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    {proofTask.title}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-4 space-y-3">
+                            <label className="block">
+                                <span className="text-[10px] font-black uppercase tracking-widest block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    What did you do? *
+                                </span>
+                                <textarea rows={4} value={proofNote} autoFocus disabled={isPending}
+                                    onChange={e => setProofNote(e.target.value)}
+                                    placeholder="Describe the action you took to resolve this task..."
+                                    className="w-full text-[12px] px-3 py-2 rounded-lg outline-none resize-none disabled:opacity-60"
+                                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                            </label>
+                            <p className="text-[10px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                This becomes permanent proof on the task — visible to anyone who opens it.
+                            </p>
+                        </div>
+                        <div className="px-4 py-3 flex items-center justify-end gap-2"
+                            style={{ borderTop: '1px solid var(--app-border)' }}>
+                            <button onClick={() => { setProofTask(null); setProofNote(''); }} disabled={isPending}
+                                className="text-[11px] font-bold px-3 py-1.5 rounded-lg"
+                                style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
+                                Cancel
+                            </button>
+                            <button onClick={submitProof} disabled={isPending || !proofNote.trim()}
+                                className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                                style={{ background: 'var(--app-success, #22c55e)', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }}>
+                                {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+                                Submit & mark done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

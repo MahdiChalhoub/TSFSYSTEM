@@ -200,7 +200,21 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                             )}
                         </span>
                     )}
+                    {t.require_completion_note && !isCompleted && (
+                        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                              style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)' }}
+                              title="You'll be asked to describe your work before marking this done">
+                            🔒 Proof required
+                        </span>
+                    )}
                 </div>
+                {isCompleted && t.completion_note && (
+                    <div className="mt-2 pt-2 flex items-start gap-2 text-[11px] font-medium"
+                         style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)', color: 'var(--app-foreground)' }}>
+                        <CheckCheck size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-success, #22c55e)' }} />
+                        <span className="whitespace-pre-wrap break-words">{t.completion_note}</span>
+                    </div>
+                )}
 
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                     {sourceLink && (

@@ -13,7 +13,7 @@ async function safeLoad(url: string) {
 }
 
 export default async function PackagesPage() {
-    const [packages, units, categories, brands, attributes] = await Promise.all([
+    const [templates, units, categories, brands, attributes] = await Promise.all([
         safeLoad('unit-packages/'),
         safeLoad('/units/'),
         safeLoad('inventory/categories/'),
@@ -23,7 +23,7 @@ export default async function PackagesPage() {
 
     return (
         <PackagesClient
-            initialPackages={packages}
+            initialTemplates={templates}
             units={units}
             categories={categories}
             brands={brands}
