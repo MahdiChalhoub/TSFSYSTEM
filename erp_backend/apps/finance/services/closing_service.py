@@ -283,46 +283,79 @@ class ClosingService:
                 re_account = rule.account
 
             # ── Step 3: Close P&L into retained earnings ───────────
-            from django.db.models import Q
-            pnl_accounts = ChartOfAccount.objects.filter(
-                organization=organization,
-                type__in=['INCOME', 'EXPENSE'],
-                is_active=True,
-            )
 
             # Close P&L into retained earnings — once per scope.
+            # CRITICAL: Compute P&L from POSTED journal entry lines within this
+            # fiscal year's date range — NOT from the denormalized `balance`/
+            # `balance_official` fields on ChartOfAccount, which can become stale
+            # after COA migrations, manual resets, or failed recalculations.
+            from apps.finance.models import JournalEntryLine
+            from django.db.models import Sum, Q
+
+            # Compute per-account, per-scope P&L from authoritative JE lines
+            pnl_lines = JournalEntryLine.objects.filter(
+                journal_entry__organization=organization,
+                journal_entry__status='POSTED',
+                account__type__in=['INCOME', 'EXPENSE'],
+            ).filter(
+                Q(journal_entry__fiscal_year=fiscal_year) |
+                Q(journal_entry__fiscal_year__isnull=True,
+                  journal_entry__transaction_date__date__gte=fiscal_year.start_date,
+                  journal_entry__transaction_date__date__lte=fiscal_year.end_date)
+            ).values(
+                'account_id', 'account__code', 'account__name',
+                'journal_entry__scope'
+            ).annotate(
+                total_debit=Sum('debit'),
+                total_credit=Sum('credit'),
+            )
+
+            # Build a lookup: {account_id: {scope: net_amount}}
+            pnl_by_account = {}
+            for row in pnl_lines:
+                acc_id = row['account_id']
+                scope_val = row['journal_entry__scope']
+                net = (row['total_debit'] or Decimal('0.00')) - (row['total_credit'] or Decimal('0.00'))
+                if acc_id not in pnl_by_account:
+                    pnl_by_account[acc_id] = {
+                        'code': row['account__code'],
+                        'name': row['account__name'],
+                        'OFFICIAL': Decimal('0.00'),
+                        'INTERNAL': Decimal('0.00'),
+                    }
+                pnl_by_account[acc_id][scope_val] = \
+                    pnl_by_account[acc_id].get(scope_val, Decimal('0.00')) + net
+
             # Option A — OFFICIAL ⊂ INTERNAL:
-            #   - OFFICIAL closing JE (scope='OFFICIAL') zeros `balance_official`
-            #     and is also visible in the INTERNAL view (no scope filter).
-            #   - INTERNAL closing JE (scope='INTERNAL') must therefore zero
-            #     ONLY the internal-only delta (`balance - balance_official`),
-            #     otherwise the OFFICIAL portion gets double-closed in INTERNAL view.
+            #   - OFFICIAL closing JE (scope='OFFICIAL') zeros the official portion.
+            #   - INTERNAL closing JE (scope='INTERNAL') zeros ONLY the
+            #     internal-only delta, avoiding double-close.
             scope_amount_fn = (
-                ('OFFICIAL', lambda a: a.balance_official or Decimal('0.00')),
-                ('INTERNAL', lambda a: (a.balance or Decimal('0.00')) - (a.balance_official or Decimal('0.00'))),
+                ('OFFICIAL', lambda d: d.get('OFFICIAL', Decimal('0.00'))),
+                ('INTERNAL', lambda d: d.get('INTERNAL', Decimal('0.00'))),
             )
 
             for scope, amount_fn in scope_amount_fn:
                 closing_lines = []
                 total_pnl = Decimal('0.00')
 
-                for acc in pnl_accounts:
-                    bal = amount_fn(acc)
+                for acc_id, data in pnl_by_account.items():
+                    bal = amount_fn(data)
                     if bal == Decimal('0.00'):
                         continue
                     if bal > Decimal('0.00'):
                         closing_lines.append({
-                            'account_id': acc.id,
+                            'account_id': acc_id,
                             'debit': Decimal('0.00'),
                             'credit': bal,
-                            'description': f"Year-end close ({scope}): {acc.code} - {acc.name}",
+                            'description': f"Year-end close ({scope}): {data['code']} - {data['name']}",
                         })
                     else:
                         closing_lines.append({
-                            'account_id': acc.id,
+                            'account_id': acc_id,
                             'debit': abs(bal),
                             'credit': Decimal('0.00'),
-                            'description': f"Year-end close ({scope}): {acc.code} - {acc.name}",
+                            'description': f"Year-end close ({scope}): {data['code']} - {data['name']}",
                         })
                     total_pnl += bal
 
