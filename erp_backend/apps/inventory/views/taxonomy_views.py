@@ -1138,11 +1138,20 @@ class CategoryViewSet(TenantModelViewSet):
         Remove an attribute group from this category. Protected: if products
         in this category use values from this group, return 409 with conflict details.
         Barcode-aware: highlights products with active barcodes (extra severity).
+
+        Pass `force=true` (body) or `?force=1` (query) to bypass the guard and
+        remove the explicit M2M link even when products still reference values
+        from this group. Products keep their attribute_values — only the explicit
+        category↔attribute link is removed.
         """
         category = self.get_object()
         organization = category.organization
         from apps.inventory.models import ProductAttribute, Product
         attr_id = request.data.get('attribute_id')
+        force = (
+            str(request.data.get('force', '')).lower() in ('1', 'true', 'yes')
+            or str(request.query_params.get('force', '')).lower() in ('1', 'true', 'yes')
+        )
 
         try:
             attr = ProductAttribute.objects.get(id=attr_id, organization=organization, parent__isnull=True)
@@ -1161,7 +1170,7 @@ class CategoryViewSet(TenantModelViewSet):
         ).distinct().only('id', 'sku', 'name', 'barcode')
 
         count = conflicting.count()
-        if count > 0:
+        if count > 0 and not force:
             # Count those with active barcodes (extra severity)
             barcode_count = conflicting.filter(barcodes__is_active=True).distinct().count()
             products_preview = list(

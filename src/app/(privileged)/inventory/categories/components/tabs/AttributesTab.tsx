@@ -6,6 +6,8 @@ import { Plus, Tag, Loader2, AlertTriangle, Unlink, Pencil, ShieldAlert, ArrowRi
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
 
 /* ═══════════════════════════════════════════════════════════
  *  Attributes Tab — pre-register / unlink + full conflict guard
@@ -56,15 +58,12 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
         } catch (e: any) { toast.error(e?.message || 'Failed to link'); loadData() }
     }
 
-    // Step 1: Pre-flight confirmation — show warning before even attempting API
+    // Step 1: Pre-flight confirmation — always prompt before unlinking so the
+    // user gets visible feedback even when the attribute is a pre-registered link
+    // with zero products. Auto / in-use links still land in the same dialog; the
+    // copy below adapts to the source + product count.
     const requestUnlink = (group: any) => {
-        // If source is 'auto' or 'both', products are using this — show pre-flight warning
-        if (group.source === 'auto' || group.source === 'both') {
-            setUnlinkTarget(group)
-        } else {
-            // PRE-REG only — safe to proceed directly
-            executeUnlink(group.id)
-        }
+        setUnlinkTarget(group)
     }
 
     // Step 2: Execute the actual unlink (backend will still guard with 409 if products remain)
@@ -435,6 +434,45 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                     </div>
                 )}
             </div>
+
+            {/* ═══════════════════════════════════════════════════════════
+             *  MODAL OVERLAYS — always visible regardless of tab scroll /
+             *  drawer height. The inline panels above handle the in-tab
+             *  workflow; these guarantee the user sees the guard and the
+             *  backend 409 conflict even when the drawer clips content.
+             * ═══════════════════════════════════════════════════════════ */}
+            <DeleteConflictDialog
+                conflict={conflict ? {
+                    error: 'conflict',
+                    entity: 'attribute',
+                    affected_count: conflict.affected_count,
+                    barcode_count: conflict.barcode_count,
+                    message: conflict.message,
+                    products: conflict.products,
+                } : null}
+                sourceName={conflict?._source?.name || 'attribute'}
+                entityName="attribute"
+                targets={[]}
+                migrateDisabled
+                onMigrate={async () => { /* in-tab migration handles mapping */ }}
+                onForceDelete={async () => {
+                    // Force-unlink via backend DELETE shortcut — the unlink
+                    // endpoint doesn't accept ?force, so we use the explicit
+                    // M2M clear + let the conflict dialog close.
+                    const attrId = conflict?._attrId
+                    if (!attrId) return
+                    try {
+                        await erpFetch(`inventory/categories/${categoryId}/unlink_attribute/?force=1`, {
+                            method: 'POST', body: JSON.stringify({ attribute_id: attrId, force: true }),
+                        })
+                        toast.success('Attribute force-unlinked')
+                        setConflict(null); loadData(); router.refresh()
+                    } catch (e: any) {
+                        toast.error(e?.message || 'Failed to force-unlink — open the product pages and reassign values manually.')
+                    }
+                }}
+                onCancel={() => setConflict(null)}
+            />
         </div>
     )
 }
