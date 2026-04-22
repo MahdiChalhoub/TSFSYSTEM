@@ -19,6 +19,7 @@ export const inventoryInProgress: MenuItem = {
     children: [
         { title: 'Categories', path: '/inventory/categories', icon: FolderTree },
         { title: 'Units & Packaging', path: '/inventory/units', icon: Warehouse },
+        { title: 'Packages', path: '/inventory/packages', icon: Box },
         { title: 'Packaging Rules', path: '/inventory/packaging-suggestions', icon: Sparkles },
     ],
 };
