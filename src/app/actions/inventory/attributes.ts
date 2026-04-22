@@ -119,13 +119,24 @@ export async function updateAttribute(id: number, data: Partial<{
 
 /**
  * Delete an attribute (and all children if root).
+ *
+ * When products are still using the attribute (group or leaf value) the
+ * backend returns 409 with a typed conflict payload. We pass that through
+ * so the client can render DeleteConflictDialog. Pass `{ force: true }` to
+ * bypass the guard and destroy the attribute regardless.
  */
-export async function deleteAttribute(id: number) {
+export async function deleteAttribute(id: number, opts?: { force?: boolean }) {
     try {
-        await erpFetch(`${BASE}/${id}/`, { method: 'DELETE' })
+        const url = opts?.force ? `${BASE}/${id}/?force=1` : `${BASE}/${id}/`
+        await erpFetch(url, { method: 'DELETE' })
         revalidatePath('/inventory/attributes')
         return { success: true }
     } catch (e: any) {
+        // erpFetch surfaces parsed body via e.data. 409 conflicts carry the
+        // structured payload: { error:'conflict', affected_count, products, … }
+        if (e?.status === 409 && e?.data?.error === 'conflict') {
+            return { success: false, conflict: e.data, message: e.data.message }
+        }
         return { success: false, error: e?.message || 'Failed to delete attribute' }
     }
 }

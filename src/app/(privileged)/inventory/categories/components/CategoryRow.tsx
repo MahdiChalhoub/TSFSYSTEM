@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from 'react'
 import {
     ChevronRight, Plus, Folder, FolderOpen,
-    Pencil, Trash2, AlertCircle,
+    Pencil, Trash2, AlertCircle, Bookmark,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CategoryNode } from './types'

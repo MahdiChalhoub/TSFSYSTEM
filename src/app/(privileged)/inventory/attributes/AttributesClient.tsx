@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
 import {
     createAttribute, updateAttribute,
     deleteAttribute, addAttributeValue,
@@ -59,6 +60,8 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
     const [linkingCategoryFor, setLinkingCategoryFor] = useState<AttributeGroup | null>(null)
     const [linkingBrandFor, setLinkingBrandFor] = useState<AttributeGroup | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string; isRoot: boolean } | null>(null)
+    // 409 conflict payload surfaced when products still use the attribute
+    const [deleteConflict, setDeleteConflict] = useState<{ conflict: any; source: { id: number; name: string; isRoot: boolean } } | null>(null)
     const [allCategories] = useState<any[]>(initialCategories)
     const [allBrands] = useState<any[]>(initialBrands)
 
@@ -98,10 +101,24 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
         if (!t) return
         setDeleteTarget(null)
         startTransition(async () => {
-            const res = await deleteAttribute(t.id)
-            if (res?.success) { toast.success(`"${t.name}" deleted`); fetchTree() }
-            else { toast.error(res?.error || 'Delete failed') }
+            const res: any = await deleteAttribute(t.id)
+            if (res?.success) { toast.success(`"${t.name}" deleted`); fetchTree(); return }
+            // Backend 409 — products still use this attribute. Open guided dialog.
+            if (res?.conflict) { setDeleteConflict({ conflict: res.conflict, source: t }); return }
+            toast.error(res?.error || 'Delete failed')
         })
+    }
+
+    const handleForceDelete = async () => {
+        const t = deleteConflict?.source
+        if (!t) return
+        const res: any = await deleteAttribute(t.id, { force: true })
+        if (res?.success) {
+            toast.success(`"${t.name}" force-deleted`)
+            setDeleteConflict(null); fetchTree()
+        } else {
+            toast.error(res?.error || 'Delete failed')
+        }
     }
 
     const handleCreateGroup = async (payload: any) => {
@@ -283,6 +300,19 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                                 : 'Products currently tagged with this value will lose it.'}
                             confirmText="Delete"
                             variant="danger"
+                        />
+                        {/* 409 guard — shows the affected products with barcode severity,
+                            then offers Force Delete or Cancel. No migration path here: the
+                            product's attribute-value mapping lives at the product level. */}
+                        <DeleteConflictDialog
+                            conflict={deleteConflict?.conflict || null}
+                            sourceName={deleteConflict?.source?.name || ''}
+                            entityName="attribute"
+                            targets={[]}
+                            migrateDisabled
+                            onMigrate={async () => { /* disabled */ }}
+                            onForceDelete={handleForceDelete}
+                            onCancel={() => setDeleteConflict(null)}
                         />
                     </>
                 }
