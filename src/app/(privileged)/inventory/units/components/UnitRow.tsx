@@ -23,8 +23,10 @@ export const UnitRow = ({ node, level, onEdit, onAdd, onDelete, searchQuery, for
 
     const isBase = level === 0
     const productCount = node.product_count ?? 0
+    const packageCount = node.package_count ?? 0
     const childCount = node.children?.length ?? 0
     const convFactor = node.conversion_factor ?? 1
+    const unitType = (node.type || 'COUNT').charAt(0) + (node.type || 'COUNT').slice(1).toLowerCase()
 
     return (
         <div>
@@ -64,8 +66,8 @@ export const UnitRow = ({ node, level, onEdit, onAdd, onDelete, searchQuery, for
                 <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); onSelect?.(node) }}>
                     <div className="flex items-center gap-1.5">
                         <span className={`truncate text-tp-lg ${isBase ? 'font-bold text-app-foreground' : 'font-medium text-app-foreground'}`}>{node.name}</span>
-                        {isBase && <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full flex-shrink-0"
-                            style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>BASE</span>}
+                        <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full flex-shrink-0"
+                            style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>{unitType}</span>
                         {node.needs_balance && <Scale size={11} style={{ color: 'var(--app-warning)', flexShrink: 0 }} />}
                     </div>
                     {(node.code || node.short_name) && (
@@ -89,6 +91,14 @@ export const UnitRow = ({ node, level, onEdit, onAdd, onDelete, searchQuery, for
                     <span className="text-tp-xs font-semibold tabular-nums flex items-center gap-0.5"
                         style={{ color: !isBase ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-muted-foreground) 40%, transparent)' }}>
                         {isBase ? '1:1' : `×${convFactor}`}
+                    </span>
+                </div>
+
+                {/* Packages */}
+                <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
+                    <span className="text-tp-xs font-semibold tabular-nums flex items-center gap-0.5"
+                        style={{ color: packageCount > 0 ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
+                        <Package size={10} />{packageCount}
                     </span>
                 </div>
 

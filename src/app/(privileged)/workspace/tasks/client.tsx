@@ -232,17 +232,22 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
     const [proofTask, setProofTask] = useState<Task | null>(null);
     const [proofNote, setProofNote] = useState('');
     const [proofFile, setProofFile] = useState<File | null>(null);
+    const [proofChecklist, setProofChecklist] = useState<{ label: string; checked: boolean }[]>([]);
 
     function handleQuickComplete(taskId: number, currentStatus: string, e: React.MouseEvent) {
         e.stopPropagation();
         const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
         const task = tasks.find(t => t.id === taskId);
-        // If the task demands a completion note, open the proof dialog instead of
-        // flipping immediately — the /complete endpoint rejects empty notes.
-        if (newStatus === 'COMPLETED' && task?.require_completion_note) {
-            setProofTask(task);
+        // If the task demands a completion note OR has a checklist, open the
+        // proof dialog instead of flipping immediately — the /complete endpoint
+        // rejects incomplete proof.
+        const needsProof = newStatus === 'COMPLETED' && task &&
+            (task.require_completion_note || (task.completion_checklist && task.completion_checklist.length > 0));
+        if (needsProof) {
+            setProofTask(task!);
             setProofNote('');
             setProofFile(null);
+            setProofChecklist(task!.completion_checklist?.map(i => ({ ...i })) ?? []);
             return;
         }
         startTransition(async () => {
@@ -262,14 +267,20 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
     async function submitProof() {
         if (!proofTask) return;
         const note = proofNote.trim();
-        if (!note) return;
+        const requiresNote = proofTask.require_completion_note;
+        const hasChecklist = proofChecklist.length > 0;
+        if (requiresNote && !note) return;
+        if (hasChecklist && proofChecklist.some(i => !i.checked)) return;
         startTransition(async () => {
             try {
-                // 1. Mark task complete with the text note.
+                // 1. Mark task complete with the text note + checklist.
+                const payload: any = {};
+                if (note) payload.completion_note = note;
+                if (hasChecklist) payload.completion_checklist = proofChecklist;
                 await erpFetch(`tasks/${proofTask.id}/complete/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ completion_note: note }),
+                    body: JSON.stringify(payload),
                 });
                 // 2. If a photo was attached, upload it as a TaskAttachment.
                 //    Non-blocking — task is already marked done; if upload
@@ -286,10 +297,10 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     }
                 }
                 setTasks(prev => prev.map(t => t.id === proofTask.id
-                    ? { ...t, status: 'COMPLETED', completion_note: note }
+                    ? { ...t, status: 'COMPLETED', completion_note: note || t.completion_note, completion_checklist: hasChecklist ? proofChecklist : t.completion_checklist }
                     : t));
-                toast.success(proofFile ? 'Task closed with note + photo' : 'Task marked done with your note');
-                setProofTask(null); setProofNote(''); setProofFile(null);
+                toast.success(proofFile ? 'Task closed with note + photo' : 'Task marked done');
+                setProofTask(null); setProofNote(''); setProofFile(null); setProofChecklist([]);
             } catch (err: unknown) {
                 toast.error(err instanceof Error ? err.message : 'Failed to save note');
             }
@@ -870,16 +881,48 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                             </div>
                         </div>
                         <div className="p-4 space-y-3">
-                            <label className="block">
-                                <span className="text-tp-xs font-bold uppercase tracking-wide block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
-                                    What did you do? *
-                                </span>
-                                <textarea rows={4} value={proofNote} autoFocus disabled={isPending}
-                                    onChange={e => setProofNote(e.target.value)}
-                                    placeholder="Describe the action you took to resolve this task..."
-                                    className="w-full text-tp-md px-3 py-2 rounded-lg outline-none resize-none disabled:opacity-60"
-                                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                            </label>
+                            {/* Checklist — must-tick items before closing */}
+                            {proofChecklist.length > 0 && (
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Checklist · {proofChecklist.filter(i => i.checked).length}/{proofChecklist.length}
+                                        </span>
+                                        {proofChecklist.every(i => i.checked) && (
+                                            <span className="text-tp-xs font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>
+                                                ✅ All ticked
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1">
+                                        {proofChecklist.map((item, idx) => (
+                                            <label key={idx} className="flex items-start gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all hover:bg-app-surface/70"
+                                                style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                                                <input type="checkbox" checked={item.checked} disabled={isPending}
+                                                    onChange={e => setProofChecklist(prev => prev.map((it, i) => i === idx ? { ...it, checked: e.target.checked } : it))}
+                                                    className="mt-0.5 flex-shrink-0" />
+                                                <span className={`text-tp-md font-medium ${item.checked ? 'line-through opacity-60' : ''}`}
+                                                    style={{ color: 'var(--app-foreground)' }}>
+                                                    {item.label}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {proofTask.require_completion_note && (
+                                <label className="block">
+                                    <span className="text-tp-xs font-bold uppercase tracking-wide block mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        What did you do? *
+                                    </span>
+                                    <textarea rows={4} value={proofNote} autoFocus disabled={isPending}
+                                        onChange={e => setProofNote(e.target.value)}
+                                        placeholder="Describe the action you took to resolve this task..."
+                                        className="w-full text-tp-md px-3 py-2 rounded-lg outline-none resize-none disabled:opacity-60"
+                                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                </label>
+                            )}
 
                             {/* Optional photo attachment */}
                             <div>
@@ -917,12 +960,17 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                         </div>
                         <div className="px-4 py-3 flex items-center justify-end gap-2"
                             style={{ borderTop: '1px solid var(--app-border)' }}>
-                            <button onClick={() => { setProofTask(null); setProofNote(''); setProofFile(null); }} disabled={isPending}
+                            <button onClick={() => { setProofTask(null); setProofNote(''); setProofFile(null); setProofChecklist([]); }} disabled={isPending}
                                 className="text-tp-sm font-bold px-3 py-1.5 rounded-lg"
                                 style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
                                 Cancel
                             </button>
-                            <button onClick={submitProof} disabled={isPending || !proofNote.trim()}
+                            <button onClick={submitProof}
+                                disabled={
+                                    isPending
+                                    || (proofTask.require_completion_note && !proofNote.trim())
+                                    || (proofChecklist.length > 0 && proofChecklist.some(i => !i.checked))
+                                }
                                 className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
                                 style={{ background: 'var(--app-success, #22c55e)', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }}>
                                 {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}

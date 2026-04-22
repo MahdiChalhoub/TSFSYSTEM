@@ -5,12 +5,13 @@ import { useState, useMemo, useRef, useEffect, ReactNode } from 'react'
 import {
     Search, Plus, Layers,
     Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp,
-    X, LayoutPanelLeft, PanelLeftClose, Bookmark, RefreshCw
+    X, LayoutPanelLeft, PanelLeftClose, Bookmark, RefreshCw, FolderTree
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { TourTriggerButton } from '@/components/ui/GuidedTour'
 import { usePageTour } from '@/lib/tours/useTour'
+import { buildTree } from '@/lib/utils/tree'
 import type { MasterPageConfig } from '@/components/templates/master-page-config'
 
 /* ═══════════════════════════════════════════════════════════
@@ -49,6 +50,18 @@ export interface TreeMasterRenderProps {
     setPanelTab: (t: string) => void
     setExpandAll: (v: boolean | undefined | ((prev: boolean | undefined) => boolean | undefined)) => void
     setExpandKey: (v: number | ((prev: number) => number)) => void
+    /**
+     * Only populated when `config.data` is provided. The template owns
+     * search + KPI filter + tree build so consumers just render rows.
+     */
+    filteredData: any[]
+    tree: any[]
+    /** True when the currently-visible selection-target matches `n`. */
+    isSelected: (n: any) => boolean
+    /** Open a node in the sidebar / split panel using the active layout. */
+    openNode: (n: any, tab?: string) => void
+    /** Active KPI filter key, or null. */
+    kpiFilter: string | null
 }
 
 interface TreeMasterPageProps {
@@ -69,8 +82,10 @@ interface TreeMasterPageProps {
  * ═══════════════════════════════════════════════════════════ */
 export function TreeMasterPage({ config, children, detailPanel, modals, aboveTree }: TreeMasterPageProps) {
     const [searchQuery, setSearchQuery] = useState('')
+    const [kpiFilter, setKpiFilter] = useState<string | null>(null)
 
-    // Notify parent on search — used by consumers to filter their data + recompute KPIs.
+    // Notify parent on search — used by legacy consumers that do their own
+    // filtering. Modern consumers pass `config.data` and ignore this.
     useEffect(() => {
         config.onSearchChange?.(searchQuery)
     }, [searchQuery, config.onSearchChange])
@@ -85,6 +100,37 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     const [sidebarTab, setSidebarTab] = useState('overview')
     const [refreshing, setRefreshing] = useState(false)
     const searchRef = useRef<HTMLInputElement>(null)
+
+    /* ── Template-owned filtering + tree (opt-in via config.data) ── */
+    const ownsData = Array.isArray(config.data)
+    const defaultSearchFields = useMemo(() => ['name', 'code', 'short_name', 'type', 'full_path'], [])
+    const filteredData = useMemo(() => {
+        if (!ownsData) return []
+        const all = config.data as any[]
+        const q = searchQuery.trim().toLowerCase()
+        const fields = config.searchFields || defaultSearchFields
+        const predicate = kpiFilter ? config.kpiPredicates?.[kpiFilter] : null
+        return all.filter(item => {
+            const searchMatch = !q || fields.some(f => String(item?.[f] ?? '').toLowerCase().includes(q))
+            const kpiMatch = !predicate || predicate(item, all)
+            return searchMatch && kpiMatch
+        })
+    }, [ownsData, config.data, searchQuery, kpiFilter, config.searchFields, config.kpiPredicates, defaultSearchFields])
+
+    const tree = useMemo(
+        () => (ownsData ? buildTree(filteredData, config.treeParentKey || 'parent') : []),
+        [ownsData, filteredData, config.treeParentKey]
+    )
+
+    const isSelected = (n: any) => {
+        if (!n) return false
+        const target = (splitPanel || pinnedSidebar) ? selectedNode : sidebarNode
+        return target?.id === n.id
+    }
+    const openNode = (n: any, tab?: string) => {
+        if (splitPanel || pinnedSidebar) { setSelectedNode(n); if (tab) setPanelTab(tab) }
+        else { setSidebarNode(n); setSidebarTab(tab || 'overview') }
+    }
 
     const handleRefresh = async () => {
         if (!config.onRefresh || refreshing) return
@@ -115,6 +161,35 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
         sidebarTab, setSidebarTab,
         panelTab, setPanelTab,
         setExpandAll, setExpandKey,
+        filteredData, tree, isSelected, openNode, kpiFilter,
+    }
+
+    /* ── Resolve config callables against the filtered view ── */
+    const resolvedSubtitle = typeof config.subtitle === 'function'
+        ? config.subtitle(filteredData, (config.data as any[]) || [])
+        : config.subtitle
+    const resolvedFooterLeft = typeof config.footerLeft === 'function'
+        ? config.footerLeft(filteredData, (config.data as any[]) || [])
+        : config.footerLeft
+    const resolveKpiValue = (v: KPI['value']) =>
+        typeof v === 'function' ? v(filteredData, (config.data as any[]) || []) : v
+
+    const hasSearch = Boolean(searchQuery.trim())
+    const treeIsEmpty = ownsData && tree.length === 0
+
+    const handleKpiClick = (key: string) => {
+        // The reserved 'all' key means "clear everything" — search + filter.
+        if (key === 'all') {
+            setSearchQuery('')
+            setKpiFilter(null)
+            config.onKpiFilterChange?.(null)
+            return
+        }
+        setKpiFilter(prev => {
+            const next = prev === key ? null : key
+            config.onKpiFilterChange?.(next)
+            return next
+        })
     }
 
     return (
@@ -158,7 +233,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 <div data-tour="page-title">
                                     <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{config.title}</h1>
                                     <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-widest">
-                                        {config.subtitle}
+                                        {resolvedSubtitle}
                                     </p>
                                 </div>
                             </div>
@@ -220,15 +295,21 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                         {/* ── KPI Strip — each card becomes a click-to-filter button when `filterKey` is set ── */}
                         <div data-tour="kpi-strip" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                             {config.kpis.map(s => {
-                                const isClickable = !!s.filterKey && !!config.onKpiFilterChange
-                                const isActive = !!s.active
-                                // Tag element chooses button vs div based on whether the KPI is wired
+                                // A KPI is clickable if it has a filterKey AND either the template owns
+                                // filtering (kpiPredicates set) or the consumer has wired onKpiFilterChange.
+                                const ownsFilter = !!config.kpiPredicates
+                                const isClickable = !!s.filterKey && (ownsFilter || !!config.onKpiFilterChange)
+                                // Template-owned active state — the 'all' KPI lights up when nothing is filtered.
+                                const templateActive = s.filterKey === 'all'
+                                    ? (kpiFilter === null && !hasSearch)
+                                    : kpiFilter === s.filterKey
+                                const isActive = ownsFilter ? templateActive : !!s.active
                                 const Tag: any = isClickable ? 'button' : 'div'
                                 return (
                                     <Tag key={s.label}
                                         {...(isClickable ? {
                                             type: 'button',
-                                            onClick: () => config.onKpiFilterChange?.(isActive ? null : s.filterKey!),
+                                            onClick: () => handleKpiClick(s.filterKey!),
                                             title: s.hint || (isActive ? 'Click to clear filter' : `Filter by ${s.label}`),
                                         } : {})}
                                         className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all text-left ${isClickable ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.99]' : ''}`}
@@ -251,9 +332,9 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                         </div>
                                         <div className="min-w-0">
                                             <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: isActive ? s.color : 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                            <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                                            <div className="text-sm font-black text-app-foreground tabular-nums">{resolveKpiValue(s.value)}</div>
                                         </div>
-                                        {isClickable && isActive && (
+                                        {isClickable && isActive && s.filterKey !== 'all' && (
                                             <X size={11} className="ml-auto flex-shrink-0" style={{ color: s.color }} />
                                         )}
                                     </Tag>
@@ -317,7 +398,13 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
 
                     {/* Scrollable Body */}
                     <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
-                        {children(renderProps)}
+                        {treeIsEmpty ? (
+                            <EmptyStatePanel
+                                config={config}
+                                hasSearch={hasSearch}
+                                onPrimary={() => config.primaryAction.onClick()}
+                            />
+                        ) : children(renderProps)}
                     </div>
                 </div>
 
@@ -393,7 +480,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                     color: 'var(--app-muted-foreground)', backdropFilter: 'blur(10px)',
                 }}>
                 <div className="flex items-center gap-3 flex-wrap">
-                    {config.footerLeft}
+                    {resolvedFooterLeft}
                     {searchQuery && (
                         <>
                             <span style={{ color: 'var(--app-border)' }}>·</span>
@@ -406,6 +493,37 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                     System Status: <span style={{ color: 'var(--app-success)' }}>Operational</span>
                 </div>
             </div>
+        </div>
+    )
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  EMPTY STATE — auto-rendered when the template owns data and
+ *  the filtered tree is empty. Consumers supply copy via config.emptyState.
+ * ═══════════════════════════════════════════════════════════ */
+function EmptyStatePanel({
+    config, hasSearch, onPrimary,
+}: { config: TreeMasterConfig; hasSearch: boolean; onPrimary: () => void }) {
+    const e = config.emptyState || {}
+    const title = typeof e.title === 'function' ? e.title(hasSearch)
+        : e.title ?? (hasSearch ? `No matching ${config.title.toLowerCase()}` : `No ${config.title.toLowerCase()} yet`)
+    const subtitle = typeof e.subtitle === 'function' ? e.subtitle(hasSearch)
+        : e.subtitle ?? (hasSearch ? 'Try a different search term or clear filters.' : 'Create the first entry to get started.')
+    const actionLabel = e.actionLabel || config.primaryAction.label
+    return (
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+            <span className="mb-3 opacity-40 [&>svg]:w-9 [&>svg]:h-9 text-app-muted-foreground">
+                {e.icon || <FolderTree size={36} />}
+            </span>
+            <p className="text-sm font-bold text-app-muted-foreground mb-1">{title}</p>
+            <p className="text-tp-sm text-app-muted-foreground mb-5 max-w-xs">{subtitle}</p>
+            {!hasSearch && (
+                <button onClick={onPrimary}
+                    className="px-4 py-2 rounded-xl bg-app-primary text-white text-tp-md font-semibold hover:brightness-110 transition-all"
+                    style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                    <Plus size={16} className="inline mr-1.5" />{actionLabel}
+                </button>
+            )}
         </div>
     )
 }

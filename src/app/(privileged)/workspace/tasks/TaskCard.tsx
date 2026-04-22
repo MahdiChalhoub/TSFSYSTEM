@@ -167,8 +167,8 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
             </div>
 
             {/* Bottom row: Metadata + Toggle */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-tp-sm font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+            <div className="flex items-center justify-between flex-wrap gap-y-2">
+                <div className="flex items-center gap-3 text-tp-sm font-medium flex-wrap" style={{ color: 'var(--app-muted-foreground)' }}>
                     {t.category_name && (
                         <span className="flex items-center gap-1">
                             <FolderKanban size={10} /> {t.category_name}
@@ -207,37 +207,20 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                             🔒 Proof required
                         </span>
                     )}
+                    {t.completion_checklist && t.completion_checklist.length > 0 && !isCompleted && (() => {
+                        const done = t.completion_checklist.filter(i => i.checked).length
+                        const total = t.completion_checklist.length
+                        return (
+                            <span className="flex items-center gap-1 text-tp-xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                  style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)', color: 'var(--app-info, #3b82f6)' }}
+                                  title="Checklist must be ticked before closing">
+                                ☑ {done}/{total}
+                            </span>
+                        )
+                    })()}
                 </div>
-                {isCompleted && (t.completion_note || (t.attachments && t.attachments.length > 0)) && (
-                    <div className="mt-2 pt-2 space-y-2"
-                         style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }}>
-                        {t.completion_note && (
-                            <div className="flex items-start gap-2 text-tp-sm font-medium"
-                                 style={{ color: 'var(--app-foreground)' }}>
-                                <CheckCheck size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-success, #22c55e)' }} />
-                                <span className="whitespace-pre-wrap break-words">{t.completion_note}</span>
-                            </div>
-                        )}
-                        {t.attachments && t.attachments.length > 0 && (
-                            <div className="flex items-center gap-2 flex-wrap">
-                                {t.attachments.map(a => {
-                                    const isImg = /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(a.filename || '')
-                                    return (
-                                        <a key={a.id} href={a.file} target="_blank" rel="noopener noreferrer"
-                                           onClick={e => e.stopPropagation()}
-                                           className="flex items-center gap-1.5 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all hover:brightness-110"
-                                           style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)', border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)' }}>
-                                            <span className="text-xs">{isImg ? '📷' : '📎'}</span>
-                                            <span className="truncate max-w-[140px]">{a.filename}</span>
-                                        </a>
-                                    )
-                                })}
-                            </div>
-                        )}
-                    </div>
-                )}
 
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
                     {sourceLink && (
                         <Link href={sourceLink.href}
                               onClick={e => e.stopPropagation()}
@@ -272,6 +255,48 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                     </div>
                 </div>
             </div>
+
+            {isCompleted && (t.completion_note || (t.attachments && t.attachments.length > 0) || (t.completion_checklist && t.completion_checklist.length > 0)) && (
+                <div className="mt-3 pt-3 space-y-2"
+                     style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }}>
+                    {t.completion_checklist && t.completion_checklist.length > 0 && (
+                        <div className="space-y-0.5">
+                            {t.completion_checklist.map((it, i) => (
+                                <div key={i} className="flex items-start gap-1.5 text-tp-sm font-medium"
+                                     style={{ color: 'var(--app-foreground)' }}>
+                                    <span className="mt-0.5 flex-shrink-0" style={{ color: it.checked ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
+                                        {it.checked ? '✓' : '☐'}
+                                    </span>
+                                    <span className={it.checked ? '' : 'line-through opacity-60'}>{it.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {t.completion_note && (
+                        <div className="flex items-start gap-2 text-tp-sm font-medium"
+                             style={{ color: 'var(--app-foreground)' }}>
+                            <CheckCheck size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-success, #22c55e)' }} />
+                            <span className="whitespace-pre-wrap break-words">{t.completion_note}</span>
+                        </div>
+                    )}
+                    {t.attachments && t.attachments.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {t.attachments.map(a => {
+                                const isImg = /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(a.filename || '')
+                                return (
+                                    <a key={a.id} href={a.file} target="_blank" rel="noopener noreferrer"
+                                       onClick={e => e.stopPropagation()}
+                                       className="flex items-center gap-1.5 text-tp-xs font-bold px-2 py-1 rounded-lg transition-all hover:brightness-110"
+                                       style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)', border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)' }}>
+                                        <span className="text-xs">{isImg ? '📷' : '📎'}</span>
+                                        <span className="truncate max-w-[140px]">{a.filename}</span>
+                                    </a>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

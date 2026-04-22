@@ -32,6 +32,10 @@ export default function TaskModal({
     const [points, setPoints] = useState(String(task?.points || 1));
     const [isRecurring, setIsRecurring] = useState(task?.is_recurring || false);
     const [recurrenceDays, setRecurrenceDays] = useState(String(task?.recurrence_days || 7));
+    const [requireProof, setRequireProof] = useState(!!task?.require_completion_note);
+    const [checklistText, setChecklistText] = useState(
+        (task?.completion_checklist || []).map(i => i.label).join('\n')
+    );
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState('');
 
@@ -54,6 +58,16 @@ export default function TaskModal({
             data.is_recurring = true;
             data.recurrence_days = parseInt(recurrenceDays) || 7;
         }
+        data.require_completion_note = requireProof;
+        const checklist = checklistText
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean)
+            .map(label => {
+                const existing = (task?.completion_checklist || []).find(i => i.label === label);
+                return { label, checked: existing?.checked || false };
+            });
+        data.completion_checklist = checklist;
 
         startTransition(async () => {
             try {
@@ -207,6 +221,31 @@ export default function TaskModal({
                                 <input type="number" min={1} max={365} value={recurrenceDays}
                                        onChange={e => setRecurrenceDays(e.target.value)}
                                        className={inputCls} style={inputStyle} placeholder="e.g., 7 for weekly" />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Proof of work */}
+                    <div className="pt-3 border-t" style={{ borderColor: 'var(--app-border)' }}>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked={requireProof} onChange={e => setRequireProof(e.target.checked)}
+                                   className="w-4 h-4 rounded" style={{ accentColor: 'var(--app-primary)' }} />
+                            <span className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                🔒 Require proof of work
+                            </span>
+                        </label>
+                        <div className="text-tp-xs mt-1 ml-6" style={{ color: 'var(--app-muted-foreground)' }}>
+                            Assignee must add a completion note {checklistText.trim() ? 'and tick every checklist item' : ''} to close the task.
+                        </div>
+                        {requireProof && (
+                            <div className="mt-3">
+                                <label className={labelCls} style={labelStyle}>Completion checklist (one item per line)</label>
+                                <textarea value={checklistText} onChange={e => setChecklistText(e.target.value)} rows={4}
+                                          className={`${inputCls} resize-none font-mono text-tp-md`} style={inputStyle}
+                                          placeholder={'e.g.\nVerified cash on hand\nSigned by manager\nPhoto of register'} />
+                                <div className="text-tp-xs mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Leave blank for a free-form note only.
+                                </div>
                             </div>
                         )}
                     </div>

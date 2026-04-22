@@ -13,6 +13,7 @@ from erp.models import Country
 
 class UnitSerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
+    package_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
@@ -20,12 +21,15 @@ class UnitSerializer(serializers.ModelSerializer):
             'id', 'code', 'name', 'short_name', 'type',
             'conversion_factor', 'base_unit', 'allow_fraction',
             'needs_balance', 'balance_code_structure', 'product_count',
-            'organization'
+            'package_count', 'organization'
         ]
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return Product.objects.filter(unit=obj).count()
+
+    def get_package_count(self, obj):
+        return UnitPackage.objects.filter(unit=obj).count()
 
 
 class CountrySimpleSerializer(serializers.ModelSerializer):
@@ -44,9 +48,10 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'code', 'short_name', 'parent',
             'level', 'full_path', 'product_count',
-            'brand_count', 'parfum_count', 'organization'
+            'brand_count', 'parfum_count', 'organization',
+            'is_archived', 'archived_at',
         ]
-        read_only_fields = ['organization', 'level', 'full_path']
+        read_only_fields = ['organization', 'level', 'full_path', 'archived_at']
 
     def validate_name(self, value):
         """Pre-flight duplicate check so the DB UNIQUE constraint doesn't

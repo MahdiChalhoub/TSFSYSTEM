@@ -16,7 +16,8 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import Link from 'next/link'
 import {
     LayoutDashboard, Loader2, AlertTriangle, Clock, CheckCircle2, Calendar,
-    Flame, User, RefreshCcw, TrendingUp, Zap, ChevronRight, Trophy, Lightbulb,
+    Flame, User, RefreshCcw, TrendingUp, TrendingDown, Zap, ChevronRight,
+    Trophy, Lightbulb, Activity, Hash, Target, Minus,
 } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
 
@@ -77,6 +78,7 @@ export default function ManagerDashboardPage() {
     const today = new Date()
     const todayIso = toIso(today)
     const weekAgoIso = toIso(shiftDays(today, -7))
+    const twoWeeksAgoIso = toIso(shiftDays(today, -14))
 
     const stats = useMemo(() => {
         let dueToday = 0, overdue = 0, completedThisWeek = 0, unassigned = 0, urgent = 0, autoTasks = 0
@@ -103,6 +105,54 @@ export default function ManagerDashboardPage() {
         }
         return { dueToday, overdue, completedThisWeek, unassigned, urgent, autoTasks, daysOverdueBuckets }
     }, [tasks, todayIso, weekAgoIso, today])
+
+    // Week-over-week delta: how completed-this-week compares to previous-week.
+    const wowDelta = useMemo(() => {
+        let thisWeek = 0, prevWeek = 0
+        for (const t of tasks) {
+            if (t.status !== 'COMPLETED' || !t.completed_at) continue
+            const day = t.completed_at.slice(0, 10)
+            if (day >= weekAgoIso && day <= todayIso) thisWeek++
+            else if (day >= twoWeeksAgoIso && day < weekAgoIso) prevWeek++
+        }
+        const diff = thisWeek - prevWeek
+        const pct = prevWeek > 0 ? Math.round((diff / prevWeek) * 100) : (thisWeek > 0 ? 100 : 0)
+        return { thisWeek, prevWeek, diff, pct }
+    }, [tasks, todayIso, weekAgoIso, twoWeeksAgoIso])
+
+    // Category breakdown — open tasks grouped by category with counts + percentage.
+    const categoryBreakdown = useMemo(() => {
+        const m = new Map<string, number>()
+        let total = 0
+        for (const t of tasks) {
+            if (t.status === 'COMPLETED' || t.status === 'CANCELLED') continue
+            const name = t.category_name || 'Uncategorized'
+            m.set(name, (m.get(name) || 0) + 1)
+            total++
+        }
+        const entries = [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6)
+        return { entries, total }
+    }, [tasks])
+
+    // Recent completions — last 5 closed tasks for the activity feed.
+    const recentCompletions = useMemo(() => {
+        return tasks
+            .filter(t => t.status === 'COMPLETED' && t.completed_at)
+            .sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''))
+            .slice(0, 5)
+    }, [tasks])
+
+    // Priority distribution of open tasks — for a small horizontal stacked bar.
+    const priorityMix = useMemo(() => {
+        const counts = { URGENT: 0, HIGH: 0, MEDIUM: 0, LOW: 0 }
+        for (const t of tasks) {
+            if (t.status === 'COMPLETED' || t.status === 'CANCELLED') continue
+            const key = (t.priority || 'MEDIUM').toUpperCase() as keyof typeof counts
+            if (key in counts) counts[key]++
+        }
+        const total = counts.URGENT + counts.HIGH + counts.MEDIUM + counts.LOW
+        return { counts, total }
+    }, [tasks])
 
     // Per-user breakdown: pending / overdue / completed this week + points-based score
     const teamRows = useMemo(() => {
@@ -271,32 +321,244 @@ export default function ManagerDashboardPage() {
                     <Loader2 size={24} className="animate-spin text-app-primary" />
                 </div>
             ) : (
-                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-4">
-                    {/* ── KPI strip — taller, colored accent bar top ── */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
-                        {kpis.map(k => (
-                            <div key={k.label}
-                                className="relative overflow-hidden px-4 py-3 rounded-2xl transition-all hover:translate-y-[-2px]"
-                                style={{
-                                    background: 'var(--app-surface)',
-                                    border: `1px solid color-mix(in srgb, ${k.color} 20%, transparent)`,
-                                    boxShadow: '0 2px 10px color-mix(in srgb, #000 4%, transparent)',
-                                }}>
-                                {/* Accent bar */}
-                                <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: k.color }} />
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                        style={{ background: `color-mix(in srgb, ${k.color} 14%, transparent)`, color: k.color }}>
-                                        {k.icon}
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-6">
+                    {/* ═══ Hero KPIs — three headline numbers, large + airy ═══ */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                        {/* Due today */}
+                        <div className="p-6 rounded-3xl relative overflow-hidden"
+                            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 4px 20px color-mix(in srgb, #000 5%, transparent)' }}>
+                            <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full"
+                                style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }} />
+                            <div className="relative flex items-start justify-between">
+                                <div>
+                                    <div className="text-tp-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Due today</div>
+                                    <div className="text-5xl font-black tabular-nums leading-none" style={{ color: stats.dueToday > 0 ? 'var(--app-primary)' : 'var(--app-foreground)' }}>
+                                        {stats.dueToday}
                                     </div>
-                                    <div className="min-w-0">
-                                        <div className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
-                                        <div className="text-2xl font-black tabular-nums leading-tight" style={{ color: k.value > 0 ? k.color : 'var(--app-foreground)' }}>{k.value}</div>
+                                    <div className="text-tp-sm font-medium mt-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {stats.dueToday === 0 ? "Nothing scheduled today" : stats.dueToday === 1 ? 'task to wrap up' : 'tasks to wrap up'}
                                     </div>
+                                </div>
+                                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                    <Calendar size={22} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Overdue */}
+                        <div className="p-6 rounded-3xl relative overflow-hidden"
+                            style={{
+                                background: stats.overdue > 0
+                                    ? 'linear-gradient(135deg, color-mix(in srgb, var(--app-error, #ef4444) 6%, var(--app-surface)), var(--app-surface))'
+                                    : 'var(--app-surface)',
+                                border: `1px solid ${stats.overdue > 0 ? 'color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' : 'var(--app-border)'}`,
+                                boxShadow: '0 4px 20px color-mix(in srgb, #000 5%, transparent)',
+                            }}>
+                            <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full"
+                                style={{ background: `color-mix(in srgb, var(--app-error, #ef4444) ${stats.overdue > 0 ? 10 : 3}%, transparent)` }} />
+                            <div className="relative flex items-start justify-between">
+                                <div>
+                                    <div className="text-tp-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Overdue</div>
+                                    <div className="text-5xl font-black tabular-nums leading-none" style={{ color: stats.overdue > 0 ? 'var(--app-error, #ef4444)' : 'var(--app-foreground)' }}>
+                                        {stats.overdue}
+                                    </div>
+                                    <div className="text-tp-sm font-medium mt-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {stats.overdue === 0 ? "Nothing past its deadline" : `${stats.daysOverdueBuckets['>7']} over a week late`}
+                                    </div>
+                                </div>
+                                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', color: 'var(--app-error, #ef4444)' }}>
+                                    <AlertTriangle size={22} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Completed this week (with trend) */}
+                        <div className="p-6 rounded-3xl relative overflow-hidden"
+                            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 4px 20px color-mix(in srgb, #000 5%, transparent)' }}>
+                            <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full"
+                                style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)' }} />
+                            <div className="relative flex items-start justify-between">
+                                <div>
+                                    <div className="text-tp-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Done this week</div>
+                                    <div className="flex items-baseline gap-3">
+                                        <div className="text-5xl font-black tabular-nums leading-none" style={{ color: 'var(--app-foreground)' }}>
+                                            {wowDelta.thisWeek}
+                                        </div>
+                                        {(wowDelta.prevWeek > 0 || wowDelta.thisWeek > 0) && (
+                                            <div className="flex items-center gap-0.5 text-tp-sm font-black"
+                                                style={{ color: wowDelta.diff > 0 ? 'var(--app-success, #22c55e)' : wowDelta.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                                                {wowDelta.diff > 0 ? <TrendingUp size={14} /> : wowDelta.diff < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}
+                                                {wowDelta.diff > 0 ? '+' : ''}{wowDelta.pct}%
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-tp-sm font-medium mt-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        vs {wowDelta.prevWeek} last week
+                                    </div>
+                                </div>
+                                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
+                                    <CheckCircle2 size={22} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ═══ Secondary metrics strip ═══ */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
+                        {[
+                            { label: 'Urgent open', value: stats.urgent, color: 'var(--app-warning, #f59e0b)', icon: <Flame size={16} /> },
+                            { label: 'Unassigned', value: stats.unassigned, color: '#8b5cf6', icon: <User size={16} /> },
+                            { label: 'Auto-created', value: stats.autoTasks, color: 'var(--app-info, #3b82f6)', icon: <Zap size={16} /> },
+                            { label: 'Open total', value: priorityMix.total, color: 'var(--app-muted-foreground)', icon: <Hash size={16} /> },
+                        ].map(k => (
+                            <div key={k.label} className="px-4 py-3 rounded-2xl flex items-center gap-3 transition-all"
+                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                    style={{ background: `color-mix(in srgb, ${k.color} 12%, transparent)`, color: k.color }}>
+                                    {k.icon}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
+                                    <div className="text-2xl font-black tabular-nums leading-tight" style={{ color: 'var(--app-foreground)' }}>{k.value}</div>
                                 </div>
                             </div>
                         ))}
                     </div>
+
+                    {/* ═══ Priority distribution — slim stacked bar (only if we have open tasks) ═══ */}
+                    {priorityMix.total > 0 && (
+                        <div className="p-5 rounded-3xl"
+                            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                            <div className="flex items-center gap-2 mb-3">
+                                <Target size={14} style={{ color: 'var(--app-muted-foreground)' }} />
+                                <span className="text-tp-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>Open tasks by priority</span>
+                                <span className="text-tp-xxs font-medium ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>{priorityMix.total} total</span>
+                            </div>
+                            <div className="flex h-3 rounded-full overflow-hidden mb-3"
+                                style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                                {([
+                                    { key: 'URGENT', color: 'var(--app-error, #ef4444)' },
+                                    { key: 'HIGH', color: 'var(--app-warning, #f59e0b)' },
+                                    { key: 'MEDIUM', color: 'var(--app-info, #3b82f6)' },
+                                    { key: 'LOW', color: 'var(--app-muted-foreground)' },
+                                ] as const).map(p => {
+                                    const n = priorityMix.counts[p.key as 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW']
+                                    if (n === 0) return null
+                                    const pct = (n / priorityMix.total) * 100
+                                    return <div key={p.key} style={{ width: `${pct}%`, background: p.color }} title={`${p.key}: ${n} (${pct.toFixed(0)}%)`} />
+                                })}
+                            </div>
+                            <div className="flex items-center gap-4 flex-wrap">
+                                {([
+                                    { key: 'URGENT', label: 'Urgent', color: 'var(--app-error, #ef4444)' },
+                                    { key: 'HIGH', label: 'High', color: 'var(--app-warning, #f59e0b)' },
+                                    { key: 'MEDIUM', label: 'Medium', color: 'var(--app-info, #3b82f6)' },
+                                    { key: 'LOW', label: 'Low', color: 'var(--app-muted-foreground)' },
+                                ] as const).map(p => {
+                                    const n = priorityMix.counts[p.key as 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW']
+                                    return (
+                                        <div key={p.key} className="flex items-center gap-1.5">
+                                            <span className="w-2.5 h-2.5 rounded-full" style={{ background: p.color }} />
+                                            <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{n}</span>
+                                            <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>{p.label}</span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ═══ Category + Activity — two-column rich detail ═══ */}
+                    {(categoryBreakdown.entries.length > 0 || recentCompletions.length > 0) && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+                            {/* Category breakdown */}
+                            {categoryBreakdown.entries.length > 0 && (
+                                <div className="p-5 rounded-3xl"
+                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                            style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                            <Target size={15} />
+                                        </div>
+                                        <div>
+                                            <div className="text-tp-sm font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>Open tasks by category</div>
+                                            <div className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>{categoryBreakdown.total} total open</div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {categoryBreakdown.entries.map(([name, count]) => {
+                                            const pct = categoryBreakdown.total > 0 ? (count / categoryBreakdown.total) * 100 : 0
+                                            return (
+                                                <div key={name}>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{name}</span>
+                                                        <span className="text-tp-xs font-black tabular-nums flex-shrink-0" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                            {count} <span className="opacity-60">· {pct.toFixed(0)}%</span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-2 rounded-full overflow-hidden"
+                                                        style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                                                        <div className="h-full rounded-full transition-all"
+                                                            style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #8b5cf6))' }} />
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Recent completions feed */}
+                            {recentCompletions.length > 0 && (
+                                <div className="p-5 rounded-3xl"
+                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                            style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
+                                            <Activity size={15} />
+                                        </div>
+                                        <div>
+                                            <div className="text-tp-sm font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>Recently completed</div>
+                                            <div className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>What just got done</div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        {recentCompletions.map(t => {
+                                            const when = t.completed_at ? new Date(t.completed_at) : null
+                                            const ago = when ? Math.max(0, Math.floor((today.getTime() - when.getTime()) / 60000)) : 0
+                                            const agoText = !when ? '' : ago < 1 ? 'just now'
+                                                : ago < 60 ? `${ago} min ago`
+                                                : ago < 1440 ? `${Math.floor(ago / 60)} h ago`
+                                                : `${Math.floor(ago / 1440)} d ago`
+                                            return (
+                                                <div key={t.id} className="flex items-start gap-2.5">
+                                                    <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
+                                                        style={{ background: 'var(--app-success, #22c55e)', boxShadow: '0 0 0 3px color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)' }} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
+                                                            {t.title}
+                                                        </div>
+                                                        <div className="text-tp-xs flex items-center gap-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                            <span>{t.assigned_to_name || 'Unassigned'}</span>
+                                                            <span>·</span>
+                                                            <span>{agoText}</span>
+                                                            {t.category_name && <>
+                                                                <span>·</span>
+                                                                <span className="truncate">{t.category_name}</span>
+                                                            </>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Insights — plain-English signals computed from the task list */}
                     {insights.length > 0 && (

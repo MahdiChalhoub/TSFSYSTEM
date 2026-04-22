@@ -3,14 +3,13 @@
 
 import { useState, useMemo, useCallback, useRef, useTransition } from 'react'
 import {
-    Plus, Ruler, Search, Layers, Package, GitBranch,
-    Scale, ArrowRightLeft, Wrench
+    Plus, Ruler, Layers, Package, GitBranch,
+    Scale, ArrowRightLeft, Wrench,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { deleteUnit } from '@/app/actions/inventory/units'
-import { buildTree } from '@/lib/utils/tree'
 import { UnitFormModal } from '@/components/admin/UnitFormModal'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
 import { BalanceBarcodeConfigModal } from '@/components/admin/BalanceBarcodeConfigModal'
@@ -24,7 +23,9 @@ import { UnitRow } from './components/UnitRow'
 import { UnitDetailPanel } from './components/UnitDetailPanel'
 
 /* ═══════════════════════════════════════════════════════════
- *  MAIN PAGE — using TreeMasterPage template
+ *  UnitsClient — thin consumer; TreeMasterPage owns search,
+ *  KPI filtering, tree build, and empty-state. This file only
+ *  supplies data + row + modals + delete-conflict flow.
  * ═══════════════════════════════════════════════════════════ */
 export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
     const router = useRouter()
@@ -48,10 +49,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
         startTransition(async () => {
             const result = await deleteUnit(source.id)
             if (result?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
-            if ((result as any)?.conflict) {
-                setDeleteConflict({ conflict: (result as any).conflict, source })
-                return
-            }
+            if ((result as any)?.conflict) { setDeleteConflict({ conflict: (result as any).conflict, source }); return }
             const msg = result?.message || 'Failed to delete'
             const hint = (result as any)?.actionHint
             if (hint) toast.error(msg, { description: hint, duration: 8000 })
@@ -67,85 +65,26 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 method: 'POST',
                 body: JSON.stringify({ source_unit_id: source.id, target_unit_id: targetId }),
             })
-            if (moveRes && moveRes.success === false) {
-                toast.error(moveRes.message || 'Migration failed — delete aborted'); return
-            }
+            if (moveRes && moveRes.success === false) { toast.error(moveRes.message || 'Migration failed — delete aborted'); return }
             const delRes = await deleteUnit(source.id, { force: true })
-            if (delRes?.success) {
-                toast.success(`Products migrated and "${source.name}" deleted`)
-                setDeleteConflict(null); router.refresh()
-            } else {
-                toast.error(delRes?.message || 'Delete failed after migration')
-            }
-        } catch (e: any) {
-            toast.error(e?.message || 'Migration failed')
-        }
+            if (delRes?.success) { toast.success(`Products migrated and "${source.name}" deleted`); setDeleteConflict(null); router.refresh() }
+            else { toast.error(delRes?.message || 'Delete failed after migration') }
+        } catch (e: any) { toast.error(e?.message || 'Migration failed') }
     }
 
     const handleForceDeleteUnit = async () => {
         const source = deleteConflict?.source
         if (!source) return
         const res = await deleteUnit(source.id, { force: true })
-        if (res?.success) {
-            toast.success(`"${source.name}" force-deleted`)
-            setDeleteConflict(null); router.refresh()
-        } else {
-            toast.error(res?.message || 'Delete failed')
-        }
+        if (res?.success) { toast.success(`"${source.name}" force-deleted`); setDeleteConflict(null); router.refresh() }
+        else { toast.error(res?.message || 'Delete failed') }
     }
 
     const unitMigrationTargets = useMemo(() => {
         const sourceId = deleteConflict?.source?.id
-        return data
-            .filter((u: any) => u.id !== sourceId)
-            .map((u: any) => ({ id: u.id, name: u.name, code: u.code }))
+        return data.filter((u: any) => u.id !== sourceId).map((u: any) => ({ id: u.id, name: u.name, code: u.code }))
     }, [data, deleteConflict])
 
-    // Search + KPI filter state
-    const [filterQuery, setFilterQuery] = useState('')
-    const [kpiFilter, setKpiFilter] = useState<string | null>(null)
-
-    const matches = useCallback((u: any, q: string) => {
-        const needle = q.trim().toLowerCase()
-        if (!needle) return true
-        return (u.name || '').toLowerCase().includes(needle)
-            || (u.code || '').toLowerCase().includes(needle)
-            || (u.short_name || '').toLowerCase().includes(needle)
-            || (u.type || '').toLowerCase().includes(needle)
-    }, [])
-
-    const kpiPredicate = useCallback((u: any): boolean => {
-        if (!kpiFilter) return true
-        if (kpiFilter === 'base') return !u.base_unit
-        if (kpiFilter === 'derived') return !!u.base_unit
-        if (kpiFilter === 'products') return (u.product_count || 0) > 0
-        if (kpiFilter === 'scale') return !!u.needs_balance
-        return true
-    }, [kpiFilter])
-
-    const filteredData = useMemo(
-        () => data.filter((u: any) => matches(u, filterQuery) && kpiPredicate(u)),
-        [data, filterQuery, matches, kpiPredicate]
-    )
-
-    const stats = useMemo(() => {
-        const source = filteredData
-        const baseCount = source.filter((u: any) => !u.base_unit).length
-        const derivedCount = source.filter((u: any) => u.base_unit).length
-        const totalProducts = source.reduce((s: number, u: any) => s + (u.product_count || 0), 0)
-        const scaleUnits = source.filter((u: any) => u.needs_balance).length
-        return {
-            total: data.length,
-            showing: source.length,
-            base: baseCount,
-            derived: derivedCount,
-            totalProducts,
-            scaleUnits,
-            isFiltered: filterQuery.trim().length > 0 || kpiFilter !== null,
-        }
-    }, [data, filteredData, filterQuery, kpiFilter])
-
-    // Tour step actions
     const renderPropsRef = useRef<any>(null)
     const tourStepActions = useMemo(() => ({
         5: () => { renderPropsRef.current?.setExpandAll(true); renderPropsRef.current?.setExpandKey((k: number) => k + 1) },
@@ -163,32 +102,10 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
         <TreeMasterPage
             config={{
                 title: 'Units & Packaging',
-                subtitle: `${stats.total} Units · Hierarchical Conversions`,
+                subtitle: (_, all) => `${all.length} Units · Hierarchical Conversions`,
                 icon: <Ruler size={20} />,
                 iconColor: 'var(--app-info)',
                 tourId: 'inventory-units',
-                onSearchChange: setFilterQuery,
-                onKpiFilterChange: (key) => {
-                    if (key === 'all') { setKpiFilter(null); setFilterQuery(''); return }
-                    setKpiFilter(key)
-                },
-                kpis: [
-                    {
-                        label: 'Total', value: stats.total, icon: <Layers size={12} />, color: 'var(--app-primary)',
-                        filterKey: 'all', active: kpiFilter === null && filterQuery.trim().length === 0,
-                        hint: 'Show all units (clear filters)',
-                    },
-                    { label: 'Base', value: stats.base, icon: <Ruler size={12} />, color: 'var(--app-info)', filterKey: 'base', active: kpiFilter === 'base', hint: 'Show only base units' },
-                    { label: 'Derived', value: stats.derived, icon: <GitBranch size={12} />, color: 'var(--app-info)', filterKey: 'derived', active: kpiFilter === 'derived', hint: 'Show only derived units' },
-                    { label: 'Products', value: stats.totalProducts, icon: <Package size={12} />, color: 'var(--app-success)', filterKey: 'products', active: kpiFilter === 'products', hint: 'Show only units with products' },
-                    { label: 'Scale', value: stats.scaleUnits, icon: <Scale size={12} />, color: 'var(--app-warning)', filterKey: 'scale', active: kpiFilter === 'scale', hint: 'Show only balance-connected units' },
-                    {
-                        label: stats.isFiltered ? 'Showing' : 'All',
-                        value: stats.isFiltered ? `${stats.showing}/${stats.total}` : stats.total,
-                        icon: <Search size={12} />,
-                        color: stats.isFiltered ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                    },
-                ],
                 searchPlaceholder: 'Search by name, code, or type...',
                 primaryAction: { label: 'New Unit', icon: <Plus size={14} />, onClick: () => openForm() },
                 secondaryActions: [
@@ -200,9 +117,65 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     { label: 'Unit', width: 'auto' },
                     { label: 'Sub', width: '40px', hideOnMobile: true },
                     { label: 'Conv.', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
+                    { label: 'Pkgs', width: '56px', color: 'var(--app-primary)', hideOnMobile: true },
                     { label: 'Products', width: '48px', color: 'var(--app-success)', hideOnMobile: true },
                 ],
-                footerLeft: (<><span>{stats.total} defined units</span><span style={{ color: 'var(--app-border)' }}>·</span><span>{stats.base} base</span><span style={{ color: 'var(--app-border)' }}>·</span><span>{stats.derived} derived</span></>),
+
+                // ── Template owns filtering (parent link for Units is `base_unit`) ──
+                data,
+                searchFields: ['name', 'code', 'short_name', 'type'],
+                treeParentKey: 'base_unit',
+                kpiPredicates: {
+                    base: (u) => !u.base_unit,
+                    derived: (u) => !!u.base_unit,
+                    products: (u) => (u.product_count || 0) > 0,
+                    scale: (u) => !!u.needs_balance,
+                },
+
+                kpis: [
+                    {
+                        label: 'Total', icon: <Layers size={12} />, color: 'var(--app-primary)',
+                        filterKey: 'all', hint: 'Show all units (clear filters)',
+                        value: (_, all) => all.length,
+                    },
+                    {
+                        label: 'Base', icon: <Ruler size={12} />, color: 'var(--app-info)',
+                        filterKey: 'base', hint: 'Only base units (no parent)',
+                        value: (filtered) => filtered.filter((u: any) => !u.base_unit).length,
+                    },
+                    {
+                        label: 'Derived', icon: <GitBranch size={12} />, color: 'var(--app-info)',
+                        filterKey: 'derived', hint: 'Only derived units (with parent)',
+                        value: (filtered) => filtered.filter((u: any) => u.base_unit).length,
+                    },
+                    {
+                        label: 'Products', icon: <Package size={12} />, color: 'var(--app-success)',
+                        filterKey: 'products', hint: 'Only units with products',
+                        value: (filtered) => filtered.reduce((s: number, u: any) => s + (u.product_count || 0), 0),
+                    },
+                    {
+                        label: 'Scale', icon: <Scale size={12} />, color: 'var(--app-warning)',
+                        filterKey: 'scale', hint: 'Only balance/scale units',
+                        value: (filtered) => filtered.filter((u: any) => u.needs_balance).length,
+                    },
+                ],
+                emptyState: {
+                    icon: <Ruler size={36} />,
+                    title: (hasSearch) => hasSearch ? 'No matching units' : 'No units defined yet',
+                    subtitle: (hasSearch) => hasSearch
+                        ? 'Try a different search term.'
+                        : 'Create a base unit like "Piece" or "KG" to get started.',
+                    actionLabel: 'Create First Unit',
+                },
+                footerLeft: (_, all) => (
+                    <>
+                        <span>{all.length} defined units</span>
+                        <span style={{ color: 'var(--app-border)' }}>·</span>
+                        <span>{all.filter((u: any) => !u.base_unit).length} base</span>
+                        <span style={{ color: 'var(--app-border)' }}>·</span>
+                        <span>{all.filter((u: any) => u.base_unit).length} derived</span>
+                    </>
+                ),
             }}
             modals={<>
                 <UnitFormModal key={formKey} isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSuccess={() => { setIsFormOpen(false); router.refresh() }} potentialParents={data} />
@@ -231,32 +204,26 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
             )}
         >
             {(renderProps) => {
-                const { searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar, selectedNode, setSelectedNode, sidebarNode, setSidebarNode, setSidebarTab, setPanelTab } = renderProps
+                const { tree, expandKey, expandAll, searchQuery, isSelected, openNode } = renderProps
                 renderPropsRef.current = renderProps
-                let filtered = data
-                if (searchQuery.trim()) {
-                    const q = searchQuery.toLowerCase()
-                    filtered = filtered.filter((u: any) => u.name?.toLowerCase().includes(q) || u.code?.toLowerCase().includes(q) || u.short_name?.toLowerCase().includes(q) || u.type?.toLowerCase().includes(q))
-                }
-                filtered = filtered.filter(kpiPredicate)
-                const tree = buildTree(filtered, 'base_unit')
-                return tree.length > 0 ? (
-                    tree.map((node: any) => (
-                        <div key={`${node.id}-${expandKey}`} className={`rounded-xl transition-all duration-300 ${((splitPanel || pinnedSidebar) ? selectedNode?.id === node.id : sidebarNode?.id === node.id) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
-                            <UnitRow node={node} level={0} onEdit={openEditForm} onAdd={openForm} onDelete={(n: any) => setDeleteTarget(n)}
-                                onViewProducts={(n: any) => { if (splitPanel || pinnedSidebar) { setSelectedNode(n); setPanelTab('products') } else { setSidebarNode(n); setSidebarTab('products') } }}
-                                onSelect={(n: any) => { if (splitPanel || pinnedSidebar) { setSelectedNode(n) } else { setSidebarNode(n); setSidebarTab('overview') } }}
-                                searchQuery={searchQuery} forceExpanded={expandAll} allUnits={data} />
-                        </div>
-                    ))
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                        <Ruler size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-                        <p className="text-tp-md font-semibold text-app-muted-foreground mb-1">{searchQuery ? 'No matching units' : 'No units defined yet'}</p>
-                        <p className="text-tp-sm text-app-muted-foreground mb-5 max-w-xs">{searchQuery ? 'Try a different search term.' : 'Create a base unit like "Piece" or "KG" to get started.'}</p>
-                        {!searchQuery && <button onClick={() => openForm()} className="px-4 py-2 rounded-xl bg-app-primary text-white text-tp-md font-semibold hover:brightness-110 transition-all"><Plus size={16} className="inline mr-1.5" />Create First Unit</button>}
+
+                return tree.map((node: any) => (
+                    <div key={`${node.id}-${expandKey}`}
+                        className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
+                        <UnitRow
+                            node={node}
+                            level={0}
+                            onEdit={openEditForm}
+                            onAdd={openForm}
+                            onDelete={(n: any) => setDeleteTarget(n)}
+                            onViewProducts={(n: any) => openNode(n, 'products')}
+                            onSelect={(n: any) => openNode(n, 'overview')}
+                            searchQuery={searchQuery}
+                            forceExpanded={expandAll}
+                            allUnits={data}
+                        />
                     </div>
-                )
+                ))
             }}
         </TreeMasterPage>
     )

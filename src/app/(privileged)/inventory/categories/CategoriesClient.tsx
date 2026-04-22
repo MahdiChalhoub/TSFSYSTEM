@@ -3,13 +3,16 @@
 
 import { useState, useMemo, useCallback, useTransition, useRef } from 'react'
 import {
-    FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search
+    FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
-import { deleteCategory, moveProducts, archiveCategory, restoreCategory, duplicateCategory } from '@/app/actions/inventory/categories'
+import {
+    deleteCategory, moveProducts,
+    archiveCategory, restoreCategory, duplicateCategory,
+} from '@/app/actions/inventory/categories'
 import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
@@ -22,58 +25,17 @@ import { CategoryRow } from './components/CategoryRow'
 import { CategoryDetailPanel } from './components/CategoryDetailPanel'
 
 /* ═══════════════════════════════════════════════════════════
- *  CategoriesClient — Decomposed & migrated to TreeMasterPage
+ *  CategoriesClient — thin consumer; TreeMasterPage is the single
+ *  source of truth for search, KPI filtering, tree build, and
+ *  empty-state UI. This file only supplies data + row + modals.
  * ═══════════════════════════════════════════════════════════ */
 export function CategoriesClient({ initialCategories }: { initialCategories: any[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
-    const [deleteConflict, setDeleteConflict] = useState<any>(null)  // { conflict, source } when backend 409s
+    const [deleteConflict, setDeleteConflict] = useState<any>(null)
     const data = initialCategories
-
-    // Track search query + active KPI filter from TreeMasterPage.
-    const [filterQuery, setFilterQuery] = useState('')
-    const [kpiFilter, setKpiFilter] = useState<string | null>(null)
-
-    const kpiPredicate = useCallback((c: any, allData: any[]): boolean => {
-        if (!kpiFilter) return true
-        if (kpiFilter === 'root') return !c.parent
-        if (kpiFilter === 'leaf') return !allData.some((child: any) => child.parent === c.id)
-        if (kpiFilter === 'products') return (c.product_count || 0) > 0
-        if (kpiFilter === 'brands') return (c.brand_count || 0) > 0
-        return true
-    }, [kpiFilter])
-
-    const filteredData = useMemo(() => {
-        const q = filterQuery.trim().toLowerCase()
-        return data.filter((c: any) => {
-            const searchMatch = !q
-                || (c.name || '').toLowerCase().includes(q)
-                || (c.code || '').toLowerCase().includes(q)
-                || (c.short_name || '').toLowerCase().includes(q)
-                || (c.full_path || '').toLowerCase().includes(q)
-            return searchMatch && kpiPredicate(c, data)
-        })
-    }, [data, filterQuery, kpiPredicate])
-
-    // Compute stats for KPIs — the "total" stays global, the rest reflect the filter.
-    const stats = useMemo(() => {
-        const source = filteredData
-        const tree = buildTree(source)
-        const leafCount = source.filter((d: any) => !source.some((c: any) => c.parent === d.id)).length
-        const totalProducts = source.reduce((sum: number, d: any) => sum + (d.product_count || 0), 0)
-        const totalBrands = source.reduce((sum: number, d: any) => sum + (d.brand_count || 0), 0)
-        return {
-            total: data.length,
-            showing: source.length,
-            roots: tree.length,
-            leafCount,
-            totalProducts,
-            totalBrands,
-            isFiltered: filterQuery.trim().length > 0 || kpiFilter !== null,
-        }
-    }, [data, filteredData, filterQuery, kpiFilter])
 
     // Actions
     const openAddModal = useCallback((parentId?: number) => { setModalState({ open: true, parentId }) }, [])
@@ -87,17 +49,8 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         setDeleteTarget(null)
         startTransition(async () => {
             const result = await deleteCategory(source.id)
-            if (result?.success) {
-                toast.success(`"${source.name}" deleted`)
-                router.refresh()
-                return
-            }
-            // Backend raised a 409 conflict — open the guided migration dialog.
-            if ((result as any)?.conflict) {
-                setDeleteConflict({ conflict: (result as any).conflict, source })
-                return
-            }
-            // Other errors: show message + action hint when available
+            if (result?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
+            if ((result as any)?.conflict) { setDeleteConflict({ conflict: (result as any).conflict, source }); return }
             const msg = result?.message || 'Failed to delete'
             const hint = (result as any)?.actionHint
             if (hint) toast.error(msg, { description: hint, duration: 8000 })
@@ -105,95 +58,60 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         })
     }
 
-    // Migrate every product from the source category → target, then force-delete.
-    // Uses the bulk shortcut path on the backend (move_products accepts
-    // source_category_id when product_ids is empty).
     const handleMigrateAndDelete = async (targetId: number) => {
         const source = deleteConflict?.source
         if (!source) return
         try {
-            // Call move_products with source_category_id shortcut
             const moveRes = await erpFetch('inventory/categories/move_products/', {
                 method: 'POST',
                 body: JSON.stringify({ source_category_id: source.id, target_category_id: targetId }),
             })
-            if (moveRes && moveRes.success === false) {
-                toast.error(moveRes.message || 'Migration failed — delete aborted')
-                return
-            }
+            if (moveRes && moveRes.success === false) { toast.error(moveRes.message || 'Migration failed — delete aborted'); return }
             const delRes = await deleteCategory(source.id, { force: true })
             if (delRes?.success) {
                 toast.success(`Products migrated and "${source.name}" deleted`)
-                setDeleteConflict(null)
-                router.refresh()
-            } else {
-                toast.error(delRes?.message || 'Delete failed after migration')
-            }
-        } catch (e: any) {
-            toast.error(e?.message || 'Migration failed')
-        }
+                setDeleteConflict(null); router.refresh()
+            } else { toast.error(delRes?.message || 'Delete failed after migration') }
+        } catch (e: any) { toast.error(e?.message || 'Migration failed') }
     }
 
-    // ── Archive + Duplicate handlers ──
     const handleDuplicate = useCallback(async (cat: CategoryNode) => {
         const res = await duplicateCategory(cat.id)
         if (res?.success) {
             toast.success(`"${(res as any).category?.name || cat.name}" duplicated`)
             router.refresh()
-        } else {
-            toast.error(res?.message || 'Failed to duplicate')
-        }
+        } else { toast.error(res?.message || 'Failed to duplicate') }
     }, [router])
 
     const handleArchive = useCallback(async (cat: CategoryNode) => {
         if (!confirm(`Archive "${cat.name}"? It will be hidden from the tree but can be restored later.`)) return
         const res = await archiveCategory(cat.id)
         if (res?.success) {
-            toast.success(`"${cat.name}" archived`, {
-                description: 'Restore from the Archive view if needed.',
-                duration: 6000,
-            })
+            toast.success(`"${cat.name}" archived`, { description: 'Restore from the Archive view if needed.', duration: 6000 })
             router.refresh()
-        } else {
-            toast.error(res?.message || 'Failed to archive')
-        }
+        } else { toast.error(res?.message || 'Failed to archive') }
     }, [router])
 
     const handleRestore = useCallback(async (cat: CategoryNode) => {
         const res = await restoreCategory(cat.id)
-        if (res?.success) {
-            toast.success(`"${cat.name}" restored`)
-            router.refresh()
-        } else {
-            toast.error(res?.message || 'Failed to restore')
-        }
+        if (res?.success) { toast.success(`"${cat.name}" restored`); router.refresh() }
+        else { toast.error(res?.message || 'Failed to restore') }
     }, [router])
 
     const handleForceDelete = async () => {
         const source = deleteConflict?.source
         if (!source) return
         const res = await deleteCategory(source.id, { force: true })
-        if (res?.success) {
-            toast.success(`"${source.name}" force-deleted`)
-            setDeleteConflict(null)
-            router.refresh()
-        } else {
-            toast.error(res?.message || 'Delete failed')
-        }
+        if (res?.success) { toast.success(`"${source.name}" force-deleted`); setDeleteConflict(null); router.refresh() }
+        else { toast.error(res?.message || 'Delete failed') }
     }
 
-    // Targets list = all other categories (excluding the one being deleted)
     const migrationTargets = useMemo(() => {
         const sourceId = deleteConflict?.source?.id
-        return data
-            .filter((c: any) => c.id !== sourceId)
-            .map((c: any) => ({ id: c.id, name: c.name, code: c.code }))
+        return data.filter((c: any) => c.id !== sourceId).map((c: any) => ({ id: c.id, name: c.name, code: c.code }))
     }, [data, deleteConflict])
 
-    // Ref to access render props from tour step actions
     const renderPropsRef = useRef<any>(null)
-
-    // Interactive tour step actions (programmatic UI interactions during tour)
     const tourStepActions = useMemo(() => ({
         5: () => { renderPropsRef.current?.setExpandAll(true); renderPropsRef.current?.setExpandKey((k: number) => k + 1) },
         6: () => {
@@ -211,30 +129,15 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         <TreeMasterPage
             config={{
                 title: 'Categories',
-                subtitle: `${data.length} Nodes · Hierarchical Tree`,
+                subtitle: (filtered, all) => `${all.length} Nodes · Hierarchical Tree`,
                 icon: <FolderTree size={20} />,
                 iconColor: 'var(--app-primary)',
                 tourId: 'inventory-categories',
-                onSearchChange: setFilterQuery,
-                onKpiFilterChange: (key) => {
-                    // Special 'all' key means "clear all filters"
-                    if (key === 'all') { setKpiFilter(null); setFilterQuery(''); return }
-                    setKpiFilter(key)
-                },
                 treeTourId: 'category-tree',
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
-                primaryAction: {
-                    label: 'New Category',
-                    icon: <Plus size={14} />,
-                    onClick: () => openAddModal(),
-                    dataTour: 'add-category-btn',
-                },
+                primaryAction: { label: 'New Category', icon: <Plus size={14} />, onClick: () => openAddModal(), dataTour: 'add-category-btn' },
                 secondaryActions: [
-                    {
-                        label: 'Cleanup',
-                        icon: <FolderTree size={13} />,
-                        href: '/inventory/maintenance?tab=category',
-                    },
+                    { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],
                 columnHeaders: [
                     { label: 'Category', width: 'auto' },
@@ -243,28 +146,61 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true },
                     { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
                 ],
+
+                // ── Template owns filtering ──
+                data,
+                searchFields: ['name', 'code', 'short_name', 'full_path'],
+                kpiPredicates: {
+                    root: (c) => !c.parent,
+                    leaf: (c, all) => !all.some((child: any) => child.parent === c.id),
+                    products: (c) => (c.product_count || 0) > 0,
+                    brands: (c) => (c.brand_count || 0) > 0,
+                },
+
                 kpis: [
                     {
-                        label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)',
-                        filterKey: 'all', active: kpiFilter === null && filterQuery.trim().length === 0,
-                        hint: 'Show all categories (clear filters)',
+                        label: 'Total', icon: <Layers size={11} />, color: 'var(--app-primary)',
+                        filterKey: 'all', hint: 'Show all categories (clear filters)',
+                        value: (_, all) => all.length,
                     },
-                    { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-success)', filterKey: 'root', active: kpiFilter === 'root', hint: 'Show only top-level categories' },
-                    { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: 'var(--app-info)', filterKey: 'leaf', active: kpiFilter === 'leaf', hint: 'Show only leaf categories (no children)' },
-                    { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-info)', filterKey: 'products', active: kpiFilter === 'products', hint: 'Show only categories with products' },
-                    { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: 'var(--app-warning)', filterKey: 'brands', active: kpiFilter === 'brands', hint: 'Show only categories with brands' },
                     {
-                        label: stats.isFiltered ? 'Showing' : 'All',
-                        value: stats.isFiltered ? `${stats.showing}/${stats.total}` : stats.total,
-                        icon: <Search size={11} />,
-                        color: stats.isFiltered ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                        label: 'Root', icon: <FolderTree size={11} />, color: 'var(--app-success)',
+                        filterKey: 'root', hint: 'Show only top-level categories',
+                        value: (filtered) => buildTree(filtered).length,
+                    },
+                    {
+                        label: 'Leaf', icon: <GitBranch size={11} />, color: 'var(--app-info)',
+                        filterKey: 'leaf', hint: 'Show only leaf categories (no children)',
+                        value: (filtered) => filtered.filter((d: any) => !filtered.some((c: any) => c.parent === d.id)).length,
+                    },
+                    {
+                        label: 'Products', icon: <Box size={11} />, color: 'var(--app-info)',
+                        filterKey: 'products', hint: 'Show only categories with products',
+                        value: (filtered) => filtered.reduce((sum: number, d: any) => sum + (d.product_count || 0), 0),
+                    },
+                    {
+                        label: 'Brands', icon: <Paintbrush size={11} />, color: 'var(--app-warning)',
+                        filterKey: 'brands', hint: 'Show only categories with brands',
+                        value: (filtered) => filtered.reduce((sum: number, d: any) => sum + (d.brand_count || 0), 0),
+                    },
+                    {
+                        label: 'Showing', icon: <Search size={11} />, color: 'var(--app-muted-foreground)',
+                        value: (filtered, all) => filtered.length < all.length ? `${filtered.length}/${all.length}` : all.length,
                     },
                 ],
-                footerLeft: (
+                emptyState: {
+                    icon: <FolderTree size={36} />,
+                    title: (hasSearch) => hasSearch ? 'No matching categories' : 'No categories defined yet',
+                    subtitle: (hasSearch) => hasSearch
+                        ? 'Try a different search term or clear filters.'
+                        : 'Create a root category to start organizing your product catalog.',
+                    actionLabel: 'Create First Category',
+                },
+                footerLeft: (_, all) => (
                     <div className="flex items-center gap-3 flex-wrap">
-                        <span>{stats.total} total categories</span>
+                        <span>{all.length} total categories</span>
                         <span style={{ color: 'var(--app-border)' }}>·</span>
-                        <span>{stats.totalProducts.toLocaleString()} linked products</span>
+                        <span>{all.reduce((s: number, d: any) => s + (d.product_count || 0), 0).toLocaleString()} linked products</span>
                     </div>
                 ),
             }}
@@ -312,79 +248,30 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             )}
         >
             {(renderProps) => {
-                const { searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar, selectedNode, setSelectedNode, sidebarNode, setSidebarNode, sidebarTab, setSidebarTab, panelTab, setPanelTab, setExpandAll, setExpandKey } = renderProps
+                const { tree, expandKey, expandAll, searchQuery, isSelected, openNode } = renderProps
                 renderPropsRef.current = renderProps
 
-                // Build tree with search + KPI filter
-                let filtered = data
-                if (searchQuery.trim()) {
-                    const q = searchQuery.toLowerCase()
-                    filtered = filtered.filter((a: any) =>
-                        a.name?.toLowerCase().includes(q)
-                        || a.code?.toLowerCase().includes(q)
-                        || a.short_name?.toLowerCase().includes(q)
-                    )
-                }
-                // Apply KPI filter (click-to-filter from the KPI strip)
-                filtered = filtered.filter((c: any) => kpiPredicate(c, data))
-
-                const tree = buildTree(filtered)
-                const leafCount = filtered.filter((d: any) => !filtered.some((c: any) => c.parent === d.id)).length
-                const totalProducts = filtered.reduce((sum: number, d: any) => sum + (d.product_count || 0), 0)
-                const totalBrands = filtered.reduce((sum: number, d: any) => sum + (d.brand_count || 0), 0)
-
-                return tree.length > 0 ? (
-                    tree.map((node: CategoryNode) => (
-                        <div key={`${node.id}-${expandKey}`}
-                            className={`rounded-xl transition-all duration-300 ${((splitPanel || pinnedSidebar) ? selectedNode?.id === node.id : sidebarNode?.id === node.id) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
-                            <CategoryRow
-                                node={node}
-                                level={0}
-                                onEdit={openEditModal}
-                                onAdd={openAddModal}
-                                onDelete={requestDelete}
-                                onDuplicate={handleDuplicate}
-                                onArchive={handleArchive}
-                                onRestore={handleRestore}
-                                onSelect={(n) => {
-                                    if (splitPanel || pinnedSidebar) { setSelectedNode(n) }
-                                    else { setSidebarNode(n); setSidebarTab('overview') }
-                                }}
-                                onViewProducts={(n) => {
-                                    if (splitPanel || pinnedSidebar) { setSelectedNode(n); setPanelTab('products') }
-                                    else { setSidebarNode(n); setSidebarTab('products') }
-                                }}
-                                onViewBrands={(n) => {
-                                    if (splitPanel || pinnedSidebar) { setSelectedNode(n); setPanelTab('brands') }
-                                    else { setSidebarNode(n); setSidebarTab('brands') }
-                                }}
-                                onViewAttributes={(n) => {
-                                    if (splitPanel || pinnedSidebar) { setSelectedNode(n); setPanelTab('attributes') }
-                                    else { setSidebarNode(n); setSidebarTab('attributes') }
-                                }}
-                                searchQuery={searchQuery}
-                                forceExpanded={expandAll}
-                            />
-                        </div>
-                    ))
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                        <FolderTree size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-                        <p className="text-sm font-bold text-app-muted-foreground mb-1">
-                            {searchQuery ? 'No matching categories' : 'No categories defined yet'}
-                        </p>
-                        <p className="text-[11px] text-app-muted-foreground mb-5 max-w-xs">
-                            {searchQuery ? 'Try a different search term or clear filters.' : 'Create a root category to start organizing your product catalog.'}
-                        </p>
-                        {!searchQuery && (
-                            <button onClick={() => openAddModal()}
-                                className="px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-bold hover:brightness-110 transition-all"
-                                style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                                <Plus size={16} className="inline mr-1.5" />Create First Category
-                            </button>
-                        )}
+                return tree.map((node: CategoryNode) => (
+                    <div key={`${node.id}-${expandKey}`}
+                        className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
+                        <CategoryRow
+                            node={node}
+                            level={0}
+                            onEdit={openEditModal}
+                            onAdd={openAddModal}
+                            onDelete={requestDelete}
+                            onDuplicate={handleDuplicate}
+                            onArchive={handleArchive}
+                            onRestore={handleRestore}
+                            onSelect={(n) => openNode(n, 'overview')}
+                            onViewProducts={(n) => openNode(n, 'products')}
+                            onViewBrands={(n) => openNode(n, 'brands')}
+                            onViewAttributes={(n) => openNode(n, 'attributes')}
+                            searchQuery={searchQuery}
+                            forceExpanded={expandAll}
+                        />
                     </div>
-                )
+                ))
             }}
         </TreeMasterPage>
     )

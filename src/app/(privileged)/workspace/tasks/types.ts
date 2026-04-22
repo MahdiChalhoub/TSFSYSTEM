@@ -29,6 +29,7 @@ export interface Task {
     completed_by_name?: string | null;
     completion_note?: string | null;
     require_completion_note?: boolean;
+    completion_checklist?: ChecklistItem[];
     attachments?: TaskAttachmentShort[];
     is_recurring?: boolean;
     recurrence_days?: number;
@@ -97,6 +98,11 @@ export interface Category {
     color: string;
     leader?: number | null;
     leader_name?: string | null;
+}
+
+export interface ChecklistItem {
+    label: string;
+    checked: boolean;
 }
 
 export interface TaskAttachmentShort {

@@ -165,7 +165,9 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                         </div>
                         <div className="font-bold text-app-muted-foreground uppercase tracking-widest truncate"
                             style={{ fontSize: 'var(--tp-xxs)' }}>
-                            {config.subtitle}
+                            {typeof config.subtitle === 'function'
+                                ? config.subtitle((config.data as any[]) || [], (config.data as any[]) || [])
+                                : config.subtitle}
                         </div>
                     </div>
 
@@ -279,7 +281,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                                 </div>
                                 <div className="min-w-0">
                                     <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground truncate">{k.label}</div>
-                                    <div className="text-tp-xl font-black text-app-foreground tabular-nums leading-tight">{k.value}</div>
+                                    <div className="text-tp-xl font-black text-app-foreground tabular-nums leading-tight">{typeof k.value === 'function' ? k.value((config.data as any[]) || [], (config.data as any[]) || []) : k.value}</div>
                                 </div>
                             </div>
                         ))}
@@ -339,7 +341,9 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
                 {/* Footer */}
                 <div className="px-4 py-3 text-tp-sm font-bold text-app-muted-foreground flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-wrap">
-                        {config.footerLeft}
+                        {typeof config.footerLeft === 'function'
+                            ? config.footerLeft((config.data as any[]) || [], (config.data as any[]) || [])
+                            : config.footerLeft}
                     </div>
                 </div>
             </motion.div>

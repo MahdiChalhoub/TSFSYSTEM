@@ -1,0 +1,230 @@
+'use server';
+
+import { erpFetch } from "@/lib/erp-api";
+import { revalidatePath } from "next/cache";
+
+export type CategoryState = {
+ message?: string;
+ errors?: {
+ name?: string[];
+ };
+};
+
+export async function createCategory(prevState: CategoryState, formData: FormData): Promise<CategoryState> {
+ const name = formData.get('name') as string;
+ const parentId = formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null;
+ const code = (formData.get('code') as string) || null;
+ const shortName = (formData.get('shortName') as string) || null;
+
+ if (!name || name.length < 2) {
+ return { message: 'Failed to create category', errors: { name: ['Name must be at least 2 characters'] } };
+ }
+
+ try {
+ const result = await erpFetch('inventory/categories/', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ name,
+ parent: parentId, // DRF expects PK of FK. Field name 'parent' in model.
+ code,
+ short_name: shortName
+ })
+ });
+
+ // erpFetch may return error object instead of throwing
+ if (result?.error || result?.detail) {
+ const errMsg = result.error || result.detail || 'Unknown backend error';
+ console.error('[createCategory] Backend error:', errMsg);
+ return { message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg) };
+ }
+
+ revalidatePath('/inventory/categories');
+ return { message: 'success' };
+ } catch (e: any) {
+ console.error('[createCategory] Exception:', e);
+ const detail = e?.message || 'Failed to create category';
+ return { message: detail };
+ }
+}
+
+export async function updateCategory(id: number, prevState: CategoryState, formData: FormData): Promise<CategoryState> {
+ const name = formData.get('name') as string;
+ const parentId = formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null;
+ const code = (formData.get('code') as string) || null;
+ const shortName = (formData.get('shortName') as string) || null;
+
+ try {
+ if (parentId === id) {
+ return { message: 'Category cannot be its own parent' };
+ }
+
+ await erpFetch(`inventory/categories/${id}/`, {
+ method: 'PATCH',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ name,
+ parent: parentId,
+ code,
+ short_name: shortName
+ })
+ });
+
+ revalidatePath('/inventory/categories');
+ return { message: 'success' };
+ } catch (e: unknown) {
+ return { message: 'Failed to update category' };
+ }
+}
+
+export async function reparentCategory(id: number, newParentId: number | null) {
+ try {
+ if (newParentId === id) {
+ return { success: false, message: 'Category cannot be its own parent' };
+ }
+ await erpFetch(`inventory/categories/${id}/`, {
+ method: 'PATCH',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ parent: newParentId })
+ });
+ revalidatePath('/inventory/categories');
+ return { success: true };
+ } catch (e: any) {
+ return { success: false, message: e?.message || 'Failed to move category' };
+ }
+}
+
+export async function deleteCategory(id: number, options: { force?: boolean } = {}) {
+    try {
+        const url = options.force
+            ? `inventory/categories/${id}/?force=1`
+            : `inventory/categories/${id}/`;
+        await erpFetch(url, { method: 'DELETE' });
+        revalidatePath('/inventory/categories');
+        return { success: true };
+    } catch (e: any) {
+        // 409 = conflict (products or sub-categories) — caller shows migrate dialog
+        if (e?.status === 409 && e?.data) {
+            return {
+                success: false,
+                conflict: e.data,
+                message: e.data.message || 'Cannot delete: products or sub-categories assigned',
+            };
+        }
+        // 500 / generic server error — turn into actionable guidance
+        const raw = e?.message || '';
+        const isGenericServer = e?.status === 500 || raw.includes('Server error');
+        if (isGenericServer) {
+            return {
+                success: false,
+                message: 'The server refused to delete this category. Products or sub-categories are likely still linked.',
+                actionHint: 'Open the category → Products tab → move products to another category, and re-parent any sub-categories, then delete.',
+            };
+        }
+        if (e?.status === 403 || e?.status === 401) {
+            return { success: false, message: "You don't have permission to delete categories." };
+        }
+        return { success: false, message: e?.message || 'Failed to delete category' };
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  ARCHIVE / RESTORE / DUPLICATE — soft-delete + clone
+ * ═══════════════════════════════════════════════════════════ */
+
+export async function archiveCategory(id: number) {
+    try {
+        const result = await erpFetch(`inventory/categories/${id}/archive/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+        });
+        revalidatePath('/inventory/categories');
+        return { success: true, category: result };
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to archive' };
+    }
+}
+
+export async function restoreCategory(id: number) {
+    try {
+        const result = await erpFetch(`inventory/categories/${id}/restore/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+        });
+        revalidatePath('/inventory/categories');
+        return { success: true, category: result };
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to restore' };
+    }
+}
+
+export async function duplicateCategory(id: number) {
+    try {
+        const result = await erpFetch(`inventory/categories/${id}/duplicate/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+        });
+        revalidatePath('/inventory/categories');
+        return { success: true, category: result };
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to duplicate' };
+    }
+}
+
+export async function listArchivedCategories() {
+    try {
+        const data = await erpFetch('inventory/categories/?archived_only=1', { cache: 'no-store' } as any);
+        return Array.isArray(data) ? data : (data?.results ?? []);
+    } catch {
+        return [];
+    }
+}
+
+export async function getCategoryWithCounts() {
+ try {
+ // Try namespaced first (new standard)
+ return await erpFetch('inventory/categories/with_counts/');
+ } catch (e: any) {
+ if (e.status === 404) {
+ // Fallback to flat URL (backward compatibility)
+ return await erpFetch('categories/with_counts/');
+ }
+ throw e;
+ }
+}
+
+export async function moveProducts(productIds: number[], targetCategoryId: number) {
+ try {
+ await erpFetch('inventory/categories/move_products/', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ product_ids: productIds,
+ target_category_id: targetCategoryId
+ })
+ });
+
+ revalidatePath('/inventory/categories/maintenance');
+ revalidatePath('/inventory/categories'); // Update main list too
+ return { success: true };
+ } catch (e) {
+ console.error('Move products error:', e);
+ return { success: false, message: 'Failed to move products' };
+ }
+}
+
+/**
+ * Fetch products assigned to a specific category
+ */
+export async function getCategoryProducts(categoryId: number) {
+ try {
+ const data = await erpFetch(`inventory/products/?category=${categoryId}`);
+ return Array.isArray(data) ? data : data?.results || [];
+ } catch (e) {
+ console.error("Failed to fetch products for category:", e);
+ return [];
+ }
+}
