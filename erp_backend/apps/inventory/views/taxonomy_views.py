@@ -468,7 +468,9 @@ class UnitPackageViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         from apps.inventory.models import UnitPackage
-        qs = UnitPackage.objects.all().select_related('unit', 'parent')
+        # `parent` field is gated out of the model until migration 0057
+        # applies — don't select_related('parent') or the SQL blows up.
+        qs = UnitPackage.objects.all().select_related('unit')
         unit_id = self.request.query_params.get('unit')
         if unit_id:
             qs = qs.filter(unit_id=unit_id)
@@ -497,13 +499,16 @@ class UnitPackageViewSet(TenantModelViewSet):
         if requested_ids:
             units_qs = units_qs.filter(id__in=requested_ids)
 
-        # Standard chain: Pack of 6 → Carton (×4 = 24) → Pallet (×6 = 144).
-        # Unit-agnostic on purpose — the ratios read sensibly for count,
-        # volume, and weight. Users tweak or extend as needed.
+        # Standard set: Pack of 6, Carton of 24, Pallet of 144. Normally
+        # these form a chain (Pack → Carton → Pallet), but the chain FKs
+        # aren't in the DB yet — see note on the model. Until then we
+        # create the three flat templates with precomputed ratios; when
+        # migration 0057 lands, users can wire up the parent links in
+        # the form and the hierarchy reassembles from ratios.
         CHAIN = [
-            {'name': 'Pack of 6',     'code': 'PK6',   'parent_ratio': Decimal('6'), 'order': 10},
-            {'name': 'Carton of 24',  'code': 'CT24',  'parent_ratio': Decimal('4'), 'order': 20},
-            {'name': 'Pallet of 144', 'code': 'PL144', 'parent_ratio': Decimal('6'), 'order': 30},
+            {'name': 'Pack of 6',     'code': 'PK6',   'ratio': Decimal('6'),   'order': 10},
+            {'name': 'Carton of 24',  'code': 'CT24',  'ratio': Decimal('24'),  'order': 20},
+            {'name': 'Pallet of 144', 'code': 'PL144', 'ratio': Decimal('144'), 'order': 30},
         ]
 
         created_rows = []
@@ -514,23 +519,17 @@ class UnitPackageViewSet(TenantModelViewSet):
                 if UnitPackage.objects.filter(unit=unit, organization=organization).exists():
                     skipped_units.append(unit.id)
                     continue
-                parent = None
-                running_ratio = Decimal('1')
                 for step in CHAIN:
-                    running_ratio = running_ratio * step['parent_ratio']
                     tpl = UnitPackage.objects.create(
                         organization=organization,
                         unit=unit,
-                        parent=parent,
-                        parent_ratio=step['parent_ratio'],
                         name=step['name'],
                         code=step['code'],
-                        ratio=running_ratio,
+                        ratio=step['ratio'],
                         order=step['order'],
-                        is_default=(parent is None),
+                        is_default=(step['order'] == 10),  # first step becomes default
                     )
                     created_rows.append(tpl)
-                    parent = tpl
 
         units_seeded = len(created_rows) // len(CHAIN) if CHAIN else 0
         return Response({
@@ -554,7 +553,11 @@ class UnitPackageViewSet(TenantModelViewSet):
         instance = self.get_object()
         org = instance.organization
 
-        children_qs = UnitPackage.objects.filter(parent=instance, organization=org)
+        # children_qs would count chain descendants but the chain FK is
+        # gated out of the model until migration 0057 lands. Skip that
+        # check for now — the ProductPackaging + SuggestionRule guards
+        # below still protect active data.
+        children_qs = UnitPackage.objects.none()
         # ProductPackaging has no FK to UnitPackage — match by unit + ratio
         # (the same signature the suggestion engine uses to identify a level).
         packaging_qs = ProductPackaging.objects.filter(

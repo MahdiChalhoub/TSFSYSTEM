@@ -3,106 +3,31 @@
 
 import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import {
-    Scale, ChevronDown, ChevronRight, Search, Download, Printer,
+    Scale, ChevronDown, Search, Download, Printer,
     RefreshCcw, Calendar, CheckCircle2, AlertTriangle, Eye, EyeOff,
     Maximize2, Minimize2, ArrowLeft, Layers,
     ChevronsUpDown, ChevronsDownUp, TrendingUp, TrendingDown, Sigma, Check,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getTrialBalanceReport } from '@/app/actions/finance/accounts'
+import { TYPE_CONFIG } from '@/app/(privileged)/finance/chart-of-accounts/_components/types'
+import { ReportAccountNode, ReportAccountHeader } from '../_shared/ReportAccountNode'
+import { FiscalYearSelector, useActiveFiscalYear } from '../_shared/FiscalYearSelector'
 import { useMoneyFormatter, exportCSV, flattenAccounts } from '../_shared/components'
 
 /* ═══════════════════════════════════════════════════════════
- *  TRIAL BALANCE — redesign
- *  - KPIs are MONEY (debit total / credit total / Δ / …), not
- *    pointless account counts (was "1 · 1 · 1 · 1 · 3").
- *  - Type column dropped (section header already communicates it).
- *  - Section headers carry inline subtotals so users see the
- *    accounting identity at a glance.
- *  - Tree auto-expands on load; zero rows hidden by default.
- *  - Column widths tightened so data fills the viewport instead
- *    of drifting across empty space.
+ *  TRIAL BALANCE — thin consumer
+ *  - Reuses TYPE_CONFIG + ReportAccountNode instead of redefining
+ *    per-type colours / icons / row layout.
+ *  - Fiscal-year selector lives in the toolbar; once picked it
+ *    governs every report (the selection is persisted and other
+ *    report tabs update live via a storage event).
+ *  - PeriodPicker embeds the native date calendar AND the preset
+ *    shortcuts in one control (no more separate chips).
  * ═══════════════════════════════════════════════════════════ */
 
-const TYPE_META: Record<string, { label: string; accent: string }> = {
-    ASSET: { label: 'Assets', accent: 'var(--app-info)' },
-    LIABILITY: { label: 'Liabilities', accent: 'var(--app-error)' },
-    EQUITY: { label: 'Equity', accent: '#8b5cf6' },
-    INCOME: { label: 'Income', accent: 'var(--app-success)' },
-    EXPENSE: { label: 'Expenses', accent: 'var(--app-warning)' },
-}
+const ORDER = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'] as const
 
-/* ─── Row ─── */
-function Row({ a, all, fmt, lvl = 0, accent, expandAll, expandKey, showZero }: any) {
-    const [open, setOpen] = useState(true) // auto-expand by default
-    useEffect(() => {
-        if (expandAll !== undefined) setOpen(expandAll)
-    }, [expandAll, expandKey])
-
-    const kids = a.children?.length > 0
-    const bal = a.balance ?? 0
-    if (!showZero && Math.abs(bal) < 0.001 && !kids) return null
-
-    const debit = bal > 0 ? fmt(bal) : ''
-    const credit = bal < 0 ? fmt(Math.abs(bal)) : ''
-
-    return (
-        <>
-            <div className="flex items-center px-3 py-1 text-tp-sm"
-                style={{
-                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 18%, transparent)',
-                    background: kids ? 'color-mix(in srgb, var(--app-surface) 35%, transparent)' : 'transparent',
-                }}>
-                <div className="w-5 flex-shrink-0" style={{ paddingLeft: lvl * 14 }}>
-                    {kids ? (
-                        <button onClick={() => setOpen(!open)}
-                            className="w-4 h-4 flex items-center justify-center rounded"
-                            style={{ color: open ? accent : 'var(--app-muted-foreground)' }}>
-                            {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
-                        </button>
-                    ) : (
-                        <span className="w-1 h-1 rounded-full inline-block"
-                            style={{ background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
-                    )}
-                </div>
-                <div className="font-mono text-tp-xxs tabular-nums flex-shrink-0 w-14 pr-2"
-                    style={{ color: 'var(--app-muted-foreground)' }}>
-                    {a.code}
-                </div>
-                <div className="flex-1 min-w-0 truncate"
-                    style={{ color: kids ? accent : 'var(--app-foreground)', fontWeight: kids ? 700 : 500 }}>
-                    {a.name}
-                </div>
-                <div className="w-28 text-right font-mono tabular-nums"
-                    style={{
-                        color: debit ? 'var(--app-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)',
-                        fontWeight: kids ? 700 : 400,
-                    }}>
-                    {debit || '—'}
-                </div>
-                <div className="w-28 text-right font-mono tabular-nums"
-                    style={{
-                        color: credit ? 'var(--app-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)',
-                        fontWeight: kids ? 700 : 400,
-                    }}>
-                    {credit || '—'}
-                </div>
-            </div>
-            {kids && open && a.children.map((c: any) => {
-                const child = typeof c === 'object' ? c : all.find(x => x.id === c)
-                return child ? (
-                    <Row key={child.id} a={child} all={all} fmt={fmt} lvl={lvl + 1}
-                        accent={accent} expandAll={expandAll} expandKey={expandKey}
-                        showZero={showZero} />
-                ) : null
-            })}
-        </>
-    )
-}
-
-/* ═══════════════════════════════════════════════════════════
- *  Viewer
- * ═══════════════════════════════════════════════════════════ */
 export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
     initialAccounts: any[]; fiscalYears: any[]
 }) {
@@ -112,7 +37,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
     const [mounted, setMounted] = useState(false)
     const [search, setSearch] = useState('')
     const [typeFilter, setTypeFilter] = useState<string | null>(null)
-    const [showZero, setShowZero] = useState(false)
+    const [hideZero, setHideZero] = useState(true)
     const [focusMode, setFocusMode] = useState(false)
     const [expandAll, setExpandAll] = useState<boolean | undefined>(true)
     const [expandKey, setExpandKey] = useState(0)
@@ -120,6 +45,14 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
     const fmt = useMoneyFormatter(mounted)
     useEffect(() => { setMounted(true) }, [])
 
+    // ─── Fiscal year rule: whenever the user picks an FY (from any report),
+    // snap asOfDate to that FY's end_date so this page respects the rule. ───
+    const activeFy = useActiveFiscalYear(fiscalYears)
+    useEffect(() => {
+        if (activeFy.mode === 'fy' && activeFy.end) setAsOfDate(activeFy.end)
+    }, [activeFy.mode, activeFy.end])
+
+    // Keyboard shortcuts
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
@@ -136,7 +69,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
         })
     }
 
-    /* ─── Per-type subtotals (debit / credit side) ─── */
+    // Subtotals per type
     const typeSubtotals = useMemo(() => {
         const out: Record<string, { debit: number; credit: number; count: number }> = {}
         accounts.filter(a => !a.parentId).forEach(a => {
@@ -160,16 +93,12 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
     const ok = totals.diff < 0.01
 
     const withBalance = accounts.filter(a => !a.parentId && Math.abs(a.balance ?? 0) > 0.001).length
-    const leafCount = accounts.length
     const rootCount = accounts.filter(a => !a.parentId).length
-    const largestAccount = useMemo(() => {
-        return accounts.filter(a => !a.parentId)
-            .slice().sort((a, b) => Math.abs(b.balance || 0) - Math.abs(a.balance || 0))[0]
-    }, [accounts])
+    const largest = useMemo(() => accounts.filter(a => !a.parentId)
+        .slice().sort((a, b) => Math.abs(b.balance || 0) - Math.abs(a.balance || 0))[0], [accounts])
 
-    /* ─── Group & filter ─── */
+    // Grouped & filtered
     const grouped = useMemo(() => {
-        const order = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE']
         let list = accounts.filter(a => !a.parentId)
         if (typeFilter) list = list.filter(a => a.type === typeFilter)
         if (search.trim()) {
@@ -184,18 +113,16 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
             }
             list = list.filter(matches)
         }
-        return order
-            .map(type => ({
-                type,
-                items: list.filter(a => a.type === type).sort((a, b) => a.code.localeCompare(b.code)),
-            }))
-            .filter(g => g.items.length > 0)
+        return ORDER.map(type => ({
+            type,
+            items: list.filter(a => a.type === type).sort((a, b) => a.code.localeCompare(b.code)),
+        })).filter(g => g.items.length > 0)
     }, [accounts, typeFilter, search])
 
     const handleExport = () => {
         const rows: any[] = []
         grouped.forEach(g => {
-            rows.push({ code: '', name: `— ${TYPE_META[g.type].label.toUpperCase()} —`, debit: '', credit: '' })
+            rows.push({ code: '', name: `— ${TYPE_CONFIG[g.type].label.toUpperCase()} —`, debit: '', credit: '' })
             flattenAccounts(g.items, accounts).forEach(r => {
                 rows.push({
                     code: r.code, name: r.name,
@@ -218,9 +145,23 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
     }
 
     return (
-        <div className="report-print-root flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
+        <div className="report-print-root flex flex-col overflow-hidden relative"
+            style={{ height: 'calc(100dvh - 6rem)' }}>
 
-            {/* ═══ Header ═══ */}
+            {/* Floating exit-focus button */}
+            {focusMode && (
+                <button onClick={() => setFocusMode(false)}
+                    className="fixed top-20 right-6 z-40 flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:scale-[1.03] animate-in fade-in slide-in-from-top-2 duration-200 print:hidden"
+                    style={{
+                        background: 'var(--app-primary)', color: 'white',
+                        boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 40%, transparent)',
+                    }}
+                    title="Exit focus mode (Ctrl+Q)">
+                    <Minimize2 size={14} /> Exit focus
+                </button>
+            )}
+
+            {/* Header */}
             {!focusMode && (
                 <div className="flex items-start justify-between gap-4 mb-3 flex-shrink-0 px-4 md:px-6 pt-4 md:pt-6 print:hidden">
                     <div className="flex items-center gap-3">
@@ -246,6 +187,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
+                        <FiscalYearSelector fiscalYears={fiscalYears} />
                         <button onClick={handleExport} className="toolbar-btn text-app-muted-foreground">
                             <Download size={13} /> <span className="hidden sm:inline">Export CSV</span>
                         </button>
@@ -264,7 +206,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                 </div>
             )}
 
-            {/* ═══ KPI strip — MONEY, not counts ═══ */}
+            {/* KPI strip — money, not counts */}
             {!focusMode && (
                 <div className="flex-shrink-0 mb-3 px-4 md:px-6 grid gap-2 print:hidden"
                     style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
@@ -276,30 +218,31 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                         icon={ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
                         color={ok ? 'var(--app-success)' : 'var(--app-error)'}
                         tone={ok ? 'soft' : 'strong'} />
-                    <MoneyKpi label={`Largest · ${TYPE_META[largestAccount?.type]?.label || '—'}`}
-                        value={largestAccount ? fmt(Math.abs(largestAccount.balance || 0)) : '—'}
-                        sub={largestAccount?.name}
+                    <MoneyKpi label={`Largest · ${TYPE_CONFIG[largest?.type]?.label || '—'}`}
+                        value={largest ? fmt(Math.abs(largest.balance || 0)) : '—'}
+                        sub={largest?.name}
                         icon={<Sigma size={13} />}
-                        color={TYPE_META[largestAccount?.type]?.accent || 'var(--app-primary)'} />
+                        color={TYPE_CONFIG[largest?.type]?.color || 'var(--app-primary)'} />
                     <MoneyKpi label="Activity" value={`${withBalance}/${rootCount}`}
-                        sub={`${leafCount} total incl. sub-accounts`}
+                        sub={`${accounts.length} total incl. sub-accounts`}
                         icon={<Layers size={13} />}
                         color="var(--app-info)" />
                 </div>
             )}
 
-            {/* ═══ Type filter pills (compact replacement for old KPIStrip filter) ═══ */}
+            {/* Type filter pills — use COA's TYPE_CONFIG */}
             {!focusMode && (
                 <div className="flex-shrink-0 flex items-center gap-1.5 mb-3 px-4 md:px-6 overflow-x-auto print:hidden"
                     style={{ scrollbarWidth: 'none' }}>
                     <FilterPill label="All" active={typeFilter === null}
                         onClick={() => setTypeFilter(null)} />
-                    {Object.entries(TYPE_META).map(([type, meta]) => {
+                    {ORDER.map(type => {
                         const st = typeSubtotals[type]
                         if (!st) return null
+                        const conf = TYPE_CONFIG[type]
                         return (
-                            <FilterPill key={type} label={meta.label}
-                                count={st.count} accent={meta.accent}
+                            <FilterPill key={type} label={conf.label} icon={conf.icon}
+                                count={st.count} accent={conf.color}
                                 active={typeFilter === type}
                                 onClick={() => setTypeFilter(typeFilter === type ? null : type)} />
                         )
@@ -307,7 +250,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                 </div>
             )}
 
-            {/* ═══ Controls: date / presets / search / expand / zero-toggle ═══ */}
+            {/* Controls: period + search + expand + hide-zero */}
             <div className="flex-shrink-0 flex flex-wrap items-center gap-2 mb-3 px-4 md:px-6 print:hidden">
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
                     style={{
@@ -334,23 +277,16 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                     {expandAll ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
                     <span className="hidden sm:inline">{expandAll ? 'Collapse' : 'Expand'}</span>
                 </button>
-                <button onClick={() => setShowZero(p => !p)}
-                    className={`toolbar-btn ${showZero ? 'text-app-warning border-app-warning/30 bg-app-warning/10' : 'text-app-muted-foreground'}`}>
-                    {showZero ? <Eye size={13} /> : <EyeOff size={13} />}
+                <button onClick={() => setHideZero(p => !p)}
+                    className={`toolbar-btn ${hideZero ? 'text-app-muted-foreground' : 'text-app-warning border-app-warning/30 bg-app-warning/10'}`}>
+                    {hideZero ? <EyeOff size={13} /> : <Eye size={13} />}
                     <span className="hidden sm:inline">Zero</span>
                 </button>
             </div>
 
-            {/* ═══ Framed tree ═══ */}
+            {/* Framed tree — reuses ReportAccountNode + ReportAccountHeader */}
             <div className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col mx-4 md:mx-6 border border-app-border bg-app-surface/30 print:border-0 print:rounded-none print:mx-0">
-                <div className="flex-shrink-0 flex items-center px-3 py-2 border-b border-app-border/50 text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground bg-app-surface/60">
-                    <div className="w-5 flex-shrink-0" />
-                    <div className="w-14 pr-2">Code</div>
-                    <div className="flex-1">Account</div>
-                    <div className="w-28 text-right">Debit</div>
-                    <div className="w-28 text-right">Credit</div>
-                </div>
-
+                <ReportAccountHeader columns="debit-credit" />
                 <div className="flex-1 overflow-y-auto overscroll-contain">
                     {grouped.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center py-12 gap-2">
@@ -360,41 +296,43 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                             </p>
                         </div>
                     ) : grouped.map(g => {
-                        const meta = TYPE_META[g.type]
+                        const conf = TYPE_CONFIG[g.type]
                         const st = typeSubtotals[g.type] || { debit: 0, credit: 0, count: 0 }
                         return (
                             <div key={g.type}>
-                                {/* Section header — inline subtotals, no redundant pill */}
+                                {/* Section header with inline subtotal */}
                                 <div className="flex items-center px-3 py-1.5 text-tp-xxs font-black uppercase tracking-widest"
                                     style={{
-                                        background: `color-mix(in srgb, ${meta.accent} 6%, transparent)`,
+                                        background: `color-mix(in srgb, ${conf.color} 5%, transparent)`,
                                         borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
-                                        borderLeft: `3px solid ${meta.accent}`,
-                                        color: meta.accent,
+                                        borderLeft: `3px solid ${conf.color}`,
+                                        color: conf.color,
                                     }}>
                                     <div className="w-5 flex-shrink-0" />
-                                    <div className="w-14" />
+                                    <div className="w-7 flex-shrink-0" />
                                     <div className="flex-1 flex items-center gap-2">
-                                        <span>{meta.label}</span>
+                                        <span>{conf.label}</span>
                                         <span className="opacity-60 font-mono normal-case tracking-normal">
-                                            · {st.count} account{st.count !== 1 ? 's' : ''}
+                                            · {st.count}
                                         </span>
                                     </div>
+                                    <div className="w-24 hidden sm:block" />
                                     <div className="w-28 text-right font-mono tabular-nums"
-                                        style={{ color: st.debit > 0 ? meta.accent : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }}>
+                                        style={{ color: st.debit > 0 ? conf.color : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }}>
                                         {st.debit > 0 ? fmt(st.debit) : '—'}
                                     </div>
                                     <div className="w-28 text-right font-mono tabular-nums"
-                                        style={{ color: st.credit > 0 ? meta.accent : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }}>
+                                        style={{ color: st.credit > 0 ? conf.color : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }}>
                                         {st.credit > 0 ? fmt(st.credit) : '—'}
                                     </div>
                                 </div>
-
                                 {g.items.map(acc => (
-                                    <Row key={acc.id} a={acc} all={accounts} fmt={fmt}
-                                        accent={meta.accent}
-                                        expandAll={expandAll} expandKey={expandKey}
-                                        showZero={showZero} />
+                                    <ReportAccountNode key={acc.id}
+                                        node={acc} level={0} accounts={accounts}
+                                        formatAmount={fmt}
+                                        columns="debit-credit"
+                                        forceOpen={expandAll} forceOpenKey={expandKey}
+                                        hideZero={hideZero} />
                                 ))}
                             </div>
                         )
@@ -402,11 +340,9 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                 </div>
             </div>
 
-            {/* ═══ Footer totals ═══ */}
+            {/* Footer */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold mx-4 md:mx-6 rounded-b-2xl border border-app-border border-t-0 bg-app-surface/70 text-app-muted-foreground mb-2 print:hidden">
-                <div>
-                    <span className="uppercase tracking-widest text-tp-xxs font-black opacity-70">Statement totals</span>
-                </div>
+                <div className="uppercase tracking-widest text-tp-xxs font-black opacity-70">Statement totals</div>
                 <div className="flex items-center gap-4 font-mono tabular-nums">
                     <span>
                         <span className="opacity-60 uppercase tracking-wide text-tp-xxs mr-2">Debit</span>
@@ -426,7 +362,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                 </div>
             </div>
 
-            {/* Print-only statement header */}
+            {/* Print-only header */}
             <div className="report-only-print px-6 py-4 text-center">
                 <h2 className="report-statement-title text-3xl font-bold">Trial Balance</h2>
                 <p className="text-sm mt-1">
@@ -452,13 +388,13 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                     transition: all 0.2s;
                 }
                 .toolbar-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
-
             `}</style>
         </div>
     )
 }
 
-/* ─── MoneyKpi — shows a money value + optional sub-caption ─── */
+/* ─── Small helpers ─── */
+
 function MoneyKpi({ label, value, sub, icon, color, tone = 'soft' }: any) {
     return (
         <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
@@ -483,15 +419,11 @@ function MoneyKpi({ label, value, sub, icon, color, tone = 'soft' }: any) {
                     {label}
                 </div>
                 <div className="font-mono font-black tabular-nums truncate"
-                    style={{
-                        color: 'var(--app-foreground)',
-                        fontSize: 'var(--tp-md, 13px)',
-                    }}>
+                    style={{ color: 'var(--app-foreground)', fontSize: 'var(--tp-md, 13px)' }}>
                     {value}
                 </div>
                 {sub && (
-                    <div className="text-tp-xxs truncate"
-                        style={{ color: 'var(--app-muted-foreground)' }}>
+                    <div className="text-tp-xxs truncate" style={{ color: 'var(--app-muted-foreground)' }}>
                         {sub}
                     </div>
                 )}
@@ -500,10 +432,37 @@ function MoneyKpi({ label, value, sub, icon, color, tone = 'soft' }: any) {
     )
 }
 
-/* ─── PeriodPicker — one themed chip that reveals a popover
- *     containing preset buttons (Today · This month · Last month · YTD
- *     · Last year) AND the native calendar picker. Replaces two
- *     separate controls that used to live side-by-side. ─── */
+function FilterPill({ label, icon, count, accent, active, onClick }: any) {
+    return (
+        <button onClick={onClick} type="button"
+            className="flex-shrink-0 flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl transition-all"
+            style={active ? {
+                background: accent ? `color-mix(in srgb, ${accent} 14%, transparent)` : 'var(--app-primary)',
+                color: accent || 'white',
+                border: accent ? `1.5px solid ${accent}` : '1.5px solid var(--app-primary)',
+            } : {
+                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                color: 'var(--app-muted-foreground)',
+            }}>
+            {icon}
+            <span>{label}</span>
+            {count != null && (
+                <span className="font-mono tabular-nums px-1.5 py-0.5 rounded-full text-tp-xxs"
+                    style={{
+                        background: active
+                            ? `color-mix(in srgb, ${accent || 'white'} 20%, transparent)`
+                            : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                        color: active ? (accent || 'white') : 'var(--app-muted-foreground)',
+                    }}>
+                    {count}
+                </span>
+            )}
+        </button>
+    )
+}
+
+/* ─── PeriodPicker — one chip, presets + native calendar merged ─── */
 function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
     const [open, setOpen] = useState(false)
     const btnRef = useRef<HTMLButtonElement>(null)
@@ -520,25 +479,18 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
         { key: 'last_year', label: 'Last year', date: iso(new Date(now.getFullYear() - 1, 11, 31)) },
     ] as const
 
-    // Identify which preset the current value matches (if any)
-    const activeKey = useMemo(() => {
-        return presets.find(p => p.date === value)?.key ?? 'custom'
-    }, [value])
-
+    const activeKey = useMemo(() => presets.find(p => p.date === value)?.key ?? 'custom', [value])
     const formatted = useMemo(() => {
         if (!value) return 'Pick a date'
         const d = new Date(value + 'T00:00:00')
         return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })
     }, [value])
 
-    // Close on outside click / Esc
     useEffect(() => {
         if (!open) return
         const onDoc = (e: MouseEvent) => {
-            if (
-                panelRef.current?.contains(e.target as Node) ||
-                btnRef.current?.contains(e.target as Node)
-            ) return
+            if (panelRef.current?.contains(e.target as Node)) return
+            if (btnRef.current?.contains(e.target as Node)) return
             setOpen(false)
         }
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
@@ -555,7 +507,7 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
         const el = dateRef.current
         if (!el) return
         if (typeof (el as any).showPicker === 'function') {
-            try { (el as any).showPicker(); return } catch { /* fall through */ }
+            try { (el as any).showPicker(); return } catch { /* fall-through */ }
         }
         el.focus(); el.click()
     }
@@ -587,10 +539,10 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
                     </span>
                 )}
                 <ChevronDown size={11}
-                    className="transition-transform"
                     style={{
                         color: 'var(--app-muted-foreground)',
                         transform: open ? 'rotate(180deg)' : 'none',
+                        transition: 'transform 0.2s',
                     }} />
             </button>
 
@@ -604,9 +556,7 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
                         minWidth: 220,
                     }}>
                     <div className="text-tp-xxs font-black uppercase tracking-widest px-2 py-1"
-                        style={{ color: 'var(--app-muted-foreground)' }}>
-                        Presets
-                    </div>
+                        style={{ color: 'var(--app-muted-foreground)' }}>Presets</div>
                     <div className="grid grid-cols-2 gap-1">
                         {presets.map(p => {
                             const isActive = activeKey === p.key
@@ -618,8 +568,7 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
                                         color: 'var(--app-primary)',
                                         border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)',
                                     } : {
-                                        background: 'transparent',
-                                        color: 'var(--app-foreground)',
+                                        background: 'transparent', color: 'var(--app-foreground)',
                                         border: '1px solid transparent',
                                     }}>
                                     <span>{p.label}</span>
@@ -628,14 +577,10 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
                             )
                         })}
                     </div>
-
                     <div className="h-px my-2"
                         style={{ background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
-
                     <div className="text-tp-xxs font-black uppercase tracking-widest px-2 py-1"
-                        style={{ color: 'var(--app-muted-foreground)' }}>
-                        Custom date
-                    </div>
+                        style={{ color: 'var(--app-muted-foreground)' }}>Custom date</div>
                     <button type="button" onClick={openNativePicker}
                         className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-tp-sm font-medium transition-all text-left"
                         style={{
@@ -645,8 +590,7 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
                         }}>
                         <Calendar size={12} style={{ color: 'var(--app-muted-foreground)' }} />
                         <span className="flex-1 tabular-nums">{formatted}</span>
-                        <span className="text-tp-xxs"
-                            style={{ color: 'var(--app-muted-foreground)' }}>
+                        <span className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
                             Open calendar
                         </span>
                     </button>
@@ -658,35 +602,5 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
                 </div>
             )}
         </div>
-    )
-}
-
-/* ─── FilterPill — type filter chip with count + accent ─── */
-function FilterPill({ label, count, accent, active, onClick }: any) {
-    return (
-        <button onClick={onClick}
-            className="flex-shrink-0 flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl transition-all"
-            style={active ? {
-                background: accent ? `color-mix(in srgb, ${accent} 14%, transparent)` : 'var(--app-primary)',
-                color: accent || 'white',
-                border: accent ? `1.5px solid ${accent}` : '1.5px solid var(--app-primary)',
-            } : {
-                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                color: 'var(--app-muted-foreground)',
-            }}>
-            <span>{label}</span>
-            {count != null && (
-                <span className="font-mono tabular-nums px-1.5 py-0.5 rounded-full text-tp-xxs"
-                    style={{
-                        background: active
-                            ? `color-mix(in srgb, ${accent || 'white'} 20%, transparent)`
-                            : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
-                        color: active ? (accent || 'white') : 'var(--app-muted-foreground)',
-                    }}>
-                    {count}
-                </span>
-            )}
-        </button>
     )
 }
