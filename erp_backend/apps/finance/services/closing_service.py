@@ -785,7 +785,7 @@ class ClosingService:
         credits (which would indicate corrupt source data), we log and
         skip rather than create an invalid JE.
         """
-        from apps.finance.models import JournalEntry
+        from apps.finance.models import JournalEntry, FiscalYear
         from apps.finance.services.ledger_core import LedgerCoreMixin
 
         if not lines:
@@ -801,6 +801,16 @@ class ClosingService:
                 f"the source year's closing JE for missing lines."
             )
             return None
+
+        # Race guard — serialize concurrent writers for this (fiscal_year,
+        # scope) pair. Without the row lock, two workers racing on the
+        # same year can both read "no active OPENING JE", both soft-
+        # supersede nothing, and both create fresh POSTED rows → duplicate
+        # active openings. select_for_update() on the FiscalYear row
+        # forces them into sequence. Cheap (single row), effective, and
+        # the transaction context from the caller is reused (atomic
+        # propagation).
+        FiscalYear.objects.select_for_update().get(pk=fiscal_year.pk)
 
         # Soft-supersede any prior OPENING JE for this (year, scope) so
         # auditors still see the history. We flip them to DRAFT + tag the
@@ -942,6 +952,14 @@ class ClosingService:
             sum_ob = sum(ob_by_acc.values(), Decimal('0.00'))
             sum_je = sum(je_by_acc.values(), Decimal('0.00'))
 
+            # Account coverage — a balance match isn't enough; a missing
+            # account on either side can net to zero while hiding real
+            # data loss (e.g. OB has A=0 and JE has B=+100/C=-100 → sum
+            # still 0 but account set differs). Track membership diffs
+            # explicitly.
+            only_in_ob = sorted(set(ob_by_acc) - set(je_by_acc))
+            only_in_je = sorted(set(je_by_acc) - set(ob_by_acc))
+
             report['scopes'][scope] = {
                 'ob_accounts': len(ob_by_acc),
                 'je_accounts': len(je_by_acc),
@@ -950,9 +968,190 @@ class ClosingService:
                 'je_sum': sum_je,
                 'ob_balanced': sum_ob.copy_abs() <= tol,
                 'je_balanced': sum_je.copy_abs() <= tol,
+                'only_in_ob': only_in_ob,
+                'only_in_je': only_in_je,
+                'coverage_match': not only_in_ob and not only_in_je,
             }
-            if drifts or not (sum_ob.copy_abs() <= tol) or not (sum_je.copy_abs() <= tol):
+            if (drifts or only_in_ob or only_in_je
+                or not (sum_ob.copy_abs() <= tol)
+                or not (sum_je.copy_abs() <= tol)):
                 report['has_drift'] = True
+
+        return report
+
+    @staticmethod
+    def rebuild_ob_from_je(organization, fiscal_year, user=None):
+        """
+        Rebuild OpeningBalance rows from the authoritative OPENING JE lines
+        for a single fiscal year. Use this — NOT the reverse — to repair
+        drift: JE is the source of truth after Phase 2, OB is the legacy
+        derived view that must follow.
+
+        Deletes all existing OB rows for this fiscal_year (both scopes)
+        and recreates them from the current POSTED OPENING JE lines.
+        No-op (but reported) for years with no OPENING JE.
+
+        Idempotent — safe to run repeatedly. Returns a dict report.
+        """
+        from apps.finance.models import JournalEntryLine, JournalEntry, OpeningBalance
+        from django.db.models import Sum
+
+        report = {
+            'fiscal_year_id': fiscal_year.id,
+            'fiscal_year_name': fiscal_year.name,
+            'scopes_rebuilt': 0,
+            'rows_written': 0,
+            'rows_deleted': 0,
+            'skipped_reason': None,
+        }
+
+        # Ensure a POSTED OPENING JE exists for at least one scope —
+        # otherwise we'd wipe OB without anything to replace it with.
+        je_exists = JournalEntry.objects.filter(
+            organization=organization,
+            fiscal_year=fiscal_year,
+            journal_type='OPENING',
+            status='POSTED',
+        ).exists()
+        if not je_exists:
+            report['skipped_reason'] = 'no POSTED OPENING JE to rebuild from — close the prior year first'
+            return report
+
+        with transaction.atomic():
+            # Lock the FY row to serialize with concurrent backfill runs.
+            from apps.finance.models import FiscalYear
+            FiscalYear.objects.select_for_update().get(pk=fiscal_year.pk)
+
+            # Wipe existing OB rows for this year (both scopes) — we'll
+            # rebuild them fully from JE data below. Deletion is safe
+            # because OpeningBalance has no downstream FK dependents.
+            deleted, _ = OpeningBalance.objects.filter(
+                organization=organization, fiscal_year=fiscal_year,
+            ).delete()
+            report['rows_deleted'] = deleted
+
+            for scope in ('OFFICIAL', 'INTERNAL'):
+                # Aggregate OPENING JE lines by account for this scope
+                lines = (
+                    JournalEntryLine.objects
+                    .filter(
+                        journal_entry__organization=organization,
+                        journal_entry__fiscal_year=fiscal_year,
+                        journal_entry__journal_type='OPENING',
+                        journal_entry__status='POSTED',
+                        journal_entry__scope=scope,
+                    )
+                    .values('account_id')
+                    .annotate(d=Sum('debit'), c=Sum('credit'))
+                )
+                for row in lines:
+                    debit = row['d'] or Decimal('0.00')
+                    credit = row['c'] or Decimal('0.00')
+                    if debit == Decimal('0.00') and credit == Decimal('0.00'):
+                        continue
+                    OpeningBalance.objects.create(
+                        organization=organization,
+                        account_id=row['account_id'],
+                        fiscal_year=fiscal_year,
+                        scope=scope,
+                        debit_amount=debit,
+                        credit_amount=credit,
+                        source='TRANSFER',
+                        created_by=user,
+                        notes=f'Rebuilt from OPENING JE ({scope})',
+                    )
+                    report['rows_written'] += 1
+                report['scopes_rebuilt'] += 1
+
+        logger.info(
+            f"ClosingService.rebuild_ob_from_je: {fiscal_year.name} — "
+            f"deleted {report['rows_deleted']}, wrote {report['rows_written']} "
+            f"across {report['scopes_rebuilt']} scopes."
+        )
+        return report
+
+    @staticmethod
+    def is_safe_to_flip_flag(organization):
+        """Cutover readiness gate — returns (safe: bool, report: dict).
+
+        Walks every fiscal year for `organization`, runs the OB↔JE
+        validator, and returns safe=True only if every year shows
+        zero drift AND every year has a POSTED OPENING JE for each
+        scope that has a corresponding OpeningBalance row.
+
+        Call this from a management command, admin action, or a future
+        UI that manages the USE_JE_OPENING flag per deployment. Never
+        flip the flag on a tenant where this returns safe=False — the
+        legacy and new paths will disagree and the year-summary UI
+        plus the RE continuity check will start showing different
+        numbers than the rest of the ledger.
+
+        Report shape:
+          {
+            'organization_id': int, 'organization_slug': str,
+            'safe': bool,
+            'years_total': int, 'years_drift': int, 'years_missing_je': int,
+            'years': [ {fy_id, fy_name, has_drift, je_coverage: {...}}, ... ],
+          }
+        """
+        from apps.finance.models import FiscalYear, JournalEntry, OpeningBalance
+
+        report = {
+            'organization_id': organization.id,
+            'organization_slug': getattr(organization, 'slug', None),
+            'safe': True,
+            'years_total': 0,
+            'years_drift': 0,
+            'years_missing_je': 0,
+            'years': [],
+        }
+
+        for fy in FiscalYear.objects.filter(organization=organization).order_by('start_date'):
+            report['years_total'] += 1
+            drift_rpt = ClosingService.validate_opening_ob_vs_je(organization, fy)
+
+            # JE coverage — for every (scope) with OB rows, there must be
+            # at least one POSTED OPENING JE. Missing coverage means the
+            # JE path will silently show nothing for that year.
+            coverage = {}
+            coverage_mismatch = False
+            for scope in ('OFFICIAL', 'INTERNAL'):
+                has_ob = OpeningBalance.objects.filter(
+                    organization=organization, fiscal_year=fy, scope=scope,
+                ).exists()
+                has_je = JournalEntry.objects.filter(
+                    organization=organization, fiscal_year=fy, scope=scope,
+                    journal_type='OPENING', status='POSTED',
+                ).exists()
+                # Account-set equality — fine-grained safety net beyond
+                # the "both exist" check. set(OB_accounts) must equal
+                # set(OPENING_JE_accounts) per scope, or we risk a
+                # zero-sum trap where balances match but data is
+                # incomplete.
+                scope_rpt = drift_rpt['scopes'].get(scope) or {}
+                only_ob = scope_rpt.get('only_in_ob') or []
+                only_je = scope_rpt.get('only_in_je') or []
+                coverage[scope] = {
+                    'has_ob': has_ob, 'has_je': has_je,
+                    'only_in_ob': only_ob, 'only_in_je': only_je,
+                    'coverage_match': not only_ob and not only_je,
+                }
+                if has_ob and not has_je:
+                    report['years_missing_je'] += 1
+                    report['safe'] = False
+                if only_ob or only_je:
+                    coverage_mismatch = True
+
+            if drift_rpt['has_drift'] or coverage_mismatch:
+                report['years_drift'] += 1
+                report['safe'] = False
+
+            report['years'].append({
+                'fy_id': fy.id,
+                'fy_name': fy.name,
+                'has_drift': drift_rpt['has_drift'] or coverage_mismatch,
+                'coverage': coverage,
+            })
 
         return report
 

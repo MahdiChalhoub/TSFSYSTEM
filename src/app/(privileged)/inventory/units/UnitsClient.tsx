@@ -110,7 +110,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 primaryAction: { label: 'New Unit', icon: <Plus size={14} />, onClick: () => openForm() },
                 secondaryActions: [
                     { label: 'Calculator', icon: <ArrowRightLeft size={13} />, onClick: () => setShowCalc(p => !p), active: showCalc, activeColor: 'var(--app-info)' },
-                    { label: 'Scale Barcode', icon: <Scale size={13} />, onClick: () => setShowBarcodeConfig(true) },
+                    { label: 'Variable Barcode', icon: <Scale size={13} />, onClick: () => setShowBarcodeConfig(true) },
                     { label: 'Cleanup', icon: <Wrench size={13} />, href: '/inventory/maintenance?tab=unit' },
                 ],
                 columnHeaders: [

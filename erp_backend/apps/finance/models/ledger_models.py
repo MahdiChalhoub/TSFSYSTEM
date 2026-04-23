@@ -73,6 +73,26 @@ class JournalEntry(VerifiableModel):
     # ── Status & Audit ─────────────────────────────────────────────
     is_locked = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    # NOTE: `is_superseded`, `superseded_by`, `superseded_at`, and
+    # `journal_role` are defined in migration 0060 but gated out of the
+    # Python model until that migration lands in the DB. 0060 is
+    # currently blocked by the pre-existing inventory 0054/0055 history
+    # mismatch (Django's check_consistent_history refuses any migrate
+    # until it's reconciled). Once ops runs:
+    #   migrate --fake inventory 0054
+    #   migrate finance 0060
+    # re-enable the four fields below AND the `constraints` block in
+    # Meta, then replace ClosingService's description-prefix supersede
+    # hack with proper is_superseded=True writes.
+    #
+    # is_superseded = models.BooleanField(default=False, db_index=True, ...)
+    # superseded_by = models.ForeignKey('self', on_delete=SET_NULL, null=True, blank=True,
+    #     related_name='supersedes', ...)
+    # superseded_at = models.DateTimeField(null=True, blank=True)
+    # JOURNAL_ROLES = [('USER_GENERAL',...), ('SYSTEM_OPENING',...),
+    #                  ('SYSTEM_CLOSING',...), ('SYSTEM_ADJUSTMENT',...)]
+    # journal_role = models.CharField(max_length=30, choices=JOURNAL_ROLES,
+    #     default='USER_GENERAL', db_index=True, ...)
     posted_at = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_journal_entries')
     posted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='posted_journal_entries')
@@ -148,7 +168,13 @@ class JournalEntry(VerifiableModel):
             models.Index(fields=['organization', 'scope']),
             models.Index(fields=['organization', 'status']),
             models.Index(fields=['reference']),
+            # NOTE: indexes for is_superseded + journal_role are defined
+            # in migration 0060 but gated out until it applies. Re-add:
+            #   models.Index(fields=['organization', 'is_superseded']),
+            #   models.Index(fields=['organization', 'journal_role']),
+            # alongside the partial unique constraint once 0060 is live.
         ]
+        # constraints = [...]  # see migration 0060; re-add when applied
 
     def __str__(self):
         return f"JE-{self.id}: {self.description[:50]}"

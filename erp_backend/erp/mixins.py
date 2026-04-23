@@ -2,6 +2,7 @@
 # AuditLogMixin - Automatic audit logging for CRUD operations
 # ConnectorAwareMixin - Routes requests through Connector Engine
 
+from django.db import models
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework import status
@@ -100,6 +101,74 @@ class AuditLogMixin:
         old_data = self._serialize_instance(instance)
         self._log_action('DELETE', instance, old_data=old_data)
         instance.delete()
+
+
+class ReferenceCodeMixin(models.Model):
+    """
+    Gives a model a globally-unique, org-scoped, human-readable auto-
+    increment code (e.g. ``CAT-00042``) pulled from the shared
+    ``TransactionSequence`` pool. Every entity that inherits this mixin
+    draws from one central counter, editable from /finance/sequences —
+    so there is a single place to re-brand prefixes or reset counters.
+
+    Usage:
+        class Category(ReferenceCodeMixin, TenantOwnedModel):
+            SEQUENCE_KEY = 'CATEGORY'
+            SEQUENCE_PREFIX = 'CAT-'   # optional, defaults derived from key
+            SEQUENCE_PADDING = 5       # optional
+
+    The mixin only fills ``reference_code`` on first save when the field
+    is empty — existing codes are never overwritten.
+    """
+    # Subclasses MUST set a stable key; treat it like a primary key for
+    # the sequence — don't rename after production data exists.
+    SEQUENCE_KEY: str = ''
+    SEQUENCE_PREFIX: str | None = None
+    SEQUENCE_PADDING: int | None = None
+
+    reference_code = models.CharField(
+        max_length=40, null=True, blank=True, db_index=True,
+        help_text='Auto-generated global reference (one counter per entity type).',
+    )
+
+    class Meta:
+        abstract = True
+
+    def _allocate_reference_code(self):
+        """Pull the next value from the shared sequence pool.
+
+        Respects per-subclass prefix/padding overrides by seeding the
+        ``TransactionSequence`` row on first touch, then delegating to
+        ``SequenceService.get_next_number``.
+        """
+        if self.reference_code:
+            return
+        if not self.SEQUENCE_KEY:
+            return
+        org = getattr(self, 'organization', None)
+        if org is None:
+            return
+        # Lazy imports — mixin lives in the root erp package; finance
+        # models shouldn't be required at import time.
+        from apps.finance.models import TransactionSequence
+        from apps.finance.services.base_services import SequenceService
+
+        # Seed defaults for this entity type the first time we see it,
+        # so the user can tweak prefix/padding from /finance/sequences.
+        defaults = {}
+        if self.SEQUENCE_PREFIX is not None:
+            defaults['prefix'] = self.SEQUENCE_PREFIX
+        if self.SEQUENCE_PADDING is not None:
+            defaults['padding'] = self.SEQUENCE_PADDING
+        if defaults:
+            TransactionSequence.objects.get_or_create(
+                organization=org, type=self.SEQUENCE_KEY, defaults=defaults,
+            )
+        self.reference_code = SequenceService.get_next_number(org, self.SEQUENCE_KEY)
+
+    def save(self, *args, **kwargs):
+        self._allocate_reference_code()
+        super().save(*args, **kwargs)
 
 
 class ConnectorAwareMixin:

@@ -4,6 +4,7 @@ from decimal import Decimal
 from erp.models import Country  # Legacy country table (backward compat)
 from kernel.tenancy.models import TenantOwnedModel
 from kernel.audit.mixins import AuditLogMixin
+from erp.mixins import ReferenceCodeMixin
 from kernel.events import emit_event
 
 
@@ -187,8 +188,15 @@ class PackagingSuggestionRule(AuditLogMixin, TenantOwnedModel):
         return f"[{'+'.join(dims) or 'global'}] → {self.packaging.name}"
 
 
-class Category(AuditLogMixin, TenantOwnedModel):
-    """Product category with Kernel OS v2.0 integration"""
+class Category(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
+    """Product category with Kernel OS v2.0 integration."""
+    # Shared global counter — see `/finance/sequences` to retune prefix
+    # / padding. Keeping the legacy hierarchical ``code`` intact; the
+    # new ``reference_code`` (from the mixin) is the cross-module ID.
+    SEQUENCE_KEY = 'CATEGORY'
+    SEQUENCE_PREFIX = 'CAT-'
+    SEQUENCE_PADDING = 5
+
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
     short_name = models.CharField(max_length=50, null=True, blank=True)

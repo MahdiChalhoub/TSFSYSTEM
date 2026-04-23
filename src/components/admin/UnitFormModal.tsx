@@ -274,45 +274,42 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                         {isInheritedBalance && <input type="hidden" name="needsBalance" value="on" />}
                     </div>
 
-                    {/* ── BALANCE CONFIG (scale) ── */}
+                    {/* ── BALANCE CONFIG — pointer only ──
+                     * The digit structure (prefix / item / int / dec) lives in the
+                     * tenant-wide Variable Barcode Config to avoid two sources of
+                     * truth. This unit only needs to flag that it dispatches via
+                     * the scale barcode path; the actual format comes from there.
+                     */}
                     {needsBalance && (
-                        <div className="p-3 rounded-xl space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200"
+                        <div className="p-3 rounded-xl space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)',
                                 border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)',
                             }}>
                             <div className="flex items-center gap-2">
                                 <AlertTriangle size={12} style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                                <span className="text-[11px] font-black uppercase tracking-widest"
+                                <span className="text-tp-xs font-bold uppercase tracking-widest"
                                     style={{ color: 'var(--app-warning, #f59e0b)' }}>
-                                    Balance Barcode Structure
+                                    Scale dispatch enabled
                                 </span>
                             </div>
-                            <p className="text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
-                                Digits the scale prints (item code + integer part + decimal part).
+                            <p className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                                This unit's barcodes follow the tenant's <strong style={{ color: 'var(--app-foreground)' }}>Variable Barcode Config</strong>. Edit the digit structure there — one source of truth for every weighed, priced, or counted item.
                             </p>
-                            <div className="grid grid-cols-3 gap-2">
-                                {[
-                                    { name: 'balanceItemDigits', label: 'Item Code', idx: 0, def: 6 },
-                                    { name: 'balanceIntDigits', label: 'Weight Int', idx: 1, def: 3 },
-                                    { name: 'balanceDecDigits', label: 'Weight Dec', idx: 2, def: 3 },
-                                ].map(f => (
-                                    <div key={f.name}>
-                                        <label className="block text-[9px] font-black uppercase tracking-widest mb-0.5"
-                                            style={{ color: 'var(--app-warning, #f59e0b)', opacity: 0.7 }}>
-                                            {f.label}
-                                        </label>
-                                        <input name={f.name} type="number"
-                                            defaultValue={unit?.balance_code_structure?.split(',')[f.idx] || f.def}
-                                            className="w-full px-2 py-1.5 rounded-lg text-[12px] font-mono font-bold text-center outline-none"
-                                            style={{
-                                                background: 'var(--app-surface)',
-                                                border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)',
-                                                color: 'var(--app-foreground)',
-                                            }} />
-                                    </div>
-                                ))}
-                            </div>
+                            {/* Preserve any legacy per-unit structure so re-save keeps the old values.
+                             * When the row has no previous structure, the inventory action's
+                             * built-in defaults (6/3/3) apply — matching Variable Barcode Config
+                             * defaults closely enough until a migration consolidates everything. */}
+                            {(() => {
+                                const parts = unit?.balance_code_structure?.split(',') ?? []
+                                return (
+                                    <>
+                                        {parts[0] && <input type="hidden" name="balanceItemDigits" value={parts[0]} />}
+                                        {parts[1] && <input type="hidden" name="balanceIntDigits" value={parts[1]} />}
+                                        {parts[2] && <input type="hidden" name="balanceDecDigits" value={parts[2]} />}
+                                    </>
+                                )
+                            })()}
                         </div>
                     )}
 

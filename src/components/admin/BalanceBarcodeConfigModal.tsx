@@ -19,9 +19,12 @@
  * (var(--app-*)) to stay consistent with the rest of the admin surface.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { X, Save, Loader2, Scale, BarChart3, Info } from 'lucide-react';
-import { getBalanceBarcodeConfig, updateBalanceBarcodeConfig, BalanceBarcodeConfig } from '@/app/actions/balance-barcode';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { X, Save, Loader2, Scale, BarChart3, Info, Droplet, DollarSign, Hash } from 'lucide-react';
+import {
+    getBalanceBarcodeConfigMap, updateBalanceBarcodeConfigMap,
+    BalanceBarcodeConfig, BalanceBarcodeConfigMap, VariableBarcodeMode,
+} from '@/app/actions/balance-barcode';
 import { toast } from 'sonner';
 
 type Props = {
@@ -29,46 +32,107 @@ type Props = {
     onClose: () => void;
 };
 
-const DEFAULTS: BalanceBarcodeConfig = {
-    prefix: '2',
-    itemDigits: 6,
-    weightIntDigits: 3,
-    weightDecDigits: 3,
-    isEnabled: true,
+const BLANK_MAP: BalanceBarcodeConfigMap = {
+    WEIGHT: { mode: 'WEIGHT', prefix: '20', itemDigits: 5, weightIntDigits: 3, weightDecDigits: 3, isEnabled: true },
+    VOLUME: { mode: 'VOLUME', prefix: '21', itemDigits: 5, weightIntDigits: 3, weightDecDigits: 3, isEnabled: false },
+    PRICE:  { mode: 'PRICE',  prefix: '22', itemDigits: 5, weightIntDigits: 4, weightDecDigits: 2, isEnabled: false },
+    COUNT:  { mode: 'COUNT',  prefix: '23', itemDigits: 7, weightIntDigits: 4, weightDecDigits: 0, isEnabled: false },
+};
+
+/** Per-mode metadata: labels, unit text, preview sample. Same layout, just
+ * different semantics — what the variable digits *mean*. */
+const MODES: Record<VariableBarcodeMode, {
+    label: string;
+    Icon: React.ComponentType<{ size?: number; className?: string }>;
+    intLabel: string;
+    decLabel: string;
+    intHint: string;
+    decHint: string;
+    exampleInt: string;
+    exampleDec: string;
+    unit: string;
+    humanExample: (int: string, dec: string) => React.ReactNode;
+    decAllowed: boolean;
+}> = {
+    WEIGHT: {
+        label: 'Weight',
+        Icon: Scale,
+        intLabel: 'Weight integer', decLabel: 'Weight decimal',
+        intHint: 'Whole kg digits', decHint: 'Grams',
+        exampleInt: '1', exampleDec: '250', unit: 'kg',
+        humanExample: (i, d) => <>weighing <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span>.<span className="font-bold" style={{ color: 'var(--app-warning)' }}>{d}</span> kg</>,
+        decAllowed: true,
+    },
+    VOLUME: {
+        label: 'Volume',
+        Icon: Droplet,
+        intLabel: 'Volume integer', decLabel: 'Volume decimal',
+        intHint: 'Whole litre digits', decHint: 'Millilitres',
+        exampleInt: '1', exampleDec: '500', unit: 'L',
+        humanExample: (i, d) => <>volume <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span>.<span className="font-bold" style={{ color: 'var(--app-warning)' }}>{d}</span> L</>,
+        decAllowed: true,
+    },
+    PRICE: {
+        label: 'Price',
+        Icon: DollarSign,
+        intLabel: 'Price integer', decLabel: 'Price decimal',
+        intHint: 'Whole currency digits', decHint: 'Minor unit (cents)',
+        exampleInt: '12', exampleDec: '50', unit: '€',
+        humanExample: (i, d) => <>priced at <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span>.<span className="font-bold" style={{ color: 'var(--app-warning)' }}>{d}</span> €</>,
+        decAllowed: true,
+    },
+    COUNT: {
+        label: 'Count',
+        Icon: Hash,
+        intLabel: 'Count digits', decLabel: 'Not used',
+        intHint: 'Unit count digits', decHint: 'Count uses no decimal',
+        exampleInt: '42', exampleDec: '', unit: 'pcs',
+        humanExample: (i) => <>count <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span> pcs</>,
+        decAllowed: false,
+    },
 };
 
 export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
-    const [config, setConfig] = useState<BalanceBarcodeConfig>(DEFAULTS);
+    const [configs, setConfigs] = useState<BalanceBarcodeConfigMap>(BLANK_MAP);
+    const [activeMode, setActiveMode] = useState<VariableBarcodeMode>('WEIGHT');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+
+    const config = configs[activeMode];
+    const patchConfig = (p: Partial<BalanceBarcodeConfig>) =>
+        setConfigs(prev => ({ ...prev, [activeMode]: { ...prev[activeMode], ...p } }));
 
     useEffect(() => {
         if (!isOpen) return;
         setLoading(true);
-        getBalanceBarcodeConfig().then(res => {
-            if (res.success && res.data) setConfig(res.data);
+        getBalanceBarcodeConfigMap().then(res => {
+            if (res.success && res.data) setConfigs(res.data);
             setLoading(false);
         });
     }, [isOpen]);
 
     const handleSave = useCallback(async () => {
         setSaving(true);
-        const res = await updateBalanceBarcodeConfig(config);
+        const res = await updateBalanceBarcodeConfigMap(configs);
         if (res.success) {
-            toast.success('Scale barcode configuration saved');
+            toast.success('Variable barcode configuration saved');
             onClose();
         } else {
             toast.error(res.error || 'Failed to save');
         }
         setSaving(false);
-    }, [config, onClose]);
+    }, [configs, onClose]);
 
     if (!isOpen) return null;
 
-    const totalDigits = 1 + config.itemDigits + config.weightIntDigits + config.weightDecDigits;
+    const meta = MODES[config.mode];
+    // When mode doesn't use decimals, force the decimal width to 0 in the
+    // preview so the barcode layout reflects the effective structure.
+    const effectiveDecDigits = meta.decAllowed ? config.weightDecDigits : 0;
+    const totalDigits = 1 + config.itemDigits + config.weightIntDigits + effectiveDecDigits;
     const itemExample = '1'.repeat(config.itemDigits);
     const weightIntExample = '2'.repeat(config.weightIntDigits);
-    const weightDecExample = '3'.repeat(config.weightDecDigits);
+    const weightDecExample = '3'.repeat(effectiveDecDigits);
     const fullBarcode = `${config.prefix}${itemExample}${weightIntExample}${weightDecExample}`;
     const checkDigit = totalDigits <= 12 ? 'C' : '';
 
@@ -79,7 +143,7 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
             onClick={e => { if (e.target === e.currentTarget) onClose() }}
         >
             <div
-                className="w-full max-w-lg mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col"
+                className="w-full max-w-4xl mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
             >
                 {/* Header — same page-header-icon pattern as Chart of Accounts */}
@@ -92,10 +156,10 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
                         </div>
                         <div>
                             <h3 className="text-tp-md font-bold tracking-tight" style={{ color: 'var(--app-foreground)' }}>
-                                Scale Barcode Config
+                                Variable Barcode Config
                             </h3>
                             <p className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
-                                Weight-embedded EAN-13 structure
+                                {meta.label}-embedded EAN-13 structure
                             </p>
                         </div>
                     </div>
@@ -112,148 +176,177 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
                         <span className="text-tp-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Loading…</span>
                     </div>
                 ) : (
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                        <div className="p-5 space-y-4">
+                    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                        {/* Landscape body: vertical tabs (left) + controls (middle) + preview (right) */}
+                        <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-[180px_minmax(0,1fr)] md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)] gap-0">
 
-                            {/* Info banner */}
-                            <div className="flex items-start gap-2.5 p-3 rounded-xl"
-                                style={{ background: 'color-mix(in srgb, var(--app-info) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
-                                <Info size={13} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
-                                <span className="text-tp-sm leading-relaxed" style={{ color: 'var(--app-foreground)' }}>
-                                    Configures the barcode format produced by your <strong>scales</strong> (deli, produce, fresh-food). Any product using a weighed unit will follow this structure.
-                                </span>
-                            </div>
-
-                            {/* Enable toggle */}
-                            <div className="flex items-center justify-between p-3 rounded-xl"
-                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
-                                <div className="min-w-0">
-                                    <div className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
-                                        Enable scale barcodes
-                                    </div>
-                                    <p className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        Enforce this structure on weighed-item barcodes.
-                                    </p>
+                            {/* LEFT: vertical mode tabs */}
+                            <div className="p-3 space-y-2 overflow-y-auto custom-scrollbar"
+                                 style={{ borderRight: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+                                <div className="text-tp-xxs font-bold uppercase tracking-widest mb-2 px-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Format
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setConfig(c => ({ ...c, isEnabled: !c.isEnabled }))}
-                                    className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200"
-                                    style={{ background: config.isEnabled ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }}
-                                    aria-pressed={config.isEnabled}
-                                >
-                                    <span className="pointer-events-none inline-flex items-center justify-center h-5 w-5 rounded-full bg-white shadow transition-transform duration-200"
-                                        style={{ transform: config.isEnabled ? 'translateX(22px)' : 'translateX(2px)', marginTop: '2px' }} />
-                                </button>
-                            </div>
-
-                            {/* Structure fields */}
-                            <div className="grid grid-cols-2 gap-3" style={{ opacity: config.isEnabled ? 1 : 0.4, pointerEvents: config.isEnabled ? 'auto' : 'none' }}>
-                                <StructureField label="Prefix" hint='Usually "2"' maxLength={2}>
-                                    <input
-                                        type="text"
-                                        value={config.prefix}
-                                        onChange={e => setConfig(c => ({ ...c, prefix: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))}
-                                        className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all"
-                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
-                                        maxLength={2}
-                                    />
-                                </StructureField>
-
-                                <StructureField label="Item digits" hint="Product code length">
-                                    <input
-                                        type="number"
-                                        value={config.itemDigits}
-                                        onChange={e => setConfig(c => ({ ...c, itemDigits: Math.max(1, Math.min(10, Number(e.target.value))) }))}
-                                        className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all"
-                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
-                                        min={1} max={10}
-                                    />
-                                </StructureField>
-
-                                <StructureField label="Weight integer" hint="Whole kg digits">
-                                    <input
-                                        type="number"
-                                        value={config.weightIntDigits}
-                                        onChange={e => setConfig(c => ({ ...c, weightIntDigits: Math.max(1, Math.min(5, Number(e.target.value))) }))}
-                                        className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all"
-                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
-                                        min={1} max={5}
-                                    />
-                                </StructureField>
-
-                                <StructureField label="Weight decimal" hint="Fractional digits (g)">
-                                    <input
-                                        type="number"
-                                        value={config.weightDecDigits}
-                                        onChange={e => setConfig(c => ({ ...c, weightDecDigits: Math.max(0, Math.min(5, Number(e.target.value))) }))}
-                                        className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all"
-                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
-                                        min={0} max={5}
-                                    />
-                                </StructureField>
-                            </div>
-
-                            {/* Live preview */}
-                            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--app-border)', opacity: config.isEnabled ? 1 : 0.4 }}>
-                                <div className="px-4 py-2 flex items-center gap-2"
-                                    style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
-                                    <BarChart3 size={12} style={{ color: 'var(--app-muted-foreground)' }} />
-                                    <span className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        Live preview
-                                    </span>
-                                    <span className="text-tp-xxs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        {fullBarcode.length + (checkDigit ? 1 : 0)} digits total
-                                    </span>
-                                </div>
-                                <div className="px-4 py-4 flex flex-col items-center gap-3" style={{ background: 'var(--app-background)' }}>
-                                    <div className="flex items-center font-mono text-tp-2xl font-bold tracking-[0.15em]">
-                                        <span style={{ color: 'var(--app-error)' }}>{config.prefix}</span>
-                                        <span style={{ color: 'var(--app-info)' }}>{itemExample}</span>
-                                        <span style={{ color: 'var(--app-success)' }}>{weightIntExample}</span>
-                                        <span style={{ color: 'var(--app-warning)' }}>{weightDecExample}</span>
-                                        {checkDigit && <span style={{ color: 'var(--app-muted-foreground)' }}>{checkDigit}</span>}
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center gap-3 justify-center">
-                                        {[
-                                            { label: 'Prefix', color: 'var(--app-error)', count: config.prefix.length },
-                                            { label: 'Item', color: 'var(--app-info)', count: config.itemDigits },
-                                            { label: 'Weight int', color: 'var(--app-success)', count: config.weightIntDigits },
-                                            { label: 'Weight dec', color: 'var(--app-warning)', count: config.weightDecDigits },
-                                            ...(checkDigit ? [{ label: 'Check', color: 'var(--app-muted-foreground)', count: 1 }] : []),
-                                        ].map(l => (
-                                            <div key={l.label} className="flex items-center gap-1.5">
-                                                <div className="w-2 h-2 rounded-full" style={{ background: l.color }} />
-                                                <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                                                    {l.label} ({l.count})
-                                                </span>
+                                {(Object.keys(MODES) as VariableBarcodeMode[]).map(key => {
+                                    const m = MODES[key];
+                                    const active = activeMode === key;
+                                    const slot = configs[key];
+                                    return (
+                                        <button key={key} type="button"
+                                            onClick={() => setActiveMode(key)}
+                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left"
+                                            style={{
+                                                background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-background)',
+                                                border: `1px solid ${active ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
+                                                color: active ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                            }}>
+                                            <m.Icon size={15} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-tp-sm font-bold">{m.label}</div>
+                                                <div className="text-tp-xxs" style={{ color: slot.isEnabled ? 'var(--app-success)' : 'var(--app-muted-foreground)' }}>
+                                                    {slot.isEnabled ? `prefix ${slot.prefix}` : 'off'}
+                                                </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                            {slot.isEnabled && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--app-success)' }} />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
 
-                                    <div className="text-tp-xs text-center" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        Example: item <span className="font-bold" style={{ color: 'var(--app-info)' }}>#000042</span> weighing{' '}
-                                        <span className="font-bold" style={{ color: 'var(--app-success)' }}>1</span>.
-                                        <span className="font-bold" style={{ color: 'var(--app-warning)' }}>250</span> kg
-                                        → <span className="font-mono font-bold" style={{ color: 'var(--app-foreground)' }}>{config.prefix}000042001250{checkDigit || ''}</span>
+                            {/* LEFT: controls */}
+                            <div className="p-5 space-y-3 overflow-y-auto custom-scrollbar"
+                                 style={{ borderRight: '1px solid var(--app-border)' }}>
+
+                                {/* Enable toggle */}
+                                <div className="flex items-center justify-between p-3 rounded-xl"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                                    <div className="min-w-0">
+                                        <div className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                            Enable {meta.label.toLowerCase()} barcodes
+                                        </div>
+                                        <p className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Enforce this {meta.label.toLowerCase()}-embedded structure.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => patchConfig({ isEnabled: !config.isEnabled })}
+                                        className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200"
+                                        style={{ background: config.isEnabled ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }}
+                                        aria-pressed={config.isEnabled}>
+                                        <span className="pointer-events-none inline-flex items-center justify-center h-5 w-5 rounded-full bg-white shadow transition-transform duration-200"
+                                            style={{ transform: config.isEnabled ? 'translateX(22px)' : 'translateX(2px)', marginTop: '2px' }} />
+                                    </button>
+                                </div>
+
+                                {/* Structure fields 2x2 */}
+                                <div className="grid grid-cols-2 gap-3" style={{ opacity: config.isEnabled ? 1 : 0.4, pointerEvents: config.isEnabled ? 'auto' : 'none' }}>
+                                    <StructureField label="Prefix" hint={`Default "${MODES[activeMode].label === 'Weight' ? '20' : activeMode === 'VOLUME' ? '21' : activeMode === 'PRICE' ? '22' : '23'}"`} maxLength={2}>
+                                        <input type="text" value={config.prefix}
+                                            onChange={e => patchConfig({ prefix: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) })}
+                                            className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all"
+                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
+                                            maxLength={2} />
+                                    </StructureField>
+
+                                    <StructureField label="Item digits" hint="Product code length">
+                                        <input type="number" value={config.itemDigits}
+                                            onChange={e => patchConfig({ itemDigits: Math.max(1, Math.min(10, Number(e.target.value))) })}
+                                            className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all"
+                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
+                                            min={1} max={10} />
+                                    </StructureField>
+
+                                    <StructureField label={meta.intLabel} hint={meta.intHint}>
+                                        <input type="number" value={config.weightIntDigits}
+                                            onChange={e => patchConfig({ weightIntDigits: Math.max(1, Math.min(5, Number(e.target.value))) })}
+                                            className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all"
+                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
+                                            min={1} max={5} />
+                                    </StructureField>
+
+                                    <StructureField label={meta.decLabel} hint={meta.decHint} disabled={!meta.decAllowed}>
+                                        <input type="number" value={config.weightDecDigits} disabled={!meta.decAllowed}
+                                            onChange={e => patchConfig({ weightDecDigits: Math.max(0, Math.min(5, Number(e.target.value))) })}
+                                            className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all disabled:opacity-40"
+                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
+                                            min={0} max={5} />
+                                    </StructureField>
+                                </div>
+
+                                {/* Info banner */}
+                                <div className="flex items-start gap-2 p-2.5 rounded-xl"
+                                    style={{ background: 'color-mix(in srgb, var(--app-info) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+                                    <Info size={12} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
+                                    <span className="text-tp-xs leading-relaxed" style={{ color: 'var(--app-foreground)' }}>
+                                        Same layout for all four modes — only the meaning of the variable digits changes. Use different prefixes so scanners can dispatch the right format.
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* RIGHT: live preview */}
+                            <div className="p-5 overflow-y-auto custom-scrollbar flex flex-col"
+                                 style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+                                <div className="rounded-xl overflow-hidden flex-1 flex flex-col"
+                                     style={{ border: '1px solid var(--app-border)', opacity: config.isEnabled ? 1 : 0.4, background: 'var(--app-surface)' }}>
+                                    <div className="px-4 py-2 flex items-center gap-2"
+                                        style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
+                                        <BarChart3 size={12} style={{ color: 'var(--app-muted-foreground)' }} />
+                                        <span className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Live preview
+                                        </span>
+                                        <span className="text-tp-xxs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            {fullBarcode.length + (checkDigit ? 1 : 0)} digits total
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 px-4 py-5 flex flex-col items-center justify-center gap-4" style={{ background: 'var(--app-background)' }}>
+                                        <div className="flex items-center font-mono text-tp-2xl font-bold tracking-[0.15em]">
+                                            <span style={{ color: 'var(--app-error)' }}>{config.prefix}</span>
+                                            <span style={{ color: 'var(--app-info)' }}>{itemExample}</span>
+                                            <span style={{ color: 'var(--app-success)' }}>{weightIntExample}</span>
+                                            <span style={{ color: 'var(--app-warning)' }}>{weightDecExample}</span>
+                                            {checkDigit && <span style={{ color: 'var(--app-muted-foreground)' }}>{checkDigit}</span>}
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-3 justify-center">
+                                            {[
+                                                { label: 'Prefix', color: 'var(--app-error)', count: config.prefix.length },
+                                                { label: 'Item', color: 'var(--app-info)', count: config.itemDigits },
+                                                { label: `${meta.label} int`, color: 'var(--app-success)', count: config.weightIntDigits },
+                                                ...(meta.decAllowed ? [{ label: `${meta.label} dec`, color: 'var(--app-warning)', count: config.weightDecDigits }] : []),
+                                                ...(checkDigit ? [{ label: 'Check', color: 'var(--app-muted-foreground)', count: 1 }] : []),
+                                            ].map(l => (
+                                                <div key={l.label} className="flex items-center gap-1.5">
+                                                    <div className="w-2 h-2 rounded-full" style={{ background: l.color }} />
+                                                    <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                        {l.label} ({l.count})
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="text-tp-xs text-center" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Example: item <span className="font-bold" style={{ color: 'var(--app-info)' }}>#000042</span>{' '}
+                                            {meta.humanExample(meta.exampleInt, meta.exampleDec)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Footer */}
-                        <div className="px-5 pb-5 pt-0 flex gap-2">
+                        <div className="px-5 py-3 flex gap-2 flex-shrink-0"
+                             style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
                             <button onClick={onClose}
-                                className="flex-1 py-2.5 rounded-xl text-tp-sm font-bold transition-all"
+                                className="px-4 py-2.5 rounded-xl text-tp-sm font-bold transition-all"
                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}>
                                 Cancel
                             </button>
+                            <div className="flex-1" />
                             <button onClick={handleSave} disabled={saving}
-                                className="flex-1 py-2.5 rounded-xl text-tp-sm font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                                className="px-5 py-2.5 rounded-xl text-tp-sm font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                                 style={{ background: 'var(--app-primary)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                 {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                                <span>Save</span>
+                                <span>Save all four modes</span>
                             </button>
                         </div>
                     </div>
@@ -263,9 +356,9 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
     );
 }
 
-function StructureField({ label, hint, children }: { label: string; hint: string; maxLength?: number; children: React.ReactNode }) {
+function StructureField({ label, hint, children, disabled }: { label: string; hint: string; maxLength?: number; children: React.ReactNode; disabled?: boolean }) {
     return (
-        <div className="space-y-1.5">
+        <div className="space-y-1.5" style={{ opacity: disabled ? 0.45 : 1 }}>
             <label className="text-tp-xxs font-bold uppercase tracking-widest block" style={{ color: 'var(--app-muted-foreground)' }}>
                 {label}
             </label>

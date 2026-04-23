@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Opening Balances Page — V2 DajingoListView
  * =============================================

@@ -122,8 +122,17 @@ export const CategoryRow = ({
                             </span>
                         )}
                     </div>
-                    {(node.code || node.short_name) && (
+                    {(node.reference_code || node.code || node.short_name) && (
                         <div className="flex items-center gap-1.5 mt-0.5">
+                            {node.reference_code && (
+                                <span className="font-mono text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                        color: 'var(--app-primary)',
+                                    }}>
+                                    {node.reference_code}
+                                </span>
+                            )}
                             {node.code && (
                                 <span className="font-mono text-tp-xxs font-medium text-app-muted-foreground">
                                     {node.code}
