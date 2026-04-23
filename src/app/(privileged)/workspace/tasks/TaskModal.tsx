@@ -89,14 +89,10 @@ export default function TaskModal({
     const [checklistText, setChecklistText] = useState(
         (task?.completion_checklist || []).map(i => i.label).join('\n')
     );
-    // "Remind until done" flag — stored in localStorage per-task until we
-    // have a dedicated DB column. Survives page reloads, does NOT sync across
-    // devices/browsers (documented limitation).
-    const [remindUntilDone, setRemindUntilDone] = useState(() => {
-        if (typeof window === 'undefined' || !task?.id) return false;
-        try { return JSON.parse(localStorage.getItem('tsf_sticky_reminders') || '{}')[String(task.id)] === true; }
-        catch { return false; }
-    });
+    // Sticky reminder — server-persisted on the task row. Survives across
+    // browsers, devices and platforms.
+    const [remindUntilDone, setRemindUntilDone] = useState(!!task?.remind_until_done);
+    const [remindIntervalMin, setRemindIntervalMin] = useState(task?.remind_interval_min || 10);
 
     // Track which chip is "open" (editor expanded inline). Only one at a time
     // so the sheet stays a clean single-column flow.
@@ -141,6 +137,8 @@ export default function TaskModal({
             data.is_recurring = false;
         }
         data.require_completion_note = requireProof;
+        data.remind_until_done = remindUntilDone;
+        data.remind_interval_min = remindIntervalMin;
         const checklist = checklistText
             .split('\n')
             .map(s => s.trim())
@@ -153,24 +151,14 @@ export default function TaskModal({
 
         startTransition(async () => {
             try {
-                const saveSticky = (taskId: number) => {
-                    try {
-                        const key = 'tsf_sticky_reminders';
-                        const map = JSON.parse(localStorage.getItem(key) || '{}');
-                        if (remindUntilDone) map[String(taskId)] = true;
-                        else delete map[String(taskId)];
-                        localStorage.setItem(key, JSON.stringify(map));
-                    } catch {}
-                };
                 if (isEdit) {
                     const { updateTask } = await import('@/app/actions/workspace');
                     const result = await updateTask(task!.id, data);
-                    saveSticky(task!.id);
                     onSuccess(result);
                 } else {
                     const { createTask } = await import('@/app/actions/workspace');
                     const result = await createTask(data);
-                    if (result?.id) { saveSticky(result.id); onSuccess(result); }
+                    if (result?.id) onSuccess(result);
                     else setError('Failed to create task');
                 }
             } catch { setError(isEdit ? 'Failed to update task' : 'Failed to create task'); }
@@ -524,6 +512,35 @@ export default function TaskModal({
                                 <div className="text-tp-xs mt-1 ml-6" style={{ color: 'var(--app-muted-foreground)' }}>
                                     Reminder popup keeps returning until the task is closed. Can only be snoozed, not dismissed.
                                 </div>
+                                {remindUntilDone && (
+                                    <div className="mt-2 ml-6 flex items-center gap-2 flex-wrap">
+                                        <span className="text-tp-sm font-medium" style={{ color: 'var(--app-muted-foreground)' }}>Nag me every</span>
+                                        {([
+                                            { v: 1, label: '1 min' },
+                                            { v: 10, label: '10 min' },
+                                            { v: 30, label: '30 min' },
+                                            { v: 60, label: '1 hr' },
+                                            { v: 240, label: '4 hr' },
+                                            { v: 1440, label: '1 day' },
+                                        ] as const).map(opt => (
+                                            <button key={opt.v} type="button"
+                                                    onClick={() => setRemindIntervalMin(opt.v)}
+                                                    className="px-2 py-1 text-tp-xs font-bold rounded-lg transition-all"
+                                                    style={{
+                                                        background: remindIntervalMin === opt.v ? 'color-mix(in srgb, var(--app-primary) 15%, transparent)' : 'var(--app-bg)',
+                                                        border: `1px solid ${remindIntervalMin === opt.v ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
+                                                        color: remindIntervalMin === opt.v ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                                    }}>
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                        <input type="number" min={1} max={10080} value={remindIntervalMin}
+                                               onChange={e => setRemindIntervalMin(Math.max(1, Number(e.target.value) || 10))}
+                                               className="w-16 px-2 py-1 text-tp-xs font-bold rounded-lg outline-none text-center"
+                                               style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                        <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>min</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Checklist */}

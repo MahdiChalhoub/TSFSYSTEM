@@ -322,3 +322,46 @@
   --sidebar-border: var(--app-sidebar-border);
   --sidebar-ring: var(--app-primary);
 }
+/* ═══════════════════════════════════════════════════════════
+ *  PRINT — finance-report print rules
+ *  Any page with `.report-print-root` becomes the print canvas;
+ *  everything else collapses. Use `print:hidden` on UI chrome
+ *  and `.report-only-print` on blocks that appear only in PDF.
+ * ═══════════════════════════════════════════════════════════ */
+@media print {
+    /* Hide app chrome (sidebar, topbar, modals) */
+    body > :not(.report-print-portal, #__next, main, #root) { display: none !important; }
+    nav, aside, header[role="banner"], .app-sidebar, .app-topbar,
+    [data-app-chrome="true"] { display: none !important; }
+
+    /* Expand the report to fill the page */
+    html, body { background: white !important; color: black !important; }
+    .report-print-root { height: auto !important; overflow: visible !important; padding: 0 !important; }
+    .report-print-root * { box-shadow: none !important; }
+
+    /* @page rules — A4 portrait, tight margins */
+    @page { size: A4; margin: 14mm 12mm 14mm 12mm; }
+    @page landscape { size: A4 landscape; }
+    .report-print-landscape { page: landscape; }
+
+    /* Table pagination */
+    table { page-break-inside: auto; }
+    tr, tbody, tfoot, thead { page-break-inside: avoid; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+
+    /* Force serif on statement titles + tabular numbers */
+    .report-statement-title { font-family: Georgia, 'Times New Roman', serif !important; }
+
+    /* Hide hover-only UI */
+    .report-print-root .opacity-0,
+    .report-print-root [data-print-hide="true"] { display: none !important; }
+
+    /* Screen-only blocks */
+    .report-only-screen { display: none !important; }
+
+    /* Always show the print-only blocks */
+    .report-only-print { display: block !important; }
+}
+
+.report-only-print { display: none; }

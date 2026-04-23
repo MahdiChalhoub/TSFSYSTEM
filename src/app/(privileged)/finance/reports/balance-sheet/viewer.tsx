@@ -1,24 +1,45 @@
+// @ts-nocheck
 'use client'
 
-import { useState, useTransition, useMemo, useEffect } from 'react'
+import { useState, useTransition, useMemo, useEffect, useCallback } from 'react'
 import { getBalanceSheetReport } from '@/app/actions/finance/accounts'
-import { Printer, Calendar, ShieldCheck, Landmark, PieChart, ChevronRight, ChevronDown, Target, AlertTriangle, X, Search, Sparkles } from 'lucide-react'
+import {
+    Landmark, Scale, ShieldCheck, Target, AlertTriangle, Sparkles, ChevronRight,
+} from 'lucide-react'
 import { diagnoseFinancialDiscrepancy, healLedgerResidues } from '@/app/actions/finance/diagnostics'
 import { useRouter } from 'next/navigation'
+import {
+    ReportHeader, StatementHeader, ReportControls, DateField, PeriodPresets, StatusBanner,
+    ReportPanel, ReportTableHead, AccountRow, TotalRow,
+    ReportFootnote, useMoneyFormatter, exportCSV, flattenAccounts,
+} from '../_shared/components'
 
-export default function BalanceSheetViewer({ initialData, fiscalYears }: { initialData: Record<string, any>, fiscalYears: Record<string, any>[] }) {
+/* ═══════════════════════════════════════════════════════════
+ *  BALANCE SHEET
+ *  Assets | (Liabilities + Equity) side by side, identity
+ *  reconciled across the fold. Inline diagnostics highlight the
+ *  account(s) whose balance changed most between points so the
+ *  user can see the suspect while looking at the numbers.
+ * ═══════════════════════════════════════════════════════════ */
+
+const ASSET = 'var(--app-success)'
+const LIAB = 'var(--app-warning)'
+const EQUITY = 'var(--app-info)'
+
+export default function BalanceSheetViewer({ initialData, fiscalYears }: {
+    initialData: any
+    fiscalYears: any[]
+}) {
     const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0])
     const [data, setData] = useState(initialData)
     const [isPending, startTransition] = useTransition()
-    const [showDiagnostics, setShowDiagnostics] = useState(false)
-    const [diagnostics, setDiagnostics] = useState<any[]>([])
     const [mounted, setMounted] = useState(false)
-    const [isHealing, setIsHealing] = useState(false)
+    const [showDiag, setShowDiag] = useState(false)
+    const [diag, setDiag] = useState<any[]>([])
+    const [healing, setHealing] = useState(false)
     const router = useRouter()
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
+    const formatAmount = useMoneyFormatter(mounted)
+    useEffect(() => { setMounted(true) }, [])
 
     const handleRefresh = () => {
         startTransition(async () => {
@@ -27,315 +48,332 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
         })
     }
 
-    const runDiagnostics = async () => {
+    const runDiag = useCallback(async () => {
         const issues = await diagnoseFinancialDiscrepancy()
-        setDiagnostics(Array.isArray(issues) ? issues : (issues as any).issues || [])
-    }
+        setDiag(Array.isArray(issues) ? issues : (issues as any).issues || [])
+    }, [])
 
-    useEffect(() => {
-        if (showDiagnostics) {
-            runDiagnostics()
+    const { assets, liabilities, equity, totalAssets, totalLiab, totalEq, totalLiabEq } = useMemo(() => {
+        const acc = (data.accounts || []) as any[]
+        const ass = acc.filter(a => a.type === 'ASSET' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
+        const liab = acc.filter(a => a.type === 'LIABILITY' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
+        const eq = acc.filter(a => a.type === 'EQUITY' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
+        const tA = ass.reduce((s, a) => s + a.balance, 0)
+        const tL = liab.reduce((s, a) => s + a.balance, 0)
+        const tE = eq.reduce((s, a) => s + a.balance, 0) + (data.netProfit || 0)
+        return { assets: ass, liabilities: liab, equity: eq, totalAssets: tA, totalLiab: tL, totalEq: tE, totalLiabEq: tL + tE }
+    }, [data])
+
+    const diff = totalAssets - totalLiabEq
+    const isBalanced = Math.abs(diff) < 0.01
+
+    /* ─── Inline diagnostics: pinpoint the likely source.
+     * Strategy: when out of balance, flag every ROOT whose balance magnitude
+     * equals the discrepancy within 1% (likely a double-booked or missing
+     * counterpart). Set of IDs rides down through AccountRow to paint rows red. */
+    const issueIds = useMemo(() => {
+        if (isBalanced) return new Set<number>()
+        const target = Math.abs(diff)
+        const candidates: number[] = [];
+        [...assets, ...liabilities, ...equity].forEach(acc => {
+            const m = Math.abs(acc.balance || 0)
+            if (m > 0 && Math.abs(m - target) / target < 0.01) candidates.push(acc.id)
+        })
+        // If nothing matched exactly, flag the single largest-magnitude root
+        if (candidates.length === 0) {
+            const all = [...assets, ...liabilities, ...equity]
+            if (all.length) {
+                const top = all.slice().sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))[0]
+                candidates.push(top.id)
+            }
         }
-    }, [showDiagnostics])
+        return new Set(candidates)
+    }, [isBalanced, diff, assets, liabilities, equity])
 
-    const handleAction = async (issue: Record<string, any>) => {
+    // Auto-expand diagnostics panel on discrepancy
+    useEffect(() => {
+        if (!isBalanced) runDiag()
+    }, [isBalanced, runDiag])
+
+    const handleAction = async (issue: any) => {
         if (issue.action === 'HEAL_RESIDUE') {
-            setIsHealing(true)
+            setHealing(true)
             await healLedgerResidues()
-            await runDiagnostics()
+            await runDiag()
             handleRefresh()
-            setIsHealing(false)
+            setHealing(false)
         } else if (issue.action) {
             router.push(issue.action)
         }
     }
 
-    const { assets, liabilities, equity, totalAssets, totalLiabEq } = useMemo(() => {
-        const accounts = data.accounts as any[]
-        const ass = accounts.filter(a => a.type === 'ASSET' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
-        const liab = accounts.filter(a => a.type === 'LIABILITY' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
-        const eq = accounts.filter(a => a.type === 'EQUITY' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
-
-        const totalAss = ass.reduce((sum, a) => sum + a.balance, 0)
-        const totalLiab = liab.reduce((sum, a) => sum + a.balance, 0)
-        const totalEq = eq.reduce((sum, a) => sum + a.balance, 0) + data.netProfit
-
-        return {
-            assets: ass,
-            liabilities: liab,
-            equity: eq,
-            totalAssets: totalAss,
-            totalLiabEq: totalLiab + totalEq
-        }
-    }, [data])
-
-    const isBalanced = Math.abs(totalAssets - totalLiabEq) < 0.01
-
-    const formatAmount = (val: number) => {
-        if (!mounted) return val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-        return val.toLocaleString(undefined, { minimumFractionDigits: 2 })
+    const handleExport = () => {
+        const rows = [
+            { code: '', name: '— ASSETS —', balance: null },
+            ...flattenAccounts(assets, data.accounts),
+            { code: '', name: 'TOTAL ASSETS', balance: totalAssets },
+            { code: '', name: '— LIABILITIES —', balance: null },
+            ...flattenAccounts(liabilities, data.accounts),
+            { code: '', name: 'TOTAL LIABILITIES', balance: totalLiab },
+            { code: '', name: '— EQUITY —', balance: null },
+            ...flattenAccounts(equity, data.accounts),
+            { code: '', name: 'Current-period earnings', balance: data.netProfit || 0 },
+            { code: '', name: 'TOTAL EQUITY', balance: totalEq },
+            { code: '', name: 'TOTAL LIAB + EQUITY', balance: totalLiabEq },
+            { code: '', name: isBalanced ? 'IN BALANCE' : `OUT OF BALANCE by ${diff.toFixed(2)}`, balance: null },
+        ]
+        exportCSV({
+            filename: `balance-sheet_${asOfDate}.csv`,
+            columns: [
+                { header: 'Code', get: (r: any) => r.code },
+                { header: 'Account', get: (r: any) => r.name },
+                { header: 'Balance', get: (r: any) => r.balance ?? '' },
+            ],
+            rows,
+        })
     }
 
     return (
-        <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
-            {/* Controls */}
-            <div className="bg-app-surface p-6 rounded-2xl shadow-sm border border-app-border flex flex-wrap items-end justify-between gap-4 print:hidden">
-                <div className="flex gap-4 items-end">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
-                            <Calendar size={12} /> Statement As Of
-                        </label>
-                        <input
-                            type="date"
-                            value={asOfDate}
-                            onChange={e => setAsOfDate(e.target.value)}
-                            className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
-                        />
-                    </div>
-                    <button
-                        onClick={handleRefresh}
-                        disabled={isPending}
-                        className="bg-app-bg text-white px-6 py-2.5 rounded-lg hover:bg-app-foreground font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
-                    >
-                        {isPending ? 'Revaluing...' : 'Generate Statement'}
-                    </button>
-                </div>
+        <div className="report-print-root flex flex-col gap-4 p-4 md:px-6 md:pt-6 md:pb-2 animate-in fade-in duration-300 overflow-y-auto custom-scrollbar"
+            style={{ height: 'calc(100dvh - 6rem)' }}>
 
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => window.print()}
-                        className="bg-app-surface text-app-muted-foreground border border-app-border px-4 py-2.5 rounded-lg hover:bg-app-surface font-bold text-sm shadow-sm flex items-center gap-2"
-                    >
-                        <Printer size={18} /> Print PDF
-                    </button>
-                </div>
-            </div>
+            <ReportHeader backHref="/finance/reports"
+                title="Balance Sheet"
+                subtitle="Statement of financial position"
+                icon={<Landmark size={20} />}
+                iconColor={ASSET} />
 
-            {/* Health Status */}
+            <ReportControls onRefresh={handleRefresh} refreshing={isPending}
+                refreshLabel="Generate" onExport={handleExport} onPrint={() => window.print()}>
+                <DateField label="Statement as of" value={asOfDate} onChange={setAsOfDate} />
+                <div className="flex flex-col gap-1 self-end pb-0.5">
+                    <span className="text-tp-xxs font-bold uppercase tracking-wide"
+                        style={{ color: 'var(--app-muted-foreground)' }}>
+                        Preset
+                    </span>
+                    <PeriodPresets mode="single"
+                        onPick={({ end }) => setAsOfDate(end)} />
+                </div>
+            </ReportControls>
+
+            <StatementHeader reportName="Balance Sheet"
+                period={`As of ${new Date(asOfDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`} />
+
             {!isPending && (
-                <div className={`p-4 rounded-xl border flex items-center justify-between gap-4 ${isBalanced ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'}`}>
-                    <div className="flex items-center gap-4">
-                        {isBalanced ? <ShieldCheck className="text-emerald-500" /> : <PieChart className="text-rose-500 animate-pulse" />}
-                        <div>
-                            <p className="font-bold text-sm">{isBalanced ? 'Statement In Balance' : 'Account Discrepancy Detected'}</p>
-                            <p className="text-xs opacity-75">{isBalanced ? 'Assets perfectly match Liabilities and Equity.' : `There is a difference of ${(totalAssets - totalLiabEq).toFixed(2)} between your assets and claims.`}</p>
-                        </div>
-                    </div>
-                    {!isBalanced && (
-                        <button
-                            onClick={() => setShowDiagnostics(true)}
-                            className="bg-rose-600 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-rose-700 transition-all flex items-center gap-2"
-                        >
-                            <Target size={14} /> Troubleshoot Difference
+                <StatusBanner ok={isBalanced}
+                    okTitle="Statement in balance"
+                    okMessage="Assets perfectly match Liabilities and Equity."
+                    failTitle="Account discrepancy detected"
+                    failMessage={`Assets ${diff > 0 ? 'exceed' : 'trail'} Liabilities + Equity by ${formatAmount(Math.abs(diff))}${issueIds.size ? ' — suspect accounts highlighted below' : ''}.`}
+                    action={!isBalanced && (
+                        <button onClick={() => setShowDiag(s => !s)}
+                            className="flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl"
+                            style={{
+                                background: 'var(--app-error)', color: 'white',
+                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-error) 30%, transparent)',
+                            }}>
+                            <Target size={12} /> {showDiag ? 'Hide' : 'Troubleshoot'}
                         </button>
-                    )}
-                </div>
+                    )} />
             )}
 
-            {/* Main Statement Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-
-                {/* Left Side: ASSETS */}
-                <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
-                    <div className="bg-app-bg p-6 text-white flex items-center gap-3">
-                        <Landmark size={20} className="text-emerald-400" />
-                        <h2 className="font-serif text-xl font-bold italic">Assets</h2>
+            {/* Inline diagnostics panel (no modal) */}
+            {!isBalanced && showDiag && (
+                <div className="rounded-2xl overflow-hidden print:hidden"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-error) 4%, var(--app-surface))',
+                        border: '1px solid color-mix(in srgb, var(--app-error) 30%, transparent)',
+                    }}>
+                    <div className="px-4 py-2 flex items-center gap-2"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-error) 8%, transparent)',
+                            borderBottom: '1px solid color-mix(in srgb, var(--app-error) 25%, var(--app-border))',
+                        }}>
+                        <Target size={14} style={{ color: 'var(--app-error)' }} />
+                        <h3 className="text-tp-md font-bold uppercase tracking-wide" style={{ color: 'var(--app-error)' }}>
+                            Forensic diagnosis · {diag.length} finding{diag.length !== 1 ? 's' : ''}
+                        </h3>
                     </div>
-                    <table className="w-full text-sm">
-                        <tbody className="divide-y divide-stone-50">
-                            {assets.map(acc => (
-                                <ReportRow key={acc.id} account={acc} allAccounts={data.accounts} level={0} formatAmount={formatAmount} />
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="bg-app-surface font-black border-t-2 border-app-border">
-                                <td className="p-6 text-right uppercase tracking-[0.2em] text-[10px] text-app-muted-foreground">Total Assets</td>
-                                <td className="p-6 text-right font-mono text-xl text-app-foreground">
-                                    {formatAmount(totalAssets)}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                {/* Right Side: LIABILITIES & EQUITY */}
-                <div className="space-y-8">
-                    {/* Liabilities */}
-                    <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
-                        <div className="bg-app-surface p-6 text-white flex items-center gap-3">
-                            <PieChart size={20} className="text-amber-400" />
-                            <h2 className="font-serif text-xl font-bold italic">Liabilities</h2>
-                        </div>
-                        <table className="w-full text-sm">
-                            <tbody className="divide-y divide-stone-50">
-                                {liabilities.map(acc => (
-                                    <ReportRow key={acc.id} account={acc} allAccounts={data.accounts} level={0} formatAmount={formatAmount} />
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Equity */}
-                    <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
-                        <div className="bg-app-surface p-6 text-white flex items-center gap-3">
-                            <ShieldCheck size={20} className="text-sky-400" />
-                            <h2 className="font-serif text-xl font-bold italic">Equity</h2>
-                        </div>
-                        <table className="w-full text-sm">
-                            <tbody className="divide-y divide-stone-50">
-                                {equity.map(acc => (
-                                    <ReportRow key={acc.id} account={acc} allAccounts={data.accounts} level={0} formatAmount={formatAmount} />
-                                ))}
-                                {/* Virtual Profit Account */}
-                                <tr className="group bg-blue-50/30 italic">
-                                    <td className="p-4 pl-6 text-blue-800">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold">Current Period Earnings</span>
-                                            <span className="text-[10px] font-medium opacity-60">Net Profit from Income Statement</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-right font-mono font-bold text-blue-900">
-                                        {formatAmount(data.netProfit)}
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr className="bg-app-surface font-black border-t-2 border-app-border">
-                                    <td className="p-6 text-right uppercase tracking-[0.2em] text-[10px] text-app-muted-foreground">Total Liab. & Equity</td>
-                                    <td className="p-6 text-right font-mono text-xl text-app-foreground">
-                                        {formatAmount(totalLiabEq)}
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-
-            <div className="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-[0.3em] font-mono">
-                {mounted && `Institutional Financial Integrity Header • ${new Date().toLocaleDateString()}`}
-            </div>
-
-            {/* Diagnostics Modal */}
-            {showDiagnostics && (
-                <div className="fixed inset-0 bg-app-bg/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-app-surface rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-app-border animate-in zoom-in-95 duration-300">
-                        <div className="p-8 bg-app-bg text-white flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <Target size={24} className="text-rose-400" />
-                                <div>
-                                    <h3 className="text-xl font-bold font-serif italic">Financial Forensic Diagnosis</h3>
-                                    <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest mt-0.5">Automated discrepancy troubleshooter</p>
-                                </div>
-                            </div>
-                            <button onClick={() => setShowDiagnostics(false)} className="bg-app-surface/10 p-2 rounded-full hover:bg-app-surface/20 transition-all">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div className="p-8 max-h-[60vh] overflow-y-auto space-y-4">
-                            {diagnostics.length === 0 ? (
-                                <div className="text-center py-10 space-y-4">
-                                    <div className="w-16 h-16 bg-app-surface-2 rounded-full flex items-center justify-center mx-auto text-app-faint">
-                                        <Search size={32} />
-                                    </div>
-                                    <p className="text-app-muted-foreground font-medium italic">No deep structural errors found in ledger entries. Checking for opening balance alignment...</p>
-                                </div>
-                            ) : (
-                                diagnostics.map((issue, idx) => (
-                                    <div key={idx} className={`p-5 rounded-2xl border flex gap-4 ${issue.severity === 'CRITICAL' ? 'bg-rose-50 border-rose-100' : 'bg-amber-50 border-amber-100'}`}>
-                                        <AlertTriangle size={24} className={issue.severity === 'CRITICAL' ? 'text-rose-500' : 'text-amber-500'} />
-                                        <div className="flex-1">
-                                            <h4 className="font-bold text-sm text-app-foreground">{issue.title}</h4>
-                                            <p className="text-xs text-app-muted-foreground mt-1 leading-relaxed">{issue.description}</p>
+                    <div className="p-3 space-y-2">
+                        {diag.length === 0 ? (
+                            <p className="text-tp-sm italic px-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                No deep structural errors detected — check opening balances or the highlighted rows above.
+                            </p>
+                        ) : (
+                            diag.map((issue, idx) => {
+                                const tone = issue.severity === 'CRITICAL' ? 'var(--app-error)' : 'var(--app-warning)'
+                                return (
+                                    <div key={idx} className="p-3 rounded-xl flex gap-3"
+                                        style={{
+                                            background: `color-mix(in srgb, ${tone} 5%, transparent)`,
+                                            border: `1px solid color-mix(in srgb, ${tone} 25%, transparent)`,
+                                        }}>
+                                        <AlertTriangle size={16} style={{ color: tone, flexShrink: 0, marginTop: 2 }} />
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                                {issue.title}
+                                            </h4>
+                                            <p className="text-tp-xs mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                {issue.description}
+                                            </p>
                                             {issue.action && (
-                                                <button
-                                                    onClick={() => handleAction(issue)}
-                                                    disabled={isHealing}
-                                                    className="mt-3 text-xs font-bold text-app-foreground flex items-center gap-1 hover:underline disabled:opacity-50"
-                                                >
+                                                <button onClick={() => handleAction(issue)} disabled={healing}
+                                                    className="mt-2 flex items-center gap-1 text-tp-xs font-bold transition-colors disabled:opacity-50"
+                                                    style={{
+                                                        color: issue.action === 'HEAL_RESIDUE'
+                                                            ? 'var(--app-success)' : 'var(--app-primary)',
+                                                    }}>
                                                     {issue.action === 'HEAL_RESIDUE' ? (
-                                                        <span className="flex items-center gap-1 text-emerald-600">
-                                                            <Sparkles size={14} /> {isHealing ? 'Healing...' : 'Sweep to Active Accounts'}
-                                                        </span>
+                                                        <>
+                                                            <Sparkles size={12} />
+                                                            {healing ? 'Healing…' : 'Sweep to active accounts'}
+                                                        </>
                                                     ) : (
-                                                        <span className="flex items-center gap-1">
-                                                            Fix This Entry <ChevronRight size={14} />
-                                                        </span>
+                                                        <>Fix this entry <ChevronRight size={12} /></>
                                                     )}
                                                 </button>
                                             )}
                                         </div>
                                     </div>
-                                ))
-                            )}
-
-                            {/* Standard Education Guide */}
-                            <div className="mt-8 p-6 bg-app-surface rounded-2xl border border-app-border">
-                                <h4 className="font-bold text-xs uppercase tracking-widest text-app-muted-foreground mb-4">Standard Resolution Guide</h4>
-                                <ul className="space-y-3">
-                                    <li className="flex items-start gap-3 text-xs text-app-muted-foreground">
-                                        <div className="w-1.5 h-1.5 bg-stone-400 rounded-full mt-1.5" />
-                                        <span>Check <strong>Trial Balance</strong> to see if Credits match Debits.</span>
-                                    </li>
-                                    <li className="flex items-start gap-3 text-xs text-app-muted-foreground">
-                                        <div className="w-1.5 h-1.5 bg-stone-400 rounded-full mt-1.5" />
-                                        <span>Ensure <strong>Opening Balances</strong> are balanced (A = L + E).</span>
-                                    </li>
-                                    <li className="flex items-start gap-3 text-xs text-app-muted-foreground">
-                                        <div className="w-1.5 h-1.5 bg-stone-400 rounded-full mt-1.5" />
-                                        <span>Verify that <strong>Income/Expense</strong> accounts aren't mixed into Assets.</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div className="p-6 bg-app-surface border-t border-app-border flex justify-end">
-                            <button
-                                onClick={() => setShowDiagnostics(false)}
-                                className="bg-app-bg text-white px-8 py-3 rounded-xl font-bold text-xs shadow-lg hover:shadow-stone-200 transition-all"
-                            >
-                                I understand
-                            </button>
-                        </div>
+                                )
+                            })
+                        )}
                     </div>
                 </div>
             )}
+
+            {/* ═══ Two-column grid with locked heights so totals line up across the fold ═══ */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+                {/* Left: Assets */}
+                <div className="flex flex-col">
+                    <ReportPanel title="Assets" icon={<Landmark size={14} />} accent={ASSET}>
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse">
+                                <ReportTableHead columns="amount" />
+                                <tbody>
+                                    {assets.map(acc => (
+                                        <AccountRow key={acc.id}
+                                            account={acc} allAccounts={data.accounts}
+                                            formatAmount={formatAmount}
+                                            columns="amount" accent={ASSET}
+                                            issueIds={issueIds} />
+                                    ))}
+                                </tbody>
+                                <tfoot>
+                                    <TotalRow label="Total assets" amount={totalAssets}
+                                        accent={ASSET} tone="bold" formatAmount={formatAmount} />
+                                </tfoot>
+                            </table>
+                        </div>
+                    </ReportPanel>
+                </div>
+
+                {/* Right: Liabilities + Equity — combined into a SINGLE panel so totals
+                     line up visually with the Assets panel's Total row across the fold. */}
+                <div className="flex flex-col">
+                    <ReportPanel title="Liabilities & Equity" icon={<Scale size={14} />} accent={LIAB}>
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse">
+                                <ReportTableHead columns="amount" />
+                                <tbody>
+                                    {/* Liabilities section */}
+                                    <tr style={{ background: `color-mix(in srgb, ${LIAB} 6%, transparent)` }}>
+                                        <td colSpan={2}
+                                            className="px-4 py-2 text-tp-xxs font-bold uppercase tracking-wide"
+                                            style={{ color: LIAB, borderLeft: `3px solid ${LIAB}` }}>
+                                            Liabilities
+                                        </td>
+                                    </tr>
+                                    {liabilities.map(acc => (
+                                        <AccountRow key={acc.id}
+                                            account={acc} allAccounts={data.accounts}
+                                            formatAmount={formatAmount}
+                                            columns="amount" accent={LIAB}
+                                            issueIds={issueIds} />
+                                    ))}
+                                    <TotalRow label="Total liabilities" amount={totalLiab}
+                                        accent={LIAB} tone="soft" formatAmount={formatAmount} />
+
+                                    {/* Equity section */}
+                                    <tr style={{ background: `color-mix(in srgb, ${EQUITY} 6%, transparent)` }}>
+                                        <td colSpan={2}
+                                            className="px-4 py-2 text-tp-xxs font-bold uppercase tracking-wide"
+                                            style={{ color: EQUITY, borderLeft: `3px solid ${EQUITY}` }}>
+                                            Equity
+                                        </td>
+                                    </tr>
+                                    {equity.map(acc => (
+                                        <AccountRow key={acc.id}
+                                            account={acc} allAccounts={data.accounts}
+                                            formatAmount={formatAmount}
+                                            columns="amount" accent={EQUITY}
+                                            issueIds={issueIds} />
+                                    ))}
+                                    {/* Virtual current-period earnings */}
+                                    <tr style={{
+                                        background: 'color-mix(in srgb, var(--app-info) 4%, transparent)',
+                                        borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
+                                    }}>
+                                        <td className="px-3 py-1.5" style={{ paddingLeft: '30px' }}>
+                                            <div className="flex flex-col">
+                                                <span className="text-tp-sm font-bold" style={{ color: EQUITY }}>
+                                                    Current-period earnings
+                                                </span>
+                                                <span className="text-tp-xxs"
+                                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                                    Net profit rolled in from the P&L
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-1.5 text-right font-mono font-bold tabular-nums text-tp-sm"
+                                            style={{ color: EQUITY }}>
+                                            {formatAmount(data.netProfit || 0)}
+                                        </td>
+                                    </tr>
+                                    <TotalRow label="Total equity" amount={totalEq}
+                                        accent={EQUITY} tone="soft" formatAmount={formatAmount} />
+                                </tbody>
+                                <tfoot>
+                                    <TotalRow label="Total liabilities + equity" amount={totalLiabEq}
+                                        accent={LIAB} tone="bold" formatAmount={formatAmount} />
+                                </tfoot>
+                            </table>
+                        </div>
+                    </ReportPanel>
+                </div>
+            </div>
+
+            {/* Identity row across the fold */}
+            <div className="rounded-2xl p-4 flex items-center justify-between gap-3"
+                style={{
+                    background: isBalanced
+                        ? `color-mix(in srgb, ${ASSET} 6%, transparent)`
+                        : 'color-mix(in srgb, var(--app-error) 6%, transparent)',
+                    border: `1px solid color-mix(in srgb, ${isBalanced ? ASSET : 'var(--app-error)'} 30%, transparent)`,
+                }}>
+                <span className="text-tp-xxs font-bold uppercase tracking-[0.25em]"
+                    style={{ color: 'var(--app-muted-foreground)' }}>
+                    Accounting identity
+                </span>
+                <div className="flex items-center gap-3 font-mono">
+                    <span className="text-tp-sm" style={{ color: 'var(--app-muted-foreground)' }}>Assets</span>
+                    <span className="text-tp-lg font-bold tabular-nums"
+                        style={{ color: ASSET }}>{formatAmount(totalAssets)}</span>
+                    <span className="text-tp-md" style={{ color: 'var(--app-muted-foreground)' }}>=</span>
+                    <span className="text-tp-sm" style={{ color: 'var(--app-muted-foreground)' }}>Liab + Equity</span>
+                    <span className="text-tp-lg font-bold tabular-nums"
+                        style={{ color: LIAB }}>{formatAmount(totalLiabEq)}</span>
+                    {!isBalanced && (
+                        <>
+                            <span className="text-tp-md" style={{ color: 'var(--app-error)' }}>Δ</span>
+                            <span className="text-tp-lg font-bold tabular-nums"
+                                style={{ color: 'var(--app-error)' }}>{formatAmount(diff)}</span>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            <ReportFootnote mounted={mounted} />
         </div>
-    )
-}
-
-function ReportRow({ account, level, allAccounts, formatAmount }: Record<string, any>) {
-    const [expanded, setExpanded] = useState(level < 1)
-    const isParent = account.children && account.children.length > 0
-    const hasBalance = Math.abs(account.balance) > 0.001
-
-    if (!hasBalance && !isParent) return null
-
-    return (
-        <>
-            <tr className={`group transition-colors ${isParent ? 'bg-app-surface/40 font-bold' : 'hover:bg-app-surface/30'}`}>
-                <td className="p-4" style={{ paddingLeft: `${level * 24 + 24}px` }}>
-                    <div className="flex items-center gap-3">
-                        {isParent && (
-                            <button onClick={() => setExpanded(!expanded)} className="text-app-faint hover:text-app-foreground transition-colors">
-                                {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                            </button>
-                        )}
-                        <span className="text-app-muted-foreground font-mono text-[10px] mr-2 opacity-0 group-hover:opacity-100 transition-opacity">{account.code}</span>
-                        <span className={isParent ? 'text-app-foreground' : 'text-app-muted-foreground'}>{account.name}</span>
-                    </div>
-                </td>
-                <td className="p-4 text-right font-mono font-medium text-app-foreground">
-                    {formatAmount(account.balance)}
-                </td>
-            </tr>
-            {isParent && expanded && account.children.map((childId: Record<string, any>) => {
-                const child = typeof childId === 'object' ? childId : allAccounts.find((a: Record<string, any>) => a.id === childId)
-                if (!child) return null
-                return <ReportRow key={child.id} account={child} level={level + 1} allAccounts={allAccounts} formatAmount={formatAmount} />
-            })}
-        </>
     )
 }

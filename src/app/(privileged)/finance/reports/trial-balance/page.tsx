@@ -1,7 +1,6 @@
 import { getChartOfAccounts } from '@/app/actions/finance/accounts'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
 import TrialBalanceViewer from '@/app/(privileged)/finance/reports/trial-balance/viewer'
-
 import { cookies } from 'next/headers'
 
 export default async function TrialBalancePage() {
@@ -10,14 +9,5 @@ export default async function TrialBalancePage() {
     const accounts = await getChartOfAccounts(false, scope)
     const fiscalYears = await getFiscalYears()
 
-    return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="text-center mb-10">
-                <h1 className="text-4xl font-bold text-app-foreground font-serif mb-2">Trial Balance</h1>
-                <p className="text-app-muted-foreground text-sm uppercase tracking-widest font-bold">General Ledger Integrity Report</p>
-            </div>
-
-            <TrialBalanceViewer initialAccounts={accounts} fiscalYears={fiscalYears} />
-        </div>
-    )
+    return <TrialBalanceViewer initialAccounts={accounts} fiscalYears={fiscalYears} />
 }

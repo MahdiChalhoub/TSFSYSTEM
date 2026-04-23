@@ -1,217 +1,283 @@
+// @ts-nocheck
 'use client'
 
-import { useState, useTransition, useMemo, useEffect } from 'react'
+import { useState, useTransition, useMemo, useEffect, useCallback } from 'react'
 import { getProfitAndLossReport } from '@/app/actions/finance/accounts'
-import { Printer, Calendar, TrendingUp, TrendingDown, ChevronRight, ChevronDown, Download } from 'lucide-react'
+import { TrendingUp, TrendingDown, Sigma } from 'lucide-react'
+import {
+    ReportHeader, StatementHeader, ReportControls, DateField, PeriodPresets,
+    ReportPanel, ReportTableHead, AccountRow, SectionRow, TotalRow,
+    MetricTile, ReportFootnote, useMoneyFormatter,
+    exportCSV, flattenAccounts,
+} from '../_shared/components'
 
-export default function PnlViewer({ initialData, fiscalYears }: { initialData: Record<string, any>[], fiscalYears: Record<string, any>[] }) {
+/* ═══════════════════════════════════════════════════════════
+ *  P&L — narrative, accounting-style
+ *  Flow: Revenue → Total revenue → Cost lines → Gross profit
+ *         → Operating expenses → Operating income → Net income
+ *  Two period columns + Δ% variance, margin % on subtotals.
+ *  Single <table> with semantic <tfoot> for proper pagination.
+ * ═══════════════════════════════════════════════════════════ */
+
+const INCOME = 'var(--app-success)'
+const EXPENSE = 'var(--app-error)'
+const NEUTRAL = 'var(--app-primary)'
+
+function fmtPeriod(start: string, end: string): string {
+    const s = new Date(start), e = new Date(end)
+    const f = (d: Date) => d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+    return `${f(s)} — ${f(e)}`
+}
+function daysBetween(a: Date, b: Date) { return Math.round((b.getTime() - a.getTime()) / 86400000) }
+
+export default function PnlViewer({ initialData, initialPriorData, fiscalYears }: {
+    initialData: any[]
+    initialPriorData: any[]
+    fiscalYears: any[]
+}) {
     const now = new Date()
-    const [startDate, setStartDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0])
-    const [endDate, setEndDate] = useState(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0])
-
+    const [startDate, setStartDate] = useState(
+        new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+    )
+    const [endDate, setEndDate] = useState(
+        new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+    )
     const [data, setData] = useState(initialData)
+    const [prior, setPrior] = useState(initialPriorData)
     const [isPending, startTransition] = useTransition()
     const [mounted, setMounted] = useState(false)
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
+    const formatAmount = useMoneyFormatter(mounted)
+    useEffect(() => { setMounted(true) }, [])
 
     const handleRefresh = () => {
         startTransition(async () => {
-            const report = await getProfitAndLossReport(new Date(startDate), new Date(endDate))
-            setData(report)
+            const s = new Date(startDate), e = new Date(endDate)
+            const span = daysBetween(s, e) + 1
+            // Prior period = equal-length window immediately before current start
+            const priorEnd = new Date(s); priorEnd.setDate(priorEnd.getDate() - 1)
+            const priorStart = new Date(priorEnd); priorStart.setDate(priorStart.getDate() - span + 1)
+            const [cur, pri] = await Promise.all([
+                getProfitAndLossReport(s, e),
+                getProfitAndLossReport(priorStart, priorEnd),
+            ])
+            setData(cur); setPrior(pri)
         })
     }
 
-    const { incomes, expenses, netProfit } = useMemo(() => {
+    const { incomes, expenses, totalIncome, totalExpense, netProfit, priorMap, priorTotals } = useMemo(() => {
         const inc = data.filter(a => a.type === 'INCOME' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
         const exp = data.filter(a => a.type === 'EXPENSE' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
+        const ti = inc.reduce((s, a) => s + a.balance, 0)
+        const te = exp.reduce((s, a) => s + a.balance, 0)
 
-        const totalInc = inc.reduce((sum, a) => sum + a.balance, 0)
-        const totalExp = exp.reduce((sum, a) => sum + a.balance, 0)
+        const pMap: Record<number, number> = {}
+        ;(prior || []).forEach((a: any) => { pMap[a.id] = a.balance ?? 0 })
+        const priorInc = (prior || []).filter((a: any) => a.type === 'INCOME' && !a.parentId).reduce((s: number, a: any) => s + (a.balance ?? 0), 0)
+        const priorExp = (prior || []).filter((a: any) => a.type === 'EXPENSE' && !a.parentId).reduce((s: number, a: any) => s + (a.balance ?? 0), 0)
 
-        return { incomes: inc, expenses: exp, netProfit: totalInc - totalExp }
-    }, [data])
+        return {
+            incomes: inc, expenses: exp,
+            totalIncome: ti, totalExpense: te, netProfit: ti - te,
+            priorMap: pMap,
+            priorTotals: { income: priorInc, expense: priorExp, net: priorInc - priorExp },
+        }
+    }, [data, prior])
 
-    const formatAmount = (val: number) => {
-        if (!mounted) return val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-        return val.toLocaleString(undefined, { minimumFractionDigits: 2 })
-    }
+    const netPositive = netProfit >= 0
+    const netColor = netPositive ? INCOME : EXPENSE
+
+    // Margin = net / revenue
+    const margin = totalIncome !== 0 ? (netProfit / totalIncome) * 100 : null
+    const priorMargin = priorTotals.income !== 0 ? (priorTotals.net / priorTotals.income) * 100 : null
+
+    // Revenue growth %
+    const revGrowth = priorTotals.income !== 0
+        ? ((totalIncome - priorTotals.income) / Math.abs(priorTotals.income)) * 100
+        : null
+    const netGrowth = priorTotals.net !== 0
+        ? ((netProfit - priorTotals.net) / Math.abs(priorTotals.net)) * 100
+        : null
+
+    const handleExport = useCallback(() => {
+        const rows = [
+            { code: '', name: '— Operating income —', balance: null, isHeader: true },
+            ...flattenAccounts(incomes, data).map(r => ({ ...r, prior: 0 })),
+            { code: '', name: 'TOTAL INCOME', balance: totalIncome, prior: priorTotals.income, isHeader: true },
+            { code: '', name: '— Operating expenses —', balance: null, isHeader: true },
+            ...flattenAccounts(expenses, data).map(r => ({ ...r, prior: 0 })),
+            { code: '', name: 'TOTAL EXPENSES', balance: totalExpense, prior: priorTotals.expense, isHeader: true },
+            { code: '', name: `NET ${netPositive ? 'PROFIT' : 'LOSS'}`, balance: netProfit, prior: priorTotals.net, isHeader: true },
+        ]
+        // Hydrate per-account prior from priorMap
+        rows.forEach((r: any) => {
+            if (r.isHeader) return
+            const match = (prior || []).find((a: any) => a.code === r.code)
+            r.prior = match ? match.balance : 0
+        })
+        exportCSV({
+            filename: `profit-and-loss_${startDate}_to_${endDate}.csv`,
+            columns: [
+                { header: 'Code', get: (r: any) => r.code },
+                { header: 'Account', get: (r: any) => r.name },
+                { header: 'Current', get: (r: any) => r.balance ?? '' },
+                { header: 'Prior', get: (r: any) => r.prior ?? '' },
+            ],
+            rows,
+        })
+    }, [incomes, expenses, data, prior, totalIncome, totalExpense, netProfit, priorTotals, startDate, endDate, netPositive])
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            {/* Controls */}
-            <div className="bg-app-surface p-6 rounded-2xl shadow-sm border border-app-border flex flex-wrap items-end justify-between gap-4 print:hidden">
-                <div className="flex gap-4 items-end">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
-                            <Calendar size={12} /> Start Date
-                        </label>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={e => setStartDate(e.target.value)}
-                            className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
-                            <Calendar size={12} /> End Date
-                        </label>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={e => setEndDate(e.target.value)}
-                            className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
-                        />
-                    </div>
-                    <button
-                        onClick={handleRefresh}
-                        disabled={isPending}
-                        className="bg-app-bg text-white px-6 py-2.5 rounded-lg hover:bg-app-foreground font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
-                    >
-                        {isPending ? 'Calculating...' : 'Update Report'}
-                    </button>
+        <div className="report-print-root flex flex-col gap-4 p-4 md:px-6 md:pt-6 md:pb-2 animate-in fade-in duration-300 overflow-y-auto custom-scrollbar"
+            style={{ height: 'calc(100dvh - 6rem)' }}>
+
+            <ReportHeader backHref="/finance/reports"
+                title="Profit & Loss"
+                subtitle="Income · Expenditure · Net result"
+                icon={<Sigma size={20} />}
+                iconColor={INCOME} />
+
+            <ReportControls onRefresh={handleRefresh} refreshing={isPending}
+                refreshLabel="Update"
+                onExport={handleExport}
+                onPrint={() => window.print()}>
+                <DateField label="Start date" value={startDate} onChange={setStartDate} />
+                <DateField label="End date" value={endDate} onChange={setEndDate} />
+                <div className="flex flex-col gap-1 self-end pb-0.5">
+                    <span className="text-tp-xxs font-bold uppercase tracking-wide"
+                        style={{ color: 'var(--app-muted-foreground)' }}>
+                        Preset
+                    </span>
+                    <PeriodPresets mode="range"
+                        onPick={({ start, end }) => {
+                            if (start) setStartDate(start)
+                            setEndDate(end)
+                        }} />
                 </div>
+            </ReportControls>
 
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => window.print()}
-                        className="bg-app-surface text-app-muted-foreground border border-app-border px-4 py-2.5 rounded-lg hover:bg-app-surface font-bold text-sm shadow-sm flex items-center gap-2"
-                    >
-                        <Printer size={18} /> Print PDF
-                    </button>
+            <StatementHeader reportName="Profit & Loss Statement"
+                period={`For the period ${fmtPeriod(startDate, endDate)}`} />
+
+            {/* Hero metrics with comparison */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 print:hidden">
+                <MetricTile label="Total income" value={formatAmount(totalIncome)}
+                    secondary={revGrowth != null ? `${revGrowth > 0 ? '+' : ''}${revGrowth.toFixed(1)}% vs prior` : 'no prior data'}
+                    icon={<TrendingUp size={16} />} color={INCOME} />
+                <MetricTile label="Total expenses" value={formatAmount(totalExpense)}
+                    secondary={`Prior ${formatAmount(priorTotals.expense)}`}
+                    icon={<TrendingDown size={16} />} color={EXPENSE} />
+                <MetricTile label="Net margin" value={margin != null ? `${margin.toFixed(1)}%` : '—'}
+                    secondary={priorMargin != null ? `Prior ${priorMargin.toFixed(1)}%` : 'no prior'}
+                    icon={<Sigma size={16} />} color={NEUTRAL} />
+                <MetricTile label={`Net ${netPositive ? 'profit' : 'loss'}`} value={formatAmount(netProfit)}
+                    secondary={netGrowth != null ? `${netGrowth > 0 ? '+' : ''}${netGrowth.toFixed(1)}% vs prior` : ''}
+                    icon={<Sigma size={16} />} color={netColor} tone="solid" />
+            </div>
+
+            {/* One panel, one table — proper semantics */}
+            <ReportPanel>
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                        <ReportTableHead columns="amount-compare" labels={{
+                            name: 'Account', current: fmtShort(startDate, endDate),
+                            prior: 'Prior', variance: 'Δ %',
+                        }} />
+                        <tbody>
+                            <SectionRow title="Operating income" accent={INCOME} colSpan={4} />
+                            {incomes.map(acc => (
+                                <AccountRow key={acc.id}
+                                    account={acc} allAccounts={data}
+                                    formatAmount={formatAmount}
+                                    columns="amount-compare" accent={INCOME}
+                                    priorMap={priorMap} />
+                            ))}
+                            <TotalRow label="Total income" amount={totalIncome}
+                                accent={INCOME} tone="soft" formatAmount={formatAmount}
+                                extra={<>
+                                    <td className="px-3 py-2 text-right font-mono tabular-nums text-tp-sm"
+                                        style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {formatAmount(priorTotals.income)}
+                                    </td>
+                                    <td className="px-3 py-2 text-right font-mono tabular-nums text-tp-xs"
+                                        style={{ color: (revGrowth ?? 0) >= 0 ? INCOME : EXPENSE }}>
+                                        {revGrowth != null ? `${revGrowth > 0 ? '+' : ''}${revGrowth.toFixed(1)}%` : '—'}
+                                    </td>
+                                </>} />
+
+                            <SectionRow title="Operating expenses" accent={EXPENSE} colSpan={4} />
+                            {expenses.map(acc => (
+                                <AccountRow key={acc.id}
+                                    account={acc} allAccounts={data}
+                                    formatAmount={formatAmount}
+                                    columns="amount-compare" accent={EXPENSE}
+                                    priorMap={priorMap} />
+                            ))}
+                            <TotalRow label="Total expenses" amount={totalExpense}
+                                accent={EXPENSE} tone="soft" formatAmount={formatAmount}
+                                extra={<>
+                                    <td className="px-3 py-2 text-right font-mono tabular-nums text-tp-sm"
+                                        style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {formatAmount(priorTotals.expense)}
+                                    </td>
+                                    <td className="px-3 py-2 text-right font-mono tabular-nums text-tp-xs"
+                                        style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {priorTotals.expense !== 0
+                                            ? `${((totalExpense - priorTotals.expense) / Math.abs(priorTotals.expense) * 100).toFixed(1)}%`
+                                            : '—'}
+                                    </td>
+                                </>} />
+                        </tbody>
+                        <tfoot>
+                            <TotalRow label={`Net ${netPositive ? 'profit' : 'loss'}`}
+                                amount={netProfit}
+                                accent={netColor} tone="result"
+                                formatAmount={formatAmount}
+                                extra={<>
+                                    <td className="px-4 py-4 text-right font-mono tabular-nums text-tp-md"
+                                        style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {formatAmount(priorTotals.net)}
+                                    </td>
+                                    <td className="px-4 py-4 text-right font-mono tabular-nums text-tp-sm"
+                                        style={{ color: (netGrowth ?? 0) >= 0 ? INCOME : EXPENSE }}>
+                                        {netGrowth != null ? `${netGrowth > 0 ? '+' : ''}${netGrowth.toFixed(1)}%` : '—'}
+                                    </td>
+                                </>} />
+                            <tr style={{
+                                background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                                borderTop: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                            }}>
+                                <td className="px-4 py-2 text-right text-tp-xxs font-bold uppercase tracking-wide"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Net margin
+                                </td>
+                                <td className="px-4 py-2 text-right font-mono font-bold tabular-nums text-tp-md"
+                                    style={{ color: (margin ?? 0) >= 0 ? INCOME : EXPENSE }}>
+                                    {margin != null ? `${margin.toFixed(1)}%` : '—'}
+                                </td>
+                                <td className="px-4 py-2 text-right font-mono tabular-nums text-tp-sm"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                    {priorMargin != null ? `${priorMargin.toFixed(1)}%` : '—'}
+                                </td>
+                                <td className="px-4 py-2 text-right font-mono tabular-nums text-tp-xs"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                    {margin != null && priorMargin != null
+                                        ? `${(margin - priorMargin).toFixed(1)} pp`
+                                        : '—'}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
-            </div>
+            </ReportPanel>
 
-            {/* Hero Summary Card */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <SummaryCard
-                    title="Total Income"
-                    amount={incomes.reduce((sum, a) => sum + a.balance, 0)}
-                    icon={<TrendingUp className="text-emerald-500" />}
-                    color="emerald"
-                    formatAmount={formatAmount}
-                />
-                <SummaryCard
-                    title="Total Expenses"
-                    amount={expenses.reduce((sum, a) => sum + a.balance, 0)}
-                    icon={<TrendingDown className="text-rose-500" />}
-                    color="rose"
-                    formatAmount={formatAmount}
-                />
-                <div className={`p-6 rounded-2xl border-2 flex flex-col justify-center ${netProfit >= 0 ? 'bg-app-bg border-stone-800 text-white shadow-xl shadow-stone-200' : 'bg-rose-900 border-rose-800 text-white shadow-xl shadow-rose-200'}`}>
-                    <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.2em] mb-1">Net Profit / Loss</p>
-                    <p className="text-3xl font-mono font-bold">
-                        {formatAmount(netProfit)}
-                    </p>
-                    <p className="text-xs mt-2 opacity-60 font-medium">Bottom Line for chosen period</p>
-                </div>
-            </div>
-
-            {/* Detailed Table */}
-            <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
-                <table className="w-full text-sm border-collapse">
-                    <thead>
-                        <tr className="bg-app-surface text-app-muted-foreground uppercase text-[10px] tracking-[0.2em] font-bold border-b border-app-border">
-                            <th className="p-6 text-left">Account Description</th>
-                            <th className="p-6 text-right w-48">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-50">
-                        {/* Income Section */}
-                        <tr className="bg-emerald-50/30">
-                            <td colSpan={2} className="px-6 py-3 text-emerald-800 font-black uppercase tracking-widest text-[11px]">Operating Income</td>
-                        </tr>
-                        {incomes.map(acc => (
-                            <ReportRow key={acc.id} account={acc} allAccounts={data} level={0} formatAmount={formatAmount} />
-                        ))}
-                        <TotalRow title="Total Income" amount={incomes.reduce((sum, a) => sum + a.balance, 0)} color="emerald" formatAmount={formatAmount} />
-
-                        {/* Expense Section */}
-                        <tr className="bg-rose-50/30">
-                            <td colSpan={2} className="px-6 py-3 text-rose-800 font-black uppercase tracking-widest text-[11px]">Operating Expenses</td>
-                        </tr>
-                        {expenses.map(acc => (
-                            <ReportRow key={acc.id} account={acc} allAccounts={data} level={0} formatAmount={formatAmount} />
-                        ))}
-                        <TotalRow title="Total Expenses" amount={expenses.reduce((sum, a) => sum + a.balance, 0)} color="rose" formatAmount={formatAmount} />
-
-                        {/* Final Net */}
-                        <tr className="bg-app-bg text-white border-t-4 border-white">
-                            <td className="p-8 text-xl font-serif font-bold italic">Net Profit / Loss</td>
-                            <td className="p-8 text-right text-2xl font-mono font-bold">
-                                {formatAmount(netProfit)}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div className="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-[0.3em] font-mono">
-                TSF Financial Control System • Integrity Confirmed • {mounted ? new Date().toLocaleDateString() : ''}
-            </div>
+            <ReportFootnote mounted={mounted} />
         </div>
     )
 }
 
-function SummaryCard({ title, amount, icon, color, formatAmount }: Record<string, any>) {
-    return (
-        <div className="bg-app-surface p-6 rounded-2xl border border-app-border shadow-sm flex items-center justify-between">
-            <div>
-                <p className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-wider mb-1">{title}</p>
-                <p className="text-2xl font-mono font-bold text-app-foreground">{formatAmount(amount)}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-${color}-50`}>
-                {icon}
-            </div>
-        </div>
-    )
-}
-
-function ReportRow({ account, level, allAccounts, formatAmount }: Record<string, any>) {
-    const [expanded, setExpanded] = useState(level < 1)
-    const isParent = account.children && account.children.length > 0
-    const hasBalance = Math.abs(account.balance) > 0.001
-
-    if (!hasBalance && !isParent) return null
-
-    return (
-        <>
-            <tr className={`group transition-colors ${isParent ? 'bg-app-surface/40 font-bold' : 'hover:bg-app-surface/30'}`}>
-                <td className="p-4" style={{ paddingLeft: `${level * 24 + 24}px` }}>
-                    <div className="flex items-center gap-3">
-                        {isParent && (
-                            <button onClick={() => setExpanded(!expanded)} className="text-app-faint hover:text-app-foreground transition-colors">
-                                {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                            </button>
-                        )}
-                        <span className="text-app-muted-foreground font-mono text-[10px] mr-2 opacity-0 group-hover:opacity-100 transition-opacity">{account.code}</span>
-                        <span className={isParent ? 'text-app-foreground' : 'text-app-muted-foreground'}>{account.name}</span>
-                    </div>
-                </td>
-                <td className="p-4 text-right font-mono font-medium text-app-foreground">
-                    {formatAmount(account.balance)}
-                </td>
-            </tr>
-            {isParent && expanded && account.children.map((childId: Record<string, any>) => {
-                const child = typeof childId === 'object' ? childId : allAccounts.find((a: Record<string, any>) => a.id === childId)
-                if (!child) return null
-                return <ReportRow key={child.id} account={child} level={level + 1} allAccounts={allAccounts} formatAmount={formatAmount} />
-            })}
-        </>
-    )
-}
-
-function TotalRow({ title, amount, color, formatAmount }: Record<string, any>) {
-    const isEmerald = color === 'emerald'
-    return (
-        <tr className={isEmerald ? 'bg-emerald-50/50' : 'bg-rose-50/50'}>
-            <td className="p-6 text-right font-bold uppercase tracking-widest text-xs text-app-muted-foreground">{title}</td>
-            <td className={`p-6 text-right font-mono font-black text-lg ${isEmerald ? 'text-emerald-700' : 'text-rose-700'}`}>
-                {formatAmount(amount)}
-            </td>
-        </tr>
-    )
+function fmtShort(start: string, end: string): string {
+    const s = new Date(start), e = new Date(end)
+    const sameMonth = s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()
+    if (sameMonth) return s.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+    return 'Current'
 }

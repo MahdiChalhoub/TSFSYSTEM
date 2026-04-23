@@ -30,6 +30,8 @@ export interface Task {
     completion_note?: string | null;
     require_completion_note?: boolean;
     completion_checklist?: ChecklistItem[];
+    remind_until_done?: boolean;
+    remind_interval_min?: number;
     attachments?: TaskAttachmentShort[];
     is_recurring?: boolean;
     recurrence_days?: number;

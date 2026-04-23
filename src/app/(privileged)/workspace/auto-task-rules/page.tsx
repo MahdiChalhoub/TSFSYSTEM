@@ -1234,6 +1234,45 @@ export default function AutoTaskRulesPage() {
                                         <p className="text-tp-xs font-medium mt-1 ml-6" style={{ color: 'var(--app-muted-foreground)' }}>
                                             The popup will keep returning on every page refresh — assignee can only snooze, not permanently dismiss.
                                         </p>
+                                        {!!(editingRule.conditions as any)?.remind_until_done && (
+                                            <div className="mt-2 ml-6 flex items-center gap-2 flex-wrap">
+                                                <span className="text-tp-xs font-medium" style={{ color: 'var(--app-muted-foreground)' }}>Nag every</span>
+                                                {([
+                                                    { v: 1, label: '1 min' },
+                                                    { v: 10, label: '10 min' },
+                                                    { v: 30, label: '30 min' },
+                                                    { v: 60, label: '1 hr' },
+                                                    { v: 240, label: '4 hr' },
+                                                    { v: 1440, label: '1 day' },
+                                                ] as const).map(opt => {
+                                                    const active = ((editingRule.conditions as any)?.remind_interval_min || 10) === opt.v;
+                                                    return (
+                                                        <button key={opt.v} type="button"
+                                                                onClick={() => setEditingRule({
+                                                                    ...editingRule,
+                                                                    conditions: { ...editingRule.conditions, remind_interval_min: opt.v } as any,
+                                                                })}
+                                                                className="px-2 py-1 text-tp-xs font-bold rounded-lg transition-all"
+                                                                style={{
+                                                                    background: active ? 'color-mix(in srgb, var(--app-primary) 15%, transparent)' : 'var(--app-bg)',
+                                                                    border: `1px solid ${active ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
+                                                                    color: active ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                                                }}>
+                                                            {opt.label}
+                                                        </button>
+                                                    )
+                                                })}
+                                                <input type="number" min={1} max={10080}
+                                                       value={(editingRule.conditions as any)?.remind_interval_min || 10}
+                                                       onChange={e => setEditingRule({
+                                                           ...editingRule,
+                                                           conditions: { ...editingRule.conditions, remind_interval_min: Math.max(1, Number(e.target.value) || 10) } as any,
+                                                       })}
+                                                       className="w-16 px-2 py-1 text-tp-xs font-bold rounded-lg outline-none text-center"
+                                                       style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                                <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>min</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div style={{ gridColumn: '1 / -1' }}>
                                         <label className={labelCls}>Checklist items (optional — one per line)</label>

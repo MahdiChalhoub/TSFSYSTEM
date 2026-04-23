@@ -25,16 +25,16 @@ import type { Task } from '@/app/(privileged)/workspace/tasks/types'
 
 type Reminder = Pick<Task,
     'id' | 'title' | 'priority' | 'due_date' | 'related_object_type' | 'related_object_id' | 'related_object_label' | 'category_name' | 'source'
-> & { reminder_at?: string | null; remind_until_done?: boolean }
+> & { reminder_at?: string | null; remind_until_done?: boolean; remind_interval_min?: number }
 
 const DISMISSED_KEY = 'tsf_dismissed_reminders_v1'
 const SNOOZE_KEY = 'tsf_snoozed_reminders_v1'
-const STICKY_KEY = 'tsf_sticky_reminders'
 const POLL_MS = 60_000
 
-function readSticky(): Record<string, boolean> {
-    if (typeof window === 'undefined') return {}
-    try { return JSON.parse(localStorage.getItem(STICKY_KEY) || '{}') } catch { return {} }
+function formatInterval(min: number): string {
+    if (min < 60) return `${min} min`
+    if (min < 1440) return `${Math.round(min / 60)} hr`
+    return `${Math.round(min / 1440)} d`
 }
 
 function readDismissed(): Record<string, number> {
@@ -96,15 +96,10 @@ export function TaskReminderPopup() {
     }, [fetchReminders])
 
     const now = Date.now()
-    const stickyMap = readSticky()
-    // Merge: a reminder is sticky if either the backend flag is on (rule-driven)
-    // or the user toggled it locally via TaskModal.
-    const combined = [...testReminders, ...reminders].map(r => ({
-        ...r,
-        remind_until_done: r.remind_until_done || stickyMap[String(r.id)] === true,
-    }))
+    // Reminder fields come straight from the server. Sticky tasks ignore
+    // local "permanent dismiss"; only snooze windows hide them.
+    const combined = [...testReminders, ...reminders]
     const visible = combined.filter(r => {
-        // Sticky reminders cannot be permanently dismissed.
         if (!r.remind_until_done) {
             const d = dismissed[String(r.id)]
             if (d) return false
@@ -120,8 +115,8 @@ export function TaskReminderPopup() {
         const next = { ...dismissed, [String(id)]: Date.now() }
         setDismissed(next); writeDismissed(next)
     }
-    const snooze = (id: number) => {
-        const next = { ...snoozed, [String(id)]: Date.now() + 10 * 60_000 }
+    const snooze = (id: number, minutes = 10) => {
+        const next = { ...snoozed, [String(id)]: Date.now() + minutes * 60_000 }
         setSnoozed(next); writeSnoozed(next)
     }
 
@@ -153,7 +148,8 @@ export function TaskReminderPopup() {
                                 )}
                             </div>
                             {r.remind_until_done ? (
-                                <button onClick={() => snooze(r.id)} title="Snooze 10 min — this reminder keeps coming back until the task is done"
+                                <button onClick={() => snooze(r.id, r.remind_interval_min || 10)}
+                                        title={`Snooze ${r.remind_interval_min || 10} min — reminder keeps returning until the task is done`}
                                         className="p-1 rounded-lg hover:bg-app-border/50 transition-all"
                                         style={{ color: pColor }}>
                                     <Clock size={13} />
@@ -177,21 +173,21 @@ export function TaskReminderPopup() {
                             )}
                             <div className="flex items-center gap-1.5 flex-wrap">
                                 {link && (
-                                    <Link href={link.href} onClick={() => snooze(r.id)}
+                                    <Link href={link.href} onClick={() => snooze(r.id, r.remind_interval_min || 10)}
                                           className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
                                           style={{ background: pColor, color: 'white' }}>
                                         <ExternalLink size={10} /> {link.label.replace(/^Open /, '')}
                                     </Link>
                                 )}
-                                <Link href={`/workspace/tasks?focus=${r.id}`} onClick={() => snooze(r.id)}
+                                <Link href={`/workspace/tasks?focus=${r.id}`} onClick={() => snooze(r.id, r.remind_interval_min || 10)}
                                       className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
                                       style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                     Open task
                                 </Link>
-                                <button onClick={() => snooze(r.id)}
+                                <button onClick={() => snooze(r.id, r.remind_interval_min || 10)}
                                         className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all"
                                         style={{ background: 'transparent', color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
-                                    <Clock size={10} /> 10 min
+                                    <Clock size={10} /> {formatInterval(r.remind_interval_min || 10)}
                                 </button>
                             </div>
                         </div>

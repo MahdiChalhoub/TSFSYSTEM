@@ -1,32 +1,26 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useEffect, useTransition, useMemo, useCallback } from "react"
+import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
 import {
     getDataQuality, getProductsForMaintenance, getMaintenanceFilterOptions,
-    bulkUpdateProducts, generateBarcodes, type ProductUpdate
-} from "@/app/actions/inventory/data-quality"
-import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select"
-import {
-    Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+    bulkUpdateProducts, generateBarcodes, type ProductUpdate,
+} from '@/app/actions/inventory/data-quality'
 import {
     Search, Barcode, AlertTriangle, CheckCircle2, Package2, Tag,
     Layers, DollarSign, Percent, Save, Loader2, ScanBarcode,
-    Wrench, ArrowLeft, RefreshCw, Filter
-} from "lucide-react"
-import Link from "next/link"
+    Wrench, ArrowLeft, RefreshCw, Filter, X, Check, Package, Sparkles,
+} from 'lucide-react'
+import Link from 'next/link'
 
-// ─── Types ───────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
+ *  DATA QUALITY — product-health dashboard + bulk editor
+ *  Designed on V2 tokens (var(--app-*)), matches the Categories
+ *  / Attributes aesthetic: icon-box header, click-to-filter
+ *  KPI strip, themed inline-edit table, native themed modal for
+ *  barcode-generation feedback.
+ * ═══════════════════════════════════════════════════════════ */
+
 interface Product {
     id: number
     sku: string
@@ -66,27 +60,33 @@ interface FilterOpts {
 
 type IssueFilter = 'all' | 'missing_barcode' | 'missing_category' | 'missing_brand' | 'zero_tva' | 'zero_price'
 
-// ─── Page ────────────────────────────────────────────────────────
+const ISSUE_LABEL: Record<IssueFilter, string> = {
+    all: 'All products',
+    missing_barcode: 'No barcode',
+    missing_category: 'No category',
+    missing_brand: 'No brand',
+    zero_tva: 'Zero TVA',
+    zero_price: 'No selling price',
+}
+
 export default function DataQualityPage() {
     const [quality, setQuality] = useState<DataQuality | null>(null)
     const [products, setProducts] = useState<Product[]>([])
     const [filterOpts, setFilterOpts] = useState<FilterOpts | null>(null)
     const [loading, setLoading] = useState(true)
     const [isPending, startTransition] = useTransition()
-    const [search, setSearch] = useState("")
-    const [issueFilter, setIssueFilter] = useState<IssueFilter>("all")
+    const [search, setSearch] = useState('')
+    const [issueFilter, setIssueFilter] = useState<IssueFilter>('all')
     const [selected, setSelected] = useState<Set<number>>(new Set())
     const [pendingEdits, setPendingEdits] = useState<Map<number, Partial<ProductUpdate>>>(new Map())
-    const [editDialog, setEditDialog] = useState<Product | null>(null)
     const [barcodeResult, setBarcodeResult] = useState<{ generated: number } | null>(null)
 
-    // ─── Fetch ───
     const reload = useCallback(() => {
         startTransition(async () => {
             const [q, p, f] = await Promise.all([
                 getDataQuality(),
                 getProductsForMaintenance(),
-                getMaintenanceFilterOptions()
+                getMaintenanceFilterOptions(),
             ])
             setQuality(q)
             setProducts(Array.isArray(p) ? p : p?.results || [])
@@ -100,15 +100,14 @@ export default function DataQualityPage() {
     }, [])
     useEffect(() => { reload() }, [reload])
 
-    // ─── Filter ───
     const filtered = useMemo(() => {
         let list = products
-        if (search) {
-            const s = search.toLowerCase()
+        const q = search.trim().toLowerCase()
+        if (q) {
             list = list.filter(p =>
-                p.name?.toLowerCase().includes(s) ||
-                p.sku?.toLowerCase().includes(s) ||
-                p.barcode?.toLowerCase().includes(s)
+                p.name?.toLowerCase().includes(q) ||
+                p.sku?.toLowerCase().includes(q) ||
+                p.barcode?.toLowerCase().includes(q)
             )
         }
         switch (issueFilter) {
@@ -121,8 +120,7 @@ export default function DataQualityPage() {
         return list
     }, [products, search, issueFilter])
 
-    // ─── Inline Edit ───
-    const setEdit = (productId: number, field: string, value: Record<string, any>) => {
+    const setEdit = (productId: number, field: string, value: any) => {
         setPendingEdits(prev => {
             const next = new Map(prev)
             const existing = next.get(productId) || {}
@@ -130,16 +128,13 @@ export default function DataQualityPage() {
             return next
         })
     }
-
-    const getEditValue = (productId: number, field: string, original: Record<string, any>) => {
+    const getEditValue = (productId: number, field: string, original: any) => {
         const edit = pendingEdits.get(productId)
         if (edit && field in edit) return (edit as any)[field]
         return original
     }
-
     const hasEdits = pendingEdits.size > 0
 
-    // ─── Save ───
     const handleSave = () => {
         const updates = Array.from(pendingEdits.values()) as ProductUpdate[]
         if (updates.length === 0) return
@@ -150,7 +145,6 @@ export default function DataQualityPage() {
         })
     }
 
-    // ─── Generate Barcodes ───
     const handleGenerateBarcodes = (selectedOnly: boolean) => {
         const ids = selectedOnly ? Array.from(selected) : undefined
         startTransition(async () => {
@@ -161,7 +155,6 @@ export default function DataQualityPage() {
         })
     }
 
-    // ─── Selection ───
     const toggleSelect = (id: number) => {
         setSelected(prev => {
             const next = new Set(prev)
@@ -174,7 +167,6 @@ export default function DataQualityPage() {
         else setSelected(new Set(filtered.map(p => p.id)))
     }
 
-    // ─── Data Quality Issues per product ───
     const getIssues = (p: Product) => {
         const issues: string[] = []
         if (!p.barcode) issues.push('barcode')
@@ -185,297 +177,509 @@ export default function DataQualityPage() {
         return issues
     }
 
-    if (loading) {
-        return <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
-    }
-
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <Link href="/inventory/maintenance" className="p-2 rounded-lg hover:bg-accent">
-                        <ArrowLeft className="w-4 h-4" />
-                    </Link>
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                            <Wrench className="w-6 h-6 text-orange-500" /> Product Data Quality
-                        </h1>
-                        <p className="text-muted-foreground text-sm">
-                            Find and fix missing data — barcodes, categories, prices, TVA, and more
-                        </p>
+        <div className="flex flex-col p-4 md:px-6 md:pt-6 md:pb-2 animate-in fade-in duration-300 overflow-hidden"
+            style={{ height: 'calc(100dvh - 6rem)' }}>
+
+            {/* ═══════════════ HEADER ═══════════════ */}
+            <div className="flex-shrink-0 space-y-4 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <Link href="/inventory/maintenance"
+                            className="p-2 rounded-xl transition-all"
+                            style={{
+                                color: 'var(--app-muted-foreground)',
+                                background: 'color-mix(in srgb, var(--app-border) 20%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                            }}
+                            aria-label="Back to Maintenance">
+                            <ArrowLeft size={16} />
+                        </Link>
+                        <div className="page-header-icon"
+                            style={{
+                                background: 'var(--app-warning)',
+                                boxShadow: '0 4px 14px color-mix(in srgb, var(--app-warning) 30%, transparent)',
+                            }}>
+                            <Wrench size={20} className="text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg md:text-xl font-black tracking-tight"
+                                style={{ color: 'var(--app-foreground)' }}>
+                                Product Data Quality
+                            </h1>
+                            <p className="text-tp-xs md:text-tp-sm font-bold uppercase tracking-widest"
+                                style={{ color: 'var(--app-muted-foreground)' }}>
+                                {quality ? `${quality.total_products} products audited` : 'Loading…'}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                        <button onClick={reload} disabled={isPending}
+                            className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all disabled:opacity-60"
+                            style={{
+                                color: 'var(--app-muted-foreground)',
+                                borderColor: 'var(--app-border)',
+                                background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                            }}>
+                            <RefreshCw size={13} style={{ animation: isPending ? 'spin 0.9s linear infinite' : undefined }} />
+                            <span className="hidden md:inline">Refresh</span>
+                        </button>
+                        {hasEdits && (
+                            <button onClick={handleSave} disabled={isPending}
+                                className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                style={{
+                                    background: 'var(--app-success)', color: 'white',
+                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-success) 30%, transparent)',
+                                }}>
+                                <Save size={13} />
+                                Save {pendingEdits.size} change{pendingEdits.size !== 1 ? 's' : ''}
+                            </button>
+                        )}
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={reload} disabled={isPending}>
-                        <RefreshCw className={`w-4 h-4 mr-2 ${isPending ? 'animate-spin' : ''}`} /> Refresh
-                    </Button>
-                    {hasEdits && (
-                        <Button onClick={handleSave} disabled={isPending} className="bg-green-600 hover:bg-green-700">
-                            <Save className="w-4 h-4 mr-2" /> Save {pendingEdits.size} Changes
-                        </Button>
+
+                {/* ═══ KPI STRIP — click to filter ═══ */}
+                {quality && (
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                        gap: '8px',
+                    }}>
+                        <KpiTile label="Total" value={quality.total_products}
+                            icon={<Package2 size={12} />} color="var(--app-primary)" />
+                        <KpiTile label="No Barcode" value={quality.missing_barcode}
+                            icon={<Barcode size={12} />} color="var(--app-error)"
+                            filterKey="missing_barcode" active={issueFilter === 'missing_barcode'}
+                            onClick={() => setIssueFilter(issueFilter === 'missing_barcode' ? 'all' : 'missing_barcode')}
+                            healthyColor="var(--app-success)" />
+                        <KpiTile label="No Category" value={quality.missing_category}
+                            icon={<Layers size={12} />} color="var(--app-warning)"
+                            filterKey="missing_category" active={issueFilter === 'missing_category'}
+                            onClick={() => setIssueFilter(issueFilter === 'missing_category' ? 'all' : 'missing_category')}
+                            healthyColor="var(--app-success)" />
+                        <KpiTile label="No Brand" value={quality.missing_brand}
+                            icon={<Tag size={12} />} color="var(--app-warning)"
+                            filterKey="missing_brand" active={issueFilter === 'missing_brand'}
+                            onClick={() => setIssueFilter(issueFilter === 'missing_brand' ? 'all' : 'missing_brand')}
+                            healthyColor="var(--app-success)" />
+                        <KpiTile label="Zero TVA" value={quality.zero_tva}
+                            icon={<Percent size={12} />} color="#8b5cf6"
+                            filterKey="zero_tva" active={issueFilter === 'zero_tva'}
+                            onClick={() => setIssueFilter(issueFilter === 'zero_tva' ? 'all' : 'zero_tva')}
+                            healthyColor="var(--app-success)" />
+                        <KpiTile label="No Cost" value={quality.zero_cost_price}
+                            icon={<DollarSign size={12} />} color="var(--app-error)"
+                            healthyColor="var(--app-success)" />
+                        <KpiTile label="No Sell Price" value={quality.zero_selling_price}
+                            icon={<DollarSign size={12} />} color="var(--app-error)"
+                            filterKey="zero_price" active={issueFilter === 'zero_price'}
+                            onClick={() => setIssueFilter(issueFilter === 'zero_price' ? 'all' : 'zero_price')}
+                            healthyColor="var(--app-success)" />
+                    </div>
+                )}
+
+                {/* ═══ Toolbar: search + barcode gen ═══ */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex-1 relative min-w-[200px]">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2"
+                            style={{ color: 'var(--app-muted-foreground)' }} />
+                        <input value={search} onChange={e => setSearch(e.target.value)}
+                            placeholder="Search by name, SKU, barcode…"
+                            className="w-full pl-9 pr-3 py-2 rounded-xl text-tp-md outline-none transition-all"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                color: 'var(--app-foreground)',
+                            }} />
+                    </div>
+                    {quality && quality.missing_barcode > 0 && (
+                        <div className="flex gap-1.5">
+                            {selected.size > 0 && (
+                                <button onClick={() => handleGenerateBarcodes(true)} disabled={isPending}
+                                    className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all disabled:opacity-50"
+                                    style={{
+                                        color: 'var(--app-primary)',
+                                        borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                        background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
+                                    }}>
+                                    <ScanBarcode size={13} />
+                                    Generate ({selected.size})
+                                </button>
+                            )}
+                            <button onClick={() => handleGenerateBarcodes(false)} disabled={isPending}
+                                className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                style={{
+                                    background: 'var(--app-primary)', color: 'white',
+                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                                }}>
+                                <Sparkles size={13} />
+                                Generate all missing ({quality.missing_barcode})
+                            </button>
+                        </div>
                     )}
                 </div>
-            </div>
 
-            {/* KPI Cards */}
-            {quality && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                    <KPICard icon={<Package2 className="w-4 h-4" />} label="Total Products" value={quality.total_products} color="blue" />
-                    <KPICard
-                        icon={<Barcode className="w-4 h-4" />} label="No Barcode" value={quality.missing_barcode}
-                        color={quality.missing_barcode > 0 ? "red" : "green"} clickable
-                        onClick={() => setIssueFilter(issueFilter === 'missing_barcode' ? 'all' : 'missing_barcode')}
-                        active={issueFilter === 'missing_barcode'}
-                    />
-                    <KPICard
-                        icon={<Layers className="w-4 h-4" />} label="No Category" value={quality.missing_category}
-                        color={quality.missing_category > 0 ? "yellow" : "green"} clickable
-                        onClick={() => setIssueFilter(issueFilter === 'missing_category' ? 'all' : 'missing_category')}
-                        active={issueFilter === 'missing_category'}
-                    />
-                    <KPICard
-                        icon={<Tag className="w-4 h-4" />} label="No Brand" value={quality.missing_brand}
-                        color={quality.missing_brand > 0 ? "yellow" : "green"} clickable
-                        onClick={() => setIssueFilter(issueFilter === 'missing_brand' ? 'all' : 'missing_brand')}
-                        active={issueFilter === 'missing_brand'}
-                    />
-                    <KPICard
-                        icon={<Percent className="w-4 h-4" />} label="Zero TVA" value={quality.zero_tva}
-                        color={quality.zero_tva > 0 ? "orange" : "green"} clickable
-                        onClick={() => setIssueFilter(issueFilter === 'zero_tva' ? 'all' : 'zero_tva')}
-                        active={issueFilter === 'zero_tva'}
-                    />
-                    <KPICard
-                        icon={<DollarSign className="w-4 h-4" />} label="No Cost" value={quality.zero_cost_price}
-                        color={quality.zero_cost_price > 0 ? "red" : "green"}
-                    />
-                    <KPICard
-                        icon={<DollarSign className="w-4 h-4" />} label="No Sell Price" value={quality.zero_selling_price}
-                        color={quality.zero_selling_price > 0 ? "red" : "green"} clickable
-                        onClick={() => setIssueFilter(issueFilter === 'zero_price' ? 'all' : 'zero_price')}
-                        active={issueFilter === 'zero_price'}
-                    />
-                </div>
-            )}
-
-            {/* Action Bar */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search by name, SKU, barcode..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-                </div>
-
-                {/* Barcode Generation */}
-                {quality && quality.missing_barcode > 0 && (
-                    <div className="flex gap-2">
-                        {selected.size > 0 && (
-                            <Button variant="outline" size="sm" onClick={() => handleGenerateBarcodes(true)} disabled={isPending}>
-                                <ScanBarcode className="w-3.5 h-3.5 mr-1" /> Generate ({selected.size})
-                            </Button>
-                        )}
-                        <Button variant="outline" size="sm" onClick={() => handleGenerateBarcodes(false)} disabled={isPending}>
-                            <ScanBarcode className="w-3.5 h-3.5 mr-1" /> Generate All Missing ({quality.missing_barcode})
-                        </Button>
+                {/* ═══ Active filter chip ═══ */}
+                {issueFilter !== 'all' && (
+                    <div className="flex items-center gap-2">
+                        <Filter size={12} style={{ color: 'var(--app-muted-foreground)' }} />
+                        <button onClick={() => setIssueFilter('all')}
+                            className="flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wider px-2 py-1 rounded-lg"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                color: 'var(--app-primary)',
+                                border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                            }}>
+                            {ISSUE_LABEL[issueFilter]} <X size={11} />
+                        </button>
+                        <span className="text-tp-sm font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                            {filtered.length} product{filtered.length !== 1 ? 's' : ''}
+                        </span>
                     </div>
                 )}
             </div>
 
-            {/* Filter Badges */}
-            {issueFilter !== 'all' && (
-                <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-muted-foreground" />
-                    <Badge variant="secondary" className="cursor-pointer" onClick={() => setIssueFilter('all')}>
-                        Filtering: {issueFilter.replace('_', ' ')} ✕
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">{filtered.length} products</span>
-                </div>
-            )}
-
-            {/* Products Table */}
-            <Card>
-                <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-10">
-                                        <Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} />
-                                    </TableHead>
-                                    <TableHead>SKU</TableHead>
-                                    <TableHead className="min-w-[200px]">Name</TableHead>
-                                    <TableHead className="min-w-[140px]">Barcode</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Brand</TableHead>
-                                    <TableHead className="min-w-[80px]">TVA %</TableHead>
-                                    <TableHead className="min-w-[100px]">Cost HT</TableHead>
-                                    <TableHead className="min-w-[100px]">Sell HT</TableHead>
-                                    <TableHead className="min-w-[100px]">Sell TTC</TableHead>
-                                    <TableHead className="text-center">Issues</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filtered.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
-                                            {issueFilter !== 'all' ? 'No products with this issue — great!' : 'No products found'}
-                                        </TableCell>
-                                    </TableRow>
-                                ) : filtered.slice(0, 100).map(p => {
+            {/* ═══════════════ TABLE ═══════════════ */}
+            <div className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                }}>
+                <div className="flex-1 overflow-auto custom-scrollbar">
+                    {loading ? (
+                        <div className="h-full flex items-center justify-center py-16">
+                            <Loader2 size={20} className="animate-spin"
+                                style={{ color: 'var(--app-primary)' }} />
+                        </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center gap-2 py-16 px-4 text-center">
+                            {issueFilter === 'all' ? (
+                                <>
+                                    <Package size={28} className="opacity-40"
+                                        style={{ color: 'var(--app-muted-foreground)' }} />
+                                    <p className="text-tp-md font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        No products
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle2 size={28}
+                                        style={{ color: 'var(--app-success)' }} />
+                                    <p className="text-tp-md font-bold" style={{ color: 'var(--app-success)' }}>
+                                        All good — no products with this issue
+                                    </p>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        <table className="w-full text-tp-sm">
+                            <thead className="sticky top-0 z-10"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-surface) 90%, transparent)',
+                                    borderBottom: '2px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                }}>
+                                <tr className="text-tp-xxs font-black uppercase tracking-widest"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                    <th className="px-3 py-2 w-10">
+                                        <Checkbox on={selected.size === filtered.length && filtered.length > 0}
+                                            onClick={toggleSelectAll} />
+                                    </th>
+                                    <th className="px-2 py-2 text-left">SKU</th>
+                                    <th className="px-2 py-2 text-left min-w-[200px]">Name</th>
+                                    <th className="px-2 py-2 text-left min-w-[140px]">Barcode</th>
+                                    <th className="px-2 py-2 text-left">Category</th>
+                                    <th className="px-2 py-2 text-left">Brand</th>
+                                    <th className="px-2 py-2 text-left min-w-[80px]">TVA %</th>
+                                    <th className="px-2 py-2 text-left min-w-[100px]">Cost HT</th>
+                                    <th className="px-2 py-2 text-left min-w-[100px]">Sell HT</th>
+                                    <th className="px-2 py-2 text-left min-w-[100px]">Sell TTC</th>
+                                    <th className="px-2 py-2 text-center">Issues</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filtered.slice(0, 100).map(p => {
                                     const issues = getIssues(p)
                                     const isEdited = pendingEdits.has(p.id)
+                                    const isSelected = selected.has(p.id)
                                     return (
-                                        <TableRow key={p.id} className={isEdited ? "bg-yellow-50/50 dark:bg-yellow-950/10" : ""}>
-                                            <TableCell>
-                                                <Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggleSelect(p.id)} />
-                                            </TableCell>
-                                            <TableCell className="font-mono text-xs text-muted-foreground">{p.sku}</TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    className="h-8 text-sm border-transparent hover:border-input focus:border-input bg-transparent"
-                                                    value={getEditValue(p.id, 'name', p.name)}
-                                                    onChange={e => setEdit(p.id, 'name', e.target.value)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
+                                        <tr key={p.id}
+                                            style={{
+                                                background: isEdited
+                                                    ? 'color-mix(in srgb, var(--app-warning) 5%, transparent)'
+                                                    : isSelected
+                                                        ? 'color-mix(in srgb, var(--app-primary) 4%, transparent)'
+                                                        : 'transparent',
+                                                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
+                                            }}>
+                                            <td className="px-3 py-1.5">
+                                                <Checkbox on={isSelected} onClick={() => toggleSelect(p.id)} />
+                                            </td>
+                                            <td className="px-2 py-1.5 font-mono text-tp-xxs"
+                                                style={{ color: 'var(--app-muted-foreground)' }}>
+                                                {p.sku}
+                                            </td>
+                                            <td className="px-2 py-1.5">
+                                                <InlineText value={getEditValue(p.id, 'name', p.name)}
+                                                    onChange={v => setEdit(p.id, 'name', v)} />
+                                            </td>
+                                            <td className="px-2 py-1.5">
                                                 {p.barcode ? (
-                                                    <span className="font-mono text-xs">{p.barcode}</span>
+                                                    <span className="font-mono text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                                                        style={{
+                                                            background: 'color-mix(in srgb, var(--app-info) 8%, transparent)',
+                                                            color: 'var(--app-info)',
+                                                        }}>
+                                                        {p.barcode}
+                                                    </span>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-red-600 border-red-200 text-xs">
-                                                        <AlertTriangle className="w-3 h-3 mr-1" /> Missing
-                                                    </Badge>
+                                                    <span className="inline-flex items-center gap-1 text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                                                        style={{
+                                                            background: 'color-mix(in srgb, var(--app-error) 10%, transparent)',
+                                                            color: 'var(--app-error)',
+                                                            border: '1px solid color-mix(in srgb, var(--app-error) 25%, transparent)',
+                                                        }}>
+                                                        <AlertTriangle size={10} /> Missing
+                                                    </span>
                                                 )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Select
-                                                    value={String(getEditValue(p.id, 'category', p.category) || '')}
-                                                    onValueChange={v => setEdit(p.id, 'category', v ? Number(v) : null)}
-                                                >
-                                                    <SelectTrigger className="h-8 text-xs border-transparent hover:border-input bg-transparent">
-                                                        <SelectValue placeholder="—" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {filterOpts?.categories.map(c => (
-                                                            <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Select
-                                                    value={String(getEditValue(p.id, 'brand', p.brand) || '')}
-                                                    onValueChange={v => setEdit(p.id, 'brand', v ? Number(v) : null)}
-                                                >
-                                                    <SelectTrigger className="h-8 text-xs border-transparent hover:border-input bg-transparent">
-                                                        <SelectValue placeholder="—" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {filterOpts?.brands.map(b => (
-                                                            <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="h-8 text-sm border-transparent hover:border-input focus:border-input bg-transparent w-20 font-mono"
-                                                    value={getEditValue(p.id, 'tva_rate', Number(p.tva_rate))}
-                                                    onChange={e => setEdit(p.id, 'tva_rate', parseFloat(e.target.value) || 0)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="h-8 text-sm border-transparent hover:border-input focus:border-input bg-transparent w-24 font-mono"
-                                                    value={getEditValue(p.id, 'cost_price_ht', Number(p.cost_price_ht))}
-                                                    onChange={e => setEdit(p.id, 'cost_price_ht', parseFloat(e.target.value) || 0)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="h-8 text-sm border-transparent hover:border-input focus:border-input bg-transparent w-24 font-mono"
-                                                    value={getEditValue(p.id, 'selling_price_ht', Number(p.selling_price_ht))}
-                                                    onChange={e => setEdit(p.id, 'selling_price_ht', parseFloat(e.target.value) || 0)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="h-8 text-sm border-transparent hover:border-input focus:border-input bg-transparent w-24 font-mono"
-                                                    value={getEditValue(p.id, 'selling_price_ttc', Number(p.selling_price_ttc))}
-                                                    onChange={e => setEdit(p.id, 'selling_price_ttc', parseFloat(e.target.value) || 0)}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="text-center">
+                                            </td>
+                                            <td className="px-2 py-1.5">
+                                                <InlineSelect value={getEditValue(p.id, 'category', p.category)}
+                                                    options={filterOpts?.categories || []}
+                                                    onChange={v => setEdit(p.id, 'category', v ? Number(v) : null)} />
+                                            </td>
+                                            <td className="px-2 py-1.5">
+                                                <InlineSelect value={getEditValue(p.id, 'brand', p.brand)}
+                                                    options={filterOpts?.brands || []}
+                                                    onChange={v => setEdit(p.id, 'brand', v ? Number(v) : null)} />
+                                            </td>
+                                            <td className="px-2 py-1.5">
+                                                <InlineNumber value={getEditValue(p.id, 'tva_rate', Number(p.tva_rate))}
+                                                    onChange={v => setEdit(p.id, 'tva_rate', v)} width={64} />
+                                            </td>
+                                            <td className="px-2 py-1.5">
+                                                <InlineNumber value={getEditValue(p.id, 'cost_price_ht', Number(p.cost_price_ht))}
+                                                    onChange={v => setEdit(p.id, 'cost_price_ht', v)} width={80} />
+                                            </td>
+                                            <td className="px-2 py-1.5">
+                                                <InlineNumber value={getEditValue(p.id, 'selling_price_ht', Number(p.selling_price_ht))}
+                                                    onChange={v => setEdit(p.id, 'selling_price_ht', v)} width={80} />
+                                            </td>
+                                            <td className="px-2 py-1.5">
+                                                <InlineNumber value={getEditValue(p.id, 'selling_price_ttc', Number(p.selling_price_ttc))}
+                                                    onChange={v => setEdit(p.id, 'selling_price_ttc', v)} width={80} />
+                                            </td>
+                                            <td className="px-2 py-1.5 text-center">
                                                 {issues.length === 0 ? (
-                                                    <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
+                                                    <CheckCircle2 size={14} className="mx-auto"
+                                                        style={{ color: 'var(--app-success)' }} />
                                                 ) : (
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
-                                                        <span className="text-xs text-yellow-600">{issues.length}</span>
-                                                    </div>
+                                                    <span className="inline-flex items-center justify-center gap-1 text-tp-xxs font-bold tabular-nums px-1.5 py-0.5 rounded-full"
+                                                        style={{
+                                                            background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)',
+                                                            color: 'var(--app-warning)',
+                                                        }}>
+                                                        <AlertTriangle size={10} /> {issues.length}
+                                                    </span>
                                                 )}
-                                            </TableCell>
-                                        </TableRow>
+                                            </td>
+                                        </tr>
                                     )
                                 })}
-                            </TableBody>
-                        </Table>
-                    </div>
-                    {filtered.length > 100 && (
-                        <div className="p-3 text-center text-sm text-muted-foreground border-t">
-                            Showing first 100 of {filtered.length} products. Use search or filters to narrow down.
-                        </div>
+                            </tbody>
+                        </table>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+                {filtered.length > 100 && (
+                    <div className="flex-shrink-0 px-3 py-2 text-tp-xs text-center font-medium"
+                        style={{
+                            color: 'var(--app-muted-foreground)',
+                            borderTop: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                        }}>
+                        Showing first 100 of {filtered.length} — refine the search or pick a filter to narrow down.
+                    </div>
+                )}
+            </div>
 
-            {/* Barcode Result Dialog */}
-            <Dialog open={!!barcodeResult} onOpenChange={() => setBarcodeResult(null)}>
-                <DialogContent className="max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <ScanBarcode className="w-5 h-5 text-green-500" /> Barcodes Generated
-                        </DialogTitle>
-                        <DialogDescription>
-                            Successfully generated {barcodeResult?.generated} EAN-13 barcodes.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button onClick={() => setBarcodeResult(null)}>Done</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* ═══ Barcode-result modal ═══ */}
+            {barcodeResult && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}
+                    onClick={e => { if (e.target === e.currentTarget) setBarcodeResult(null) }}>
+                    <div className="w-full max-w-sm rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                        style={{
+                            background: 'var(--app-surface)',
+                            border: '1px solid var(--app-border)',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+                        }}>
+                        <div className="px-5 py-3 flex items-center justify-between"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-success) 8%, var(--app-surface))',
+                                borderBottom: '1px solid var(--app-border)',
+                            }}>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                    style={{ background: 'var(--app-success)' }}>
+                                    <ScanBarcode size={14} className="text-white" />
+                                </div>
+                                <h3 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                    Barcodes generated
+                                </h3>
+                            </div>
+                            <button onClick={() => setBarcodeResult(null)}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-app-border/30">
+                                <X size={14} style={{ color: 'var(--app-muted-foreground)' }} />
+                            </button>
+                        </div>
+                        <div className="p-5">
+                            <p className="text-tp-sm" style={{ color: 'var(--app-muted-foreground)' }}>
+                                Successfully generated <strong style={{ color: 'var(--app-foreground)' }}>{barcodeResult.generated}</strong> EAN-13 barcode{barcodeResult.generated !== 1 ? 's' : ''}.
+                            </p>
+                        </div>
+                        <div className="px-5 py-3 flex justify-end"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
+                                borderTop: '1px solid var(--app-border)',
+                            }}>
+                            <button onClick={() => setBarcodeResult(null)}
+                                className="flex items-center gap-1.5 text-tp-sm font-bold uppercase tracking-wider px-4 py-2 rounded-xl"
+                                style={{
+                                    background: 'var(--app-success)', color: 'white',
+                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-success) 30%, transparent)',
+                                }}>
+                                <Check size={12} /> Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
 
-// ─── KPI Card ────────────────────────────────────────────────────
-function KPICard({ icon, label, value, color, clickable, onClick, active }: {
-    icon: React.ReactNode; label: string; value: number; color: string
-    clickable?: boolean; onClick?: () => void; active?: boolean
+/* ─── KPI tile — clickable when filterKey is set ─── */
+function KpiTile({ label, value, icon, color, filterKey, active, onClick, healthyColor }: {
+    label: string; value: number; icon: any; color: string
+    filterKey?: string; active?: boolean
+    onClick?: () => void; healthyColor?: string
 }) {
-    const colorMap: Record<string, string> = {
-        blue: 'bg-blue-50 text-blue-600 border-blue-200',
-        red: 'bg-red-50 text-red-600 border-red-200',
-        yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
-        orange: 'bg-orange-50 text-orange-600 border-orange-200',
-        green: 'bg-green-50 text-green-600 border-green-200',
-    }
+    const clickable = !!filterKey
+    const effective = value === 0 && healthyColor ? healthyColor : color
+    const Tag: any = clickable ? 'button' : 'div'
     return (
-        <Card
-            className={`${clickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''} ${active ? 'ring-2 ring-primary ring-offset-1' : ''}`}
-            onClick={clickable ? onClick : undefined}
-        >
-            <CardContent className="flex items-center gap-2 p-3">
-                <div className={`p-1.5 rounded-lg ${colorMap[color] || colorMap.blue}`}>{icon}</div>
-                <div className="min-w-0">
-                    <p className="text-[10px] text-muted-foreground truncate">{label}</p>
-                    <p className="text-lg font-bold leading-none">{value}</p>
+        <Tag onClick={onClick}
+            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all text-left ${clickable ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.99]' : ''}`}
+            style={active ? {
+                background: `color-mix(in srgb, ${effective} 14%, transparent)`,
+                border: `1.5px solid ${effective}`,
+                boxShadow: `0 2px 10px color-mix(in srgb, ${effective} 22%, transparent)`,
+            } : {
+                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+            }}>
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                    background: active ? effective : `color-mix(in srgb, ${effective} 12%, transparent)`,
+                    color: active ? 'white' : effective,
+                }}>
+                {icon}
+            </div>
+            <div className="min-w-0">
+                <div className="text-tp-xxs font-bold uppercase tracking-wider"
+                    style={{ color: active ? effective : 'var(--app-muted-foreground)' }}>
+                    {label}
                 </div>
-            </CardContent>
-        </Card>
+                <div className="text-sm font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>
+                    {value}
+                </div>
+            </div>
+            {clickable && active && (
+                <X size={11} className="ml-auto flex-shrink-0" style={{ color: effective }} />
+            )}
+        </Tag>
+    )
+}
+
+/* ─── Inline editors ─── */
+function Checkbox({ on, onClick }: { on: boolean; onClick: () => void }) {
+    return (
+        <button onClick={onClick}
+            className="w-4 h-4 rounded flex items-center justify-center transition-all flex-shrink-0"
+            style={on ? {
+                background: 'var(--app-primary)',
+                border: '1px solid var(--app-primary)', color: 'white',
+            } : {
+                background: 'var(--app-background)',
+                border: '1px solid var(--app-border)',
+            }}>
+            {on && <Check size={10} />}
+        </button>
+    )
+}
+function InlineText({ value, onChange }: { value: any; onChange: (v: string) => void }) {
+    return (
+        <input value={value ?? ''} onChange={e => onChange(e.target.value)}
+            className="w-full px-2 py-1 rounded-md text-tp-sm font-medium outline-none transition-all"
+            style={{
+                background: 'transparent',
+                border: '1px solid transparent',
+                color: 'var(--app-foreground)',
+            }}
+            onFocus={e => {
+                e.currentTarget.style.border = '1px solid var(--app-border)'
+                e.currentTarget.style.background = 'var(--app-background)'
+            }}
+            onBlur={e => {
+                e.currentTarget.style.border = '1px solid transparent'
+                e.currentTarget.style.background = 'transparent'
+            }} />
+    )
+}
+function InlineNumber({ value, onChange, width }: { value: any; onChange: (v: number) => void; width?: number }) {
+    return (
+        <input type="number" value={value ?? 0}
+            onChange={e => onChange(parseFloat(e.target.value) || 0)}
+            className="px-2 py-1 rounded-md text-tp-sm font-mono tabular-nums outline-none transition-all"
+            style={{
+                width: width ? `${width}px` : '100%',
+                background: 'transparent',
+                border: '1px solid transparent',
+                color: 'var(--app-foreground)',
+            }}
+            onFocus={e => {
+                e.currentTarget.style.border = '1px solid var(--app-border)'
+                e.currentTarget.style.background = 'var(--app-background)'
+            }}
+            onBlur={e => {
+                e.currentTarget.style.border = '1px solid transparent'
+                e.currentTarget.style.background = 'transparent'
+            }} />
+    )
+}
+function InlineSelect({ value, options, onChange }: {
+    value: any; options: { id: number; name: string }[]
+    onChange: (v: string) => void
+}) {
+    return (
+        <select value={value ?? ''} onChange={e => onChange(e.target.value)}
+            className="w-full px-2 py-1 rounded-md text-tp-sm font-medium outline-none transition-all"
+            style={{
+                background: 'transparent',
+                border: '1px solid transparent',
+                color: 'var(--app-foreground)',
+            }}
+            onFocus={e => {
+                e.currentTarget.style.border = '1px solid var(--app-border)'
+                e.currentTarget.style.background = 'var(--app-background)'
+            }}
+            onBlur={e => {
+                e.currentTarget.style.border = '1px solid transparent'
+                e.currentTarget.style.background = 'transparent'
+            }}>
+            <option value="">—</option>
+            {options.map(o => (
+                <option key={o.id} value={o.id}>{o.name}</option>
+            ))}
+        </select>
     )
 }

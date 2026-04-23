@@ -472,6 +472,11 @@ class Task(TenantModel):
     # Dates
     due_date = models.DateTimeField(null=True, blank=True)
     reminder_at = models.DateTimeField(null=True, blank=True)
+    # Sticky reminder controls — popup cannot be permanently dismissed while
+    # `remind_until_done` is True and the task is still open. `remind_interval_min`
+    # sets the snooze duration before the reminder re-fires.
+    remind_until_done = models.BooleanField(default=False)
+    remind_interval_min = models.IntegerField(default=10)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     completed_by = models.ForeignKey(

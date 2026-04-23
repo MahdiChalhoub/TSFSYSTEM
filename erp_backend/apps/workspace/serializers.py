@@ -164,6 +164,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             'assigned_to', 'assigned_to_name', 'assigned_by', 'assigned_by_name',
             'completed_by', 'completed_by_name', 'completed_at', 'completion_note',
             'require_completion_note', 'completion_checklist',
+            'remind_until_done', 'remind_interval_min',
             'points', 'due_date', 'is_overdue',
             'subtask_count', 'related_object_label', 'related_object_type', 'related_object_id',
             'created_at',

@@ -343,11 +343,19 @@ class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
             'related_object_label': t.related_object_label,
             'category_name': t.category.name if t.category else None,
             'source': t.source,
-            # When the rule asked for "keep reminding until done", the popup
-            # should not allow permanent dismissal — only snooze.
+            # Sticky reminder controls — task row wins, rule conditions are a
+            # fallback for historical rule-generated tasks that predate the
+            # per-task fields.
             'remind_until_done': bool(
-                t.auto_rule and isinstance(t.auto_rule.conditions, dict)
-                and t.auto_rule.conditions.get('remind_until_done')
+                t.remind_until_done
+                or (t.auto_rule and isinstance(t.auto_rule.conditions, dict)
+                    and t.auto_rule.conditions.get('remind_until_done'))
+            ),
+            'remind_interval_min': int(
+                t.remind_interval_min if t.remind_interval_min and t.remind_interval_min != 10
+                else (t.auto_rule.conditions.get('remind_interval_min') or 10
+                      if t.auto_rule and isinstance(t.auto_rule.conditions, dict)
+                      else 10)
             ),
         } for t in qs]
         return Response({'results': data, 'count': len(data)})

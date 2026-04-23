@@ -13,6 +13,9 @@ import {
     Calendar,
     DollarSign,
     Bell,
+    Scale,
+    Sigma,
+    Landmark,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -43,6 +46,15 @@ export const financeInProgress: MenuItem = {
     children: [
         { title: 'General Ledger', path: '/finance/ledger', icon: BookOpen },
         { title: 'Fiscal Years', path: '/finance/fiscal-years', icon: Calendar },
+        {
+            title: 'Reports',
+            icon: TrendingUp,
+            children: [
+                { title: 'Trial Balance', path: '/finance/reports/trial-balance', icon: Scale },
+                { title: 'Profit & Loss', path: '/finance/reports/pnl', icon: Sigma },
+                { title: 'Balance Sheet', path: '/finance/reports/balance-sheet', icon: Landmark },
+            ],
+        },
     ],
 };
 
