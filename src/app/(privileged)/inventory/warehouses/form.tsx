@@ -259,10 +259,10 @@ export default function WarehouseModal({
                             <typeCfg.icon size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">
+                            <h3 className="text-sm font-bold text-app-foreground">
                                 {isEditing ? 'Edit Location' : 'New Location'}
                             </h3>
-                            <p className="text-[10px] font-bold text-app-muted-foreground">
+                            <p className="text-tp-xs font-bold text-app-muted-foreground">
                                 {isEditing ? `Editing "${warehouse?.name}"` : 'Configure a new location in your hierarchy'}
                             </p>
                         </div>
@@ -278,7 +278,7 @@ export default function WarehouseModal({
 
                         {/* ── Section: Location Type ── */}
                         <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">
+                            <p className="text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground mb-2">
                                 Location Type
                             </p>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
@@ -310,8 +310,8 @@ export default function WarehouseModal({
                                                 <Icon size={14} />
                                             </div>
                                             <div className="min-w-0 text-left">
-                                                <p className={`text-[11px] font-black truncate ${selected ? 'text-app-foreground' : 'text-app-foreground/60'}`}>{lt.label}</p>
-                                                <p className="text-[8px] text-app-muted-foreground truncate">{lt.desc}</p>
+                                                <p className={`text-tp-sm font-bold truncate ${selected ? 'text-app-foreground' : 'text-app-foreground/60'}`}>{lt.label}</p>
+                                                <p className="text-tp-xxs text-app-muted-foreground truncate">{lt.desc}</p>
                                             </div>
                                             {selected && (
                                                 <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: lt.color }}>
@@ -329,12 +329,12 @@ export default function WarehouseModal({
                             className="rounded-xl p-3 sm:p-4 space-y-3"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
                         >
-                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                            <p className="text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground flex items-center gap-1.5">
                                 <GitBranch size={10} /> Identity
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-3">
                                 <div>
-                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                    <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">
                                         Name <span style={{ color: 'var(--app-error)' }}>*</span>
                                     </label>
                                     <input
@@ -342,19 +342,19 @@ export default function WarehouseModal({
                                         value={name}
                                         onChange={e => setName(e.target.value)}
                                         placeholder="e.g., Central Warehouse, Downtown Store..."
-                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 focus:ring-2 focus:ring-app-primary/10 transition-all placeholder:text-app-muted-foreground/40"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md font-medium text-app-foreground outline-none focus:border-app-primary/50 focus:ring-2 focus:ring-app-primary/10 transition-all placeholder:text-app-muted-foreground/40"
                                         autoFocus
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">Code</label>
+                                    <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">Code</label>
                                     <input
                                         type="text"
                                         value={code}
                                         onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9\-_]/g, ''))}
                                         placeholder="Auto"
-                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-mono font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md font-mono font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                     />
                                 </div>
                             </div>
@@ -362,13 +362,13 @@ export default function WarehouseModal({
                             {/* Parent (non-branch) */}
                             {locationType !== 'BRANCH' && parentOptions.length > 0 && (
                                 <div>
-                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                    <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">
                                         <Building2 size={9} className="inline mr-1" /> Parent Branch <span style={{ color: 'var(--app-error)' }}>*</span>
                                     </label>
                                     <select
                                         value={parentId}
                                         onChange={e => setParentId(e.target.value ? Number(e.target.value) : '')}
-                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
                                         required
                                     >
                                         <option value="">— Select Parent Branch —</option>
@@ -387,20 +387,20 @@ export default function WarehouseModal({
                             className="rounded-xl p-3 sm:p-4 space-y-3"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
                         >
-                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                            <p className="text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground flex items-center gap-1.5">
                                 <MapPin size={10} /> Physical Address
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                    <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">
                                         <Globe size={9} className="inline mr-1" /> Country
                                         {locationType === 'BRANCH' && <span style={{ color: 'var(--app-error)' }}> *</span>}
                                     </label>
                                     <select
                                         value={countryId}
                                         onChange={e => setCountryId(e.target.value ? Number(e.target.value) : '')}
-                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
                                     >
                                         <option value="">— Select Country —</option>
                                         {countries.map(c => (
@@ -408,18 +408,18 @@ export default function WarehouseModal({
                                         ))}
                                     </select>
                                     {locationType === 'BRANCH' && (
-                                        <p className="text-[9px] font-bold mt-1 flex items-center gap-1" style={{ color: 'var(--app-warning)' }}>
+                                        <p className="text-tp-xxs font-bold mt-1 flex items-center gap-1" style={{ color: 'var(--app-warning)' }}>
                                             ⚠ Children inherit this country
                                         </p>
                                     )}
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">City</label>
+                                    <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">City</label>
                                     {cityOptions.length > 0 ? (
                                         <select
                                             value={city}
                                             onChange={e => setCity(e.target.value)}
-                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
+                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
                                         >
                                             <option value="">— Select City —</option>
                                             {cityOptions.map(c => (
@@ -435,26 +435,26 @@ export default function WarehouseModal({
                                             onChange={e => setCity(e.target.value)}
                                             placeholder={loadingCities ? 'Loading...' : (countryId ? 'Type city name' : 'Select country first')}
                                             disabled={loadingCities}
-                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40 disabled:opacity-50"
+                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40 disabled:opacity-50"
                                         />
                                     )}
                                 </div>
                             </div>
 
                             <div>
-                                <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">Street Address</label>
+                                <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">Street Address</label>
                                 <input
                                     type="text"
                                     value={address}
                                     onChange={e => setAddress(e.target.value)}
                                     placeholder="Full street address..."
-                                    className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                    className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                    <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">
                                         <Phone size={9} className="inline mr-1" /> Phone
                                     </label>
                                     <input
@@ -463,11 +463,11 @@ export default function WarehouseModal({
                                         value={phone}
                                         onChange={e => handlePhoneChange(e.target.value)}
                                         placeholder="+961 1 234 567"
-                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-mono text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md font-mono text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                    <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">
                                         <Shield size={9} className="inline mr-1" /> VAT / Tax ID
                                     </label>
                                     <input
@@ -475,7 +475,7 @@ export default function WarehouseModal({
                                         value={vatNumber}
                                         onChange={e => handleVatChange(e.target.value)}
                                         placeholder="e.g., LB12345678"
-                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-mono text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md font-mono text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                     />
                                 </div>
                             </div>
@@ -486,7 +486,7 @@ export default function WarehouseModal({
                             className="rounded-xl p-3 sm:p-4 space-y-3"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
                         >
-                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                            <p className="text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground flex items-center gap-1.5">
                                 <Sparkles size={10} /> Settings
                             </p>
 
@@ -498,8 +498,8 @@ export default function WarehouseModal({
                                         <Sparkles size={11} />
                                     </div>
                                     <div>
-                                        <p className="text-[11px] font-bold text-app-foreground">Active</p>
-                                        <p className="text-[9px] text-app-muted-foreground">Location is visible and operational</p>
+                                        <p className="text-tp-sm font-bold text-app-foreground">Active</p>
+                                        <p className="text-tp-xxs text-app-muted-foreground">Location is visible and operational</p>
                                     </div>
                                 </div>
                                 <button
@@ -520,8 +520,8 @@ export default function WarehouseModal({
                                             <Store size={11} />
                                         </div>
                                         <div>
-                                            <p className="text-[11px] font-bold text-app-foreground">Can Sell (POS)</p>
-                                            <p className="text-[9px] text-app-muted-foreground">Products can be sold from this location</p>
+                                            <p className="text-tp-sm font-bold text-app-foreground">Can Sell (POS)</p>
+                                            <p className="text-tp-xxs text-app-muted-foreground">Products can be sold from this location</p>
                                         </div>
                                     </div>
                                     <button
@@ -541,7 +541,7 @@ export default function WarehouseModal({
                                 className="rounded-xl p-3 sm:p-4 space-y-3"
                                 style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
                             >
-                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                <p className="text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground flex items-center gap-1.5">
                                     <FileText size={10} /> Tax Engine
                                 </p>
 
@@ -569,8 +569,8 @@ export default function WarehouseModal({
                                                     {selected ? <Check size={10} /> : <FileText size={10} />}
                                                 </div>
                                                 <div className="text-left min-w-0">
-                                                    <p className={`text-[10px] font-bold ${selected ? 'text-app-foreground' : 'text-app-foreground/50'}`}>{cfg.label}</p>
-                                                    <p className="text-[8px] text-app-muted-foreground truncate">{cfg.desc}</p>
+                                                    <p className={`text-tp-xs font-bold ${selected ? 'text-app-foreground' : 'text-app-foreground/50'}`}>{cfg.label}</p>
+                                                    <p className="text-tp-xxs text-app-muted-foreground truncate">{cfg.desc}</p>
                                                 </div>
                                             </button>
                                         )
@@ -579,14 +579,14 @@ export default function WarehouseModal({
 
                                 {taxPolicyMode === 'CUSTOM' && (
                                     <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-                                        <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                        <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">
                                             Select Tax Policy
                                         </label>
                                         {taxPolicies.length > 0 ? (
                                             <select
                                                 value={taxPolicyId}
                                                 onChange={e => setTaxPolicyId(e.target.value ? Number(e.target.value) : '')}
-                                                className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
+                                                className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-tp-md font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
                                             >
                                                 <option value="">— Select Policy —</option>
                                                 {taxPolicies.map(p => (
@@ -594,7 +594,7 @@ export default function WarehouseModal({
                                                 ))}
                                             </select>
                                         ) : (
-                                            <p className="text-[10px] text-app-muted-foreground italic">
+                                            <p className="text-tp-xs text-app-muted-foreground italic">
                                                 No tax policies available. Configure them in Settings → Tax Engine.
                                             </p>
                                         )}
@@ -609,10 +609,10 @@ export default function WarehouseModal({
                                 className="rounded-xl p-3 sm:p-4 space-y-3"
                                 style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
                             >
-                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                <p className="text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground flex items-center gap-1.5">
                                     <Share2 size={10} /> Product Sharing
                                 </p>
-                                <p className="text-[9px] text-app-muted-foreground -mt-1">
+                                <p className="text-tp-xxs text-app-muted-foreground -mt-1">
                                     Control which branches can see and sell products from this location
                                 </p>
 
@@ -638,7 +638,7 @@ export default function WarehouseModal({
                                                     color: opt.color,
                                                 } : { borderColor: 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: 'var(--app-muted-foreground)' }}
                                             >
-                                                <p className={`text-[10px] font-bold ${selected ? '' : 'opacity-60'}`}>{opt.label}</p>
+                                                <p className={`text-tp-xs font-bold ${selected ? '' : 'opacity-60'}`}>{opt.label}</p>
                                             </button>
                                         )
                                     })}
@@ -646,7 +646,7 @@ export default function WarehouseModal({
 
                                 {sharingScope === 'SELECTED' && (
                                     <div className="animate-in fade-in slide-in-from-top-1 duration-150 space-y-2">
-                                        <label className="text-[10px] font-bold text-app-muted-foreground block">
+                                        <label className="text-tp-xs font-bold text-app-muted-foreground block">
                                             Select Target Branches
                                         </label>
                                         {allBranches.filter(b => b.id !== warehouse?.id).length > 0 ? (
@@ -675,7 +675,7 @@ export default function WarehouseModal({
                                                             }`}>
                                                                 {checked && <Check size={9} />}
                                                             </div>
-                                                            <span className={`text-[11px] font-bold truncate ${checked ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>
+                                                            <span className={`text-tp-sm font-bold truncate ${checked ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>
                                                                 {b.name}
                                                             </span>
                                                         </button>
@@ -683,7 +683,7 @@ export default function WarehouseModal({
                                                 })}
                                             </div>
                                         ) : (
-                                            <p className="text-[10px] text-app-muted-foreground italic">
+                                            <p className="text-tp-xs text-app-muted-foreground italic">
                                                 No other branches available to share with.
                                             </p>
                                         )}
@@ -698,7 +698,7 @@ export default function WarehouseModal({
                                 className="rounded-xl p-3 sm:p-4 space-y-3"
                                 style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
                             >
-                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                <p className="text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground flex items-center gap-1.5">
                                     <Building2 size={10} /> Auto-Create Child Locations
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -709,8 +709,8 @@ export default function WarehouseModal({
                                                 <Store size={11} />
                                             </div>
                                             <div>
-                                                <p className="text-[11px] font-bold text-app-foreground">Main Store</p>
-                                                <p className="text-[8px] text-app-muted-foreground">POS point</p>
+                                                <p className="text-tp-sm font-bold text-app-foreground">Main Store</p>
+                                                <p className="text-tp-xxs text-app-muted-foreground">POS point</p>
                                             </div>
                                         </div>
                                         <button
@@ -728,8 +728,8 @@ export default function WarehouseModal({
                                                 <Warehouse size={11} />
                                             </div>
                                             <div>
-                                                <p className="text-[11px] font-bold text-app-foreground">Main Warehouse</p>
-                                                <p className="text-[8px] text-app-muted-foreground">Storage hub</p>
+                                                <p className="text-tp-sm font-bold text-app-foreground">Main Warehouse</p>
+                                                <p className="text-tp-xxs text-app-muted-foreground">Storage hub</p>
                                             </div>
                                         </div>
                                         <button
@@ -747,7 +747,7 @@ export default function WarehouseModal({
                         {/* ── Error ── */}
                         {error && (
                             <div
-                                className="rounded-xl px-4 py-2.5 text-[11px] font-bold flex items-center gap-2"
+                                className="rounded-xl px-4 py-2.5 text-tp-sm font-bold flex items-center gap-2"
                                 style={{
                                     background: 'color-mix(in srgb, var(--app-error) 8%, transparent)',
                                     border: '1px solid color-mix(in srgb, var(--app-error) 25%, transparent)',
@@ -766,14 +766,14 @@ export default function WarehouseModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-xl text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"
+                            className="px-4 py-2 rounded-xl text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isPending}
-                            className="px-5 py-2 rounded-xl text-[11px] font-bold text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex items-center gap-1.5"
+                            className="px-5 py-2 rounded-xl text-tp-sm font-bold text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex items-center gap-1.5"
                             style={{
                                 background: typeCfg.color,
                                 boxShadow: `0 2px 8px color-mix(in srgb, ${typeCfg.color} 25%, transparent)`,

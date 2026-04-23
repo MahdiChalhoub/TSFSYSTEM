@@ -414,84 +414,42 @@ export default function RichOverviewPage() {
                     {/* ═════════════════ ME TAB ═════════════════ */}
                     {tab === 'me' && meStats && (
                         <>
-                            {/* Hero: compact agenda + streak ring */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(240px, 1fr)', gap: '12px' }}
-                                 className="md:grid-cols-[2fr_1fr] grid-cols-1">
-                                {/* Today's agenda — max 3 items */}
-                                <div className="p-3 rounded-2xl"
-                                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Sparkles size={12} style={{ color: 'var(--app-primary)' }} />
-                                        <h2 className="text-tp-xs font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
-                                            Your agenda
-                                        </h2>
-                                        <span className="text-tp-xxs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            {agenda.length === 0 ? 'clear day' : `${agenda.length} up now`}
-                                        </span>
+                            {/* HERO — bold greeting band with gradient, no card */}
+                            <div className="rounded-2xl px-5 py-4 flex items-center gap-5 flex-wrap"
+                                 style={{
+                                     background: `linear-gradient(135deg,
+                                         color-mix(in srgb, var(--app-primary) 14%, var(--app-surface)),
+                                         color-mix(in srgb, #8b5cf6 10%, var(--app-surface)) 60%,
+                                         var(--app-surface))`,
+                                     border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                 }}>
+                                <ProgressRing size={72} stroke={8}
+                                    value={meStats.doneThisWeek} max={meStats.weeklyGoal}
+                                    color="var(--app-primary)" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-tp-xl md:text-tp-2xl font-bold leading-tight" style={{ color: 'var(--app-foreground)' }}>
+                                        {meStats.doneThisWeek === 0
+                                            ? `Let's make it a productive week, ${me?.first_name || 'friend'}.`
+                                            : meStats.doneThisWeek >= meStats.weeklyGoal
+                                                ? `You've crushed your weekly goal. 🔥`
+                                                : `${meStats.doneThisWeek} down, ${meStats.weeklyGoal - meStats.doneThisWeek} to go.`}
                                     </div>
-                                    {agenda.length === 0 ? (
-                                        <div className="py-2 flex items-center gap-3">
-                                            <CheckCircle2 size={20} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                            <div>
-                                                <div className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>No fires today.</div>
-                                                <div className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
-                                                    {meStats.openCount} open task{meStats.openCount === 1 ? '' : 's'} waiting.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-1">
-                                            {agenda.slice(0, 3).map(t => {
-                                                const pColor = PRIORITY_COLOR[t.priority]
-                                                const overdueText = t.is_overdue ? 'Overdue' : relDue(t.due_date, today)
-                                                return (
-                                                    <Link key={t.id} href={`/workspace/tasks?focus=${t.id}`}
-                                                          className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all hover:translate-x-0.5"
-                                                          style={{
-                                                              background: t.is_overdue ? 'color-mix(in srgb, var(--app-error) 6%, transparent)' : 'var(--app-bg)',
-                                                              border: `1px solid ${t.is_overdue ? 'color-mix(in srgb, var(--app-error) 25%, transparent)' : 'var(--app-border)'}`,
-                                                              borderLeft: `3px solid ${pColor}`,
-                                                          }}>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{t.title}</div>
-                                                            <div className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
-                                                                <span className="font-bold" style={{ color: t.is_overdue ? 'var(--app-error)' : pColor }}>{overdueText}</span>
-                                                                {t.category_name && <> · {t.category_name}</>}
-                                                            </div>
-                                                        </div>
-                                                        <ArrowRight size={12} style={{ color: 'var(--app-muted-foreground)' }} className="flex-shrink-0" />
-                                                    </Link>
-                                                )
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Weekly goal ring — compact */}
-                                <div className="p-3 rounded-2xl flex items-center gap-3"
-                                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <ProgressRing
-                                        size={80} stroke={8}
-                                        value={meStats.doneThisWeek}
-                                        max={meStats.weeklyGoal}
-                                        color="var(--app-primary)"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            Weekly goal
-                                        </div>
-                                        <div className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
-                                            {meStats.doneThisWeek} / {meStats.weeklyGoal}
-                                        </div>
-                                        <div className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            {meStats.pointsThisWeek > 0 ? `${meStats.pointsThisWeek} pts · ` : ''}done this week
-                                        </div>
+                                    <div className="text-tp-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {meStats.streak > 0 && <span className="font-bold" style={{ color: 'var(--app-warning, #f59e0b)' }}>🔥 {meStats.streak}-day streak · </span>}
+                                        {meStats.openCount} open · {meStats.delegatedByMe} delegated
                                     </div>
                                 </div>
+                                {agenda.length > 0 && (
+                                    <div className="px-3 py-2 rounded-xl flex items-center gap-2"
+                                         style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 12%, transparent)', color: 'var(--app-error, #ef4444)', border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>
+                                        <AlertTriangle size={14} />
+                                        <span className="text-tp-sm font-bold">{agenda.length} need attention</span>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* 4 stat cards with inline sparklines */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                            {/* 4 stat tiles — colorful, gradient-tinted, no uniform card look */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px' }}>
                                 <StatWithSpark label="Open tasks" value={meStats.openCount}
                                     color="var(--app-foreground)" Icon={Target}
                                     series={sparkline14d.map(s => s.created)} />
@@ -576,84 +534,94 @@ export default function RichOverviewPage() {
                     {/* ═════════════════ COMPANY TAB ═════════════════ */}
                     {tab === 'company' && (
                         <>
-                            {/* Row 1: health + velocity + 4 stacked KPIs */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 1fr) minmax(0, 2fr) minmax(200px, 1fr)', gap: '10px' }}>
-                                {/* Health ring — compact */}
-                                <div className="p-3 rounded-2xl flex items-center gap-3"
-                                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <ProgressRing size={80} stroke={8}
+                            {/* BRIEFING CARD — one unified hero that tells the company story in plain English */}
+                            <div className="relative overflow-hidden rounded-2xl p-5"
+                                 style={{
+                                     background: `linear-gradient(135deg,
+                                         color-mix(in srgb, ${companyStats.healthScore >= 75 ? 'var(--app-success, #22c55e)' : companyStats.healthScore >= 50 ? 'var(--app-warning, #f59e0b)' : 'var(--app-error, #ef4444)'} 10%, var(--app-surface)),
+                                         var(--app-surface) 55%,
+                                         color-mix(in srgb, var(--app-primary) 8%, var(--app-surface)))`,
+                                     border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                 }}>
+                                <div className="flex items-center gap-5 flex-wrap">
+                                    <ProgressRing size={88} stroke={10}
                                         value={companyStats.healthScore} max={100}
                                         color={companyStats.healthScore >= 75 ? 'var(--app-success, #22c55e)'
                                             : companyStats.healthScore >= 50 ? 'var(--app-warning, #f59e0b)'
                                             : 'var(--app-error, #ef4444)'}
-                                        label={`${companyStats.healthScore}`} sublabel="/ 100" />
-                                    <div className="min-w-0">
-                                        <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Health</div>
-                                        <div className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
-                                            {companyStats.healthScore >= 75 ? 'Smooth'
-                                             : companyStats.healthScore >= 50 ? 'Watchlist'
-                                             : 'Attention'}
+                                        label={`${companyStats.healthScore}`} sublabel="Health" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-tp-xl font-bold leading-tight" style={{ color: 'var(--app-foreground)' }}>
+                                            {companyStats.healthScore >= 75 ? 'Operations running smoothly.'
+                                             : companyStats.healthScore >= 50 ? 'Keeping an eye on things.'
+                                             : 'Needs your attention.'}
+                                        </div>
+                                        <div className="text-tp-sm mt-1.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            <span className="font-bold" style={{ color: 'var(--app-foreground)' }}>{companyStats.open}</span> task{companyStats.open === 1 ? '' : 's'} open
+                                            {companyStats.overdue > 0 && <> · <span className="font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>{companyStats.overdue} overdue</span></>}
+                                            {companyStats.urgent > 0 && <> · <span className="font-bold" style={{ color: 'var(--app-warning, #f59e0b)' }}>{companyStats.urgent} urgent</span></>}
+                                            {' · '}
+                                            <span className="font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>{companyStats.doneThisWeek} shipped</span> this week
+                                            {companyStats.wowPct !== 0 && (
+                                                <span className="inline-flex items-center gap-0.5 ml-1 font-bold"
+                                                      style={{ color: companyStats.wowDiff > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-error, #ef4444)' }}>
+                                                    ({companyStats.wowDiff > 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                                                    {companyStats.wowDiff > 0 ? '+' : ''}{companyStats.wowPct}%)
+                                                </span>
+                                            )}
+                                            {' · '}
+                                            <span className="font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>{companyStats.autoPct}%</span> automated
                                         </div>
                                     </div>
-                                </div>
-                                {/* Velocity chart */}
-                                <div className="p-3 rounded-2xl"
-                                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <TrendingUp size={12} style={{ color: 'var(--app-primary)' }} />
-                                        <h2 className="text-tp-xs font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
-                                            Velocity · 14d
-                                        </h2>
-                                        <div className="ml-auto text-tp-xxs flex items-center gap-2" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-success, #22c55e)' }} /> Done</span>
-                                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-muted-foreground)' }} /> Created</span>
-                                        </div>
+                                    <div className="flex-shrink-0">
+                                        <Sparkline values={sparkline14d.map(s => s.done)} color="var(--app-success, #22c55e)" width={160} height={44} />
+                                        <div className="text-tp-xxs text-center mt-1" style={{ color: 'var(--app-muted-foreground)' }}>last 14 days</div>
                                     </div>
-                                    <div style={{ maxHeight: 90 }}>
-                                        <VelocityChart data={sparkline14d} />
-                                    </div>
-                                </div>
-                                {/* 2x2 mini KPI grid */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                    <MiniKPI label="Open" value={companyStats.open} color="var(--app-foreground)" />
-                                    <MiniKPI label="Overdue" value={companyStats.overdue} color="var(--app-error, #ef4444)" />
-                                    <MiniKPI label="Done·7d" value={companyStats.doneThisWeek} color="var(--app-success, #22c55e)"
-                                        trend={{ diff: companyStats.wowDiff, pct: companyStats.wowPct }} />
-                                    <MiniKPI label="Auto" value={`${companyStats.autoPct}%`} color="var(--app-info, #3b82f6)" />
                                 </div>
                             </div>
 
-                            {/* Row 2: leaderboard + categories + urgent/unassigned */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
-                                <MiniKPI label="Urgent" value={companyStats.urgent} color="var(--app-warning, #f59e0b)" />
-                                <MiniKPI label="Unassigned" value={companyStats.unassigned} color="#8b5cf6" />
-                            </div>
+                            {/* Zero-aware stat strip — only show cards with value > 0 */}
+                            {(companyStats.urgent > 0 || companyStats.unassigned > 0 || companyStats.overdue > 0) && (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                                    {companyStats.overdue > 0 && <MiniKPI label="Overdue" value={companyStats.overdue} color="var(--app-error, #ef4444)" />}
+                                    {companyStats.urgent > 0 && <MiniKPI label="Urgent" value={companyStats.urgent} color="var(--app-warning, #f59e0b)" />}
+                                    {companyStats.unassigned > 0 && <MiniKPI label="Unassigned" value={companyStats.unassigned} color="#8b5cf6" />}
+                                </div>
+                            )}
 
-                            {/* Row 3: fills — leaderboard + categories + compact board */}
-                            <div className="min-h-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '10px' }}>
-                                {companyStats.leaderboard.length > 0 && (
-                                    <section className="p-3 rounded-2xl flex flex-col min-h-0"
-                                             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                        <h2 className="text-tp-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5 flex-shrink-0" style={{ color: 'var(--app-foreground)' }}>
-                                            <Trophy size={11} style={{ color: 'var(--app-warning, #f59e0b)' }} /> Top performers · 7d
-                                        </h2>
-                                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-2">
+                            {/* Row fills — leaderboard + categories side-by-side lists */}
+                            <div className="min-h-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
+                                <section className="p-4 rounded-2xl flex flex-col min-h-0"
+                                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                    <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                                        <Trophy size={14} style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                        <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Top performers</span>
+                                        <span className="text-tp-xxs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>last 7 days</span>
+                                    </div>
+                                    {companyStats.leaderboard.length === 0 ? (
+                                        <div className="text-tp-sm py-4" style={{ color: 'var(--app-muted-foreground)' }}>No completions yet.</div>
+                                    ) : (
+                                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-2.5">
                                             {companyStats.leaderboard.map((r, i) => {
                                                 const maxPts = companyStats.leaderboard[0]?.points || 1
                                                 const pct = (r.points / maxPts) * 100
                                                 return (
                                                     <div key={r.user?.id ?? i}>
-                                                        <div className="flex items-center gap-2 mb-0.5">
-                                                            <span className="text-tp-xxs font-bold tabular-nums"
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-tp-xxs font-bold tabular-nums w-5 text-center"
                                                                   style={{ color: i === 0 ? 'var(--app-warning, #f59e0b)' : 'var(--app-muted-foreground)' }}>#{i + 1}</span>
+                                                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-tp-xxs font-bold flex-shrink-0"
+                                                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+                                                                {fullName(r.user).charAt(0).toUpperCase()}
+                                                            </div>
                                                             <div className="flex-1 min-w-0 text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
                                                                 {fullName(r.user)}
                                                             </div>
-                                                            <span className="text-tp-xxs tabular-nums font-bold" style={{ color: 'var(--app-foreground)' }}>
-                                                                {r.points} pts
+                                                            <span className="text-tp-xs tabular-nums font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                                                {r.points} pts · {r.done} done
                                                             </span>
                                                         </div>
-                                                        <div className="h-1 rounded-full overflow-hidden"
+                                                        <div className="h-1.5 rounded-full overflow-hidden ml-7"
                                                              style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                                                             <div className="h-full rounded-full"
                                                                  style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #8b5cf6))' }} />
@@ -662,26 +630,31 @@ export default function RichOverviewPage() {
                                                 )
                                             })}
                                         </div>
-                                    </section>
-                                )}
-                                {companyStats.topCategories.length > 0 && (
-                                    <section className="p-3 rounded-2xl flex flex-col min-h-0"
-                                             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                        <h2 className="text-tp-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5 flex-shrink-0" style={{ color: 'var(--app-foreground)' }}>
-                                            <Target size={11} style={{ color: 'var(--app-primary)' }} /> Biggest categories
-                                        </h2>
-                                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-2">
+                                    )}
+                                </section>
+
+                                <section className="p-4 rounded-2xl flex flex-col min-h-0"
+                                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                                    <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                                        <Target size={14} style={{ color: 'var(--app-primary)' }} />
+                                        <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Biggest categories</span>
+                                        <span className="text-tp-xxs ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>open tasks</span>
+                                    </div>
+                                    {companyStats.topCategories.length === 0 ? (
+                                        <div className="text-tp-sm py-4" style={{ color: 'var(--app-muted-foreground)' }}>No categorised work yet.</div>
+                                    ) : (
+                                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-2.5">
                                             {companyStats.topCategories.map(([name, count]) => {
                                                 const pct = companyStats.open > 0 ? (count / companyStats.open) * 100 : 0
                                                 return (
                                                     <div key={name}>
-                                                        <div className="flex items-center justify-between mb-0.5">
+                                                        <div className="flex items-center justify-between mb-1">
                                                             <span className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{name}</span>
                                                             <span className="text-tp-xxs font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
                                                                 {count} · {pct.toFixed(0)}%
                                                             </span>
                                                         </div>
-                                                        <div className="h-1 rounded-full overflow-hidden"
+                                                        <div className="h-1.5 rounded-full overflow-hidden"
                                                              style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                                                             <div className="h-full rounded-full"
                                                                  style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #8b5cf6))' }} />
@@ -690,8 +663,8 @@ export default function RichOverviewPage() {
                                                 )
                                             })}
                                         </div>
-                                    </section>
-                                )}
+                                    )}
+                                </section>
                             </div>
                         </>
                     )}
@@ -709,11 +682,14 @@ function MiniKPI({ label, value, color, trend }: {
     trend?: { diff: number; pct: number };
 }) {
     return (
-        <div className="px-3 py-2 rounded-xl"
-             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+        <div className="relative px-3 py-2 rounded-xl overflow-hidden"
+             style={{
+                 background: `linear-gradient(135deg, color-mix(in srgb, ${color} 10%, var(--app-surface)), var(--app-surface))`,
+                 border: `1px solid color-mix(in srgb, ${color} 20%, transparent)`,
+             }}>
             <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
             <div className="flex items-baseline gap-1.5">
-                <div className="text-tp-lg font-bold tabular-nums leading-none" style={{ color }}>{value}</div>
+                <div className="text-tp-xl font-bold tabular-nums leading-none" style={{ color }}>{value}</div>
                 {trend && (
                     <span className="text-tp-xxs font-bold flex items-center gap-0.5"
                           style={{ color: trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
@@ -752,25 +728,33 @@ function StatWithSpark({ label, value, color, Icon, series, sub, trend }: {
     trend?: { diff: number; pct: number };
 }) {
     return (
-        <div className="px-4 py-3 rounded-2xl"
-             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-            <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                     style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
-                    <Icon size={13} />
+        <div className="relative px-4 py-3 rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
+             style={{
+                 background: `linear-gradient(135deg, color-mix(in srgb, ${color} 8%, var(--app-surface)), var(--app-surface) 70%)`,
+                 border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+             }}>
+            <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full"
+                 style={{ background: `color-mix(in srgb, ${color} 10%, transparent)` }} />
+            <div className="relative flex items-center gap-2 mb-1">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                     style={{ background: color, color: 'white', boxShadow: `0 2px 8px color-mix(in srgb, ${color} 35%, transparent)` }}>
+                    <Icon size={14} />
                 </div>
                 <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
                 {trend && (
-                    <span className="ml-auto flex items-center gap-0.5 text-tp-xxs font-bold"
-                          style={{ color: trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                    <span className="ml-auto flex items-center gap-0.5 text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                          style={{
+                              background: `color-mix(in srgb, ${trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)'} 15%, transparent)`,
+                              color: trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)',
+                          }}>
                         {trend.diff > 0 ? <TrendingUp size={10} /> : trend.diff < 0 ? <TrendingDown size={10} /> : <Minus size={10} />}
                         {trend.diff > 0 ? '+' : ''}{trend.pct}%
                     </span>
                 )}
             </div>
-            <div className="flex items-end justify-between gap-2">
+            <div className="relative flex items-end justify-between gap-2">
                 <div>
-                    <div className="text-tp-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--app-foreground)' }}>{value}</div>
+                    <div className="text-tp-3xl font-bold tabular-nums leading-none" style={{ color: 'var(--app-foreground)' }}>{value}</div>
                     {sub && <div className="text-tp-xxs mt-1" style={{ color: 'var(--app-muted-foreground)' }}>{sub}</div>}
                 </div>
                 {series && series.length > 0 && <Sparkline values={series} color={color} />}
@@ -963,10 +947,14 @@ function Board({ board, today, userMap, compact }: {
                 {(['now', 'today', 'week', 'later'] as Lane[]).map(lane => {
                     const meta = LANE_META[lane]; const items = board[lane]
                     return (
-                        <div key={lane} className="w-[260px] lg:w-auto flex flex-col rounded-xl overflow-hidden"
-                             style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                            <div className="flex items-center gap-2 px-3 py-2 flex-shrink-0 border-b" style={{ borderColor: 'var(--app-border)' }}>
-                                <span className="w-1.5 h-5 rounded-full" style={{ background: meta.color }} />
+                        <div key={lane} className="w-[260px] lg:w-auto flex flex-col rounded-2xl overflow-hidden"
+                             style={{
+                                 background: `linear-gradient(180deg, color-mix(in srgb, ${meta.color} 4%, var(--app-bg)), var(--app-bg) 80%)`,
+                                 border: `1px solid color-mix(in srgb, ${meta.color} 18%, transparent)`,
+                             }}>
+                            <div className="flex items-center gap-2 px-3 py-2.5 flex-shrink-0"
+                                 style={{ borderBottom: `1px solid color-mix(in srgb, ${meta.color} 15%, transparent)` }}>
+                                <span className="w-1.5 h-5 rounded-full" style={{ background: meta.color, boxShadow: `0 0 8px color-mix(in srgb, ${meta.color} 50%, transparent)` }} />
                                 <div className="flex-1 min-w-0">
                                     <div className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>{meta.title}</div>
                                     {!compact && <div className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>{meta.sub}</div>}

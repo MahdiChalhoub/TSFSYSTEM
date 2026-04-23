@@ -53,7 +53,7 @@ export default function CreateWarehousesPage() {
         </div>
 
         <div>
-          <h1 className="text-3xl md:text-4xl font-black theme-text">
+          <h1 className="text-3xl md:text-4xl font-bold theme-text">
             Create Warehouses
           </h1>
           <p className="theme-text-muted mt-1">

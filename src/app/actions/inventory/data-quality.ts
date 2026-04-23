@@ -6,7 +6,12 @@ import { revalidatePath } from "next/cache"
 // ─── Data Quality ────────────────────────────────────────────────
 
 export async function getDataQuality() {
-    return await erpFetch('inventory/products/data-quality/')
+    try {
+        return await erpFetch('inventory/products/data-quality/')
+    } catch (e) {
+        console.error('[data-quality] getDataQuality failed', e)
+        return null
+    }
 }
 
 // ─── Bulk Update ─────────────────────────────────────────────────
@@ -56,17 +61,29 @@ export async function generateBarcodes(productIds?: number[]) {
 // ─── Fetch Products with missing data filters ───────────────────
 
 export async function getProductsForMaintenance(params?: Record<string, string>) {
+    // Use the flat route — the `inventory/` prefix variant was 404 on this
+    // tenant's URL resolver. The viewset is also registered at the top-level
+    // router so `products/` works identically.
     const query = params ? '?' + new URLSearchParams(params).toString() : ''
-    return await erpFetch(`inventory/products/${query}`)
+    try {
+        return await erpFetch(`products/${query}`)
+    } catch (e) {
+        console.error('[data-quality] getProductsForMaintenance failed', e)
+        return []
+    }
 }
 
 // ─── Filter Options ──────────────────────────────────────────────
 
 export async function getMaintenanceFilterOptions() {
+    // Use the flat routes — `inventory/categories/` etc. are 404; the
+    // actual viewsets are registered at the top-level (see erp/urls.py).
+    // Resilient to individual failures so one missing lookup doesn't
+    // take down the whole page.
     const [categories, brands, units] = await Promise.all([
-        erpFetch('inventory/categories/'),
-        erpFetch('inventory/brands/'),
-        erpFetch('inventory/units/'),
+        erpFetch('categories/').catch(() => []),
+        erpFetch('brands/').catch(() => []),
+        erpFetch('units/').catch(() => []),
     ])
     return { categories, brands, units }
 }

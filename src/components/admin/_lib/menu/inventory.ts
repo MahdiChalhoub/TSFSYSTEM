@@ -36,6 +36,7 @@ export const inventoryInProgress: MenuItem = {
     module: 'inventory',
     stage: 'in-progress',
     children: [
+        { title: 'Warehouses', path: '/inventory/warehouses', icon: Warehouse },
         { title: 'Brands', path: '/inventory/brands', icon: Award },
         { title: 'Attributes', path: '/inventory/attributes', icon: Tags },
         { title: 'Sourcing Countries', path: '/inventory/countries', icon: Globe },

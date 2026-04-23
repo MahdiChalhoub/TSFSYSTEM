@@ -29,7 +29,13 @@ type Reminder = Pick<Task,
 
 const DISMISSED_KEY = 'tsf_dismissed_reminders_v1'
 const SNOOZE_KEY = 'tsf_snoozed_reminders_v1'
+const STICKY_KEY = 'tsf_sticky_reminders'
 const POLL_MS = 60_000
+
+function readSticky(): Record<string, boolean> {
+    if (typeof window === 'undefined') return {}
+    try { return JSON.parse(localStorage.getItem(STICKY_KEY) || '{}') } catch { return {} }
+}
 
 function readDismissed(): Record<string, number> {
     if (typeof window === 'undefined') return {}
@@ -90,10 +96,19 @@ export function TaskReminderPopup() {
     }, [fetchReminders])
 
     const now = Date.now()
-    const combined = [...testReminders, ...reminders]
+    const stickyMap = readSticky()
+    // Merge: a reminder is sticky if either the backend flag is on (rule-driven)
+    // or the user toggled it locally via TaskModal.
+    const combined = [...testReminders, ...reminders].map(r => ({
+        ...r,
+        remind_until_done: r.remind_until_done || stickyMap[String(r.id)] === true,
+    }))
     const visible = combined.filter(r => {
-        const d = dismissed[String(r.id)]
-        if (d) return false
+        // Sticky reminders cannot be permanently dismissed.
+        if (!r.remind_until_done) {
+            const d = dismissed[String(r.id)]
+            if (d) return false
+        }
         const s = snoozed[String(r.id)]
         if (s && s > now) return false
         return true

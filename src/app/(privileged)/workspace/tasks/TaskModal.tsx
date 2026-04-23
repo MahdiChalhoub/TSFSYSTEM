@@ -89,6 +89,14 @@ export default function TaskModal({
     const [checklistText, setChecklistText] = useState(
         (task?.completion_checklist || []).map(i => i.label).join('\n')
     );
+    // "Remind until done" flag — stored in localStorage per-task until we
+    // have a dedicated DB column. Survives page reloads, does NOT sync across
+    // devices/browsers (documented limitation).
+    const [remindUntilDone, setRemindUntilDone] = useState(() => {
+        if (typeof window === 'undefined' || !task?.id) return false;
+        try { return JSON.parse(localStorage.getItem('tsf_sticky_reminders') || '{}')[String(task.id)] === true; }
+        catch { return false; }
+    });
 
     // Track which chip is "open" (editor expanded inline). Only one at a time
     // so the sheet stays a clean single-column flow.
@@ -145,14 +153,24 @@ export default function TaskModal({
 
         startTransition(async () => {
             try {
+                const saveSticky = (taskId: number) => {
+                    try {
+                        const key = 'tsf_sticky_reminders';
+                        const map = JSON.parse(localStorage.getItem(key) || '{}');
+                        if (remindUntilDone) map[String(taskId)] = true;
+                        else delete map[String(taskId)];
+                        localStorage.setItem(key, JSON.stringify(map));
+                    } catch {}
+                };
                 if (isEdit) {
                     const { updateTask } = await import('@/app/actions/workspace');
                     const result = await updateTask(task!.id, data);
+                    saveSticky(task!.id);
                     onSuccess(result);
                 } else {
                     const { createTask } = await import('@/app/actions/workspace');
                     const result = await createTask(data);
-                    if (result?.id) onSuccess(result);
+                    if (result?.id) { saveSticky(result.id); onSuccess(result); }
                     else setError('Failed to create task');
                 }
             } catch { setError(isEdit ? 'Failed to update task' : 'Failed to create task'); }
@@ -491,6 +509,20 @@ export default function TaskModal({
                                 </label>
                                 <div className="text-tp-xs mt-1 ml-6" style={{ color: 'var(--app-muted-foreground)' }}>
                                     Assignee must add a completion note{checklistCount > 0 ? ' and tick every checklist item' : ''} to close.
+                                </div>
+                            </div>
+
+                            {/* Sticky reminder */}
+                            <div>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={remindUntilDone} onChange={e => setRemindUntilDone(e.target.checked)}
+                                           className="w-4 h-4 rounded" style={{ accentColor: 'var(--app-primary)' }} />
+                                    <span className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                        🔁 Remind until done
+                                    </span>
+                                </label>
+                                <div className="text-tp-xs mt-1 ml-6" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    Reminder popup keeps returning until the task is closed. Can only be snoozed, not dismissed.
                                 </div>
                             </div>
 

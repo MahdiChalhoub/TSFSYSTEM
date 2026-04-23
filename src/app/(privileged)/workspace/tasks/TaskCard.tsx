@@ -207,6 +207,21 @@ export default function TaskCard({ task: t, users, compact = false, onEdit, onQu
                             🔒 Proof required
                         </span>
                     )}
+                    {!isCompleted && typeof window !== 'undefined' && (() => {
+                        try {
+                            const sticky = JSON.parse(localStorage.getItem('tsf_sticky_reminders') || '{}');
+                            if (sticky[String(t.id)] === true) {
+                                return (
+                                    <span className="flex items-center gap-1 text-tp-xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                          style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}
+                                          title="Reminder keeps coming back until the task is closed">
+                                        🔁 Sticky reminder
+                                    </span>
+                                );
+                            }
+                        } catch {}
+                        return null;
+                    })()}
                     {t.completion_checklist && t.completion_checklist.length > 0 && !isCompleted && (() => {
                         const done = t.completion_checklist.filter(i => i.checked).length
                         const total = t.completion_checklist.length

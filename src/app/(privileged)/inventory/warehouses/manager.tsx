@@ -56,7 +56,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
                     </div>
                     <div>
                         <div className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider">Total Sites</div>
-                        <div className="text-2xl font-black text-app-foreground">{warehouses.length}</div>
+                        <div className="text-2xl font-bold text-app-foreground">{warehouses.length}</div>
                     </div>
                 </div>
                 <div className="bg-app-surface p-6 rounded-3xl border border-app-border shadow-sm flex items-center gap-4">
@@ -65,7 +65,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
                     </div>
                     <div>
                         <div className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider">Retail Stores</div>
-                        <div className="text-2xl font-black text-app-foreground">{warehouses.filter(w => w.can_sell).length}</div>
+                        <div className="text-2xl font-bold text-app-foreground">{warehouses.filter(w => w.can_sell).length}</div>
                     </div>
                 </div>
                 <div className="relative">
@@ -92,7 +92,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
                     filtered.map((wh) => (
                         <div key={wh.id} className="group bg-app-surface border border-app-border rounded-3xl p-6 hover:shadow-2xl hover:shadow-emerald-900/5 transition-all relative overflow-hidden">
                             {!wh.is_active && (
-                                <div className="absolute top-0 right-0 bg-app-surface-2 text-app-muted-foreground px-3 py-1 text-[10px] font-black uppercase rounded-bl-xl">
+                                <div className="absolute top-0 right-0 bg-app-surface-2 text-app-muted-foreground px-3 py-1 text-tp-xs font-bold uppercase rounded-bl-xl">
                                     Disabled
                                 </div>
                             )}
@@ -122,10 +122,10 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
                             </div>
 
                             <div className="mb-6">
-                                <div className="text-[10px] font-black text-app-faint uppercase tracking-widest mb-1">
+                                <div className="text-tp-xs font-bold text-app-faint uppercase tracking-wide mb-1">
                                     {wh.code || `SITE-${wh.id.toString().padStart(3, '0')}`}
                                 </div>
-                                <h3 className="text-xl font-black text-app-foreground mb-2 truncate">{wh.name}</h3>
+                                <h3 className="text-xl font-bold text-app-foreground mb-2 truncate">{wh.name}</h3>
                                 <div className="flex items-center gap-1.5 text-xs text-app-muted-foreground font-medium capitalize">
                                     <MapPin size={14} className="text-emerald-500" />
                                     {wh.site_name ? `${wh.site_name} · ${(wh.type || 'warehouse').toLowerCase()}` : `${(wh.type || 'warehouse').toLowerCase()} site`}
@@ -134,11 +134,11 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
 
                             <div className="pt-6 border-t border-gray-50 flex justify-between items-end">
                                 <div>
-                                    <div className="text-[10px] text-app-muted-foreground font-black uppercase tracking-tighter mb-1 font-mono">Stock Level</div>
-                                    <div className="text-xl font-black text-app-foreground">{wh.inventory_count || 0} <span className="text-xs text-app-faint font-bold ml-1">SKUs</span></div>
+                                    <div className="text-tp-xs text-app-muted-foreground font-bold uppercase tracking-tighter mb-1 font-mono">Stock Level</div>
+                                    <div className="text-xl font-bold text-app-foreground">{wh.inventory_count || 0} <span className="text-xs text-app-faint font-bold ml-1">SKUs</span></div>
                                 </div>
                                 {wh.can_sell && (
-                                    <div className="px-3 py-1 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-lg shadow-lg shadow-emerald-500/30">
+                                    <div className="px-3 py-1 bg-emerald-500 text-white text-tp-xxs font-bold uppercase rounded-lg shadow-lg shadow-emerald-500/30">
                                         Active Store
                                     </div>
                                 )}

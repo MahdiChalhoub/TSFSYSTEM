@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect, useDeferredValue } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteWarehouse } from '@/app/actions/inventory/warehouses'
 import { erpFetch } from '@/lib/erp-api'
@@ -103,10 +103,10 @@ function ChildRow({ node, onEdit, onDelete, onSkuClick }: {
 
             {/* Name + Badges */}
             <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
-                <span className="text-[13px] font-medium text-app-foreground truncate">{node.name}</span>
+                <span className="text-tp-lg font-medium text-app-foreground truncate">{node.name}</span>
                 {node.code && (
                     <span
-                        className="hidden md:inline font-mono text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                        className="hidden md:inline font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0"
                         style={{
                             background: 'color-mix(in srgb, var(--app-background) 60%, transparent)',
                             color: 'var(--app-foreground)',
@@ -117,7 +117,7 @@ function ChildRow({ node, onEdit, onDelete, onSkuClick }: {
                 )}
                 {node.can_sell && (
                     <span
-                        className="hidden sm:inline text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                        className="hidden sm:inline text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                         style={{
                             background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
                             color: 'var(--app-success)',
@@ -127,7 +127,7 @@ function ChildRow({ node, onEdit, onDelete, onSkuClick }: {
                 )}
                 {!node.is_active && (
                     <span
-                        className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                        className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                         style={{
                             background: 'color-mix(in srgb, var(--app-error) 10%, transparent)',
                             color: 'var(--app-error)',
@@ -139,7 +139,7 @@ function ChildRow({ node, onEdit, onDelete, onSkuClick }: {
             {/* Code Column */}
             <div className="hidden sm:flex w-16 flex-shrink-0">
                 <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    className="text-tp-xs font-bold px-1.5 py-0.5 rounded"
                     style={{
                         color: cfg.color,
                         background: `color-mix(in srgb, ${cfg.color} 8%, transparent)`,
@@ -148,24 +148,24 @@ function ChildRow({ node, onEdit, onDelete, onSkuClick }: {
             </div>
 
             {/* Type Column */}
-            <div className="hidden sm:block w-20 flex-shrink-0 text-[11px] font-bold text-app-muted-foreground">
+            <div className="hidden sm:block w-20 flex-shrink-0 text-tp-sm font-bold text-app-muted-foreground">
                 {cfg.label}
             </div>
 
             {/* City Column */}
-            <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-[10px] text-app-muted-foreground font-bold truncate">
+            <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-tp-xs text-app-muted-foreground font-bold truncate">
                 {node.city && <><MapPin size={9} />{node.city}</>}
             </div>
 
             {/* Country Column */}
             <div className="hidden lg:flex w-16 flex-shrink-0 items-center">
                 {node.country_name ? (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
                         style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 8%, transparent)' }}>
                         {node.country_iso2 || node.country_name}
                     </span>
                 ) : (
-                    <span className="text-[9px] font-bold" style={{ color: 'var(--app-warning)' }}>—</span>
+                    <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-warning)' }}>—</span>
                 )}
             </div>
 
@@ -173,7 +173,7 @@ function ChildRow({ node, onEdit, onDelete, onSkuClick }: {
             <div className="hidden sm:block w-16 text-right flex-shrink-0">
                 <button
                     onClick={(e) => { e.stopPropagation(); onSkuClick?.(node) }}
-                    className="inline-flex items-center gap-1 justify-end text-[12px] font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 justify-end text-tp-md font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
                     title="View inventory"
                 >
                     <Settings size={10} className="text-app-muted-foreground" />
@@ -243,10 +243,10 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle,
 
                 {/* Name + Badges */}
                 <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
-                    <span className="truncate text-[13px] font-bold text-app-foreground">{branch.name}</span>
+                    <span className="truncate text-tp-lg font-bold text-app-foreground">{branch.name}</span>
                     {branch.code && (
                         <span
-                            className="hidden md:inline font-mono text-[11px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                            className="hidden md:inline font-mono text-tp-sm font-bold px-1.5 py-0.5 rounded flex-shrink-0"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-background) 60%, transparent)',
                                 color: 'var(--app-foreground)',
@@ -256,7 +256,7 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle,
                         </span>
                     )}
                     <span
-                        className="hidden md:inline text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                        className="hidden md:inline text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                         style={{
                             background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
                             color: 'var(--app-success)',
@@ -268,7 +268,7 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle,
                 {/* Code Column */}
                 <div className="hidden sm:flex w-16 flex-shrink-0">
                     <span
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                        className="text-tp-xs font-bold px-1.5 py-0.5 rounded"
                         style={{
                             color: 'var(--app-success)',
                             background: 'color-mix(in srgb, var(--app-success) 8%, transparent)',
@@ -277,24 +277,24 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle,
                 </div>
 
                 {/* Type Column */}
-                <div className="hidden sm:block w-20 flex-shrink-0 text-[11px] font-bold text-app-muted-foreground">
+                <div className="hidden sm:block w-20 flex-shrink-0 text-tp-sm font-bold text-app-muted-foreground">
                     Branch
                 </div>
 
                 {/* City Column */}
-                <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-[10px] text-app-muted-foreground font-bold truncate">
+                <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-tp-xs text-app-muted-foreground font-bold truncate">
                     {branch.city && <><MapPin size={9} />{branch.city}</>}
                 </div>
 
                 {/* Country Column */}
                 <div className="hidden lg:flex w-16 flex-shrink-0 items-center">
                     {branch.country_name ? (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
                             style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 8%, transparent)' }}>
                             {branch.country_iso2 || branch.country_name}
                         </span>
                     ) : (
-                        <span className="text-[9px] font-bold flex items-center gap-0.5" style={{ color: 'var(--app-warning)' }}>
+                        <span className="text-tp-xxs font-bold flex items-center gap-0.5" style={{ color: 'var(--app-warning)' }}>
                             ⚠
                         </span>
                     )}
@@ -304,7 +304,7 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle,
                 <div className="hidden sm:block w-16 text-right flex-shrink-0">
                     <button
                         onClick={(e) => { e.stopPropagation(); onSkuClick?.(branch) }}
-                        className="inline-flex items-center gap-1 justify-end text-[12px] font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 justify-end text-tp-md font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
                         title="View inventory"
                     >
                         <Settings size={10} className="text-app-muted-foreground" />
@@ -374,14 +374,14 @@ function OrphanRow({ node, onEdit, onDelete, onSkuClick }: {
 
             {/* Name */}
             <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
-                <span className="text-[13px] font-medium text-app-foreground truncate">{node.name}</span>
+                <span className="text-tp-lg font-medium text-app-foreground truncate">{node.name}</span>
                 {node.code && (
-                    <span className="hidden md:inline font-mono text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                    <span className="hidden md:inline font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0"
                         style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', color: 'var(--app-foreground)' }}>
                         {node.code}
                     </span>
                 )}
-                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                     style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)' }}>
                     Unassigned
                 </span>
@@ -389,29 +389,29 @@ function OrphanRow({ node, onEdit, onDelete, onSkuClick }: {
 
             {/* Code */}
             <div className="hidden sm:flex w-16 flex-shrink-0">
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                <span className="text-tp-xs font-bold px-1.5 py-0.5 rounded"
                     style={{ color: cfg.color, background: `color-mix(in srgb, ${cfg.color} 8%, transparent)` }}>
                     {node.code || '—'}
                 </span>
             </div>
 
             {/* Type */}
-            <div className="hidden sm:block w-20 flex-shrink-0 text-[11px] font-bold text-app-muted-foreground">{cfg.label}</div>
+            <div className="hidden sm:block w-20 flex-shrink-0 text-tp-sm font-bold text-app-muted-foreground">{cfg.label}</div>
 
             {/* City */}
-            <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-[10px] text-app-muted-foreground font-bold truncate">
+            <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-tp-xs text-app-muted-foreground font-bold truncate">
                 {node.city && <><MapPin size={9} />{node.city}</>}
             </div>
 
             {/* Country */}
             <div className="hidden lg:flex w-16 flex-shrink-0 items-center">
                 {node.country_name ? (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
                         style={{ color: cfg.color, background: `color-mix(in srgb, ${cfg.color} 8%, transparent)` }}>
                         {node.country_iso2 || node.country_name}
                     </span>
                 ) : (
-                    <span className="text-[9px] font-bold" style={{ color: 'var(--app-warning)' }}>—</span>
+                    <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-warning)' }}>—</span>
                 )}
             </div>
 
@@ -419,7 +419,7 @@ function OrphanRow({ node, onEdit, onDelete, onSkuClick }: {
             <div className="hidden sm:block w-16 text-right flex-shrink-0">
                 <button
                     onClick={(e) => { e.stopPropagation(); onSkuClick?.(node) }}
-                    className="inline-flex items-center gap-1 justify-end text-[12px] font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 justify-end text-tp-md font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
                     title="View inventory"
                 >
                     <Settings size={10} className="text-app-muted-foreground" />
@@ -588,8 +588,8 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                             <Box size={13} className="text-white" />
                         </div>
                         <div className="min-w-0">
-                            <h3 className="text-[12px] font-black text-app-foreground truncate">{skuPanel.location?.name}</h3>
-                            <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">
+                            <h3 className="text-tp-md font-bold text-app-foreground truncate">{skuPanel.location?.name}</h3>
+                            <p className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider">
                                 {filteredItems.length} of {skuPanel.items.length} products
                             </p>
                         </div>
@@ -623,7 +623,7 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             placeholder="Search products..."
-                            className="w-full pl-8 pr-7 py-1.5 text-[11px] rounded-lg outline-none transition-all"
+                            className="w-full pl-8 pr-7 py-1.5 text-tp-sm rounded-lg outline-none transition-all"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-bg) 50%, var(--app-surface))',
                                 border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -650,7 +650,7 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                                 <button
                                     key={f.key}
                                     onClick={() => setFilterMode(f.key)}
-                                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all"
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-tp-xxs font-bold uppercase tracking-wider transition-all"
                                     style={{
                                         background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
                                         color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
@@ -668,7 +668,7 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                         <select
                             value={compareLocationId || ''}
                             onChange={e => setCompareLocationId(e.target.value ? Number(e.target.value) : null)}
-                            className="w-full text-[11px] px-2.5 py-1.5 rounded-lg outline-none"
+                            className="w-full text-tp-sm px-2.5 py-1.5 rounded-lg outline-none"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-bg) 50%, var(--app-surface))',
                                 border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -688,7 +688,7 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                     {(skuPanel.loading || loadingCompare) ? (
                         <div className="flex flex-col items-center justify-center py-16">
                             <Loader2 size={24} className="animate-spin text-app-primary mb-3" />
-                            <p className="text-[11px] font-bold text-app-muted-foreground">Loading inventory...</p>
+                            <p className="text-tp-sm font-bold text-app-muted-foreground">Loading inventory...</p>
                         </div>
                     ) : filteredItems.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -696,10 +696,10 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
                                 <Package size={20} style={{ color: 'var(--app-primary)', opacity: 0.5 }} />
                             </div>
-                            <p className="text-[12px] font-bold text-app-muted-foreground">
+                            <p className="text-tp-md font-bold text-app-muted-foreground">
                                 {searchQuery ? 'No matches' : filterMode === 'NOT_IN_OTHER' ? 'All products are shared' : 'No inventory found'}
                             </p>
-                            <p className="text-[10px] text-app-muted-foreground mt-1">
+                            <p className="text-tp-xs text-app-muted-foreground mt-1">
                                 {searchQuery ? 'Try a different search term' : filterMode === 'NOT_IN_OTHER' ? 'Every product in this location also exists in the selected location' : 'Click + to add products to this location'}
                             </p>
                         </div>
@@ -716,16 +716,16 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                                         <Package size={11} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[11px] font-bold text-app-foreground truncate">
+                                        <p className="text-tp-sm font-bold text-app-foreground truncate">
                                             {item.product_name || item.product?.name || `Product #${item.product ?? item.product_id}`}
                                         </p>
-                                        <p className="text-[8px] font-mono text-app-muted-foreground">
+                                        <p className="text-tp-xxs font-mono text-app-muted-foreground">
                                             {item.sku || item.product?.sku || ''}
                                             {item.batch_number && ` · Batch: ${item.batch_number}`}
                                         </p>
                                     </div>
                                     <div className="text-right flex-shrink-0 mr-1">
-                                        <p className="text-[12px] font-black text-app-foreground tabular-nums">
+                                        <p className="text-tp-md font-bold text-app-foreground tabular-nums">
                                             {typeof item.quantity === 'number' ? Number(item.quantity).toLocaleString() : 0}
                                         </p>
                                     </div>
@@ -746,7 +746,7 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                 </div>
 
                 {/* ── Footer Stats ── */}
-                <div className="flex-shrink-0 px-3 py-2 flex items-center justify-between text-[9px] font-bold text-app-muted-foreground"
+                <div className="flex-shrink-0 px-3 py-2 flex items-center justify-between text-tp-xxs font-bold text-app-muted-foreground"
                     style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)' }}>
                     <span>{filteredItems.length} product{filteredItems.length !== 1 ? 's' : ''}</span>
                     <span className="tabular-nums">
@@ -766,8 +766,8 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                                     <PackagePlus size={13} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-[12px] font-black text-app-foreground">Add Product</h3>
-                                    <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">
+                                    <h3 className="text-tp-md font-bold text-app-foreground">Add Product</h3>
+                                    <p className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider">
                                         to {skuPanel.location?.name}
                                     </p>
                                 </div>
@@ -788,7 +788,7 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                                     onChange={e => setPickerSearch(e.target.value)}
                                     placeholder="Search by name, SKU, barcode..."
                                     autoFocus
-                                    className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg outline-none"
+                                    className="w-full pl-8 pr-3 py-1.5 text-tp-sm rounded-lg outline-none"
                                     style={{
                                         background: 'color-mix(in srgb, var(--app-bg) 50%, var(--app-surface))',
                                         border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -803,11 +803,11 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                             {loadingProducts ? (
                                 <div className="flex flex-col items-center justify-center py-16">
                                     <Loader2 size={24} className="animate-spin text-app-success mb-3" />
-                                    <p className="text-[11px] font-bold text-app-muted-foreground">Loading products...</p>
+                                    <p className="text-tp-sm font-bold text-app-muted-foreground">Loading products...</p>
                                 </div>
                             ) : addableProducts.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                                    <p className="text-[12px] font-bold text-app-muted-foreground">
+                                    <p className="text-tp-md font-bold text-app-muted-foreground">
                                         {pickerSearch ? 'No matching products' : 'All products already assigned'}
                                     </p>
                                 </div>
@@ -825,13 +825,13 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                                             {addingProductId === p.id ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[11px] font-bold text-app-foreground truncate">{p.name}</p>
-                                            <p className="text-[8px] font-mono text-app-muted-foreground">
+                                            <p className="text-tp-sm font-bold text-app-foreground truncate">{p.name}</p>
+                                            <p className="text-tp-xxs font-mono text-app-muted-foreground">
                                                 {p.sku || p.barcode || ''}
                                                 {p.category_name && ` · ${p.category_name}`}
                                             </p>
                                         </div>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
                                             style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', color: 'var(--app-success)' }}>
                                             Add
                                         </span>
@@ -859,7 +859,15 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     const [deleteTarget, setDeleteTarget] = useState<any>(null)
     const [defaultParent, setDefaultParent] = useState<number | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
-    const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set(data.filter(w => w.location_type === 'BRANCH').map(w => w.id)))
+    // Start collapsed so we don't paint every child row on initial load.
+    // Without this, a tenant with 100 branches × 20 children = 2000+ row
+    // components mounted synchronously, locking the main thread. User can
+    // still expand all via the toolbar toggle.
+    const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
+    // Progressive render: cap visible rows on first paint, "Show more"
+    // reveals additional batches. Keeps TTI snappy even with 500+ nodes.
+    const BATCH_SIZE = 30
+    const [visibleCount, setVisibleCount] = useState<number>(BATCH_SIZE)
     const [focusMode, setFocusMode] = useState(false)
     const [activeFilter, setActiveFilter] = useState<string | null>(null)
 
@@ -881,6 +889,11 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
 
     const { branches, orphans } = useMemo(() => buildTree(data), [data])
 
+    /* ─── Reset the progressive-render window whenever the list shape
+     * changes. Otherwise switching filters would show a stale "Showing
+     * 30 of 120" label. ─── */
+    useEffect(() => { setVisibleCount(BATCH_SIZE) }, [searchQuery, activeFilter])
+
     /* ─── Keyboard shortcuts (Ctrl+K search, Ctrl+Q focus mode) ─── */
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
@@ -899,6 +912,11 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     const retailActive = data.filter(w => w.can_sell).length
     const globalSKUCount = data.reduce((sum, w) => sum + (w.inventory_count || 0), 0)
 
+    // Defer the search input so fast typing doesn't force a full
+    // re-filter + re-render on every keystroke — React 18+ scheduler
+    // interleaves the filter pass with input updates.
+    const deferredSearch = useDeferredValue(searchQuery)
+
     // Filter — composes search + KPI type filter
     const filteredBranches = useMemo(() => {
         let result = branches
@@ -908,8 +926,8 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
         } else if (activeFilter === 'RETAIL') {
             result = result.map(b => ({ ...b, children: b.children?.filter(c => c.can_sell) || [] })).filter(b => b.can_sell || (b.children?.length || 0) > 0)
         }
-        if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase()
+        if (deferredSearch.trim()) {
+            const q = deferredSearch.toLowerCase()
             result = result.filter(b => {
                 const branchMatch = b.name.toLowerCase().includes(q) || b.code?.toLowerCase().includes(q) || b.city?.toLowerCase().includes(q)
                 const childMatch = b.children?.some(c => c.name.toLowerCase().includes(q) || c.code?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))
@@ -917,19 +935,19 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
             })
         }
         return result
-    }, [branches, searchQuery, activeFilter])
+    }, [branches, deferredSearch, activeFilter])
 
     const filteredOrphans = useMemo(() => {
         let result = orphans
         if (activeFilter === 'BRANCH') { result = [] }
         else if (activeFilter === 'STORE' || activeFilter === 'WAREHOUSE' || activeFilter === 'VIRTUAL') { result = result.filter(o => o.location_type === activeFilter) }
         else if (activeFilter === 'RETAIL') { result = result.filter(o => o.can_sell) }
-        if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase()
+        if (deferredSearch.trim()) {
+            const q = deferredSearch.toLowerCase()
             result = result.filter(o => o.name.toLowerCase().includes(q) || o.code?.toLowerCase().includes(q) || o.city?.toLowerCase().includes(q))
         }
         return result
-    }, [orphans, searchQuery, activeFilter])
+    }, [orphans, deferredSearch, activeFilter])
 
     const parentOptions = data.filter(w => w.location_type === 'BRANCH').map(w => ({ id: w.id, name: w.name, country: w.country, country_name: w.country_name }))
 
@@ -993,7 +1011,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
         { label: 'Branches', value: branchCount, color: 'var(--app-success)', icon: Building2, filterKey: 'BRANCH' },
         { label: 'Stores', value: storeCount, color: 'var(--app-info)', icon: Store, filterKey: 'STORE' },
         { label: 'Warehouses', value: warehouseCount, color: 'var(--app-warning)', icon: Warehouse, filterKey: 'WAREHOUSE' },
-        { label: 'Retail', value: retailActive, color: '#8b5cf6', icon: Package, filterKey: 'RETAIL' },
+        { label: 'Retail', value: retailActive, color: 'var(--app-primary)', icon: Package, filterKey: 'RETAIL' },
         { label: 'Showing', value: filteredBranches.length + filteredOrphans.length, color: 'var(--app-muted-foreground)', icon: Search, filterKey: null },
     ]
 
@@ -1009,8 +1027,8 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--app-primary)' }}>
                                 <GitBranch size={14} className="text-white" />
                             </div>
-                            <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Locations</span>
-                            <span className="text-[10px] font-bold text-app-muted-foreground">{filteredBranches.length + filteredOrphans.length}/{totalNodes}</span>
+                            <span className="text-tp-md font-bold text-app-foreground hidden sm:inline">Locations</span>
+                            <span className="text-tp-xs font-bold text-app-muted-foreground">{filteredBranches.length + filteredOrphans.length}/{totalNodes}</span>
                         </div>
 
                         <div className="flex-1 relative">
@@ -1021,12 +1039,12 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 placeholder="Search..."
-                                className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
+                                className="w-full pl-8 pr-3 py-1.5 text-tp-md bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
                             />
                         </div>
 
                         <button onClick={handleAdd}
-                            className="flex items-center gap-1 text-[10px] font-bold bg-app-primary text-white px-2 py-1.5 rounded-lg transition-all flex-shrink-0">
+                            className="flex items-center gap-1 text-tp-xs font-bold bg-app-primary text-white px-2 py-1.5 rounded-lg transition-all flex-shrink-0">
                             <Plus size={12} /><span className="hidden sm:inline">New</span>
                         </button>
 
@@ -1044,10 +1062,10 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                                     <GitBranch size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
                                         Branch <span style={{ color: 'var(--app-primary)' }}>Hierarchy</span>
                                     </h1>
-                                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                    <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                                         {totalNodes} Locations · {branchCount} Branches · {retailActive} Retail Points
                                     </p>
                                 </div>
@@ -1056,14 +1074,14 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                             <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
                                 <button
                                     onClick={handleAdd}
-                                    className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                                    className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                                     style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                                 >
                                     <Plus size={14} />
                                     <span className="hidden sm:inline">New Location</span>
                                 </button>
                                 <button onClick={() => setFocusMode(true)} title="Focus mode — maximize tree"
-                                    className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                                    className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                     <Maximize2 size={13} />
                                 </button>
                             </div>
@@ -1097,9 +1115,9 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                                             <KIcon size={11} />
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="text-[9px] font-bold uppercase tracking-wider"
+                                            <div className="text-tp-xxs font-bold uppercase tracking-wider"
                                                 style={{ color: isActive ? c : 'var(--app-muted-foreground)' }}>{kpi.label}</div>
-                                            <div className="text-sm font-black text-app-foreground tabular-nums">{kpi.value}</div>
+                                            <div className="text-sm font-bold text-app-foreground tabular-nums">{kpi.value}</div>
                                         </div>
                                     </div>
                                 )
@@ -1116,13 +1134,13 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                     placeholder="Search by name, code, or city... (Ctrl+K)"
-                                    className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                                    className="w-full pl-9 pr-3 py-2 text-tp-md md:text-tp-lg bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
                                 />
                             </div>
 
                             <button
                                 onClick={toggleExpandAll}
-                                className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-2 rounded-xl border transition-all flex-shrink-0"
+                                className="flex items-center gap-1 text-tp-sm font-bold px-2.5 py-2 rounded-xl border transition-all flex-shrink-0"
                                 style={{
                                     background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)',
                                     color: 'var(--app-primary)',
@@ -1135,7 +1153,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
 
                             {searchQuery && (
                                 <button onClick={() => setSearchQuery('')}
-                                    className="text-[11px] font-bold px-2 py-2 rounded-xl border transition-all flex-shrink-0"
+                                    className="text-tp-sm font-bold px-2 py-2 rounded-xl border transition-all flex-shrink-0"
                                     style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 20%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
                                     <X size={13} />
                                 </button>
@@ -1148,9 +1166,9 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
             {/* ═══════════════ ACTIVE FILTER INDICATOR ═══════════════ */}
             {activeFilter && (
                 <div className="flex-shrink-0 flex items-center gap-2 mb-2 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Filtering:</span>
+                    <span className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider">Filtering:</span>
                     <span
-                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                        className="inline-flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
                         style={{
                             color: kpis.find(k => k.filterKey === activeFilter)?.color || 'var(--app-primary)',
                             background: `color-mix(in srgb, ${kpis.find(k => k.filterKey === activeFilter)?.color || 'var(--app-primary)'} 12%, transparent)`,
@@ -1161,7 +1179,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                         {kpis.find(k => k.filterKey === activeFilter)?.label || activeFilter}
                         <X size={10} />
                     </span>
-                    <span className="text-[10px] font-bold text-app-muted-foreground">
+                    <span className="text-tp-xs font-bold text-app-muted-foreground">
                         {filteredBranches.length + filteredOrphans.length} result{filteredBranches.length + filteredOrphans.length !== 1 ? 's' : ''}
                     </span>
                 </div>
@@ -1172,7 +1190,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                 style={{ background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
 
                 {/* Column Headers */}
-                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
+                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider"
                     style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
                     <div className="w-5 flex-shrink-0" />
                     <div className="w-7 flex-shrink-0" />
@@ -1216,12 +1234,12 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                         <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
                             <Search size={36} className="text-app-muted-foreground mb-3 opacity-40" />
                             <p className="text-sm font-bold text-app-muted-foreground">No matching locations</p>
-                            <p className="text-[11px] text-app-muted-foreground mt-1">Try a different search term or clear filters</p>
+                            <p className="text-tp-sm text-app-muted-foreground mt-1">Try a different search term or clear filters</p>
                         </div>
                     ) : (
                         <>
-                            {/* Branches (tree rows) */}
-                            {filteredBranches.map(branch => (
+                            {/* Branches (tree rows) — sliced for progressive render */}
+                            {filteredBranches.slice(0, visibleCount).map(branch => (
                                 <BranchRow
                                     key={branch.id}
                                     branch={branch}
@@ -1234,16 +1252,50 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                                 />
                             ))}
 
-                            {/* Orphans */}
-                            {filteredOrphans.map(node => (
-                                <OrphanRow
-                                    key={node.id}
-                                    node={node}
-                                    onEdit={(w) => { setEditingWarehouse(w); setDefaultParent(null); setIsFormOpen(true) }}
-                                    onDelete={(w) => setDeleteTarget(w)}
-                                    onSkuClick={openSkuPanel}
-                                />
-                            ))}
+                            {/* Orphans — allow a proportional slice once branches are exhausted */}
+                            {(() => {
+                                const branchesShown = Math.min(filteredBranches.length, visibleCount)
+                                const remaining = Math.max(0, visibleCount - branchesShown)
+                                return filteredOrphans.slice(0, remaining).map(node => (
+                                    <OrphanRow
+                                        key={node.id}
+                                        node={node}
+                                        onEdit={(w) => { setEditingWarehouse(w); setDefaultParent(null); setIsFormOpen(true) }}
+                                        onDelete={(w) => setDeleteTarget(w)}
+                                        onSkuClick={openSkuPanel}
+                                    />
+                                ))
+                            })()}
+
+                            {/* Show-more sentinel — cheap button, no IntersectionObserver needed */}
+                            {(() => {
+                                const totalShowable = filteredBranches.length + filteredOrphans.length
+                                const remaining = totalShowable - visibleCount
+                                if (remaining <= 0) return null
+                                return (
+                                    <div className="flex flex-col items-center gap-2 py-6">
+                                        <p className="text-tp-sm text-app-muted-foreground">
+                                            Showing {Math.min(visibleCount, totalShowable)} of {totalShowable} · rendering in batches to keep things snappy
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setVisibleCount(v => v + BATCH_SIZE)}
+                                                className="px-3 py-1.5 rounded-lg text-tp-sm font-bold bg-app-primary text-white hover:brightness-110 transition-all"
+                                            >
+                                                Show {Math.min(remaining, BATCH_SIZE)} more
+                                            </button>
+                                            {remaining > BATCH_SIZE && (
+                                                <button
+                                                    onClick={() => setVisibleCount(totalShowable)}
+                                                    className="px-3 py-1.5 rounded-lg text-tp-sm font-bold border border-app-border text-app-foreground hover:bg-app-surface transition-all"
+                                                >
+                                                    Show all {totalShowable}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })()}
                         </>
                     )}
                 </div>
@@ -1251,7 +1303,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
 
             {/* ── Footer ──────────────────────────────────────── */}
             <div
-                className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-[11px] font-bold rounded-b-2xl"
+                className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold rounded-b-2xl"
                 style={{
                     background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -1292,7 +1344,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                         </>
                     )}
                 </div>
-                <div className="tabular-nums font-black" style={{ color: 'var(--app-foreground)' }}>
+                <div className="tabular-nums font-bold" style={{ color: 'var(--app-foreground)' }}>
                     System Status: <span style={{ color: 'var(--app-success)' }}>Operational</span>
                 </div>
             </div>

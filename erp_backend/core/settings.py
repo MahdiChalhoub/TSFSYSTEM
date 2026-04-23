@@ -150,6 +150,11 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT', '5432'),
+        # ── Performance: Persistent DB connections ──────────────────
+        # Reuse connections for 10 min instead of opening/closing per request.
+        # Saves ~5-15ms per request (TCP handshake + PG auth).
+        'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '600')),
+        'CONN_HEALTH_CHECKS': True,  # Django 4.1+ — validate before reuse
     }
 }
 
