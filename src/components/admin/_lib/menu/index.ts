@@ -13,7 +13,7 @@ import {
 } from './core';
 import { financeProduction, financeInProgress, financeMain } from './finance';
 import { commercial } from './commercial';
-import { inventory, inventoryProduction, inventoryInProgress, products } from './inventory';
+import { inventory, inventoryProduction, inventoryInProgress, products, sitesWarehouses } from './inventory';
 import { crm, clientPortal, supplierPortal } from './crm';
 import { ecommerce, store } from './ecommerce';
 import { hr } from './hr';
@@ -36,6 +36,7 @@ export const MENU_ITEMS: MenuItem[] = [
     // ── Development (default) ──
     commercial,
     inventory,
+    sitesWarehouses,
     financeMain,
     crm,
     ecommerce,

@@ -2,6 +2,7 @@ import {
     Box,
     Tag,
     Warehouse,
+    Building2,
     ClipboardList,
     Bell,
     FolderTree,
@@ -44,6 +45,18 @@ export const inventoryInProgress: MenuItem = {
         { title: 'Units & Packaging', path: '/inventory/units', icon: Warehouse },
         { title: 'Packages', path: '/inventory/packages', icon: Box },
         { title: 'Packaging Rules', path: '/inventory/packaging-suggestions', icon: Sparkles },
+    ],
+};
+
+export const sitesWarehouses: MenuItem = {
+    title: 'Sites & Warehouses',
+    icon: Building2,
+    module: 'inventory',
+    children: [
+        { title: 'Warehouses', path: '/inventory/warehouses', icon: Warehouse },
+        { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
+        { title: 'Transfers', path: '/inventory/transfers' },
+        { title: 'Stock Moves', path: '/inventory/stock-moves' },
     ],
 };
 
@@ -91,9 +104,7 @@ export const inventory: MenuItem = {
                 { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
                 { title: 'Stock Count', path: '/inventory/stock-count' },
                 { title: 'Counting Sessions', path: '/inventory/counting-sessions' },
-                { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
-                { title: 'Transfers', path: '/inventory/transfers' },
-                { title: 'Stock Moves', path: '/inventory/stock-moves' },
+
                 { title: 'Inventory Movements', path: '/inventory/inventory-movements' },
                 { title: 'Stock Valuation', path: '/inventory/valuation' },
                 { title: 'Stock Matrix', path: '/inventory/stock-matrix' },
