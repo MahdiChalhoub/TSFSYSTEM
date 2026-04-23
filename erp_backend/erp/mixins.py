@@ -17,31 +17,37 @@ class AuditLogMixin:
             audit_model_name = 'Product'
     """
     audit_model_name = None  # Override in subclass, e.g., 'Product', 'ChartOfAccount'
-    audit_exclude_fields = ['password', 'token', 'secret']  # Fields to exclude from logs
+    audit_exclude_fields = {'password', 'token', 'secret'}  # Set for O(1) lookup
+    # Fields excluded from audit diffs (auto-managed metadata)
+    _AUDIT_SKIP_FIELDS = frozenset({'id', 'created_at', 'updated_at', 'modified_at'})
+
+    # Types that are natively JSON-serializable — skip json.dumps() test
+    _JSON_SAFE_TYPES = (str, int, float, bool, type(None), list, dict)
     
     def _serialize_instance(self, instance):
-        """Safely serialize instance data for logging."""
+        """Serialize instance for audit logging. Optimized: no json.dumps() per field."""
         if instance is None:
             return None
         
         data = {}
+        exclude = self.audit_exclude_fields
         for field in instance._meta.fields:
-            field_name = field.name
-            if field_name in self.audit_exclude_fields:
-                data[field_name] = '[REDACTED]'
+            name = field.name
+            if name in exclude:
+                data[name] = '[REDACTED]'
+                continue
+            if name in self._AUDIT_SKIP_FIELDS:
+                continue
+            value = getattr(instance, name, None)
+            # Fast type-based serialization (avoids json.dumps test)
+            if isinstance(value, self._JSON_SAFE_TYPES):
+                data[name] = value
+            elif hasattr(value, 'isoformat'):
+                data[name] = value.isoformat()
+            elif hasattr(value, 'pk'):
+                data[name] = str(value.pk)
             else:
-                value = getattr(instance, field_name, None)
-                # Handle special types
-                if hasattr(value, 'isoformat'):
-                    data[field_name] = value.isoformat()
-                elif hasattr(value, 'pk'):
-                    data[field_name] = str(value.pk)
-                else:
-                    try:
-                        json.dumps(value)  # Test if serializable
-                        data[field_name] = value
-                    except (TypeError, ValueError):
-                        data[field_name] = str(value)
+                data[name] = str(value)
         return data
     
     def _get_org_id(self):

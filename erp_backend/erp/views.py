@@ -125,7 +125,7 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
 # ============================================================================
 
 class UserViewSet(TenantModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.select_related('organization', 'role').all()
     serializer_class = UserSerializer
 
     @action(detail=True, methods=['post'], url_path='set-scope-pin')
@@ -811,7 +811,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 
 
 class SiteViewSet(TenantModelViewSet):
-    queryset = Site.objects.all()
+    queryset = Site.objects.select_related('organization').all()
     serializer_class = SiteSerializer
 
 
@@ -861,7 +861,7 @@ class CountryViewSet(TenantModelViewSet):
 
 
 class RoleViewSet(TenantModelViewSet):
-    queryset = Role.objects.all()
+    queryset = Role.objects.select_related('organization').all()
     serializer_class = RoleSerializer
 
 

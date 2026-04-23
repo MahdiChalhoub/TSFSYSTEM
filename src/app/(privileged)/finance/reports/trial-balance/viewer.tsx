@@ -148,18 +148,6 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
         <div className="report-print-root flex flex-col overflow-hidden relative"
             style={{ height: 'calc(100dvh - 6rem)' }}>
 
-            {/* Floating exit-focus button */}
-            {focusMode && (
-                <button onClick={() => setFocusMode(false)}
-                    className="fixed top-20 right-6 z-40 flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:scale-[1.03] animate-in fade-in slide-in-from-top-2 duration-200 print:hidden"
-                    style={{
-                        background: 'var(--app-primary)', color: 'white',
-                        boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 40%, transparent)',
-                    }}
-                    title="Exit focus mode (Ctrl+Q)">
-                    <Minimize2 size={14} /> Exit focus
-                </button>
-            )}
 
             {/* Header */}
             {!focusMode && (
@@ -197,10 +185,6 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                         <button onClick={handleRefresh} disabled={isPending} className="toolbar-btn-primary disabled:opacity-60">
                             <RefreshCcw size={13} style={{ animation: isPending ? 'spin 0.9s linear infinite' : undefined }} />
                             {isPending ? 'Updating…' : 'Refresh'}
-                        </button>
-                        <button onClick={() => setFocusMode(p => !p)}
-                            className="p-1.5 rounded-xl border border-app-border text-app-muted-foreground">
-                            {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                         </button>
                     </div>
                 </div>
@@ -281,6 +265,15 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                     className={`toolbar-btn ${hideZero ? 'text-app-muted-foreground' : 'text-app-warning border-app-warning/30 bg-app-warning/10'}`}>
                     {hideZero ? <EyeOff size={13} /> : <Eye size={13} />}
                     <span className="hidden sm:inline">Zero</span>
+                </button>
+                {/* Focus-mode toggle — always visible in the search row so
+                 *  the user has a predictable way back when focus mode is on. */}
+                <button onClick={() => setFocusMode(p => !p)}
+                    className={`toolbar-btn ${focusMode ? 'text-app-primary border-app-primary/30 bg-app-primary/10' : 'text-app-muted-foreground'}`}
+                    title={focusMode ? 'Exit focus mode (Ctrl+Q)' : 'Focus mode — hide header (Ctrl+Q)'}
+                    aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}>
+                    {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                    <span className="hidden sm:inline">{focusMode ? 'Exit focus' : 'Focus'}</span>
                 </button>
             </div>
 
