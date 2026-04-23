@@ -141,18 +141,37 @@ export async function getAccountStatement(accountId: number, filter?: { startDat
     }
 }
 
-export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolean = false, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
+export async function getTrialBalanceReport(
+    asOfDate?: Date | null,
+    fyStartDate?: Date | null,
+    scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL',
+) {
     try {
-        const query = new URLSearchParams({
-            scope,
-            as_of: asOfDate?.toISOString() || ''
-        }).toString()
+        // Send *local* YYYY-MM-DD dates so the backend treats them as
+        // business days (and upgrades as_of to end-of-day). Sending UTC
+        // ISO strings instead would silently drop the last ~24h of
+        // postings for users east of UTC.
+        const toLocalIso = (d: Date) => {
+            const y = d.getFullYear()
+            const m = String(d.getMonth() + 1).padStart(2, '0')
+            const day = String(d.getDate()).padStart(2, '0')
+            return `${y}-${m}-${day}`
+        }
+        const params: Record<string, string> = { scope }
+        if (asOfDate) params.as_of = toLocalIso(asOfDate)
+        if (fyStartDate) params.fy_start_date = toLocalIso(fyStartDate)
+        const query = new URLSearchParams(params).toString()
 
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         return serialize(result.map((acc: Record<string, any>) => ({
             ...acc,
             balance: Number(acc.rollup_balance ?? 0),
-            directBalance: Number(acc.temp_balance ?? 0)
+            directBalance: Number(acc.temp_balance ?? 0),
+            // Opening / movement split (non-zero only when fyStartDate is set)
+            opening: Number(acc.rollup_opening ?? 0),
+            movement: Number(acc.rollup_movement ?? 0),
+            directOpening: Number(acc.temp_opening ?? 0),
+            directMovement: Number(acc.temp_movement ?? 0),
         })))
     } catch (error) {
         console.error("Failed to fetch trial balance:", error)

@@ -53,17 +53,29 @@ export function useActiveFiscalYear(fiscalYears: FiscalYear[] | undefined) {
     }, [])
 
     const resolved = useMemo(() => {
-        if (fyId === 'all') return { mode: 'all' as const, fy: null, start: null, end: null }
-        const findCovering = () => {
-            const today = new Date().toISOString().split('T')[0]
-            return safe.find(f => f.start_date <= today && today <= f.end_date)
+        if (fyId === 'all') {
+            return { mode: 'all' as const, fy: null, start: null, end: null, isExplicit: true }
         }
+        // Use local-date for "today" to avoid UTC shift near midnight.
+        const d = new Date()
+        const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        const findCovering = () => safe.find(f => f.start_date <= today && today <= f.end_date)
+        const explicit = fyId != null ? safe.find(f => f.id === fyId) : null
         const fy =
-            safe.find(f => f.id === fyId) ||
+            explicit ||
             findCovering() ||
             safe.slice().sort((a, b) => (b.end_date || '').localeCompare(a.end_date || ''))[0] ||
             null
-        return { mode: 'fy' as const, fy, start: fy?.start_date ?? null, end: fy?.end_date ?? null }
+        return {
+            mode: 'fy' as const,
+            fy,
+            start: fy?.start_date ?? null,
+            end: fy?.end_date ?? null,
+            // Distinguishes a user-chosen FY from the auto-resolved default.
+            // Consumers should usually only *snap* their date state when
+            // the user made an explicit selection.
+            isExplicit: Boolean(explicit),
+        }
     }, [fyId, safe])
 
     return resolved

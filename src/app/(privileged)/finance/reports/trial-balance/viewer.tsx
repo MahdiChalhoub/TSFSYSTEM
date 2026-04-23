@@ -31,7 +31,7 @@ const ORDER = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'] as const
 export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
     initialAccounts: any[]; fiscalYears: any[]
 }) {
-    const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0])
+    const [asOfDate, setAsOfDate] = useState(todayLocalIso())
     const [accounts, setAccounts] = useState(initialAccounts)
     const [isPending, startTransition] = useTransition()
     const [mounted, setMounted] = useState(false)
@@ -45,12 +45,41 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
     const fmt = useMoneyFormatter(mounted)
     useEffect(() => { setMounted(true) }, [])
 
-    // ─── Fiscal year rule: whenever the user picks an FY (from any report),
-    // snap asOfDate to that FY's end_date so this page respects the rule. ───
+    // ─── Fiscal year rule ───
+    // When an FY is explicitly picked the report is FY-scoped:
+    //   balance = opening (carry-forward from prior years, 0 for P&L accts)
+    //           + movements inside [fy.start, as_of]
+    // The as-of date is *clamped* to the FY window — selecting a date
+    // outside the FY is not allowed because the opening wouldn't be the
+    // opening of the chosen FY.
     const activeFy = useActiveFiscalYear(fiscalYears)
+    const fyBounds = useMemo(() => {
+        if (!activeFy.isExplicit || activeFy.mode !== 'fy' || !activeFy.start || !activeFy.end) return null
+        return { start: activeFy.start as string, end: activeFy.end as string }
+    }, [activeFy.isExplicit, activeFy.mode, activeFy.start, activeFy.end])
+
     useEffect(() => {
-        if (activeFy.mode === 'fy' && activeFy.end) setAsOfDate(activeFy.end)
-    }, [activeFy.mode, activeFy.end])
+        if (!activeFy.isExplicit) return
+        if (activeFy.mode === 'all') { setAsOfDate(''); return }
+        if (activeFy.mode === 'fy' && activeFy.start && activeFy.end) {
+            // Land on the most useful date inside the FY: if today is within
+            // the FY use today; if FY is in the past use its end; if in the
+            // future use its start.
+            const t = todayLocalIso()
+            const next = t >= activeFy.start && t <= activeFy.end
+                ? t
+                : (t > activeFy.end ? activeFy.end : activeFy.start)
+            setAsOfDate(next)
+        }
+    }, [activeFy.isExplicit, activeFy.mode, activeFy.start, activeFy.end])
+
+    // Safety net: if the as-of drifts outside the FY window (stale state,
+    // URL share, etc.) snap it back in-range.
+    useEffect(() => {
+        if (!fyBounds || !asOfDate) return
+        if (asOfDate < fyBounds.start) setAsOfDate(fyBounds.start)
+        else if (asOfDate > fyBounds.end) setAsOfDate(fyBounds.end)
+    }, [fyBounds, asOfDate])
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -62,26 +91,38 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
         return () => window.removeEventListener('keydown', handler)
     }, [])
 
+    // Build the fetch argument: null when "all time" so backend drops the
+    // upper bound; otherwise a noon-local Date to avoid UTC rollover to the
+    // previous day. (The backend still upgrades as_of to end-of-day.)
+    const toFetchDate = (iso: string) => {
+        if (!iso) return null
+        const [y, m, d] = iso.split('-').map(Number)
+        return new Date(y, (m || 1) - 1, d || 1, 12, 0, 0)
+    }
+
+    const fyStartForFetch = fyBounds ? toFetchDate(fyBounds.start) : null
+
     const handleRefresh = () => {
         startTransition(async () => {
-            const d = await getTrialBalanceReport(new Date(asOfDate))
+            const d = await getTrialBalanceReport(toFetchDate(asOfDate), fyStartForFetch)
             setAccounts(d)
         })
     }
 
-    // Auto-refresh on as-of-date change (preset pick or manual). Skip the
-    // very first render since SSR already hydrated the page.
+    // Auto-refresh on as-of-date OR fy-start change (preset pick, FY
+    // switch, or manual). Skip the very first render since SSR already
+    // hydrated the page.
     const didMountRef = useRef(false)
     useEffect(() => {
         if (!didMountRef.current) { didMountRef.current = true; return }
         const t = setTimeout(() => {
             startTransition(async () => {
-                const d = await getTrialBalanceReport(new Date(asOfDate))
+                const d = await getTrialBalanceReport(toFetchDate(asOfDate), fyStartForFetch)
                 setAccounts(d)
             })
         }, 150)
         return () => clearTimeout(t)
-    }, [asOfDate])
+    }, [asOfDate, fyBounds?.start])
 
     // Subtotals per type
     const typeSubtotals = useMemo(() => {
@@ -147,7 +188,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
         })
         rows.push({ code: '', name: 'STATEMENT TOTALS', debit: totals.dr.toFixed(2), credit: totals.cr.toFixed(2) })
         exportCSV({
-            filename: `trial-balance_${asOfDate}.csv`,
+            filename: `trial-balance_${asOfDate || 'all-time'}.csv`,
             columns: [
                 { header: 'Code', get: (r: any) => r.code },
                 { header: 'Account', get: (r: any) => r.name },
@@ -184,7 +225,13 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                         <div>
                             <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Trial Balance</h1>
                             <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
-                                {rootCount} accounts · {withBalance} with balance · as of {new Date(asOfDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {rootCount} accounts · {withBalance} with balance · {
+                                    fyBounds
+                                        ? `${activeFy.fy?.name || `FY ${fyBounds.start.slice(0, 4)}`} · opening + movement thru ${new Date(asOfDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
+                                        : asOfDate
+                                            ? `cumulative as of ${new Date(asOfDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
+                                            : 'all time'
+                                }
                             </p>
                         </div>
                     </div>
@@ -261,10 +308,11 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                         {ok ? 'Balanced' : `Δ ${fmt(totals.diff)}`}
                     </span>
                 </div>
-                <PeriodPicker value={asOfDate} onChange={(v) => {
-                    if (v === asOfDate) handleRefresh() // same value → force-fetch anyway
-                    else setAsOfDate(v)                 // different → auto-refresh effect picks it up
-                }} />
+                <PeriodPicker value={asOfDate} bounds={fyBounds}
+                    onChange={(v) => {
+                        if (v === asOfDate) handleRefresh() // same value → force-fetch anyway
+                        else setAsOfDate(v)                 // different → auto-refresh effect picks it up
+                    }} />
 
                 <div className="flex-1 min-w-[180px] relative ml-auto">
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
@@ -376,7 +424,11 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
             <div className="report-only-print px-6 py-4 text-center">
                 <h2 className="report-statement-title text-3xl font-bold">Trial Balance</h2>
                 <p className="text-sm mt-1">
-                    As of {new Date(asOfDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {fyBounds
+                        ? `${activeFy.fy?.name || `FY ${fyBounds.start.slice(0, 4)}`} — opening + movement through ${new Date(asOfDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`
+                        : asOfDate
+                            ? `Cumulative as of ${new Date(asOfDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`
+                            : 'All time'}
                 </p>
             </div>
 
@@ -473,15 +525,27 @@ function FilterPill({ label, icon, count, accent, active, onClick }: any) {
 }
 
 /* ─── PeriodPicker — one chip, presets + native calendar merged ─── */
-function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function todayLocalIso() {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function PeriodPicker({ value, onChange, bounds }: {
+    value: string
+    onChange: (v: string) => void
+    bounds: { start: string; end: string } | null
+}) {
     const [open, setOpen] = useState(false)
     const btnRef = useRef<HTMLButtonElement>(null)
     const panelRef = useRef<HTMLDivElement>(null)
     const dateRef = useRef<HTMLInputElement>(null)
 
-    const iso = (d: Date) => d.toISOString().split('T')[0]
+    // Local-date ISO — avoids UTC shifting "today" to yesterday/tomorrow
+    // for users away from UTC.
+    const iso = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const now = new Date()
-    const presets = [
+    const allPresets = [
         { key: 'today', label: 'Today', date: iso(now) },
         { key: 'this_month', label: 'This month', date: iso(new Date(now.getFullYear(), now.getMonth() + 1, 0)) },
         { key: 'last_month', label: 'Last month', date: iso(new Date(now.getFullYear(), now.getMonth(), 0)) },
@@ -489,7 +553,20 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
         { key: 'last_year', label: 'Last year', date: iso(new Date(now.getFullYear() - 1, 11, 31)) },
     ] as const
 
-    const activeKey = useMemo(() => presets.find(p => p.date === value)?.key ?? 'custom', [value])
+    // When an FY is selected, only presets inside the window are offered —
+    // and the FY end is always available as an explicit preset.
+    const presets = useMemo(() => {
+        if (!bounds) return allPresets as readonly { key: string; label: string; date: string }[]
+        const inRange = (d: string) => d >= bounds.start && d <= bounds.end
+        const filtered = allPresets.filter(p => inRange(p.date))
+        return [
+            ...filtered,
+            { key: 'fy_end', label: 'FY end', date: bounds.end },
+            { key: 'fy_start', label: 'FY start', date: bounds.start },
+        ]
+    }, [bounds])
+
+    const activeKey = useMemo(() => presets.find(p => p.date === value)?.key ?? 'custom', [value, presets])
     const formatted = useMemo(() => {
         if (!value) return 'Pick a date'
         const d = new Date(value + 'T00:00:00')
@@ -512,7 +589,15 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
         }
     }, [open])
 
-    const pickDate = (v: string) => { onChange(v); setOpen(false) }
+    const pickDate = (v: string) => {
+        // When a FY is active, reject clicks that fall outside the window —
+        // opening balance semantics only make sense inside the chosen FY.
+        if (bounds && v) {
+            if (v < bounds.start) v = bounds.start
+            else if (v > bounds.end) v = bounds.end
+        }
+        onChange(v); setOpen(false)
+    }
     const openNativePicker = () => {
         const el = dateRef.current
         if (!el) return
@@ -605,10 +690,18 @@ function PeriodPicker({ value, onChange }: { value: string; onChange: (v: string
                         </span>
                     </button>
                     <input ref={dateRef} type="date" value={value}
+                        min={bounds?.start}
+                        max={bounds?.end}
                         onChange={e => pickDate(e.target.value)}
                         aria-label="Custom date"
                         className="absolute w-px h-px opacity-0 pointer-events-none"
                         tabIndex={-1} />
+                    {bounds && (
+                        <p className="px-2 pt-1.5 text-tp-xxs"
+                            style={{ color: 'var(--app-muted-foreground)' }}>
+                            Constrained to {bounds.start} → {bounds.end} (selected fiscal year)
+                        </p>
+                    )}
                 </div>
             )}
         </div>

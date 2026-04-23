@@ -1494,9 +1494,14 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
         organization = Organization.objects.get(id=organization_id)
         # Accept ALL of: as_of (single point), end_date (alias), start_date
-        # (period lower bound for P&L). Frontend sends ISO strings.
+        # (period lower bound — also accepted as `fy_start_date` for
+        # clarity from the TB caller). Frontend sends ISO strings.
         as_of = request.query_params.get('as_of') or request.query_params.get('end_date')
-        start_date = request.query_params.get('start_date') or None
+        start_date = (
+            request.query_params.get('fy_start_date')
+            or request.query_params.get('start_date')
+            or None
+        )
 
         # --- STRICT SCOPE ISOLATION ---
         from erp.middleware import get_authorized_scope
@@ -1510,7 +1515,7 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         accounts = LedgerService.get_trial_balance(
             organization, as_of, scope, site_id=site_id, start_date=start_date,
         )
-        
+
         data = []
         for acc in accounts:
             data.append({
@@ -1518,9 +1523,15 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 "code": acc.code,
                 "name": acc.name,
                 "type": acc.type,
+                # Leaf (direct) figures
                 "temp_balance": float(acc.temp_balance),
+                "temp_opening": float(getattr(acc, 'temp_opening', 0) or 0),
+                "temp_movement": float(getattr(acc, 'temp_movement', 0) or 0),
+                # Rolled-up through descendants
                 "rollup_balance": float(acc.rollup_balance),
-                "parent_id": acc.parent_id
+                "rollup_opening": float(getattr(acc, 'rollup_opening', 0) or 0),
+                "rollup_movement": float(getattr(acc, 'rollup_movement', 0) or 0),
+                "parent_id": acc.parent_id,
             })
         return Response(data)
 

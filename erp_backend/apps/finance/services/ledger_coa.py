@@ -582,6 +582,50 @@ class LedgerCOAMixin:
 
 
     @staticmethod
+    def _coerce_day_boundary(value, end=False):
+        """Normalize a date/datetime/ISO-string to a tz-aware datetime.
+
+        - `'2026-04-22'`  → 2026-04-22 23:59:59.999999 UTC  (end=True)
+        - `'2026-04-22'`  → 2026-04-22 00:00:00 UTC        (end=False)
+        - full ISO / datetime object passes through (just tz-aware).
+        - None / '' → None.
+        Prevents same-day postings from being excluded by a midnight
+        `__lte` against a DateTimeField column.
+        """
+        if value in (None, ''):
+            return None
+        import datetime as _dt
+        if isinstance(value, _dt.datetime):
+            dt = value
+        elif isinstance(value, _dt.date):
+            dt = _dt.datetime.combine(
+                value,
+                _dt.time.max if end else _dt.time.min,
+            )
+        else:
+            s = str(value).strip()
+            # Strip trailing Z and parse
+            iso = s[:-1] + '+00:00' if s.endswith('Z') else s
+            try:
+                dt = _dt.datetime.fromisoformat(iso)
+            except ValueError:
+                # date-only fallback: YYYY-MM-DD
+                try:
+                    d = _dt.date.fromisoformat(s[:10])
+                    dt = _dt.datetime.combine(d, _dt.time.max if end else _dt.time.min)
+                except ValueError:
+                    return None
+            else:
+                # If user sent date-only at midnight AND wants end-of-day,
+                # upgrade to 23:59:59.999999 so same-day entries are kept.
+                if end and dt.hour == 0 and dt.minute == 0 and dt.second == 0 and dt.microsecond == 0 and len(s) <= 10:
+                    dt = _dt.datetime.combine(dt.date(), _dt.time.max)
+        if timezone.is_naive(dt):
+            from datetime import timezone as _tz
+            dt = dt.replace(tzinfo=_tz.utc)
+        return dt
+
+    @staticmethod
     def get_trial_balance(organization, as_of_date=None, scope='INTERNAL', site_id=None,
                           start_date=None):
         """Cumulative trial balance up to `as_of_date`.
@@ -590,43 +634,88 @@ class LedgerCOAMixin:
         (entries where `start_date <= transaction_date <= as_of_date`).
         This is what the P&L caller wants — without it, "income for
         March" would actually be year-to-date through March.
+
+        `transaction_date` is a DateTimeField — callers typically send a
+        date-only `YYYY-MM-DD` string. We coerce as_of to **end-of-day**
+        and start to start-of-day so that same-day postings aren't
+        silently excluded by a midnight `__lte`.
         """
         from apps.finance.models import ChartOfAccount, JournalEntryLine
         accounts_qs = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
 
-        lines_qs = JournalEntryLine.objects.filter(organization=organization, journal_entry__status='POSTED')
-        if start_date:
-            lines_qs = lines_qs.filter(journal_entry__transaction_date__gte=start_date)
-        if as_of_date:
-            lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=as_of_date)
+        start_dt = LedgerCOAMixin._coerce_day_boundary(start_date, end=False)
+        end_dt = LedgerCOAMixin._coerce_day_boundary(as_of_date, end=True)
+
+        # Shared base queryset — applies scope / site filters once.
+        base_qs = JournalEntryLine.objects.filter(
+            organization=organization, journal_entry__status='POSTED',
+        )
         if scope == 'OFFICIAL':
-            lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+            base_qs = base_qs.filter(journal_entry__scope='OFFICIAL')
         if site_id:
-            lines_qs = lines_qs.filter(journal_entry__site_id=site_id)
-            
-        balance_map = {
-            b['account_id']: Decimal(str(b['net'] or '0')) 
-            for b in lines_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))
+            base_qs = base_qs.filter(journal_entry__site_id=site_id)
+
+        # Period movement: entries whose transaction_date falls inside the
+        # window [start_dt, end_dt]. When start_dt is None this degenerates
+        # to "everything up to end_dt" (cumulative view).
+        move_qs = base_qs
+        if start_dt is not None:
+            move_qs = move_qs.filter(journal_entry__transaction_date__gte=start_dt)
+        if end_dt is not None:
+            move_qs = move_qs.filter(journal_entry__transaction_date__lte=end_dt)
+
+        move_map = {
+            b['account_id']: Decimal(str(b['net'] or '0'))
+            for b in move_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))
         }
-        
+
+        # Opening balance (carry-forward): only meaningful when a period
+        # lower bound is supplied. For B/S accounts it is the net position
+        # *before* the period started. For P&L accounts opening is always
+        # 0 because year-end closing sweeps them into retained earnings.
+        open_map = {}
+        if start_dt is not None:
+            open_qs = base_qs.filter(journal_entry__transaction_date__lt=start_dt)
+            open_map = {
+                b['account_id']: Decimal(str(b['net'] or '0'))
+                for b in open_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))
+            }
+
+        BS_TYPES = {'ASSET', 'LIABILITY', 'EQUITY'}
+
         accounts = list(accounts_qs)
         account_map = {acc.id: acc for acc in accounts}
-        for acc in accounts: 
-            acc.temp_balance = balance_map.get(acc.id, Decimal('0'))
+        for acc in accounts:
+            opening = open_map.get(acc.id, Decimal('0')) if acc.type in BS_TYPES else Decimal('0')
+            movement = move_map.get(acc.id, Decimal('0'))
+            acc.temp_opening = opening
+            acc.temp_movement = movement
+            acc.temp_balance = opening + movement
             acc.temp_children = []
-        
+
         roots = []
         for acc in accounts:
             if acc.parent_id and acc.parent_id in account_map:
                 account_map[acc.parent_id].temp_children.append(acc)
             else:
                 roots.append(acc)
-                
+
         def rollup(node):
-            node.rollup_balance = node.temp_balance + sum(rollup(child) for child in node.temp_children)
+            child_bal = Decimal('0')
+            child_open = Decimal('0')
+            child_move = Decimal('0')
+            for c in node.temp_children:
+                rollup(c)
+                child_bal += c.rollup_balance
+                child_open += c.rollup_opening
+                child_move += c.rollup_movement
+            node.rollup_balance = node.temp_balance + child_bal
+            node.rollup_opening = node.temp_opening + child_open
+            node.rollup_movement = node.temp_movement + child_move
             return node.rollup_balance
-            
-        for root in roots: rollup(root)
+
+        for root in roots:
+            rollup(root)
         return accounts
 
 
