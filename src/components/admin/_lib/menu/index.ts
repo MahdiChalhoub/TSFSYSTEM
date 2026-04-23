@@ -2,6 +2,7 @@ import type { MenuItem } from './types';
 import {
     dashboard,
     usersAccess,
+    usersAccessInProgress,
     systemSettings,
     importMigration,
     marketplace,
@@ -31,6 +32,7 @@ export const MENU_ITEMS: MenuItem[] = [
     financeInProgress,
     inventoryInProgress,
     workspaceInProgress,
+    usersAccessInProgress,
     // ── Development (default) ──
     commercial,
     inventory,

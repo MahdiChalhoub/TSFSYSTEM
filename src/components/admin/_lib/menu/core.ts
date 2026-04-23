@@ -22,14 +22,23 @@ export const dashboard: MenuItem = {
     module: 'core',
 };
 
+export const usersAccessInProgress: MenuItem = {
+    title: 'Users & Access',
+    icon: UserCheck,
+    module: 'core',
+    stage: 'in-progress',
+    children: [
+        { title: 'All Users', path: '/access/users', icon: UserCheck },
+        { title: 'Access Roles', path: '/access/roles', icon: Shield },
+    ],
+};
+
 export const usersAccess: MenuItem = {
     title: 'Users & Access',
     icon: UserCheck,
     module: 'core',
     children: [
         { title: 'Users', path: '/users' },
-        { title: 'All Users', path: '/access/users' },
-        { title: 'Access Roles', path: '/access/roles' },
         { title: 'Client Access', path: '/access/client-access' },
         { title: 'Supplier Access', path: '/access/supplier-access' },
         { title: 'Supplier Dashboard', path: '/access/supplier-dashboard' },

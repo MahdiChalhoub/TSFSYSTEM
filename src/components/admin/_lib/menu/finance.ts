@@ -47,6 +47,15 @@ export const financeInProgress: MenuItem = {
         { title: 'General Ledger', path: '/finance/ledger', icon: BookOpen },
         { title: 'Fiscal Years', path: '/finance/fiscal-years', icon: Calendar },
         {
+            title: 'Accounts',
+            icon: Wallet,
+            children: [
+                { title: 'Accounts & Drawers', path: '/finance/accounts', icon: Wallet },
+                { title: 'Account Categories', path: '/finance/account-categories', icon: FolderTree },
+                { title: 'Opening Balances', path: '/finance/opening-balances', icon: ClipboardList },
+            ],
+        },
+        {
             title: 'Reports',
             icon: TrendingUp,
             children: [
@@ -79,11 +88,8 @@ export const financeMain: MenuItem = {
             title: 'Accounts & Ledger',
             icon: BookOpen,
             children: [
-                { title: 'Accounts & Drawers', path: '/finance/accounts' },
-                { title: 'Account Categories', path: '/finance/account-categories' },
                 { title: 'Account Book', path: '/finance/account-book' },
                 { title: 'COA Management', path: '/finance/coa' },
-                { title: 'Opening Balances', path: '/finance/opening-balances' },
                 { title: 'CSV Import', path: '/finance/ledger/import' },
                 { title: 'Journal Entries', path: '/finance/journal' },
                 { title: 'Sequences', path: '/finance/sequences' },
