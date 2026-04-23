@@ -246,7 +246,7 @@ export const dictionaries = {
             complexity: "Complexity",
             high: "High",
             optimal: "Optimal",
-            units_and_packaging: "Units & Packaging",
+            units_and_packaging: "Units of Measure",
             units_subtitle: "Base and derived measurement units",
             reorganize_hierarchy: "Reorganize Hierarchy",
             bulk_align: "Bulk Align",

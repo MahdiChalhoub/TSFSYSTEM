@@ -10,6 +10,8 @@ import { toast } from 'sonner'
 import { getUnitPackaging, listUnitPackages, createUnitPackage, deleteUnitPackage } from '@/app/actions/inventory/units'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
 import { EntityProductsTab } from '@/components/templates/EntityProductsTab'
+import { erpFetch } from '@/lib/erp-api'
+import { TemplateFormModal } from '@/app/(privileged)/inventory/packages/_shared/TemplateFormModal'
 
 /* ═══════════════════════════════════════════════════════════
  *  DETAIL PANEL — 4 tabs: Overview, Products, Packages, Calculator
@@ -242,62 +244,14 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                                         <div className="text-tp-xxs font-semibold" style={{ color: 'var(--app-muted-foreground)' }}>{unitPackages.length} template{unitPackages.length !== 1 ? 's' : ''}</div>
                                     </div>
                                 </div>
-                                {!showNewPkg && (
-                                    <button type="button" onClick={() => { setShowNewPkg(true); setNewPkgName(''); setNewPkgRatio(''); setNewPkgCode(''); }}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-xs font-semibold transition-colors"
-                                        style={{ background: 'var(--app-primary)', color: 'white' }}>
-                                        <Plus size={11} /> New
-                                    </button>
-                                )}
+                                <button type="button" onClick={() => setShowNewPkg(true)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-xs font-semibold transition-colors"
+                                    style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                    <Plus size={11} /> New Template
+                                </button>
                             </div>
 
                             <div className="p-3 space-y-2">
-                                {/* New package — compact single-row form */}
-                                {showNewPkg && (
-                                    <div className="rounded-lg p-3 animate-in fade-in slide-in-from-top-2"
-                                        style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
-                                        <div className="flex items-end gap-2 flex-wrap">
-                                            <div className="flex-1 min-w-[120px]">
-                                                <label className="block text-tp-xxs font-semibold mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Name</label>
-                                                <input value={newPkgName} onChange={e => setNewPkgName(e.target.value)} placeholder="e.g. Pack of 6"
-                                                    className="w-full px-2.5 py-1.5 rounded-lg text-tp-md font-medium outline-none transition-colors focus:ring-1"
-                                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                                            </div>
-                                            <div className="w-20">
-                                                <label className="block text-tp-xxs font-semibold mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Ratio</label>
-                                                <input type="number" step="0.001" min="0" value={newPkgRatio} onChange={e => setNewPkgRatio(e.target.value)} placeholder="12"
-                                                    className="w-full px-2.5 py-1.5 rounded-lg text-tp-md font-mono font-bold text-center outline-none transition-colors focus:ring-1"
-                                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                                            </div>
-                                            <div className="w-16">
-                                                <label className="block text-tp-xxs font-semibold mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Code</label>
-                                                <input value={newPkgCode} onChange={e => setNewPkgCode(e.target.value.toUpperCase())} placeholder="PK6"
-                                                    className="w-full px-2.5 py-1.5 rounded-lg text-tp-xs font-mono text-center outline-none uppercase transition-colors focus:ring-1"
-                                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                                            </div>
-                                            <div className="flex items-center gap-1.5">
-                                                <button type="button" onClick={() => setShowNewPkg(false)} disabled={savingPkg}
-                                                    className="px-2.5 py-1.5 rounded-lg text-tp-xs font-semibold transition-colors" style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
-                                                <button type="button" disabled={savingPkg || !newPkgName.trim() || !newPkgRatio}
-                                                    onClick={async () => {
-                                                        setSavingPkg(true)
-                                                        try {
-                                                            await createUnitPackage({ unit: node.id, name: newPkgName.trim(), ratio: Number(newPkgRatio), code: newPkgCode || null })
-                                                            toast.success(`Package "${newPkgName}" created`)
-                                                            setShowNewPkg(false); setNewPkgName(''); setNewPkgRatio(''); setNewPkgCode('')
-                                                            await reloadUnitPackages()
-                                                        } catch (e: any) { toast.error(e?.message || 'Failed to create package') }
-                                                        setSavingPkg(false)
-                                                    }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-tp-xs font-bold transition-colors disabled:opacity-50"
-                                                    style={{ background: 'var(--app-primary)', color: 'white' }}>
-                                                    {savingPkg ? <Loader2 size={12} className="animate-spin" /> : <><Save size={12} /> Save</>}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
                                 {/* Package list */}
                                 {unitPkgLoading ? (
                                     <div className="flex items-center justify-center py-6"><Loader2 size={16} className="animate-spin" style={{ color: 'var(--app-primary)' }} /></div>
@@ -381,6 +335,32 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                     </div>
                 )}
             </div>
+
+            {/* Shared "New Template" modal — same backend as /inventory/packages.
+             * Unit is locked to the one this panel was opened for. */}
+            {showNewPkg && (
+                <TemplateFormModal
+                    units={allUnits}
+                    allTemplates={unitPackages}
+                    lockedUnitId={node.id}
+                    onClose={() => setShowNewPkg(false)}
+                    onSave={async (data) => {
+                        try {
+                            await erpFetch('unit-packages/', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ ...data, unit: node.id }),
+                            })
+                            toast.success(`Template "${data.name}" created`)
+                            setShowNewPkg(false)
+                            await reloadUnitPackages()
+                        } catch (e: any) {
+                            toast.error(e?.message || 'Failed to create template')
+                            throw e
+                        }
+                    }}
+                />
+            )}
         </div>
     )
 }

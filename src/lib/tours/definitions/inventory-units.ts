@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
- *  TOUR: Inventory — Units & Packaging
+ *  TOUR: Inventory — Units
  *
  *  Walkthrough for the Units page:
  *    • Base vs derived unit hierarchy
@@ -43,7 +43,7 @@ import type { TourConfig } from '@/lib/tours/types'
 
 const unitsTour: TourConfig = {
     id: 'inventory-units',
-    title: 'Units & Packaging',
+    title: 'Units of Measure',
     module: 'inventory',
     description: 'Interactive walkthrough of base vs derived units, conversion factors, packages, and the calculator.',
     version: 1,

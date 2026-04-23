@@ -2,7 +2,7 @@
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
- *  MobileUnitRow — two-tier row for Units & Packaging
+ *  MobileUnitRow — two-tier row for Units
  *  Line 1: chevron · icon · name · BASE badge · scale icon
  *  Line 2: code · ×factor · products chip · inline actions
  * ═══════════════════════════════════════════════════════════ */

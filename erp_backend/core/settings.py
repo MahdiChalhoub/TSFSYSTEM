@@ -335,6 +335,16 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = 'erp.User'
 
+# ──────────────────────────────────────────────────────────────────
+# Finance feature flags — OB → JE unification (Phase 3 migration)
+# ──────────────────────────────────────────────────────────────────
+# When False (default): balance services read opening balances from the
+#   OpeningBalance table (legacy path — the one production runs on).
+# When True: balance services read opening balances from OPENING JE rows.
+#   Flip per-deployment via env after dual-read validation confirms the
+#   two paths agree. Flip back to False immediately if drift appears.
+USE_JE_OPENING = os.getenv('USE_JE_OPENING', 'False').lower() in ('true', '1', 'yes')
+
 import sys
 # Local dev hacks to bypass model clashes and migration history issues
 if 'runserver' in sys.argv or 'test' in sys.argv or 'migrate' in sys.argv or os.getenv('APP_ENV') == 'production':

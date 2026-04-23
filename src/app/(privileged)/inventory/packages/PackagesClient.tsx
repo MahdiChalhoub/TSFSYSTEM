@@ -37,6 +37,7 @@ import { erpFetch } from '@/lib/erp-api'
 import {
     createPackagingRule, deletePackagingRule,
 } from '@/app/actions/inventory/packaging-suggestions'
+import { TemplateFormModal } from './_shared/TemplateFormModal'
 import '@/lib/tours/definitions/inventory-packages'
 
 type Option = { id: number; name: string; code?: string }
@@ -888,10 +889,11 @@ function StatTile({ label, value, icon, color }: any) {
     )
 }
 
-/* ═══════════════════════════════════════════════════════════
- *  FORM MODAL — shape only (no barcode / price)
- * ═══════════════════════════════════════════════════════════ */
-function TemplateFormModal({ tpl, units, onSave, onClose, allTemplates }: any) {
+/* Inline TemplateFormModal / FormField moved to ./_shared/TemplateFormModal.
+ * Keeping the legacy symbol below dead-code'd for a release cycle in case any
+ * other importer lingers — TODO remove once grep confirms no references.
+ */
+function _TemplateFormModal_legacy({ tpl, units, onSave, onClose, allTemplates }: any) {
     const [form, setForm] = useState<any>({
         unit: tpl?.unit ?? units[0]?.id ?? 0,
         parent: tpl?.parent ?? null,

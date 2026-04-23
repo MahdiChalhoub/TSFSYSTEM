@@ -42,7 +42,7 @@ export const inventoryInProgress: MenuItem = {
         { title: 'Brands', path: '/inventory/brands', icon: Award },
         { title: 'Attributes', path: '/inventory/attributes', icon: Tags },
         { title: 'Sourcing Countries', path: '/inventory/countries', icon: Globe },
-        { title: 'Units & Packaging', path: '/inventory/units', icon: Warehouse },
+        { title: 'Units of Measure', path: '/inventory/units', icon: Warehouse },
         { title: 'Packages', path: '/inventory/packages', icon: Box },
         { title: 'Packaging Rules', path: '/inventory/packaging-suggestions', icon: Sparkles },
     ],

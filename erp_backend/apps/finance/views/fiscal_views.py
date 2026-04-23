@@ -295,19 +295,50 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 'lines': [{'code': l.account.code, 'name': l.account.name, 'debit': float(l.debit), 'credit': float(l.credit)} for l in closing_lines],
             }
 
-        # Opening balances generated for next year (what THIS year sends out)
+        # Opening balances rendering — feature-flagged migration from the
+        # OpeningBalance table to OPENING journal-entry lines. When
+        # USE_JE_OPENING is True, we aggregate from the OPENING JE
+        # (journal_type='OPENING', status='POSTED'); otherwise the legacy
+        # OB table drives the UI. Both paths produce an identical shape.
         from apps.finance.models import FiscalYear as FY
+        from django.conf import settings as _s
+
+        def _ob_rows_for_year(target_year):
+            """Shape-stable list of {code,name,type,debit,credit} for UI."""
+            if getattr(_s, 'USE_JE_OPENING', False):
+                lines = (
+                    JournalEntryLine.objects
+                    .filter(
+                        journal_entry__organization=org,
+                        journal_entry__fiscal_year=target_year,
+                        journal_entry__journal_type='OPENING',
+                        journal_entry__status='POSTED',
+                    )
+                    .select_related('account')
+                    .order_by('account__type', 'account__code')
+                )
+                return [{
+                    'code': l.account.code, 'name': l.account.name, 'type': l.account.type,
+                    'debit': float(l.debit or 0), 'credit': float(l.credit or 0),
+                } for l in lines]
+            # Legacy path — OpeningBalance table
+            obs = (
+                OpeningBalance.objects
+                .filter(organization=org, fiscal_year=target_year)
+                .select_related('account')
+                .order_by('account__type', 'account__code')
+            )
+            return [{
+                'code': ob.account.code, 'name': ob.account.name, 'type': ob.account.type,
+                'debit': float(ob.debit_amount), 'credit': float(ob.credit_amount),
+            } for ob in obs]
+
+        # Opening balances generated for next year (what THIS year sends out)
         next_fy = FY.objects.filter(organization=org, start_date__gt=fiscal_year.end_date).order_by('start_date').first()
-        opening_bals = []
-        if next_fy:
-            obs = OpeningBalance.objects.filter(organization=org, fiscal_year=next_fy).select_related('account').order_by('account__type', 'account__code')
-            opening_bals = [{'code': ob.account.code, 'name': ob.account.name, 'type': ob.account.type,
-                             'debit': float(ob.debit_amount), 'credit': float(ob.credit_amount)} for ob in obs]
+        opening_bals = _ob_rows_for_year(next_fy) if next_fy else []
 
         # Opening balances received from prior year (what THIS year carries in)
-        obs_in = OpeningBalance.objects.filter(organization=org, fiscal_year=fiscal_year).select_related('account').order_by('account__type', 'account__code')
-        opening_bals_received = [{'code': ob.account.code, 'name': ob.account.name, 'type': ob.account.type,
-                                  'debit': float(ob.debit_amount), 'credit': float(ob.credit_amount)} for ob in obs_in]
+        opening_bals_received = _ob_rows_for_year(fiscal_year)
 
         # Period breakdown
         period_data = []

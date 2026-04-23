@@ -130,7 +130,7 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
     return (
         <MobileMasterPage
             config={{
-                title: 'Units & Packaging',
+                title: 'Units of Measure',
                 subtitle: `${stats.total} units · hierarchical conversions`,
                 icon: <Ruler size={20} />,
                 iconColor: 'var(--app-info, #3b82f6)',
