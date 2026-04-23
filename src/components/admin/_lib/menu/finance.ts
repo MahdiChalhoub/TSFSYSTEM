@@ -55,6 +55,16 @@ export const financeInProgress: MenuItem = {
                 { title: 'Balance Sheet', path: '/finance/reports/balance-sheet', icon: Landmark },
             ],
         },
+        {
+            title: 'Tax & Compliance',
+            icon: ShieldCheck,
+            children: [
+                { title: 'Tax Groups', path: '/finance/tax-groups', icon: FolderTree },
+                { title: 'Org Tax Policies', path: '/finance/org-tax-policies', icon: Settings },
+                { title: 'Custom Tax Rules', path: '/finance/custom-tax-rules', icon: ListChecks },
+                { title: 'Counterparty Tax Profiles', path: '/finance/counterparty-tax-profiles', icon: Database },
+            ],
+        },
     ],
 };
 
@@ -111,11 +121,7 @@ export const financeMain: MenuItem = {
             title: 'Tax & Compliance',
             icon: ShieldCheck,
             children: [
-                { title: 'Tax Groups', path: '/finance/tax-groups' },
                 { title: 'Tax Policy', path: '/finance/tax-policy' },
-                { title: 'Org Tax Policies', path: '/finance/org-tax-policies' },
-                { title: 'Custom Tax Rules', path: '/finance/custom-tax-rules' },
-                { title: 'Counterparty Tax Profiles', path: '/finance/counterparty-tax-profiles' },
                 { title: 'Withholding Tax Rules', path: '/finance/withholding-tax-rules' },
                 { title: 'VAT Return', path: '/finance/vat-return' },
                 { title: 'VAT Settlement', path: '/finance/vat-settlement' },
@@ -142,9 +148,6 @@ export const financeMain: MenuItem = {
                 { title: 'Report Builder', path: '/finance/reports/builder' },
                 { title: 'All Reports', path: '/finance/reports' },
                 { title: 'Account Statement', path: '/finance/reports/statement' },
-                { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
-                { title: 'Profit & Loss', path: '/finance/reports/pnl' },
-                { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
                 { title: 'Cash Flow', path: '/finance/reports/cash-flow' },
                 { title: 'Aging Report', path: '/finance/reports/aging' },
                 { title: 'Aging Overview', path: '/finance/aging' },

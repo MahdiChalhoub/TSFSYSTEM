@@ -36,6 +36,7 @@ export const inventoryInProgress: MenuItem = {
     module: 'inventory',
     stage: 'in-progress',
     children: [
+        { title: 'Products', path: '/inventory/products', icon: Tag },
         { title: 'Warehouses', path: '/inventory/warehouses', icon: Warehouse },
         { title: 'Brands', path: '/inventory/brands', icon: Award },
         { title: 'Attributes', path: '/inventory/attributes', icon: Tags },
@@ -55,7 +56,6 @@ export const inventory: MenuItem = {
             title: 'Products',
             icon: Tag,
             children: [
-                { title: 'Product Master', path: '/inventory/products' },
                 { title: 'Product Analytics', path: '/inventory/analytics' },
                 { title: 'Product Explorer', path: '/inventory/product-explorer' },
                 { title: 'Combo & Bundles', path: '/inventory/combo' },
@@ -73,7 +73,6 @@ export const inventory: MenuItem = {
             title: 'Warehousing',
             icon: Warehouse,
             children: [
-                { title: 'Warehouses', path: '/inventory/warehouses' },
                 { title: 'Zones', path: '/inventory/zones' },
                 { title: 'Aisles', path: '/inventory/aisles' },
                 { title: 'Racks', path: '/inventory/racks' },
@@ -124,7 +123,6 @@ export const inventory: MenuItem = {
             title: 'Catalog Setup',
             icon: FolderTree,
             children: [
-                { title: 'Categories', path: '/inventory/categories' },
                 { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
                 { title: 'Category Rules', path: '/inventory/category-rules' },
                 { title: 'Packaging', path: '/inventory/packaging' },
