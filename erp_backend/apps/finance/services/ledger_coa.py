@@ -582,11 +582,21 @@ class LedgerCOAMixin:
 
 
     @staticmethod
-    def get_trial_balance(organization, as_of_date=None, scope='INTERNAL', site_id=None):
+    def get_trial_balance(organization, as_of_date=None, scope='INTERNAL', site_id=None,
+                          start_date=None):
+        """Cumulative trial balance up to `as_of_date`.
+
+        When `start_date` is provided the totals become period-specific
+        (entries where `start_date <= transaction_date <= as_of_date`).
+        This is what the P&L caller wants — without it, "income for
+        March" would actually be year-to-date through March.
+        """
         from apps.finance.models import ChartOfAccount, JournalEntryLine
         accounts_qs = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
 
         lines_qs = JournalEntryLine.objects.filter(organization=organization, journal_entry__status='POSTED')
+        if start_date:
+            lines_qs = lines_qs.filter(journal_entry__transaction_date__gte=start_date)
         if as_of_date:
             lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=as_of_date)
         if scope == 'OFFICIAL':
@@ -622,7 +632,12 @@ class LedgerCOAMixin:
 
     @staticmethod
     def get_profit_loss(organization, start_date=None, end_date=None, scope='INTERNAL', site_id=None):
-        accounts = LedgerCOAMixin.get_trial_balance(organization, as_of_date=end_date, scope=scope, site_id=site_id)
+        # IMPORTANT: P&L is period-specific — pass `start_date` so the service
+        # sums only entries inside the window, not year-to-date.
+        accounts = LedgerCOAMixin.get_trial_balance(
+            organization, as_of_date=end_date, start_date=start_date,
+            scope=scope, site_id=site_id,
+        )
         income_accs = [a for a in accounts if a.type == 'INCOME']
         expense_accs = [a for a in accounts if a.type == 'EXPENSE']
         total_income = abs(sum((a.rollup_balance for a in income_accs if a.parent is None), Decimal('0')))

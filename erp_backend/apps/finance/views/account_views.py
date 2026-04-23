@@ -1491,10 +1491,13 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         organization = Organization.objects.get(id=organization_id)
-        as_of = request.query_params.get('as_of')
-        
+        # Accept ALL of: as_of (single point), end_date (alias), start_date
+        # (period lower bound for P&L). Frontend sends ISO strings.
+        as_of = request.query_params.get('as_of') or request.query_params.get('end_date')
+        start_date = request.query_params.get('start_date') or None
+
         # --- STRICT SCOPE ISOLATION ---
         from erp.middleware import get_authorized_scope
         authorized = get_authorized_scope() or 'official'
@@ -1502,9 +1505,11 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         if authorized == 'official' and requested == 'INTERNAL':
             requested = 'OFFICIAL'
         scope = requested
-        
+
         site_id = request.query_params.get('site_id') or None
-        accounts = LedgerService.get_trial_balance(organization, as_of, scope, site_id=site_id)
+        accounts = LedgerService.get_trial_balance(
+            organization, as_of, scope, site_id=site_id, start_date=start_date,
+        )
         
         data = []
         for acc in accounts:

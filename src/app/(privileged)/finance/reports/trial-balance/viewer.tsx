@@ -69,6 +69,20 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
         })
     }
 
+    // Auto-refresh on as-of-date change (preset pick or manual). Skip the
+    // very first render since SSR already hydrated the page.
+    const didMountRef = useRef(false)
+    useEffect(() => {
+        if (!didMountRef.current) { didMountRef.current = true; return }
+        const t = setTimeout(() => {
+            startTransition(async () => {
+                const d = await getTrialBalanceReport(new Date(asOfDate))
+                setAccounts(d)
+            })
+        }, 150)
+        return () => clearTimeout(t)
+    }, [asOfDate])
+
     // Subtotals per type
     const typeSubtotals = useMemo(() => {
         const out: Record<string, { debit: number; credit: number; count: number }> = {}
@@ -247,7 +261,10 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                         {ok ? 'Balanced' : `Δ ${fmt(totals.diff)}`}
                     </span>
                 </div>
-                <PeriodPicker value={asOfDate} onChange={setAsOfDate} />
+                <PeriodPicker value={asOfDate} onChange={(v) => {
+                    if (v === asOfDate) handleRefresh() // same value → force-fetch anyway
+                    else setAsOfDate(v)                 // different → auto-refresh effect picks it up
+                }} />
 
                 <div className="flex-1 min-w-[180px] relative ml-auto">
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />

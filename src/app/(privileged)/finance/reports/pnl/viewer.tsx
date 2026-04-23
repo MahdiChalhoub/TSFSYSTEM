@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useTransition, useMemo, useEffect, useCallback } from 'react'
+import { useState, useTransition, useMemo, useEffect, useCallback, useRef } from 'react'
 import { getProfitAndLossReport } from '@/app/actions/finance/accounts'
 import { TrendingUp, TrendingDown, Sigma } from 'lucide-react'
 import {
@@ -10,6 +10,7 @@ import {
     MetricTile, ReportFootnote, useMoneyFormatter,
     exportCSV, flattenAccounts,
 } from '../_shared/components'
+import { useActiveFiscalYear } from '../_shared/FiscalYearSelector'
 
 /* ═══════════════════════════════════════════════════════════
  *  P&L — narrative, accounting-style
@@ -49,6 +50,17 @@ export default function PnlViewer({ initialData, initialPriorData, fiscalYears }
     const formatAmount = useMoneyFormatter(mounted)
     useEffect(() => { setMounted(true) }, [])
 
+    // Fiscal-year rule: when the user picks an FY (from any report), snap
+    // BOTH start and end to the FY's window so the P&L shows the whole
+    // fiscal year instead of the default calendar month.
+    const activeFy = useActiveFiscalYear(fiscalYears)
+    useEffect(() => {
+        if (activeFy.mode === 'fy' && activeFy.start && activeFy.end) {
+            setStartDate(activeFy.start)
+            setEndDate(activeFy.end)
+        }
+    }, [activeFy.mode, activeFy.start, activeFy.end])
+
     const handleRefresh = () => {
         startTransition(async () => {
             const s = new Date(startDate), e = new Date(endDate)
@@ -63,6 +75,15 @@ export default function PnlViewer({ initialData, initialPriorData, fiscalYears }
             setData(cur); setPrior(pri)
         })
     }
+
+    // Auto-refresh whenever start or end changes (FY pick / preset / manual).
+    // Skip the first render — SSR already hydrated the page.
+    const didMountRef = useRef(false)
+    useEffect(() => {
+        if (!didMountRef.current) { didMountRef.current = true; return }
+        const t = setTimeout(() => handleRefresh(), 150)
+        return () => clearTimeout(t)
+    }, [startDate, endDate])
 
     const { incomes, expenses, totalIncome, totalExpense, netProfit, priorMap, priorTotals } = useMemo(() => {
         const inc = data.filter(a => a.type === 'INCOME' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))

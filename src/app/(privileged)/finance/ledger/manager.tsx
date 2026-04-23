@@ -113,11 +113,48 @@ function renderLedgerCell(key: string, e: JournalEntry, fmt: (n: number) => stri
  * ═══════════════════════════════════════════════════════════ */
 const EMPTY_LOOKUPS: Lookups = { fiscalYears: [], users: [] }
 
+/* ─── Snake-case → camelCase field normaliser ─────────────────────────────
+ * Backend (Django serializer with `fields='__all__'`) returns `transaction_date`,
+ * `fiscal_year`, `posted_at`, etc. The page expects camelCase. Run every
+ * entry through this once on load so downstream code can stay consistent.
+ * Returns a NEW object (non-destructive). */
+function normaliseEntry(e: any): any {
+  if (!e) return e
+  const fy = e.fiscalYear ?? e.fiscal_year ?? null
+  return {
+    ...e,
+    transactionDate: e.transactionDate ?? e.transaction_date ?? null,
+    fiscalYear: fy ? {
+      ...fy,
+      name: fy.name ?? fy.label ?? fy.code ?? null,
+      isLocked: fy.isLocked ?? fy.is_locked ?? false,
+      status: fy.status ?? null,
+    } : null,
+    fiscalPeriod: e.fiscalPeriod ?? e.fiscal_period ?? null,
+    postedAt: e.postedAt ?? e.posted_at ?? null,
+    createdAt: e.createdAt ?? e.created_at ?? null,
+    updatedAt: e.updatedAt ?? e.updated_at ?? null,
+    totalDebit: e.totalDebit ?? e.total_debit ?? null,
+    totalCredit: e.totalCredit ?? e.total_credit ?? null,
+    lineCount: e.lineCount ?? e.line_count ?? (Array.isArray(e.lines) ? e.lines.length : null),
+    journalType: e.journalType ?? e.journal_type ?? null,
+    sourceModule: e.sourceModule ?? e.source_module ?? null,
+    sourceModel: e.sourceModel ?? e.source_model ?? null,
+    sourceId: e.sourceId ?? e.source_id ?? null,
+    exchangeRate: e.exchangeRate ?? e.exchange_rate ?? null,
+    isLocked: e.isLocked ?? e.is_locked ?? false,
+    isVerified: e.isVerified ?? e.is_verified ?? false,
+    entryHash: e.entryHash ?? e.entry_hash ?? null,
+    createdBy: e.createdBy ?? e.created_by ?? null,
+    postedBy: e.postedBy ?? e.posted_by ?? null,
+  }
+}
+
 export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS }: { initialEntries?: any; lookups?: Lookups }) {
   const router = useRouter()
   const { fmt } = useCurrency()
   const { viewScope } = useAdmin()
-  const safeInitial = toArr(initialEntries)
+  const safeInitial = useMemo(() => toArr(initialEntries).map(normaliseEntry), [initialEntries])
   const [items, setItems] = useState<JournalEntry[]>(safeInitial)
   const [loading, setLoading] = useState(safeInitial.length === 0)
   const [search, setSearch] = useState('')
@@ -170,7 +207,7 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
     setLoading(true)
     try {
       const data = await getLedgerEntries(viewScope || 'INTERNAL', {})
-      setItems(toArr(data))
+      setItems(toArr(data).map(normaliseEntry))
     } catch { /* empty */ }
     setLoading(false)
   }, [viewScope])
@@ -536,6 +573,7 @@ function LedgerExpandedRow({ entry, fmt, onView, onDeleted }: { entry: JournalEn
             <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-info)' }}>Financial Vectors</span>
           </div>
           <div className="flex items-center gap-3 px-3 py-1.5 border-b border-app-border/20 text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground">
+            <div className="w-20">Date</div>
             <div className="w-16">Code</div>
             <div className="flex-[1.5]">Account</div>
             <div className="flex-1">Dimension (Cost Center / Partner)</div>
@@ -543,39 +581,50 @@ function LedgerExpandedRow({ entry, fmt, onView, onDeleted }: { entry: JournalEn
             <div className="w-24 text-right">Debit</div>
             <div className="w-24 text-right">Credit</div>
           </div>
-          {lines.map((l: any, i: number) => (
-            <div key={i} className="flex items-center gap-3 px-3 py-1.5 border-b border-app-border/10 hover:bg-app-surface/40 transition-all">
-              <div className="w-16">
-                <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
-                  style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
-                  {l.account?.code}
-                </span>
+          {lines.map((l: any, i: number) => {
+            // Per-line date falls back to the entry's transaction date since
+            // every line of a journal entry shares the same posting date.
+            const lineDateRaw = l.transactionDate || l.transaction_date || l.date || entry.transactionDate
+            const lineDate = lineDateRaw
+              ? new Date(lineDateRaw).toLocaleDateString('en-GB')
+              : '—'
+            return (
+              <div key={i} className="flex items-center gap-3 px-3 py-1.5 border-b border-app-border/10 hover:bg-app-surface/40 transition-all">
+                <div className="w-20 text-tp-xs font-mono tabular-nums text-app-muted-foreground">
+                  {lineDate}
+                </div>
+                <div className="w-16">
+                  <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                    {l.account?.code}
+                  </span>
+                </div>
+                <div className="flex-[1.5] text-tp-sm font-bold text-app-foreground truncate" title={l.account?.name}>{l.account?.name}</div>
+                <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                    {l.costCenter || l.cost_center ? (
+                        <span className="text-tp-xxs font-bold uppercase tracking-wide text-app-info truncate">
+                            {l.costCenter || l.cost_center}
+                        </span>
+                    ) : null}
+                    {l.contact?.name ? (
+                        <span className="text-tp-xs text-app-muted-foreground truncate">
+                            👤 {l.contact.name}
+                        </span>
+                    ) : null}
+                    {!l.costCenter && !l.cost_center && !l.contact?.name && <span className="text-tp-xs opacity-20">—</span>}
+                </div>
+                <div className="flex-1 text-tp-xs text-app-muted-foreground truncate hidden md:block" title={l.description}>{l.description || '—'}</div>
+                <div className="w-24 text-right text-tp-sm font-mono font-bold tabular-nums"
+                  style={{ color: Number(l.debit) > 0 ? 'var(--app-primary)' : 'transparent' }}>
+                  {Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}
+                </div>
+                <div className="w-24 text-right text-tp-sm font-mono font-bold tabular-nums"
+                  style={{ color: Number(l.credit) > 0 ? 'var(--app-error)' : 'transparent' }}>
+                  {Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}
+                </div>
               </div>
-              <div className="flex-[1.5] text-tp-sm font-bold text-app-foreground truncate" title={l.account?.name}>{l.account?.name}</div>
-              <div className="flex-1 flex flex-col gap-0.5 min-w-0">
-                  {l.costCenter || l.cost_center ? (
-                      <span className="text-tp-xxs font-bold uppercase tracking-wide text-app-info truncate">
-                          {l.costCenter || l.cost_center}
-                      </span>
-                  ) : null}
-                  {l.contact?.name ? (
-                      <span className="text-tp-xs text-app-muted-foreground truncate">
-                          👤 {l.contact.name}
-                      </span>
-                  ) : null}
-                  {!l.costCenter && !l.cost_center && !l.contact?.name && <span className="text-tp-xs opacity-20">—</span>}
-              </div>
-              <div className="flex-1 text-tp-xs text-app-muted-foreground truncate hidden md:block" title={l.description}>{l.description || '—'}</div>
-              <div className="w-24 text-right text-tp-sm font-mono font-bold tabular-nums"
-                style={{ color: Number(l.debit) > 0 ? 'var(--app-primary)' : 'transparent' }}>
-                {Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}
-              </div>
-              <div className="w-24 text-right text-tp-sm font-mono font-bold tabular-nums"
-                style={{ color: Number(l.credit) > 0 ? 'var(--app-error)' : 'transparent' }}>
-                {Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

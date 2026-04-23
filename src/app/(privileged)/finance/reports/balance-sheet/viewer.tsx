@@ -72,6 +72,22 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
         })
     }
 
+    // Auto-refresh whenever the as-of date changes (preset click OR manual
+    // pick). The initial render already has `initialData` from SSR so we
+    // skip the very first run. Debounced so rapid picker changes don't
+    // hammer the endpoint.
+    const didMountRef = useRef(false)
+    useEffect(() => {
+        if (!didMountRef.current) { didMountRef.current = true; return }
+        const t = setTimeout(() => {
+            startTransition(async () => {
+                const report = await getBalanceSheetReport(new Date(asOfDate))
+                setData(report)
+            })
+        }, 150)
+        return () => clearTimeout(t)
+    }, [asOfDate])
+
     const runDiag = useCallback(async () => {
         const issues = await diagnoseFinancialDiscrepancy()
         setDiag(Array.isArray(issues) ? issues : (issues as any).issues || [])
@@ -260,7 +276,10 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
                         {isBalanced ? 'Balanced' : `Δ ${fmt(Math.abs(diff))}`}
                     </span>
                 </div>
-                <PeriodPicker value={asOfDate} onChange={setAsOfDate} />
+                <PeriodPicker value={asOfDate} onChange={(v) => {
+                    if (v === asOfDate) handleRefresh() // same value → state setter is a no-op, force refresh
+                    else setAsOfDate(v)                 // different → auto-refresh effect picks it up
+                }} />
                 {!isBalanced && (
                     <button onClick={() => setShowDiag(s => !s)}
                         className="toolbar-btn text-app-error border-app-error/30 bg-app-error/10">
