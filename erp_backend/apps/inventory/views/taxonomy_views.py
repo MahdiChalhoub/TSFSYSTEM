@@ -474,6 +474,74 @@ class UnitPackageViewSet(TenantModelViewSet):
             qs = qs.filter(unit_id=unit_id)
         return qs.order_by('unit_id', 'order', 'ratio')
 
+    @action(detail=False, methods=['post'])
+    def seed_defaults(self, request):
+        """Bootstrap a standard Pack → Carton → Pallet chain for units
+        that don't have any templates yet. Idempotent — skips units that
+        already have at least one template, so calling this twice is safe.
+
+        Request body (optional):
+          { "unit_ids": [1, 2, 3] }  # restrict to specific units
+        Response: { "created": [...templates], "skipped_units": [ids] }
+        """
+        from decimal import Decimal
+        from apps.inventory.models import Unit, UnitPackage
+        from apps.inventory.serializers import UnitPackageSerializer
+
+        organization, err = _get_org_or_400()
+        if err:
+            return err
+
+        requested_ids = (request.data or {}).get('unit_ids') or []
+        units_qs = Unit.objects.filter(organization=organization)
+        if requested_ids:
+            units_qs = units_qs.filter(id__in=requested_ids)
+
+        # Standard chain: Pack of 6 → Carton (×4 = 24) → Pallet (×6 = 144).
+        # Unit-agnostic on purpose — the ratios read sensibly for count,
+        # volume, and weight. Users tweak or extend as needed.
+        CHAIN = [
+            {'name': 'Pack of 6',     'code': 'PK6',   'parent_ratio': Decimal('6'), 'order': 10},
+            {'name': 'Carton of 24',  'code': 'CT24',  'parent_ratio': Decimal('4'), 'order': 20},
+            {'name': 'Pallet of 144', 'code': 'PL144', 'parent_ratio': Decimal('6'), 'order': 30},
+        ]
+
+        created_rows = []
+        skipped_units = []
+
+        with transaction.atomic():
+            for unit in units_qs:
+                if UnitPackage.objects.filter(unit=unit, organization=organization).exists():
+                    skipped_units.append(unit.id)
+                    continue
+                parent = None
+                running_ratio = Decimal('1')
+                for step in CHAIN:
+                    running_ratio = running_ratio * step['parent_ratio']
+                    tpl = UnitPackage.objects.create(
+                        organization=organization,
+                        unit=unit,
+                        parent=parent,
+                        parent_ratio=step['parent_ratio'],
+                        name=step['name'],
+                        code=step['code'],
+                        ratio=running_ratio,
+                        order=step['order'],
+                        is_default=(parent is None),
+                    )
+                    created_rows.append(tpl)
+                    parent = tpl
+
+        units_seeded = len(created_rows) // len(CHAIN) if CHAIN else 0
+        return Response({
+            'created': UnitPackageSerializer(created_rows, many=True).data,
+            'skipped_units': skipped_units,
+            'message': (
+                f'Created {len(created_rows)} template{"s" if len(created_rows) != 1 else ""} '
+                f'across {units_seeded} unit{"s" if units_seeded != 1 else ""}.'
+            ),
+        }, status=status.HTTP_201_CREATED)
+
     def destroy(self, request, *args, **kwargs):
         """Guard: block delete when the template is referenced by children
         (chain descendants), ProductPackaging rows, or PackagingSuggestionRule

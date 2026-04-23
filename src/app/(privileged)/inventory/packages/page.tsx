@@ -16,15 +16,16 @@ async function safeLoad<T = any>(url: string): Promise<LoadResult<T>> {
 }
 
 export default async function PackagesPage() {
-    // All paths use the flat `inventory/<resource>/` convention for consistency.
-    // The router registers both `/api/<resource>/` and `/api/inventory/<resource>/`,
-    // so either works — we pick one for predictability.
+    // URL path convention is deployment-specific — the `inventory/`-
+    // namespaced mount returns 404 on some production deployments even
+    // though it resolves locally. The flat mount (`/api/<resource>/`)
+    // is the reliable path, so we use it for everything.
     const [templates, units, categories, brands, attributes] = await Promise.all([
-        safeLoad('inventory/unit-packages/'),
-        safeLoad('inventory/units/'),
-        safeLoad('inventory/categories/'),
-        safeLoad('inventory/brands/'),
-        safeLoad('inventory/product-attributes/?parent=null'),
+        safeLoad('unit-packages/'),
+        safeLoad('units/'),
+        safeLoad('categories/'),
+        safeLoad('brands/'),
+        safeLoad('product-attributes/?parent=null'),
     ])
 
     const loadErrors: Record<string, string> = {}

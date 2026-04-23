@@ -88,7 +88,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
 
     const refresh = useCallback(async () => {
         try {
-            const data = await erpFetch('inventory/unit-packages/', { cache: 'no-store' } as any)
+            const data = await erpFetch('unit-packages/', { cache: 'no-store' } as any)
             setTemplates(Array.isArray(data) ? data : (data?.results ?? []))
         } catch (e: any) {
             toast.error('Failed to refresh templates', { description: e?.message || 'network error' })
@@ -163,13 +163,13 @@ export default function PackagesClient({ initialTemplates, units, categories, br
     const handleSave = async (data: any) => {
         try {
             if (editing?.id) {
-                await erpFetch(`inventory/unit-packages/${editing.id}/`, {
+                await erpFetch(`unit-packages/${editing.id}/`, {
                     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
                 })
                 toast.success('Template updated')
             } else {
-                await erpFetch(`inventory/unit-packages/`, {
+                await erpFetch(`unit-packages/`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
                 })
@@ -180,12 +180,34 @@ export default function PackagesClient({ initialTemplates, units, categories, br
         } catch (e: any) { toast.error(e?.message || 'Save failed') }
     }
 
+    const [seeding, setSeeding] = useState(false)
+    const handleSeedDefaults = async () => {
+        if (seeding) return
+        setSeeding(true)
+        try {
+            const res: any = await erpFetch('unit-packages/seed_defaults/', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+            })
+            const n = Array.isArray(res?.created) ? res.created.length : 0
+            if (n > 0) {
+                toast.success(res?.message || `Seeded ${n} templates`)
+                refresh()
+            } else {
+                toast.info('All units already have templates — nothing to seed.')
+            }
+        } catch (e: any) {
+            toast.error(e?.message || 'Seed failed')
+        } finally {
+            setSeeding(false)
+        }
+    }
+
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
         const t = deleteTarget
         setDeleteTarget(null)
         try {
-            await erpFetch(`inventory/unit-packages/${t.id}/`, { method: 'DELETE' })
+            await erpFetch(`unit-packages/${t.id}/`, { method: 'DELETE' })
             toast.success(`"${t.name}" deleted`)
             refresh()
         } catch (e: any) { toast.error(e?.message || 'Delete failed') }
@@ -289,9 +311,29 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                                 {q ? 'Try a different term.' : 'Define the SHAPE of your packagings — "Pack of 6", "Carton 24", "Pallet 144" — then link them to categories / brands / attributes. Products will adopt the shape and supply their own barcode + price.'}
                             </p>
                             {!q && (
-                                <button onClick={openNewForm} className="px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-bold">
-                                    <Plus size={16} className="inline mr-1.5" />Create First Template
-                                </button>
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap justify-center">
+                                        <button onClick={openNewForm} className="px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-bold">
+                                            <Plus size={16} className="inline mr-1.5" />Create First Template
+                                        </button>
+                                        <button
+                                            onClick={handleSeedDefaults}
+                                            disabled={seeding || units.length === 0}
+                                            className="px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
+                                            style={{ background: 'color-mix(in srgb, #8b5cf6 12%, transparent)', color: '#8b5cf6', border: '1px solid color-mix(in srgb, #8b5cf6 40%, transparent)' }}
+                                            title={units.length === 0 ? 'Define a unit first' : 'Bootstrap Pack → Carton → Pallet chain for every unit that has no templates yet'}
+                                        >
+                                            {seeding ? (
+                                                <><Loader2 size={16} className="inline mr-1.5 animate-spin" />Seeding…</>
+                                            ) : (
+                                                <><Sparkles size={16} className="inline mr-1.5" />Seed starter chains</>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <p className="text-tp-xxs text-app-muted-foreground max-w-xs">
+                                        Starter chain = Pack of 6 → Carton of 24 → Pallet of 144, created once per unit. Safe to click — won't touch units that already have templates.
+                                    </p>
+                                </div>
                             )}
                         </div>
                     )

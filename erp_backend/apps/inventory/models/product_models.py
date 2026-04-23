@@ -65,15 +65,17 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
     barcode / price / image — those are per-product on ProductPackaging.
     """
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name='unit_packages')
-    parent = models.ForeignKey(
-        'self', on_delete=models.PROTECT, null=True, blank=True,
-        related_name='children',
-        help_text='Previous step in the packaging chain (None for base-level)',
-    )
-    parent_ratio = models.DecimalField(
-        max_digits=15, decimal_places=4, null=True, blank=True,
-        help_text='How many of `parent` this package contains (e.g. 4 boxes per pallet)',
-    )
+    # NOTE: `parent` + `parent_ratio` are defined in migration 0057 but the
+    # DB doesn't have those columns yet (blocked on pre-existing 0054 history
+    # mismatch — user must run `migrate --fake inventory 0054 && migrate
+    # inventory 0058` themselves). Gated out of the model until then so
+    # reads don't crash with "column parent_id does not exist". Re-enable
+    # the two fields below once migrations apply.
+    # parent = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True,
+    #     related_name='children',
+    #     help_text='Previous step in the packaging chain (None for base-level)')
+    # parent_ratio = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+    #     help_text='How many of `parent` this package contains (e.g. 4 boxes per pallet)')
     name = models.CharField(max_length=120, help_text='Display name, e.g. "Pack of 6"')
     code = models.CharField(max_length=50, null=True, blank=True, help_text='Short code, e.g. "PK6"')
     ratio = models.DecimalField(
