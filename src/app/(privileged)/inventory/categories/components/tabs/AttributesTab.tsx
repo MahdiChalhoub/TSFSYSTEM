@@ -469,18 +469,22 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                                         </div>
                                         {group.code && <p className="text-tp-xs font-mono font-bold text-app-muted-foreground">{group.code}</p>}
                                     </div>
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                    {/* Actions: always visible on touch / small screens (no hover),
+                                        hover-gated from md+. The opacity-0 variant also disables
+                                        pointer events so an invisible button can never swallow a
+                                        tap meant for the row itself. */}
+                                    <div className="flex items-center gap-1 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 pointer-events-auto md:pointer-events-none md:group-hover:pointer-events-auto">
                                         {hasProducts && (
-                                            <button onClick={() => openMigrate(group)} disabled={migrateLoading}
-                                                className="flex items-center gap-1 text-tp-xxs font-bold px-1.5 py-1 rounded-lg transition-all disabled:opacity-50"
-                                                style={{ color: 'var(--app-primary)', background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}
+                                            <button onClick={(e) => { e.stopPropagation(); openMigrate(group) }} disabled={migrateLoading}
+                                                className="flex items-center gap-1 text-tp-xxs font-bold px-2 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                                                style={{ color: 'var(--app-primary)', background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', minHeight: 32 }}
                                                 title="Migrate attribute values to another group before unlinking">
                                                 <ArrowRightLeft size={10} />Migrate
                                             </button>
                                         )}
-                                        <button onClick={() => requestUnlink(group)} disabled={linking}
-                                            className="flex items-center gap-1 text-tp-xxs font-bold px-1.5 py-1 rounded-lg transition-all disabled:opacity-50"
-                                            style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                        <button onClick={(e) => { e.stopPropagation(); requestUnlink(group) }} disabled={linking}
+                                            className="flex items-center gap-1 text-tp-xxs font-bold px-2 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                                            style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', minHeight: 32 }}>
                                             <Unlink size={10} />Unlink
                                         </button>
                                     </div>

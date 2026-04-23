@@ -267,9 +267,11 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                                     </div>
                                     {b.product_count != null && <p className="text-tp-sm font-medium text-app-muted-foreground">{b.product_count} product{b.product_count !== 1 ? 's' : ''}</p>}
                                 </div>
+                                {/* Action button: always visible on touch/narrow viewports (no hover),
+                                    hover-gated from md+ where the group-hover pattern works. */}
                                 <button onClick={() => requestUnlink(b)} disabled={linking}
-                                    className="flex items-center gap-1 text-tp-xs font-semibold px-1.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
+                                    className="flex items-center gap-1 text-tp-xs font-semibold px-2 py-1 rounded-lg transition-all disabled:opacity-50 opacity-100 md:opacity-0 md:group-hover:opacity-100 pointer-events-auto md:pointer-events-none md:group-hover:pointer-events-auto"
+                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', minHeight: 32 }}>
                                     <Unlink size={11} />Unlink
                                 </button>
                             </div>

@@ -337,7 +337,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                             {Number(p.stock_on_hand ?? 0).toLocaleString()}
                                         </span>
                                         <button onClick={e => { e.stopPropagation(); setPreviewProduct(p) }}
-                                            className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary opacity-0 group-hover:opacity-100 transition-all">
+                                            className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 pointer-events-auto md:pointer-events-none md:group-hover:pointer-events-auto">
                                             <Info size={11} />
                                         </button>
                                     </div>
