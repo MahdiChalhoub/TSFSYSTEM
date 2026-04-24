@@ -405,6 +405,7 @@ class ClosingService:
                     scope=scope,
                     user=user,
                     journal_type='CLOSING',
+                    journal_role='SYSTEM_CLOSING',
                     source_module='finance',
                     source_model='FiscalYear',
                     source_id=fiscal_year.id,
@@ -630,6 +631,7 @@ class ClosingService:
                     journal_entry__fiscal_year=next_year,
                     journal_entry__journal_type='OPENING',
                     journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
                     journal_entry__scope=scope,
                     account=re_account,
                 ).aggregate(d=Sum('debit'), c=Sum('credit'))
@@ -812,29 +814,25 @@ class ClosingService:
         # propagation).
         FiscalYear.objects.select_for_update().get(pk=fiscal_year.pk)
 
-        # Soft-supersede any prior OPENING JE for this (year, scope) so
-        # auditors still see the history. We flip them to DRAFT + tag the
-        # description so they're visibly inactive AND balance services
-        # skip them (balances aggregate status='POSTED' only). Lines stay
-        # attached. When the schema migration adds a proper `is_superseded`
-        # field, upgrade this to the richer semantics.
+        # Soft-supersede any prior active SYSTEM_OPENING JE for this
+        # (year, scope) — we keep the row POSTED, keep the is_locked
+        # audit flag, and just flip is_superseded=True. Balance services
+        # filter is_superseded=False so superseded rows stop contributing
+        # immediately. The superseded_by FK is stamped below after the
+        # new JE is created so the chain is traceable both directions.
         from django.utils import timezone
-        stamp = timezone.now().strftime('%Y-%m-%d %H:%M')
+        now = timezone.now()
         JournalEntry.objects.filter(
             organization=organization,
             fiscal_year=fiscal_year,
             journal_type='OPENING',
             scope=scope,
-            source_model='FiscalYear',
-            source_id=fiscal_year.id,
+            journal_role='SYSTEM_OPENING',
             status='POSTED',
+            is_superseded=False,
         ).update(
-            status='DRAFT',
-            is_locked=False,  # must be unlocked for the update to not trip guards
-            description=models.functions.Concat(
-                models.Value(f'[SUPERSEDED {stamp}] '),
-                models.F('description'),
-            ),
+            is_superseded=True,
+            superseded_at=now,
         )
 
         # Build line dicts for create_journal_entry — needs the
@@ -858,6 +856,7 @@ class ClosingService:
             scope=scope,
             user=user,
             journal_type='OPENING',
+            journal_role='SYSTEM_OPENING',
             source_module='finance',
             source_model='FiscalYear',
             source_id=fiscal_year.id,
@@ -865,9 +864,21 @@ class ClosingService:
         )
 
         # Immutability — opening JEs are system-owned and must not be
-        # editable via the normal JE editor. is_locked + the journal_type
-        # + source_model triple makes them trivially distinguishable.
+        # editable via the normal JE editor. is_locked + journal_role=
+        # 'SYSTEM_OPENING' makes them trivially distinguishable.
         JournalEntry.objects.filter(pk=je.pk).update(is_locked=True)
+
+        # Link superseded rows to the new JE for bidirectional traceability.
+        # This has to happen AFTER the new JE exists.
+        JournalEntry.objects.filter(
+            organization=organization,
+            fiscal_year=fiscal_year,
+            journal_type='OPENING',
+            scope=scope,
+            journal_role='SYSTEM_OPENING',
+            is_superseded=True,
+            superseded_by__isnull=True,
+        ).exclude(pk=je.pk).update(superseded_by=je)
 
         logger.info(
             f"ClosingService: OPENING JE created for {fiscal_year.name} ({scope}) "
@@ -919,7 +930,9 @@ class ClosingService:
                 net = (ob.debit_amount or Decimal('0.00')) - (ob.credit_amount or Decimal('0.00'))
                 ob_by_acc[ob.account_id] = net
 
-            # Path B — OPENING JE lines for this (fy, scope), POSTED only
+            # Path B — active OPENING JE lines for this (fy, scope)
+            # (POSTED and not superseded — superseded rows are audit history
+            # only and must not contribute to aggregate balances).
             je_by_acc: dict[int, Decimal] = {}
             je_lines = JournalEntryLine.objects.filter(
                 journal_entry__organization=organization,
@@ -927,6 +940,7 @@ class ClosingService:
                 journal_entry__scope=scope,
                 journal_entry__journal_type='OPENING',
                 journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
             ).values('account_id').annotate(
                 d=Sum('debit'), c=Sum('credit'),
             )
@@ -1005,13 +1019,15 @@ class ClosingService:
             'skipped_reason': None,
         }
 
-        # Ensure a POSTED OPENING JE exists for at least one scope —
-        # otherwise we'd wipe OB without anything to replace it with.
+        # Ensure an active (POSTED + not superseded) OPENING JE exists
+        # for at least one scope — otherwise we'd wipe OB without anything
+        # to replace it with.
         je_exists = JournalEntry.objects.filter(
             organization=organization,
             fiscal_year=fiscal_year,
             journal_type='OPENING',
             status='POSTED',
+            is_superseded=False,
         ).exists()
         if not je_exists:
             report['skipped_reason'] = 'no POSTED OPENING JE to rebuild from — close the prior year first'
@@ -1031,7 +1047,8 @@ class ClosingService:
             report['rows_deleted'] = deleted
 
             for scope in ('OFFICIAL', 'INTERNAL'):
-                # Aggregate OPENING JE lines by account for this scope
+                # Aggregate active OPENING JE lines by account (POSTED +
+                # not superseded — see _create_opening_journal_entry)
                 lines = (
                     JournalEntryLine.objects
                     .filter(
@@ -1039,6 +1056,7 @@ class ClosingService:
                         journal_entry__fiscal_year=fiscal_year,
                         journal_entry__journal_type='OPENING',
                         journal_entry__status='POSTED',
+                        journal_entry__is_superseded=False,
                         journal_entry__scope=scope,
                     )
                     .values('account_id')
@@ -1122,6 +1140,7 @@ class ClosingService:
                 has_je = JournalEntry.objects.filter(
                     organization=organization, fiscal_year=fy, scope=scope,
                     journal_type='OPENING', status='POSTED',
+                    is_superseded=False,
                 ).exists()
                 # Account-set equality — fine-grained safety net beyond
                 # the "both exist" check. set(OB_accounts) must equal
@@ -1217,6 +1236,7 @@ class ClosingService:
                 source_model='FiscalYear',
                 source_id=fiscal_year.id,
                 status='POSTED',
+                is_superseded=False,
             ).exists()
             if already and not force:
                 report['scopes_skipped'] += 1

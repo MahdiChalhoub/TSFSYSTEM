@@ -455,10 +455,9 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
 class UnitPackageViewSet(TenantModelViewSet):
     """CRUD for per-unit package templates (Pack of 6, Carton 24, etc.).
-    Filterable by ?unit=<id>.
-
-    NOTE: soft-delete (is_archived) arrives with migration 0058. Until then
-    destroy() hard-deletes after the 409 guard passes.
+    Filterable by ?unit=<id>. Hides archived templates by default; pass
+    ?include_archived=1 to include them or ?archived_only=1 to see only
+    the archive.
     """
     pagination_class = None
 
@@ -468,12 +467,15 @@ class UnitPackageViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         from apps.inventory.models import UnitPackage
-        # `parent` field is gated out of the model until migration 0057
-        # applies — don't select_related('parent') or the SQL blows up.
-        qs = UnitPackage.objects.all().select_related('unit')
+        qs = UnitPackage.objects.all().select_related('unit', 'parent')
         unit_id = self.request.query_params.get('unit')
         if unit_id:
             qs = qs.filter(unit_id=unit_id)
+        # Soft-delete filters
+        if self.request.query_params.get('archived_only') == '1':
+            qs = qs.filter(is_archived=True)
+        elif self.request.query_params.get('include_archived') != '1':
+            qs = qs.filter(is_archived=False)
         return qs.order_by('unit_id', 'order', 'ratio')
 
     @action(detail=False, methods=['post'])
@@ -499,16 +501,13 @@ class UnitPackageViewSet(TenantModelViewSet):
         if requested_ids:
             units_qs = units_qs.filter(id__in=requested_ids)
 
-        # Standard set: Pack of 6, Carton of 24, Pallet of 144. Normally
-        # these form a chain (Pack → Carton → Pallet), but the chain FKs
-        # aren't in the DB yet — see note on the model. Until then we
-        # create the three flat templates with precomputed ratios; when
-        # migration 0057 lands, users can wire up the parent links in
-        # the form and the hierarchy reassembles from ratios.
+        # Standard chain: Pack of 6 → Carton (×4 = 24) → Pallet (×6 = 144).
+        # Unit-agnostic on purpose — the ratios read sensibly for count,
+        # volume, and weight. Users tweak or extend as needed.
         CHAIN = [
-            {'name': 'Pack of 6',     'code': 'PK6',   'ratio': Decimal('6'),   'order': 10},
-            {'name': 'Carton of 24',  'code': 'CT24',  'ratio': Decimal('24'),  'order': 20},
-            {'name': 'Pallet of 144', 'code': 'PL144', 'ratio': Decimal('144'), 'order': 30},
+            {'name': 'Pack of 6',     'code': 'PK6',   'parent_ratio': Decimal('6'), 'order': 10},
+            {'name': 'Carton of 24',  'code': 'CT24',  'parent_ratio': Decimal('4'), 'order': 20},
+            {'name': 'Pallet of 144', 'code': 'PL144', 'parent_ratio': Decimal('6'), 'order': 30},
         ]
 
         created_rows = []
@@ -519,17 +518,23 @@ class UnitPackageViewSet(TenantModelViewSet):
                 if UnitPackage.objects.filter(unit=unit, organization=organization).exists():
                     skipped_units.append(unit.id)
                     continue
+                parent = None
+                running_ratio = Decimal('1')
                 for step in CHAIN:
+                    running_ratio = running_ratio * step['parent_ratio']
                     tpl = UnitPackage.objects.create(
                         organization=organization,
                         unit=unit,
+                        parent=parent,
+                        parent_ratio=step['parent_ratio'],
                         name=step['name'],
                         code=step['code'],
-                        ratio=step['ratio'],
+                        ratio=running_ratio,
                         order=step['order'],
-                        is_default=(step['order'] == 10),  # first step becomes default
+                        is_default=(parent is None),  # base step becomes default
                     )
                     created_rows.append(tpl)
+                    parent = tpl
 
         units_seeded = len(created_rows) // len(CHAIN) if CHAIN else 0
         return Response({
@@ -545,19 +550,18 @@ class UnitPackageViewSet(TenantModelViewSet):
         """Guard: block delete when the template is referenced by children
         (chain descendants), ProductPackaging rows, or PackagingSuggestionRule
         rows. On conflict return 409 with counts + preview. Bypass with
-        ?force=1 — which currently hard-deletes; once migration 0058 lands
-        this will archive (soft-delete) instead.
+        ?force=1 — which archives (soft-deletes) instead of hard-deleting
+        to preserve audit trail and the PROTECT FK semantics.
         """
         from apps.inventory.models import UnitPackage, ProductPackaging, PackagingSuggestionRule
+        from django.utils import timezone
 
         instance = self.get_object()
         org = instance.organization
 
-        # children_qs would count chain descendants but the chain FK is
-        # gated out of the model until migration 0057 lands. Skip that
-        # check for now — the ProductPackaging + SuggestionRule guards
-        # below still protect active data.
-        children_qs = UnitPackage.objects.none()
+        children_qs = UnitPackage.objects.filter(
+            parent=instance, organization=org, is_archived=False,
+        )
         # ProductPackaging has no FK to UnitPackage — match by unit + ratio
         # (the same signature the suggestion engine uses to identify a level).
         packaging_qs = ProductPackaging.objects.filter(
@@ -594,13 +598,36 @@ class UnitPackageViewSet(TenantModelViewSet):
                     'rules_count': rules_count,
                     'message': (
                         f'Cannot delete "{instance.name}" — referenced by {", ".join(msg_parts)}. '
-                        f'Re-send DELETE with ?force=1 to proceed anyway.'
+                        f'Re-send DELETE with ?force=1 to archive (soft-delete) instead.'
                     ),
                     'products': preview,
                 }, status=status.HTTP_409_CONFLICT)
 
-        return super().destroy(request, *args, **kwargs)
+        # force=1 OR no dependents — archive (soft-delete) to preserve
+        # referential integrity (PROTECT FK would block hard delete
+        # anyway when children reference this template).
+        with transaction.atomic():
+            instance.is_archived = True
+            instance.archived_at = timezone.now()
+            instance.save(update_fields=['is_archived', 'archived_at'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None):
+        """Un-archive a soft-deleted template."""
+        from apps.inventory.models import UnitPackage
+        organization, err = _get_org_or_400()
+        if err:
+            return err
+        try:
+            instance = UnitPackage.objects.get(id=pk, organization=organization)
+        except UnitPackage.DoesNotExist:
+            return Response({'error': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
+        instance.is_archived = False
+        instance.archived_at = None
+        instance.save(update_fields=['is_archived', 'archived_at'])
+        from apps.inventory.serializers import UnitPackageSerializer
+        return Response(UnitPackageSerializer(instance).data)
 
 class ProductPackagingViewSet(TenantModelViewSet):
     """Flat list of ProductPackaging rows across ALL products.

@@ -80,18 +80,18 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
     }
     const availableParents = potentialParents.filter(p => (!unit || p.id !== unit.id) && !descendantIds.has(p.id));
 
-    const inputCls = "w-full px-3 py-2.5 rounded-xl text-[13px] font-bold outline-none transition-all focus:ring-2";
+    const inputCls = "w-full px-3 py-2 rounded-xl text-tp-md font-bold outline-none transition-all focus:ring-2";
     const inputStyle = {
         background: 'var(--app-background)',
         border: '1px solid var(--app-border)',
         color: 'var(--app-foreground)',
     };
-    const labelCls = "block text-[9px] font-black uppercase tracking-widest mb-1.5";
+    const labelCls = "block text-tp-xxs font-bold uppercase tracking-widest mb-1.5";
     const labelStyle = { color: 'var(--app-muted-foreground)' };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+            <div className="w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
 
                 {/* Header */}
@@ -109,10 +109,10 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                             <Ruler size={14} />
                         </div>
                         <div>
-                            <h3 className="text-[14px] font-black" style={{ color: 'var(--app-foreground)' }}>
+                            <h3 className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
                                 {unit ? 'Edit Unit' : 'Create Unit'}
                             </h3>
-                            <p className="text-[10px] font-semibold" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <p className="text-tp-xs font-semibold" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {baseUnitName ? `Adds under "${baseUnitName}"` : 'Define a unit of measurement'}
                             </p>
                         </div>
@@ -125,12 +125,12 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                 </div>
 
                 <form action={(formData) => { setPending(true); formAction(formData); setPending(false); }}
-                    className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                    className="flex-1 overflow-y-auto px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
 
-                    {/* ── UNIT TYPE (Count / Weight / Volume / …) ── */}
-                    <div>
+                    {/* ── UNIT TYPE — full width ── */}
+                    <div className="md:col-span-2">
                         <label className={labelCls} style={labelStyle}>Unit Type</label>
-                        <div className="grid grid-cols-3 gap-1.5">
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5">
                             {UNIT_TYPES.map(t => {
                                 const Icon = t.icon;
                                 const active = selectedType === t.id;
@@ -149,17 +149,21 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                             color: 'var(--app-muted-foreground)',
                                         }}>
                                         <Icon size={14} />
-                                        <span className="text-[10px] font-black uppercase tracking-wider">{t.label}</span>
+                                        <span className="text-tp-xs font-bold uppercase tracking-wider">{t.label}</span>
                                     </button>
                                 );
                             })}
                         </div>
                         {/* Hidden input — posts the selected type */}
                         <input type="hidden" name="type" value={selectedType} />
-                        <p className="text-[10px] mt-1.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <p className="text-tp-xs mt-1.5" style={{ color: 'var(--app-muted-foreground)' }}>
                             {UNIT_TYPES.find(t => t.id === selectedType)?.hint || 'Category of measurement'}
                         </p>
                     </div>
+
+                    {/* ── LEFT COLUMN: Identity + naming ──
+                     * Hierarchy/parent/conversion/options live in the right column. */}
+                    <div className="space-y-4">
 
                     {/* ── ROOT / DERIVED TOGGLE ── */}
                     {!baseUnitId && (
@@ -168,7 +172,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                             <div className="flex p-1 rounded-xl gap-0.5"
                                 style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                                 <button type="button" onClick={() => setUnitType('base')}
-                                    className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                    className="flex-1 py-1.5 text-tp-xs font-bold uppercase tracking-widest rounded-lg transition-all"
                                     style={unitType === 'base' ? {
                                         background: 'var(--app-surface)', color: 'var(--app-primary)',
                                         boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
@@ -176,7 +180,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                     Base (Root)
                                 </button>
                                 <button type="button" onClick={() => setUnitType('derived')}
-                                    className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                    className="flex-1 py-1.5 text-tp-xs font-bold uppercase tracking-widest rounded-lg transition-all"
                                     style={unitType === 'derived' ? {
                                         background: 'var(--app-surface)', color: 'var(--app-primary)',
                                         boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
@@ -213,7 +217,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                             <input name="name" defaultValue={unit?.name || ''} placeholder="e.g. Box"
                                 required className={inputCls} style={inputStyle} />
                             {state.errors?.name && (
-                                <p className="text-[10px] mt-1 font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
+                                <p className="text-tp-xs mt-1 font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
                                     {state.errors.name[0]}
                                 </p>
                             )}
@@ -223,7 +227,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                             <input name="code" defaultValue={unit?.code || ''} placeholder="e.g. BX"
                                 required className={inputCls + " font-mono uppercase"} style={inputStyle} />
                             {state.errors?.code && (
-                                <p className="text-[10px] mt-1 font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
+                                <p className="text-tp-xs mt-1 font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
                                     {state.errors.code[0]}
                                 </p>
                             )}
@@ -236,13 +240,18 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                             className={inputCls} style={inputStyle} />
                     </div>
 
+                    </div>{/* /LEFT COLUMN */}
+
+                    {/* ── RIGHT COLUMN: behaviour ── */}
+                    <div className="space-y-4">
+
                     {/* ── OPTIONS ── */}
                     <div className="p-3 rounded-xl space-y-2"
                         style={{
                             background: 'color-mix(in srgb, var(--app-border) 20%, transparent)',
                             border: '1px solid var(--app-border)',
                         }}>
-                        <label className="flex items-center gap-2 text-[12px] font-bold cursor-pointer"
+                        <label className="flex items-center gap-2 text-tp-sm font-bold cursor-pointer"
                             style={{ color: 'var(--app-foreground)' }}>
                             <input type="checkbox" name="allowFraction"
                                 checked={allowFraction}
@@ -250,12 +259,12 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                 className="w-4 h-4 rounded cursor-pointer"
                                 style={{ accentColor: 'var(--app-primary)' }} />
                             Allow fractional quantities
-                            <span className="text-[9px] font-bold uppercase tracking-widest ml-auto"
+                            <span className="text-tp-xxs font-bold uppercase tracking-widest ml-auto"
                                 style={{ color: 'var(--app-muted-foreground)' }}>
                                 {selectedType === 'COUNT' ? 'Usually off' : 'Usually on'}
                             </span>
                         </label>
-                        <label className="flex items-center gap-2 text-[12px] font-bold cursor-pointer"
+                        <label className="flex items-center gap-2 text-tp-sm font-bold cursor-pointer"
                             style={{ color: 'var(--app-foreground)' }}>
                             <input type="checkbox" name="needsBalance"
                                 defaultChecked={unit?.needs_balance}
@@ -265,7 +274,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                 style={{ accentColor: 'var(--app-warning, #f59e0b)' }} />
                             Connect to scale (balance barcode)
                             {isInheritedBalance && (
-                                <span className="ml-auto text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
+                                <span className="ml-auto text-tp-xxs font-bold uppercase tracking-widest px-1.5 py-0.5 rounded"
                                     style={{ background: 'var(--app-background)', color: 'var(--app-muted-foreground)' }}>
                                     Inherited
                                 </span>
@@ -318,7 +327,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                         <div className="animate-in fade-in slide-in-from-top-2 duration-200">
                             <label className={labelCls} style={labelStyle}>Conversion Factor</label>
                             <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold font-mono"
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-tp-xs font-bold font-mono"
                                     style={{ color: 'var(--app-muted-foreground)' }}>
                                     1 =
                                 </span>
@@ -326,23 +335,25 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                     defaultValue={unit?.conversion_factor || (baseUnitId ? 1 : '')}
                                     required placeholder="Qty"
                                     className={inputCls + " pl-14 pr-20 font-mono text-center"} style={inputStyle} />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase tracking-widest"
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-tp-xxs font-bold uppercase tracking-widest"
                                     style={{ color: 'var(--app-muted-foreground)' }}>
                                     base units
                                 </span>
                             </div>
-                            <p className="text-[10px] mt-1.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <p className="text-tp-xs mt-1.5" style={{ color: 'var(--app-muted-foreground)' }}>
                                 How many base units are in this unit?
                             </p>
                         </div>
                     )}
+
+                    </div>{/* /RIGHT COLUMN */}
                 </form>
 
                 {/* Footer */}
                 <div className="flex-shrink-0 px-5 py-3 flex items-center justify-end gap-2"
                     style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
                     <button type="button" onClick={onClose}
-                        className="px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all"
+                        className="px-4 py-2 rounded-lg text-tp-xs font-bold uppercase tracking-widest transition-all"
                         style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
                         Cancel
                     </button>
@@ -352,7 +363,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                             const form = (e.currentTarget.closest('.w-full') as HTMLElement)?.querySelector('form');
                             form?.requestSubmit();
                         }}
-                        className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-tp-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{
                             background: 'var(--app-primary)',
                             color: 'white',

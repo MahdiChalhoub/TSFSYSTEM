@@ -108,6 +108,12 @@ services:
       - TOKEN_TTL_HOURS=${TOKEN_TTL_HOURS:-24}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      # Feature flag — OB → JE unification (Phase 3 rollout).
+      # When true, balance services read opening balances from OPENING
+      # JE rows instead of the legacy OpeningBalance table. Flip only
+      # after `manage.py backfill_opening_jes --org <slug> --flag-check`
+      # passes cleanly (see ClosingService.is_safe_to_flip_flag).
+      - USE_JE_OPENING=${USE_JE_OPENING:-false}
     networks:
       - tsf_network
     deploy:

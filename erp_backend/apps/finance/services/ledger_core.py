@@ -179,22 +179,24 @@ class LedgerCoreMixin:
             
             # ── Step 5: Create Journal Entry ──────────────────────────
             journal_type = kwargs.get('journal_type', 'GENERAL')
+            journal_role = kwargs.get('journal_role', 'USER_GENERAL')
             currency = kwargs.get('currency')
             exchange_rate = kwargs.get('exchange_rate')
 
             entry = JournalEntry.objects.create(
-                organization=organization, 
-                transaction_date=transaction_date, 
-                description=description, 
-                reference=reference, 
-                fiscal_year=fp.fiscal_year, 
-                fiscal_period=fp, 
+                organization=organization,
+                transaction_date=transaction_date,
+                description=description,
+                reference=reference,
+                fiscal_year=fp.fiscal_year,
+                fiscal_period=fp,
                 status='DRAFT',
-                scope=scope, 
+                scope=scope,
                 site_id=site_id,
                 created_by=user,
                 # New fields
                 journal_type=journal_type,
+                journal_role=journal_role,
                 source_module=source_module or '',
                 source_model=source_model or '',
                 source_id=source_id,

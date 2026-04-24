@@ -73,26 +73,37 @@ class JournalEntry(VerifiableModel):
     # ── Status & Audit ─────────────────────────────────────────────
     is_locked = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    # NOTE: `is_superseded`, `superseded_by`, `superseded_at`, and
-    # `journal_role` are defined in migration 0060 but gated out of the
-    # Python model until that migration lands in the DB. 0060 is
-    # currently blocked by the pre-existing inventory 0054/0055 history
-    # mismatch (Django's check_consistent_history refuses any migrate
-    # until it's reconciled). Once ops runs:
-    #   migrate --fake inventory 0054
-    #   migrate finance 0060
-    # re-enable the four fields below AND the `constraints` block in
-    # Meta, then replace ClosingService's description-prefix supersede
-    # hack with proper is_superseded=True writes.
-    #
-    # is_superseded = models.BooleanField(default=False, db_index=True, ...)
-    # superseded_by = models.ForeignKey('self', on_delete=SET_NULL, null=True, blank=True,
-    #     related_name='supersedes', ...)
-    # superseded_at = models.DateTimeField(null=True, blank=True)
-    # JOURNAL_ROLES = [('USER_GENERAL',...), ('SYSTEM_OPENING',...),
-    #                  ('SYSTEM_CLOSING',...), ('SYSTEM_ADJUSTMENT',...)]
-    # journal_role = models.CharField(max_length=30, choices=JOURNAL_ROLES,
-    #     default='USER_GENERAL', db_index=True, ...)
+    # Supersede semantics (migration 0060). When a system-regeneratable
+    # JE is replaced (e.g. OPENING JE regenerated after a close rerun),
+    # the old row stays POSTED but flips is_superseded=True and
+    # superseded_by -> new row. Balance aggregations must filter
+    # is_superseded=False.
+    is_superseded = models.BooleanField(
+        default=False, db_index=True,
+        help_text='True when this JE has been replaced by a newer system-generated one',
+    )
+    superseded_by = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='supersedes', help_text='Newer JE that replaced this one',
+    )
+    superseded_at = models.DateTimeField(null=True, blank=True)
+    # Ownership axis, orthogonal to journal_type. journal_type says WHAT
+    # the JE is (OPENING / CLOSING / GENERAL / …). journal_role says WHO
+    # owns it and drives edit-lock rules. User-created capital-injection
+    # entries can still have journal_type='OPENING' with journal_role=
+    # 'USER_GENERAL' — the partial unique constraint only enforces
+    # uniqueness across SYSTEM_OPENING.
+    JOURNAL_ROLES = [
+        ('USER_GENERAL', 'User General'),
+        ('SYSTEM_OPENING', 'System Opening'),
+        ('SYSTEM_CLOSING', 'System Closing'),
+        ('SYSTEM_ADJUSTMENT', 'System Adjustment'),
+    ]
+    journal_role = models.CharField(
+        max_length=30, choices=JOURNAL_ROLES, default='USER_GENERAL',
+        db_index=True,
+        help_text='Ownership axis — separate from journal_type; drives edit-lock rules',
+    )
     posted_at = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_journal_entries')
     posted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='posted_journal_entries')
@@ -168,13 +179,26 @@ class JournalEntry(VerifiableModel):
             models.Index(fields=['organization', 'scope']),
             models.Index(fields=['organization', 'status']),
             models.Index(fields=['reference']),
-            # NOTE: indexes for is_superseded + journal_role are defined
-            # in migration 0060 but gated out until it applies. Re-add:
-            #   models.Index(fields=['organization', 'is_superseded']),
-            #   models.Index(fields=['organization', 'journal_role']),
-            # alongside the partial unique constraint once 0060 is live.
+            models.Index(fields=['organization', 'is_superseded']),
+            models.Index(fields=['organization', 'journal_role']),
         ]
-        # constraints = [...]  # see migration 0060; re-add when applied
+        constraints = [
+            # DB-level defense-in-depth: only one active system-generated
+            # OPENING JE per (fiscal_year, scope, organization). User-
+            # created entries with journal_type='OPENING' but journal_role=
+            # 'USER_GENERAL' (e.g. capital injections) are NOT covered —
+            # they're not the system's carry-forward artefact.
+            models.UniqueConstraint(
+                fields=['fiscal_year', 'scope', 'organization'],
+                condition=models.Q(
+                    journal_type='OPENING',
+                    status='POSTED',
+                    is_superseded=False,
+                    journal_role='SYSTEM_OPENING',
+                ),
+                name='unique_active_opening_je_per_fy_scope',
+            ),
+        ]
 
     def __str__(self):
         return f"JE-{self.id}: {self.description[:50]}"

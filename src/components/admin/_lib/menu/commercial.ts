@@ -41,7 +41,7 @@ export const commercial: MenuItem = {
             title: 'POS Settings & Audit',
             icon: Package,
             children: [
-                { title: 'POS Settings', path: '/sales/pos-settings' },
+                { title: 'POS Settings', path: '/sales/pos-settings', stage: 'in-progress' },
                 { title: 'POS Terminal (Alt)', path: '/pos/pos' },
                 { title: 'POS Registers', path: '/pos/pos-registers' },
                 { title: 'POS Settings (Alt)', path: '/pos/pos-settings' },

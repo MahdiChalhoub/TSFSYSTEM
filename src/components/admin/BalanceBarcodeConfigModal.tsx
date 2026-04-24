@@ -93,10 +93,14 @@ const MODES: Record<VariableBarcodeMode, {
 };
 
 export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
+    // Start with defaults visible instantly. The backend endpoint for
+    // `settings/balance-barcode/` may not exist in every tenant yet, so we
+    // don't block the UI on it — we just hydrate in the background if it
+    // comes back with saved values.
     const [configs, setConfigs] = useState<BalanceBarcodeConfigMap>(BLANK_MAP);
     const [activeMode, setActiveMode] = useState<VariableBarcodeMode>('WEIGHT');
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const loading = false; // kept for render guards below
 
     const config = configs[activeMode];
     const patchConfig = (p: Partial<BalanceBarcodeConfig>) =>
@@ -104,11 +108,15 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
 
     useEffect(() => {
         if (!isOpen) return;
-        setLoading(true);
-        getBalanceBarcodeConfigMap().then(res => {
-            if (res.success && res.data) setConfigs(res.data);
-            setLoading(false);
+        let cancelled = false;
+        // Fetch with a short timeout — if the endpoint is missing or Django
+        // is slow, we stick with defaults rather than freezing the modal.
+        const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), 3000));
+        Promise.race([getBalanceBarcodeConfigMap(), timeout]).then(res => {
+            if (cancelled || !res || !(res as any).success || !(res as any).data) return;
+            setConfigs((res as any).data);
         });
+        return () => { cancelled = true; };
     }, [isOpen]);
 
     const handleSave = useCallback(async () => {

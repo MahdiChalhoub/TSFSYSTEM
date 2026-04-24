@@ -97,6 +97,8 @@ services:
       - DJANGO_ALLOWED_HOSTS=*
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      # Feature flag — OB → JE unification (Phase 3 rollout).
+      - USE_JE_OPENING=${USE_JE_OPENING:-false}
     mem_limit: 1g
     memswap_limit: 1g
     networks:

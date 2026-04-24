@@ -313,6 +313,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                         journal_entry__fiscal_year=target_year,
                         journal_entry__journal_type='OPENING',
                         journal_entry__status='POSTED',
+                        journal_entry__is_superseded=False,
                     )
                     .select_related('account')
                     .order_by('account__type', 'account__code')

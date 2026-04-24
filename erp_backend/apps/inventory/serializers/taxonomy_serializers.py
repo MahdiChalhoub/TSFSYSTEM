@@ -326,23 +326,23 @@ class UnitPackageSerializer(serializers.ModelSerializer):
     unit_code = serializers.ReadOnlyField(source='unit.code')
     unit_type = serializers.ReadOnlyField(source='unit.type')
 
-    # Chain fields (`parent`, `parent_ratio`, derived `parent_name`) are
-    # gated out until migration 0057 lands — the DB doesn't have the
-    # columns yet. Frontend already tolerates their absence and flattens
-    # the tree to unit-root level. Re-enable alongside the model fields.
-    # parent_name = serializers.ReadOnlyField(source='parent.name', default=None)
-    # parent_ratio = serializers.DecimalField(max_digits=15, decimal_places=4, allow_null=True, required=False)
+    parent_name = serializers.ReadOnlyField(source='parent.name', default=None)
+    parent_ratio = serializers.DecimalField(
+        max_digits=15, decimal_places=4, allow_null=True, required=False,
+    )
 
     class Meta:
         model = UnitPackage
         fields = [
             'id', 'unit', 'unit_name', 'unit_code', 'unit_type',
+            'parent', 'parent_name', 'parent_ratio',
             'name', 'code', 'ratio', 'is_default', 'order', 'notes',
+            'is_archived', 'archived_at',
             'created_at', 'updated_at', 'organization',
         ]
-        read_only_fields = ['organization', 'created_at', 'updated_at']
+        read_only_fields = ['organization', 'created_at', 'updated_at', 'archived_at']
 
-    def _unused_chain_validator(self, attrs):
+    def validate(self, attrs):
         """Chain integrity: tenant scope, same-unit, cycle detection,
         parent_ratio sanity, and server-derived `ratio` when chained.
 

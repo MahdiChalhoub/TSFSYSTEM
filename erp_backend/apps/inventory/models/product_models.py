@@ -23,7 +23,10 @@ UNIT_TYPE_CHOICES = (
 )
 
 
-class Unit(AuditLogMixin, TenantOwnedModel):
+class Unit(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
+    SEQUENCE_KEY = 'UNIT'
+    SEQUENCE_PREFIX = 'UOM-'
+    SEQUENCE_PADDING = 5
     """Unit of measurement with Kernel OS v2.0 integration"""
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
@@ -47,7 +50,10 @@ class Unit(AuditLogMixin, TenantOwnedModel):
         return self.code
 
 
-class UnitPackage(AuditLogMixin, TenantOwnedModel):
+class UnitPackage(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
+    SEQUENCE_KEY = 'UNIT_PACKAGE'
+    SEQUENCE_PREFIX = 'PKG-'
+    SEQUENCE_PADDING = 5
     """
     Per-UNIT package TEMPLATE — a step in a packaging pipeline.
 
@@ -66,17 +72,15 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
     barcode / price / image — those are per-product on ProductPackaging.
     """
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name='unit_packages')
-    # NOTE: `parent` + `parent_ratio` are defined in migration 0057 but the
-    # DB doesn't have those columns yet (blocked on pre-existing 0054 history
-    # mismatch — user must run `migrate --fake inventory 0054 && migrate
-    # inventory 0058` themselves). Gated out of the model until then so
-    # reads don't crash with "column parent_id does not exist". Re-enable
-    # the two fields below once migrations apply.
-    # parent = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True,
-    #     related_name='children',
-    #     help_text='Previous step in the packaging chain (None for base-level)')
-    # parent_ratio = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
-    #     help_text='How many of `parent` this package contains (e.g. 4 boxes per pallet)')
+    parent = models.ForeignKey(
+        'self', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='children',
+        help_text='Previous step in the packaging chain (None for base-level)',
+    )
+    parent_ratio = models.DecimalField(
+        max_digits=15, decimal_places=4, null=True, blank=True,
+        help_text='How many of `parent` this package contains (e.g. 4 boxes per pallet)',
+    )
     name = models.CharField(max_length=120, help_text='Display name, e.g. "Pack of 6"')
     code = models.CharField(max_length=50, null=True, blank=True, help_text='Short code, e.g. "PK6"')
     ratio = models.DecimalField(
@@ -86,12 +90,11 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
     is_default = models.BooleanField(default=False, help_text='Primary package for this unit')
     order = models.PositiveIntegerField(default=0, help_text='Display order (ascending)')
     notes = models.TextField(null=True, blank=True)
-    # NOTE: is_archived + archived_at defined in migration 0058 but gated out of
-    # the Python model until that migration actually lands in DB (blocked on
-    # pre-existing 0054 history mismatch). Once `migrate inventory 0058` runs,
-    # re-add these fields and the partial unique-default constraint.
-    # is_archived = models.BooleanField(default=False, db_index=True, ...)
-    # archived_at = models.DateTimeField(null=True, blank=True)
+    is_archived = models.BooleanField(
+        default=False, db_index=True,
+        help_text='Soft-deleted templates are hidden from default listings',
+    )
+    archived_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -100,13 +103,21 @@ class UnitPackage(AuditLogMixin, TenantOwnedModel):
         ordering = ['unit_id', 'order', 'ratio']
         constraints = [
             models.UniqueConstraint(fields=['unit', 'name', 'organization'], name='unique_unit_package_name_tenant'),
+            models.UniqueConstraint(
+                fields=['unit', 'organization'],
+                condition=models.Q(is_default=True, is_archived=False),
+                name='unique_default_package_per_unit_tenant',
+            ),
         ]
 
     def __str__(self):
         return f"{self.name} (×{self.ratio} {self.unit.code})"
 
 
-class PackagingSuggestionRule(AuditLogMixin, TenantOwnedModel):
+class PackagingSuggestionRule(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
+    SEQUENCE_KEY = 'PACKAGING_SUGGESTION_RULE'
+    SEQUENCE_PREFIX = 'PKR-'
+    SEQUENCE_PADDING = 5
     """
     Smart Suggestion Engine — proposes the right packaging based on a product's
     category, brand, and/or attributes. User can accept or override.
@@ -246,8 +257,11 @@ class Category(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
         self.full_path = ' > '.join(parts)
 
 
-class Brand(AuditLogMixin, TenantOwnedModel):
+class Brand(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     """Brand with Kernel OS v2.0 integration"""
+    SEQUENCE_KEY = 'BRAND'
+    SEQUENCE_PREFIX = 'BRA-'
+    SEQUENCE_PADDING = 5
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     logo = models.CharField(max_length=255, null=True, blank=True)
@@ -274,8 +288,11 @@ class Brand(AuditLogMixin, TenantOwnedModel):
         return self.name
 
 
-class Parfum(AuditLogMixin, TenantOwnedModel):
+class Parfum(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     """Parfum/Fragrance with Kernel OS v2.0 integration"""
+    SEQUENCE_KEY = 'PARFUM'
+    SEQUENCE_PREFIX = 'PAR-'
+    SEQUENCE_PADDING = 5
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     categories = models.ManyToManyField(Category, blank=True, related_name='parfums')
@@ -290,7 +307,10 @@ class Parfum(AuditLogMixin, TenantOwnedModel):
         return self.name
 
 
-class ProductGroup(AuditLogMixin, TenantOwnedModel):
+class ProductGroup(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
+    SEQUENCE_KEY = 'PRODUCT_GROUP'
+    SEQUENCE_PREFIX = 'GRP-'
+    SEQUENCE_PADDING = 5
     """Product group with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='product_groups')
@@ -876,7 +896,10 @@ class Product(AuditLogMixin, TenantOwnedModel):
         return f"{self.sku} - {self.name}"
 
 
-class ProductAttribute(AuditLogMixin, TenantOwnedModel):
+class ProductAttribute(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
+    SEQUENCE_KEY = 'PRODUCT_ATTRIBUTE'
+    SEQUENCE_PREFIX = 'ATT-'
+    SEQUENCE_PADDING = 5
     """
     Dynamic Attribute Tree — Enterprise V3 (Nomenclature-Aware)
     ────────────────────────────────────────────────────────────

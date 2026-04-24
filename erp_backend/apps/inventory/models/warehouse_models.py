@@ -5,14 +5,18 @@ from decimal import Decimal
 from django.utils.translation import gettext_lazy as _
 from kernel.tenancy.models import TenantOwnedModel
 from kernel.audit.mixins import AuditLogMixin
+from erp.mixins import ReferenceCodeMixin
 
 
-class Warehouse(AuditLogMixin, TenantOwnedModel):
+class Warehouse(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     """
     Unified location model — replaces both Site and Warehouse.
     A Warehouse can be a Branch/Site (top-level), a Store, a Warehouse, or Virtual.
     Hierarchy: parent → children (e.g., Branch → Store → Warehouse)
     """
+    SEQUENCE_KEY = 'WAREHOUSE'
+    SEQUENCE_PREFIX = 'WH-'
+    SEQUENCE_PADDING = 5
     LOCATION_TYPES = (
         ('BRANCH', 'Branch / Site'),   # Top-level, replaces old "Site"
         ('STORE', 'Store'),            # Retail point of sale

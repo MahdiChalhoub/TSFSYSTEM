@@ -92,7 +92,6 @@ export const financeMain: MenuItem = {
                 { title: 'COA Management', path: '/finance/coa' },
                 { title: 'CSV Import', path: '/finance/ledger/import' },
                 { title: 'Journal Entries', path: '/finance/journal' },
-                { title: 'Sequences', path: '/finance/sequences' },
             ],
         },
         {
