@@ -22,6 +22,27 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer
 
+    # Journal entries owned by the system (year-open/close/adjustment runs)
+    # must not be mutated through the normal API surface. The close-
+    # fiscal-year process owns their lifecycle — it supersedes the old JE
+    # and writes a new one; no external actor may edit, delete, or
+    # reverse them. The model-level `is_locked` flag still protects
+    # the save() path, but UX-wise a 403 returned here is cleaner than
+    # a downstream 500.
+    _SYSTEM_ROLES_LOCKED = ('SYSTEM_OPENING', 'SYSTEM_CLOSING', 'SYSTEM_ADJUSTMENT')
+
+    def _assert_not_system_owned(self, entry, action_verb='modify'):
+        from rest_framework.exceptions import PermissionDenied
+        if getattr(entry, 'journal_role', None) in self._SYSTEM_ROLES_LOCKED:
+            raise PermissionDenied(
+                f"Cannot {action_verb} system-owned journal entry "
+                f"{entry.reference} (role={entry.journal_role}, "
+                f"type={entry.journal_type}). These entries are produced "
+                f"by the close-fiscal-year workflow and can only be "
+                f"changed by reversing the fiscal-year close and "
+                f"re-running it."
+            )
+
     @profile_view
     def get_queryset(self):
         qs = super().get_queryset().select_related(
@@ -129,9 +150,15 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         organization = Organization.objects.get(id=organization_id)
-        
+
+        try:
+            entry = JournalEntry.objects.get(pk=pk, organization=organization)
+        except JournalEntry.DoesNotExist:
+            return Response({"error": "Journal entry not found"}, status=status.HTTP_404_NOT_FOUND)
+        self._assert_not_system_owned(entry, action_verb='reverse')
+
         try:
             LedgerService.reverse_journal_entry(organization, pk, user=request.user)
             return Response({"message": "Journal entry reversed successfully"})
@@ -229,9 +256,16 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         organization = Organization.objects.get(id=organization_id)
-        
+
+        # --- SYSTEM-OWNED JE GUARD ---
+        try:
+            entry_obj = JournalEntry.objects.get(pk=kwargs.get('pk'), organization=organization)
+        except JournalEntry.DoesNotExist:
+            return Response({"error": "Journal entry not found"}, status=status.HTTP_404_NOT_FOUND)
+        self._assert_not_system_owned(entry_obj, action_verb='edit')
+
         # --- STRICT SCOPE ENFORCEMENT ---
         if 'scope' in request.data:
             self.check_scope_permission(request.data.get('scope'))
@@ -259,6 +293,20 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            entry_obj = JournalEntry.objects.get(pk=kwargs.get('pk'), organization=organization)
+        except JournalEntry.DoesNotExist:
+            return Response({"error": "Journal entry not found"}, status=status.HTTP_404_NOT_FOUND)
+        self._assert_not_system_owned(entry_obj, action_verb='delete')
+
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=['post'], url_path='import')
     def import_csv(self, request):

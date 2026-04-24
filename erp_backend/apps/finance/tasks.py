@@ -134,3 +134,99 @@ def fire_period_reminders():
     call_command('fire_period_reminders')
     logger.info('[fire_period_reminders] Completed daily fiscal-period reminder sweep')
     return {'status': 'ok'}
+
+
+@shared_task(name='apps.finance.tasks.run_close_chain_canary')
+def run_close_chain_canary(org_id: int | None = None):
+    """Daily drift-monitor for the fiscal-year close chain.
+
+    Walks every organization (or just `org_id` if given) and runs the
+    OB↔JE validator + JE-coverage gate across every fiscal year. Any
+    per-year drift or coverage mismatch is:
+      - logged at WARNING level (so it shows up in log aggregation)
+      - returned in the task result for programmatic pickup
+
+    Safe to run daily — read-only. Takes ~1s per org on typical data.
+    Designed to be the first alarm if a deployment introduces silent
+    corruption: if this starts failing, STOP before closing another
+    year until the root cause is understood.
+
+    Result shape:
+      {
+        'ran_at': iso-datetime,
+        'orgs_total': int,
+        'orgs_clean': int,
+        'orgs_drifted': int,
+        'details': [
+          {'org_id': int, 'org_slug': str, 'safe': bool,
+           'years_drift': int, 'years_missing_je': int,
+           'first_broken_year': str | None},
+          ...
+        ]
+      }
+    """
+    from apps.finance.services.closing_service import ClosingService
+    from erp.models import Organization
+
+    orgs = (
+        Organization.objects.filter(id=org_id)
+        if org_id is not None
+        else Organization.objects.all()
+    )
+
+    out = {
+        'ran_at': timezone.now().isoformat(),
+        'orgs_total': 0,
+        'orgs_clean': 0,
+        'orgs_drifted': 0,
+        'details': [],
+    }
+
+    for org in orgs:
+        out['orgs_total'] += 1
+        try:
+            rpt = ClosingService.is_safe_to_flip_flag(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: is_safe_to_flip_flag crashed for org %s: %s",
+                org.id, exc,
+            )
+            out['orgs_drifted'] += 1
+            out['details'].append({
+                'org_id': org.id,
+                'org_slug': getattr(org, 'slug', None),
+                'safe': False,
+                'error': str(exc),
+            })
+            continue
+
+        first_broken = next(
+            (y['fy_name'] for y in rpt['years'] if y['has_drift']),
+            None,
+        )
+        detail = {
+            'org_id': org.id,
+            'org_slug': rpt.get('organization_slug'),
+            'safe': rpt['safe'],
+            'years_drift': rpt['years_drift'],
+            'years_missing_je': rpt['years_missing_je'],
+            'first_broken_year': first_broken,
+        }
+        out['details'].append(detail)
+
+        if rpt['safe']:
+            out['orgs_clean'] += 1
+        else:
+            out['orgs_drifted'] += 1
+            logger.warning(
+                "Canary ALERT org=%s slug=%s: years_drift=%s years_missing_je=%s "
+                "first_broken=%s — investigate before next year close.",
+                org.id, detail['org_slug'], rpt['years_drift'],
+                rpt['years_missing_je'], first_broken,
+            )
+
+    logger.info(
+        "Canary: %s/%s orgs clean, %s drifted",
+        out['orgs_clean'], out['orgs_total'], out['orgs_drifted'],
+    )
+    return out

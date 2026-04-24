@@ -60,9 +60,12 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
         return { message: 'success' };
     } catch (e: unknown) {
         console.error('[createCategory] Exception:', e);
-        const body = (e as any)?.body;
-        const fieldErrors = pickFieldErrors(body);
-        const detail = (e as any)?.message || 'Failed to create category';
+        const data = (e as any)?.data || (e as any)?.body;
+        const fieldErrors = pickFieldErrors(data);
+        const detail = (fieldErrors?.barcode_prefix?.[0])
+            || (fieldErrors?.name?.[0])
+            || (e as any)?.message
+            || 'Failed to create category';
         return { message: detail, errors: fieldErrors };
     }
 }
@@ -103,9 +106,13 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
         revalidatePath('/inventory/categories');
         return { message: 'success' };
     } catch (e: unknown) {
-        const body = (e as any)?.body;
-        const fieldErrors = pickFieldErrors(body);
-        const detail = (e as any)?.message || 'Failed to update category';
+        console.error('[updateCategory] Exception:', e);
+        const data = (e as any)?.data || (e as any)?.body;
+        const fieldErrors = pickFieldErrors(data);
+        const detail = (fieldErrors?.barcode_prefix?.[0])
+            || (fieldErrors?.name?.[0])
+            || (e as any)?.message
+            || 'Failed to update category';
         return { message: detail, errors: fieldErrors };
     }
 }

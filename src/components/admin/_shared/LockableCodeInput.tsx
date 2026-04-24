@@ -37,6 +37,9 @@ interface Props {
     className?: string;
     style?: React.CSSProperties;
     warning?: string;           // custom confirm copy; falls back to a default
+    maxLength?: number;
+    /** "digits" → strip non-numeric on every keystroke. */
+    inputFilter?: 'digits';
 }
 
 const EDIT_WARNING =
@@ -50,7 +53,7 @@ const OVERRIDE_WARNING =
 
 export function LockableCodeInput({
     name, defaultValue, suggestedValue, isEdit, placeholder, required,
-    mono, className, style, warning,
+    mono, className, style, warning, maxLength, inputFilter,
 }: Props) {
     // Lock whenever there is an authoritative value in the field:
     //   • edit mode: the existing code is the source of truth
@@ -83,6 +86,11 @@ export function LockableCodeInput({
                 placeholder={placeholder}
                 required={required}
                 readOnly={!unlocked}
+                maxLength={maxLength}
+                inputMode={inputFilter === 'digits' ? 'numeric' : undefined}
+                onChange={inputFilter === 'digits'
+                    ? e => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, maxLength ?? 999); }
+                    : undefined}
                 className={`${className ?? ''} ${mono ? 'font-mono font-bold' : ''} pr-10 ${!unlocked ? 'opacity-80 cursor-not-allowed' : ''}`}
                 style={style}
             />

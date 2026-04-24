@@ -202,3 +202,67 @@ class FiscalPeriod(TenantModel):
         self.save()
         return self
 
+
+class FiscalYearCloseSnapshot(TenantModel):
+    """Immutable snapshot of the books at the moment a fiscal year is
+    finalized. Written once by `ClosingService.close_fiscal_year` after
+    the integrity gate passes, never modified. Provides a fast, append-
+    only audit record that survives:
+      - denormalized balance drift
+      - OB↔JE dual-write corrections
+      - Chart of Accounts renames / restructures after the fact
+
+    One row per (fiscal_year, scope) pair. Two rows per year close
+    (OFFICIAL + INTERNAL). Structure of `trial_balance` is a list of
+    dicts so it's safe to restore even if the COA is later reshaped:
+      [
+        {"account_id": 12, "code": "1000", "name": "Cash", "type": "ASSET",
+         "debit": "1000.00", "credit": "0.00", "net": "1000.00"},
+        ...
+      ]
+    """
+    fiscal_year = models.ForeignKey(
+        'finance.FiscalYear', on_delete=models.CASCADE,
+        related_name='close_snapshots',
+    )
+    SCOPE_CHOICES = (('OFFICIAL', 'Official'), ('INTERNAL', 'Internal'))
+    scope = models.CharField(max_length=10, choices=SCOPE_CHOICES)
+
+    closing_journal_entry = models.ForeignKey(
+        'finance.JournalEntry', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='close_snapshots_closing',
+    )
+    opening_journal_entry = models.ForeignKey(
+        'finance.JournalEntry', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='close_snapshots_opening',
+    )
+
+    total_assets = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_liabilities = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_equity = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    net_income = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    retained_earnings = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+
+    trial_balance = models.JSONField(default=list)
+
+    captured_at = models.DateTimeField(auto_now_add=True)
+    captured_by = models.ForeignKey(
+        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='fy_close_snapshots_captured',
+    )
+
+    class Meta:
+        db_table = 'finance_fy_close_snapshot'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['fiscal_year', 'scope'],
+                name='fy_close_snapshot_uniq_year_scope',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['organization', 'fiscal_year']),
+            models.Index(fields=['fiscal_year', 'scope']),
+        ]
+
+    def __str__(self):
+        return f"CloseSnapshot({self.fiscal_year_id}, {self.scope})"

@@ -312,6 +312,15 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'apps.finance.tasks.fire_period_reminders',
         'schedule': crontab(minute=0, hour=6),       # Daily 06:00
     },
+    # ── Close-chain drift monitor ──────────────────────────────
+    # Daily canary over every org's fiscal-year close chain. Surfaces
+    # OB↔JE drift, missing SYSTEM_OPENING JEs, and account-coverage
+    # mismatches. Read-only; never modifies ledger state. Runs pre-
+    # business-hours so alerts land before anyone closes a new year.
+    'finance-close-chain-canary': {
+        'task': 'apps.finance.tasks.run_close_chain_canary',
+        'schedule': crontab(minute=30, hour=5),      # Daily 05:30
+    },
 }
 
 # ── Email Configuration (for notifications) ──────────────────

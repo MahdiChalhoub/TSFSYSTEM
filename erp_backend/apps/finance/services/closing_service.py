@@ -487,7 +487,16 @@ class ClosingService:
             # FINALIZED — rollback instead (transaction.atomic wraps the
             # entire method, so raising here undoes everything).
             ClosingService._assert_close_integrity(
-                organization, fiscal_year, re_account, next_year
+                organization, fiscal_year, next_year
+            )
+
+            # ── Step 4.5: Capture close snapshot ─────────────────────
+            # Immutable trial-balance snapshot per scope. Runs AFTER the
+            # integrity gate so we never persist a snapshot of a broken
+            # close; the gate raises on failure and the atomic block
+            # rolls back everything, including the snapshot row.
+            ClosingService._capture_close_snapshot(
+                organization, fiscal_year, user=user
             )
 
             # ── Step 5: Mark fiscal year FINALIZED ────────────────────
@@ -511,25 +520,34 @@ class ClosingService:
     _RECON_TOLERANCE = Decimal('0.01')
 
     @staticmethod
-    def _assert_close_integrity(organization, fiscal_year, re_account, next_year):
+    def _assert_close_integrity(organization, fiscal_year, next_year):
         """Reconciliation gate run just before marking the year FINALIZED.
 
-        Three invariants must hold. Any failure raises ValidationError,
-        which triggers rollback of the enclosing transaction.atomic():
+        Invariants — any failure raises ValidationError, which triggers
+        rollback of the enclosing transaction.atomic():
 
-          1. Accounting equation: ΣASSET = ΣLIABILITY + ΣEQUITY
-             — computed from POSTED JE lines through fiscal_year.end_date,
-             per scope. Ensures the closing JE actually balanced the books.
+          0. Period-state invariant: zero OPEN periods under a year about
+             to be marked FINALIZED (UX correctness).
 
-          2. P&L zeroing: ΣINCOME = 0 AND ΣEXPENSE = 0
-             — after the closing JE, every revenue and expense account
-             should sum to zero. Non-zero means an account was missed
-             (e.g. added to COA after the sum was computed).
+          1. Double-entry invariant: ΣDebit = ΣCredit across every POSTED
+             line in this year × scope. Catches single-sided JEs.
 
-          3. Retained-earnings continuity: new-year OB on `re_account`
-             equals old-year closing balance on `re_account`.
-             — only when next_year is present. Confirms the roll-forward
-             landed on the right account with the right amount.
+          2. Accounting equation: ΣASSET = ΣLIABILITY + ΣEQUITY per scope.
+             Ensures the closing JE actually balanced the books.
+
+          3. P&L zeroing: ΣINCOME = 0 AND ΣEXPENSE = 0 per scope.
+             Non-zero means an account was missed by the close sweep.
+
+          4. Contra-equity zeroing: every `clears_at_close=True` account
+             sums to 0 post-close per scope (Owner Draws, Dividends
+             Declared, Treasury Stock).
+
+          5. Full closing-chain continuity: for every BS account
+             (ASSET / LIABILITY / EQUITY), the old-year closing net
+             equals the new-year opening net per scope. Strongest
+             invariant — catches missing accounts, wrong amounts,
+             account-set mismatches, and scope bleed. Covers RE as
+             a special case since RE is type=EQUITY.
         """
         from apps.finance.models import JournalEntryLine, OpeningBalance
         from django.db.models import Sum, Q
@@ -660,74 +678,251 @@ class ClosingService:
                     f"triggered, year NOT finalized."
                 )
 
-        # ── Retained-earnings continuity ──
-        # Old-year RE closing balance (after the closing JE has posted)
-        # must equal new-year RE opening balance (what generate_opening_
-        # balances wrote). Any drift means the roll-forward got the wrong
-        # account or the wrong amount.
+        # ── Full closing-chain continuity (every BS account) ──
+        # Every balance-sheet account's closing net in FY N must equal its
+        # opening net in FY N+1 per scope. This is the strongest possible
+        # integrity invariant short of posting every JE — it catches:
+        #   • missing accounts in the carry-forward
+        #   • wrong amounts (even if RE happens to balance by coincidence)
+        #   • account-set mismatches (zero-sum traps)
+        #   • scope bleed (OFFICIAL↔INTERNAL misrouting)
+        # Previously we only checked RE; a sibling account could drift
+        # silently as long as RE itself was right.
         if next_year is None:
             return  # Nothing to reconcile; warning already logged upstream.
 
+        from apps.finance.models import ChartOfAccount as _COA
+        from django.conf import settings as _s
+        use_je_opening = getattr(_s, 'USE_JE_OPENING', False)
+
         for scope in ('OFFICIAL', 'INTERNAL'):
-            # Old-year closing balance on RE account (debit - credit)
-            re_close_agg = JournalEntryLine.objects.filter(
+            # Old-year closing state per BS account (net = debit - credit)
+            # aggregated across all POSTED, non-superseded lines in the
+            # year. Filter to BS types since P&L zeros out at close and
+            # carries nothing. `clears_at_close=True` accounts were
+            # already verified zero above — they'd drop out naturally
+            # here too, but we leave them so an unexpected non-zero
+            # surfaces as a continuity break rather than a silent ignore.
+            close_rows = JournalEntryLine.objects.filter(
                 journal_entry__organization=organization,
                 journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
                 journal_entry__scope=scope,
-                account=re_account,
+                account__type__in=['ASSET', 'LIABILITY', 'EQUITY'],
             ).filter(
                 Q(journal_entry__fiscal_year=fiscal_year) |
                 Q(journal_entry__fiscal_year__isnull=True,
                   journal_entry__transaction_date__date__gte=fiscal_year.start_date,
                   journal_entry__transaction_date__date__lte=fiscal_year.end_date)
-            ).aggregate(d=Sum('debit'), c=Sum('credit'))
-            re_close = (re_close_agg['d'] or Decimal('0.00')) - (re_close_agg['c'] or Decimal('0.00'))
+            ).values('account_id').annotate(d=Sum('debit'), c=Sum('credit'))
+            close_by_acc = {
+                r['account_id']: (r['d'] or Decimal('0.00')) - (r['c'] or Decimal('0.00'))
+                for r in close_rows
+            }
 
-            # New-year opening balance on RE account for this scope.
-            # NOTE: this is the delta-only row (Option A). For OFFICIAL
-            # this IS the roll-forward; for INTERNAL it's the delta and
-            # must be added to the OFFICIAL OB to get the full figure.
-            #
-            # Feature-flagged: USE_JE_OPENING switches the source from the
-            # legacy OpeningBalance table to OPENING JE lines. Both paths
-            # return the same Decimal amount by construction (dual-write
-            # keeps them in sync).
-            from django.conf import settings as _s
-            ob_amount = Decimal('0.00')
-            if getattr(_s, 'USE_JE_OPENING', False):
-                je_agg = JournalEntryLine.objects.filter(
+            # New-year opening state per account — source depends on
+            # USE_JE_OPENING flag. Both paths produce the same per-account
+            # net under dual-write; we only pick one so a drift between
+            # them (the job of validate_opening_ob_vs_je) doesn't double-
+            # report here.
+            if use_je_opening:
+                ob_rows = JournalEntryLine.objects.filter(
                     journal_entry__organization=organization,
                     journal_entry__fiscal_year=next_year,
                     journal_entry__journal_type='OPENING',
+                    journal_entry__journal_role='SYSTEM_OPENING',
                     journal_entry__status='POSTED',
                     journal_entry__is_superseded=False,
                     journal_entry__scope=scope,
-                    account=re_account,
-                ).aggregate(d=Sum('debit'), c=Sum('credit'))
-                ob_amount = (je_agg['d'] or Decimal('0.00')) - (je_agg['c'] or Decimal('0.00'))
+                ).values('account_id').annotate(d=Sum('debit'), c=Sum('credit'))
+                ob_by_acc = {
+                    r['account_id']: (r['d'] or Decimal('0.00')) - (r['c'] or Decimal('0.00'))
+                    for r in ob_rows
+                }
             else:
-                ob_row = OpeningBalance.objects.filter(
-                    organization=organization, account=re_account,
-                    fiscal_year=next_year, scope=scope,
-                ).first()
-                if ob_row:
-                    ob_amount = (ob_row.debit_amount or Decimal('0.00')) - (ob_row.credit_amount or Decimal('0.00'))
+                ob_qs = OpeningBalance.objects.filter(
+                    organization=organization, fiscal_year=next_year, scope=scope,
+                ).values('account_id', 'debit_amount', 'credit_amount')
+                ob_by_acc = {
+                    r['account_id']: (r['debit_amount'] or Decimal('0.00')) - (r['credit_amount'] or Decimal('0.00'))
+                    for r in ob_qs
+                }
 
-            # OFFICIAL and INTERNAL are disjoint scopes (each JE belongs
-            # to exactly one). The OB row for each scope stores that
-            # scope's OWN closing movement on the RE account, so the
-            # continuity check is a direct 1:1 comparison — no delta
-            # subtraction needed.
-            expected = re_close
+            # Per-account drift report — accumulate all violations so the
+            # error message surfaces every broken account, not just the
+            # first one. Much faster to debug "5 accounts drifted" than
+            # "account 1200 drifted → fix → rerun → account 2100 drifted".
+            breaks = []
+            all_accounts = set(close_by_acc) | set(ob_by_acc)
+            for acc_id in all_accounts:
+                old_close = close_by_acc.get(acc_id, Decimal('0.00'))
+                new_open = ob_by_acc.get(acc_id, Decimal('0.00'))
 
-            diff = (expected - ob_amount).copy_abs()
-            if diff > tol:
+                # Non-zero closes must match; zero closes that picked up
+                # an OB row are also a break (ghost opening with no prior
+                # state). Tolerance absorbs rounding-split cents only.
+                if (old_close - new_open).copy_abs() > tol:
+                    breaks.append({
+                        'account_id': acc_id,
+                        'old_close': old_close,
+                        'new_open': new_open,
+                        'diff': (old_close - new_open),
+                    })
+
+            if breaks:
+                # Pull codes/names once for readable error text
+                acc_ids = [b['account_id'] for b in breaks]
+                acc_map = {
+                    a.id: (a.code, a.name)
+                    for a in _COA.objects.filter(id__in=acc_ids)
+                }
+                lines = []
+                for b in breaks:
+                    code, name = acc_map.get(b['account_id'], ('?', '?'))
+                    lines.append(
+                        f"  {code} {name}: close={b['old_close']} "
+                        f"open={b['new_open']} diff={b['diff']}"
+                    )
                 raise ValidationError(
-                    f"[{scope}] Retained-earnings continuity check failed: "
-                    f"old-year closing={expected}, new-year opening={ob_amount}, diff={diff}. "
-                    f"The roll-forward did not land correctly on {re_account.code} — "
-                    f"rollback triggered, year NOT finalized."
+                    f"[{scope}] Closing-chain continuity failed on "
+                    f"{len(breaks)} account(s) — rollback triggered, year "
+                    f"NOT finalized:\n" + "\n".join(lines)
                 )
+
+    @staticmethod
+    def _capture_close_snapshot(organization, fiscal_year, user=None):
+        """Write one FiscalYearCloseSnapshot row per scope.
+
+        Idempotent via the (fiscal_year, scope) UNIQUE constraint + an
+        update_or_create pattern — re-running close_fiscal_year (e.g.
+        after a reverse + re-finalize) overwrites the prior snapshot
+        with fresh post-integrity-gate state.
+
+        Called AFTER `_assert_close_integrity` so we can trust the
+        numbers. Failure here rolls back everything (atomic block), so
+        no half-finalized state can leak out.
+        """
+        from apps.finance.models import (
+            JournalEntryLine, FiscalYearCloseSnapshot
+        )
+        from django.db.models import Sum, Q
+
+        for scope in ('OFFICIAL', 'INTERNAL'):
+            # Per-account trial balance for this scope, full BS + P&L.
+            # P&L should be zero post-close, but we record it anyway —
+            # a non-zero P&L line in the snapshot would be a smoking gun
+            # of sweep failure that somehow slipped past the gate.
+            rows = JournalEntryLine.objects.filter(
+                journal_entry__organization=organization,
+                journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
+                journal_entry__scope=scope,
+            ).filter(
+                Q(journal_entry__fiscal_year=fiscal_year) |
+                Q(journal_entry__fiscal_year__isnull=True,
+                  journal_entry__transaction_date__date__gte=fiscal_year.start_date,
+                  journal_entry__transaction_date__date__lte=fiscal_year.end_date)
+            ).values(
+                'account_id', 'account__code', 'account__name',
+                'account__type', 'account__system_role',
+            ).annotate(d=Sum('debit'), c=Sum('credit'))
+
+            trial = []
+            totals = {'ASSET': Decimal('0.00'), 'LIABILITY': Decimal('0.00'),
+                      'EQUITY': Decimal('0.00'), 'INCOME': Decimal('0.00'),
+                      'EXPENSE': Decimal('0.00')}
+            re_value = Decimal('0.00')
+
+            for r in rows:
+                d = r['d'] or Decimal('0.00')
+                c = r['c'] or Decimal('0.00')
+                if d == 0 and c == 0:
+                    continue
+                net = d - c
+                atype = r['account__type']
+                totals[atype] = totals.get(atype, Decimal('0.00')) + net
+                if r['account__system_role'] == 'RETAINED_EARNINGS':
+                    re_value += net
+                trial.append({
+                    'account_id': r['account_id'],
+                    'code': r['account__code'],
+                    'name': r['account__name'],
+                    'type': atype,
+                    'system_role': r['account__system_role'],
+                    'debit': str(d),
+                    'credit': str(c),
+                    'net': str(net),
+                })
+
+            trial.sort(key=lambda x: (x['code'] or '', x['account_id']))
+
+            # P&L should be zero post-close; net_income here is the
+            # *pre-close* figure we can reconstruct: -(INCOME + EXPENSE)
+            # would all be zero at this point, so pull it from the closing
+            # JE itself — it's the line targeting re_account whose amount
+            # equals the year's net income.
+            closing_je = (
+                fiscal_year.closing_journal_entry if scope == 'OFFICIAL'
+                else fiscal_year.internal_closing_journal_entry
+            )
+            net_income = Decimal('0.00')
+            if closing_je:
+                # Net income is what the closing JE posted to the RE
+                # account; signed so positive = profit. RE line is the
+                # balancing side, so we read it directly.
+                re_lines = closing_je.lines.filter(
+                    account__system_role='RETAINED_EARNINGS'
+                ).aggregate(d=Sum('debit'), c=Sum('credit'))
+                # Closing entry: Dr RE means a loss (RE goes up as a DR,
+                # reducing credit balance). Cr RE means profit.
+                net_income = (re_lines['c'] or Decimal('0.00')) - (re_lines['d'] or Decimal('0.00'))
+
+            opening_je = None
+            if fiscal_year.closed_at:  # proxy for "there was a next year"
+                from apps.finance.models import JournalEntry, FiscalYear
+                nxt = FiscalYear.objects.filter(
+                    organization=organization,
+                    start_date__gt=fiscal_year.end_date,
+                ).order_by('start_date').first()
+                if nxt:
+                    opening_je = JournalEntry.objects.filter(
+                        organization=organization,
+                        fiscal_year=nxt,
+                        journal_type='OPENING',
+                        journal_role='SYSTEM_OPENING',
+                        scope=scope,
+                        status='POSTED',
+                        is_superseded=False,
+                    ).first()
+
+            # Sign totals per normal balance for human-readable reporting:
+            # Assets positive when debit-positive, Liab/Equity positive
+            # when credit-positive. trial_balance stores raw nets.
+            total_assets = totals.get('ASSET', Decimal('0.00'))
+            total_liab = -totals.get('LIABILITY', Decimal('0.00'))
+            total_equity = -totals.get('EQUITY', Decimal('0.00'))
+
+            FiscalYearCloseSnapshot.objects.update_or_create(
+                organization=organization,
+                fiscal_year=fiscal_year,
+                scope=scope,
+                defaults={
+                    'closing_journal_entry': closing_je,
+                    'opening_journal_entry': opening_je,
+                    'total_assets': total_assets,
+                    'total_liabilities': total_liab,
+                    'total_equity': total_equity,
+                    'net_income': net_income,
+                    'retained_earnings': -re_value,  # sign as credit-positive
+                    'trial_balance': trial,
+                    'captured_by': user,
+                },
+            )
+
+        logger.info(
+            f"ClosingService: Close snapshots captured for {fiscal_year.name} "
+            f"(OFFICIAL + INTERNAL)"
+        )
 
     @staticmethod
     def generate_opening_balances(organization, from_year, to_year, user=None):

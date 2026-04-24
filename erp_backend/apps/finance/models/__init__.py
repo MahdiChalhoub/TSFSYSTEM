@@ -1,6 +1,6 @@
 from .coa_models import ChartOfAccount, FinancialAccount, FinancialAccountCategory
 from .coa_models import NORMAL_BALANCE_MAP, ACCOUNT_CLASS_MAP, ACCOUNT_CLASS_NAMES
-from .fiscal_models import FiscalYear, FiscalPeriod
+from .fiscal_models import FiscalYear, FiscalPeriod, FiscalYearCloseSnapshot
 from .ledger_models import JournalEntry, JournalEntryLine, PaymentMethod
 from .transaction_models import Transaction, TransactionSequence
 from .loan_models import Loan, LoanInstallment, FinancialEvent

@@ -253,17 +253,20 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                             <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
                                 <Hash size={9} className="inline mr-1" />Barcode Prefix
                             </label>
-                            <input
+                            <LockableCodeInput
                                 name="barcodePrefix"
-                                defaultValue={category?.barcode_prefix || ''}
+                                defaultValue={category?.barcode_prefix}
+                                isEdit={!!category?.barcode_prefix}
                                 placeholder="e.g. 0410"
+                                mono
                                 maxLength={10}
-                                className="w-full text-tp-sm font-mono font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                inputFilter="digits"
+                                warning="Changing the barcode prefix will break every product barcode already printed in this category. Only change this if you understand the impact. Continue?"
+                                className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
                                 style={{
                                     background: 'var(--app-background)',
                                     border: state.errors?.barcode_prefix ? '1px solid var(--app-error)' : '1px solid var(--app-border)',
                                 }}
-                                onChange={e => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10); }}
                             />
                             {state.errors?.barcode_prefix ? (
                                 <p className="text-tp-xs font-bold mt-1" style={{ color: 'var(--app-error)' }}>
