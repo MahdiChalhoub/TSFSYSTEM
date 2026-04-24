@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { Calendar, Plus, Zap, Bell, Loader2, X, ExternalLink, Check, Pencil } from 'lucide-react'
+import { useEffect, useState, useRef, useMemo } from 'react'
+import { Calendar, Plus, Zap, Bell, Loader2, X, ExternalLink, Check, Pencil, RefreshCcw, Target } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
@@ -27,6 +27,32 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
     const [rules, setRules] = useState<any[]>([])
     const [loadingRules, setLoadingRules] = useState(true)
     const [togglingId, setTogglingId] = useState<number | null>(null)
+    const daysInputRef = useRef<HTMLInputElement | null>(null)
+    const dialogRef = useRef<HTMLDivElement | null>(null)
+
+    // Close on Esc, autofocus the first field, and trap focus within the dialog.
+    useEffect(() => {
+        const keyHandler = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); return }
+            if (e.key === 'Tab' && dialogRef.current) {
+                const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+                    'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )
+                if (focusables.length === 0) return
+                const first = focusables[0]
+                const last = focusables[focusables.length - 1]
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault(); last.focus()
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault(); first.focus()
+                }
+            }
+        }
+        window.addEventListener('keydown', keyHandler)
+        // Focus first interactive element on open
+        setTimeout(() => daysInputRef.current?.focus(), 0)
+        return () => window.removeEventListener('keydown', keyHandler)
+    }, [onClose])
 
     useEffect(() => {
         erpFetch('settings/item/period_reminder_days_before/')
@@ -84,7 +110,8 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
             onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-            <div className="w-full max-w-xl rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col"
+            <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="task-settings-title"
+                className="w-full max-w-xl rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
                 <div className="px-5 py-3 flex items-center justify-between flex-shrink-0"
                     style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
@@ -94,11 +121,11 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                             <Zap size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-app-foreground">Task Settings · Finance</h3>
+                            <h3 id="task-settings-title" className="text-sm font-bold text-app-foreground">Task Settings · Finance</h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground">Reminders · auto-task rules · routing</p>
                         </div>
                     </div>
-                    <button onClick={onClose}
+                    <button onClick={onClose} aria-label="Close dialog"
                         className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all">
                         <X size={16} />
                     </button>
@@ -115,10 +142,11 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                             How many days before a period's end/start the reminder task fires.
                         </p>
                         <div className="flex items-center gap-2">
-                            <input type="number" min={1} max={60} value={days}
+                            <input ref={daysInputRef} type="number" min={1} max={60} value={days}
                                 disabled={loadingSettings || savingSettings}
                                 onChange={e => { const n = Math.max(1, Math.min(60, Number(e.target.value) || 1)); setDays(n) }}
                                 onBlur={() => { if (!loadingSettings) saveLead(days) }}
+                                aria-label="Reminder lead-time in days"
                                 className="w-20 text-tp-lg font-bold tabular-nums px-2 py-1.5 rounded-lg outline-none"
                                 style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
                             <span className="text-tp-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>days</span>
@@ -214,6 +242,58 @@ function TaskSettingsModal({ onClose }: { onClose: () => void }) {
 export default function FiscalYearsViewer({ initialYears }: { initialYears: Record<string, any>[] }) {
     const fy = useFiscalYears(initialYears)
     const [showTaskSettings, setShowTaskSettings] = useState(false)
+    const [refreshing, setRefreshing] = useState(false)
+
+    // ── Current period: the one whose start..end contains today ──
+    const today = useMemo(() => new Date(), [])
+    const currentContext = useMemo(() => {
+        for (const y of fy.years) {
+            const periods: any[] = (y as any).periods || []
+            for (const p of periods) {
+                if (!p.start_date || !p.end_date) continue
+                const s = new Date(p.start_date), e = new Date(p.end_date)
+                if (today >= s && today <= e) {
+                    const daysToEnd = Math.ceil((e.getTime() - today.getTime()) / 86_400_000)
+                    return { year: y, period: p, daysToEnd }
+                }
+            }
+        }
+        return null
+    }, [fy.years, today])
+
+    const focusCurrentPeriod = () => {
+        if (!currentContext) return
+        fy.setExpandedYear(currentContext.year.id)
+        setTimeout(() => {
+            const node = document.querySelector(`[data-period-id="${currentContext.period.id}"]`)
+            if (node) (node as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 150)
+    }
+
+    const doRefresh = async () => {
+        setRefreshing(true)
+        try { await fy.refreshData() } finally { setRefreshing(false) }
+    }
+
+    // ── Keyboard shortcuts: Ctrl+K focus search, Ctrl+Q toggle focus mode ──
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null
+            const inField = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault()
+                const el = document.getElementById('fy-search-input') as HTMLInputElement | null
+                el?.focus()
+                el?.select()
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'q' && !inField) {
+                e.preventDefault()
+                fy.setFocusMode(prev => !prev)
+            }
+        }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, [fy])
 
     /** Deep-link from a task: /finance/fiscal-years?from_task=<taskId>&period=<periodId>
      *  Finds the period, expands its year, scrolls to it, offers one-click reopen,
@@ -289,7 +369,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             {/* ── Header ── */}
             {!fy.focusMode && (
                 <div className="flex items-start justify-between gap-4 mb-4 flex-wrap flex-shrink-0">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                         <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                             <Calendar size={20} className="text-white" />
                         </div>
@@ -297,8 +377,33 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                             <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Fiscal Years</h1>
                             <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">Accounting Periods & Closing Cycles</p>
                         </div>
+                        {/* ── Current period anchor chip ── */}
+                        {currentContext && (
+                            <button onClick={focusCurrentPeriod}
+                                title={`Jump to ${currentContext.period.name} in ${currentContext.year.name}`}
+                                className="flex items-center gap-1.5 text-tp-xs font-bold px-2.5 py-1.5 rounded-xl transition-all hover:brightness-110"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)',
+                                    color: 'var(--app-success, #22c55e)',
+                                }}>
+                                <Target size={12} />
+                                <span className="uppercase tracking-wide">Current:</span>
+                                <span className="normal-case">{currentContext.year.name} · {currentContext.period.name}</span>
+                                <span className="opacity-70 normal-case">
+                                    · {currentContext.daysToEnd <= 0 ? 'ends today' : `${currentContext.daysToEnd} day${currentContext.daysToEnd === 1 ? '' : 's'} left`}
+                                </span>
+                            </button>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
+                        <button onClick={doRefresh} disabled={refreshing || fy.isPending}
+                            title="Refresh fiscal years data"
+                            aria-label="Refresh"
+                            className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl transition-all hover:bg-app-surface disabled:opacity-50"
+                            style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
+                            <RefreshCcw size={13} className={refreshing ? 'animate-spin' : ''} />
+                        </button>
                         <button onClick={() => setShowTaskSettings(true)}
                             title="Reminders, routing & auto-task rules for Finance"
                             className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"

@@ -92,6 +92,7 @@ export function CanaryCard() {
     const [report, setReport] = useState<CanaryReport | null>(null)
     const [loading, setLoading] = useState(true)
     const [expanded, setExpanded] = useState(false)
+    const [userToggled, setUserToggled] = useState(false)
 
     const run = async () => {
         setLoading(true)
@@ -110,6 +111,11 @@ export function CanaryCard() {
     const allClean = signals.every(s => s.clean)
     const dirtyCount = signals.filter(s => !s.clean).length
 
+    // Auto-expand on dirty state unless the user has explicitly set a preference.
+    useEffect(() => {
+        if (!loading && detail && !userToggled) setExpanded(!allClean)
+    }, [loading, detail, allClean, userToggled])
+
     return (
         <div className="rounded-2xl p-3 mb-2" style={{
             background: 'var(--app-surface)',
@@ -117,7 +123,8 @@ export function CanaryCard() {
         }}>
             {/* Header row */}
             <button
-                onClick={() => setExpanded(e => !e)}
+                onClick={() => { setExpanded(e => !e); setUserToggled(true) }}
+                aria-expanded={expanded}
                 className="w-full flex items-center justify-between gap-3 text-left"
             >
                 <div className="flex items-center gap-2 min-w-0">
@@ -159,8 +166,8 @@ export function CanaryCard() {
                 </div>
             </button>
 
-            {/* Signal pills — always visible */}
-            {!loading && signals.length > 0 && (
+            {/* Signal pills — shown when expanded (auto-expanded when dirty) */}
+            {expanded && !loading && signals.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                     {signals.map(s => (
                         <span

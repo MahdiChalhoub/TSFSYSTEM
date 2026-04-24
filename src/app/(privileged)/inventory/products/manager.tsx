@@ -39,9 +39,9 @@ import { loadProfiles, saveProfiles, loadActiveProfileId, saveActiveProfileId, s
 /* ── Component imports ── */
 import { FiltersPanel } from './_components/FiltersPanel'
 import { CustomizePanel } from './_components/CustomizePanel'
-import { KPIStrip } from '@/components/ui/KPIStrip'
 import type { KPIStat } from '@/components/ui/KPIStrip'
 import { DajingoListView } from '@/components/common/DajingoListView'
+import { DajingoPageShell } from '@/components/common/DajingoPageShell'
 import { ProductDetailCards } from './_components/ProductDetailCards'
 import { renderProductCell } from './_components/ProductColumns'
 
@@ -174,83 +174,40 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
    *  RENDER
    * ═══════════════════════════════════════════════════════════ */
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] animate-in fade-in duration-300 transition-all">
-      <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
-
-        {focusMode ? (
-          /* ── FOCUS MODE ── */
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
-                <Package size={14} className="text-white" />
-              </div>
-              <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Products</span>
-              <span className="text-[10px] font-bold text-app-muted-foreground">{filtered.length}/{stats.total}</span>
-            </div>
-
-            <div className="flex-1 relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-              <input ref={searchRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Search..."
-                className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
-            </div>
-
-            <button onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition-all flex-shrink-0 ${showFilters ? 'border-app-primary text-app-primary bg-app-primary/5' : 'border-app-border text-app-muted-foreground'}`}>
-              <SlidersHorizontal size={13} />
-              {activeFilterCount > 0 && <span className="text-[9px] font-black bg-app-primary text-white px-1.5 rounded-full">{activeFilterCount}</span>}
-            </button>
-
-            <button onClick={() => setFocusMode(false)} className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
-              <Minimize2 size={13} />
-            </button>
-          </div>
-        ) : (
-          /* ── NORMAL MODE ── */
-          <>
-            {/* Title Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                  <Package size={20} className="text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Product Master</h1>
-                  <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                    {stats.total} Products · {stats.combos} Combos · {stats.outOfStock} Out of Stock
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
-                <button onClick={() => openTab('New Product', '/products/new')}
-                  className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
-                  style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                  <Plus size={14} /><span className="hidden sm:inline">New Product</span>
-                </button>
-                <button onClick={fetchData} title="Refresh"
-                  className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
-                  <RefreshCcw size={13} />
-                </button>
-                <button onClick={() => setFocusMode(true)} title="Focus mode — Ctrl+Q"
-                  className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
-                  <Maximize2 size={13} />
-                </button>
-              </div>
-            </div>
-
-            {/* KPI Strip */}
-            <KPIStrip stats={kpiStats} />
-
-            {/* Advanced Filters Panel (rendered ABOVE the table, BELOW KPIs) */}
-            <FiltersPanel items={items} filters={filters} setFilters={setFilters} isOpen={showFilters} lookups={lookups} visibleFilters={visibleFilters} />
-          </>
-        )}
-
-        {/* Focus mode filter panel */}
-        {focusMode && <FiltersPanel items={items} filters={filters} setFilters={setFilters} isOpen={showFilters} lookups={lookups} visibleFilters={visibleFilters} />}
-      </div>
-
+    <DajingoPageShell
+      title="Product Master"
+      icon={<Package size={20} className="text-white" />}
+      subtitle={`${stats.total} Products · ${stats.combos} Combos · ${stats.outOfStock} Out of Stock`}
+      entityLabel="Product"
+      kpiStats={kpiStats}
+      primaryAction={{
+        label: 'New Product',
+        icon: <Plus size={14} />,
+        onClick: () => openTab('New Product', '/products/new'),
+      }}
+      search={search}
+      onSearchChange={setSearch}
+      searchRef={searchRef}
+      searchPlaceholder="Search by name, SKU, or barcode... (Ctrl+K)"
+      filteredCount={filtered.length}
+      totalCount={stats.total}
+      focusMode={focusMode}
+      onFocusModeChange={setFocusMode}
+      showFilters={showFilters}
+      onToggleFilters={() => setShowFilters(!showFilters)}
+      activeFilterCount={activeFilterCount}
+      onRefresh={fetchData}
+      renderFilters={() => (
+        <FiltersPanel
+          items={items}
+          filters={filters}
+          setFilters={setFilters}
+          isOpen={showFilters}
+          lookups={lookups}
+          visibleFilters={visibleFilters}
+        />
+      )}
+    >
       {/* ═══════════════ TREE TABLE (DajingoListView) ═══════════════ */}
       <DajingoListView<Product>
         data={paginated}
@@ -347,6 +304,6 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         profiles={profiles} setProfiles={setProfiles}
         activeProfileId={activeProfileId} setActiveProfileId={setActiveProfileId}
         policyHiddenColumns={policyHiddenColumns} policyHiddenFilters={policyHiddenFilters} />
-    </div>
+    </DajingoPageShell>
   )
 }

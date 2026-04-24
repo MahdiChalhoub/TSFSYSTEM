@@ -32,8 +32,8 @@ export function Toolbar({ focusMode, setFocusMode, searchQuery, setSearchQuery, 
             )}
             <div className="flex-1 relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--app-muted-foreground)' }} />
-                <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search fiscal years..."
+                <input id="fy-search-input" type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search fiscal years... (Ctrl+K)"
                     className="w-full pl-9 pr-3 py-2 text-tp-md md:text-tp-lg rounded-xl outline-none transition-all"
                     style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                     onFocus={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.style.background = 'var(--app-surface)' }}

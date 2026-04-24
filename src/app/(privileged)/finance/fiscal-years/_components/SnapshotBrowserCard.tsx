@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ShieldCheck, ShieldAlert, Link2, Link2Off, RefreshCw, Loader2, ChevronDown, Copy } from 'lucide-react'
+import { ShieldCheck, ShieldAlert, Link2, Link2Off, RefreshCw, Loader2, ChevronDown, Copy, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { getSnapshotChain, type SnapshotChainReport } from '@/app/actions/finance/fiscal-year'
 
@@ -20,6 +20,8 @@ export function SnapshotBrowserCard() {
     const [report, setReport] = useState<SnapshotChainReport | null>(null)
     const [loading, setLoading] = useState(true)
     const [expandedId, setExpandedId] = useState<number | null>(null)
+    const [cardExpanded, setCardExpanded] = useState(false)
+    const [userToggled, setUserToggled] = useState(false)
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -27,6 +29,11 @@ export function SnapshotBrowserCard() {
         finally { setLoading(false) }
     }, [])
     useEffect(() => { void load() }, [load])
+
+    // Auto-expand only when the chain is broken — stay calm when intact.
+    useEffect(() => {
+        if (!userToggled && report) setCardExpanded(!report.clean)
+    }, [report, userToggled])
 
     const copyHash = (h: string | null | undefined) => {
         if (!h) return
@@ -41,10 +48,12 @@ export function SnapshotBrowserCard() {
 
     return (
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-            {/* Header */}
-            <div className="px-3 py-2 flex items-center justify-between gap-2"
+            {/* Header — click to toggle card expand/collapse */}
+            <button onClick={() => { setCardExpanded(v => !v); setUserToggled(true) }}
+                aria-expanded={cardExpanded}
+                className="w-full px-3 py-2 flex items-center justify-between gap-2 text-left"
                 style={{
-                    borderBottom: '1px solid var(--app-border)',
+                    borderBottom: cardExpanded ? '1px solid var(--app-border)' : 'none',
                     background: report.clean
                         ? 'color-mix(in srgb, var(--app-success, #22c55e) 5%, transparent)'
                         : 'color-mix(in srgb, var(--app-error, #ef4444) 6%, transparent)',
@@ -60,13 +69,20 @@ export function SnapshotBrowserCard() {
                         {report.rows_checked} snapshots · {report.breaks} break{report.breaks === 1 ? '' : 's'}
                     </span>
                 </div>
-                <button onClick={() => void load()} disabled={loading}
-                    className="p-1 rounded hover:opacity-70 disabled:opacity-30" title="Re-verify chain">
-                    <RefreshCw size={12} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--app-muted-foreground)' }} />
-                </button>
-            </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <span onClick={(e) => { e.stopPropagation(); void load() }}
+                        role="button" tabIndex={-1}
+                        aria-disabled={loading}
+                        className="p-1 rounded hover:opacity-70" title="Re-verify chain">
+                        <RefreshCw size={12} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--app-muted-foreground)' }} />
+                    </span>
+                    {cardExpanded
+                        ? <ChevronUp size={14} style={{ color: 'var(--app-muted-foreground)' }} />
+                        : <ChevronDown size={14} style={{ color: 'var(--app-muted-foreground)' }} />}
+                </div>
+            </button>
 
-            {report.chain.length === 0 ? (
+            {cardExpanded && (report.chain.length === 0 ? (
                 <div className="px-3 py-6 text-center text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
                     No snapshots yet. First year- or period-close will seed the chain.
                 </div>
@@ -201,7 +217,7 @@ export function SnapshotBrowserCard() {
                         )
                     })}
                 </div>
-            )}
+            ))}
         </div>
     )
 }

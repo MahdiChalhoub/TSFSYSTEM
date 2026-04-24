@@ -10,21 +10,21 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { fetchPurchaseOrders, fetchPurchaseOrder, submitPO, approvePO, cancelPO, sendToSupplier, completePO, revertToDraft } from '@/app/actions/pos/purchases'
 import { toast } from 'sonner'
-import { getListViewPolicy } from '@/app/actions/listview-policies'
 import { useRouter } from 'next/navigation'
 import { useAdmin } from '@/context/AdminContext'
 import {
-  Plus, Search, ClipboardList, Eye, Edit, Package,
-  X, Maximize2, Minimize2,
-  SlidersHorizontal, RefreshCcw,
-  DollarSign, Clock, CheckCircle,
+  Plus, ClipboardList, Eye, Edit, Package,
+  X, DollarSign, Clock, CheckCircle,
   ChevronDown, Loader2, Truck, Receipt, ArrowRightCircle, Check,
 } from 'lucide-react'
 
 /* ── Shared UI ── */
-import { KPIStrip } from '@/components/ui/KPIStrip'
 import { DajingoListView, type DajingoColumnDef } from '@/components/common/DajingoListView'
+import { DajingoPageShell } from '@/components/common/DajingoPageShell'
 import { DCell } from '@/components/ui/DCell'
+
+/* ── State engine ── */
+import { useDajingoPageState } from '@/hooks/useDajingoPageState'
 
 /* ── Local lib ── */
 import type { PO, Filters } from './_lib/types'
@@ -208,46 +208,15 @@ export default function PurchaseOrdersManager() {
   const { openTab } = useAdmin()
   const [orders, setOrders] = useState<PO[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [focusMode, setFocusMode] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
-  const [visibleFilters, setVisibleFilters] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_FILTERS)
-  const searchRef = useRef<HTMLInputElement>(null)
 
-  // Column visibility & ordering
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_COLS)
-  const [columnOrder, setColumnOrder] = useState<string[]>(ALL_COLUMNS.map(c => c.key))
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(50)
-
-  // Selection
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-  const toggleSelect = (id: number | string) => {
-    const next = new Set(selectedIds)
-    if (next.has(id as number)) next.delete(id as number); else next.add(id as number)
-    setSelectedIds(next)
-  }
-
-  // ── SaaS ListViewPolicy enforcement ──
-  const [policyHiddenColumns, setPolicyHiddenColumns] = useState<Set<string>>(new Set())
-  useEffect(() => {
-    getListViewPolicy('purchases_purchase_orders').then(policy => {
-      if (policy?.hidden_columns?.length) setPolicyHiddenColumns(new Set(policy.hidden_columns))
-    }).catch(() => {})
-  }, [])
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(prev => !prev) }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
+  // ── Universal state engine (search, columns, ordering, policy, selection, pagination, shortcuts) ──
+  const state = useDajingoPageState({
+    moduleKey: 'purchases_purchase_orders',
+    columns: ALL_COLUMNS,
+    defaultVisibleCols: DEFAULT_VISIBLE_COLS,
+    defaultVisibleFilters: DEFAULT_VISIBLE_FILTERS,
+  })
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -301,8 +270,8 @@ export default function PurchaseOrdersManager() {
       if (filters.amountRange.op) {
         if (!matchesNumericRange(Number(o.total_amount || 0), filters.amountRange)) return false
       }
-      if (search) {
-        const q = search.toLowerCase()
+      if (state.search) {
+        const q = state.search.toLowerCase()
         const match = (o.po_number || `PO-${o.id}`).toLowerCase().includes(q) ||
           (o.supplier?.name || o.supplier_name || o.supplier_display || '').toLowerCase().includes(q) ||
           (o.supplier_ref || '').toLowerCase().includes(q)
@@ -310,9 +279,9 @@ export default function PurchaseOrdersManager() {
       }
       return true
     })
-  }, [orders, search, filters])
+  }, [orders, state.search, filters])
 
-  const hasFilters = !!search || activeFilterCount > 0
+  const hasFilters = !!state.search || activeFilterCount > 0
 
   // Stats
   const stats = useMemo(() => {
@@ -323,94 +292,41 @@ export default function PurchaseOrdersManager() {
     return { total, totalValue, pending, completed }
   }, [orders])
 
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const clampedPage = Math.min(currentPage, totalPages)
-  const paginated = filtered.slice((clampedPage - 1) * pageSize, clampedPage * pageSize)
-
-  const isAllPageSelected = paginated.length > 0 && paginated.every(o => selectedIds.has(o.id))
-  const toggleSelectAll = () => {
-    if (isAllPageSelected) setSelectedIds(new Set())
-    else setSelectedIds(new Set(paginated.map(o => o.id)))
-  }
+  // Pagination — delegated to state engine
+  const paginated = state.paginate(filtered)
+  const isAllPageSelected = state.isAllPageSelected(paginated)
 
   const onView = (id: number) => router.push(`/purchases/${id}`)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] animate-in fade-in duration-300 transition-all">
-      <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
-
-        {focusMode ? (
-          /* ── FOCUS MODE ── */
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
-                <ClipboardList size={14} className="text-white" />
-              </div>
-              <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Purchase Orders</span>
-              <span className="text-[10px] font-bold text-app-muted-foreground">{filtered.length}/{stats.total}</span>
-            </div>
-            <div className="flex-1 relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-              <input ref={searchRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Search..."
-                className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all" />
-            </div>
-            <button onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition-all flex-shrink-0 ${showFilters ? 'border-app-primary text-app-primary bg-app-primary/5' : 'border-app-border text-app-muted-foreground'}`}>
-              <SlidersHorizontal size={13} />
-              {activeFilterCount > 0 && <span className="text-[9px] font-black bg-app-primary text-white px-1.5 rounded-full">{activeFilterCount}</span>}
-            </button>
-            <button onClick={() => setFocusMode(false)} className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
-              <Minimize2 size={13} />
-            </button>
-          </div>
-        ) : (
-          /* ── NORMAL MODE ── */
-          <>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                  <ClipboardList size={20} className="text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Purchase Orders</h1>
-                  <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                    {stats.total} Orders · {stats.pending} Pending · {stats.completed} Completed
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
-                <button onClick={() => openTab('New Purchase Order', '/purchases/new-order')}
-                  className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
-                  style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                  <Plus size={14} /><span className="hidden sm:inline">New Order</span>
-                </button>
-                <button onClick={fetchData} title="Refresh"
-                  className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
-                  <RefreshCcw size={13} />
-                </button>
-                <button onClick={() => setFocusMode(true)} title="Focus mode — Ctrl+Q"
-                  className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
-                  <Maximize2 size={13} />
-                </button>
-              </div>
-            </div>
-
-            <KPIStrip stats={[
-              { label: 'Total Orders', value: stats.total, icon: <ClipboardList size={11} />, color: 'var(--app-primary)' },
-              { label: 'Total Value', value: fmt(stats.totalValue), icon: <DollarSign size={11} />, color: 'var(--app-success, #22c55e)' },
-              { label: 'Pending', value: stats.pending, icon: <Clock size={11} />, color: 'var(--app-warning, #f59e0b)' },
-              { label: 'Completed', value: stats.completed, icon: <CheckCircle size={11} />, color: 'var(--app-success, #22c55e)' },
-            ]} />
-
-            <POFiltersPanel orders={orders} filters={filters} setFilters={setFilters} isOpen={showFilters} visibleFilters={visibleFilters} />
-          </>
-        )}
-
-        {focusMode && <POFiltersPanel orders={orders} filters={filters} setFilters={setFilters} isOpen={showFilters} visibleFilters={visibleFilters} />}
-      </div>
-
+    <DajingoPageShell
+      title="Purchase Orders"
+      icon={<ClipboardList size={20} className="text-white" />}
+      subtitle={`${stats.total} Orders · ${stats.pending} Pending · ${stats.completed} Completed`}
+      kpiStats={[
+        { label: 'Total Orders', value: stats.total, icon: <ClipboardList size={11} />, color: 'var(--app-primary)' },
+        { label: 'Total Value', value: fmt(stats.totalValue), icon: <DollarSign size={11} />, color: 'var(--app-success, #22c55e)' },
+        { label: 'Pending', value: stats.pending, icon: <Clock size={11} />, color: 'var(--app-warning, #f59e0b)' },
+        { label: 'Completed', value: stats.completed, icon: <CheckCircle size={11} />, color: 'var(--app-success, #22c55e)' },
+      ]}
+      primaryAction={{ label: 'New Order', icon: <Plus size={14} />, onClick: () => openTab('New Purchase Order', '/purchases/new-order') }}
+      search={state.search}
+      onSearchChange={state.setSearch}
+      searchRef={state.searchRef}
+      searchPlaceholder="Search by PO number or supplier... (Ctrl+K)"
+      filteredCount={filtered.length}
+      totalCount={stats.total}
+      focusMode={state.focusMode}
+      onFocusModeChange={state.setFocusMode}
+      showFilters={state.showFilters}
+      onToggleFilters={() => state.setShowFilters(!state.showFilters)}
+      activeFilterCount={activeFilterCount}
+      onRefresh={fetchData}
+      renderFilters={() => (
+        <POFiltersPanel orders={orders} filters={filters} setFilters={setFilters}
+          isOpen={state.showFilters} visibleFilters={state.visibleFilters} />
+      )}
+    >
       {/* ═══════════════ TABLE (DajingoListView) ═══════════════ */}
       <DajingoListView<PO>
         data={paginated}
@@ -418,28 +334,28 @@ export default function PurchaseOrdersManager() {
         loading={loading}
         getRowId={po => po.id}
         columns={ALL_COLUMNS}
-        visibleColumns={visibleColumns}
+        visibleColumns={state.effectiveVisibleColumns}
         columnWidths={COLUMN_WIDTHS}
         rightAlignedCols={RIGHT_ALIGNED_COLS}
         growCols={GROW_COLS}
-        columnOrder={columnOrder}
-        onColumnReorder={setColumnOrder}
-        policyHiddenColumns={policyHiddenColumns}
+        columnOrder={state.columnOrder}
+        onColumnReorder={state.setColumnOrder}
+        policyHiddenColumns={state.policyHiddenColumns}
         entityLabel="Purchase Order"
         /* ── Integrated Toolbar ── */
-        search={search}
-        onSearchChange={setSearch}
+        search={state.search}
+        onSearchChange={state.setSearch}
         searchPlaceholder="Search by PO number or supplier... (Ctrl+K)"
-        searchRef={searchRef as React.RefObject<HTMLInputElement>}
-        showFilters={showFilters}
-        onToggleFilters={() => setShowFilters(!showFilters)}
+        searchRef={state.searchRef as React.RefObject<HTMLInputElement>}
+        showFilters={state.showFilters}
+        onToggleFilters={() => state.setShowFilters(!state.showFilters)}
         activeFilterCount={activeFilterCount}
-        onSetVisibleColumns={setVisibleColumns}
-        onSetColumnOrder={setColumnOrder}
-        moduleKey="purchases.purchase_orders"
+        onSetVisibleColumns={state.setVisibleColumns}
+        onSetColumnOrder={state.setColumnOrder}
+        moduleKey={state.moduleKey}
         allFilters={ALL_FILTERS}
-        visibleFilters={visibleFilters}
-        onSetVisibleFilters={setVisibleFilters}
+        visibleFilters={state.visibleFilters}
+        onSetVisibleFilters={state.setVisibleFilters}
         /* ── Row rendering ── */
         renderRowIcon={po => {
           const sc = STATUS_CONFIG[po.status] || { label: po.status, color: 'var(--app-muted-foreground)' }
@@ -468,24 +384,16 @@ export default function PurchaseOrdersManager() {
           { label: 'Purchase Receipt', icon: <Truck size={12} style={{ color: 'var(--app-success)' }} />, onClick: () => { window.location.href = `/purchases/receipts/new?from_po=${po.id}` } },
           { label: 'Purchase Invoice', icon: <Receipt size={12} style={{ color: 'var(--app-warning)' }} />, onClick: () => { window.location.href = `/finance/invoices/new?from_po=${po.id}&type=purchase` } },
         ]}
-        selectedIds={selectedIds}
-        onToggleSelect={toggleSelect}
+        selectedIds={state.selectedIds}
+        onToggleSelect={state.toggleSelect}
         isAllPageSelected={isAllPageSelected}
-        onToggleSelectAll={toggleSelectAll}
+        onToggleSelectAll={() => state.toggleSelectAll(paginated)}
         hasFilters={hasFilters}
-        onClearFilters={() => { setSearch(''); setFilters(EMPTY_FILTERS) }}
+        onClearFilters={() => { state.setSearch(''); setFilters(EMPTY_FILTERS) }}
         emptyIcon={<ClipboardList size={36} />}
-        pagination={{
-          totalItems: filtered.length,
-          activeFilterCount,
-          currentPage: clampedPage,
-          totalPages,
-          pageSize,
-          onPageChange: setCurrentPage,
-          onPageSizeChange: n => { setPageSize(n); setCurrentPage(1) },
-        }}
+        pagination={state.buildPagination(filtered.length, activeFilterCount)}
       />
-    </div>
+    </DajingoPageShell>
   )
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Loader2, RefreshCw, BarChart3, ChevronDown } from 'lucide-react'
+import { Loader2, RefreshCw, BarChart3, ChevronDown, ChevronUp } from 'lucide-react'
 import { getMultiYearComparison, type MultiYearReport } from '@/app/actions/finance/fiscal-year'
 
 function fmtMoney(s: string): string {
@@ -23,6 +23,7 @@ export function MultiYearCard() {
     const [report, setReport] = useState<MultiYearReport | null>(null)
     const [loading, setLoading] = useState(true)
     const [showAllAccounts, setShowAllAccounts] = useState(false)
+    const [cardExpanded, setCardExpanded] = useState(false)
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -46,9 +47,11 @@ export function MultiYearCard() {
 
     return (
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-            {/* Header */}
-            <div className="px-3 py-2 flex items-center justify-between gap-2"
-                style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-info, #3b82f6) 5%, transparent)' }}>
+            {/* Header — click to expand (default collapsed, this is ambient context) */}
+            <button onClick={() => setCardExpanded(v => !v)}
+                aria-expanded={cardExpanded}
+                className="w-full px-3 py-2 flex items-center justify-between gap-2 text-left"
+                style={{ borderBottom: cardExpanded ? '1px solid var(--app-border)' : 'none', background: 'color-mix(in srgb, var(--app-info, #3b82f6) 5%, transparent)' }}>
                 <div className="flex items-center gap-2 min-w-0">
                     <BarChart3 size={14} style={{ color: 'var(--app-info, #3b82f6)' }} />
                     <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -58,25 +61,34 @@ export function MultiYearCard() {
                         {nYears}-year view
                     </span>
                 </div>
-                <div className="flex items-center gap-2">
-                    {[2, 3, 5].map(n => (
-                        <button key={n} onClick={() => setYearsToShow(n)}
-                            className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md transition-all"
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    {cardExpanded && [2, 3, 5].map(n => (
+                        <span key={n} onClick={(e) => { e.stopPropagation(); setYearsToShow(n) }}
+                            role="button" tabIndex={-1}
+                            className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md transition-all cursor-pointer"
                             style={{
                                 background: yearsToShow === n ? 'var(--app-info, #3b82f6)' : 'transparent',
                                 color: yearsToShow === n ? 'white' : 'var(--app-muted-foreground)',
                                 border: yearsToShow === n ? 'none' : '1px solid var(--app-border)',
                             }}>
                             {n}Y
-                        </button>
+                        </span>
                     ))}
-                    <button onClick={() => void load()} disabled={loading}
-                        className="p-1 rounded hover:opacity-70 disabled:opacity-30" title="Reload">
-                        <RefreshCw size={12} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--app-muted-foreground)' }} />
-                    </button>
+                    {cardExpanded && (
+                        <span onClick={(e) => { e.stopPropagation(); void load() }}
+                            role="button" tabIndex={-1}
+                            aria-disabled={loading}
+                            className="p-1 rounded hover:opacity-70 cursor-pointer" title="Reload">
+                            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--app-muted-foreground)' }} />
+                        </span>
+                    )}
+                    {cardExpanded
+                        ? <ChevronUp size={14} style={{ color: 'var(--app-muted-foreground)' }} />
+                        : <ChevronDown size={14} style={{ color: 'var(--app-muted-foreground)' }} />}
                 </div>
-            </div>
+            </button>
 
+            {cardExpanded && (<>
             {/* Year headers */}
             <div className="grid gap-2 px-3 py-1 text-tp-xxs font-bold uppercase tracking-wide"
                 style={{
@@ -180,6 +192,7 @@ export function MultiYearCard() {
                     </>
                 )}
             </div>
+            </>)}
         </div>
     )
 }
