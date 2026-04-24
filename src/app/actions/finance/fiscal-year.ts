@@ -393,6 +393,127 @@ export async function getMultiYearComparison(years: number = 3): Promise<MultiYe
     }
 }
 
+export type SnapshotChainRow = {
+    kind: 'year' | 'period'
+    id: number
+    label: string
+    scope: string
+    captured_at: string | null
+    content_hash: string | null
+    prev_hash: string | null
+    status: 'intact' | 'content_drift' | 'chain_break'
+    recomputed_hash?: string
+    expected_prev?: string | null
+}
+
+export type SnapshotChainReport = {
+    rows_checked: number
+    breaks: number
+    clean: boolean
+    chain: SnapshotChainRow[]
+}
+
+export async function getSnapshotChain(): Promise<SnapshotChainReport | null> {
+    try {
+        return await erpFetch('fiscal-years/snapshot-chain/') as SnapshotChainReport
+    } catch (error) {
+        console.error('Failed to fetch snapshot chain:', error)
+        return null
+    }
+}
+
+export type PPALineInput = {
+    account_id: number
+    debit: string | number
+    credit: string | number
+    description?: string
+}
+
+export type PPAResult = {
+    journal_entry_id: number | null
+    journal_entry_reference?: string
+    lines: Array<{
+        account_id: number
+        debit: string
+        credit: string
+        description: string
+    }>
+    redirected_count: number
+    target_fiscal_year: string
+    total_debit: string
+    total_credit: string
+    dry_run: boolean
+}
+
+export async function previewPriorPeriodAdjustment(
+    yearId: number,
+    lines: PPALineInput[],
+    reason: string,
+    currentPeriodId?: number,
+): Promise<
+    | { success: true; preview: PPAResult }
+    | { success: false; error: string }
+> {
+    try {
+        const res = await erpFetch(`fiscal-years/${yearId}/prior-period-adjustment/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lines, reason, dry_run: true,
+                current_period_id: currentPeriodId,
+            }),
+        }) as PPAResult
+        return { success: true, preview: res }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
+export async function postPriorPeriodAdjustment(
+    yearId: number,
+    lines: PPALineInput[],
+    reason: string,
+    currentPeriodId?: number,
+): Promise<
+    | { success: true; result: PPAResult }
+    | { success: false; error: string }
+> {
+    try {
+        const res = await erpFetch(`fiscal-years/${yearId}/prior-period-adjustment/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lines, reason, dry_run: false,
+                current_period_id: currentPeriodId,
+            }),
+        }) as PPAResult
+        revalidatePath('/finance/fiscal-years')
+        return { success: true, result: res }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
+export type PPAHistoryRow = {
+    id: number
+    reference: string | null
+    transaction_date: string | null
+    description: string
+    created_by: string | null
+    line_count: number
+}
+
+export async function listPriorPeriodAdjustments(yearId: number): Promise<PPAHistoryRow[]> {
+    try {
+        return await erpFetch(`fiscal-years/${yearId}/prior-period-adjustments/`) as PPAHistoryRow[]
+    } catch (error) {
+        console.error('Failed to list PPAs:', error)
+        return []
+    }
+}
+
 export async function getIntegrityCanary(): Promise<CanaryReport | null> {
     try {
         return await erpFetch('fiscal-years/integrity-canary/') as CanaryReport

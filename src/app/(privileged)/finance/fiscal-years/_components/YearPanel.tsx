@@ -1,9 +1,11 @@
-import { ChevronDown, ChevronRight, Lock, ShieldCheck, Trash2, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronDown, ChevronRight, Lock, ShieldCheck, Trash2, Loader2, ArrowRightLeft } from 'lucide-react'
 import { getStatusStyle } from '../_lib/constants'
 import { PeriodsGrid } from './PeriodsGrid'
 import { SummaryTab } from './SummaryTab'
 import { HistoryTab } from './HistoryTab'
 import { CloseChecklistPanel } from './CloseChecklistPanel'
+import { PriorPeriodAdjustmentModal } from './PriorPeriodAdjustmentModal'
 import type { YearSummary, YearHistoryEvent } from '@/app/actions/finance/fiscal-year'
 
 const TABS = [
@@ -42,6 +44,8 @@ export function YearPanel({
     const periods = [...(year.periods || [])].sort((a: any, b: any) => (a.start_date || '').localeCompare(b.start_date || ''))
     const openCount = periods.filter((p: any) => (p.status || 'OPEN') === 'OPEN').length
     const isPartial = new Date() < new Date(year.endDate || year.end_date)
+    const isClosed = yearStatus === 'CLOSED' || yearStatus === 'FINALIZED'
+    const [ppaOpen, setPpaOpen] = useState(false)
 
     return (
         <div style={{ borderBottom: '1px solid var(--app-border)' }}>
@@ -88,6 +92,14 @@ export function YearPanel({
                                 {isPending && closingYearId === year.id ? <Loader2 size={11} className="animate-spin" /> : <ShieldCheck size={11} />} {isPartial ? 'Partial Close' : 'Year-End Close'}
                             </button>
                         )}
+                        {isClosed && (
+                            <button onClick={() => setPpaOpen(true)} disabled={isPending}
+                                className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg border transition-all"
+                                title="Post a Prior Period Adjustment — closed year is NOT reopened; P&L impact routes through Retained Earnings"
+                                style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                                <ArrowRightLeft size={11} /> PPA
+                            </button>
+                        )}
                         {year.isHardLocked && (
                             <span className="flex items-center gap-1 text-tp-xxs font-bold uppercase px-2 py-0.5 rounded"
                                 style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', color: 'var(--app-error, #ef4444)' }}>
@@ -109,6 +121,15 @@ export function YearPanel({
                     {activeTab === 'checklist' && <CloseChecklistPanel fiscalYearId={year.id} />}
                     {activeTab === 'history' && <HistoryTab history={history} />}
                 </div>
+            )}
+
+            {/* Prior Period Adjustment modal — mounted only when invoked */}
+            {ppaOpen && (
+                <PriorPeriodAdjustmentModal
+                    fiscalYearId={year.id}
+                    fiscalYearName={year.name}
+                    onClose={() => setPpaOpen(false)}
+                />
             )}
         </div>
     )

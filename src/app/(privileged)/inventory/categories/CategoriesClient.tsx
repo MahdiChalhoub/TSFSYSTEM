@@ -29,9 +29,8 @@ import { CategoryDetailPanel } from './components/CategoryDetailPanel'
 import { BulkActionBar } from './components/BulkActionBar'
 import { BulkDialog } from './components/BulkDialog'
 import { CsvImportDialog } from './components/CsvImportDialog'
-import { Database } from 'lucide-react'
-import { DataMenu } from '@/components/admin/_shared/DataMenu'
 import { exportExcel } from '@/components/admin/_shared/excel-export'
+import { PrintDialog, type PrintSpec } from '@/components/admin/_shared/PrintDialog'
 
 /* ═══════════════════════════════════════════════════════════
  *  CategoriesClient — thin consumer; TreeMasterPage is the single
@@ -48,9 +47,10 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     // When non-empty, a floating action bar offers Bulk Delete / Bulk Move /
     // Bulk Prefix. Selection clears on save or Esc.
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-    const [bulkDialog, setBulkDialog] = useState<null | 'move' | 'prefix' | 'delete'>(null)
+    const [bulkDialog, setBulkDialog] = useState<null | 'move' | 'delete'>(null)
     const [bulkBusy, setBulkBusy] = useState(false)
     const [showImport, setShowImport] = useState(false)
+    const [showPrint, setShowPrint] = useState(false)
     const data = initialCategories
 
     const toggleSelect = useCallback((id: number) => {
@@ -130,12 +130,10 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         toast.success(`Exported ${sorted.length} categories to Excel`)
     }, [data])
 
-    // Print — injects a hidden iframe with a clean printable view and triggers
-    // its print dialog. Iframes avoid the pop-up blocker problem (no window.open
-    // needed) and clean themselves up after print. This reliably works across
-    // Chrome/Safari/Firefox without any permission prompts.
-    const handlePrint = useCallback(() => {
-        if (!data?.length) { toast.info('No categories to print'); return }
+    // Print spec — flatten each category into a row with every printable
+    // field. PrintDialog handles column-picker + layout; the iframe-based
+    // print trigger lives in there so this page stays declarative.
+    const printSpec: PrintSpec = useMemo(() => {
         const byId = new Map<number, any>()
         data.forEach((c: any) => byId.set(c.id, c))
         const pathFor = (c: any): string => {
@@ -145,63 +143,31 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             return parts.join(' › ')
         }
         const sorted = [...data].sort((a: any, b: any) => pathFor(a).localeCompare(pathFor(b)))
-        const rowsHtml = sorted.map((c: any) => `
-            <tr>
-                <td>${escapeHtml(pathFor(c))}</td>
-                <td class="mono">${escapeHtml(c.code || '')}</td>
-                <td class="mono">${escapeHtml(c.short_name || '')}</td>
-                <td class="mono">${escapeHtml(c.barcode_prefix || '')}</td>
-                <td class="num">${c.product_count || 0}</td>
-                <td class="num">${c.brand_count || 0}</td>
-            </tr>`).join('')
-        const html = `<!doctype html><html><head><meta charset="utf-8"/>
-            <title>Categories — ${new Date().toISOString().slice(0, 10)}</title>
-            <style>
-                body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 20px; color: #111; }
-                h1 { font-size: 18px; margin: 0 0 4px; }
-                .meta { color: #666; font-size: 11px; margin-bottom: 16px; }
-                table { width: 100%; border-collapse: collapse; font-size: 11px; }
-                th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
-                th { background: #f3f4f6; text-transform: uppercase; font-size: 9px; letter-spacing: 0.04em; }
-                .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-                .num { text-align: right; font-variant-numeric: tabular-nums; }
-                @media print { body { margin: 12mm; } }
-            </style></head><body>
-            <h1>Categories</h1>
-            <div class="meta">${sorted.length} nodes · Exported ${new Date().toLocaleString()}</div>
-            <table>
-                <thead><tr><th>Category Path</th><th>Code</th><th>Short</th><th>Prefix</th><th>Products</th><th>Brands</th></tr></thead>
-                <tbody>${rowsHtml}</tbody>
-            </table>
-            </body></html>`
-
-        const iframe = document.createElement('iframe')
-        iframe.setAttribute('aria-hidden', 'true')
-        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;'
-        document.body.appendChild(iframe)
-
-        const cleanup = () => {
-            // Give the print dialog a moment to finish, then remove the iframe.
-            setTimeout(() => { iframe.remove() }, 1000)
+        return {
+            title: 'Categories',
+            subtitle: 'Product Taxonomy',
+            prefKey: 'print.categories',
+            columns: [
+                { key: 'path', label: 'Category Path', defaultOn: true, width: '30%' },
+                { key: 'name', label: 'Name', defaultOn: false },
+                { key: 'code', label: 'Code', mono: true, defaultOn: true, width: '90px' },
+                { key: 'short', label: 'Short Name', defaultOn: false, width: '100px' },
+                { key: 'prefix', label: 'Barcode Prefix', mono: true, defaultOn: true, width: '110px' },
+                { key: 'subs', label: 'Sub-cats', align: 'right', defaultOn: false, width: '70px' },
+                { key: 'brands', label: 'Brands', align: 'right', defaultOn: false, width: '70px' },
+                { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
+            ],
+            rows: sorted.map((c: any) => ({
+                path: pathFor(c),
+                name: c.name,
+                code: c.code || '',
+                short: c.short_name || '',
+                prefix: c.barcode_prefix || '',
+                subs: data.filter((x: any) => x.parent === c.id).length,
+                brands: c.brand_count || 0,
+                products: c.product_count || 0,
+            })),
         }
-
-        iframe.onload = () => {
-            try {
-                const win = iframe.contentWindow
-                if (!win) { cleanup(); toast.error('Unable to open print view'); return }
-                // afterprint fires even on Cancel — use it to clean up the iframe.
-                win.addEventListener('afterprint', cleanup, { once: true })
-                win.focus()
-                win.print()
-            } catch (e) {
-                cleanup()
-                toast.error('Print failed')
-            }
-        }
-
-        const doc = iframe.contentDocument
-        if (!doc) { iframe.remove(); toast.error('Unable to open print view'); return }
-        doc.open(); doc.write(html); doc.close()
     }, [data])
 
     // Actions
@@ -307,19 +273,14 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 treeTourId: 'category-tree',
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
                 primaryAction: { label: 'New Category', icon: <Plus size={14} />, onClick: () => openAddModal(), dataTour: 'add-category-btn' },
+                dataTools: {
+                    onExportExcel: handleExportExcel,
+                    onExport: handleExport,
+                    onImport: () => setShowImport(true),
+                    onPrint: () => setShowPrint(true),
+                    title: 'Category Data',
+                },
                 secondaryActions: [
-                    {
-                        label: 'Data',
-                        icon: <Database size={13} />,
-                        render: () => (
-                            <DataMenu
-                                onExportExcel={handleExportExcel}
-                                onExport={handleExport}
-                                onImport={() => setShowImport(true)}
-                                onPrint={handlePrint}
-                            />
-                        ),
-                    },
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],
                 columnHeaders: [
@@ -466,7 +427,6 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             <BulkActionBar
                 count={selectedIds.size}
                 onMove={() => setBulkDialog('move')}
-                onPrefix={() => setBulkDialog('prefix')}
                 onDelete={() => setBulkDialog('delete')}
                 onClear={clearSelection}
             />
@@ -488,6 +448,11 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 onDone={() => { setShowImport(false); router.refresh() }}
             />
         )}
+        <PrintDialog
+            isOpen={showPrint}
+            onClose={() => setShowPrint(false)}
+            spec={printSpec}
+        />
         </>
     )
 }

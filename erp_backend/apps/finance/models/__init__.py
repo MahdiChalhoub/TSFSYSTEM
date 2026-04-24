@@ -13,6 +13,7 @@ from .close_checklist_models import (
     CloseChecklistTemplate, CloseChecklistItem,
     CloseChecklistRun, CloseChecklistItemState,
 )
+from .collections_models import DunningReminder
 from .asset_models import Asset, AmortizationSchedule
 from .voucher_models import Voucher
 from .audit_models import ProfitDistribution, ForensicAuditLog

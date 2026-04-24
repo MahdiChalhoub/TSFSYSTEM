@@ -13,6 +13,7 @@ import { TourTriggerButton } from '@/components/ui/GuidedTour'
 import { usePageTour } from '@/lib/tours/useTour'
 import { buildTree } from '@/lib/utils/tree'
 import type { MasterPageConfig } from '@/components/templates/master-page-config'
+import { DataMenu } from '@/components/admin/_shared/DataMenu'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
@@ -270,6 +271,19 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 </div>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                                {/* Data dropdown — rendered before other secondary
+                                 *  actions so Export/Import/Print always sit in
+                                 *  the same spot regardless of what else the page
+                                 *  adds to the toolbar. */}
+                                {config.dataTools && (
+                                    <DataMenu
+                                        onExport={config.dataTools.onExport}
+                                        onExportExcel={config.dataTools.onExportExcel}
+                                        onImport={config.dataTools.onImport}
+                                        onPrint={config.dataTools.onPrint}
+                                        title={config.dataTools.title}
+                                    />
+                                )}
                                 {config.secondaryActions?.map((action, i) => (
                                     action.render ? (
                                         <span key={i}>{action.render()}</span>

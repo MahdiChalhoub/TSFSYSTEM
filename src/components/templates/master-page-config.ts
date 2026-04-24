@@ -64,6 +64,23 @@ export interface EmptyStateConfig {
     actionLabel?: string
 }
 
+/**
+ * Data toolbox — Export / Import / Print affordances for a master-data page.
+ * When set on MasterPageConfig, the shell renders a single "Data" dropdown in
+ * the header toolbar, adjacent to the other secondary actions. Any handler you
+ * omit simply hides that menu row (e.g. a page with no bulk import only sets
+ * onExport/onPrint). The dropdown lives in one slot regardless of how many
+ * sub-actions are wired, keeping the toolbar tidy.
+ */
+export interface DataToolsConfig {
+    onExport?: () => void
+    onExportExcel?: () => void
+    onImport?: () => void
+    onPrint?: () => void
+    /** Optional menu-header override (e.g. "Brand Data"). */
+    title?: string
+}
+
 export interface MasterPageConfig {
     title: string
     subtitle: string | ((filtered: any[], all: any[]) => string)
@@ -73,6 +90,9 @@ export interface MasterPageConfig {
     searchPlaceholder?: string
     primaryAction: PrimaryAction
     secondaryActions?: ActionButton[]
+    /** Export / Import / Print affordances — rendered as one unified dropdown
+     *  in the toolbar. Leave a handler out to hide that row. */
+    dataTools?: DataToolsConfig
     footerLeft?: ReactNode | ((filtered: any[], all: any[]) => ReactNode)
     /**
      * Optional refresh handler. Mobile shell binds it to pull-to-refresh;

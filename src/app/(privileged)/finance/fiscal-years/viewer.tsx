@@ -16,6 +16,8 @@ import { KpiStrip } from './_components/KpiStrip'
 import { Toolbar } from './_components/Toolbar'
 import { YearPanel } from './_components/YearPanel'
 import { CanaryCard } from './_components/CanaryCard'
+import { MultiYearCard } from './_components/MultiYearCard'
+import { SnapshotBrowserCard } from './_components/SnapshotBrowserCard'
 import { useFiscalYears } from './_hooks/useFiscalYears'
 
 function TaskSettingsModal({ onClose }: { onClose: () => void }) {
@@ -317,6 +319,12 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
             {/* ── Close-chain integrity canary ── */}
             {!fy.focusMode && <CanaryCard />}
+
+            {/* ── Multi-year comparative (strategic review) ── */}
+            {!fy.focusMode && <div className="mb-2"><MultiYearCard /></div>}
+
+            {/* ── Snapshot hash-chain browser (forensic audit) ── */}
+            {!fy.focusMode && <div className="mb-2"><SnapshotBrowserCard /></div>}
 
             {/* ── Toolbar ── */}
             <Toolbar

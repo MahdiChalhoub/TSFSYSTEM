@@ -507,6 +507,189 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'je_by_month': je_by_month,
         })
 
+    @action(detail=True, methods=['post'], url_path='prior-period-adjustment')
+    def prior_period_adjustment(self, request, pk=None):
+        """Post (or preview) a PPA for this CLOSED fiscal year.
+
+        Body:
+          lines:    [{account_id:int, debit:str, credit:str, description?:str}, ...]
+          reason:   required free text
+          dry_run:  bool (default false) — if true, return preview without posting
+          current_period_id: optional — else we pick the latest OPEN period
+
+        Wraps `PriorPeriodAdjustmentService.post_adjustment` so operators
+        never touch the raw service.
+        """
+        from apps.finance.services.prior_period_adjustment_service import (
+            PriorPeriodAdjustmentService,
+        )
+        from apps.finance.models import FiscalPeriod
+        from django.core.exceptions import ValidationError
+
+        fy = self.get_object()
+        organization_id = get_current_tenant_id()
+        organization = Organization.objects.get(id=organization_id)
+
+        lines = request.data.get('lines') or []
+        reason = request.data.get('reason') or ''
+        dry_run = bool(request.data.get('dry_run', False))
+        current_period_id = request.data.get('current_period_id')
+
+        # Resolve target period — caller-supplied or latest OPEN
+        if current_period_id:
+            try:
+                current_fp = FiscalPeriod.objects.get(
+                    id=current_period_id, organization=organization,
+                )
+            except FiscalPeriod.DoesNotExist:
+                return Response({'error': 'current_period_id not found'}, status=400)
+        else:
+            current_fp = (
+                FiscalPeriod.objects
+                .filter(organization=organization, status='OPEN')
+                .order_by('-start_date').first()
+            )
+            if not current_fp:
+                return Response(
+                    {'error': 'No OPEN fiscal period — create or reopen one first'},
+                    status=400,
+                )
+
+        try:
+            result = PriorPeriodAdjustmentService.post_adjustment(
+                organization=organization,
+                target_fiscal_year=fy,
+                current_fiscal_period=current_fp,
+                lines=lines,
+                reason=reason,
+                user=request.user if request.user.is_authenticated else None,
+                dry_run=dry_run,
+            )
+            return Response(result)
+        except ValidationError as e:
+            return Response({'error': str(e.messages[0] if hasattr(e, 'messages') else e)}, status=400)
+
+    @action(detail=True, methods=['get'], url_path='prior-period-adjustments')
+    def list_prior_period_adjustments(self, request, pk=None):
+        """List PPA JEs targeting this fiscal year."""
+        from apps.finance.services.prior_period_adjustment_service import (
+            PriorPeriodAdjustmentService,
+        )
+        fy = self.get_object()
+        organization_id = get_current_tenant_id()
+        organization = Organization.objects.get(id=organization_id)
+
+        jes = PriorPeriodAdjustmentService.list_adjustments(
+            organization=organization, target_fiscal_year=fy,
+        )
+        return Response([
+            {
+                'id': je.id,
+                'reference': je.reference,
+                'transaction_date': je.transaction_date.isoformat() if je.transaction_date else None,
+                'description': je.description,
+                'created_by': je.created_by.username if je.created_by_id else None,
+                'line_count': je.lines.count(),
+            }
+            for je in jes[:100]
+        ])
+
+    @action(detail=False, methods=['get'], url_path='snapshot-chain')
+    def snapshot_chain(self, request):
+        """Return the full hash-chained snapshot history for this org.
+
+        Merges FiscalYearCloseSnapshot + FiscalPeriodCloseSnapshot into
+        one chronologically-ordered list and verifies each row:
+          • content_hash matches a fresh recompute → intact ✓
+          • stored prev_hash equals the previous row's stored
+            content_hash → chain unbroken ✓
+
+        Response shape:
+          {
+            'rows_checked': int, 'breaks': int, 'clean': bool,
+            'chain': [
+              {'kind':'year'|'period', 'id', 'label', 'scope',
+               'captured_at', 'content_hash', 'prev_hash',
+               'status':'intact'|'content_drift'|'chain_break',
+               'recomputed_hash' (only if drift),
+               'expected_prev' (only if break)},
+              ...
+            ],
+          }
+        """
+        from apps.finance.models import (
+            FiscalYearCloseSnapshot, FiscalPeriodCloseSnapshot,
+        )
+
+        organization_id = get_current_tenant_id()
+
+        year_rows = list(
+            FiscalYearCloseSnapshot.objects
+            .filter(organization_id=organization_id)
+            .select_related('fiscal_year')
+            .order_by('captured_at', 'id')
+        )
+        period_rows = list(
+            FiscalPeriodCloseSnapshot.objects
+            .filter(organization_id=organization_id)
+            .select_related('fiscal_period')
+            .order_by('captured_at', 'id')
+        )
+
+        # Merge by captured_at (+ 'id' for stable tiebreak)
+        merged = []
+        for s in year_rows:
+            merged.append(('year', s))
+        for s in period_rows:
+            merged.append(('period', s))
+        merged.sort(key=lambda pair: (pair[1].captured_at, pair[1].id))
+
+        chain = []
+        expected_prev = None
+        breaks = 0
+
+        for kind, s in merged:
+            recomputed = s.compute_content_hash()
+            content_drift = s.content_hash != recomputed
+            chain_break = s.prev_hash != expected_prev
+
+            status = 'intact'
+            extra = {}
+            if content_drift:
+                status = 'content_drift'
+                extra['recomputed_hash'] = recomputed
+                breaks += 1
+            elif chain_break:
+                status = 'chain_break'
+                extra['expected_prev'] = expected_prev
+                breaks += 1
+
+            label = (
+                s.fiscal_year.name if kind == 'year'
+                else s.fiscal_period.name
+            )
+            chain.append({
+                'kind': kind,
+                'id': s.id,
+                'label': label,
+                'scope': s.scope,
+                'captured_at': s.captured_at.isoformat() if s.captured_at else None,
+                'content_hash': s.content_hash,
+                'prev_hash': s.prev_hash,
+                'status': status,
+                **extra,
+            })
+            # Walk using STORED hash — not recomputed — so mid-chain
+            # tampering cascades and we detect it on subsequent rows too.
+            expected_prev = s.content_hash
+
+        return Response({
+            'rows_checked': len(chain),
+            'breaks': breaks,
+            'clean': breaks == 0,
+            'chain': chain,
+        })
+
     @action(detail=False, methods=['get'], url_path='multi-year-comparison')
     def multi_year_comparison(self, request):
         """N-year comparative P&L + Balance Sheet, strategic-review shape.

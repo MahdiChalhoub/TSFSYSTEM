@@ -2,23 +2,25 @@
 
 /**
  * BulkActionBar — floating toolbar shown when N>0 categories are selected.
- * Offers the 3 high-frequency bulk operations:
+ * Offers high-value bulk ops:
  *   - Move to parent (re-parent N at once)
- *   - Set barcode prefix (apply one prefix to all — with override warning)
- *   - Delete (with confirm)
+ *   - Delete (with typed-confirmation guard + safe/blocked split)
+ *
+ * Note: bulk "Set prefix" was removed — barcode prefixes are unique per
+ * category, so applying one prefix to N rows would fail for N-1 of them.
+ * Users set prefixes per-row from the edit dialog.
  */
 
-import { X, FolderTree, Hash, Trash2 } from 'lucide-react';
+import { X, FolderTree, Trash2 } from 'lucide-react';
 
 interface Props {
     count: number;
     onMove: () => void;
-    onPrefix: () => void;
     onDelete: () => void;
     onClear: () => void;
 }
 
-export function BulkActionBar({ count, onMove, onPrefix, onDelete, onClear }: Props) {
+export function BulkActionBar({ count, onMove, onDelete, onClear }: Props) {
     if (count === 0) return null;
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2 py-1.5 rounded-2xl animate-in slide-in-from-bottom-4 duration-200"
@@ -38,11 +40,6 @@ export function BulkActionBar({ count, onMove, onPrefix, onDelete, onClear }: Pr
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5"
                     style={{ background: 'var(--app-background)', color: 'var(--app-foreground)', border: '1px solid var(--app-border)' }}>
                 <FolderTree size={13} /> Move
-            </button>
-            <button onClick={onPrefix}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5"
-                    style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)', border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)' }}>
-                <Hash size={13} /> Prefix
             </button>
             <button onClick={onDelete}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5"

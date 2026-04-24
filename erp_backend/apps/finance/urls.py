@@ -77,6 +77,15 @@ router.register(r'posting-rules', PostingRuleViewSet, basename='posting-rule')
 router.register(r'einvoice-standards', EInvoiceStandardViewSet, basename='einvoice-standard')
 
 # --- Tax Engine: VAT & Periodic ---
+from apps.finance.views.collections_views import CollectionsViewSet
+router.register(r'collections', CollectionsViewSet, basename='collections')
+from apps.finance.views.allocation_views import AllocationWorkbenchViewSet
+router.register(r'allocation', AllocationWorkbenchViewSet, basename='allocation-workbench')
+from apps.finance.views.statement_views import StatementViewSet
+router.register(r'statement', StatementViewSet, basename='statement')
+from apps.finance.views.cash_flow_views import CashFlowForecastViewSet
+router.register(r'cash-flow', CashFlowForecastViewSet, basename='cash-flow')
+
 router.register(r'vat-settlement', VATSettlementViewSet, basename='vat-settlement')
 router.register(r'vat-returns', VATReturnReportViewSet, basename='vat-return')
 router.register(r'periodic-taxes', PeriodicTaxViewSet, basename='periodic-tax')
