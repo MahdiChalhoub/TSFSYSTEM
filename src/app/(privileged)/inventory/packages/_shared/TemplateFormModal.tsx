@@ -19,6 +19,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Package, X, Check, Loader2, ArrowRight, Info } from 'lucide-react'
 import { toast } from 'sonner'
+import { peekNextCode } from '@/lib/sequences-client'
 
 export interface TemplateShape {
     id?: number
@@ -64,6 +65,30 @@ export function TemplateFormModal({
         notes: tpl?.notes ?? '',
     })
     const [saving, setSaving] = useState(false)
+    // Code lock — same rule as LockableCodeInput:
+    //   • edit: existing code is the source of truth, lock
+    //   • new with a sequence-supplied code: lock, user opts out to override
+    const isEdit = !!tpl?.id
+    const [codeUnlocked, setCodeUnlocked] = useState(false)
+    const [userTouchedCode, setUserTouchedCode] = useState(false)
+    // When sequence peek fills the code on a new form, keep it locked until
+    // the user explicitly unlocks.
+    useEffect(() => {
+        if (isEdit) { setCodeUnlocked(false); return; }
+        if (form.code && !userTouchedCode) setCodeUnlocked(false);
+        // Blank new form (no suggestion yet) stays editable
+        if (!form.code) setCodeUnlocked(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.code, isEdit])
+
+    // Prefill code from the UNIT_PACKAGE sequence on New (/settings/sequences).
+    useEffect(() => {
+        if (tpl || form.code) return;
+        peekNextCode('UNIT_PACKAGE')
+            .then(code => setForm((f: any) => (f.code ? f : { ...f, code })))
+            .catch(() => { /* ignore — user types their own */ })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     // Candidate parents: same-unit templates, excluding self + descendants.
     const candidateParents = useMemo(() => {
@@ -139,7 +164,29 @@ export function TemplateFormModal({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <FormField label="Name *" value={form.name} onChange={(v: string) => setForm({ ...form, name: v })} placeholder="Pack of 6" />
-                        <FormField label="Code" value={form.code} onChange={(v: string) => setForm({ ...form, code: v })} placeholder="PK6" mono />
+                        <div>
+                            <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>
+                                Code
+                                {!codeUnlocked && form.code && (
+                                    <button type="button"
+                                        onClick={() => {
+                                            const msg = isEdit
+                                                ? 'Changing this code may break existing references (products, packagings). Continue?'
+                                                : 'This code was auto-assigned by your sequence (/settings/sequences). Overriding means this record will NOT follow the sequence, but the counter still advances. Continue?';
+                                            if (window.confirm(msg)) { setCodeUnlocked(true); setUserTouchedCode(true); }
+                                        }}
+                                        className="ml-2 text-tp-xxs font-bold normal-case"
+                                        style={{ color: isEdit ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)' }}>
+                                        🔒 {isEdit ? 'unlock' : 'override'}
+                                    </button>
+                                )}
+                            </label>
+                            <input value={form.code || ''} readOnly={!codeUnlocked}
+                                onChange={e => { setForm({ ...form, code: e.target.value }); setUserTouchedCode(true); }}
+                                placeholder="PK6"
+                                className={`w-full px-3 py-2 rounded-xl outline-none text-tp-md font-mono font-bold ${!codeUnlocked ? 'cursor-not-allowed opacity-80' : ''}`}
+                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                        </div>
                         <div>
                             <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Unit *</label>
                             <select value={form.unit}

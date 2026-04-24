@@ -306,12 +306,16 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         def _ob_rows_for_year(target_year):
             """Shape-stable list of {code,name,type,debit,credit} for UI."""
             if getattr(_s, 'USE_JE_OPENING', False):
+                # Scope to SYSTEM_OPENING so user-entered capital
+                # injections don't render as "carry-forward" in the
+                # year-summary UI. Those live in the regular JE list.
                 lines = (
                     JournalEntryLine.objects
                     .filter(
                         journal_entry__organization=org,
                         journal_entry__fiscal_year=target_year,
                         journal_entry__journal_type='OPENING',
+                        journal_entry__journal_role='SYSTEM_OPENING',
                         journal_entry__status='POSTED',
                         journal_entry__is_superseded=False,
                     )

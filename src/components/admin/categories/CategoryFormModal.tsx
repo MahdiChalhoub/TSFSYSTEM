@@ -5,6 +5,8 @@ import { createCategory, updateCategory, CategoryState } from '@/app/actions/cat
 import { X, Save, Loader2, FolderTree, AlertCircle, Hash, Tag, ChevronRight } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { CategoryCascader } from './CategoryCascader';
+import { peekNextCode } from '@/lib/sequences-client';
+import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
 
 type CategoryFormModalProps = {
     isOpen: boolean;
@@ -42,6 +44,10 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
 
     const [isSubCategory, setIsSubCategory] = useState(!!parentId || (category && !!category.parent));
     const [selectedParent, setSelectedParent] = useState<number | string>(parentId || category?.parent || '');
+    // Pre-filled code from /settings/sequences (peek only — sequence is
+    // consumed server-side on save). Empty while creating an existing
+    // category or until the first fetch resolves.
+    const [suggestedCode, setSuggestedCode] = useState<string>('');
 
     useEffect(() => { if (state.message === 'success') onClose(); }, [state, onClose]);
 
@@ -49,6 +55,12 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
         if (isOpen) {
             setIsSubCategory(!!parentId || (category && !!category.parent));
             setSelectedParent(parentId || category?.parent || '');
+            if (!category) {
+                // New record — peek next code from sequence so the Code input is pre-filled.
+                peekNextCode('CATEGORY').then(setSuggestedCode).catch(() => setSuggestedCode(''));
+            } else {
+                setSuggestedCode('');
+            }
         }
     }, [isOpen, parentId, category]);
 
@@ -221,15 +233,15 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                         <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">
                             <Hash size={9} className="inline mr-1" />Code (Unique)
                         </label>
-                        <input
+                        <LockableCodeInput
                             name="code"
-                            defaultValue={category?.code || ''}
+                            defaultValue={category?.code}
+                            suggestedValue={suggestedCode}
+                            isEdit={!!category}
                             placeholder="e.g. 1001 or CAT-BEV"
-                            className="w-full text-[12px] font-mono font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                            style={{
-                                background: 'var(--app-background)',
-                                border: '1px solid var(--app-border)',
-                            }}
+                            mono
+                            className="w-full text-[12px] px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
                         />
                         <p className="text-[10px] font-bold text-app-muted-foreground mt-1">
                             Used for barcode generation and internal reference.

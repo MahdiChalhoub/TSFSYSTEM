@@ -4,6 +4,8 @@ import { useActionState } from 'react';
 import { createAttribute, updateAttribute, AttributeState } from '@/app/actions/attributes';
 import { X, Save, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { peekNextCode } from '@/lib/sequences-client';
+import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
 
 type AttributeFormModalProps = {
@@ -61,12 +63,16 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
         attribute?.categories?.map((c: Record<string, any>) => c.id) || []
     );
+    // Pre-filled short code from /settings/sequences (PRODUCT_ATTRIBUTE key). Peek-only.
+    const [suggestedCode, setSuggestedCode] = useState<string>('');
 
     // Reset selected categories when attribute changes (for edit mode)
     useEffect(() => {
         if (isOpen) {
             setSelectedCategoryIds(attribute?.categories?.map((c: Record<string, any>) => c.id) || []);
             setPending(false); // Reset pending state when opening
+            if (!attribute) peekNextCode('PRODUCT_ATTRIBUTE').then(setSuggestedCode).catch(() => setSuggestedCode(''));
+            else setSuggestedCode('');
         }
     }, [isOpen, attribute]);
 
@@ -117,9 +123,11 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Code</label>
-                            <input
+                            <LockableCodeInput
                                 name="shortName"
-                                defaultValue={attribute?.short_name || ''}
+                                defaultValue={attribute?.short_name}
+                                suggestedValue={suggestedCode}
+                                isEdit={!!attribute}
                                 placeholder="e.g. VAN"
                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
                             />

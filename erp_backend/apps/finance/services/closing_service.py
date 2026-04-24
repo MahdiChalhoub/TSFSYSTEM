@@ -644,24 +644,12 @@ class ClosingService:
                 if ob_row:
                     ob_amount = (ob_row.debit_amount or Decimal('0.00')) - (ob_row.credit_amount or Decimal('0.00'))
 
-            if scope == 'INTERNAL':
-                # Internal closing balance = delta of INTERNAL over OFFICIAL;
-                # roll-forward rule mirrors this on the OB row.
-                off_close_agg = JournalEntryLine.objects.filter(
-                    journal_entry__organization=organization,
-                    journal_entry__status='POSTED',
-                    journal_entry__scope='OFFICIAL',
-                    account=re_account,
-                ).filter(
-                    Q(journal_entry__fiscal_year=fiscal_year) |
-                    Q(journal_entry__fiscal_year__isnull=True,
-                      journal_entry__transaction_date__date__gte=fiscal_year.start_date,
-                      journal_entry__transaction_date__date__lte=fiscal_year.end_date)
-                ).aggregate(d=Sum('debit'), c=Sum('credit'))
-                off_close = (off_close_agg['d'] or Decimal('0.00')) - (off_close_agg['c'] or Decimal('0.00'))
-                expected = re_close - off_close
-            else:
-                expected = re_close
+            # OFFICIAL and INTERNAL are disjoint scopes (each JE belongs
+            # to exactly one). The OB row for each scope stores that
+            # scope's OWN closing movement on the RE account, so the
+            # continuity check is a direct 1:1 comparison — no delta
+            # subtraction needed.
+            expected = re_close
 
             diff = (expected - ob_amount).copy_abs()
             if diff > tol:
@@ -694,7 +682,8 @@ class ClosingService:
           JE-only and the OpeningBalance table becomes read-only. Dual-write
           keeps both in sync during the transition.
         """
-        from apps.finance.models import ChartOfAccount, OpeningBalance
+        from apps.finance.models import ChartOfAccount, OpeningBalance, JournalEntryLine
+        from django.db.models import Sum, Q
 
         bs_accounts = ChartOfAccount.objects.filter(
             organization=organization,
@@ -706,15 +695,44 @@ class ClosingService:
         # the opening JE. Collecting once avoids a second pass.
         by_scope: dict[str, list[dict]] = {'OFFICIAL': [], 'INTERNAL': []}
 
+        # Compute post-close balance per (account, scope) by aggregating
+        # POSTED, non-superseded JE lines up to and including
+        # from_year.end_date. The denormalized `balance` / `balance_official`
+        # fields on ChartOfAccount can drift (observed 1.86M drift on
+        # live data) — we've already learned the hard way they aren't
+        # safe to trust here. This mirrors the closing-JE computation
+        # which likewise reads JE lines directly.
+        def _authoritative(acc, scope):
+            agg = JournalEntryLine.objects.filter(
+                journal_entry__organization=organization,
+                journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
+                journal_entry__scope=scope,
+                account=acc,
+                journal_entry__transaction_date__date__lte=from_year.end_date,
+            ).aggregate(d=Sum('debit'), c=Sum('credit'))
+            return (agg['d'] or Decimal('0.00')) - (agg['c'] or Decimal('0.00'))
+
         created = 0
         with transaction.atomic():
+            # Full rebuild semantics — wipe existing OB rows for this
+            # target year first, then write fresh from authoritative JE
+            # lines. Otherwise `update_or_create` leaves stale rows
+            # behind for accounts whose new net is 0 (observed on live
+            # data: accounts 2100 and 3000 retained pre-close values of
+            # 680k and 780k respectively, blocking every downstream gate).
+            OpeningBalance.objects.filter(
+                organization=organization, fiscal_year=to_year,
+            ).delete()
+
             for acc in bs_accounts:
-                official = acc.balance_official or Decimal('0.00')
-                internal_total = acc.balance or Decimal('0.00')
-                # Option A: INTERNAL row = delta only (internal-exclusive activity)
+                # OFFICIAL and INTERNAL are disjoint scopes — each JE
+                # belongs to exactly one. Each scope's OB is the direct
+                # sum of that scope's POSTED JE lines on this account
+                # up to year-end. No cumulative subtraction.
                 amounts_by_scope = (
-                    ('OFFICIAL', official),
-                    ('INTERNAL', internal_total - official),
+                    ('OFFICIAL', _authoritative(acc, 'OFFICIAL')),
+                    ('INTERNAL', _authoritative(acc, 'INTERNAL')),
                 )
                 for scope, net in amounts_by_scope:
                     if net == Decimal('0.00'):
@@ -930,9 +948,14 @@ class ClosingService:
                 net = (ob.debit_amount or Decimal('0.00')) - (ob.credit_amount or Decimal('0.00'))
                 ob_by_acc[ob.account_id] = net
 
-            # Path B — active OPENING JE lines for this (fy, scope)
-            # (POSTED and not superseded — superseded rows are audit history
-            # only and must not contribute to aggregate balances).
+            # Path B — active SYSTEM_OPENING JE lines for this (fy, scope).
+            # - POSTED + not superseded: exclude historical versions
+            # - journal_role='SYSTEM_OPENING': exclude user-entered
+            #   capital-injection / manual opening entries. Those are
+            #   legitimate journal_type='OPENING' but represent user
+            #   activity, not the system's authoritative carry-forward
+            #   from the prior year close. The OB table mirrors only the
+            #   carry-forward, so only system rows are comparable.
             je_by_acc: dict[int, Decimal] = {}
             je_lines = JournalEntryLine.objects.filter(
                 journal_entry__organization=organization,
@@ -941,6 +964,7 @@ class ClosingService:
                 journal_entry__journal_type='OPENING',
                 journal_entry__status='POSTED',
                 journal_entry__is_superseded=False,
+                journal_entry__journal_role='SYSTEM_OPENING',
             ).values('account_id').annotate(
                 d=Sum('debit'), c=Sum('credit'),
             )
@@ -1019,13 +1043,14 @@ class ClosingService:
             'skipped_reason': None,
         }
 
-        # Ensure an active (POSTED + not superseded) OPENING JE exists
-        # for at least one scope — otherwise we'd wipe OB without anything
-        # to replace it with.
+        # Ensure an active SYSTEM_OPENING JE exists for at least one
+        # scope — otherwise we'd wipe OB without an authoritative
+        # carry-forward to replace it with.
         je_exists = JournalEntry.objects.filter(
             organization=organization,
             fiscal_year=fiscal_year,
             journal_type='OPENING',
+            journal_role='SYSTEM_OPENING',
             status='POSTED',
             is_superseded=False,
         ).exists()
@@ -1047,14 +1072,19 @@ class ClosingService:
             report['rows_deleted'] = deleted
 
             for scope in ('OFFICIAL', 'INTERNAL'):
-                # Aggregate active OPENING JE lines by account (POSTED +
-                # not superseded — see _create_opening_journal_entry)
+                # Aggregate active SYSTEM_OPENING JE lines by account.
+                # OB mirrors only the authoritative carry-forward — user-
+                # entered capital injections (journal_role=USER_GENERAL)
+                # are 2026 activity, not a representation of year-end
+                # state. Including them would pollute OB with amounts
+                # that didn't exist at prior-year close.
                 lines = (
                     JournalEntryLine.objects
                     .filter(
                         journal_entry__organization=organization,
                         journal_entry__fiscal_year=fiscal_year,
                         journal_entry__journal_type='OPENING',
+                        journal_entry__journal_role='SYSTEM_OPENING',
                         journal_entry__status='POSTED',
                         journal_entry__is_superseded=False,
                         journal_entry__scope=scope,

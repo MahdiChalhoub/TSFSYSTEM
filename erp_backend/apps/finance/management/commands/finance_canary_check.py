@@ -329,28 +329,24 @@ class Command(BaseCommand):
                     ).aggregate(d=Sum('debit'), c=Sum('credit'))
                     pc = (prior_close['d'] or Decimal('0.00')) - (prior_close['c'] or Decimal('0.00'))
 
+                    # Restrict to SYSTEM_OPENING + non-superseded — user-
+                    # entered opening entries aren't the system's
+                    # authoritative roll-forward.
                     this_open = JournalEntryLine.objects.filter(
                         journal_entry__organization=org,
                         journal_entry__fiscal_year=fy,
                         journal_entry__journal_type='OPENING',
+                        journal_entry__journal_role='SYSTEM_OPENING',
                         journal_entry__status='POSTED',
+                        journal_entry__is_superseded=False,
                         journal_entry__scope=scope,
                         account=re_acc,
                     ).aggregate(d=Sum('debit'), c=Sum('credit'))
                     to = (this_open['d'] or Decimal('0.00')) - (this_open['c'] or Decimal('0.00'))
 
-                    # INTERNAL opening is delta-only; compare to delta of prior close
-                    if scope == 'INTERNAL':
-                        off_close = JournalEntryLine.objects.filter(
-                            journal_entry__organization=org,
-                            journal_entry__fiscal_year=prior,
-                            journal_entry__status='POSTED',
-                            journal_entry__scope='OFFICIAL',
-                            account=re_acc,
-                        ).aggregate(d=Sum('debit'), c=Sum('credit'))
-                        oc = (off_close['d'] or Decimal('0.00')) - (off_close['c'] or Decimal('0.00'))
-                        pc = pc - oc
-
+                    # OFFICIAL and INTERNAL are disjoint scopes — each JE
+                    # belongs to exactly one, and each scope's OB stores
+                    # its own direct closing movement. No delta math.
                     if (pc - to).copy_abs() > TOL:
                         failures.append(
                             f'[{scope}] RE continuity: prior close ({prior.name})={pc} '

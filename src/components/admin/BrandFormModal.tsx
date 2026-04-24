@@ -4,6 +4,8 @@ import { useActionState } from 'react';
 import { createBrand, updateBrand, BrandState } from '@/app/actions/brands';
 import { X, Save, Loader2, Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { peekNextCode } from '@/lib/sequences-client';
+import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
 
 type BrandFormModalProps = {
@@ -62,12 +64,16 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
         brand?.categories?.map((c: Record<string, any>) => c.id) || []
     );
+    // Pre-filled short code from /settings/sequences (BRAND key). Peek-only.
+    const [suggestedCode, setSuggestedCode] = useState<string>('');
 
     // Reset selected categories when brand changes (for edit mode)
     useEffect(() => {
         if (isOpen) {
             setSelectedCategoryIds(brand?.categories?.map((c: Record<string, any>) => c.id) || []);
             setPending(false); // Reset pending state when opening
+            if (!brand) peekNextCode('BRAND').then(setSuggestedCode).catch(() => setSuggestedCode(''));
+            else setSuggestedCode('');
         }
     }, [isOpen, brand]);
 
@@ -118,9 +124,11 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Name</label>
-                            <input
+                            <LockableCodeInput
                                 name="shortName"
-                                defaultValue={brand?.short_name || ''}
+                                defaultValue={brand?.short_name}
+                                suggestedValue={suggestedCode}
+                                isEdit={!!brand}
                                 placeholder="e.g. NES"
                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
                             />

@@ -19,78 +19,58 @@
  * (var(--app-*)) to stay consistent with the rest of the admin surface.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { X, Save, Loader2, Scale, BarChart3, Info, Droplet, DollarSign, Hash } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { X, Save, Loader2, Scale, BarChart3, Info } from 'lucide-react';
 import {
     getBalanceBarcodeConfigMap, updateBalanceBarcodeConfigMap,
     BalanceBarcodeConfig, BalanceBarcodeConfigMap, VariableBarcodeMode,
 } from '@/app/actions/balance-barcode';
 import { toast } from 'sonner';
+import { BARCODE_EMBEDDABLE_TYPES, UNIT_TYPE_BY_ID, UnitTypeId } from '@/lib/unit-types';
 
 type Props = {
     isOpen: boolean;
     onClose: () => void;
 };
 
-const BLANK_MAP: BalanceBarcodeConfigMap = {
-    WEIGHT: { mode: 'WEIGHT', prefix: '20', itemDigits: 5, weightIntDigits: 3, weightDecDigits: 3, isEnabled: true },
-    VOLUME: { mode: 'VOLUME', prefix: '21', itemDigits: 5, weightIntDigits: 3, weightDecDigits: 3, isEnabled: false },
-    PRICE:  { mode: 'PRICE',  prefix: '22', itemDigits: 5, weightIntDigits: 4, weightDecDigits: 2, isEnabled: false },
-    COUNT:  { mode: 'COUNT',  prefix: '23', itemDigits: 7, weightIntDigits: 4, weightDecDigits: 0, isEnabled: false },
-};
+/** Blank config map derived from the SINGLE SOURCE OF TRUTH at
+ *  `src/lib/unit-types.ts`. No hardcoded list here — add/remove a type there
+ *  (flag `canEmbedInBarcode`) and this modal updates automatically. */
+const BLANK_MAP: BalanceBarcodeConfigMap = Object.fromEntries(
+    BARCODE_EMBEDDABLE_TYPES.map(t => [t.id, {
+        mode: t.id as VariableBarcodeMode,
+        prefix: t.barcodeRender?.prefix || '20',
+        itemDigits: 5,
+        weightIntDigits: t.barcodeDefaults?.intDigits ?? 3,
+        weightDecDigits: t.barcodeDefaults?.decDigits ?? 0,
+        isEnabled: t.id === 'WEIGHT',
+    }])
+) as BalanceBarcodeConfigMap;
 
-/** Per-mode metadata: labels, unit text, preview sample. Same layout, just
- * different semantics — what the variable digits *mean*. */
-const MODES: Record<VariableBarcodeMode, {
-    label: string;
-    Icon: React.ComponentType<{ size?: number; className?: string }>;
-    intLabel: string;
-    decLabel: string;
-    intHint: string;
-    decHint: string;
-    exampleInt: string;
-    exampleDec: string;
-    unit: string;
-    humanExample: (int: string, dec: string) => React.ReactNode;
-    decAllowed: boolean;
-}> = {
-    WEIGHT: {
-        label: 'Weight',
-        Icon: Scale,
-        intLabel: 'Weight integer', decLabel: 'Weight decimal',
-        intHint: 'Whole kg digits', decHint: 'Grams',
-        exampleInt: '1', exampleDec: '250', unit: 'kg',
-        humanExample: (i, d) => <>weighing <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span>.<span className="font-bold" style={{ color: 'var(--app-warning)' }}>{d}</span> kg</>,
-        decAllowed: true,
-    },
-    VOLUME: {
-        label: 'Volume',
-        Icon: Droplet,
-        intLabel: 'Volume integer', decLabel: 'Volume decimal',
-        intHint: 'Whole litre digits', decHint: 'Millilitres',
-        exampleInt: '1', exampleDec: '500', unit: 'L',
-        humanExample: (i, d) => <>volume <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span>.<span className="font-bold" style={{ color: 'var(--app-warning)' }}>{d}</span> L</>,
-        decAllowed: true,
-    },
-    PRICE: {
-        label: 'Price',
-        Icon: DollarSign,
-        intLabel: 'Price integer', decLabel: 'Price decimal',
-        intHint: 'Whole currency digits', decHint: 'Minor unit (cents)',
-        exampleInt: '12', exampleDec: '50', unit: '€',
-        humanExample: (i, d) => <>priced at <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span>.<span className="font-bold" style={{ color: 'var(--app-warning)' }}>{d}</span> €</>,
-        decAllowed: true,
-    },
-    COUNT: {
-        label: 'Count',
-        Icon: Hash,
-        intLabel: 'Count digits', decLabel: 'Not used',
-        intHint: 'Unit count digits', decHint: 'Count uses no decimal',
-        exampleInt: '42', exampleDec: '', unit: 'pcs',
-        humanExample: (i) => <>count <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span> pcs</>,
-        decAllowed: false,
-    },
-};
+/** Derived mode metadata — no hardcoding. Labels / icons / examples all
+ *  come from the shared unit-types catalog. */
+function modeMeta(mode: VariableBarcodeMode) {
+    const t = UNIT_TYPE_BY_ID[mode as UnitTypeId];
+    const r = t?.barcodeRender;
+    return {
+        label: t?.label ?? mode,
+        Icon: t?.icon ?? Scale,
+        intLabel: `${t?.label ?? mode} integer`,
+        decLabel: r?.decHint === 'Count uses no decimal' ? 'Not used' : `${t?.label ?? mode} decimal`,
+        intHint: r?.intHint ?? '',
+        decHint: r?.decHint ?? '',
+        exampleInt: r?.exampleInt ?? '1',
+        exampleDec: r?.exampleDec ?? '',
+        unit: r?.unit ?? '',
+        decAllowed: (t?.barcodeDefaults?.decDigits ?? 0) > 0,
+        humanExample: (i: string, d: string) => {
+            const verb = r?.verbPhrase ?? '';
+            const unit = r?.unit ?? '';
+            if (!d) return <>{verb} <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span> {unit}</>;
+            return <>{verb} <span className="font-bold" style={{ color: 'var(--app-success)' }}>{i}</span>.<span className="font-bold" style={{ color: 'var(--app-warning)' }}>{d}</span> {unit}</>;
+        },
+    };
+}
 
 export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
     // Start with defaults visible instantly. The backend endpoint for
@@ -133,7 +113,7 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
 
     if (!isOpen) return null;
 
-    const meta = MODES[config.mode];
+    const meta = modeMeta(config.mode);
     // When mode doesn't use decimals, force the decimal width to 0 in the
     // preview so the barcode layout reflects the effective structure.
     const effectiveDecDigits = meta.decAllowed ? config.weightDecDigits : 0;
@@ -194,8 +174,9 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
                                 <div className="text-tp-xxs font-bold uppercase tracking-widest mb-2 px-1" style={{ color: 'var(--app-muted-foreground)' }}>
                                     Format
                                 </div>
-                                {(Object.keys(MODES) as VariableBarcodeMode[]).map(key => {
-                                    const m = MODES[key];
+                                {BARCODE_EMBEDDABLE_TYPES.map(t => {
+                                    const key = t.id as VariableBarcodeMode;
+                                    const m = modeMeta(key);
                                     const active = activeMode === key;
                                     const slot = configs[key];
                                     return (
@@ -248,7 +229,7 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
 
                                 {/* Structure fields 2x2 */}
                                 <div className="grid grid-cols-2 gap-3" style={{ opacity: config.isEnabled ? 1 : 0.4, pointerEvents: config.isEnabled ? 'auto' : 'none' }}>
-                                    <StructureField label="Prefix" hint={`Default "${MODES[activeMode].label === 'Weight' ? '20' : activeMode === 'VOLUME' ? '21' : activeMode === 'PRICE' ? '22' : '23'}"`} maxLength={2}>
+                                    <StructureField label="Prefix" hint={`Default "${UNIT_TYPE_BY_ID[activeMode as UnitTypeId]?.barcodeRender?.prefix || ''}"`} maxLength={2}>
                                         <input type="text" value={config.prefix}
                                             onChange={e => patchConfig({ prefix: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) })}
                                             className="w-full px-3 py-2 rounded-xl text-tp-lg font-mono font-bold text-center outline-none transition-all"

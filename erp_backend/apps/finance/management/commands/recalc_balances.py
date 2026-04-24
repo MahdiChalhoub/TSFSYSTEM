@@ -7,20 +7,28 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         c = connection.cursor()
         
-        # Recalculate balance from posted JE lines
+        # Recalculate balance from posted, non-superseded JE lines.
+        # Superseded rows are historical versions (e.g. an OPENING JE
+        # replaced by a fresh close-generated one) — summing them would
+        # double-count.
         c.execute("""
-            UPDATE chartofaccount SET 
+            UPDATE chartofaccount SET
                 balance = COALESCE((
-                    SELECT SUM(jl.debit) - SUM(jl.credit) 
-                    FROM journalentryline jl 
-                    JOIN journalentry je ON jl.journal_entry_id = je.id 
-                    WHERE jl.account_id = chartofaccount.id AND je.status = 'POSTED'
+                    SELECT SUM(jl.debit) - SUM(jl.credit)
+                    FROM journalentryline jl
+                    JOIN journalentry je ON jl.journal_entry_id = je.id
+                    WHERE jl.account_id = chartofaccount.id
+                      AND je.status = 'POSTED'
+                      AND je.is_superseded = FALSE
                 ), 0),
                 balance_official = COALESCE((
-                    SELECT SUM(jl.debit) - SUM(jl.credit) 
-                    FROM journalentryline jl 
-                    JOIN journalentry je ON jl.journal_entry_id = je.id 
-                    WHERE jl.account_id = chartofaccount.id AND je.status = 'POSTED' AND je.scope = 'OFFICIAL'
+                    SELECT SUM(jl.debit) - SUM(jl.credit)
+                    FROM journalentryline jl
+                    JOIN journalentry je ON jl.journal_entry_id = je.id
+                    WHERE jl.account_id = chartofaccount.id
+                      AND je.status = 'POSTED'
+                      AND je.is_superseded = FALSE
+                      AND je.scope = 'OFFICIAL'
                 ), 0)
         """)
         self.stdout.write(f'Recalculated balances for {c.rowcount} accounts')

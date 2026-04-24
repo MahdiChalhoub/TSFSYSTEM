@@ -7,7 +7,7 @@ from rest_framework.routers import SimpleRouter
 
 # ViewSets live in module-level views (canonical location)
 from apps.finance.views import (
-    FinancialAccountViewSet, ChartOfAccountViewSet,
+    FinancialAccountViewSet, FinancialAccountCategoryViewSet, ChartOfAccountViewSet,
     FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet,
     BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet,
     TransactionSequenceViewSet, ForensicAuditLogViewSet, AuditVerificationViewSet,
@@ -37,6 +37,7 @@ from apps.finance.views import (
 router = SimpleRouter()
 # --- Core Finance ---
 router.register(r'accounts', FinancialAccountViewSet)
+router.register(r'account-categories', FinancialAccountCategoryViewSet, basename='financial-account-category')
 router.register(r'coa', ChartOfAccountViewSet)
 router.register(r'fiscal-years', FiscalYearViewSet)
 router.register(r'fiscal-periods', FiscalPeriodViewSet)

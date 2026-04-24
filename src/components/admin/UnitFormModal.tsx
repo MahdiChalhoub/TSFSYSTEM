@@ -2,8 +2,11 @@
 
 import { useActionState } from 'react';
 import { createUnit, updateUnit, UnitState } from '@/app/actions/inventory';
-import { X, Save, Loader2, Ruler, Scale, Package, Milestone, Clock, Grid2X2, Hash, AlertTriangle } from 'lucide-react';
+import { X, Save, Loader2, Ruler, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { peekNextCode } from '@/lib/sequences-client';
+import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
+import { UNIT_TYPES } from '@/lib/unit-types';
 
 type UnitFormModalProps = {
     isOpen: boolean;
@@ -16,16 +19,7 @@ type UnitFormModalProps = {
 
 const initialState: UnitState = { message: '', errors: {} };
 
-// Type taxonomy — mirror of UNIT_TYPE_CHOICES in the backend. Extensible:
-// new types can be appended here without a migration (model keeps CharField).
-const UNIT_TYPES = [
-    { id: 'COUNT', label: 'Count', hint: 'Integer quantities — pieces, units, items', icon: Hash, color: 'var(--app-primary)' },
-    { id: 'WEIGHT', label: 'Weight', hint: 'Grams, kg, lb — needs scale', icon: Scale, color: 'var(--app-warning, #f59e0b)' },
-    { id: 'VOLUME', label: 'Volume', hint: 'Litre, ml, gallon — liquids', icon: Milestone, color: 'var(--app-info, #3b82f6)' },
-    { id: 'LENGTH', label: 'Length', hint: 'Metres, cm, inches — distance/dimension', icon: Ruler, color: '#8b5cf6' },
-    { id: 'AREA', label: 'Area', hint: 'm², ft² — surface measurement', icon: Grid2X2, color: '#ec4899' },
-    { id: 'TIME', label: 'Time', hint: 'Hours, minutes — labor/service billing', icon: Clock, color: '#14b8a6' },
-] as const;
+// UNIT_TYPES now lives in src/lib/unit-types.ts — single source of truth.
 
 export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName, potentialParents = [] }: UnitFormModalProps) {
     const [state, formAction] = useActionState(unit ? updateUnit.bind(null, unit.id) : createUnit, initialState);
@@ -36,6 +30,8 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
     const [needsBalance, setNeedsBalance] = useState(unit?.needs_balance || false);
     const [selectedType, setSelectedType] = useState<string>(unit?.type || 'COUNT');
     const [allowFraction, setAllowFraction] = useState<boolean>(unit?.allow_fraction ?? true);
+    // Pre-filled code from /settings/sequences (UNIT key). Peek-only.
+    const [suggestedCode, setSuggestedCode] = useState<string>('');
 
     useEffect(() => {
         if (state.message === 'success') onClose();
@@ -55,13 +51,21 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
             setNeedsBalance(unit?.needs_balance || false);
             setSelectedType(unit?.type || 'COUNT');
             setAllowFraction(unit?.allow_fraction ?? true);
+            if (!unit) {
+                peekNextCode('UNIT').then(setSuggestedCode).catch(() => setSuggestedCode(''));
+            } else {
+                setSuggestedCode('');
+            }
         }
     }, [isOpen, baseUnitId, unit]);
 
     // When type changes, suggest sensible defaults for allowFraction
+    // and reset needsBalance for types without variable barcode formats
     useEffect(() => {
         if (selectedType === 'COUNT') setAllowFraction(false);
         else if (['WEIGHT', 'VOLUME', 'LENGTH', 'AREA', 'TIME'].includes(selectedType)) setAllowFraction(true);
+        // Types without variable barcode config cannot use scale dispatch
+        if (!['WEIGHT', 'VOLUME', 'COUNT'].includes(selectedType)) setNeedsBalance(false);
     }, [selectedType]);
 
     if (!isOpen) return null;
@@ -224,8 +228,16 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                         </div>
                         <div>
                             <label className={labelCls} style={labelStyle}>Short Code *</label>
-                            <input name="code" defaultValue={unit?.code || ''} placeholder="e.g. BX"
-                                required className={inputCls + " font-mono uppercase"} style={inputStyle} />
+                            <LockableCodeInput
+                                name="code"
+                                defaultValue={unit?.code}
+                                suggestedValue={suggestedCode}
+                                isEdit={!!unit}
+                                placeholder="e.g. BX"
+                                required
+                                mono
+                                className={inputCls + " uppercase"}
+                                style={inputStyle} />
                             {state.errors?.code && (
                                 <p className="text-tp-xs mt-1 font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
                                     {state.errors.code[0]}
@@ -264,6 +276,8 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                 {selectedType === 'COUNT' ? 'Usually off' : 'Usually on'}
                             </span>
                         </label>
+                        {/* Only show balance/scale toggle for types that have a Variable Barcode Config format */}
+                        {['WEIGHT', 'VOLUME', 'COUNT'].includes(selectedType) && (
                         <label className="flex items-center gap-2 text-tp-sm font-bold cursor-pointer"
                             style={{ color: 'var(--app-foreground)' }}>
                             <input type="checkbox" name="needsBalance"
@@ -280,6 +294,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                 </span>
                             )}
                         </label>
+                        )}
                         {isInheritedBalance && <input type="hidden" name="needsBalance" value="on" />}
                     </div>
 

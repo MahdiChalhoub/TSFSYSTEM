@@ -118,13 +118,20 @@ class LedgerCoreMixin:
             source_model = kwargs.get('source_model')
             source_id = kwargs.get('source_id')
             if source_module and source_id:
+                # Superseded rows don't count as "active" — they represent
+                # historical versions that have already been soft-replaced
+                # via the is_superseded / superseded_by chain. Matching them
+                # here would block every regeneration of system-owned JEs
+                # (OPENING, CLOSING) which is exactly the flow the supersede
+                # mechanic was designed to support.
                 existing = JournalEntry.objects.filter(
                     organization=organization,
                     source_module=source_module,
                     source_model=source_model or '',
                     source_id=source_id,
                     scope=scope,
-                    status='POSTED'
+                    status='POSTED',
+                    is_superseded=False,
                 ).first()
                 if existing:
                     raise ValidationError(

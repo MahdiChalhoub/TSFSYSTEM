@@ -69,11 +69,38 @@ export function Sidebar({
         : processedItems;
 
     // Split items by stage: production (finished) vs in-progress vs development (not started).
-    // To promote an item to production, add `stage: 'production'` to it in the menu data.
-    // To mark as in-progress, add `stage: 'in-progress'`.
-    const productionItems = filteredItems.filter((i: any) => i.stage === 'production');
-    const inProgressItems = filteredItems.filter((i: any) => i.stage === 'in-progress');
-    const developmentItems = filteredItems.filter((i: any) => i.stage !== 'production' && i.stage !== 'in-progress');
+    // Supports CHILD-LEVEL stage filtering: a parent group can have children in different stages.
+    // When a parent has children with mixed stages, it appears in each section with only matching children.
+    function splitByStage(items: any[], targetStage: 'production' | 'in-progress' | 'development'): any[] {
+        const result: any[] = [];
+        for (const item of items) {
+            const itemStage = item.stage || undefined; // undefined = no explicit stage
+            const isTarget = targetStage === 'production' ? itemStage === 'production'
+                           : targetStage === 'in-progress' ? itemStage === 'in-progress'
+                           : itemStage !== 'production' && itemStage !== 'in-progress';
+
+            if (!item.children || item.children.length === 0) {
+                // Leaf item — straightforward stage check
+                if (isTarget) result.push(item);
+            } else {
+                // Parent with children — check for mixed stages
+                const matchingChildren = item.children.filter((c: any) => {
+                    // Recursively handle nested groups
+                    const childStage = c.stage || itemStage || undefined;
+                    return targetStage === 'production' ? childStage === 'production'
+                         : targetStage === 'in-progress' ? childStage === 'in-progress'
+                         : childStage !== 'production' && childStage !== 'in-progress';
+                });
+                if (matchingChildren.length > 0) {
+                    result.push({ ...item, children: matchingChildren });
+                }
+            }
+        }
+        return result;
+    }
+    const productionItems = splitByStage(filteredItems, 'production');
+    const inProgressItems = splitByStage(filteredItems, 'in-progress');
+    const developmentItems = splitByStage(filteredItems, 'development');
 
     return (
         <React.Fragment>

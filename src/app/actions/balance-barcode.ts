@@ -13,7 +13,9 @@ import { revalidatePath } from 'next/cache';
  * backward compat; the UI treats them as generic integer/decimal slots and
  * labels them per `mode`.
  */
-export type VariableBarcodeMode = 'WEIGHT' | 'VOLUME' | 'PRICE' | 'COUNT';
+// Mirrors real Unit types that appear in the app's UNIT_TYPES taxonomy.
+// Price isn't a Unit type so we don't include it here.
+export type VariableBarcodeMode = 'WEIGHT' | 'VOLUME' | 'COUNT';
 
 export type BalanceBarcodeConfig = {
     mode: VariableBarcodeMode;
@@ -34,7 +36,6 @@ export type BalanceBarcodeConfigMap = Record<VariableBarcodeMode, BalanceBarcode
 const MODE_DEFAULTS: BalanceBarcodeConfigMap = {
     WEIGHT: { mode: 'WEIGHT', prefix: '20', itemDigits: 5, weightIntDigits: 3, weightDecDigits: 3, isEnabled: true },
     VOLUME: { mode: 'VOLUME', prefix: '21', itemDigits: 5, weightIntDigits: 3, weightDecDigits: 3, isEnabled: false },
-    PRICE:  { mode: 'PRICE',  prefix: '22', itemDigits: 5, weightIntDigits: 4, weightDecDigits: 2, isEnabled: false },
     COUNT:  { mode: 'COUNT',  prefix: '23', itemDigits: 7, weightIntDigits: 4, weightDecDigits: 0, isEnabled: false },
 };
 
@@ -88,7 +89,7 @@ export async function getBalanceBarcodeConfigMap(): Promise<{ success: boolean; 
         //   • Legacy flat shape treated as the WEIGHT row
         const configs = settings?.configs && typeof settings.configs === 'object' ? settings.configs : null;
         if (configs) {
-            (['WEIGHT','VOLUME','PRICE','COUNT'] as VariableBarcodeMode[]).forEach(m => {
+            (['WEIGHT','VOLUME','COUNT'] as VariableBarcodeMode[]).forEach(m => {
                 if (configs[m]) out[m] = fromWire(m, configs[m]);
             });
         } else if (settings && typeof settings === 'object') {
@@ -117,7 +118,6 @@ export async function updateBalanceBarcodeConfigMap(map: BalanceBarcodeConfigMap
             configs: {
                 WEIGHT: toWire(map.WEIGHT),
                 VOLUME: toWire(map.VOLUME),
-                PRICE: toWire(map.PRICE),
                 COUNT: toWire(map.COUNT),
             },
             // Legacy mirror so old callers reading flat keys still work —
