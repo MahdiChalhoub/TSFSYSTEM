@@ -1,7 +1,8 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useCallback, useTransition, useRef } from 'react'
+import { useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react'
+import { prefetchNextCode } from '@/lib/sequences-client'
 import {
     FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
 } from 'lucide-react'
@@ -33,6 +34,10 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
     const [deleteConflict, setDeleteConflict] = useState<any>(null)
     const data = initialCategories
+
+    // Warm up the CATEGORY sequence cache on page mount so the first New
+    // dialog opens with a pre-filled code instantly (no network wait).
+    useEffect(() => { prefetchNextCode('CATEGORY') }, [])
 
     // Actions
     const openAddModal = useCallback((parentId?: number) => { setModalState({ open: true, parentId }) }, [])
@@ -141,6 +146,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 ],
                 columnHeaders: [
                     { label: 'Category', width: 'auto' },
+                    { label: 'Barcode', width: '96px', color: 'var(--app-success)', hideOnMobile: true },
                     { label: 'Sub', width: '48px', hideOnMobile: true },
                     { label: 'Brands', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
                     { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true },

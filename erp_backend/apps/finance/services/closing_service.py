@@ -678,6 +678,54 @@ class ClosingService:
                     f"triggered, year NOT finalized."
                 )
 
+            # ── Parent-account posting invariant ──
+            # No journal entry line in this year may target a parent /
+            # header account. Parents are pure aggregations of their
+            # children; any direct posting to them is a data bug. List
+            # every offender so the user can reclassify before retrying.
+            from django.db.models import Count as _Count2
+            from apps.finance.models import ChartOfAccount as _COA_parent
+            parent_ids = list(
+                _COA_parent.objects
+                .annotate(n=_Count2('children'))
+                .filter(organization=organization, n__gt=0)
+                .values_list('id', flat=True)
+            )
+            if parent_ids:
+                off_rows = JournalEntryLine.objects.filter(
+                    journal_entry__organization=organization,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    journal_entry__scope=scope,
+                    account_id__in=parent_ids,
+                ).filter(
+                    Q(journal_entry__fiscal_year=fiscal_year) |
+                    Q(journal_entry__fiscal_year__isnull=True,
+                      journal_entry__transaction_date__date__gte=fiscal_year.start_date,
+                      journal_entry__transaction_date__date__lte=fiscal_year.end_date)
+                ).values(
+                    'account_id', 'account__code', 'account__name',
+                ).annotate(
+                    d=Sum('debit'), c=Sum('credit'),
+                    n_lines=_Count2('id'),
+                )
+                offenders = []
+                for r in off_rows:
+                    net = (r['d'] or Decimal('0.00')) - (r['c'] or Decimal('0.00'))
+                    if (net.copy_abs() > tol) or r['n_lines']:
+                        offenders.append(
+                            f"  {r['account__code']} {r['account__name']}: "
+                            f"net={net} across {r['n_lines']} line(s)"
+                        )
+                if offenders:
+                    raise ValidationError(
+                        f"[{scope}] Parent/header accounts hold direct JE "
+                        f"postings — they must be pure aggregations of their "
+                        f"children. Reclassify these lines to leaf accounts "
+                        f"before closing. Offenders:\n"
+                        + "\n".join(offenders)
+                    )
+
         # ── Full closing-chain continuity (every BS account) ──
         # Every balance-sheet account's closing net in FY N must equal its
         # opening net in FY N+1 per scope. This is the strongest possible
@@ -949,10 +997,23 @@ class ClosingService:
         from apps.finance.models import ChartOfAccount, OpeningBalance, JournalEntryLine
         from django.db.models import Sum, Q
 
-        bs_accounts = ChartOfAccount.objects.filter(
+        # Opening balances carry forward only LEAF accounts. Parent /
+        # header accounts are pure aggregations of their descendants and
+        # must never hold their own opening balance — including them
+        # would either double-count (if a child also carries the same
+        # amount) or invent balance out of thin air. The `allow_posting`
+        # flag is the canonical signal (auto-flipped to False when an
+        # account gains children); we also annotate and filter on the
+        # live tree shape to survive any stale-flag edge case.
+        from django.db.models import Count as _Count
+        bs_accounts = ChartOfAccount.objects.annotate(
+            _n_children=_Count('children'),
+        ).filter(
             organization=organization,
             type__in=['ASSET', 'LIABILITY', 'EQUITY'],
             is_active=True,
+            allow_posting=True,
+            _n_children=0,
         )
 
         # Per-scope amounts we'll both write to OB rows AND use to build

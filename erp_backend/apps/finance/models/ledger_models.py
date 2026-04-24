@@ -278,6 +278,27 @@ class JournalEntryLine(TenantModel):
     def clean(self):
         if not self.account:
             raise ValidationError("A Journal Entry Line must be linked to a Chart of Account.")
+        # Parent / header accounts must not accept direct postings — their
+        # balance is defined as the sum of their children. Two independent
+        # checks so a stale flag or a stale tree shape each fail loudly.
+        # This is enforced at the model level (not just the service layer)
+        # because many code paths call `JournalEntryLine.objects.create`
+        # directly, bypassing the ledger_core guard.
+        acc = self.account
+        if not acc.allow_posting:
+            raise ValidationError(
+                f"Account '{acc.code} — {acc.name}' is a header account "
+                f"(allow_posting=False). Post to a leaf (child) account — "
+                f"the parent's balance is derived from its descendants."
+            )
+        # Belt-and-suspenders: if the flag is stale but the tree shape
+        # says it has children, refuse anyway.
+        if acc.children.exists():
+            raise ValidationError(
+                f"Account '{acc.code} — {acc.name}' has child accounts, "
+                f"so it is a header node. Post to one of its children "
+                f"instead — parent balances are pure aggregations."
+            )
         super().clean()
 
     def save(self, *args, **kwargs):

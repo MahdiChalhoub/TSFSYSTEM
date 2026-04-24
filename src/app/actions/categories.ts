@@ -12,13 +12,24 @@ export type CategoryState = {
 };
 
 /** Pulls DRF field-error objects out of an erpFetch failure so the form
- *  can render them inline. DRF returns 400 with { field: ["msg"], ... } */
+ *  can render them inline. DRF returns 400 with { field: ["msg"], ... } —
+ *  we only treat a field as an error when the value is an array of strings
+ *  (success responses have scalar `name: "Foo"`, which shouldn't be flagged). */
 function pickFieldErrors(raw: any): CategoryState['errors'] | undefined {
     if (!raw || typeof raw !== 'object') return undefined;
     const out: CategoryState['errors'] = {};
-    if (Array.isArray(raw.name)) out.name = raw.name;
-    if (Array.isArray(raw.barcode_prefix)) out.barcode_prefix = raw.barcode_prefix;
+    if (Array.isArray(raw.name) && raw.name.every((v: any) => typeof v === 'string')) out.name = raw.name;
+    if (Array.isArray(raw.barcode_prefix) && raw.barcode_prefix.every((v: any) => typeof v === 'string')) out.barcode_prefix = raw.barcode_prefix;
     return Object.keys(out).length ? out : undefined;
+}
+
+function hasError(raw: any): boolean {
+    if (!raw || typeof raw !== 'object') return false;
+    if (raw.error || raw.detail) return true;
+    // Field errors only — DRF always returns arrays for validation errors.
+    if (Array.isArray(raw.barcode_prefix)) return true;
+    if (Array.isArray(raw.name)) return true;
+    return false;
 }
 
 export async function createCategory(prevState: CategoryState, formData: FormData): Promise<CategoryState> {
@@ -46,7 +57,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
         });
 
         // erpFetch may return error object instead of throwing
-        if (result?.error || result?.detail || result?.barcode_prefix || result?.name) {
+        if (hasError(result)) {
             const fieldErrors = pickFieldErrors(result);
             const errMsg = result.error || result.detail
                 || (fieldErrors?.barcode_prefix?.[0])
@@ -94,7 +105,7 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
             })
         });
 
-        if (result?.error || result?.detail || result?.barcode_prefix || result?.name) {
+        if (hasError(result)) {
             const fieldErrors = pickFieldErrors(result);
             const errMsg = result.error || result.detail
                 || (fieldErrors?.barcode_prefix?.[0])

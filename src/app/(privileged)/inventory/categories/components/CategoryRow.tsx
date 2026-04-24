@@ -122,7 +122,7 @@ export const CategoryRow = ({
                             </span>
                         )}
                     </div>
-                    {(node.reference_code || node.code || node.short_name || node.barcode_prefix) && (
+                    {(node.reference_code || node.code || node.short_name) && (
                         <div className="flex items-center gap-1.5 mt-0.5">
                             {node.reference_code && (
                                 <span className="font-mono text-tp-xxs font-bold px-1.5 py-0.5 rounded"
@@ -138,16 +138,6 @@ export const CategoryRow = ({
                                     {node.code}
                                 </span>
                             )}
-                            {node.barcode_prefix && (
-                                <span className="font-mono text-tp-xxs font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
-                                    title={`Barcode prefix — products get ${node.barcode_prefix}NNN`}
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
-                                        color: 'var(--app-success, #22c55e)',
-                                    }}>
-                                    🏷 {node.barcode_prefix}
-                                </span>
-                            )}
                             {node.short_name && (
                                 <span className="text-tp-xxs font-medium text-app-muted-foreground opacity-60">
                                     {node.short_name}
@@ -158,6 +148,25 @@ export const CategoryRow = ({
                 </div>
 
                 {/* ── Stat Badges — numbers only, clean ── */}
+                {/* Barcode prefix */}
+                <div className="hidden sm:flex w-24 flex-shrink-0 justify-center">
+                    {node.barcode_prefix ? (
+                        <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
+                            title={`Products in this category get barcodes starting ${node.barcode_prefix}`}
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                color: 'var(--app-success, #22c55e)',
+                            }}>
+                            🏷 {node.barcode_prefix}
+                        </span>
+                    ) : (
+                        <span className="text-tp-xs tabular-nums"
+                            style={{ color: 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
+                            –
+                        </span>
+                    )}
+                </div>
+
                 {/* Children */}
                 <div className="hidden sm:flex w-10 flex-shrink-0 justify-center">
                     <span className="text-tp-xs font-semibold tabular-nums"

@@ -70,7 +70,7 @@ const categoriesTour: TourConfig = {
         {
             target: '[data-tour="add-category-btn"]',
             title: 'Step 1: Create a Category',
-            description: 'Click this button to create a new category. Choose Root or Sub-category, set a name and code. The modal is quick — brands and attributes are linked separately after creation.',
+            description: 'Click this button to create a new category. The modal pre-fills a unique Code from /settings/sequences and lets you set a Barcode Prefix (the leading digits products in this category inherit when their barcode is auto-generated). Brands and attributes are linked separately after creation.',
             icon: createElement(Plus, { size: 16 }),
             color: 'var(--app-primary)',
             placement: 'bottom',

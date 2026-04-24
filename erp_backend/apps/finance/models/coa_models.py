@@ -295,6 +295,18 @@ class ChartOfAccount(TenantModel):
 
         super().save(*args, **kwargs)
 
+        # ── Auto-maintain header flag on the parent ──
+        # When a child is saved with a parent link, that parent becomes
+        # (or remains) a header node — its own balance is the sum of its
+        # descendants and must never accept direct postings. Flip
+        # `allow_posting=False` on the parent row so the JE-line model
+        # guard rejects any future line targeting it. Idempotent: the
+        # .update() is a no-op when already False.
+        if self.parent_id:
+            ChartOfAccount.objects.filter(
+                id=self.parent_id, allow_posting=True,
+            ).update(allow_posting=False)
+
     def delete(self, *args, **kwargs):
         if self.organization.finance_setup_completed:
             from django.core.exceptions import ValidationError

@@ -25,6 +25,7 @@
 
 import { useRef, useState } from 'react';
 import { Lock, Pencil } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface Props {
     name: string;
@@ -62,14 +63,14 @@ export function LockableCodeInput({
     // Only open by default when new AND no suggestion is available yet.
     const hasAuthoritativeValue = isEdit || !!(suggestedValue || defaultValue);
     const [unlocked, setUnlocked] = useState(!hasAuthoritativeValue);
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
 
-    const handleUnlock = () => {
-        const msg = warning ?? (isEdit ? EDIT_WARNING : OVERRIDE_WARNING);
-        if (window.confirm(msg)) {
-            setUnlocked(true);
-            setTimeout(() => inputRef.current?.focus(), 10);
-        }
+    const openConfirm = () => setConfirmOpen(true);
+    const handleConfirm = () => {
+        setConfirmOpen(false);
+        setUnlocked(true);
+        setTimeout(() => inputRef.current?.focus(), 10);
     };
 
     const showLock = hasAuthoritativeValue && !unlocked;
@@ -97,7 +98,7 @@ export function LockableCodeInput({
             {showLock && (
                 <button
                     type="button"
-                    onClick={handleUnlock}
+                    onClick={openConfirm}
                     title={isEdit ? 'Unlock to edit — may break existing references' : 'Override sequence — pick a custom code'}
                     className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1.5 py-1 rounded-lg transition-all hover:bg-app-border/40"
                     style={{ color: tintColor }}
@@ -112,6 +113,18 @@ export function LockableCodeInput({
                     {isEdit ? 'editing' : 'custom'}
                 </span>
             )}
+
+            {/* Theme-styled confirm dialog instead of the ugly native
+             *  window.confirm with "saas.developos.shop says" header. */}
+            <ConfirmDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                onConfirm={handleConfirm}
+                title={isEdit ? 'Unlock this code?' : 'Override the sequence?'}
+                description={warning ?? (isEdit ? EDIT_WARNING : OVERRIDE_WARNING)}
+                confirmText={isEdit ? 'Unlock and edit' : 'Override'}
+                variant={isEdit ? 'warning' : 'info'}
+            />
         </div>
     );
 }
