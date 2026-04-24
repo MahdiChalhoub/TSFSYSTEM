@@ -5,11 +5,13 @@ import {
     FileText, Clock, CheckCircle2, XCircle, Truck, Package, AlertTriangle,
     Calendar, User,
 } from 'lucide-react'
+import { MasterListCard } from '@/components/templates/MasterListCard'
 
 /* ═══════════════════════════════════════════════════════════
- *  PURCHASE ORDER ROW — flat list row for TreeMasterPage.
- *  Same visual grammar as UnitRow / WarehouseRow: icon tile,
- *  name block, secondary chips, right-aligned stats, hover actions.
+ *  PURCHASE ORDER ROW — thin consumer of MasterListCard.
+ *  No layout logic of its own anymore; this file only maps PO
+ *  fields onto the shared card primitive (same shape as the
+ *  KPI filter chips in TreeMasterPage).
  * ═══════════════════════════════════════════════════════════ */
 
 export const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
@@ -65,88 +67,56 @@ export function PurchaseOrderRow({
     const StatusIcon = status.icon
     const isUrgent = node.priority === 'URGENT'
 
+    const badges: any[] = [{ label: status.label, color: status.color }]
+    if (isUrgent) {
+        badges.push({
+            label: 'Urgent',
+            color: 'var(--app-error)',
+            icon: <AlertTriangle size={9} />,
+        })
+    }
+
     return (
-        <div
-            className={`group flex items-center gap-2 transition-colors duration-150 cursor-pointer
-                py-2.5 hover:bg-app-surface-hover ${isSelected ? 'bg-app-primary/[0.04]' : ''}`}
+        <MasterListCard
+            icon={<StatusIcon size={13} />}
+            accentColor={status.color}
+            leftAccent={isUrgent ? 'var(--app-error)' : undefined}
+            isSelected={isSelected}
             onClick={() => onSelect(node)}
-            style={{
-                paddingLeft: '12px',
-                paddingRight: '12px',
-                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
-                position: 'relative',
-            }}
-        >
-            {/* Urgent accent bar */}
-            {isUrgent && (
-                <div className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full"
-                    style={{ background: 'var(--app-error)' }} />
-            )}
-
-            {/* Status icon tile */}
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{
-                    background: `color-mix(in srgb, ${status.color} 12%, transparent)`,
-                    color: status.color,
-                }}>
-                <StatusIcon size={13} />
-            </div>
-
-            {/* PO number + created date + supplier */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-bold text-tp-lg text-app-foreground truncate">
-                        {node.po_number || `PO-${node.id}`}
-                    </span>
-                    <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full flex-shrink-0"
-                        style={{
-                            background: `color-mix(in srgb, ${status.color} 12%, transparent)`,
-                            color: status.color,
-                        }}>
-                        {status.label}
-                    </span>
-                    {isUrgent && (
-                        <span className="flex items-center gap-0.5 text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full flex-shrink-0"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-error) 12%, transparent)',
-                                color: 'var(--app-error)',
-                            }}>
-                            <AlertTriangle size={9} />Urgent
-                        </span>
-                    )}
-                </div>
-                <div className="flex items-center gap-2 mt-0.5 text-tp-xxs text-app-muted-foreground">
-                    <span className="flex items-center gap-1 font-medium">
+            title={node.po_number || `PO-${node.id}`}
+            badges={badges}
+            subtitle={
+                <>
+                    <span className="flex items-center gap-1 font-medium min-w-0">
                         <User size={9} />
-                        <span className="truncate max-w-[160px]">{node.supplier_display || node.supplier_name || '—'}</span>
+                        <span className="truncate max-w-[180px]">
+                            {node.supplier_display || node.supplier_name || '—'}
+                        </span>
                     </span>
                     <span className="opacity-50">·</span>
                     <span className="flex items-center gap-1 font-medium">
                         <Calendar size={9} />
                         {formatDate(node.created_at)}
                     </span>
-                </div>
-            </div>
-
-            {/* Priority — small column */}
-            <div className="hidden md:flex w-16 flex-shrink-0 justify-center">
-                <span className="text-tp-xs font-bold uppercase tracking-wide"
-                    style={{ color: priority.color }}>
-                    {priority.label}
-                </span>
-            </div>
-
-            {/* Expected date — small column */}
-            <div className="hidden lg:flex w-24 flex-shrink-0 justify-center text-tp-xs text-app-muted-foreground font-medium">
-                {formatDate(node.expected_date)}
-            </div>
-
-            {/* Amount */}
-            <div className="flex w-28 flex-shrink-0 justify-end text-right">
-                <span className="font-bold text-app-foreground tabular-nums text-tp-md">
-                    {formatMoney(node.total_amount, node.currency)}
-                </span>
-            </div>
-        </div>
+                </>
+            }
+            rightSlot={
+                <>
+                    <div className="hidden md:flex w-16 flex-shrink-0 justify-center">
+                        <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: priority.color }}>
+                            {priority.label}
+                        </span>
+                    </div>
+                    <div className="hidden lg:flex w-24 flex-shrink-0 justify-center text-tp-xs text-app-muted-foreground font-medium">
+                        {formatDate(node.expected_date)}
+                    </div>
+                    <div className="flex w-28 flex-shrink-0 justify-end text-right">
+                        <span className="font-bold text-app-foreground tabular-nums text-tp-md">
+                            {formatMoney(node.total_amount, node.currency)}
+                        </span>
+                    </div>
+                </>
+            }
+        />
     )
 }

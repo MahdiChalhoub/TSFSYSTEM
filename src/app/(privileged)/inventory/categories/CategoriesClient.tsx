@@ -18,13 +18,20 @@ import { GuidedTour } from '@/components/ui/GuidedTour'
 import '@/lib/tours/definitions/inventory-categories'
 
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
+
+/** Minimal HTML escape for print output — we assemble the document by hand
+ *  so we never insert untrusted names straight into a new-window DOM. */
+const escapeHtml = (s: string) => (s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c])
 import type { CategoryNode, PanelTab } from './components/types'
 import { CategoryRow } from './components/CategoryRow'
 import { CategoryDetailPanel } from './components/CategoryDetailPanel'
 import { BulkActionBar } from './components/BulkActionBar'
 import { BulkDialog } from './components/BulkDialog'
 import { CsvImportDialog } from './components/CsvImportDialog'
-import { Upload, Download } from 'lucide-react'
+import { Database } from 'lucide-react'
+import { DataMenu } from '@/components/admin/_shared/DataMenu'
+import { exportExcel } from '@/components/admin/_shared/excel-export'
 
 /* ═══════════════════════════════════════════════════════════
  *  CategoriesClient — thin consumer; TreeMasterPage is the single
@@ -90,6 +97,111 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         a.click()
         URL.revokeObjectURL(url)
         toast.success(`Exported ${data.length} categories`)
+    }, [data])
+
+    // Excel export — writes a SpreadsheetML file (.xls) that opens natively in
+    // Excel. Includes the parent path so the hierarchy is readable without
+    // cross-referencing codes. For quick visual review (no re-import needed).
+    const handleExportExcel = useCallback(() => {
+        if (!data?.length) { toast.info('No categories to export'); return }
+        const byId = new Map<number, any>()
+        data.forEach((c: any) => byId.set(c.id, c))
+        const pathFor = (c: any): string => {
+            const parts: string[] = [c.name]
+            let cur = c.parent ? byId.get(c.parent) : null
+            while (cur) { parts.unshift(cur.name); cur = cur.parent ? byId.get(cur.parent) : null }
+            return parts.join(' › ')
+        }
+        const sorted = [...data].sort((a: any, b: any) => pathFor(a).localeCompare(pathFor(b)))
+        const rows = sorted.map((c: any) => [
+            pathFor(c),
+            c.code || '',
+            c.short_name || '',
+            c.barcode_prefix || '',
+            c.product_count || 0,
+            c.brand_count || 0,
+        ])
+        exportExcel({
+            filename: `categories-${new Date().toISOString().slice(0, 10)}.xls`,
+            sheetName: 'Categories',
+            columns: ['Category Path', 'Code', 'Short Name', 'Barcode Prefix', 'Products', 'Brands'],
+            rows,
+        })
+        toast.success(`Exported ${sorted.length} categories to Excel`)
+    }, [data])
+
+    // Print — injects a hidden iframe with a clean printable view and triggers
+    // its print dialog. Iframes avoid the pop-up blocker problem (no window.open
+    // needed) and clean themselves up after print. This reliably works across
+    // Chrome/Safari/Firefox without any permission prompts.
+    const handlePrint = useCallback(() => {
+        if (!data?.length) { toast.info('No categories to print'); return }
+        const byId = new Map<number, any>()
+        data.forEach((c: any) => byId.set(c.id, c))
+        const pathFor = (c: any): string => {
+            const parts: string[] = [c.name]
+            let cur = c.parent ? byId.get(c.parent) : null
+            while (cur) { parts.unshift(cur.name); cur = cur.parent ? byId.get(cur.parent) : null }
+            return parts.join(' › ')
+        }
+        const sorted = [...data].sort((a: any, b: any) => pathFor(a).localeCompare(pathFor(b)))
+        const rowsHtml = sorted.map((c: any) => `
+            <tr>
+                <td>${escapeHtml(pathFor(c))}</td>
+                <td class="mono">${escapeHtml(c.code || '')}</td>
+                <td class="mono">${escapeHtml(c.short_name || '')}</td>
+                <td class="mono">${escapeHtml(c.barcode_prefix || '')}</td>
+                <td class="num">${c.product_count || 0}</td>
+                <td class="num">${c.brand_count || 0}</td>
+            </tr>`).join('')
+        const html = `<!doctype html><html><head><meta charset="utf-8"/>
+            <title>Categories — ${new Date().toISOString().slice(0, 10)}</title>
+            <style>
+                body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 20px; color: #111; }
+                h1 { font-size: 18px; margin: 0 0 4px; }
+                .meta { color: #666; font-size: 11px; margin-bottom: 16px; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+                th { background: #f3f4f6; text-transform: uppercase; font-size: 9px; letter-spacing: 0.04em; }
+                .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+                .num { text-align: right; font-variant-numeric: tabular-nums; }
+                @media print { body { margin: 12mm; } }
+            </style></head><body>
+            <h1>Categories</h1>
+            <div class="meta">${sorted.length} nodes · Exported ${new Date().toLocaleString()}</div>
+            <table>
+                <thead><tr><th>Category Path</th><th>Code</th><th>Short</th><th>Prefix</th><th>Products</th><th>Brands</th></tr></thead>
+                <tbody>${rowsHtml}</tbody>
+            </table>
+            </body></html>`
+
+        const iframe = document.createElement('iframe')
+        iframe.setAttribute('aria-hidden', 'true')
+        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;'
+        document.body.appendChild(iframe)
+
+        const cleanup = () => {
+            // Give the print dialog a moment to finish, then remove the iframe.
+            setTimeout(() => { iframe.remove() }, 1000)
+        }
+
+        iframe.onload = () => {
+            try {
+                const win = iframe.contentWindow
+                if (!win) { cleanup(); toast.error('Unable to open print view'); return }
+                // afterprint fires even on Cancel — use it to clean up the iframe.
+                win.addEventListener('afterprint', cleanup, { once: true })
+                win.focus()
+                win.print()
+            } catch (e) {
+                cleanup()
+                toast.error('Print failed')
+            }
+        }
+
+        const doc = iframe.contentDocument
+        if (!doc) { iframe.remove(); toast.error('Unable to open print view'); return }
+        doc.open(); doc.write(html); doc.close()
     }, [data])
 
     // Actions
@@ -196,8 +308,18 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
                 primaryAction: { label: 'New Category', icon: <Plus size={14} />, onClick: () => openAddModal(), dataTour: 'add-category-btn' },
                 secondaryActions: [
-                    { label: 'Export CSV', icon: <Download size={13} />, onClick: handleExport },
-                    { label: 'Import CSV', icon: <Upload size={13} />, onClick: () => setShowImport(true) },
+                    {
+                        label: 'Data',
+                        icon: <Database size={13} />,
+                        render: () => (
+                            <DataMenu
+                                onExportExcel={handleExportExcel}
+                                onExport={handleExport}
+                                onImport={() => setShowImport(true)}
+                                onPrint={handlePrint}
+                            />
+                        ),
+                    },
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],
                 columnHeaders: [

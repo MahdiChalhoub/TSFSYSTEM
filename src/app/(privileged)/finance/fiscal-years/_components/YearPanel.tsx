@@ -105,7 +105,7 @@ export function YearPanel({
                     {activeTab === 'periods' && (
                         <PeriodsGrid periods={periods} year={year} isPending={isPending} handlePeriodStatus={handlePeriodStatus} handlePeriodAction={handlePeriodAction} />
                     )}
-                    {activeTab === 'summary' && <SummaryTab summary={summary} />}
+                    {activeTab === 'summary' && <SummaryTab summary={summary} fiscalYearId={year.id} />}
                     {activeTab === 'checklist' && <CloseChecklistPanel fiscalYearId={year.id} />}
                     {activeTab === 'history' && <HistoryTab history={history} />}
                 </div>

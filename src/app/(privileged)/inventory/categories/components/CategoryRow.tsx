@@ -80,21 +80,17 @@ export const CategoryRow = ({
 
     return (
         <div>
-            {/* ── ROW ── */}
+            {/* ── ROW ──
+             *  Outer flex splits the row into two cells: a fixed-width
+             *  checkbox gutter (always at the same x so every row's checkbox
+             *  aligns vertically regardless of tree depth) and the indented
+             *  row body. Before this split, checkboxes drifted right on
+             *  deeper children because the indent padding lived on the row
+             *  itself. */}
             <div
-                className={`
-                    group flex items-center gap-2 transition-colors duration-150 relative cursor-pointer
-                    ${isRoot ? 'py-2.5' : 'py-2'}
-                    hover:bg-app-surface-hover
-                `}
+                className={`group flex items-stretch relative transition-colors duration-150 cursor-pointer hover:bg-app-surface-hover`}
                 onClick={(e) => {
                     e.stopPropagation()
-                    // When split panel is open / pane is compact, a single click
-                    // should OPEN the row in the detail panel instead of just
-                    // toggling children — otherwise a root with sub-categories
-                    // can never populate the panel without a double-click, which
-                    // feels broken (especially when the root has no products).
-                    // Expand/collapse stays available via the chevron button.
                     if (compact) { onSelect?.(node); return }
                     if (isParent) { setIsOpen(o => !o) } else { onSelect?.(node) }
                 }}
@@ -103,37 +99,47 @@ export const CategoryRow = ({
                     onSelect?.(node)
                 }}
                 style={{
-                    paddingLeft: `${12 + (level > 0 ? level * 20 : 0)}px`,
-                    paddingRight: '12px',
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
                 }}
             >
-                {/* Left accent bar for root — simple solid */}
+                {/* Left accent bar for root — at the outer left edge so it sits
+                 *  even before the checkbox gutter. */}
                 {isRoot && (
                     <div className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full"
                         style={{ background: 'var(--app-primary)' }} />
                 )}
 
-                {/* Selection checkbox — shown only when the bulk-edit mode is
-                 *  armed (selectable=true). Invisible by default; appears on
-                 *  hover OR when the row is already selected, so the UI isn't
-                 *  noisy until the user starts picking. */}
+                {/* Fixed checkbox gutter — same x for every row when selectable.
+                 *  Rendered before the indent so depth doesn't push it right. */}
                 {selectable && (
-                    <button type="button"
-                        onClick={(e) => { e.stopPropagation(); onToggleCheck?.(node.id) }}
-                        className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${rowChecked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                        style={{
-                            borderColor: rowChecked ? 'var(--app-primary)' : 'var(--app-border)',
-                            background: rowChecked ? 'var(--app-primary)' : 'transparent',
-                        }}
-                        aria-checked={rowChecked}
-                        role="checkbox"
-                        aria-label={`Select ${node.name}`}>
-                        {rowChecked && <span className="text-white text-[10px] font-bold">✓</span>}
-                    </button>
+                    <div className="w-9 flex-shrink-0 flex items-center justify-center">
+                        <button type="button"
+                            onClick={(e) => { e.stopPropagation(); onToggleCheck?.(node.id) }}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${rowChecked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                            style={{
+                                borderColor: rowChecked ? 'var(--app-primary)' : 'var(--app-border)',
+                                background: rowChecked ? 'var(--app-primary)' : 'transparent',
+                            }}
+                            aria-checked={rowChecked}
+                            role="checkbox"
+                            aria-label={`Select ${node.name}`}>
+                            {rowChecked && <span className="text-white text-[10px] font-bold">✓</span>}
+                        </button>
+                    </div>
                 )}
 
-                {/* Indent connector line */}
+                {/* Row body — holds indent, chevron, icon, name, stats, actions. */}
+                <div
+                    className={`relative flex items-center gap-2 flex-1 min-w-0 ${isRoot ? 'py-2.5' : 'py-2'}`}
+                    style={{
+                        paddingLeft: `${12 + (level > 0 ? level * 20 : 0)}px`,
+                        paddingRight: '12px',
+                    }}
+                >
+
+                {/* Indent connector line — lives inside the body so its left
+                 *  offset is relative to the body's left edge, not affected
+                 *  by the checkbox gutter. */}
                 {level > 0 && (
                     <div className="absolute top-0 bottom-0" style={{ left: `${10 + (level - 1) * 20}px`, width: '1px', background: 'color-mix(in srgb, var(--app-border) 25%, transparent)' }} />
                 )}
@@ -304,6 +310,7 @@ export const CategoryRow = ({
                         {isParent ? <AlertCircle size={12} /> : <Trash2 size={12} />}
                     </button>
                 </div>
+                </div> {/* /row body */}
             </div>
 
             {/* ── CHILDREN ── */}

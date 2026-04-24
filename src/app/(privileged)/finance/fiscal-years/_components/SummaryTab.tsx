@@ -1,16 +1,20 @@
 import { Loader2 } from 'lucide-react'
 import type { YearSummary } from '@/app/actions/finance/fiscal-year'
+import { YoyComparisonCard } from './YoyComparisonCard'
 
 interface SummaryTabProps {
     summary: YearSummary | undefined
+    fiscalYearId?: number
 }
 
-export function SummaryTab({ summary }: SummaryTabProps) {
+export function SummaryTab({ summary, fiscalYearId }: SummaryTabProps) {
     if (!summary) return <div className="p-8 text-center"><Loader2 size={20} className="animate-spin mx-auto text-app-muted-foreground" /></div>
 
     const s = summary
     return (
         <div className="p-4 space-y-3">
+            {/* YoY comparison — shows if a prior year exists */}
+            {fiscalYearId && <YoyComparisonCard fiscalYearId={fiscalYearId} />}
             {/* P&L */}
             <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                 <div className="text-tp-xxs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Profit & Loss</div>

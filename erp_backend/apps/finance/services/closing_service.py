@@ -35,29 +35,44 @@ class ClosingService:
     """Handles period and year-end close per SAP/Odoo/Oracle standards."""
 
     @staticmethod
-    def close_fiscal_period(organization, fiscal_period, user=None):
+    def close_fiscal_period(organization, fiscal_period, user=None, dry_run=False):
         """
         Close a fiscal period. No further posting allowed after close.
-        
-        Steps:
-          1. Verify no DRAFT entries remain
-          2. Refresh balance snapshots
-          3. Mark period as CLOSED
+
+        Enforces period-level parity of the year-close integrity gate:
+          1. No DRAFT entries remain in the period
+          2. Per-scope double-entry invariant (ΣDebit = ΣCredit) within the period
+          3. Posting-guard check: no JE lines target a parent account
+        After the gate passes:
+          4. Refresh balance snapshots
+          5. Capture hash-chained FiscalPeriodCloseSnapshot per scope
+          6. Transition the period to CLOSED
+
+        `dry_run=True` runs every check + simulates the snapshot capture,
+        then rolls back. Returns a preview dict instead of the period row.
         """
         from apps.finance.models import JournalEntry
         from apps.finance.services.balance_service import BalanceService
 
-        if fiscal_period.is_closed:
+        if fiscal_period.is_closed and not dry_run:
             return fiscal_period
 
-        with transaction.atomic():
-            # Check for unposted entries
+        preview = {
+            'dry_run': dry_run,
+            'fiscal_period_id': fiscal_period.id,
+            'fiscal_period_name': fiscal_period.name,
+            'invariants_passed': False,
+            'snapshots_captured': [],
+            'messages': [],
+        }
+
+        def _run():
+            # ── Invariant 1: no drafts ──
             draft_count = JournalEntry.objects.filter(
                 organization=organization,
                 fiscal_period=fiscal_period,
                 status='DRAFT',
             ).count()
-
             if draft_count > 0:
                 raise ValidationError(
                     f"Cannot close period {fiscal_period.name}: "
@@ -65,12 +80,29 @@ class ClosingService:
                     f"Post or delete them first."
                 )
 
+            # ── Invariants 2 + 3: period-scoped double-entry + parent-posting check ──
+            ClosingService._assert_period_integrity(organization, fiscal_period)
+
             # Refresh balance snapshots before closing
             BalanceService.refresh_snapshots(organization, fiscal_period, scope='OFFICIAL')
             BalanceService.refresh_snapshots(organization, fiscal_period, scope='INTERNAL')
 
+            # Capture snapshots (one per scope) BEFORE state transition
+            snaps = ClosingService._capture_period_snapshot(organization, fiscal_period, user)
+            preview['snapshots_captured'] = snaps
+            preview['invariants_passed'] = True
+
+            if dry_run:
+                raise _DryRunComplete(preview)
+
             # Close the period (canonical transition)
             fiscal_period.transition_to('CLOSED', user=user)
+
+        try:
+            with transaction.atomic():
+                _run()
+        except _DryRunComplete as done:
+            return done.payload
 
             logger.info(
                 f"ClosingService: Period {fiscal_period.name} closed by "
@@ -1038,6 +1070,164 @@ class ClosingService:
                     f"{len(breaks)} account(s) — rollback triggered, year "
                     f"NOT finalized:\n" + "\n".join(lines)
                 )
+
+    # ──────────────────────────────────────────────────────────
+    # Period-close invariants + snapshot (month-end parity)
+    # ──────────────────────────────────────────────────────────
+    @staticmethod
+    def _assert_period_integrity(organization, fiscal_period):
+        """Period-level integrity gate — lighter than the year gate.
+
+        Two invariants:
+          1. Per-scope double-entry within the period (ΣDebit = ΣCredit)
+          2. No JE line in this period targets a parent account
+             (active children count, consistent with other guards)
+        """
+        from apps.finance.models import JournalEntryLine, ChartOfAccount
+        from django.db.models import Sum, Count, Q
+
+        tol = ClosingService._RECON_TOLERANCE
+
+        for scope in ('OFFICIAL', 'INTERNAL'):
+            agg = JournalEntryLine.objects.filter(
+                journal_entry__organization=organization,
+                journal_entry__fiscal_period=fiscal_period,
+                journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
+                journal_entry__scope=scope,
+            ).aggregate(d=Sum('debit'), c=Sum('credit'))
+            d = agg['d'] or Decimal('0.00')
+            c = agg['c'] or Decimal('0.00')
+            if (d - c).copy_abs() > tol:
+                raise ValidationError(
+                    f"[{scope}] Period {fiscal_period.name} has unbalanced "
+                    f"JE lines: ΣDr={d}, ΣCr={c}, diff={d-c}. Period close "
+                    f"aborted."
+                )
+
+        # Parent-posting check (consistent with active-children-only rule)
+        parent_ids = list(
+            ChartOfAccount.objects
+            .filter(organization=organization)
+            .annotate(n=Count('children', filter=Q(children__is_active=True)))
+            .filter(n__gt=0)
+            .values_list('id', flat=True)
+        )
+        if parent_ids:
+            off = JournalEntryLine.objects.filter(
+                organization=organization,
+                account_id__in=parent_ids,
+                journal_entry__fiscal_period=fiscal_period,
+                journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
+            ).values('account__code', 'account__name').annotate(n=Count('id'))
+            offenders = [
+                f"{r['account__code']} {r['account__name']} ({r['n']} lines)"
+                for r in off
+            ]
+            if offenders:
+                raise ValidationError(
+                    f"Period {fiscal_period.name} has JE lines on parent "
+                    f"accounts — reclass to leaves first:\n  "
+                    + "\n  ".join(offenders)
+                )
+
+    @staticmethod
+    def _capture_period_snapshot(organization, fiscal_period, user=None):
+        """Write one FiscalPeriodCloseSnapshot row per scope.
+
+        Mirrors `_capture_close_snapshot` but scoped to a single period.
+        Idempotent via UNIQUE (fiscal_period, scope).
+        Returns a list of brief dicts for the dry-run preview.
+        """
+        from apps.finance.models import (
+            JournalEntryLine, FiscalPeriodCloseSnapshot, JournalEntry,
+        )
+        from django.db.models import Sum, Count
+
+        out = []
+        for scope in ('OFFICIAL', 'INTERNAL'):
+            # Trial balance for the period (per-account net)
+            rows = (
+                JournalEntryLine.objects
+                .filter(
+                    journal_entry__organization=organization,
+                    journal_entry__fiscal_period=fiscal_period,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    journal_entry__scope=scope,
+                )
+                .values('account_id', 'account__code', 'account__name', 'account__type')
+                .annotate(d=Sum('debit'), c=Sum('credit'))
+            )
+            trial = []
+            total_d = Decimal('0.00')
+            total_c = Decimal('0.00')
+            for r in rows:
+                d = r['d'] or Decimal('0.00')
+                c = r['c'] or Decimal('0.00')
+                if d == 0 and c == 0:
+                    continue
+                trial.append({
+                    'account_id': r['account_id'],
+                    'code': r['account__code'],
+                    'name': r['account__name'],
+                    'type': r['account__type'],
+                    'debit': str(d),
+                    'credit': str(c),
+                    'net': str(d - c),
+                })
+                total_d += d
+                total_c += c
+            trial.sort(key=lambda x: (x['code'] or '', x['account_id']))
+
+            # Counts
+            je_stats = (
+                JournalEntry.objects
+                .filter(
+                    organization=organization, fiscal_period=fiscal_period,
+                    status='POSTED', is_superseded=False, scope=scope,
+                )
+                .aggregate(n=Count('id'))
+            )
+            je_count = je_stats['n'] or 0
+            je_lines = (
+                JournalEntryLine.objects
+                .filter(
+                    journal_entry__organization=organization,
+                    journal_entry__fiscal_period=fiscal_period,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    journal_entry__scope=scope,
+                )
+                .count()
+            )
+            unique_accts = len(trial)
+
+            snap, _ = FiscalPeriodCloseSnapshot.objects.update_or_create(
+                organization=organization,
+                fiscal_period=fiscal_period,
+                scope=scope,
+                defaults={
+                    'movement_debit': total_d,
+                    'movement_credit': total_c,
+                    'je_count': je_count,
+                    'je_lines_count': je_lines,
+                    'unique_accounts_touched': unique_accts,
+                    'trial_balance': trial,
+                    'captured_by': user,
+                },
+            )
+            out.append({
+                'scope': scope,
+                'je_count': je_count,
+                'lines': je_lines,
+                'total_debit': str(total_d),
+                'total_credit': str(total_c),
+                'accounts_touched': unique_accts,
+                'content_hash': snap.content_hash,
+            })
+        return out
 
     @staticmethod
     def _capture_close_snapshot(organization, fiscal_year, user=None):

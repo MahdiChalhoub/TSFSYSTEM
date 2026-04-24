@@ -309,15 +309,9 @@ class FiscalYearCloseSnapshot(TenantModel):
     def __str__(self):
         return f"CloseSnapshot({self.fiscal_year_id}, {self.scope})"
 
-    # ── Hash chain ────────────────────────────────────────────
+    # ── Hash chain (FY snapshot) ─────────────────────────────
     def canonical_payload(self) -> dict:
-        """Deterministic dict used as the hash input. Any field that
-        should be tamper-protected goes here; audit-metadata (captured_at
-        / captured_by / the hash fields themselves) is excluded so
-        recomputing is stable across rehydrations.
-        """
-        # Sort trial_balance for determinism — Python dict iteration is
-        # insertion-ordered but relying on that across re-saves is fragile.
+        """Deterministic dict used as the hash input."""
         tb_sorted = sorted(
             self.trial_balance or [],
             key=lambda x: (str(x.get('code', '')), x.get('account_id', 0)),
@@ -346,12 +340,6 @@ class FiscalYearCloseSnapshot(TenantModel):
         return hashlib.sha256(payload.encode('utf-8')).hexdigest()
 
     def save(self, *args, **kwargs):
-        # On first save, resolve prev_hash by looking up the most
-        # recent snapshot for this org (any year/scope). On re-save
-        # (update_or_create after a close redo), re-anchor to whatever
-        # the latest OTHER snapshot is at save time — we must exclude
-        # ourselves so we don't point at our own prior hash and form a
-        # self-loop.
         if self.organization_id:
             latest_other = (
                 FiscalYearCloseSnapshot.objects
@@ -362,7 +350,128 @@ class FiscalYearCloseSnapshot(TenantModel):
             )
             prev = latest_other.order_by('-captured_at', '-id').first()
             self.prev_hash = prev.content_hash if prev else None
-        # Compute hash LAST so it reflects the finalized field values
-        # including the just-resolved prev_hash.
+        self.content_hash = self.compute_content_hash()
+        super().save(*args, **kwargs)
+
+
+class FiscalPeriodCloseSnapshot(TenantModel):
+    """Immutable snapshot captured when a FiscalPeriod transitions to CLOSED.
+
+    Mirrors the year-end `FiscalYearCloseSnapshot` but at period
+    granularity (month-end close). Uses the same hash-chain pattern
+    so tampering with a historical period snapshot is detectable.
+
+    Month-end close is far more frequent than year-end, so having
+    the same audit-grade integrity per-period means auditors can
+    reconstruct any month's final state without relying on (drift-
+    prone) denormalized balance fields.
+    """
+    fiscal_period = models.ForeignKey(
+        'finance.FiscalPeriod', on_delete=models.CASCADE,
+        related_name='close_snapshots',
+    )
+    SCOPE_CHOICES = (('OFFICIAL', 'Official'), ('INTERNAL', 'Internal'))
+    scope = models.CharField(max_length=10, choices=SCOPE_CHOICES)
+
+    # Headline KPIs for the period (denormalized for fast read).
+    movement_debit = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    movement_credit = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    je_count = models.PositiveIntegerField(default=0)
+    je_lines_count = models.PositiveIntegerField(default=0)
+    unique_accounts_touched = models.PositiveIntegerField(default=0)
+
+    # Ending BS + P&L snapshot for this period (per-account net) — JSON
+    # so we're not married to current COA structure.
+    trial_balance = models.JSONField(default=list)
+
+    captured_at = models.DateTimeField(auto_now_add=True)
+    captured_by = models.ForeignKey(
+        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='fp_close_snapshots_captured',
+    )
+
+    # Hash chain — identical semantics to FiscalYearCloseSnapshot.
+    content_hash = models.CharField(
+        max_length=64, null=True, blank=True, db_index=True,
+        help_text='SHA-256 over canonical payload',
+    )
+    prev_hash = models.CharField(
+        max_length=64, null=True, blank=True,
+        help_text='content_hash of the prior snapshot (any period or year) per org',
+    )
+
+    class Meta:
+        db_table = 'finance_fp_close_snapshot'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['fiscal_period', 'scope'],
+                name='fp_close_snapshot_uniq_period_scope',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['organization', 'fiscal_period']),
+            models.Index(fields=['fiscal_period', 'scope']),
+        ]
+
+    def __str__(self):
+        return f"PeriodSnapshot({self.fiscal_period_id}, {self.scope})"
+
+    # ── Hash chain (mirrors FiscalYearCloseSnapshot) ────────
+    def canonical_payload(self) -> dict:
+        tb_sorted = sorted(
+            self.trial_balance or [],
+            key=lambda x: (str(x.get('code', '')), x.get('account_id', 0)),
+        )
+        return {
+            'organization_id': str(self.organization_id),
+            'fiscal_period_id': self.fiscal_period_id,
+            'scope': self.scope,
+            'movement_debit': str(self.movement_debit),
+            'movement_credit': str(self.movement_credit),
+            'je_count': self.je_count,
+            'je_lines_count': self.je_lines_count,
+            'unique_accounts_touched': self.unique_accounts_touched,
+            'trial_balance': tb_sorted,
+            'prev_hash': self.prev_hash,
+        }
+
+    def compute_content_hash(self) -> str:
+        import hashlib, json
+        payload = json.dumps(
+            self.canonical_payload(),
+            sort_keys=True, default=str, separators=(',', ':'),
+        )
+        return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+
+    def save(self, *args, **kwargs):
+        # Resolve prev_hash from the most recent snapshot of ANY kind
+        # (year or period) for this org — unified chain.
+        if self.organization_id:
+            prev_y = (
+                FiscalYearCloseSnapshot.objects
+                .filter(organization_id=self.organization_id)
+                .exclude(content_hash__isnull=True)
+                .order_by('-captured_at', '-id')
+                .values_list('content_hash', 'captured_at').first()
+            )
+            prev_p = (
+                FiscalPeriodCloseSnapshot.objects
+                .filter(organization_id=self.organization_id)
+                .exclude(pk=self.pk) if self.pk else
+                FiscalPeriodCloseSnapshot.objects
+                .filter(organization_id=self.organization_id)
+            )
+            prev_p_row = (
+                prev_p.exclude(content_hash__isnull=True)
+                .order_by('-captured_at', '-id')
+                .values_list('content_hash', 'captured_at').first()
+            )
+            # Pick the most recent of year / period hashes
+            candidates = [x for x in (prev_y, prev_p_row) if x]
+            if candidates:
+                candidates.sort(key=lambda x: x[1], reverse=True)
+                self.prev_hash = candidates[0][0]
+            else:
+                self.prev_hash = None
         self.content_hash = self.compute_content_hash()
         super().save(*args, **kwargs)

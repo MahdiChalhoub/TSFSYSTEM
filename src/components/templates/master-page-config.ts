@@ -41,6 +41,13 @@ export interface ActionButton {
     active?: boolean
     activeColor?: string
     dataTour?: string
+    /**
+     * Escape hatch: when provided, the template renders this instead of the
+     * default button/link. Lets a single secondaryActions entry produce a
+     * dropdown menu, custom control, etc. Keep the outer shape similar to
+     * the default button so the toolbar stays visually consistent.
+     */
+    render?: () => ReactNode
 }
 
 export interface PrimaryAction {

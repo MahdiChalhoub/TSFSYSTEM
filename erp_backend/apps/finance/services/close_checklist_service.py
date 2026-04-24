@@ -74,6 +74,50 @@ class CloseChecklistService:
         )
         return tmpl
 
+    @staticmethod
+    def ensure_default_period_template(organization):
+        """Create-or-get the standard monthly period-close template.
+
+        Month-end close is a lighter version of year-end: no P&L sweep
+        to RE (that only happens annually), no opening-balance
+        regeneration, just the discipline tasks that should run every
+        month so year-end isn't a surprise.
+        """
+        from apps.finance.models import CloseChecklistTemplate, CloseChecklistItem
+
+        tmpl, created = CloseChecklistTemplate.objects.get_or_create(
+            organization=organization,
+            name='Standard Monthly Close',
+            scope='FISCAL_PERIOD',
+            defaults={'is_default': True,
+                      'description': 'Required tasks before each period (month) close'},
+        )
+        if not created:
+            return tmpl
+
+        defaults = [
+            (10, 'All bank accounts reconciled for the period', 'RECONCILIATION', 'all_bank_reconciled'),
+            (20, 'AR aging reviewed', 'RECONCILIATION', ''),
+            (30, 'AP aging reviewed', 'ACCRUALS', ''),
+            (40, 'Accruals + deferrals posted', 'ACCRUALS', ''),
+            (50, 'FX revaluation run for period', 'FX', 'fx_revaluation_completed'),
+            (60, 'Depreciation posted', 'DEPRECIATION', ''),
+            (70, 'Inventory movements reconciled', 'INVENTORY', ''),
+            (80, 'No DRAFT journals remain', 'RECONCILIATION', 'no_draft_journals'),
+            (90, 'Period P&L reviewed', 'REVIEW', ''),
+        ]
+        for order, name, category, signal in defaults:
+            CloseChecklistItem.objects.create(
+                organization=organization,
+                template=tmpl,
+                order=order, name=name, category=category,
+                is_required=True, auto_check_signal=signal,
+            )
+        logger.info(
+            "CloseChecklistService: seeded monthly template for org %s", organization.id,
+        )
+        return tmpl
+
     # ── Run lifecycle ──────────────────────────────────────
     @staticmethod
     def start_run(organization, *, template=None, fiscal_year=None,

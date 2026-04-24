@@ -507,6 +507,333 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'je_by_month': je_by_month,
         })
 
+    @action(detail=False, methods=['get'], url_path='multi-year-comparison')
+    def multi_year_comparison(self, request):
+        """N-year comparative P&L + Balance Sheet, strategic-review shape.
+
+        Query params:
+          years: how many years to include (2-10, default 3). Anchored
+                 on the current FY (containing today) OR the most recent
+                 CLOSED year, whichever is later.
+
+        Response shape:
+          {
+            'years': [{'id','name','start','end'}, ...]  (newest first),
+            'rollups': [
+              {'section':'pnl', 'label':'Revenue', 'values':[str,str,...]},
+              ...
+            ],
+            'per_account': [
+              {'account_id','code','name','type','section','values':[str,...]},
+              ...
+            ],
+          }
+        """
+        from apps.finance.models import (
+            FiscalYear, JournalEntryLine, ChartOfAccount,
+        )
+        from django.db.models import Sum, Q
+        from decimal import Decimal
+        from django.utils import timezone as _tz
+
+        organization_id = get_current_tenant_id()
+
+        try:
+            n = max(2, min(10, int(request.query_params.get('years') or 3)))
+        except (TypeError, ValueError):
+            n = 3
+
+        # Pick anchor: current or latest year, then walk back n-1 more
+        today = _tz.localdate()
+        anchor = FiscalYear.objects.filter(
+            organization_id=organization_id,
+            start_date__lte=today, end_date__gte=today,
+        ).order_by('-start_date').first()
+        if anchor is None:
+            anchor = FiscalYear.objects.filter(
+                organization_id=organization_id,
+            ).order_by('-end_date').first()
+        if anchor is None:
+            return Response({'years': [], 'rollups': [], 'per_account': []})
+
+        years = [anchor]
+        prev = anchor
+        for _ in range(n - 1):
+            nxt = (
+                FiscalYear.objects
+                .filter(organization_id=organization_id, end_date__lt=prev.start_date)
+                .order_by('-end_date').first()
+            )
+            if not nxt:
+                break
+            years.append(nxt)
+            prev = nxt
+        # years list is [newest … oldest]; we'll emit columns in that order
+
+        # Per-year aggregation (same formula as yoy_comparison)
+        def _agg(fy):
+            rows = (
+                JournalEntryLine.objects
+                .filter(
+                    organization_id=organization_id,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    journal_entry__scope='OFFICIAL',
+                )
+                .filter(
+                    Q(journal_entry__fiscal_year=fy) |
+                    Q(journal_entry__fiscal_year__isnull=True,
+                      journal_entry__transaction_date__date__gte=fy.start_date,
+                      journal_entry__transaction_date__date__lte=fy.end_date)
+                )
+                .values('account_id', 'account__code', 'account__name', 'account__type')
+                .annotate(d=Sum('debit'), c=Sum('credit'))
+            )
+            out = {}
+            for r in rows:
+                d = r['d'] or Decimal('0.00')
+                c = r['c'] or Decimal('0.00')
+                raw = d - c
+                atype = r['account__type']
+                net = (-raw) if atype in ('LIABILITY', 'EQUITY', 'INCOME') else raw
+                out[r['account_id']] = {
+                    'code': r['account__code'],
+                    'name': r['account__name'],
+                    'type': atype,
+                    'net': net,
+                }
+            return out
+
+        per_year = [_agg(y) for y in years]
+
+        def _rollup_across(types):
+            vals = []
+            for yi in per_year:
+                total = Decimal('0.00')
+                for v in yi.values():
+                    if v['type'] in types:
+                        total += v['net']
+                vals.append(str(total))
+            return vals
+
+        rev_vals = _rollup_across(('INCOME',))
+        exp_vals = _rollup_across(('EXPENSE',))
+        # Net income per year
+        ni_vals = [
+            str(Decimal(rev_vals[i]) - Decimal(exp_vals[i]))
+            for i in range(len(years))
+        ]
+
+        rollups = [
+            {'section': 'pnl',           'label': 'Revenue',     'values': rev_vals},
+            {'section': 'pnl',           'label': 'Expenses',    'values': exp_vals},
+            {'section': 'pnl',           'label': 'Net Income',  'values': ni_vals},
+            {'section': 'balance_sheet', 'label': 'Assets',      'values': _rollup_across(('ASSET',))},
+            {'section': 'balance_sheet', 'label': 'Liabilities', 'values': _rollup_across(('LIABILITY',))},
+            {'section': 'balance_sheet', 'label': 'Equity',      'values': _rollup_across(('EQUITY',))},
+        ]
+
+        # Per-account matrix — union of ids across all years
+        all_ids: set[int] = set()
+        for yi in per_year:
+            all_ids.update(yi.keys())
+        TYPE_TO_SECTION = {
+            'ASSET': 'balance_sheet', 'LIABILITY': 'balance_sheet', 'EQUITY': 'balance_sheet',
+            'INCOME': 'pnl', 'EXPENSE': 'pnl',
+        }
+        per_account = []
+        for acc_id in all_ids:
+            ref = None
+            vals = []
+            for yi in per_year:
+                v = yi.get(acc_id)
+                if ref is None and v is not None:
+                    ref = v
+                vals.append(str(v['net']) if v else '0.00')
+            if ref is None:
+                continue
+            # Skip accounts that are zero across all years
+            if all(Decimal(x) == 0 for x in vals):
+                continue
+            per_account.append({
+                'account_id': acc_id,
+                'code': ref['code'],
+                'name': ref['name'],
+                'type': ref['type'],
+                'section': TYPE_TO_SECTION.get(ref['type'], 'other'),
+                'values': vals,
+            })
+        per_account.sort(key=lambda x: (x['section'], x['type'], x['code'] or ''))
+
+        return Response({
+            'years': [
+                {
+                    'id': y.id, 'name': y.name,
+                    'start': y.start_date.isoformat(),
+                    'end': y.end_date.isoformat(),
+                }
+                for y in years
+            ],
+            'rollups': rollups,
+            'per_account': per_account,
+        })
+
+    @action(detail=True, methods=['get'], url_path='yoy-comparison')
+    def yoy_comparison(self, request, pk=None):
+        """Year-over-year comparative P&L + Balance Sheet + KPIs.
+
+        Compares THIS fiscal year's totals to the immediately prior
+        fiscal year (by end_date). Reads directly from POSTED, non-
+        superseded JE lines so numbers match the closing JE.
+
+        Response shape:
+          {
+            'current_year':  {'id','name','start','end'},
+            'prior_year':    {'id','name','start','end'}  (or null),
+            'pnl':  {'revenue': {curr, prior, delta, pct},
+                     'expenses': {...}, 'net_income': {...}},
+            'balance_sheet': {'assets', 'liabilities', 'equity'} each → {curr, prior, delta, pct},
+            'accounts': [{code, name, type, curr, prior, delta, pct}],
+          }
+        """
+        from apps.finance.models import (
+            FiscalYear, JournalEntryLine, ChartOfAccount,
+        )
+        from django.db.models import Sum, Q
+        from decimal import Decimal
+
+        current = self.get_object()
+        organization_id = get_current_tenant_id()
+
+        # Find the immediately-prior fiscal year by end_date
+        prior = (
+            FiscalYear.objects
+            .filter(organization_id=organization_id, end_date__lt=current.start_date)
+            .order_by('-end_date').first()
+        )
+
+        def _agg(fy):
+            """Per-account aggregation for a fiscal year (OFFICIAL scope).
+            Returns {account_id: {code, name, type, net}} where
+            net is signed with normal-balance convention flipped for
+            display (debit-positive for ASSET/EXPENSE, credit-positive
+            for LIABILITY/EQUITY/INCOME).
+            """
+            rows = (
+                JournalEntryLine.objects
+                .filter(
+                    organization_id=organization_id,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    journal_entry__scope='OFFICIAL',
+                )
+                .filter(
+                    Q(journal_entry__fiscal_year=fy) |
+                    Q(journal_entry__fiscal_year__isnull=True,
+                      journal_entry__transaction_date__date__gte=fy.start_date,
+                      journal_entry__transaction_date__date__lte=fy.end_date)
+                )
+                .values('account_id', 'account__code', 'account__name', 'account__type')
+                .annotate(d=Sum('debit'), c=Sum('credit'))
+            )
+            out = {}
+            for r in rows:
+                d = r['d'] or Decimal('0.00')
+                c = r['c'] or Decimal('0.00')
+                raw_net = d - c  # debit - credit
+                # Flip sign for credit-normal types so signed display
+                # reads naturally (e.g. Revenue = positive number).
+                atype = r['account__type']
+                net = (-raw_net) if atype in ('LIABILITY', 'EQUITY', 'INCOME') else raw_net
+                out[r['account_id']] = {
+                    'code': r['account__code'],
+                    'name': r['account__name'],
+                    'type': atype,
+                    'net': net,
+                }
+            return out
+
+        curr_by_acc = _agg(current)
+        prior_by_acc = _agg(prior) if prior else {}
+
+        def _delta(a, b):
+            delta = a - b
+            pct = None
+            if b != Decimal('0.00'):
+                pct = float(delta / b.copy_abs() * 100)
+            return {
+                'current': str(a), 'prior': str(b),
+                'delta': str(delta), 'pct': pct,
+            }
+
+        # Roll up by type
+        def _rollup(rows_by_acc, types):
+            total = Decimal('0.00')
+            for v in rows_by_acc.values():
+                if v['type'] in types:
+                    total += v['net']
+            return total
+
+        curr_rev = _rollup(curr_by_acc, ('INCOME',))
+        prior_rev = _rollup(prior_by_acc, ('INCOME',))
+        curr_exp = _rollup(curr_by_acc, ('EXPENSE',))
+        prior_exp = _rollup(prior_by_acc, ('EXPENSE',))
+        curr_net = curr_rev - curr_exp
+        prior_net = prior_rev - prior_exp
+
+        curr_assets = _rollup(curr_by_acc, ('ASSET',))
+        prior_assets = _rollup(prior_by_acc, ('ASSET',))
+        curr_liab = _rollup(curr_by_acc, ('LIABILITY',))
+        prior_liab = _rollup(prior_by_acc, ('LIABILITY',))
+        curr_eq = _rollup(curr_by_acc, ('EQUITY',))
+        prior_eq = _rollup(prior_by_acc, ('EQUITY',))
+
+        # Per-account detail — union of current + prior keys
+        all_ids = set(curr_by_acc) | set(prior_by_acc)
+        per_account = []
+        for acc_id in all_ids:
+            c_v = curr_by_acc.get(acc_id)
+            p_v = prior_by_acc.get(acc_id)
+            ref = c_v or p_v
+            c_net = c_v['net'] if c_v else Decimal('0.00')
+            p_net = p_v['net'] if p_v else Decimal('0.00')
+            if c_net == 0 and p_net == 0:
+                continue
+            per_account.append({
+                'account_id': acc_id,
+                'code': ref['code'],
+                'name': ref['name'],
+                'type': ref['type'],
+                **_delta(c_net, p_net),
+            })
+        per_account.sort(key=lambda x: (x['type'], x['code'] or ''))
+
+        return Response({
+            'current_year': {
+                'id': current.id, 'name': current.name,
+                'start': current.start_date.isoformat(),
+                'end': current.end_date.isoformat(),
+            },
+            'prior_year': (
+                {
+                    'id': prior.id, 'name': prior.name,
+                    'start': prior.start_date.isoformat(),
+                    'end': prior.end_date.isoformat(),
+                } if prior else None
+            ),
+            'pnl': {
+                'revenue': _delta(curr_rev, prior_rev),
+                'expenses': _delta(curr_exp, prior_exp),
+                'net_income': _delta(curr_net, prior_net),
+            },
+            'balance_sheet': {
+                'assets': _delta(curr_assets, prior_assets),
+                'liabilities': _delta(curr_liab, prior_liab),
+                'equity': _delta(curr_eq, prior_eq),
+            },
+            'accounts': per_account,
+        })
+
     @action(detail=True, methods=['get'], url_path='close-checklist')
     def close_checklist(self, request, pk=None):
         """Return the pre-close checklist run for this fiscal year.

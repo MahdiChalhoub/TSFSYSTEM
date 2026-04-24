@@ -271,7 +271,9 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
                                 {config.secondaryActions?.map((action, i) => (
-                                    action.href ? (
+                                    action.render ? (
+                                        <span key={i}>{action.render()}</span>
+                                    ) : action.href ? (
                                         <Link key={i} href={action.href}
                                             className="flex items-center gap-1.5 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                             {action.icon}<span className="hidden md:inline">{action.label}</span>

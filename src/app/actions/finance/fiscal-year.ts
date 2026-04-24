@@ -347,6 +347,52 @@ export async function toggleCloseChecklistItem(
     }
 }
 
+export type YoyDelta = {
+    current: string
+    prior: string
+    delta: string
+    pct: number | null
+}
+
+export type YoyReport = {
+    current_year: { id: number; name: string; start: string; end: string }
+    prior_year: { id: number; name: string; start: string; end: string } | null
+    pnl: { revenue: YoyDelta; expenses: YoyDelta; net_income: YoyDelta }
+    balance_sheet: { assets: YoyDelta; liabilities: YoyDelta; equity: YoyDelta }
+    accounts: Array<{
+        account_id: number; code: string; name: string; type: string;
+        current: string; prior: string; delta: string; pct: number | null;
+    }>
+}
+
+export async function getYoyComparison(yearId: number): Promise<YoyReport | null> {
+    try {
+        return await erpFetch(`fiscal-years/${yearId}/yoy-comparison/`) as YoyReport
+    } catch (error) {
+        console.error('Failed to fetch YoY comparison:', error)
+        return null
+    }
+}
+
+export type MultiYearReport = {
+    years: Array<{ id: number; name: string; start: string; end: string }>
+    rollups: Array<{ section: 'pnl' | 'balance_sheet' | string; label: string; values: string[] }>
+    per_account: Array<{
+        account_id: number; code: string; name: string; type: string;
+        section: 'pnl' | 'balance_sheet' | 'other';
+        values: string[];
+    }>
+}
+
+export async function getMultiYearComparison(years: number = 3): Promise<MultiYearReport | null> {
+    try {
+        return await erpFetch(`fiscal-years/multi-year-comparison/?years=${years}`) as MultiYearReport
+    } catch (error) {
+        console.error('Failed to fetch multi-year comparison:', error)
+        return null
+    }
+}
+
 export async function getIntegrityCanary(): Promise<CanaryReport | null> {
     try {
         return await erpFetch('fiscal-years/integrity-canary/') as CanaryReport
