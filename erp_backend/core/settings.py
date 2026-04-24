@@ -323,6 +323,18 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+# ── Finance canary alerting ────────────────────────────────
+# When the daily close-chain canary detects drift it fires these hooks.
+# Leave empty ([]) to run the canary silently (logs only). Populate via
+# env vars in deployed environments:
+#   export FINANCE_CANARY_ALERT_WEBHOOKS="https://hooks.slack.com/..."
+#   export FINANCE_CANARY_ALERT_EMAILS="finance-ops@example.com,cfo@..."
+def _csv_env(key):
+    raw = os.getenv(key, '')
+    return [x.strip() for x in raw.split(',') if x.strip()]
+FINANCE_CANARY_ALERT_WEBHOOKS = _csv_env('FINANCE_CANARY_ALERT_WEBHOOKS')
+FINANCE_CANARY_ALERT_EMAILS = _csv_env('FINANCE_CANARY_ALERT_EMAILS')
+
 # ── Email Configuration (for notifications) ──────────────────
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')

@@ -397,4 +397,104 @@ def run_close_chain_canary(org_id: int | None = None):
         "Canary: %s/%s orgs clean, %s drifted",
         out['orgs_clean'], out['orgs_total'], out['orgs_drifted'],
     )
+
+    # ── Alerting ──
+    # If any org drifted, fire the alerting hooks. Non-blocking: a
+    # webhook/email failure must never take down the canary itself.
+    if out['orgs_drifted'] > 0:
+        try:
+            _dispatch_canary_alerts(out)
+        except Exception as exc:
+            logger.exception("Canary alert dispatch failed: %s", exc)
+
     return out
+
+
+def _dispatch_canary_alerts(report):
+    """Fire any configured alert channels when the canary detects drift.
+
+    Channels are discovered from Django settings:
+      FINANCE_CANARY_ALERT_WEBHOOKS: list of URLs (optional). POSTed
+        with the full report JSON.
+      FINANCE_CANARY_ALERT_EMAILS: list of email addresses (optional).
+        Sent a text summary.
+
+    If neither is configured, this function is a no-op. This keeps the
+    canary usable in dev without ceremony, while letting production
+    deployments opt in per tenant.
+    """
+    import json
+    from django.conf import settings
+
+    webhooks = getattr(settings, 'FINANCE_CANARY_ALERT_WEBHOOKS', []) or []
+    emails = getattr(settings, 'FINANCE_CANARY_ALERT_EMAILS', []) or []
+
+    if not webhooks and not emails:
+        return
+
+    dirty = [d for d in report.get('details', []) if not d.get('safe', True)
+             or not d.get('parent_purity_clean', True)
+             or not d.get('subledger_clean', True)
+             or not d.get('snapshot_chain_clean', True)
+             or not d.get('balance_integrity_clean', True)
+             or not d.get('fx_integrity_clean', True)
+             or not d.get('revenue_recognition_clean', True)
+             or not d.get('consolidation_clean', True)]
+    if not dirty:
+        return
+
+    subject = (
+        f"[Finance Canary] {len(dirty)} organization(s) reporting drift "
+        f"at {report['ran_at']}"
+    )
+    # Plain-text summary — one line per dirty org with its trouble spots
+    summary_lines = [subject, '']
+    for d in dirty:
+        problems = []
+        if not d.get('safe', True):
+            problems.append(f"OB↔JE: {d.get('years_drift', 0)} yrs drift")
+        if not d.get('parent_purity_clean', True):
+            problems.append(f"parent: {d.get('parent_offender_count', 0)}")
+        if not d.get('subledger_clean', True):
+            problems.append(f"subledger: {d.get('subledger_offender_count', 0)}")
+        if not d.get('snapshot_chain_clean', True):
+            problems.append(f"snapshot: {d.get('snapshot_chain_breaks', 0)} breaks")
+        if not d.get('balance_integrity_clean', True):
+            problems.append(f"balance drift: {d.get('balance_integrity_drifted_accounts', 0)}")
+        if not d.get('fx_integrity_clean', True):
+            problems.append(f"FX: {d.get('fx_stale_rate_lines', 0)} stale")
+        if not d.get('revenue_recognition_clean', True):
+            problems.append(f"rev-rec: {d.get('revenue_overdue_rows', 0)} overdue")
+        if not d.get('consolidation_clean', True):
+            problems.append(f"consolidation: {d.get('consolidation_missing_runs', 0)} missing")
+        summary_lines.append(f"- {d.get('org_slug')}: {'; '.join(problems)}")
+
+    summary = '\n'.join(summary_lines)
+
+    # Webhook dispatch — uses stdlib urllib to avoid a hard httpx/requests
+    # dependency. 5s timeout so one bad endpoint can't stall the others.
+    if webhooks:
+        import urllib.request
+        payload = json.dumps(report, default=str).encode('utf-8')
+        for url in webhooks:
+            try:
+                req = urllib.request.Request(
+                    url, data=payload,
+                    headers={'Content-Type': 'application/json'},
+                )
+                urllib.request.urlopen(req, timeout=5)
+                logger.info("Canary: alert webhook fired → %s", url)
+            except Exception as exc:
+                logger.warning("Canary: webhook %s failed: %s", url, exc)
+
+    if emails:
+        try:
+            from django.core.mail import send_mail
+            send_mail(
+                subject=subject, message=summary,
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                recipient_list=list(emails), fail_silently=True,
+            )
+            logger.info("Canary: alert email sent to %s recipient(s)", len(emails))
+        except Exception as exc:
+            logger.warning("Canary: email dispatch failed: %s", exc)

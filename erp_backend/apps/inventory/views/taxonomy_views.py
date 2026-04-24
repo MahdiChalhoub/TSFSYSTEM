@@ -983,6 +983,34 @@ class CategoryViewSet(TenantModelViewSet):
                 return Response(conflict, status=status.HTTP_409_CONFLICT)
         return super().destroy(request, *args, **kwargs)
 
+    @action(detail=True, methods=['get'])
+    def audit(self, request, pk=None):
+        """Last 50 audit entries for this category (create / update / delete).
+        Uses the generic AuditLog table keyed by (table_name, record_id)."""
+        from erp.models_audit import AuditLog
+        organization, err = _get_org_or_400()
+        if err: return err
+        try:
+            entries = AuditLog.objects.filter(
+                organization_id=organization.id,
+                table_name__iexact='Category',
+                record_id=str(pk),
+            ).order_by('-timestamp')[:50]
+            return Response({
+                'results': [{
+                    'id': str(e.id),
+                    'timestamp': e.timestamp,
+                    'action': e.action,
+                    'actor': (e.actor.get_full_name() or e.actor.email or e.actor.username) if e.actor else None,
+                    'old_value': e.old_value,
+                    'new_value': e.new_value,
+                    'description': e.description,
+                } for e in entries],
+                'count': entries.count() if hasattr(entries, 'count') else len(entries),
+            })
+        except Exception:
+            return Response({'results': [], 'count': 0})
+
     @action(detail=False, methods=['get'])
     def with_counts(self, request):
         """Categories list annotated with product / brand / parfum / attribute

@@ -17,6 +17,8 @@ export interface CategoryNode {
     full_path?: string
     reference_code?: string
     barcode_prefix?: string
+    name_fr?: string
+    name_ar?: string
 }
 
-export type PanelTab = 'overview' | 'products' | 'brands' | 'attributes'
+export type PanelTab = 'overview' | 'products' | 'brands' | 'attributes' | 'audit'

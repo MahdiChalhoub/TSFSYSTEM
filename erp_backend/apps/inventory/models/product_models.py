@@ -209,6 +209,12 @@ class Category(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     SEQUENCE_PADDING = 5
 
     name = models.CharField(max_length=255)
+    # Localised display names — retailers serving multi-language regions
+    # can surface either French or Arabic without a full i18n layer.
+    name_fr = models.CharField(max_length=255, blank=True, default='',
+        help_text='French display name (falls back to `name` if empty)')
+    name_ar = models.CharField(max_length=255, blank=True, default='',
+        help_text='Arabic display name (falls back to `name` if empty)')
     code = models.CharField(max_length=50, null=True, blank=True)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')

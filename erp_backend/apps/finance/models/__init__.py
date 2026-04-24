@@ -6,6 +6,10 @@ from .transaction_models import Transaction, TransactionSequence
 from .loan_models import Loan, LoanInstallment, FinancialEvent
 from .expense_models import DeferredExpense, DirectExpense
 from .revenue_models import DeferredRevenue, RevenuePerformanceObligation
+from .close_checklist_models import (
+    CloseChecklistTemplate, CloseChecklistItem,
+    CloseChecklistRun, CloseChecklistItemState,
+)
 from .asset_models import Asset, AmortizationSchedule
 from .voucher_models import Voucher
 from .audit_models import ProfitDistribution, ForensicAuditLog

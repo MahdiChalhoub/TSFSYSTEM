@@ -228,6 +228,33 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                         </div>
                     </div>
 
+                    {/* Localised display names — empty falls back to `name` */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                Nom (FR)
+                            </label>
+                            <input
+                                name="nameFr"
+                                defaultValue={category?.name_fr || ''}
+                                placeholder="e.g. Boissons"
+                                className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }} />
+                        </div>
+                        <div>
+                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                الاسم (AR)
+                            </label>
+                            <input
+                                name="nameAr"
+                                defaultValue={category?.name_ar || ''}
+                                placeholder="مثال: المشروبات"
+                                dir="rtl"
+                                className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }} />
+                        </div>
+                    </div>
+
                     {/* Code + Barcode Prefix — side-by-side on the wider modal */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>

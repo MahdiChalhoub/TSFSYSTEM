@@ -72,6 +72,11 @@ class FiscalYear(TenantModel):
         Canonical state transition. Enforces the allowed lattice
         OPEN → CLOSED → FINALIZED and records closed_at / closed_by.
         Callers should prefer this over direct field writes.
+
+        Every transition is forensic-logged via ForensicAuditService so
+        audit reviewers get a who/when/what record for every status
+        change on a fiscal year — the most sensitive object in the
+        system.
         """
         allowed = {
             'OPEN':      {'CLOSED'},
@@ -82,6 +87,7 @@ class FiscalYear(TenantModel):
             raise ValueError(f"Unknown fiscal-year status: {new_status}")
         if new_status != self.status and new_status not in allowed.get(self.status, set()):
             raise ValueError(f"Illegal transition {self.status} → {new_status}")
+        old_status = self.status
         self.status = new_status
         if new_status in ('CLOSED', 'FINALIZED'):
             if not self.closed_at:
@@ -92,6 +98,25 @@ class FiscalYear(TenantModel):
             self.closed_at = None
             self.closed_by = None
         self.save()
+
+        # Forensic audit — fire AFTER save so the row reflects its new
+        # state. Failures are logged but never bubble up; an audit-write
+        # failure must not roll back the state transition itself.
+        try:
+            from apps.finance.services.audit_service import ForensicAuditService
+            ForensicAuditService.log_mutation(
+                organization=self.organization, user=user,
+                model_name='FiscalYear', object_id=self.pk,
+                change_type='STATE_TRANSITION',
+                payload={
+                    'from': old_status, 'to': new_status,
+                    'name': self.name,
+                    'closed_at': self.closed_at.isoformat() if self.closed_at else None,
+                },
+            )
+        except Exception:
+            pass
+
         return self
 
 

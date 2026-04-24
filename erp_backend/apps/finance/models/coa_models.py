@@ -307,6 +307,31 @@ class ChartOfAccount(TenantModel):
                 id=self.parent_id, allow_posting=True,
             ).update(allow_posting=False)
 
+        # ── Forensic audit for structural / classification changes ──
+        # COA mutations are rare but high-impact — a wrong type flip,
+        # accidental parent re-link, or is_active toggle rewrites the
+        # balance sheet everywhere. Log every save with the delta so
+        # reviewers can reconstruct "who changed what when" without
+        # needing database binlog access.
+        try:
+            from apps.finance.services.audit_service import ForensicAuditService
+            changes = {
+                'code': self.code, 'name': self.name,
+                'type': self.type, 'parent_id': self.parent_id,
+                'is_active': self.is_active,
+                'allow_posting': self.allow_posting,
+                'clears_at_close': getattr(self, 'clears_at_close', None),
+                'system_role': self.system_role,
+            }
+            ForensicAuditService.log_mutation(
+                organization=self.organization, user=getattr(self, 'updated_by', None),
+                model_name='ChartOfAccount', object_id=self.pk,
+                change_type='UPDATE' if self.pk else 'CREATE',
+                payload=changes,
+            )
+        except Exception:
+            pass
+
     def delete(self, *args, **kwargs):
         if self.organization.finance_setup_completed:
             from django.core.exceptions import ValidationError

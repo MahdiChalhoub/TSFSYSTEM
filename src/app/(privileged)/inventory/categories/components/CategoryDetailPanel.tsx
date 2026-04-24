@@ -2,12 +2,13 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Pencil, Pin, Bookmark, Package, Paintbrush, Tag } from 'lucide-react'
+import { X, Pencil, Pin, Bookmark, Package, Paintbrush, Tag, Clock } from 'lucide-react'
 import type { CategoryNode, PanelTab } from './types'
 import { OverviewTab } from './tabs/OverviewTab'
 import { ProductsTab } from './tabs/ProductsTab'
 import { BrandsTab } from './tabs/BrandsTab'
 import { AttributesTab } from './tabs/AttributesTab'
+import { AuditTab } from './tabs/AuditTab'
 
 /* ═══════════════════════════════════════════════════════════
  *  CategoryDetailPanel — tabbed detail view
@@ -34,6 +35,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
         { key: 'products', label: 'Products', icon: <Package size={13} />, count: productCount, color: 'var(--app-success)' },
         { key: 'brands', label: 'Brands', icon: <Paintbrush size={13} />, count: brandCount, color: 'var(--app-info)' },
         { key: 'attributes', label: 'Attributes', icon: <Tag size={13} />, count: attributeCount, color: 'var(--app-warning)' },
+        { key: 'audit', label: 'Audit', icon: <Clock size={13} />, color: 'var(--app-muted-foreground)' },
     ]
 
     return (
@@ -198,6 +200,9 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
                 )}
                 {tab === 'attributes' && (
                     <AttributesTab categoryId={node.id} categoryName={node.name} />
+                )}
+                {tab === 'audit' && (
+                    <AuditTab node={node} />
                 )}
             </div>
         </div>

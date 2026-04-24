@@ -481,6 +481,21 @@ class ClosingService:
                     f"Opening balances not generated. Create next year first."
                 )
 
+            # ── Pre-close checklist gate (opt-in) ────────────────────
+            # If the organisation has a default checklist template,
+            # refuse finalize until every required task is marked
+            # complete. Deployments that never configure a template
+            # are unaffected (validator returns None and we proceed).
+            try:
+                from apps.finance.services.close_checklist_service import (
+                    CloseChecklistService,
+                )
+                CloseChecklistService.validate_ready_for_year(
+                    organization, fiscal_year,
+                )
+            except ImportError:
+                pass  # module not loaded — skip silently
+
             # ── Reconciliation gate (pre-finalize) ────────────────────
             # Closing is permanent. If the closing JEs didn't actually zero
             # P&L or if the books don't balance, we must NOT mark the year
