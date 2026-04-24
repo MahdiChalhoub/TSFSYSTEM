@@ -24,7 +24,7 @@ import { CategoryDetailPanel } from './components/CategoryDetailPanel'
 import { BulkActionBar } from './components/BulkActionBar'
 import { BulkDialog } from './components/BulkDialog'
 import { CsvImportDialog } from './components/CsvImportDialog'
-import { Upload } from 'lucide-react'
+import { Upload, Download } from 'lucide-react'
 
 /* ═══════════════════════════════════════════════════════════
  *  CategoriesClient — thin consumer; TreeMasterPage is the single
@@ -62,6 +62,35 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     // Warm up the CATEGORY sequence cache on page mount so the first New
     // dialog opens with a pre-filled code instantly (no network wait).
     useEffect(() => { prefetchNextCode('CATEGORY') }, [])
+
+    // Export current categories as CSV — format mirrors CsvImportDialog so a
+    // round-trip works. `parent_code` is resolved to the parent's `code` or
+    // falls back to its `name` so humans editing in Excel can still rebuild
+    // the tree without knowing internal ids.
+    const handleExport = useCallback(() => {
+        if (!data?.length) { toast.info('No categories to export'); return }
+        const byId = new Map<number, any>()
+        data.forEach((c: any) => byId.set(c.id, c))
+        const escape = (v: any) => {
+            const s = (v ?? '').toString()
+            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+        }
+        const headers = ['name', 'code', 'short_name', 'barcode_prefix', 'parent_code']
+        const lines = [headers.join(',')]
+        data.forEach((c: any) => {
+            const parent = c.parent ? byId.get(c.parent) : null
+            const parentCode = parent ? (parent.code || parent.name || '') : ''
+            lines.push([c.name, c.code || '', c.short_name || '', c.barcode_prefix || '', parentCode].map(escape).join(','))
+        })
+        const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `categories-${new Date().toISOString().slice(0, 10)}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
+        toast.success(`Exported ${data.length} categories`)
+    }, [data])
 
     // Actions
     const openAddModal = useCallback((parentId?: number) => { setModalState({ open: true, parentId }) }, [])
@@ -167,6 +196,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
                 primaryAction: { label: 'New Category', icon: <Plus size={14} />, onClick: () => openAddModal(), dataTour: 'add-category-btn' },
                 secondaryActions: [
+                    { label: 'Export CSV', icon: <Download size={13} />, onClick: handleExport },
                     { label: 'Import CSV', icon: <Upload size={13} />, onClick: () => setShowImport(true) },
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],

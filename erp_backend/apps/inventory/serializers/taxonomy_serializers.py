@@ -270,13 +270,13 @@ class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
         fields = [
-            'id', 'name', 'short_name', 'logo', 'translations',
+            'id', 'name', 'reference_code', 'short_name', 'logo', 'translations',
             'countries', 'categories',
             'category_ids', 'country_ids',
             'product_count',
             'created_at', 'organization',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['organization', 'reference_code']
 
     def get_product_count(self, obj):
         return Product.objects.filter(brand=obj).count()
@@ -315,12 +315,12 @@ class ParfumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parfum
         fields = [
-            'id', 'name', 'short_name', 'translations',
+            'id', 'name', 'reference_code', 'short_name', 'translations',
             'categories', 'category_ids',
             'product_count',
             'organization',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['organization', 'reference_code']
 
     def get_product_count(self, obj):
         return Product.objects.filter(parfum=obj).count()

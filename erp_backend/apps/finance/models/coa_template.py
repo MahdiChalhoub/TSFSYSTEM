@@ -255,6 +255,7 @@ class COATemplate(models.Model):
     organization = models.ForeignKey(
         'erp.Organization', on_delete=models.CASCADE,
         null=True, blank=True, related_name='coa_templates',
+        db_column='tenant_id',  # Standard multi-tenant column name (matches other TenantModels)
         help_text='Only set for custom (per-org) templates; NULL for system templates'
     )
 

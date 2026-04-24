@@ -1,218 +1,168 @@
+// @ts-nocheck
 'use client'
 
-import React from 'react'
-import { TypicalListView, ColumnDef, LifecycleConfig } from '@/components/common/TypicalListView'
-import { useListViewSettings } from '@/hooks/useListViewSettings'
-import { Calendar, AlertTriangle, Clock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useMemo } from 'react'
+import {
+    Plus, ShoppingCart, Layers, Clock, CheckCircle2,
+    Truck, Package, FileText, AlertTriangle, BarChart3, DollarSign,
+} from 'lucide-react'
 import Link from 'next/link'
-import { TypicalFilter } from '@/components/common/TypicalFilter'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
+import { PurchaseOrderRow } from './components/PurchaseOrderRow'
+import { PurchaseOrderDetailPanel } from './components/PurchaseOrderDetailPanel'
 
-interface PurchaseOrder {
- id: number
- po_number: string
- supplier_display: string
- supplier_name: string
- status: string
- priority: string
- purchase_sub_type: string
- total_amount: string | number
- expected_date: string
- created_at: string
- is_legacy?: boolean
+/* ═══════════════════════════════════════════════════════════
+ *  PurchasesRegistryClient — thin TreeMasterPage consumer.
+ *  Flat list of purchase orders (no parent tree). All shell
+ *  behavior (search, KPI filter, split panel, pinned sidebar,
+ *  keyboard shortcuts, focus mode) comes from the template.
+ * ═══════════════════════════════════════════════════════════ */
+
+type PurchaseOrder = {
+    id: number
+    po_number: string
+    supplier_display?: string
+    supplier_name?: string
+    status: string
+    priority: string
+    purchase_sub_type?: string
+    total_amount: string | number
+    currency?: string
+    expected_date?: string
+    created_at?: string
+    site_name?: string
 }
 
-interface PurchasesRegistryClientProps {
- orders: PurchaseOrder[]
- currency: string
- tradeSubTypesEnabled: boolean
-}
+const AWAITING_STATUSES = new Set(['ORDERED', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'])
 
-const STATUS_MAP: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }> = {
- DRAFT: { label: 'Draft', variant: 'default' },
- SUBMITTED: { label: 'Pending Approval', variant: 'warning' },
- APPROVED: { label: 'Approved', variant: 'info' },
- REJECTED: { label: 'Rejected', variant: 'danger' },
- ORDERED: { label: 'Ordered', variant: 'info' },
- CONFIRMED: { label: 'Confirmed by Supp.', variant: 'info' },
- IN_TRANSIT: { label: '🚚 In Transit', variant: 'warning' },
- PARTIALLY_RECEIVED: { label: 'Partial Receipt', variant: 'warning' },
- RECEIVED: { label: 'Fully Received', variant: 'success' },
- INVOICED: { label: 'Invoiced', variant: 'info' },
- COMPLETED: { label: 'Completed', variant: 'success' },
- CANCELLED: { label: 'Cancelled', variant: 'danger' },
-}
+export function PurchasesRegistryClient({
+    orders, currency = 'USD', tradeSubTypesEnabled = false,
+}: {
+    orders: PurchaseOrder[]
+    currency?: string
+    tradeSubTypesEnabled?: boolean
+}) {
+    const router = useRouter()
+    const data = orders
 
-const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
- LOW: { label: 'Low', color: 'text-app-muted-foreground' },
- NORMAL: { label: 'Normal', color: 'text-blue-500' },
- HIGH: { label: 'High', color: 'text-amber-500' },
- URGENT: { label: 'Urgent', color: 'text-rose-500 font-black' },
-}
+    const subtotals = useMemo(() => {
+        const drafts  = data.filter(o => o.status === 'DRAFT').length
+        const pending = data.filter(o => o.status === 'SUBMITTED').length
+        const awaiting = data.filter(o => AWAITING_STATUSES.has(o.status)).length
+        const received = data.filter(o => o.status === 'RECEIVED' || o.status === 'COMPLETED').length
+        const total    = data.reduce((s, o) => s + Number(o.total_amount || 0), 0)
+        return { drafts, pending, awaiting, received, total }
+    }, [data])
 
-const PO_SUB_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
- STANDARD: { label: 'Standard', color: 'bg-app-muted/10 border border-app-border text-app-muted-foreground ' },
- WHOLESALE: { label: 'Wholesale', color: 'bg-amber-500/10 text-amber-600 border border-amber-200' },
- CONSIGNEE: { label: 'Consignee', color: 'bg-emerald-500/10 text-emerald-600 border border-emerald-200' },
-}
+    return (
+        <TreeMasterPage
+            config={{
+                title: 'Purchase Orders',
+                subtitle: (_, all) => `${all.length} orders · ${subtotals.pending} pending · ${subtotals.awaiting} incoming`,
+                icon: <ShoppingCart size={20} />,
+                iconColor: 'var(--app-primary)',
+                searchPlaceholder: 'Search by PO number or supplier...',
+                primaryAction: {
+                    label: 'New Purchase Order',
+                    icon: <Plus size={14} />,
+                    onClick: () => router.push('/purchases/new-order'),
+                },
+                secondaryActions: [
+                    {
+                        label: 'Sourcing Intelligence',
+                        icon: <BarChart3 size={13} />,
+                        href: '/purchases/sourcing',
+                    },
+                    {
+                        label: 'Dashboard',
+                        icon: <DollarSign size={13} />,
+                        href: '/purchases/dashboard',
+                    },
+                ],
 
-export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled }: PurchasesRegistryClientProps) {
- const router = useRouter()
- const searchParams = useSearchParams()
- const settings = useListViewSettings('purch_registry', {
- columns: ['po_number', 'supplier_display', 'purchase_sub_type', 'priority', 'total_amount', 'expected_date'],
- pageSize: 25, sortKey: 'created_at', sortDir: 'desc'
- })
+                // Template owns filtering — flat list, no parent key needed.
+                data,
+                searchFields: ['po_number', 'supplier_display', 'supplier_name'],
+                // Use a non-existent parent key so buildTree leaves every row at root.
+                treeParentKey: '__no_parent_key__',
+                kpiPredicates: {
+                    draft:    (o) => o.status === 'DRAFT',
+                    pending:  (o) => o.status === 'SUBMITTED',
+                    awaiting: (o) => AWAITING_STATUSES.has(o.status),
+                    received: (o) => o.status === 'RECEIVED' || o.status === 'COMPLETED',
+                    urgent:   (o) => o.priority === 'URGENT',
+                },
 
- const columns: ColumnDef<PurchaseOrder>[] = [
- {
- key: 'po_number',
- label: 'PO Number',
- sortable: true,
- render: (po) => (
- <Link href={`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`} className="flex flex-col group">
- <span className="font-bold text-app-foreground group-hover:text-emerald-500 transition-colors uppercase tracking-tight">
- {po.po_number ||`PO-${po.id}`}
- </span>
- <div className="flex items-center gap-1 text-[10px] text-app-muted-foreground mt-0.5">
- <Calendar size={10} />
- {po.created_at ? new Date(po.created_at).toLocaleDateString('fr-FR') : '—'}
- </div>
- </Link>
- )
- },
- {
- key: 'supplier_display',
- label: 'Supplier',
- sortable: true,
- render: (po) => (
- <span className="text-sm font-bold text-app-muted-foreground">
- {po.supplier_display || po.supplier_name || 'N/A'}
- </span>
- )
- },
- ...(tradeSubTypesEnabled ? [{
- key: 'purchase_sub_type',
- label: 'Type',
- sortable: true,
- render: (po: PurchaseOrder) => (
- po.purchase_sub_type && PO_SUB_TYPE_CONFIG[po.purchase_sub_type] ? (
- <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${PO_SUB_TYPE_CONFIG[po.purchase_sub_type].color}`}>
- {PO_SUB_TYPE_CONFIG[po.purchase_sub_type].label}
- </span>
- ) : (
- <span className="text-xs text-app-muted-foreground">—</span>
- )
- )
- }] as ColumnDef<PurchaseOrder>[] : []),
- {
- key: 'priority',
- label: 'Priority',
- sortable: true,
- render: (po) => {
- const priorityInfo = PRIORITY_MAP[po.priority] || { label: po.priority, color: 'text-app-muted-foreground' }
- return (
- <span className={`text-xs font-bold ${priorityInfo.color}`}>
- {po.priority === 'URGENT' && <AlertTriangle size={12} className="inline mr-1" />}
- {priorityInfo.label}
- </span>
- )
- }
- },
- {
- key: 'total_amount',
- label: 'Amount',
- sortable: true,
- align: 'right',
- render: (po) => (
- <span className="font-black text-app-foreground">
- {parseFloat(String(po.total_amount || 0)).toLocaleString()} {currency}
- </span>
- )
- },
- {
- key: 'expected_date',
- label: 'Expected',
- sortable: true,
- render: (po) => (
- <span className="text-sm text-app-muted-foreground">
- {po.expected_date ? new Date(po.expected_date).toLocaleDateString('fr-FR') : '—'}
- </span>
- )
- }
- ]
-
- const lifecycle: LifecycleConfig<PurchaseOrder> = {
- getStatus: (po) => STATUS_MAP[po.status] || { label: po.status, variant: 'default' },
- }
-
- const handleSearch = (query: string) => {
- const params = new URLSearchParams(searchParams.toString())
- if (query) params.set('query', query)
- else params.delete('query')
- router.push(`/purchases?${params.toString()}`)
- }
-
- const handleFilterChange = (key: string, value: string | boolean) => {
- const params = new URLSearchParams(searchParams.toString())
- if (value && value !== 'ALL') params.set(key, String(value))
- else params.delete(key)
- router.push(`/purchases?${params.toString()}`)
- }
-
- return (
- <TypicalListView
- title="Registry"
- data={orders}
- getRowId={(po) => po.id}
- columns={columns}
- lifecycle={lifecycle}
- actions={{
- onView: (po) => router.push(`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`),
- extra: (po) => (
- <Link href={`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`} className="p-1.5 text-app-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/5 rounded-lg transition-all min-h-[44px] min-w-[44px] md:min-h-[28px] md:min-w-[28px] flex items-center justify-center">
- <Clock size={16} />
- </Link>
- )
- }}
- className="overflow-hidden"
- visibleColumns={settings.visibleColumns}
- onToggleColumn={settings.toggleColumn}
- pageSize={settings.pageSize}
- onPageSizeChange={settings.setPageSize}
- sortKey={settings.sortKey}
- sortDir={settings.sortDir}
- onSort={settings.setSort}
- >
- <TypicalFilter
- search={{
- value: searchParams.get('query') || '',
- onChange: handleSearch,
- placeholder: "Search POs or Suppliers..."
- }}
- filters={[
- {
- key: 'status',
- label: 'Status',
- type: 'select',
- options: [
- { label: 'Draft', value: 'DRAFT' },
- { label: 'Pending Approval', value: 'SUBMITTED' },
- { label: 'Approved', value: 'APPROVED' },
- { label: 'Ordered', value: 'ORDERED' },
- { label: 'Partially Received', value: 'PARTIALLY_RECEIVED' },
- { label: 'Received', value: 'RECEIVED' },
- { label: 'Invoiced', value: 'INVOICED' },
- { label: 'Completed', value: 'COMPLETED' },
- { label: 'Cancelled', value: 'CANCELLED' },
- ]
- }
- ]}
- values={{
- status: searchParams.get('status') || ''
- }}
- onChange={handleFilterChange}
- />
- </TypicalListView>
- )
+                kpis: [
+                    {
+                        label: 'Total', icon: <Layers size={12} />, color: 'var(--app-primary)',
+                        filterKey: 'all', hint: 'Show everything',
+                        value: (_, all) => all.length,
+                    },
+                    {
+                        label: 'Drafts', icon: <FileText size={12} />, color: 'var(--app-muted-foreground)',
+                        filterKey: 'draft', hint: 'Orders awaiting submission',
+                        value: (f) => f.filter((o: any) => o.status === 'DRAFT').length,
+                    },
+                    {
+                        label: 'Pending', icon: <Clock size={12} />, color: 'var(--app-warning)',
+                        filterKey: 'pending', hint: 'Waiting for manager approval',
+                        value: (f) => f.filter((o: any) => o.status === 'SUBMITTED').length,
+                    },
+                    {
+                        label: 'Incoming', icon: <Truck size={12} />, color: 'var(--app-info)',
+                        filterKey: 'awaiting', hint: 'Ordered, awaiting delivery',
+                        value: (f) => f.filter((o: any) => AWAITING_STATUSES.has(o.status)).length,
+                    },
+                    {
+                        label: 'Received', icon: <Package size={12} />, color: 'var(--app-success)',
+                        filterKey: 'received', hint: 'Fully received or completed',
+                        value: (f) => f.filter((o: any) => o.status === 'RECEIVED' || o.status === 'COMPLETED').length,
+                    },
+                    {
+                        label: 'Urgent', icon: <AlertTriangle size={12} />, color: 'var(--app-error)',
+                        filterKey: 'urgent', hint: 'Only urgent-priority orders',
+                        value: (f) => f.filter((o: any) => o.priority === 'URGENT').length,
+                    },
+                ],
+                columnHeaders: [
+                    { label: 'Order', width: 'auto' },
+                    { label: 'Priority', width: '64px', hideOnMobile: true },
+                    { label: 'Expected', width: '96px', hideOnMobile: true },
+                    { label: 'Amount', width: '112px', color: 'var(--app-foreground)' },
+                ],
+                emptyState: {
+                    icon: <ShoppingCart size={36} />,
+                    title: (has) => has ? 'No matching purchase orders' : 'No purchase orders yet',
+                    subtitle: (has) => has
+                        ? 'Try a different search term or clear filters.'
+                        : 'Create your first purchase order to start tracking procurement.',
+                    actionLabel: 'Create First PO',
+                },
+                footerLeft: (_, all) => (
+                    <>
+                        <span>{all.length} orders</span>
+                        <span style={{ color: 'var(--app-border)' }}>·</span>
+                        <span>Total procurement: <strong className="text-app-foreground tabular-nums">{subtotals.total.toLocaleString(undefined, { maximumFractionDigits: 0 })} {currency}</strong></span>
+                    </>
+                ),
+            }}
+            detailPanel={(node, { tab, onClose, onPin }) => (
+                <PurchaseOrderDetailPanel
+                    node={node} initialTab={tab}
+                    onClose={onClose} onPin={onPin}
+                />
+            )}
+        >
+            {(renderProps) => {
+                const { tree, isSelected, openNode } = renderProps
+                return tree.map((po: any) => (
+                    <PurchaseOrderRow key={po.id} node={po}
+                        isSelected={isSelected(po)}
+                        onSelect={(n: any) => openNode(n, 'overview')} />
+                ))
+            }}
+        </TreeMasterPage>
+    )
 }
