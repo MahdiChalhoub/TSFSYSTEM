@@ -38,15 +38,13 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
     const code = (formData.get('code') as string) || null;
     const shortName = (formData.get('shortName') as string) || null;
     const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
-    let translations: Record<string, string> = {};
+    let translations: Record<string, { name?: string; short_name?: string }> = {};
     try {
         const raw = (formData.get('translationsJson') as string) || '';
         if (raw) translations = JSON.parse(raw);
     } catch { /* tolerate malformed JSON — treat as empty */ }
-    // Legacy FR/AR mirrors so backend consumers still reading the old columns
-    // keep working until they migrate to `translations`.
-    const nameFr = translations.fr || '';
-    const nameAr = translations.ar || '';
+    const nameFr = translations.fr?.name || '';
+    const nameAr = translations.ar?.name || '';
 
     if (!name || name.length < 2) {
         return { message: 'Failed to create category', errors: { name: ['Name must be at least 2 characters'] } };
@@ -99,15 +97,13 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
     const code = (formData.get('code') as string) || null;
     const shortName = (formData.get('shortName') as string) || null;
     const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
-    let translations: Record<string, string> = {};
+    let translations: Record<string, { name?: string; short_name?: string }> = {};
     try {
         const raw = (formData.get('translationsJson') as string) || '';
         if (raw) translations = JSON.parse(raw);
     } catch { /* tolerate malformed JSON — treat as empty */ }
-    // Legacy FR/AR mirrors so backend consumers still reading the old columns
-    // keep working until they migrate to `translations`.
-    const nameFr = translations.fr || '';
-    const nameAr = translations.ar || '';
+    const nameFr = translations.fr?.name || '';
+    const nameAr = translations.ar?.name || '';
 
     try {
         if (parentId === id) {

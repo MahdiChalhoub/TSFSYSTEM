@@ -20,10 +20,18 @@ export async function getAttributes() {
     }
 }
 
+function parseTranslations(formData: FormData): Record<string, { name?: string; short_name?: string }> {
+    try {
+        const raw = (formData.get('translationsJson') as string) || '';
+        return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+}
+
 export async function createAttribute(prevState: AttributeState, formData: FormData): Promise<AttributeState> {
     const name = formData.get('name') as string;
     const shortName = formData.get('shortName') as string;
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
+    const translations = parseTranslations(formData);
 
     if (!name || name.length < 2) {
         return { message: 'Failed to create attribute', errors: { name: ['Name must be at least 2 characters'] } };
@@ -35,6 +43,7 @@ export async function createAttribute(prevState: AttributeState, formData: FormD
             body: JSON.stringify({
                 name,
                 short_name: shortName || null,
+                translations,
                 categories: categoryIds
             })
         });
@@ -50,6 +59,7 @@ export async function updateAttribute(id: number, prevState: AttributeState, for
     const name = formData.get('name') as string;
     const shortName = formData.get('shortName') as string;
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
+    const translations = parseTranslations(formData);
 
     try {
         await erpFetch(`parfums/${id}/`, {
@@ -57,7 +67,8 @@ export async function updateAttribute(id: number, prevState: AttributeState, for
             body: JSON.stringify({
                 name,
                 short_name: shortName || null,
-                categories: categoryIds // Same issue as above
+                translations,
+                categories: categoryIds
             })
         });
         revalidatePath('/inventory/attributes');

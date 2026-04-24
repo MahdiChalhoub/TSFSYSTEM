@@ -2,11 +2,12 @@
 
 import { useActionState } from 'react';
 import { createAttribute, updateAttribute, AttributeState } from '@/app/actions/attributes';
-import { X, Save, Loader2 } from 'lucide-react';
+import { X, Save, Loader2, Tag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { peekNextCode } from '@/lib/sequences-client';
 import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
+import { getCatalogueLanguages, labelFor, placeholderFor, isRTL, type LocaleCode } from '@/lib/catalogue-languages';
 
 type AttributeFormModalProps = {
     isOpen: boolean;
@@ -66,6 +67,20 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
     // Pre-filled short code from /settings/sequences (PRODUCT_ATTRIBUTE key). Peek-only.
     const [suggestedCode, setSuggestedCode] = useState<string>('');
 
+    // Tenant-configured catalogue locales (first = default).
+    const [locales, setLocales] = useState<LocaleCode[]>([]);
+    type LangEntry = { name?: string; short_name?: string };
+    const coerce = (v: any): LangEntry =>
+        typeof v === 'string' ? { name: v } : (v && typeof v === 'object' ? v : {});
+    const [translations, setTranslations] = useState<Record<string, LangEntry>>({});
+    const patchT = (code: string, field: 'name' | 'short_name', value: string) =>
+        setTranslations(t => ({ ...t, [code]: { ...(t[code] || {}), [field]: value } }));
+    const [activeLang, setActiveLang] = useState<string>('__default__');
+
+    useEffect(() => {
+        if (isOpen) getCatalogueLanguages().then(setLocales).catch(() => setLocales([]));
+    }, [isOpen]);
+
     // Reset selected categories when attribute changes (for edit mode)
     useEffect(() => {
         if (isOpen) {
@@ -73,6 +88,11 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
             setPending(false); // Reset pending state when opening
             if (!attribute) peekNextCode('PRODUCT_ATTRIBUTE').then(setSuggestedCode).catch(() => setSuggestedCode(''));
             else setSuggestedCode('');
+            const src: Record<string, any> = { ...(attribute?.translations || {}) };
+            const out: Record<string, LangEntry> = {};
+            Object.keys(src).forEach(k => { out[k] = coerce(src[k]); });
+            setTranslations(out);
+            setActiveLang('__default__');
         }
     }, [isOpen, attribute]);
 
@@ -110,28 +130,87 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Attribute Name</label>
-                            <input
-                                name="name"
-                                defaultValue={attribute?.name || ''}
-                                placeholder="e.g. Vanilla"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
-                                required
-                            />
+                    <div>
+                        {(() => {
+                            const defaultCode = locales[0];
+                            const extras = locales.slice(1);
+                            if (extras.length === 0) return null;
+                            return (
+                                <div className="flex items-center gap-1 mb-2 overflow-x-auto">
+                                    <button type="button"
+                                        onClick={() => setActiveLang('__default__')}
+                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all flex-shrink-0 border ${activeLang === '__default__' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-gray-200 text-gray-500'}`}>
+                                        <Tag size={9} /> DEFAULT{defaultCode ? ` · ${defaultCode.toUpperCase()}` : ''}
+                                    </button>
+                                    {extras.map(code => {
+                                        const active = activeLang === code;
+                                        const filled = !!translations[code];
+                                        return (
+                                            <button key={code} type="button"
+                                                onClick={() => setActiveLang(code)}
+                                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all flex-shrink-0 border ${active ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-gray-200 ' + (filled ? 'text-gray-900' : 'text-gray-500')}`}>
+                                                {code}
+                                                {filled && <span className="w-1 h-1 rounded-full bg-green-500" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
+
+                        <div className="grid grid-cols-2 gap-4">
+                            {activeLang === '__default__' ? (
+                                <>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Attribute Name</label>
+                                        <input
+                                            name="name"
+                                            defaultValue={attribute?.name || ''}
+                                            placeholder="e.g. Vanilla"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Code</label>
+                                        <LockableCodeInput
+                                            name="shortName"
+                                            defaultValue={attribute?.short_name}
+                                            suggestedValue={suggestedCode}
+                                            isEdit={!!attribute}
+                                            placeholder="e.g. VAN"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">{labelFor(activeLang)}</label>
+                                        <input
+                                            value={translations[activeLang]?.name || ''}
+                                            onChange={e => patchT(activeLang, 'name', e.target.value)}
+                                            placeholder={placeholderFor(activeLang)}
+                                            dir={isRTL(activeLang) ? 'rtl' : undefined}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Code · {activeLang.toUpperCase()}</label>
+                                        <input
+                                            value={translations[activeLang]?.short_name || ''}
+                                            onChange={e => patchT(activeLang, 'short_name', e.target.value)}
+                                            placeholder={isRTL(activeLang) ? 'مثال: فان' : 'e.g. VAN'}
+                                            dir={isRTL(activeLang) ? 'rtl' : undefined}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <input type="hidden" name="name" value={attribute?.name || ''} />
+                                    <input type="hidden" name="shortName" value={attribute?.short_name || ''} />
+                                </>
+                            )}
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Code</label>
-                            <LockableCodeInput
-                                name="shortName"
-                                defaultValue={attribute?.short_name}
-                                suggestedValue={suggestedCode}
-                                isEdit={!!attribute}
-                                placeholder="e.g. VAN"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
-                            />
-                        </div>
+                        <input type="hidden" name="translationsJson" value={JSON.stringify(translations)} />
                     </div>
 
                     {/* Category Selection Tree */}

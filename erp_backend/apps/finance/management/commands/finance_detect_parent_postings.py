@@ -90,11 +90,13 @@ class Command(BaseCommand):
         total_orgs_dirty = 0
 
         for org in orgs:
-            # Parent = has children. These cannot accept direct postings.
+            # Parent = has at least one ACTIVE child. Inactive ghost
+            # children (e.g. from unused template imports) don't count.
+            from django.db.models import Q as _Q
             parent_ids = list(
                 ChartOfAccount.objects
                 .filter(organization=org)
-                .annotate(n=Count('children'))
+                .annotate(n=Count('children', filter=_Q(children__is_active=True)))
                 .filter(n__gt=0)
                 .values_list('id', flat=True)
             )
@@ -210,9 +212,10 @@ class Command(BaseCommand):
         from_code = opts['from_account']
         to_code = opts['to_account']
 
+        from django.db.models import Q as _Q
         parent = ChartOfAccount.objects.filter(
             organization=org, code=from_code,
-        ).annotate(n=Count('children')).first()
+        ).annotate(n=Count('children', filter=_Q(children__is_active=True))).first()
         if not parent:
             self.stdout.write(self.style.ERROR(
                 f"  --from-account {from_code} not found in this org"
@@ -220,13 +223,13 @@ class Command(BaseCommand):
             return
         if parent.n == 0:
             self.stdout.write(self.style.ERROR(
-                f"  --from-account {from_code} has no children — it's already a leaf"
+                f"  --from-account {from_code} has no active children — it's already a functional leaf"
             ))
             return
 
         child = ChartOfAccount.objects.filter(
             organization=org, code=to_code,
-        ).annotate(n=Count('children')).first()
+        ).annotate(n=Count('children', filter=_Q(children__is_active=True))).first()
         if not child:
             self.stdout.write(self.style.ERROR(
                 f"  --to-account {to_code} not found in this org"

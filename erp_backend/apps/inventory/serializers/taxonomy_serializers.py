@@ -270,7 +270,7 @@ class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
         fields = [
-            'id', 'name', 'short_name', 'logo',
+            'id', 'name', 'short_name', 'logo', 'translations',
             'countries', 'categories',
             'category_ids', 'country_ids',
             'product_count',
@@ -315,7 +315,7 @@ class ParfumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parfum
         fields = [
-            'id', 'name', 'short_name',
+            'id', 'name', 'short_name', 'translations',
             'categories', 'category_ids',
             'product_count',
             'organization',

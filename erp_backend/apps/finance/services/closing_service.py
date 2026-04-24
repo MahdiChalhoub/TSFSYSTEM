@@ -804,11 +804,13 @@ class ClosingService:
             # header account. Parents are pure aggregations of their
             # children; any direct posting to them is a data bug. List
             # every offender so the user can reclassify before retrying.
-            from django.db.models import Count as _Count2
+            from django.db.models import Count as _Count2, Q as _Q2
             from apps.finance.models import ChartOfAccount as _COA_parent
+            # Count only ACTIVE children — archived ghosts don't make
+            # a parent (consistent with `clean()` and `check_parent_purity`).
             parent_ids = list(
                 _COA_parent.objects
-                .annotate(n=_Count2('children'))
+                .annotate(n=_Count2('children', filter=_Q2(children__is_active=True)))
                 .filter(organization=organization, n__gt=0)
                 .values_list('id', flat=True)
             )
@@ -1205,15 +1207,19 @@ class ClosingService:
         # flag is the canonical signal (auto-flipped to False when an
         # account gains children); we also annotate and filter on the
         # live tree shape to survive any stale-flag edge case.
-        from django.db.models import Count as _Count
+        from django.db.models import Count as _Count, Q as _Q
+        # Count only ACTIVE children — inactive/archived children are
+        # ghosts from template imports (e.g. USA_GAAP accounts on an
+        # IFRS-primary deployment) and shouldn't make their parent
+        # be treated as a header.
         bs_accounts = ChartOfAccount.objects.annotate(
-            _n_children=_Count('children'),
+            _n_active_children=_Count('children', filter=_Q(children__is_active=True)),
         ).filter(
             organization=organization,
             type__in=['ASSET', 'LIABILITY', 'EQUITY'],
             is_active=True,
             allow_posting=True,
-            _n_children=0,
+            _n_active_children=0,
         )
 
         # Per-scope amounts we'll both write to OB rows AND use to build
@@ -1669,14 +1675,17 @@ class ClosingService:
           }
         """
         from apps.finance.models import ChartOfAccount, JournalEntryLine
-        from django.db.models import Count, Sum
+        from django.db.models import Count, Sum, Q
 
         tol = ClosingService._RECON_TOLERANCE
+        # A "parent" for this check = any account with at least one
+        # ACTIVE child. Accounts whose only children are archived
+        # ghosts (e.g. from an unused template) are functional leaves.
         parent_ids = list(
             ChartOfAccount.objects
             .filter(organization=organization)
-            .annotate(n_children=Count('children'))
-            .filter(n_children__gt=0)
+            .annotate(n_active=Count('children', filter=Q(children__is_active=True)))
+            .filter(n_active__gt=0)
             .values_list('id', flat=True)
         )
 
@@ -2175,21 +2184,27 @@ class ClosingService:
                 )
 
                 # 1) Missing partner: no contact FK AND no partner_id
+                # Only flag if the partnerless group has a non-zero NET
+                # impact on the sub-ledger. If DR/CR cancel (e.g. a
+                # reclass JE posted a contra-line without partner to
+                # reverse the original), the sub-ledger is effectively
+                # clean on this account.
                 missing = base.filter(
                     contact__isnull=True, partner_id__isnull=True,
                 ).aggregate(d=Sum('debit'), c=Sum('credit'), n=Count('id'))
                 if missing['n']:
                     net = (missing['d'] or Decimal('0.00')) - (missing['c'] or Decimal('0.00'))
-                    report['offenders'].append({
-                        'account_id': acc.id,
-                        'code': acc.code, 'name': acc.name,
-                        'scope': scope, 'kind': 'missing_partner',
-                        'n_lines': missing['n'],
-                        'debit': missing['d'] or Decimal('0.00'),
-                        'credit': missing['c'] or Decimal('0.00'),
-                        'net': net,
-                    })
-                    report['clean'] = False
+                    if net.copy_abs() > ClosingService._RECON_TOLERANCE:
+                        report['offenders'].append({
+                            'account_id': acc.id,
+                            'code': acc.code, 'name': acc.name,
+                            'scope': scope, 'kind': 'missing_partner',
+                            'n_lines': missing['n'],
+                            'debit': missing['d'] or Decimal('0.00'),
+                            'credit': missing['c'] or Decimal('0.00'),
+                            'net': net,
+                        })
+                        report['clean'] = False
 
                 # 2) Orphan partner: partner_id points nowhere
                 if orphan_ids:

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import {
     Globe, DollarSign, Search, Plus, Star, Check, X, MapPin,
     Phone, Loader2, Coins, ArrowLeft, AlertTriangle,
@@ -14,6 +14,8 @@ import {
     disableOrgCountry, disableOrgCurrency,
 } from '@/app/actions/reference';
 import { toast } from 'sonner';
+import { Languages } from 'lucide-react';
+import { getCatalogueLanguages, setCatalogueLanguages, labelFor, isRTL } from '@/lib/catalogue-languages';
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 const grad = (v: string) => ({ background: `linear-gradient(135deg, var(${v}), color-mix(in srgb, var(${v}) 60%, black))` });
@@ -22,7 +24,15 @@ function flag(iso2: string) { if (!iso2 || iso2.length !== 2) return '🏳️'; 
 
 /* ─── Types ────────────────────────────────────────────────────── */
 interface Props { allCountries: RefCountry[]; allCurrencies: RefCurrency[]; initialOrgCountries: OrgCountry[]; initialOrgCurrencies: OrgCurrency[]; }
-type Tab = 'countries' | 'currencies';
+type Tab = 'countries' | 'currencies' | 'languages';
+
+const COMMON_LOCALES: { code: string; native: string }[] = [
+    { code: 'en', native: 'English' }, { code: 'fr', native: 'Français' }, { code: 'ar', native: 'العربية' },
+    { code: 'es', native: 'Español' }, { code: 'de', native: 'Deutsch' }, { code: 'it', native: 'Italiano' },
+    { code: 'pt', native: 'Português' }, { code: 'nl', native: 'Nederlands' }, { code: 'tr', native: 'Türkçe' },
+    { code: 'ru', native: 'Русский' }, { code: 'zh', native: '中文' }, { code: 'ja', native: '日本語' },
+    { code: 'he', native: 'עברית' }, { code: 'fa', native: 'فارسی' },
+];
 type ConfirmAction = {
     type: 'set-default-country' | 'set-default-currency' | 'disable-country' | 'disable-currency';
     label: string;
@@ -40,6 +50,39 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     const [orgCurrencies, setOrgCurrencies] = useState<OrgCurrency[]>(initialOrgCurrencies);
     const [isPending, startTransition] = useTransition();
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+    // Catalogue languages — tenant-wide list of locale codes used across
+    // product / category translations. Persisted to Organization.settings.
+    const [langCodes, setLangCodes] = useState<string[]>([]);
+    const [langCustom, setLangCustom] = useState('');
+    const [langLoading, setLangLoading] = useState(false);
+    const [langSaving, setLangSaving] = useState(false);
+    useEffect(() => {
+        if (tab !== 'languages' || langCodes.length > 0) return;
+        setLangLoading(true);
+        getCatalogueLanguages()
+            .then(setLangCodes)
+            .catch(() => setLangCodes(['fr', 'ar']))
+            .finally(() => setLangLoading(false));
+    }, [tab, langCodes.length]);
+    const toggleLang = (c: string) => setLangCodes(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]);
+    const addCustomLang = () => {
+        const n = langCustom.trim().toLowerCase().slice(0, 10);
+        if (!n) return;
+        if (!langCodes.includes(n)) setLangCodes(p => [...p, n]);
+        setLangCustom('');
+    };
+    const saveLangs = async () => {
+        setLangSaving(true);
+        try {
+            const saved = await setCatalogueLanguages(langCodes);
+            setLangCodes(saved);
+            toast.success(`${saved.length} language${saved.length === 1 ? '' : 's'} enabled for the catalogue`);
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to save');
+        } finally {
+            setLangSaving(false);
+        }
+    };
 
     // Derived
     const enabledCountryIds = useMemo(() => new Set(orgCountries.map(oc => oc.country)), [orgCountries]);
@@ -235,6 +278,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                     {([
                                         { key: 'countries' as Tab, label: 'Countries', icon: Globe, color: '--app-primary' },
                                         { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-warning' },
+                                        { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-info' },
                                     ]).map(t => {
                                         const Icon = t.icon; const active = tab === t.key;
                                         return (
@@ -253,6 +297,92 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
 
                 {/* ── CONTENT AREA (fills remaining viewport) ─────── */}
                 <div className="flex-1 overflow-hidden px-4 md:px-8 py-4">
+                    {tab === 'languages' ? (
+                    /* ── LANGUAGES PANEL — single column picker ── */
+                    <div className="max-w-[900px] mx-auto h-full bg-app-surface rounded-xl border border-app-border/50 flex flex-col overflow-hidden">
+                        <div className="px-5 py-3 border-b border-app-border/50 flex items-center justify-between"
+                             style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+                            <div>
+                                <h2 className="text-[11px] font-black uppercase tracking-widest text-app-foreground flex items-center gap-2">
+                                    <Languages size={13} style={{ color: 'var(--app-info)' }} />
+                                    Catalogue languages
+                                </h2>
+                                <p className="text-[10px] text-app-muted-foreground mt-0.5">
+                                    {langCodes.length} enabled · used across category + product translation inputs
+                                </p>
+                            </div>
+                            <button onClick={saveLangs} disabled={langSaving || langLoading}
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-bold text-white transition-all disabled:opacity-50"
+                                    style={{ background: 'var(--app-primary)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 35%, transparent)' }}>
+                                {langSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                                Save
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-5 space-y-3">
+                            {langLoading ? (
+                                <div className="flex justify-center py-10">
+                                    <Loader2 size={16} className="animate-spin text-app-muted-foreground" />
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-[11px] text-app-muted-foreground">
+                                        Pick the languages your catalogue needs. Category / product forms render one translation input per enabled locale. The default language is the main <code className="font-mono text-app-foreground">name</code> field — never duplicated.
+                                    </p>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                                        {COMMON_LOCALES.map(l => {
+                                            const active = langCodes.includes(l.code);
+                                            return (
+                                                <button key={l.code} type="button"
+                                                        onClick={() => toggleLang(l.code)}
+                                                        className="flex items-center justify-between px-3 py-2 rounded-xl transition-all text-left"
+                                                        style={{
+                                                            background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-background)',
+                                                            border: `1px solid ${active ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
+                                                            color: active ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                                        }}>
+                                                    <span className="flex-1 min-w-0">
+                                                        <span className="text-[12px] font-bold truncate block" dir={isRTL(l.code) ? 'rtl' : undefined}>
+                                                            {l.native}
+                                                        </span>
+                                                        <span className="text-[9px] font-mono uppercase text-app-muted-foreground">
+                                                            {l.code}
+                                                        </span>
+                                                    </span>
+                                                    {active && <span className="text-[12px] font-bold ml-2">✓</span>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {langCodes.filter(c => !COMMON_LOCALES.some(l => l.code === c)).length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-app-border/50">
+                                            <span className="text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground self-center mr-2">Custom:</span>
+                                            {langCodes.filter(c => !COMMON_LOCALES.some(l => l.code === c)).map(c => (
+                                                <span key={c} className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded"
+                                                      style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
+                                                    {labelFor(c)}
+                                                    <button type="button" onClick={() => toggleLang(c)}>×</button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2 pt-3 border-t border-app-border/50">
+                                        <input value={langCustom}
+                                               onChange={e => setLangCustom(e.target.value.replace(/[^a-z-]/gi, ''))}
+                                               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomLang() } }}
+                                               placeholder="Custom locale code (e.g. ber, ku)"
+                                               className="flex-1 px-3 py-2 rounded-lg text-[11px] font-mono outline-none"
+                                               style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                        <button type="button" onClick={addCustomLang}
+                                                className="flex items-center gap-1 px-3 py-2 rounded-lg text-[10px] font-bold"
+                                                style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                            <Plus size={11} /> Add
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                    ) : (
                     <div className="max-w-[1400px] mx-auto h-full grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
 
                         {/* ── LEFT PANEL: Active Selection ── */}
@@ -493,6 +623,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
         </>

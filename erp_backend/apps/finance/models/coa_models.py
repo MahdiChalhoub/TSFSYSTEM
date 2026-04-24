@@ -296,16 +296,30 @@ class ChartOfAccount(TenantModel):
         super().save(*args, **kwargs)
 
         # ── Auto-maintain header flag on the parent ──
-        # When a child is saved with a parent link, that parent becomes
-        # (or remains) a header node — its own balance is the sum of its
-        # descendants and must never accept direct postings. Flip
-        # `allow_posting=False` on the parent row so the JE-line model
-        # guard rejects any future line targeting it. Idempotent: the
-        # .update() is a no-op when already False.
+        # When an ACTIVE child is saved under a parent, that parent
+        # becomes (or remains) a header node — its own balance is the
+        # sum of its descendants and must never accept direct postings.
+        # Inactive/archived children don't count: a parent whose only
+        # children are ghosts (e.g. from an unused template import)
+        # acts as a functional leaf and should remain postable.
+        #
+        # If we're saving an INACTIVE child AND the parent has no
+        # other active children, flip the parent's allow_posting BACK
+        # to True so it recovers leaf semantics.
         if self.parent_id:
-            ChartOfAccount.objects.filter(
-                id=self.parent_id, allow_posting=True,
-            ).update(allow_posting=False)
+            if self.is_active:
+                ChartOfAccount.objects.filter(
+                    id=self.parent_id, allow_posting=True,
+                ).update(allow_posting=False)
+            else:
+                # Only restore if no active siblings remain
+                siblings_active = ChartOfAccount.objects.filter(
+                    parent_id=self.parent_id, is_active=True,
+                ).exclude(pk=self.pk).exists()
+                if not siblings_active:
+                    ChartOfAccount.objects.filter(
+                        id=self.parent_id, allow_posting=False,
+                    ).update(allow_posting=True)
 
         # ── Forensic audit for structural / classification changes ──
         # COA mutations are rare but high-impact — a wrong type flip,

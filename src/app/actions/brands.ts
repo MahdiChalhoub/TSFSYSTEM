@@ -11,11 +11,19 @@ export type BrandState = {
     };
 };
 
+function parseTranslations(formData: FormData): Record<string, { name?: string; short_name?: string }> {
+    try {
+        const raw = (formData.get('translationsJson') as string) || '';
+        return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+}
+
 export async function createBrand(prevState: BrandState, formData: FormData): Promise<BrandState> {
     const name = formData.get('name') as string;
     const shortName = formData.get('shortName') as string;
     const countryIds = formData.getAll('countryIds').map(id => Number(id));
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
+    const translations = parseTranslations(formData);
 
     if (!name || name.length < 2) {
         return { message: 'Failed to create brand', errors: { name: ['Name must be at least 2 characters'] } };
@@ -28,6 +36,7 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
             body: JSON.stringify({
                 name,
                 short_name: shortName,
+                translations,
                 categories: categoryIds,
                 countries: countryIds
             })
@@ -45,6 +54,7 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
     const shortName = formData.get('shortName') as string;
     const countryIds = formData.getAll('countryIds').map(id => Number(id));
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
+    const translations = parseTranslations(formData);
 
     try {
         await erpFetch(`brands/${id}/`, {
@@ -53,6 +63,7 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
             body: JSON.stringify({
                 name,
                 short_name: shortName,
+                translations,
                 categories: categoryIds,
                 countries: countryIds
             })

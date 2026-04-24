@@ -291,9 +291,10 @@ class Command(BaseCommand):
                 f"  --from-account {from_code} not found or not a control account in this org"
             ))
             return
-        if acc.children.exists():
+        if acc.children.filter(is_active=True).exists():
             self.stdout.write(self.style.ERROR(
-                f"  {from_code} has children — post to a leaf child, not a header"
+                f"  {from_code} has active children — post to a leaf child, not a header. "
+                f"(Archived/inactive children don't count.)"
             ))
             return
 

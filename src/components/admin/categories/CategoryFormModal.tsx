@@ -52,14 +52,22 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
     // Tenant-configured catalogue locales (e.g. ['fr','ar'] or ['en','es','fr']).
     // Fetched once on modal open — users change the list under Settings.
     const [locales, setLocales] = useState<LocaleCode[]>([]);
-    // Initial translations map from the saved category, falling back to the
-    // legacy name_fr / name_ar columns so migrated data stays visible.
-    const [translations, setTranslations] = useState<Record<string, string>>(() => {
-        const tl: Record<string, string> = { ...(category?.translations || {}) };
-        if (category?.name_fr && !tl.fr) tl.fr = category.name_fr;
-        if (category?.name_ar && !tl.ar) tl.ar = category.name_ar;
-        return tl;
+    // Translations now carry BOTH `name` and `short_name` per locale. A
+    // legacy-string value (from the old flat shape) is coerced into
+    // `{ name: string }` so migrated data stays visible.
+    type LangEntry = { name?: string; short_name?: string };
+    const coerce = (v: any): LangEntry =>
+        typeof v === 'string' ? { name: v } : (v && typeof v === 'object' ? v : {});
+    const [translations, setTranslations] = useState<Record<string, LangEntry>>(() => {
+        const src: Record<string, any> = { ...(category?.translations || {}) };
+        if (category?.name_fr && !src.fr) src.fr = { name: category.name_fr };
+        if (category?.name_ar && !src.ar) src.ar = { name: category.name_ar };
+        const out: Record<string, LangEntry> = {};
+        Object.keys(src).forEach(k => { out[k] = coerce(src[k]); });
+        return out;
     });
+    const patchT = (code: string, field: 'name' | 'short_name', value: string) =>
+        setTranslations(t => ({ ...t, [code]: { ...(t[code] || {}), [field]: value } }));
     // Which language tab is active above the Name field. `__default__` = the
     // main `name` column (authoritative base value). Other values are ISO
     // locale codes writing into `translations[code]`.
@@ -212,47 +220,53 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                     )}
 
                     {/* Name + Short Name — with language tabs above Name.
-                     *  The "Default" tab binds to the main `name` field (the
-                     *  authoritative value). Other tabs bind to `translations[code]`
-                     *  so we never duplicate the default language. */}
+                     *  The first enabled locale IS the default — it maps to
+                     *  the main `name` column, so we don't render it as a
+                     *  second tab (that would duplicate the field). The tab
+                     *  strip only shows when at least one *other* locale is
+                     *  enabled. */}
                     <div>
-                        {/* Language tab strip — only shown when more than 0 extra locales exist */}
-                        {locales.length > 0 && (
-                            <div className="flex items-center gap-1 mb-1.5 overflow-x-auto custom-scrollbar">
-                                <button type="button"
-                                    onClick={() => setActiveLang('__default__')}
-                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-tp-xxs font-bold transition-all flex-shrink-0"
-                                    style={{
-                                        background: activeLang === '__default__' ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-background)',
-                                        border: `1px solid ${activeLang === '__default__' ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
-                                        color: activeLang === '__default__' ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                    }}>
-                                    <Tag size={9} /> DEFAULT
-                                </button>
-                                {locales.map(code => {
-                                    const active = activeLang === code;
-                                    const filled = !!translations[code];
-                                    return (
-                                        <button key={code} type="button"
-                                            onClick={() => setActiveLang(code)}
-                                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-tp-xxs font-bold uppercase transition-all flex-shrink-0"
-                                            style={{
-                                                background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-background)',
-                                                border: `1px solid ${active ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
-                                                color: active ? 'var(--app-primary)' : (filled ? 'var(--app-foreground)' : 'var(--app-muted-foreground)'),
-                                            }}>
-                                            {code}
-                                            {filled && <span className="w-1 h-1 rounded-full" style={{ background: 'var(--app-success, #22c55e)' }} />}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
+                        {(() => {
+                            const defaultCode = locales[0];                  // first = default
+                            const extras = locales.slice(1);                 // everything after
+                            if (extras.length === 0) return null;            // single-lang: no tabs
+                            return (
+                                <div className="flex items-center gap-1 mb-1.5 overflow-x-auto custom-scrollbar">
+                                    <button type="button"
+                                        onClick={() => setActiveLang('__default__')}
+                                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-tp-xxs font-bold transition-all flex-shrink-0"
+                                        style={{
+                                            background: activeLang === '__default__' ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-background)',
+                                            border: `1px solid ${activeLang === '__default__' ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
+                                            color: activeLang === '__default__' ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                        }}>
+                                        <Tag size={9} /> DEFAULT{defaultCode ? ` · ${defaultCode.toUpperCase()}` : ''}
+                                    </button>
+                                    {extras.map(code => {
+                                        const active = activeLang === code;
+                                        const filled = !!translations[code];
+                                        return (
+                                            <button key={code} type="button"
+                                                onClick={() => setActiveLang(code)}
+                                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-tp-xxs font-bold uppercase transition-all flex-shrink-0"
+                                                style={{
+                                                    background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-background)',
+                                                    border: `1px solid ${active ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
+                                                    color: active ? 'var(--app-primary)' : (filled ? 'var(--app-foreground)' : 'var(--app-muted-foreground)'),
+                                                }}>
+                                                {code}
+                                                {filled && <span className="w-1 h-1 rounded-full" style={{ background: 'var(--app-success, #22c55e)' }} />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
-                            <div>
-                                {activeLang === '__default__' ? (
-                                    <>
+                            {activeLang === '__default__' ? (
+                                <>
+                                    <div>
                                         <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
                                             <Tag size={9} className="inline mr-1" />Category Name
                                         </label>
@@ -265,41 +279,53 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                                             style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
                                         />
                                         {state.errors?.name && <p className="text-tp-xs font-bold mt-0.5" style={{ color: 'var(--app-error)' }}>{state.errors.name[0]}</p>}
-                                    </>
-                                ) : (
-                                    <>
+                                    </div>
+                                    <div>
+                                        <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">Short Name</label>
+                                        <input
+                                            name="shortName"
+                                            defaultValue={category?.short_name || ''}
+                                            placeholder="e.g. BEV"
+                                            className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div>
                                         <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
                                             {labelFor(activeLang)}
                                         </label>
                                         <input
-                                            value={translations[activeLang] || ''}
-                                            onChange={e => setTranslations(t => ({ ...t, [activeLang]: e.target.value }))}
+                                            value={translations[activeLang]?.name || ''}
+                                            onChange={e => patchT(activeLang, 'name', e.target.value)}
                                             placeholder={placeholderFor(activeLang)}
                                             dir={isRTL(activeLang) ? 'rtl' : undefined}
                                             className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
                                             style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
                                         />
-                                    </>
-                                )}
-                                {/* Keep `name` in the form payload even when a non-default
-                                 *  tab is active, and the full translations map as one
-                                 *  hidden field so the action parses it as JSON. */}
-                                {activeLang !== '__default__' && (
+                                    </div>
+                                    <div>
+                                        <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                            Short Name · {activeLang.toUpperCase()}
+                                        </label>
+                                        <input
+                                            value={translations[activeLang]?.short_name || ''}
+                                            onChange={e => patchT(activeLang, 'short_name', e.target.value)}
+                                            placeholder={isRTL(activeLang) ? 'مثال: مش' : 'e.g. BEV'}
+                                            dir={isRTL(activeLang) ? 'rtl' : undefined}
+                                            className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                        />
+                                    </div>
+                                    {/* Keep the default fields present in the form payload so
+                                     *  the API still receives name + shortName. */}
                                     <input type="hidden" name="name" value={category?.name || ''} />
-                                )}
-                                <input type="hidden" name="translationsJson" value={JSON.stringify(translations)} />
-                            </div>
-
-                            <div>
-                                <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">Short Name</label>
-                                <input
-                                    name="shortName"
-                                    defaultValue={category?.short_name || ''}
-                                    placeholder="e.g. BEV"
-                                    className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                                />
-                            </div>
+                                    <input type="hidden" name="shortName" value={category?.short_name || ''} />
+                                </>
+                            )}
+                            <input type="hidden" name="translationsJson" value={JSON.stringify(translations)} />
                         </div>
                     </div>
 

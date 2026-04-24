@@ -292,10 +292,13 @@ class JournalEntryLine(TenantModel):
                 f"the parent's balance is derived from its descendants."
             )
         # Belt-and-suspenders: if the flag is stale but the tree shape
-        # says it has children, refuse anyway.
-        if acc.children.exists():
+        # says it has ACTIVE children, refuse anyway. Inactive/archived
+        # children don't count — they're ghosts from template imports
+        # that never got used; their existence shouldn't block posting
+        # to the code that currently acts as a functional leaf.
+        if acc.children.filter(is_active=True).exists():
             raise ValidationError(
-                f"Account '{acc.code} — {acc.name}' has child accounts, "
+                f"Account '{acc.code} — {acc.name}' has active child accounts, "
                 f"so it is a header node. Post to one of its children "
                 f"instead — parent balances are pure aggregations."
             )

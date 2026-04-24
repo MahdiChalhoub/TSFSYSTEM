@@ -280,6 +280,10 @@ class Brand(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     SEQUENCE_PADDING = 5
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
+    translations = models.JSONField(
+        default=dict, blank=True,
+        help_text='Localised brand names keyed by language code, e.g. {"fr":{"name":"...","short_name":"..."}}'
+    )
     logo = models.CharField(max_length=255, null=True, blank=True)
     countries = models.ManyToManyField(Country, blank=True, related_name='brands')  # Legacy
     origin_countries = models.ManyToManyField(
@@ -311,6 +315,10 @@ class Parfum(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     SEQUENCE_PADDING = 5
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
+    translations = models.JSONField(
+        default=dict, blank=True,
+        help_text='Localised attribute names keyed by language code, e.g. {"fr":{"name":"...","short_name":"..."}}'
+    )
     categories = models.ManyToManyField(Category, blank=True, related_name='parfums')
 
     class Meta:
