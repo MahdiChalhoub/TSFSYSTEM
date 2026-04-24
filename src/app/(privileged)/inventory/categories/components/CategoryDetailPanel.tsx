@@ -53,8 +53,18 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
                 </div>
                 <div className="flex-1 min-w-0">
                     <h3 className="text-tp-lg font-bold text-app-foreground truncate">{node.name}</h3>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                         {node.code && <span className="text-tp-xs font-mono font-semibold text-app-primary">{node.code}</span>}
+                        {node.barcode_prefix && (
+                            <span className="text-tp-xxs font-mono font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                                title={`Barcode prefix — products get ${node.barcode_prefix}NNN`}
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                    color: 'var(--app-success, #22c55e)',
+                                }}>
+                                🏷 {node.barcode_prefix}
+                            </span>
+                        )}
                         {node.short_name && <span className="text-tp-xs font-medium text-app-muted-foreground">{node.short_name}</span>}
                     </div>
                 </div>

@@ -15,6 +15,8 @@ export interface CategoryNode {
     attribute_count?: number
     level?: number
     full_path?: string
+    reference_code?: string
+    barcode_prefix?: string
 }
 
 export type PanelTab = 'overview' | 'products' | 'brands' | 'attributes'

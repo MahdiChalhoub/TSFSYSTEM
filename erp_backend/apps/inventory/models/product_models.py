@@ -217,6 +217,11 @@ class Category(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     full_path = models.CharField(max_length=1000, null=True, blank=True)
     products_count = models.IntegerField(default=0)
     barcode_sequence = models.IntegerField(default=0)
+    # Leading digits used when auto-generating product barcodes under this
+    # category. The /inventory/barcode rules engine prepends this prefix to
+    # the per-category incremental counter (e.g. "0410" + "001" → "0410001").
+    barcode_prefix = models.CharField(max_length=10, blank=True, default='',
+        help_text='Leading digits for barcodes created under this category')
     # Dynamic attributes: which attribute groups are relevant for products in this category
     attributes = models.ManyToManyField(
         'ProductAttribute', blank=True, related_name='categories',

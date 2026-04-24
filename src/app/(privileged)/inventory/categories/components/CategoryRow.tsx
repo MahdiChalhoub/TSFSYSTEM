@@ -122,7 +122,7 @@ export const CategoryRow = ({
                             </span>
                         )}
                     </div>
-                    {(node.reference_code || node.code || node.short_name) && (
+                    {(node.reference_code || node.code || node.short_name || node.barcode_prefix) && (
                         <div className="flex items-center gap-1.5 mt-0.5">
                             {node.reference_code && (
                                 <span className="font-mono text-tp-xxs font-bold px-1.5 py-0.5 rounded"
@@ -136,6 +136,16 @@ export const CategoryRow = ({
                             {node.code && (
                                 <span className="font-mono text-tp-xxs font-medium text-app-muted-foreground">
                                     {node.code}
+                                </span>
+                            )}
+                            {node.barcode_prefix && (
+                                <span className="font-mono text-tp-xxs font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                                    title={`Barcode prefix — products get ${node.barcode_prefix}NNN`}
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                        color: 'var(--app-success, #22c55e)',
+                                    }}>
+                                    🏷 {node.barcode_prefix}
                                 </span>
                             )}
                             {node.short_name && (

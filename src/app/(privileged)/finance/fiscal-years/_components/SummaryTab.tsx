@@ -55,8 +55,16 @@ export function SummaryTab({ summary }: SummaryTabProps) {
             {/* Closing Entry */}
             {s.closing_entry && (
                 <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                    <div className="text-tp-xxs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
-                        Closing Entry — {s.closing_entry.reference}
+                    <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                        <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
+                            Closing Entry
+                        </div>
+                        <a href={`/finance/ledger/${s.closing_entry.id}`}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-tp-xxs font-bold hover:underline"
+                            style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 15%, transparent)', color: 'var(--app-error, #ef4444)' }}
+                            title={s.closing_entry.description}>
+                            {s.closing_entry.reference}
+                        </a>
                     </div>
                     <div className="max-h-[120px] overflow-y-auto custom-scrollbar space-y-0.5">
                         {s.closing_entry.lines.map((l, i) => (
@@ -74,8 +82,21 @@ export function SummaryTab({ summary }: SummaryTabProps) {
             {/* Opening Balances Received */}
             {s.opening_balances_received && s.opening_balances_received.length > 0 && (
                 <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                    <div className="text-tp-xxs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-success, #22c55e)' }}>
-                        Opening Balances ← Carried In ({s.opening_balances_received.length} accounts)
+                    <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                        <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-success, #22c55e)' }}>
+                            Opening Balances ← Carried In ({s.opening_balances_received.length} accounts)
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            {(s.opening_entries_received || []).map(je => (
+                                <a key={je.id} href={`/finance/ledger/${je.id}`}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-tp-xxs font-bold hover:underline"
+                                    style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)', color: 'var(--app-success, #22c55e)' }}
+                                    title={`${je.scope} — ${je.line_count} lines — ${je.transaction_date}`}>
+                                    {je.reference}
+                                    <span style={{ opacity: 0.7 }}>· {je.scope.slice(0, 3)}</span>
+                                </a>
+                            ))}
+                        </div>
                     </div>
                     <div className="max-h-[120px] overflow-y-auto custom-scrollbar space-y-0.5">
                         {s.opening_balances_received.map((ob, i) => (
@@ -92,8 +113,21 @@ export function SummaryTab({ summary }: SummaryTabProps) {
             {/* Opening Balances Sent */}
             {s.opening_balances.length > 0 && (
                 <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                    <div className="text-tp-xxs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
-                        Opening Balances → {s.opening_balances_target || 'Next Year'} ({s.opening_balances.length} accounts)
+                    <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                        <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
+                            Opening Balances → {s.opening_balances_target || 'Next Year'} ({s.opening_balances.length} accounts)
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            {(s.opening_entries || []).map(je => (
+                                <a key={je.id} href={`/finance/ledger/${je.id}`}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-tp-xxs font-bold hover:underline"
+                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', color: 'var(--app-primary)' }}
+                                    title={`${je.scope} — ${je.line_count} lines — ${je.transaction_date}`}>
+                                    {je.reference}
+                                    <span style={{ opacity: 0.7 }}>· {je.scope.slice(0, 3)}</span>
+                                </a>
+                            ))}
+                        </div>
                     </div>
                     <div className="max-h-[120px] overflow-y-auto custom-scrollbar space-y-0.5">
                         {s.opening_balances.map((ob, i) => (

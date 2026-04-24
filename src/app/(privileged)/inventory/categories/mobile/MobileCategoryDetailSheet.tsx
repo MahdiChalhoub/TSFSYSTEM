@@ -65,10 +65,20 @@ export function MobileCategoryDetailSheet({
                     <h3 className="font-bold text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
                         {node.name}
                     </h3>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                         {node.code && (
                             <span className="font-mono font-bold" style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-primary)' }}>
                                 {node.code}
+                            </span>
+                        )}
+                        {node.barcode_prefix && (
+                            <span className="font-mono font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                                style={{
+                                    fontSize: 'var(--tp-xxs)',
+                                    background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                    color: 'var(--app-success, #22c55e)',
+                                }}>
+                                🏷 {node.barcode_prefix}
                             </span>
                         )}
                         {node.short_name && (

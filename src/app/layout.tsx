@@ -131,9 +131,12 @@ export default async function RootLayout({
             <head>
                 {/* SSR theme: correct colors on byte 1, before any JS runs.
                     ALWAYS render both tags (even if empty) so the DOM tree shape
-                    is identical on server and client — prevents hydration mismatch. */}
-                <style id="ssr-theme" dangerouslySetInnerHTML={{ __html: ssrThemeCSS }} />
-                <script id="__tsf_ssr_theme__" type="application/json" dangerouslySetInnerHTML={{ __html: ssrThemeJSON || '{}' }} />
+                    is identical on server and client — prevents hydration mismatch.
+                    `suppressHydrationWarning` guards against browser extensions
+                    (Polymer-legacy "unresolved" polyfills, theme overriders) that
+                    rewrite the first <style> tag before React mounts. */}
+                <style id="ssr-theme" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: ssrThemeCSS }} />
+                <script id="__tsf_ssr_theme__" type="application/json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: ssrThemeJSON || '{}' }} />
                 <ThemeScript />
                 <link rel="manifest" href="/manifest.json" />
             </head>

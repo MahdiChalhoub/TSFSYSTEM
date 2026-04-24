@@ -51,6 +51,7 @@ class CategorySerializer(serializers.ModelSerializer):
             'level', 'full_path', 'product_count',
             'brand_count', 'parfum_count', 'attribute_count', 'organization',
             'is_archived', 'archived_at',
+            'barcode_prefix',
         ]
         read_only_fields = ['organization', 'level', 'full_path', 'archived_at']
 
@@ -68,6 +69,29 @@ class CategorySerializer(serializers.ModelSerializer):
         if qs.exists():
             raise serializers.ValidationError(
                 f'A category named "{value}" already exists. Pick a different name or edit the existing one.'
+            )
+        return value
+
+    def validate_barcode_prefix(self, value):
+        """Barcode prefixes must be unique per tenant (non-empty only).
+        Two categories sharing a prefix would collide on auto-generated
+        product barcodes. Empty string is allowed and means "no prefix"."""
+        if not value:
+            return value
+        from erp.middleware import get_current_tenant_id
+        tenant_id = get_current_tenant_id()
+        if not tenant_id:
+            return value
+        qs = Category.original_objects.filter(
+            barcode_prefix=value, organization_id=tenant_id,
+        )
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            owner = qs.first().name
+            raise serializers.ValidationError(
+                f'Prefix "{value}" is already used by category "{owner}". '
+                f'Each category needs its own unique prefix — otherwise barcodes collide.'
             )
         return value
 

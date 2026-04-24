@@ -83,6 +83,23 @@ class ChartOfAccount(TenantModel):
         default=False,
         help_text='AR/AP control accounts — posting only via subledger'
     )
+    # Contra-equity "temporary equity" marker — Owner Draws / Treasury Stock /
+    # Dividends Declared. These accounts collect activity during the year
+    # like P&L accounts, but live in the equity section of the BS. At
+    # year-end close they must sweep into Retained Earnings alongside
+    # INCOME/EXPENSE — otherwise equity fragments indefinitely (lifetime
+    # draws accumulate as a free-standing DR row next to Capital and RE).
+    # Independent of `type` on purpose: real equity accounts (Capital, RE)
+    # MUST NOT close, so type=EQUITY alone is not a safe signal.
+    clears_at_close = models.BooleanField(
+        default=False,
+        help_text=(
+            'If True, this account is swept into Retained Earnings at fiscal '
+            'year-end alongside INCOME/EXPENSE. Typical for Owner Draws, '
+            'Dividends Declared, Treasury Stock — contra-equity "temporary" '
+            'accounts. Leave False for Capital and Retained Earnings themselves.'
+        ),
+    )
 
     # ── Subledger Linking ──────────────────────────────────────────
     SUBLEDGER_TYPES = [

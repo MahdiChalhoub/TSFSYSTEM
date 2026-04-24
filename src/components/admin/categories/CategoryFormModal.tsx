@@ -76,7 +76,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
             onClick={e => { if (e.target === e.currentTarget) onClose() }}
         >
             <div
-                className="w-full max-w-lg mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
+                className="w-full max-w-3xl mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
             >
                 {/* ── Modal Header — matches design-language §11 ── */}
@@ -98,10 +98,10 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                             <FolderTree size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">
+                            <h3 className="text-sm font-bold text-app-foreground">
                                 {category ? 'Edit Category' : 'Create Category'}
                             </h3>
-                            <p className="text-[10px] font-bold text-app-muted-foreground">
+                            <p className="text-tp-xs font-bold text-app-muted-foreground">
                                 {category ? `Editing #${category.id}` : 'Product Taxonomy'}
                             </p>
                         </div>
@@ -121,7 +121,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                     {/* Error */}
                     {state.message && state.message !== 'success' && (
                         <div
-                            className="p-3 rounded-xl flex items-center gap-2 text-[12px] font-bold animate-in slide-in-from-top-1 duration-200"
+                            className="p-3 rounded-xl flex items-center gap-2 text-tp-sm font-bold animate-in slide-in-from-top-1 duration-200"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-error) 8%, transparent)',
                                 border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)',
@@ -142,7 +142,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                             <button
                                 type="button"
                                 onClick={() => setIsSubCategory(false)}
-                                className="flex-1 py-2 text-[12px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                                className="flex-1 py-2 text-tp-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
                                 style={!isSubCategory ? {
                                     background: 'var(--app-surface)',
                                     color: 'var(--app-primary)',
@@ -157,7 +157,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                             <button
                                 type="button"
                                 onClick={() => setIsSubCategory(true)}
-                                className="flex-1 py-2 text-[12px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                                className="flex-1 py-2 text-tp-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
                                 style={isSubCategory ? {
                                     background: 'var(--app-surface)',
                                     color: 'var(--app-primary)',
@@ -175,7 +175,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                     {/* Parent Selector */}
                     {isSubCategory && (
                         <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-1.5">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground block">Parent Category</label>
+                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground block">Parent Category</label>
                             <CategoryCascader
                                 allCategories={availableParents as any}
                                 selectedId={typeof selectedParent === 'number' ? selectedParent : parseInt(selectedParent as string) || null}
@@ -184,7 +184,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                             />
                             <input type="hidden" name="parentId" value={selectedParent} />
                             {parentName && (
-                                <div className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: 'var(--app-success)' }}>
+                                <div className="flex items-center gap-1.5 text-tp-xs font-bold" style={{ color: 'var(--app-success)' }}>
                                     <ChevronRight size={10} />
                                     Nesting under &ldquo;{parentName}&rdquo;
                                     {parentCode && <span className="font-mono opacity-60">({parentCode})</span>}
@@ -196,7 +196,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                     {/* Name + Short Name — §12 inline form */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
                         <div>
-                            <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
                                 <Tag size={9} className="inline mr-1" />Category Name
                             </label>
                             <input
@@ -204,22 +204,22 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                                 defaultValue={category?.name || ''}
                                 placeholder="e.g. Beverages"
                                 required
-                                className="w-full text-[12px] font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
                                 style={{
                                     background: 'var(--app-background)',
                                     border: '1px solid var(--app-border)',
                                 }}
                             />
-                            {state.errors?.name && <p className="text-[10px] font-bold mt-0.5" style={{ color: 'var(--app-error)' }}>{state.errors.name[0]}</p>}
+                            {state.errors?.name && <p className="text-tp-xs font-bold mt-0.5" style={{ color: 'var(--app-error)' }}>{state.errors.name[0]}</p>}
                         </div>
 
                         <div>
-                            <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Short Name</label>
+                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">Short Name</label>
                             <input
                                 name="shortName"
                                 defaultValue={category?.short_name || ''}
                                 placeholder="e.g. BEV"
-                                className="w-full text-[12px] font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
                                 style={{
                                     background: 'var(--app-background)',
                                     border: '1px solid var(--app-border)',
@@ -228,24 +228,53 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                         </div>
                     </div>
 
-                    {/* Code */}
-                    <div>
-                        <label className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                            <Hash size={9} className="inline mr-1" />Code (Unique)
-                        </label>
-                        <LockableCodeInput
-                            name="code"
-                            defaultValue={category?.code}
-                            suggestedValue={suggestedCode}
-                            isEdit={!!category}
-                            placeholder="e.g. 1001 or CAT-BEV"
-                            mono
-                            className="w-full text-[12px] px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                        />
-                        <p className="text-[10px] font-bold text-app-muted-foreground mt-1">
-                            Used for barcode generation and internal reference.
-                        </p>
+                    {/* Code + Barcode Prefix — side-by-side on the wider modal */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                <Hash size={9} className="inline mr-1" />Code (Unique)
+                            </label>
+                            <LockableCodeInput
+                                name="code"
+                                defaultValue={category?.code}
+                                suggestedValue={suggestedCode}
+                                isEdit={!!category}
+                                placeholder="e.g. 1001 or CAT-BEV"
+                                mono
+                                className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                            />
+                            <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
+                                Internal reference — not printed on barcodes.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                <Hash size={9} className="inline mr-1" />Barcode Prefix
+                            </label>
+                            <input
+                                name="barcodePrefix"
+                                defaultValue={category?.barcode_prefix || ''}
+                                placeholder="e.g. 0410"
+                                maxLength={10}
+                                className="w-full text-tp-sm font-mono font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                style={{
+                                    background: 'var(--app-background)',
+                                    border: state.errors?.barcode_prefix ? '1px solid var(--app-error)' : '1px solid var(--app-border)',
+                                }}
+                                onChange={e => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10); }}
+                            />
+                            {state.errors?.barcode_prefix ? (
+                                <p className="text-tp-xs font-bold mt-1" style={{ color: 'var(--app-error)' }}>
+                                    {state.errors.barcode_prefix[0]}
+                                </p>
+                            ) : (
+                                <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
+                                    Auto-prefix for products — e.g. <code className="font-mono">0410</code> → <code className="font-mono">0410001</code>. Must be unique per category. <a href="/inventory/barcode" className="underline text-app-primary">Rules</a>.
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Actions */}
@@ -253,7 +282,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all"
+                            className="flex-1 py-2.5 rounded-xl text-tp-xs font-bold transition-all"
                             style={{
                                 color: 'var(--app-muted-foreground)',
                                 border: '1px solid var(--app-border)',
@@ -264,7 +293,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                         <button
                             type="submit"
                             disabled={pending}
-                            className="flex-1 py-2.5 rounded-xl text-[11px] font-bold bg-app-primary text-white transition-all flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50"
+                            className="flex-1 py-2.5 rounded-xl text-tp-xs font-bold bg-app-primary text-white transition-all flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50"
                             style={{
                                 boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
                             }}

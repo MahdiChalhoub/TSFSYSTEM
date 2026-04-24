@@ -15,6 +15,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
  const parentId = formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null;
  const code = (formData.get('code') as string) || null;
  const shortName = (formData.get('shortName') as string) || null;
+ const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
 
  if (!name || name.length < 2) {
  return { message: 'Failed to create category', errors: { name: ['Name must be at least 2 characters'] } };
@@ -28,7 +29,8 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
  name,
  parent: parentId, // DRF expects PK of FK. Field name 'parent' in model.
  code,
- short_name: shortName
+ short_name: shortName,
+ barcode_prefix: barcodePrefix,
  })
  });
 
@@ -53,6 +55,7 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
  const parentId = formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null;
  const code = (formData.get('code') as string) || null;
  const shortName = (formData.get('shortName') as string) || null;
+ const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
 
  try {
  if (parentId === id) {
@@ -66,7 +69,8 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
  name,
  parent: parentId,
  code,
- short_name: shortName
+ short_name: shortName,
+ barcode_prefix: barcodePrefix,
  })
  });
 

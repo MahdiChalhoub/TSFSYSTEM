@@ -289,6 +289,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             cje = fiscal_year.closing_journal_entry
             closing_lines = JournalEntryLine.objects.filter(journal_entry=cje).select_related('account').order_by('-debit', 'credit')
             closing_je = {
+                'id': cje.id,
                 'reference': cje.reference,
                 'date': str(cje.transaction_date),
                 'description': cje.description,
@@ -345,6 +346,36 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # Opening balances received from prior year (what THIS year carries in)
         opening_bals_received = _ob_rows_for_year(fiscal_year)
 
+        # Traceability — surface the active SYSTEM_OPENING journal entries
+        # so the UI can link from "Opening Balances → FY 2026 (6 accounts)"
+        # back to the specific JE row(s) that produced them. Matches the
+        # closing_entry block which already does this.
+        def _opening_entries_for_year(target_year):
+            if not target_year:
+                return []
+            rows = []
+            qs = JournalEntry.objects.filter(
+                organization=org, fiscal_year=target_year,
+                journal_type='OPENING',
+                journal_role='SYSTEM_OPENING',
+                status='POSTED',
+                is_superseded=False,
+            ).order_by('scope', 'transaction_date')
+            for je in qs:
+                rows.append({
+                    'id': je.id,
+                    'reference': je.reference,
+                    'scope': je.scope,
+                    'transaction_date': str(je.transaction_date.date()) if je.transaction_date else None,
+                    'line_count': je.lines.count(),
+                    'total_debit': float(je.total_debit or 0),
+                    'total_credit': float(je.total_credit or 0),
+                })
+            return rows
+
+        opening_entries = _opening_entries_for_year(next_fy)
+        opening_entries_received = _opening_entries_for_year(fiscal_year)
+
         # Period breakdown
         period_data = []
         for p in periods:
@@ -372,6 +403,11 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'opening_balances': opening_bals,
             'opening_balances_target': next_fy.name if next_fy else None,
             'opening_balances_received': opening_bals_received,
+            # Traceability — the SYSTEM_OPENING JE(s) that produced the
+            # lines above. UI renders these as clickable references so
+            # users can jump to the source journal entry (one JE per scope).
+            'opening_entries': opening_entries,
+            'opening_entries_received': opening_entries_received,
             'periods': period_data,
         })
 

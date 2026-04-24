@@ -304,10 +304,14 @@ export type YearSummary = {
     journal_entries: { total: number; posted: number; draft: number; total_debit: number; total_credit: number }
     pnl: { revenue: number; expenses: number; net_income: number }
     balance_sheet: { assets: number; liabilities: number; equity: number }
-    closing_entry: { reference: string; date: string; description: string; lines: { code: string; name: string; debit: number; credit: number }[] } | null
+    closing_entry: { id: number; reference: string; date: string; description: string; lines: { code: string; name: string; debit: number; credit: number }[] } | null
     opening_balances: { code: string; name: string; type: string; debit: number; credit: number }[]
     opening_balances_target: string | null
     opening_balances_received: { code: string; name: string; type: string; debit: number; credit: number }[]
+    // Traceability — the SYSTEM_OPENING JE(s) that produced the lines
+    // above. One entry per scope (OFFICIAL / INTERNAL).
+    opening_entries: { id: number; reference: string; scope: string; transaction_date: string | null; line_count: number; total_debit: number; total_credit: number }[]
+    opening_entries_received: { id: number; reference: string; scope: string; transaction_date: string | null; line_count: number; total_debit: number; total_credit: number }[]
     periods: { name: string; status: string; start_date: string; end_date: string; journal_entries: number }[]
 }
 

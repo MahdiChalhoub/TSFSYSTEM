@@ -88,9 +88,26 @@ class ClosingService:
 
     @staticmethod
     def reopen_period(organization, fiscal_period, user=None):
-        """Reopen a closed/locked period. Requires superuser."""
+        """Reopen a closed/locked period. Requires superuser.
+
+        Hard block: cannot reopen a period whose fiscal year is FINALIZED
+        (or hard-locked). Finalization is an irreversible accounting act
+        — reopening a period under it would leave the year technically
+        closed while allowing new postings, which silently invalidates
+        the CLOSING JE's P&L sweep. If the year really needs to be
+        amended, the flow is: reverse the CLOSING JE → un-finalize →
+        then reopen periods.
+        """
         if user and not user.is_superuser:
             raise ValidationError("Only superusers can reopen fiscal periods.")
+
+        fy = fiscal_period.fiscal_year
+        if fy and (fy.status == 'FINALIZED' or fy.is_hard_locked):
+            raise ValidationError(
+                f"Cannot reopen period {fiscal_period.name}: fiscal year "
+                f"{fy.name} is FINALIZED. Reverse the closing JE and "
+                f"un-finalize the year first."
+            )
 
         fiscal_period.transition_to('OPEN', user=user)
         logger.info(
@@ -308,11 +325,19 @@ class ClosingService:
             from apps.finance.models import JournalEntryLine
             from django.db.models import Sum, Q
 
-            # Compute per-account, per-scope P&L from authoritative JE lines
+            # Compute per-account, per-scope P&L from authoritative JE lines.
+            # Sweep set = INCOME + EXPENSE (the P&L) + any contra-equity
+            # account flagged clears_at_close=True (Owner Draws, Dividends
+            # Declared, Treasury Stock). The flag is the ONLY safe signal —
+            # using type=EQUITY alone would wrongly include Capital and
+            # Retained Earnings themselves, zeroing real equity every year.
             pnl_lines = JournalEntryLine.objects.filter(
                 journal_entry__organization=organization,
                 journal_entry__status='POSTED',
-                account__type__in=['INCOME', 'EXPENSE'],
+                journal_entry__is_superseded=False,
+            ).filter(
+                Q(account__type__in=['INCOME', 'EXPENSE'])
+                | Q(account__clears_at_close=True)
             ).filter(
                 Q(journal_entry__fiscal_year=fiscal_year) |
                 Q(journal_entry__fiscal_year__isnull=True,
@@ -529,6 +554,24 @@ class ClosingService:
             )
             return (agg['d'] or Decimal('0.00')) - (agg['c'] or Decimal('0.00'))
 
+        # ── 0. Period-state invariant ──
+        # A FINALIZED year must have zero open periods — anything else
+        # is a UX lie. Catches cases where the force-close step missed a
+        # period (e.g. if a signal or concurrent action reopened one
+        # between force-close and finalize).
+        from apps.finance.models import FiscalPeriod
+        open_periods = list(
+            FiscalPeriod.objects.filter(
+                fiscal_year=fiscal_year, is_closed=False,
+            ).values_list('name', flat=True)
+        )
+        if open_periods:
+            raise ValidationError(
+                f"Cannot finalize {fiscal_year.name}: {len(open_periods)} period(s) "
+                f"still OPEN ({', '.join(open_periods)}). Force-close step did not "
+                f"cover these — rollback triggered, year NOT finalized."
+            )
+
         for scope in ('OFFICIAL', 'INTERNAL'):
             # Double-entry invariant — every JE line pair debits and credits
             # equal amounts, so the global sum across all posted lines in
@@ -589,6 +632,32 @@ class ClosingService:
                     f"[{scope}] Expense accounts did not zero out after close: "
                     f"residual={expense}. Check the closing JE for missing "
                     f"EXPENSE account lines — rollback triggered."
+                )
+
+            # Contra-equity (clears_at_close=True) must zero out exactly
+            # like P&L — they're swept to RE in the same closing JE. If a
+            # draws / dividends-declared account survives the close with
+            # non-zero net, the sweep filter missed it and equity will
+            # fragment on the opening carry.
+            clears_agg = JournalEntryLine.objects.filter(
+                journal_entry__organization=organization,
+                journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
+                journal_entry__scope=scope,
+                account__clears_at_close=True,
+            ).filter(
+                Q(journal_entry__fiscal_year=fiscal_year) |
+                Q(journal_entry__fiscal_year__isnull=True,
+                  journal_entry__transaction_date__date__gte=fiscal_year.start_date,
+                  journal_entry__transaction_date__date__lte=fiscal_year.end_date)
+            ).aggregate(d=Sum('debit'), c=Sum('credit'))
+            clears_net = (clears_agg['d'] or Decimal('0.00')) - (clears_agg['c'] or Decimal('0.00'))
+            if clears_net.copy_abs() > tol:
+                raise ValidationError(
+                    f"[{scope}] Contra-equity (clears_at_close) accounts did not "
+                    f"zero out after close: residual={clears_net}. The closing JE "
+                    f"missed a draws/dividends/treasury-stock account — rollback "
+                    f"triggered, year NOT finalized."
                 )
 
         # ── Retained-earnings continuity ──

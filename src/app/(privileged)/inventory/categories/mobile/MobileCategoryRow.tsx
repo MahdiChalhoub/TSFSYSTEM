@@ -188,11 +188,21 @@ export function MobileCategoryRow({
                                     }}>ROOT</span>
                             )}
                         </div>
-                        {(node.code || node.short_name) && (
-                            <div className="flex items-center gap-2 mt-0.5">
+                        {(node.code || node.short_name || node.barcode_prefix) && (
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                 {node.code && (
                                     <span className="font-mono font-bold text-app-muted-foreground" style={{ fontSize: 'var(--tp-sm)' }}>
                                         {node.code}
+                                    </span>
+                                )}
+                                {node.barcode_prefix && (
+                                    <span className="font-mono font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                                        style={{
+                                            fontSize: 'var(--tp-xxs)',
+                                            background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                            color: 'var(--app-success, #22c55e)',
+                                        }}>
+                                        🏷 {node.barcode_prefix}
                                     </span>
                                 )}
                                 {node.short_name && (
