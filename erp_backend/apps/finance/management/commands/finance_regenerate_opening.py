@@ -139,3 +139,92 @@ class Command(BaseCommand):
             ))
         else:
             self.stdout.write(self.style.SUCCESS("Post-flight: zero OB↔JE drift ✓"))
+
+        # ── Strict TB reconciliation ──
+        # Every leaf account's closing net in `prior` must equal its
+        # opening net in `target`. This is the most definitive check —
+        # if any leaf account differs, the carry-forward dropped data.
+        self._reconcile_leaf_trial_balance(org, prior, target)
+
+    def _reconcile_leaf_trial_balance(self, org, prior, target):
+        """Compare per-(account × scope) closing net of prior year to
+        opening net of target year for every LEAF account. Non-leaf
+        accounts (parents) are expected to differ by construction
+        because the opening generator filters them out, and the
+        closing chain-continuity check already validates those.
+        """
+        from apps.finance.models import ChartOfAccount, JournalEntryLine
+        from django.db.models import Sum, Q, Count
+        from decimal import Decimal
+
+        self.stdout.write("\n── Leaf trial-balance reconciliation ──")
+
+        tol = Decimal('0.01')
+        # Leaves only: allow_posting=True AND children=0
+        leaves = (
+            ChartOfAccount.objects.annotate(n=Count('children'))
+            .filter(
+                organization=org,
+                type__in=['ASSET', 'LIABILITY', 'EQUITY'],
+                is_active=True, allow_posting=True, n=0,
+            )
+        )
+
+        total_accounts = 0
+        breaks = []
+
+        for scope in ('OFFICIAL', 'INTERNAL'):
+            for acc in leaves:
+                # Prior year closing net
+                close_agg = (
+                    JournalEntryLine.objects
+                    .filter(
+                        organization=org, account=acc,
+                        journal_entry__status='POSTED',
+                        journal_entry__is_superseded=False,
+                        journal_entry__scope=scope,
+                        journal_entry__transaction_date__date__lte=prior.end_date,
+                    )
+                    .aggregate(d=Sum('debit'), c=Sum('credit'))
+                )
+                close_net = (close_agg['d'] or Decimal('0')) - (close_agg['c'] or Decimal('0'))
+
+                # Target opening net (from SYSTEM_OPENING JE lines only)
+                open_agg = (
+                    JournalEntryLine.objects
+                    .filter(
+                        organization=org, account=acc,
+                        journal_entry__fiscal_year=target,
+                        journal_entry__journal_type='OPENING',
+                        journal_entry__journal_role='SYSTEM_OPENING',
+                        journal_entry__status='POSTED',
+                        journal_entry__is_superseded=False,
+                        journal_entry__scope=scope,
+                    )
+                    .aggregate(d=Sum('debit'), c=Sum('credit'))
+                )
+                open_net = (open_agg['d'] or Decimal('0')) - (open_agg['c'] or Decimal('0'))
+
+                total_accounts += 1
+                diff = (close_net - open_net).copy_abs()
+                if diff > tol:
+                    breaks.append({
+                        'scope': scope, 'code': acc.code, 'name': acc.name,
+                        'close_net': close_net, 'open_net': open_net, 'diff': close_net - open_net,
+                    })
+
+        if not breaks:
+            self.stdout.write(self.style.SUCCESS(
+                f"✓ Leaf reconciliation clean — {total_accounts} (account × scope) pairs checked, 0 mismatches"
+            ))
+            return
+        self.stdout.write(self.style.ERROR(
+            f"✗ {len(breaks)} leaf accounts differ between {prior.name} closing and {target.name} opening:"
+        ))
+        for b in breaks[:20]:
+            self.stdout.write(
+                f"  [{b['scope']:8}] {b['code']:8} {b['name'][:35]:35} "
+                f"close={b['close_net']} open={b['open_net']} diff={b['diff']}"
+            )
+        if len(breaks) > 20:
+            self.stdout.write(f"  ... +{len(breaks) - 20} more")

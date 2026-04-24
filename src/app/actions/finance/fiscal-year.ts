@@ -278,7 +278,73 @@ export type CanaryReport = {
         consolidation_failed_runs?: number
         consolidation_missing_ic?: number
         consolidation_missing_runs?: number
+        // Close checklist
+        close_checklist_clean?: boolean
+        close_checklist_abandoned?: number
+        close_checklist_overdue?: number
+        // Realized FX
+        realized_fx_clean?: boolean
+        realized_fx_missing?: number
+        // Tax coverage
+        tax_coverage_clean?: boolean
+        tax_uncovered_countries?: number
+        tax_uncovered_top?: string[]
     }>
+}
+
+export type CloseChecklistItem = {
+    state_id: number
+    item_id: number
+    order: number
+    name: string
+    category: string
+    is_required: boolean
+    is_complete: boolean
+    auto_checked: boolean
+    completed_at: string | null
+    completed_by: string | null
+    notes: string
+    auto_check_signal: string
+}
+
+export type CloseChecklistReport = {
+    run_id: number
+    status: 'OPEN' | 'READY' | 'CLOSED' | 'CANCELLED'
+    template_name: string
+    ready_to_close: boolean
+    total_items: number
+    completed_items: number
+    required_missing: number
+    items: CloseChecklistItem[]
+}
+
+export async function getCloseChecklist(fiscalYearId: number): Promise<CloseChecklistReport | null> {
+    try {
+        return await erpFetch(`fiscal-years/${fiscalYearId}/close-checklist/`) as CloseChecklistReport
+    } catch (error) {
+        console.error('Failed to fetch close checklist:', error)
+        return null
+    }
+}
+
+export async function toggleCloseChecklistItem(
+    fiscalYearId: number,
+    stateId: number,
+    complete: boolean,
+    notes?: string,
+): Promise<{ success: boolean; ready_to_close?: boolean; run_status?: string; error?: string }> {
+    try {
+        const res = await erpFetch(`fiscal-years/${fiscalYearId}/close-checklist/toggle/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state_id: stateId, complete, notes }),
+        }) as { ready_to_close: boolean; run_status: string }
+        revalidatePath('/finance/fiscal-years')
+        return { success: true, ready_to_close: res.ready_to_close, run_status: res.run_status }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
 }
 
 export async function getIntegrityCanary(): Promise<CanaryReport | null> {
@@ -312,6 +378,47 @@ export async function lockFiscalYear(id: number) {
  *
  * This calls ClosingService.close_fiscal_year on the backend.
  */
+export type DryRunClosePreview = {
+    dry_run: boolean
+    fiscal_year_id: number
+    fiscal_year_name: string
+    closing_jes: Array<{
+        scope: string
+        lines: number
+        total_debit: string
+        total_credit: string
+        pnl_net?: string
+    }>
+    opening_jes: Array<{
+        scope: string
+        target_year: string
+        lines: number
+        total_debit: string
+        total_credit: string
+    }>
+    messages: string[]
+    invariants_passed: boolean
+    snapshot_captured: boolean
+    final_status?: string
+}
+
+export async function previewCloseFiscalYear(id: number, closeDate?: string): Promise<
+    | { success: true; preview: DryRunClosePreview }
+    | { success: false; error: string }
+> {
+    try {
+        const res = await erpFetch(`fiscal-years/${id}/finalize/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dry_run: true, close_date: closeDate }),
+        }) as { preview: DryRunClosePreview }
+        return { success: true, preview: res.preview }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
 export async function hardLockFiscalYear(id: number, closeDate?: string) {
     try {
         // Uses /finalize/ — explicit alias for year-end close.

@@ -38,8 +38,15 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
     const code = (formData.get('code') as string) || null;
     const shortName = (formData.get('shortName') as string) || null;
     const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
-    const nameFr = (formData.get('nameFr') as string) || '';
-    const nameAr = (formData.get('nameAr') as string) || '';
+    let translations: Record<string, string> = {};
+    try {
+        const raw = (formData.get('translationsJson') as string) || '';
+        if (raw) translations = JSON.parse(raw);
+    } catch { /* tolerate malformed JSON — treat as empty */ }
+    // Legacy FR/AR mirrors so backend consumers still reading the old columns
+    // keep working until they migrate to `translations`.
+    const nameFr = translations.fr || '';
+    const nameAr = translations.ar || '';
 
     if (!name || name.length < 2) {
         return { message: 'Failed to create category', errors: { name: ['Name must be at least 2 characters'] } };
@@ -55,6 +62,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
                 code,
                 short_name: shortName,
                 barcode_prefix: barcodePrefix,
+                translations,
                 name_fr: nameFr,
                 name_ar: nameAr,
             })
@@ -91,8 +99,15 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
     const code = (formData.get('code') as string) || null;
     const shortName = (formData.get('shortName') as string) || null;
     const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
-    const nameFr = (formData.get('nameFr') as string) || '';
-    const nameAr = (formData.get('nameAr') as string) || '';
+    let translations: Record<string, string> = {};
+    try {
+        const raw = (formData.get('translationsJson') as string) || '';
+        if (raw) translations = JSON.parse(raw);
+    } catch { /* tolerate malformed JSON — treat as empty */ }
+    // Legacy FR/AR mirrors so backend consumers still reading the old columns
+    // keep working until they migrate to `translations`.
+    const nameFr = translations.fr || '';
+    const nameAr = translations.ar || '';
 
     try {
         if (parentId === id) {
@@ -108,6 +123,7 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
                 code,
                 short_name: shortName,
                 barcode_prefix: barcodePrefix,
+                translations,
                 name_fr: nameFr,
                 name_ar: nameAr,
             })

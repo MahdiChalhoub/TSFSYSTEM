@@ -62,8 +62,8 @@ export interface UseFiscalYearsReturn {
     confirmAction: () => void
 
     // Year tabs (summary / history)
-    yearTab: Record<number, 'periods' | 'summary' | 'history'>
-    setYearTab: React.Dispatch<React.SetStateAction<Record<number, 'periods' | 'summary' | 'history'>>>
+    yearTab: Record<number, 'periods' | 'summary' | 'checklist' | 'history'>
+    setYearTab: React.Dispatch<React.SetStateAction<Record<number, 'periods' | 'summary' | 'checklist' | 'history'>>>
     summaryCache: Record<number, YearSummary>
     historyCache: Record<number, { events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }>
     loadSummary: (yearId: number) => void

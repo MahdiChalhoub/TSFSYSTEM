@@ -334,3 +334,67 @@ class CanarySignalsTests(CloseIntegrityBase):
         from apps.finance.services.consolidation_service import ConsolidationService
         r = ConsolidationService.check_consolidation_integrity(self.org)
         self.assertTrue(r['clean'])
+
+    def test_close_checklist_enforces_required_items(self):
+        """A default checklist template should block close until every
+        required item is marked complete. validate_ready_for_year raises
+        when the run is not READY."""
+        from apps.finance.services.close_checklist_service import (
+            CloseChecklistService,
+        )
+        # Seed the default template and start a run for this org's FY
+        tmpl = CloseChecklistService.ensure_default_template(self.org)
+        self.assertGreater(tmpl.items.count(), 0)
+
+        with self.assertRaises(ValidationError) as cm:
+            CloseChecklistService.validate_ready_for_year(self.org, self.fy)
+        self.assertIn('checklist not ready', str(cm.exception).lower())
+
+    def test_close_checklist_canary_reports_overdue_year(self):
+        """A FY whose end_date is within 30 days and has no READY
+        checklist must appear in the canary overdue list."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from apps.finance.services.close_checklist_service import (
+            CloseChecklistService,
+        )
+        # Force this test's FY to be nearing its end-date window
+        self.fy.end_date = (timezone.now() + timedelta(days=20)).date()
+        self.fy.save(update_fields=['end_date'])
+        # Seed default template so the canary knows to care
+        CloseChecklistService.ensure_default_template(self.org)
+
+        r = CloseChecklistService.check_close_checklist_integrity(self.org)
+        self.assertFalse(r['clean'])
+        self.assertTrue(any(
+            y['fiscal_year_id'] == self.fy.id
+            for y in r['years_overdue_checklist']
+        ))
+
+    def test_realized_fx_clean_when_no_multicurrency(self):
+        """Orgs without a base currency configured should report
+        realized-FX clean by default (signal opts out)."""
+        from apps.finance.services.realized_fx_service import RealizedFXService
+        r = RealizedFXService.check_realized_fx_integrity(self.org)
+        self.assertTrue(r['clean'])
+
+    def test_fy_transition_emits_audit_log(self):
+        """Every fiscal-year status change must land a ForensicAuditLog
+        row — this is the audit-trail guarantee for SOX-adjacent reviews."""
+        from apps.finance.models import ForensicAuditLog
+        before = ForensicAuditLog.objects.filter(
+            organization=self.org, model_name='FiscalYear',
+            change_type='STATE_TRANSITION',
+        ).count()
+        self.fy.transition_to('CLOSED', user=self.user)
+        after = ForensicAuditLog.objects.filter(
+            organization=self.org, model_name='FiscalYear',
+            change_type='STATE_TRANSITION',
+        ).count()
+        self.assertEqual(after, before + 1)
+        latest = ForensicAuditLog.objects.filter(
+            organization=self.org, model_name='FiscalYear',
+            change_type='STATE_TRANSITION',
+        ).order_by('-id').first()
+        self.assertEqual(latest.payload.get('from'), 'OPEN')
+        self.assertEqual(latest.payload.get('to'), 'CLOSED')

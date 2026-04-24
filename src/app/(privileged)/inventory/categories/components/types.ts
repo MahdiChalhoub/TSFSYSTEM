@@ -19,6 +19,7 @@ export interface CategoryNode {
     barcode_prefix?: string
     name_fr?: string
     name_ar?: string
+    translations?: Record<string, string>
 }
 
 export type PanelTab = 'overview' | 'products' | 'brands' | 'attributes' | 'audit'

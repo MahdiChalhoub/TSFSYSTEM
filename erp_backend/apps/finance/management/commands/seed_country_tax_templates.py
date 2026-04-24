@@ -766,6 +766,648 @@ TEMPLATES = [
             _tax_group('GST 0% (Zero-Rated)', '0.0000', description='Basic groceries, prescription drugs, exports'),
         ],
     },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Italy (Agenzia delle Entrate / SDI e-invoicing)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'IT',
+        'country_name': 'Italy',
+        'currency_code': 'EUR',
+        'document_requirements': [
+            _doc('TAX_ID', 'Partita IVA (VAT Number)'),
+            _doc('TAX_ID', 'Codice Fiscale'),
+            _doc('COMPLIANCE', 'SDI Destination Code / PEC'),
+        ],
+        'org_policy_defaults': [
+            _policy('Regime Ordinario (Standard VAT)', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Regime Forfettario (Flat-rate Scheme)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='FORFAIT',
+                    sales_tax_rate='0.0500', sales_tax_trigger='ON_TURNOVER'),
+        ],
+        'counterparty_presets': [
+            _profile('Italian Business (B2B)', vat_registered=True),
+            _profile('Italian Consumer (B2C)', vat_registered=False),
+            _profile('EU Business (Reverse Charge)', vat_registered=True, reverse_charge=True),
+            _profile('Public Administration (B2G / SDI)', vat_registered=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('IVA 22%', '0.2200', is_default=True, description='Aliquota ordinaria — standard rate'),
+            _tax_group('IVA 10%', '0.1000', description='Aliquota ridotta — food, tourism'),
+            _tax_group('IVA 5%', '0.0500', description='Aliquota super-ridotta — social services'),
+            _tax_group('IVA 4%', '0.0400', description='Aliquota minima — staples, books'),
+            _tax_group('IVA 0%', '0.0000', description='Operazioni esenti / exports'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Spain (AEAT / Sistema Inmediato Información — SII)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'ES',
+        'country_name': 'Spain',
+        'currency_code': 'EUR',
+        'document_requirements': [
+            _doc('TAX_ID', 'NIF / CIF (Tax ID)'),
+            _doc('BIZ_REG', 'Registro Mercantil'),
+            _doc('COMPLIANCE', 'SII enrolment (if turnover > €6M)'),
+        ],
+        'org_policy_defaults': [
+            _policy('Régimen General IVA', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Recargo de Equivalencia (Retail)', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Régimen Simplificado', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='FORFAIT'),
+        ],
+        'counterparty_presets': [
+            _profile('Empresa Española (B2B)', vat_registered=True),
+            _profile('Consumidor Final (B2C)', vat_registered=False),
+            _profile('Intracomunitario EU (Reverse Charge)', vat_registered=True, reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('Recargo de Equivalencia 5.2%', '0.0520', is_active=False,
+                        description='Retail surcharge — applied only for RE regime'),
+        ],
+        'tax_group_presets': [
+            _tax_group('IVA 21%', '0.2100', is_default=True, description='Tipo general'),
+            _tax_group('IVA 10%', '0.1000', description='Tipo reducido'),
+            _tax_group('IVA 4%', '0.0400', description='Tipo superreducido'),
+            _tax_group('IVA 0%', '0.0000', description='Exento / exports'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Netherlands (Belastingdienst)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'NL',
+        'country_name': 'Netherlands',
+        'currency_code': 'EUR',
+        'document_requirements': [
+            _doc('TAX_ID', 'BTW-nummer (VAT ID)'),
+            _doc('BIZ_REG', 'KvK (Chamber of Commerce) Registration'),
+        ],
+        'org_policy_defaults': [
+            _policy('Standard BTW', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Kleine Ondernemers Regeling (KOR)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Dutch Business (B2B)', vat_registered=True),
+            _profile('Dutch Consumer (B2C)', vat_registered=False),
+            _profile('EU Business (Reverse Charge)', vat_registered=True, reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('BTW 21%', '0.2100', is_default=True, description='Hoog tarief — standard rate'),
+            _tax_group('BTW 9%', '0.0900', description='Laag tarief — food, books, transport'),
+            _tax_group('BTW 0%', '0.0000', description='Nultarief — exports, intra-EU'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Belgium
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'BE',
+        'country_name': 'Belgium',
+        'currency_code': 'EUR',
+        'document_requirements': [
+            _doc('TAX_ID', 'BTW/TVA Number'),
+            _doc('BIZ_REG', 'BCE/KBO Enterprise Number'),
+        ],
+        'org_policy_defaults': [
+            _policy('Standard BTW/TVA', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Franchise Exemption', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Belgian Business', vat_registered=True),
+            _profile('Consumer', vat_registered=False),
+            _profile('EU B2B (Reverse Charge)', vat_registered=True, reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('BTW/TVA 21%', '0.2100', is_default=True, description='Standard rate'),
+            _tax_group('BTW/TVA 12%', '0.1200', description='Intermediate rate — catering, housing'),
+            _tax_group('BTW/TVA 6%', '0.0600', description='Reduced rate — food, books, meds'),
+            _tax_group('BTW/TVA 0%', '0.0000', description='Zero rate — exports, newspapers'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Switzerland (Federal Tax Administration — ESTV)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'CH',
+        'country_name': 'Switzerland',
+        'currency_code': 'CHF',
+        'document_requirements': [
+            _doc('TAX_ID', 'MWST / UID Number'),
+            _doc('BIZ_REG', 'Handelsregister-Auszug'),
+        ],
+        'org_policy_defaults': [
+            _policy('Standard MwSt (Effective Method)', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Saldo-/Pauschalsteuersatz', vat_output_enabled=True,
+                    vat_input_recoverability='0.000', profit_tax_mode='STANDARD',
+                    sales_tax_rate='0.0600', sales_tax_trigger='ON_TURNOVER'),
+            _policy('Below CHF 100k Turnover (Exempt)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Swiss Business (B2B)', vat_registered=True),
+            _profile('Swiss Consumer', vat_registered=False),
+            _profile('Foreign Vendor', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('MwSt 8.1%', '0.0810', is_default=True, description='Normalsatz (2024+)'),
+            _tax_group('MwSt 3.8%', '0.0380', description='Sondersatz — accommodation'),
+            _tax_group('MwSt 2.6%', '0.0260', description='Reduzierter Satz — food, books, meds'),
+            _tax_group('MwSt 0%', '0.0000', description='Steuerfreie Umsätze / exports'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Australia (ATO — Australian Taxation Office)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'AU',
+        'country_name': 'Australia',
+        'currency_code': 'AUD',
+        'document_requirements': [
+            _doc('TAX_ID', 'ABN (Australian Business Number)'),
+            _doc('TAX_ID', 'GST Registration Number'),
+        ],
+        'org_policy_defaults': [
+            _policy('GST Registered — Full Input Credits', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Below GST Threshold (AUD 75k)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Australian Business (GST Registered)', vat_registered=True),
+            _profile('Consumer / Small Business', vat_registered=False),
+            _profile('Non-Resident Supplier (Reverse Charge)', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('GST 10%', '0.1000', is_default=True, description='Standard GST rate'),
+            _tax_group('GST-Free', '0.0000', description='Food, health, education, exports'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # New Zealand (Inland Revenue / IRD)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'NZ',
+        'country_name': 'New Zealand',
+        'currency_code': 'NZD',
+        'document_requirements': [
+            _doc('TAX_ID', 'IRD Number'),
+            _doc('TAX_ID', 'NZBN (Business Number)'),
+        ],
+        'org_policy_defaults': [
+            _policy('GST Registered (Payments/Invoice/Hybrid)', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Below GST Threshold (NZD 60k)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('NZ Business (GST Registered)', vat_registered=True),
+            _profile('Consumer', vat_registered=False),
+            _profile('Foreign Supplier (Reverse Charge)', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('GST 15%', '0.1500', is_default=True, description='Standard GST rate'),
+            _tax_group('GST 0%', '0.0000', description='Zero-rated — exports, financial services'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Japan (NTA — National Tax Agency)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'JP',
+        'country_name': 'Japan',
+        'currency_code': 'JPY',
+        'document_requirements': [
+            _doc('TAX_ID', 'Corporate Number (13 digits)'),
+            _doc('TAX_ID', 'Qualified Invoice Issuer Number (Peppol)'),
+        ],
+        'org_policy_defaults': [
+            _policy('Consumption Tax Taxable Enterprise', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Simplified Tax Method', vat_output_enabled=True,
+                    vat_input_recoverability='0.000', profit_tax_mode='STANDARD',
+                    sales_tax_rate='0.1000', sales_tax_trigger='ON_TURNOVER'),
+            _policy('Tax-Exempt Enterprise (< JPY 10M)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Japanese Business', vat_registered=True),
+            _profile('Consumer', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('Consumption Tax 10%', '0.1000', is_default=True, description='Standard consumption tax'),
+            _tax_group('Consumption Tax 8%', '0.0800', description='Reduced rate — food, subscriptions'),
+            _tax_group('Consumption Tax 0%', '0.0000', description='Export / international transport'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Singapore (IRAS)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'SG',
+        'country_name': 'Singapore',
+        'currency_code': 'SGD',
+        'document_requirements': [
+            _doc('TAX_ID', 'UEN (Unique Entity Number)'),
+            _doc('TAX_ID', 'GST Registration Number'),
+        ],
+        'org_policy_defaults': [
+            _policy('GST Registered', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Below GST Threshold (SGD 1M)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Singapore Business (B2B)', vat_registered=True),
+            _profile('Consumer / Overseas Customer', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('GST 9%', '0.0900', is_default=True, description='Standard GST rate (2024+)'),
+            _tax_group('GST 0% (Zero-Rated)', '0.0000', description='Exports, international services'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Hong Kong (IRD)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'HK',
+        'country_name': 'Hong Kong',
+        'currency_code': 'HKD',
+        'document_requirements': [
+            _doc('TAX_ID', 'Business Registration Number'),
+        ],
+        'org_policy_defaults': [
+            _policy('No VAT/GST — Standard Profits Tax', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='STANDARD'),
+        ],
+        'counterparty_presets': [
+            _profile('Hong Kong Business', vat_registered=False),
+            _profile('Overseas Customer', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('No Sales Tax', '0.0000', is_default=True, description='Hong Kong has no VAT/GST'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Mexico (SAT — CFDI 4.0 e-invoicing)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'MX',
+        'country_name': 'Mexico',
+        'currency_code': 'MXN',
+        'document_requirements': [
+            _doc('TAX_ID', 'RFC (Registro Federal de Contribuyentes)'),
+            _doc('COMPLIANCE', 'FIEL / e.firma (Digital Certificate)'),
+            _doc('COMPLIANCE', 'CSD (Certificado de Sello Digital) for CFDI'),
+        ],
+        'org_policy_defaults': [
+            _policy('Régimen General', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('RESICO (Simplified for Small Biz)', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='FORFAIT'),
+        ],
+        'counterparty_presets': [
+            _profile('Mexican Business (B2B)', vat_registered=True),
+            _profile('Mexican Consumer', vat_registered=False),
+            _profile('Foreign Supplier', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('IEPS (Excise)', '0.0000', is_active=False,
+                        description='Impuesto Especial sobre Producción y Servicios — varies by product'),
+            _custom_tax('ISR Withholding 10%', '0.1000', is_active=False,
+                        transaction_type='PURCHASE',
+                        description='Professional services ISR retention'),
+        ],
+        'tax_group_presets': [
+            _tax_group('IVA 16%', '0.1600', is_default=True, description='Tasa general'),
+            _tax_group('IVA 8% (Border)', '0.0800', description='Frontera norte/sur'),
+            _tax_group('IVA 0%', '0.0000', description='Exportaciones, alimentos, medicinas'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Brazil (SEFAZ — NF-e / NFS-e)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'BR',
+        'country_name': 'Brazil',
+        'currency_code': 'BRL',
+        'document_requirements': [
+            _doc('TAX_ID', 'CNPJ (Corporate) / CPF (Individual)'),
+            _doc('COMPLIANCE', 'Inscrição Estadual (State Tax ID)'),
+            _doc('COMPLIANCE', 'Digital Certificate (e-CNPJ A1 or A3)'),
+        ],
+        'org_policy_defaults': [
+            _policy('Lucro Real', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Lucro Presumido', vat_output_enabled=True,
+                    vat_input_recoverability='0.000', profit_tax_mode='FORFAIT'),
+            _policy('Simples Nacional (MEI)', vat_output_enabled=True,
+                    vat_input_recoverability='0.000', profit_tax_mode='FORFAIT',
+                    sales_tax_rate='0.0600', sales_tax_trigger='ON_TURNOVER'),
+        ],
+        'counterparty_presets': [
+            _profile('Brazilian Business (B2B)', vat_registered=True),
+            _profile('Consumer (B2C)', vat_registered=False),
+            _profile('Foreign Supplier', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('PIS 1.65%', '0.0165', transaction_type='BOTH', is_active=False,
+                        description='Programa de Integração Social'),
+            _custom_tax('COFINS 7.6%', '0.0760', transaction_type='BOTH', is_active=False,
+                        description='Contribuição p/ Financiamento da Seguridade Social'),
+            _custom_tax('ISS (Municipal Service Tax)', '0.0500', is_active=False,
+                        description='Varies 2-5% by municipality'),
+        ],
+        'tax_group_presets': [
+            _tax_group('ICMS 18% (default)', '0.1800', is_default=True, description='Varies 17-19% by state'),
+            _tax_group('IPI', '0.0000', description='Federal Tax on Industrialized Products — varies by product'),
+            _tax_group('ICMS 0% (Export)', '0.0000', description='Zero-rated exports'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Argentina (AFIP — Factura Electrónica)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'AR',
+        'country_name': 'Argentina',
+        'currency_code': 'ARS',
+        'document_requirements': [
+            _doc('TAX_ID', 'CUIT (Clave Única de Identificación Tributaria)'),
+            _doc('COMPLIANCE', 'AFIP Digital Certificate for e-invoicing'),
+        ],
+        'org_policy_defaults': [
+            _policy('Responsable Inscripto', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Monotributo (Simplified)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='FORFAIT'),
+            _policy('Exento', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Responsable Inscripto', vat_registered=True),
+            _profile('Monotributista', vat_registered=True),
+            _profile('Consumidor Final', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('IIBB (Ingresos Brutos)', '0.0300', is_active=False,
+                        description='Provincial turnover tax — varies 1-5% by jurisdiction'),
+        ],
+        'tax_group_presets': [
+            _tax_group('IVA 21%', '0.2100', is_default=True, description='Tasa general'),
+            _tax_group('IVA 10.5%', '0.1050', description='Productos alimenticios, medicinas'),
+            _tax_group('IVA 27%', '0.2700', description='Servicios regulados'),
+            _tax_group('IVA 0%', '0.0000', description='Exportaciones'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Chile (SII — Servicio de Impuestos Internos)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'CL',
+        'country_name': 'Chile',
+        'currency_code': 'CLP',
+        'document_requirements': [
+            _doc('TAX_ID', 'RUT (Rol Único Tributario)'),
+            _doc('COMPLIANCE', 'Folio autorizado SII for e-invoicing'),
+        ],
+        'org_policy_defaults': [
+            _policy('Régimen General (Primera Categoría)', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Régimen Pro-Pyme', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+        ],
+        'counterparty_presets': [
+            _profile('Empresa Chilena', vat_registered=True),
+            _profile('Consumidor Final', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('IVA 19%', '0.1900', is_default=True, description='Tasa general'),
+            _tax_group('IVA 0%', '0.0000', description='Exportaciones'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Colombia (DIAN)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'CO',
+        'country_name': 'Colombia',
+        'currency_code': 'COP',
+        'document_requirements': [
+            _doc('TAX_ID', 'NIT (Número de Identificación Tributaria)'),
+            _doc('COMPLIANCE', 'DIAN Digital Signature for Factura Electrónica'),
+        ],
+        'org_policy_defaults': [
+            _policy('Régimen Común', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Régimen Simple de Tributación', vat_output_enabled=True,
+                    vat_input_recoverability='0.000', profit_tax_mode='FORFAIT'),
+        ],
+        'counterparty_presets': [
+            _profile('Empresa Colombiana', vat_registered=True),
+            _profile('Consumidor Final', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('ReteFuente (Income WHT)', '0.0250', is_active=False,
+                        transaction_type='PURCHASE',
+                        description='Retención en la Fuente — varies by concept'),
+            _custom_tax('ReteICA (Municipal WHT)', '0.0069', is_active=False,
+                        description='Municipal industry & commerce tax — varies'),
+        ],
+        'tax_group_presets': [
+            _tax_group('IVA 19%', '0.1900', is_default=True, description='Tasa general'),
+            _tax_group('IVA 5%', '0.0500', description='Alimentos, medicinas'),
+            _tax_group('IVA 0%', '0.0000', description='Exportaciones, exentos'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # South Africa (SARS)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'ZA',
+        'country_name': 'South Africa',
+        'currency_code': 'ZAR',
+        'document_requirements': [
+            _doc('TAX_ID', 'VAT Number (SARS)'),
+            _doc('BIZ_REG', 'CIPC Registration Number'),
+        ],
+        'org_policy_defaults': [
+            _policy('VAT Vendor (Standard)', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Small Business (Below Threshold)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('SA Business (VAT-Registered)', vat_registered=True),
+            _profile('Consumer', vat_registered=False),
+            _profile('Non-SA Supplier', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('VAT 15%', '0.1500', is_default=True, description='Standard VAT rate'),
+            _tax_group('VAT 0%', '0.0000', description='Zero-rated — staples, exports'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Kenya (KRA)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'KE',
+        'country_name': 'Kenya',
+        'currency_code': 'KES',
+        'document_requirements': [
+            _doc('TAX_ID', 'KRA PIN Certificate'),
+            _doc('TAX_ID', 'VAT Registration'),
+            _doc('COMPLIANCE', 'eTIMS Device / ETR'),
+        ],
+        'org_policy_defaults': [
+            _policy('Standard VAT Registered', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Turnover Tax (< KES 25M)', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='FORFAIT',
+                    sales_tax_rate='0.0100', sales_tax_trigger='ON_TURNOVER'),
+        ],
+        'counterparty_presets': [
+            _profile('Kenyan Business (PIN-Registered)', vat_registered=True),
+            _profile('Consumer', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('WHT Professional Services 5%', '0.0500', is_active=False,
+                        transaction_type='PURCHASE',
+                        description='Withholding tax on consultancy / management fees'),
+        ],
+        'tax_group_presets': [
+            _tax_group('VAT 16%', '0.1600', is_default=True, description='Standard rate'),
+            _tax_group('VAT 8%', '0.0800', description='Petroleum products'),
+            _tax_group('VAT 0%', '0.0000', description='Exports, zero-rated supplies'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Ghana (GRA)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'GH',
+        'country_name': 'Ghana',
+        'currency_code': 'GHS',
+        'document_requirements': [
+            _doc('TAX_ID', 'TIN (Tax Identification Number)'),
+            _doc('TAX_ID', 'VAT Registration Certificate'),
+        ],
+        'org_policy_defaults': [
+            _policy('Standard VAT', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('VAT Flat Rate Scheme (3%)', vat_output_enabled=True,
+                    vat_input_recoverability='0.000', profit_tax_mode='STANDARD',
+                    sales_tax_rate='0.0300', sales_tax_trigger='ON_TURNOVER'),
+        ],
+        'counterparty_presets': [
+            _profile('Ghanaian Business', vat_registered=True),
+            _profile('Consumer', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('NHIL 2.5%', '0.0250', is_active=False,
+                        description='National Health Insurance Levy'),
+            _custom_tax('GETFund 2.5%', '0.0250', is_active=False,
+                        description='Ghana Education Trust Fund'),
+            _custom_tax('COVID Levy 1%', '0.0100', is_active=False,
+                        description='COVID-19 Health Recovery Levy'),
+        ],
+        'tax_group_presets': [
+            _tax_group('VAT 15%', '0.1500', is_default=True, description='Standard VAT rate'),
+            _tax_group('VAT 0%', '0.0000', description='Exports, zero-rated'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Togo (OHADA — SYSCOHADA)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'TG',
+        'country_name': 'Togo',
+        'currency_code': 'XOF',
+        'document_requirements': [
+            _doc('TAX_ID', 'NIF (Numéro d\'Identification Fiscale)'),
+            _doc('BIZ_REG', 'RCCM (OHADA Registre du Commerce)'),
+        ],
+        'org_policy_defaults': [
+            _policy('Régime Réel Normal', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Régime Simplifié', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='FORFAIT'),
+        ],
+        'counterparty_presets': [
+            _profile('Entreprise Togolaise', vat_registered=True),
+            _profile('Consommateur', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('TVA 18%', '0.1800', is_default=True, description='Taux normal'),
+            _tax_group('TVA 0%', '0.0000', description='Exportations, opérations exonérées'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Benin (OHADA / UEMOA)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'BJ',
+        'country_name': 'Benin',
+        'currency_code': 'XOF',
+        'document_requirements': [
+            _doc('TAX_ID', 'IFU (Identifiant Fiscal Unique)'),
+            _doc('BIZ_REG', 'RCCM'),
+        ],
+        'org_policy_defaults': [
+            _policy('Régime Réel', vat_output_enabled=True,
+                    vat_input_recoverability='1.000', profit_tax_mode='STANDARD'),
+            _policy('Régime des Micro-Entreprises', vat_output_enabled=False,
+                    vat_input_recoverability='0.000', profit_tax_mode='FORFAIT'),
+        ],
+        'counterparty_presets': [
+            _profile('Entreprise Béninoise', vat_registered=True),
+            _profile('Consommateur', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('TVA 18%', '0.1800', is_default=True, description='Taux normal'),
+            _tax_group('TVA 0%', '0.0000', description='Exportations'),
+        ],
+    },
 ]
 
 

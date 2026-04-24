@@ -212,9 +212,14 @@ class Category(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     # Localised display names — retailers serving multi-language regions
     # can surface either French or Arabic without a full i18n layer.
     name_fr = models.CharField(max_length=255, blank=True, default='',
-        help_text='French display name (falls back to `name` if empty)')
+        help_text='[legacy] French display name — prefer translations["fr"]')
     name_ar = models.CharField(max_length=255, blank=True, default='',
-        help_text='Arabic display name (falls back to `name` if empty)')
+        help_text='[legacy] Arabic display name — prefer translations["ar"]')
+    # Scalable i18n — one JSONB field keyed by ISO locale codes. The tenant
+    # picks which languages to expose via Organization.settings.catalogue_languages;
+    # the form renders one input per enabled locale. Empty = fall back to `name`.
+    translations = models.JSONField(default=dict, blank=True,
+        help_text='Arbitrary localised names keyed by language code, e.g. {"fr":"Boissons","ar":"المشروبات","en":"Drinks"}')
     code = models.CharField(max_length=50, null=True, blank=True)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')

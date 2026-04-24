@@ -77,6 +77,13 @@ class Command(BaseCommand):
         parser.add_argument('--audit-reason', type=str, default=None,
                             help='Free-text reason stamped onto the reclassification JE description. '
                                  'Strongly recommended.')
+        parser.add_argument('--use-unidentified', action='store_true', default=False,
+                            help=('Auto-create (or reuse) a dedicated "Unidentified '
+                                  '(Legacy Cleanup)" Contact for the --partner-type and '
+                                  'attribute the partnerless lines to it. SAFER than '
+                                  'rolling them into a real customer/supplier — keeps '
+                                  'the legacy bucket clearly labelled in aging reports. '
+                                  'When set, --partner-id is ignored.'))
 
     # ── Entry point ─────────────────────────────────────────
     def handle(self, *args, **opts):
@@ -84,7 +91,14 @@ class Command(BaseCommand):
         from erp.models import Organization
 
         if opts['migrate']:
-            missing = [f for f in ('from_account', 'partner_id', 'partner_type')
+            # --use-unidentified auto-resolves partner_id, so only
+            # from_account + partner_type are required then.
+            required_fields = (
+                ('from_account', 'partner_type')
+                if opts.get('use_unidentified')
+                else ('from_account', 'partner_id', 'partner_type')
+            )
+            missing = [f for f in required_fields
                        if not opts.get(f)]
             if missing:
                 raise CommandError(
@@ -217,14 +231,57 @@ class Command(BaseCommand):
         )
         return referenced - existing
 
+    def _ensure_unidentified_contact(self, org, partner_type):
+        """Get-or-create the dedicated "Unidentified (Legacy Cleanup)"
+        Contact for a given partner_type. Keeps legacy ungrouped lines
+        in their own clearly-labelled sub-ledger bucket rather than
+        polluting a real customer/supplier.
+
+        Idempotent: look up by name; create only if missing.
+        """
+        try:
+            from apps.crm.models import Contact
+        except Exception as exc:
+            raise RuntimeError(
+                f"CRM Contact model not importable: {exc}"
+            )
+
+        label = f"Unidentified {partner_type.title()} (Legacy Cleanup)"
+        contact, created = Contact.objects.get_or_create(
+            organization=org,
+            name=label,
+            defaults={
+                'type': partner_type,
+                'company_name': label,
+                # Keep this contact clearly flagged — it's a bookkeeping
+                # construct, not a real counterparty. Minimal fields.
+            },
+        )
+        if created:
+            self.stdout.write(self.style.SUCCESS(
+                f"  ✓ Created dedicated contact: {label} (id={contact.id})"
+            ))
+        return contact.id
+
     def _repair(self, org, opts, scopes, control_ids):
         from apps.finance.models import ChartOfAccount, JournalEntryLine
         from apps.finance.services.ledger_core import LedgerCoreMixin
 
         from_code = opts['from_account']
-        partner_id = opts['partner_id']
         partner_type = opts['partner_type']
         reason = opts.get('audit_reason') or '(no reason provided)'
+
+        # Resolve partner_id — if --use-unidentified, get-or-create the
+        # dedicated "Unidentified (Legacy Cleanup)" Contact and use its
+        # id. Otherwise take the operator-supplied value as-is.
+        if opts.get('use_unidentified'):
+            partner_id = self._ensure_unidentified_contact(org, partner_type)
+            self.stdout.write(self.style.WARNING(
+                f"  Using dedicated 'Unidentified {partner_type.title()} "
+                f"(Legacy Cleanup)' contact — id={partner_id}"
+            ))
+        else:
+            partner_id = opts['partner_id']
 
         acc = ChartOfAccount.objects.filter(
             organization=org, code=from_code, is_control_account=True,

@@ -64,6 +64,27 @@ function buildSignals(d: CanaryReport['details'][number]): Signal[] {
             clean: d.consolidation_clean ?? true,
             count: (d.consolidation_failed_runs ?? 0) + (d.consolidation_missing_ic ?? 0) + (d.consolidation_missing_runs ?? 0),
         },
+        {
+            key: 'close_checklist',
+            label: 'Close checklist',
+            clean: d.close_checklist_clean ?? true,
+            count: (d.close_checklist_abandoned ?? 0) + (d.close_checklist_overdue ?? 0),
+        },
+        {
+            key: 'realized_fx',
+            label: 'Realized FX',
+            clean: d.realized_fx_clean ?? true,
+            count: d.realized_fx_missing ?? 0,
+        },
+        {
+            key: 'tax_coverage',
+            label: 'Tax country coverage',
+            clean: d.tax_coverage_clean ?? true,
+            count: d.tax_uncovered_countries ?? 0,
+            detail: d.tax_uncovered_top?.length
+                ? `missing: ${d.tax_uncovered_top.join(', ')}`
+                : undefined,
+        },
     ]
 }
 

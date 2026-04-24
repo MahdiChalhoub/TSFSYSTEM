@@ -1,17 +1,24 @@
 'use client'
 
+import { useState } from 'react'
 import {
     ShieldCheck, X, AlertTriangle, Lock, Plus, TrendingUp, TrendingDown,
-    ArrowRight, CheckCircle2, Loader2,
+    ArrowRight, CheckCircle2, Loader2, FlaskConical,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useModalDismiss } from '@/hooks/useModalDismiss'
-import type { ClosePreview } from '@/app/actions/finance/fiscal-year'
+import {
+    previewCloseFiscalYear,
+    type ClosePreview,
+    type DryRunClosePreview,
+} from '@/app/actions/finance/fiscal-year'
 
 export type CloseStep = 'preview' | 'result' | null
 
 interface YearEndCloseModalProps {
     closeStep: Exclude<CloseStep, null>
     closePreview: ClosePreview
+    yearId: number
     closeResult: string | null
     closeConfirmText: string
     setCloseConfirmText: (v: string) => void
@@ -22,10 +29,33 @@ interface YearEndCloseModalProps {
 }
 
 export function YearEndCloseModal({
-    closeStep, closePreview, closeResult, closeConfirmText, setCloseConfirmText,
+    closeStep, closePreview, yearId, closeResult, closeConfirmText, setCloseConfirmText,
     isPending, onClose, onDone, onExecute,
 }: YearEndCloseModalProps) {
     const dismiss = useModalDismiss(true, onClose)
+    const [dryRunning, setDryRunning] = useState(false)
+    const [dryResult, setDryResult] = useState<
+        { ok: true; preview: DryRunClosePreview } | { ok: false; error: string } | null
+    >(null)
+
+    const runDryClose = async () => {
+        setDryRunning(true)
+        setDryResult(null)
+        try {
+            const r = await previewCloseFiscalYear(yearId)
+            if (r.success) {
+                setDryResult({ ok: true, preview: r.preview })
+                if (r.preview.invariants_passed) {
+                    toast.success('Dry-run passed — safe to proceed with real close')
+                }
+            } else {
+                setDryResult({ ok: false, error: r.error })
+                toast.error('Dry-run caught an invariant violation — inspect before proceeding')
+            }
+        } finally {
+            setDryRunning(false)
+        }
+    }
 
     const today = new Date()
     const yearEnd = new Date(closePreview.year.end_date)
@@ -233,11 +263,58 @@ export function YearEndCloseModal({
                             </div>
                         )}
 
+                        {/* Dry-run result panel (only visible after a dry-run attempt) */}
+                        {dryResult && (
+                            <div className="rounded-xl p-3 space-y-2"
+                                style={{
+                                    background: dryResult.ok && dryResult.preview.invariants_passed
+                                        ? 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)'
+                                        : 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)',
+                                    border: `1px solid ${dryResult.ok && dryResult.preview.invariants_passed ? 'var(--app-success, #22c55e)' : 'var(--app-warning, #f59e0b)'}`,
+                                }}>
+                                <div className="flex items-center gap-1.5 text-tp-xs font-bold"
+                                    style={{ color: dryResult.ok && dryResult.preview.invariants_passed ? 'var(--app-success, #22c55e)' : 'var(--app-warning, #f59e0b)' }}>
+                                    <FlaskConical size={12} />
+                                    {dryResult.ok && dryResult.preview.invariants_passed
+                                        ? 'DRY-RUN PASSED · all invariants clean · no changes persisted'
+                                        : 'DRY-RUN CAUGHT AN ISSUE · fix before proceeding'}
+                                </div>
+                                {dryResult.ok ? (
+                                    <div className="text-tp-xs space-y-0.5 font-mono"
+                                        style={{ color: 'var(--app-foreground)' }}>
+                                        {dryResult.preview.closing_jes.map((je, i) => (
+                                            <div key={`c${i}`}>
+                                                Closing JE [{je.scope}]: {je.lines} lines · Dr {je.total_debit} / Cr {je.total_credit}
+                                                {je.pnl_net && ` · P&L net=${je.pnl_net}`}
+                                            </div>
+                                        ))}
+                                        {dryResult.preview.opening_jes.map((je, i) => (
+                                            <div key={`o${i}`}>
+                                                Opening JE [{je.scope}] → {je.target_year}: {je.lines} lines · Dr {je.total_debit} / Cr {je.total_credit}
+                                            </div>
+                                        ))}
+                                        {dryResult.preview.messages?.map((m, i) => (
+                                            <div key={`m${i}`} style={{ color: 'var(--app-muted-foreground)' }}>· {m}</div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-tp-xs" style={{ color: 'var(--app-foreground)' }}>
+                                        {dryResult.error}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <div className="flex gap-2 pt-1">
                             <button onClick={onClose}
                                 className="flex-1 py-2.5 text-tp-sm font-bold rounded-xl border transition-all"
                                 style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                                 Cancel
+                            </button>
+                            <button onClick={() => void runDryClose()} disabled={dryRunning || isPending}
+                                className="flex-1 py-2.5 text-tp-sm font-bold rounded-xl border transition-all disabled:opacity-40 flex items-center justify-center gap-1.5"
+                                style={{ borderColor: 'var(--app-border)', color: 'var(--app-foreground)' }}>
+                                {dryRunning ? <><Loader2 size={12} className="animate-spin" /> Simulating...</> : <><FlaskConical size={12} /> Dry-Run Close</>}
                             </button>
                             <button disabled={!closePreview.can_close || isPending || !confirmed}
                                 onClick={() => onExecute(isPartial)}

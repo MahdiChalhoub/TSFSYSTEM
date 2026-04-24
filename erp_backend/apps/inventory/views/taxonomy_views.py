@@ -983,6 +983,33 @@ class CategoryViewSet(TenantModelViewSet):
                 return Response(conflict, status=status.HTTP_409_CONFLICT)
         return super().destroy(request, *args, **kwargs)
 
+    @action(detail=False, methods=['get', 'post'], url_path='catalogue-languages')
+    def catalogue_languages(self, request):
+        """Get / set the list of locale codes the tenant wants in the catalogue.
+        Stored in Organization.settings['catalogue_languages']. Default: ['fr','ar'].
+        Codes are arbitrary strings (ISO 639-1 recommended). Empty list =
+        single-language mode (only the base `name` field shows up in forms)."""
+        organization, err = _get_org_or_400()
+        if err: return err
+        settings = organization.settings or {}
+        if request.method == 'POST':
+            codes = request.data.get('languages') or []
+            if not isinstance(codes, list):
+                return Response({'error': 'languages must be an array of codes'}, status=400)
+            # Normalise: lowercase, strip, dedupe, keep max 20 entries
+            cleaned = []
+            seen = set()
+            for c in codes:
+                s = str(c or '').strip().lower()
+                if s and s not in seen:
+                    cleaned.append(s); seen.add(s)
+                if len(cleaned) >= 20: break
+            settings['catalogue_languages'] = cleaned
+            organization.settings = settings
+            organization.save(update_fields=['settings'])
+            return Response({'languages': cleaned})
+        return Response({'languages': settings.get('catalogue_languages', ['fr', 'ar'])})
+
     @action(detail=True, methods=['get'])
     def audit(self, request, pk=None):
         """Last 50 audit entries for this category (create / update / delete).

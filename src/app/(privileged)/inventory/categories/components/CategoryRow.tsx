@@ -16,7 +16,7 @@ import { MobileCategoryRow } from '../mobile/MobileCategoryRow'
 export const CategoryRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
     onViewProducts, onViewBrands, onViewAttributes, onSelect, compact,
-    selectable, isChecked, onToggleCheck,
+    selectable, isChecked, isCheckedFn, onToggleCheck,
 }: {
     node: CategoryNode; level: number; searchQuery: string; forceExpanded?: boolean;
     onEdit: (n: CategoryNode) => void; onAdd: (parentId?: number) => void; onDelete: (n: CategoryNode) => void;

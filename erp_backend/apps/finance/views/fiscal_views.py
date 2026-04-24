@@ -113,6 +113,11 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         """
         Year-end finalize: runs the full SAP-style sequence (P&L → retained earnings, opening
         balances for next year) and permanently hard-locks to FINALIZED.
+
+        Pass `dry_run=true` in the request body to simulate the close
+        inside an atomic block and roll back. Returns a preview payload
+        describing what WOULD have been written — useful for operators
+        to verify invariants + JE shape before committing.
         """
         fiscal_year = self.get_object()
         organization_id = get_current_tenant_id()
@@ -120,17 +125,29 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
         # Optional close_date for partial year close
         close_date = request.data.get('close_date') if hasattr(request, 'data') else None
+        dry_run = bool(request.data.get('dry_run', False)) if hasattr(request, 'data') else False
 
         try:
             from apps.finance.services.closing_service import ClosingService
-            ClosingService.close_fiscal_year(
+            result = ClosingService.close_fiscal_year(
                 organization, fiscal_year,
                 user=request.user if request.user.is_authenticated else None,
                 close_date=close_date,
+                dry_run=dry_run,
             )
+            if dry_run:
+                # Service returns the preview dict on dry-run
+                return Response({
+                    "status": "Dry-run complete — no changes persisted",
+                    "dry_run": True,
+                    "preview": result,
+                })
             return Response({"status": "Fiscal Year Finalized"})
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "error": str(e),
+                "dry_run": dry_run,
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['get'], url_path='close-preview')
     def close_preview(self, request, pk=None):
@@ -488,6 +505,118 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         return Response({
             'events': events,
             'je_by_month': je_by_month,
+        })
+
+    @action(detail=True, methods=['get'], url_path='close-checklist')
+    def close_checklist(self, request, pk=None):
+        """Return the pre-close checklist run for this fiscal year.
+        Creates one from the default template if none exists. Applies
+        auto-checks on every call so the progress reflects current state.
+        """
+        from apps.finance.services.close_checklist_service import (
+            CloseChecklistService,
+        )
+        from apps.finance.models import CloseChecklistRun, CloseChecklistTemplate
+
+        fy = self.get_object()
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({'error': 'No organization context'}, status=status.HTTP_400_BAD_REQUEST)
+
+        run = CloseChecklistRun.objects.filter(
+            organization_id=organization_id, fiscal_year=fy,
+            status__in=('OPEN', 'READY'),
+        ).order_by('-created_at').first()
+
+        if run is None:
+            tmpl = CloseChecklistTemplate.objects.filter(
+                organization_id=organization_id,
+                scope='FISCAL_YEAR', is_default=True,
+            ).first()
+            if tmpl is None:
+                tmpl = CloseChecklistService.ensure_default_template(fy.organization)
+            run = CloseChecklistService.start_run(
+                fy.organization, template=tmpl, fiscal_year=fy,
+            )
+
+        CloseChecklistService.apply_auto_checks(run)
+        run.refresh_from_db()
+
+        items = [
+            {
+                'state_id': state.id,
+                'item_id': state.item.id,
+                'order': state.item.order,
+                'name': state.item.name,
+                'category': state.item.category,
+                'is_required': state.item.is_required,
+                'is_complete': state.is_complete,
+                'auto_checked': state.auto_checked,
+                'completed_at': state.completed_at.isoformat() if state.completed_at else None,
+                'completed_by': state.completed_by.username if state.completed_by_id else None,
+                'notes': state.notes,
+                'auto_check_signal': state.item.auto_check_signal,
+            }
+            for state in run.item_states.select_related('item', 'completed_by').order_by('item__order')
+        ]
+        required_missing = sum(
+            1 for s in items if s['is_required'] and not s['is_complete']
+        )
+        return Response({
+            'run_id': run.id,
+            'status': run.status,
+            'template_name': run.template.name,
+            'ready_to_close': run.is_ready_to_close(),
+            'total_items': len(items),
+            'completed_items': sum(1 for s in items if s['is_complete']),
+            'required_missing': required_missing,
+            'items': items,
+        })
+
+    @action(detail=True, methods=['post'], url_path='close-checklist/toggle')
+    def close_checklist_toggle(self, request, pk=None):
+        """Tick or untick a single checklist item.
+
+        Body: { state_id: int, complete: bool, notes?: str }
+        """
+        from apps.finance.models import CloseChecklistItemState
+        from django.utils import timezone as tz
+
+        fy = self.get_object()
+        state_id = request.data.get('state_id')
+        if not state_id:
+            return Response({'error': 'state_id required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            state = CloseChecklistItemState.objects.select_related('run', 'item').get(
+                id=state_id, run__fiscal_year=fy,
+            )
+        except CloseChecklistItemState.DoesNotExist:
+            return Response({'error': 'item state not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        complete = bool(request.data.get('complete', True))
+        notes = request.data.get('notes') or ''
+        state.is_complete = complete
+        state.completed_at = tz.now() if complete else None
+        state.completed_by = request.user if complete else None
+        state.auto_checked = False  # manual override
+        if notes:
+            state.notes = notes
+        state.save()
+
+        run = state.run
+        if run.is_ready_to_close() and run.status == 'OPEN':
+            run.status = 'READY'
+            run.save(update_fields=['status'])
+        elif not run.is_ready_to_close() and run.status == 'READY':
+            run.status = 'OPEN'
+            run.save(update_fields=['status'])
+
+        return Response({
+            'state_id': state.id,
+            'is_complete': state.is_complete,
+            'run_status': run.status,
+            'ready_to_close': run.is_ready_to_close(),
         })
 
     @action(detail=False, methods=['get'], url_path='integrity-canary')

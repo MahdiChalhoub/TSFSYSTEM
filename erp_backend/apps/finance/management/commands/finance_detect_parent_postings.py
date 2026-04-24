@@ -62,6 +62,13 @@ class Command(BaseCommand):
                                   'description. Highly recommended — becomes the only '
                                   'forensic breadcrumb for why this collapse was made.'))
 
+        parser.add_argument('--dimensions', action='store_true', default=False,
+                            help=('Break down each offender by partner/contact/cost_center/'
+                                  'product. Use BEFORE --migrate to decide whether '
+                                  '--force-collapse would silently flatten meaningful '
+                                  'segmentation, or whether you need multiple targeted '
+                                  '--line-ids migrations instead.'))
+
     def handle(self, *args, **opts):
         from apps.finance.models import ChartOfAccount, JournalEntryLine, FiscalYear
         from erp.models import Organization
@@ -123,6 +130,10 @@ class Command(BaseCommand):
                         f"({r['account__type']}): {r['n']} line(s), "
                         f"DR {r['d']} / CR {r['c']} → net {net}"
                     )
+                    if opts.get('dimensions'):
+                        self._dimension_breakdown(
+                            org, scope, r['account_id'], fiscal_year=opts.get('fiscal_year'),
+                        )
                 if not any_rows:
                     self.stdout.write(f"  [{scope}] clean ✓")
 
@@ -144,6 +155,52 @@ class Command(BaseCommand):
                 "\nRun with --migrate --from-account <code> --to-account <code> "
                 "to reclassify lines into a leaf account."
             ))
+
+    def _dimension_breakdown(self, org, scope, account_id, *, fiscal_year=None):
+        """Show how the offender's balance splits across dimensional
+        attributes on JE lines — so the operator can tell whether
+        collapsing everything into a single leaf would silently lose
+        meaningful segmentation.
+
+        Surfaces four axes: contact (CRM), partner (raw partner_id +
+        type), cost_center, product. Empty-valued rows are collected
+        under '<none>' so "no partner at all" is visible.
+        """
+        from apps.finance.models import JournalEntryLine
+        from django.db.models import Sum, Count
+
+        base = JournalEntryLine.objects.filter(
+            organization=org, account_id=account_id,
+            journal_entry__scope=scope,
+            journal_entry__is_superseded=False,
+            journal_entry__status='POSTED',
+        )
+        if fiscal_year:
+            base = base.filter(journal_entry__fiscal_year_id=fiscal_year)
+
+        def _render(label, key):
+            rows = (
+                base.values(key)
+                .annotate(d=Sum('debit'), c=Sum('credit'), n=Count('id'))
+                .order_by(key)
+            )
+            printed = False
+            for r in rows:
+                val = r[key]
+                if val is None or val == '':
+                    val = '<none>'
+                net = (r['d'] or Decimal('0.00')) - (r['c'] or Decimal('0.00'))
+                if not printed:
+                    self.stdout.write(f"      └─ by {label}:")
+                    printed = True
+                self.stdout.write(
+                    f"          {str(val)[:30]:30} n={r['n']:>3}  net={net}"
+                )
+
+        _render('contact (CRM)', 'contact_id')
+        _render('partner_type', 'partner_type')
+        _render('cost_center', 'cost_center')
+        _render('product', 'product_id')
 
     def _migrate(self, org, opts, scopes):
         from apps.finance.models import ChartOfAccount, JournalEntryLine

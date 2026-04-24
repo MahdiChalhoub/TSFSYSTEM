@@ -388,6 +388,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             {fy.closeStep && fy.closePreview && (
                 <YearEndCloseModal
                     closeStep={fy.closeStep} closePreview={fy.closePreview} closeResult={fy.closeResult}
+                    yearId={fy.closePreview.year.id}
                     closeConfirmText={fy.closeConfirmText} setCloseConfirmText={fy.setCloseConfirmText}
                     isPending={fy.isPending} onClose={fy.closeYearEndModal}
                     onDone={() => { fy.closeYearEndModal(); fy.refreshData() }}

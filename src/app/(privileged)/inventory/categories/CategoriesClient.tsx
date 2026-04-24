@@ -155,6 +155,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     }), [data])
 
     return (
+        <>
         <TreeMasterPage
             config={{
                 title: 'Categories',
@@ -305,34 +306,36 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     </div>
                 ))
             }}
-            {/* Extra floating surfaces rendered via children don't fit the
-             *  TreeMasterPage API — keep them as siblings outside. */}
-            {selectedIds.size > 0 && (
-                <BulkActionBar
-                    count={selectedIds.size}
-                    onMove={() => setBulkDialog('move')}
-                    onPrefix={() => setBulkDialog('prefix')}
-                    onDelete={() => setBulkDialog('delete')}
-                    onClear={clearSelection}
-                />
-            )}
-            {bulkDialog && (
-                <BulkDialog
-                    mode={bulkDialog}
-                    selectedIds={Array.from(selectedIds)}
-                    allCategories={data}
-                    busy={bulkBusy}
-                    onClose={() => setBulkDialog(null)}
-                    onDone={() => { setBulkDialog(null); clearSelection(); router.refresh() }}
-                />
-            )}
-            {showImport && (
-                <CsvImportDialog
-                    allCategories={data}
-                    onClose={() => setShowImport(false)}
-                    onDone={() => { setShowImport(false); router.refresh() }}
-                />
-            )}
         </TreeMasterPage>
+
+        {/* Floating surfaces — mounted outside the render-prop tree so
+         *  TreeMasterPage's `children` stays a single function. */}
+        {selectedIds.size > 0 && (
+            <BulkActionBar
+                count={selectedIds.size}
+                onMove={() => setBulkDialog('move')}
+                onPrefix={() => setBulkDialog('prefix')}
+                onDelete={() => setBulkDialog('delete')}
+                onClear={clearSelection}
+            />
+        )}
+        {bulkDialog && (
+            <BulkDialog
+                mode={bulkDialog}
+                selectedIds={Array.from(selectedIds)}
+                allCategories={data}
+                busy={bulkBusy}
+                onClose={() => setBulkDialog(null)}
+                onDone={() => { setBulkDialog(null); clearSelection(); router.refresh() }}
+            />
+        )}
+        {showImport && (
+            <CsvImportDialog
+                allCategories={data}
+                onClose={() => setShowImport(false)}
+                onDone={() => { setShowImport(false); router.refresh() }}
+            />
+        )}
+        </>
     )
 }

@@ -283,6 +283,56 @@ def run_close_chain_canary(org_id: int | None = None):
                 for br in snap.get('breaks', [])[:3]
             ]
 
+        # Tax-coverage integrity — any country referenced by an
+        # OrgTaxPolicy or CounterpartyTaxProfile must have a matching
+        # CountryTaxTemplate in the global library. Missing coverage
+        # means transactions fall through to default handling.
+        try:
+            tax_rpt = ClosingService.check_tax_coverage(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: check_tax_coverage crashed for org %s: %s",
+                org.id, exc,
+            )
+            tax_rpt = {'clean': True, 'error': str(exc)}
+        detail['tax_coverage_clean'] = tax_rpt.get('clean', True)
+        detail['tax_uncovered_countries'] = len(tax_rpt.get('uncovered_countries', []))
+        if tax_rpt.get('uncovered_countries'):
+            detail['tax_uncovered_top'] = tax_rpt['uncovered_countries'][:5]
+
+        # Close-checklist integrity — abandoned runs + years overdue
+        # a ready checklist. Opt-in: orgs with no default template are
+        # reported clean.
+        try:
+            from apps.finance.services.close_checklist_service import (
+                CloseChecklistService,
+            )
+            cl_rpt = CloseChecklistService.check_close_checklist_integrity(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: check_close_checklist_integrity crashed for org %s: %s",
+                org.id, exc,
+            )
+            cl_rpt = {'clean': True, 'error': str(exc)}
+        detail['close_checklist_clean'] = cl_rpt.get('clean', True)
+        detail['close_checklist_abandoned'] = len(cl_rpt.get('abandoned_runs', []))
+        detail['close_checklist_overdue'] = len(cl_rpt.get('years_overdue_checklist', []))
+
+        # Realized-FX integrity — foreign invoices fully paid with no
+        # realized-FX JE. Opt-in: orgs without Currency/FX_GAIN setup
+        # report clean.
+        try:
+            from apps.finance.services.realized_fx_service import RealizedFXService
+            rfx_rpt = RealizedFXService.check_realized_fx_integrity(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: check_realized_fx_integrity crashed for org %s: %s",
+                org.id, exc,
+            )
+            rfx_rpt = {'clean': True, 'error': str(exc)}
+        detail['realized_fx_clean'] = rfx_rpt.get('clean', True)
+        detail['realized_fx_missing'] = len(rfx_rpt.get('missing_realized_fx', []))
+
         # Consolidation integrity — failed runs, groups missing IC rules,
         # recent closed periods without a COMPLETED consolidation.
         # Skipped silently for orgs with no ConsolidationGroup rows.
@@ -369,6 +419,9 @@ def run_close_chain_canary(org_id: int | None = None):
             and fx_rpt['clean']
             and rev_rpt.get('clean', False)
             and cons_rpt.get('clean', True)
+            and cl_rpt.get('clean', True)
+            and rfx_rpt.get('clean', True)
+            and tax_rpt.get('clean', True)
         )
         if overall_safe:
             out['orgs_clean'] += 1

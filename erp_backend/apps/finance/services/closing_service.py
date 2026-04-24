@@ -23,6 +23,14 @@ from django.core.exceptions import ValidationError
 logger = logging.getLogger(__name__)
 
 
+class _DryRunComplete(Exception):
+    """Sentinel raised at the end of a dry_run close to force the
+    enclosing transaction.atomic() to roll back. Carries the preview
+    payload so the outer boundary can hand it back to the caller."""
+    def __init__(self, payload):
+        self.payload = payload
+
+
 class ClosingService:
     """Handles period and year-end close per SAP/Odoo/Oracle standards."""
 
@@ -159,11 +167,38 @@ class ClosingService:
             return fiscal_year
 
     @staticmethod
-    def close_fiscal_year(organization, fiscal_year, user=None, retained_earnings_account_id=None, close_date=None):
+    def close_fiscal_year(organization, fiscal_year, user=None,
+                          retained_earnings_account_id=None, close_date=None,
+                          dry_run=False):
         """
         Full year-end close sequence.
 
-        Steps:
+        `dry_run=True` runs the entire close inside an atomic block,
+        then raises a sentinel to force rollback. Returns a preview
+        dict describing what WOULD have happened — every JE, every
+        invariant, every snapshot — without any DB persistence. Real
+        callers get the FiscalYear row as before.
+
+        Implementation: the public method is a thin wrapper that
+        catches the sentinel. All work is delegated to
+        `_close_fiscal_year_impl`, which raises on completion when
+        dry_run=True. Kept split so `with transaction.atomic()` stays
+        at a single indent level.
+        """
+        try:
+            return ClosingService._close_fiscal_year_impl(
+                organization, fiscal_year, user=user,
+                retained_earnings_account_id=retained_earnings_account_id,
+                close_date=close_date, dry_run=dry_run,
+            )
+        except _DryRunComplete as done:
+            return done.payload
+
+    @staticmethod
+    def _close_fiscal_year_impl(organization, fiscal_year, user=None,
+                                retained_earnings_account_id=None,
+                                close_date=None, dry_run=False):
+        """Steps:
           1. Verify all periods are closed (or partial close at close_date)
           2. Close P&L accounts into retained earnings
           3. Generate opening balances for the remainder year (or next year)
@@ -176,8 +211,25 @@ class ClosingService:
         from apps.finance.services.ledger_core import LedgerCoreMixin
         from datetime import date as date_cls, timedelta
 
-        if fiscal_year.is_closed:
+        if fiscal_year.is_closed and not dry_run:
             raise ValidationError(f"Fiscal year {fiscal_year.name} is already closed.")
+        if fiscal_year.is_closed and dry_run:
+            # Dry-run on a closed year is still useful (what WOULD re-close look like?)
+            # but skip the guard rather than silently returning nothing.
+            pass
+
+        # Preview accumulator — populated as the close runs so we can
+        # hand a rich report back to the caller on dry_run=True.
+        preview = {
+            'dry_run': dry_run,
+            'fiscal_year_id': fiscal_year.id,
+            'fiscal_year_name': fiscal_year.name,
+            'closing_jes': [],      # list of {scope, lines, total_debit, total_credit}
+            'opening_jes': [],
+            'messages': [],
+            'invariants_passed': False,
+            'snapshot_captured': False,
+        }
 
         # Detect partial close: close_date is before fiscal_year.end_date
         is_partial = False
@@ -443,6 +495,20 @@ class ClosingService:
                 elif scope == 'INTERNAL':
                     fiscal_year.internal_closing_journal_entry = closing_entry
 
+                # Preview capture — row is already in the DB but will
+                # roll back at the end if dry_run; we snapshot here so
+                # the preview reflects what the operator would see.
+                if dry_run:
+                    total_d = sum((Decimal(str(l['debit'])) for l in closing_lines), Decimal('0'))
+                    total_c = sum((Decimal(str(l['credit'])) for l in closing_lines), Decimal('0'))
+                    preview['closing_jes'].append({
+                        'scope': scope,
+                        'lines': len(closing_lines),
+                        'total_debit': str(total_d),
+                        'total_credit': str(total_c),
+                        'pnl_net': str(total_pnl),
+                    })
+
             # ── Step 4: Resolve next fiscal year ──
             # Auto-creation of a remainder year on partial close was removed —
             # it created silent "FY 2026-B" ghost years that confused users and
@@ -475,11 +541,37 @@ class ClosingService:
                 ClosingService.generate_opening_balances(
                     organization, fiscal_year, next_year, user=user
                 )
+                if dry_run:
+                    from apps.finance.models import JournalEntryLine
+                    for scope in ('OFFICIAL', 'INTERNAL'):
+                        ob_lines = JournalEntryLine.objects.filter(
+                            organization=organization,
+                            journal_entry__fiscal_year=next_year,
+                            journal_entry__journal_type='OPENING',
+                            journal_entry__journal_role='SYSTEM_OPENING',
+                            journal_entry__scope=scope,
+                            journal_entry__is_superseded=False,
+                        )
+                        cnt = ob_lines.count()
+                        from django.db.models import Sum
+                        agg = ob_lines.aggregate(d=Sum('debit'), c=Sum('credit'))
+                        if cnt:
+                            preview['opening_jes'].append({
+                                'scope': scope,
+                                'target_year': next_year.name,
+                                'lines': cnt,
+                                'total_debit': str(agg['d'] or 0),
+                                'total_credit': str(agg['c'] or 0),
+                            })
             else:
                 logger.warning(
                     f"ClosingService: No next fiscal year found after {fiscal_year.name}. "
                     f"Opening balances not generated. Create next year first."
                 )
+                if dry_run:
+                    preview['messages'].append(
+                        f"No next fiscal year after {fiscal_year.name} — opening JEs would be skipped."
+                    )
 
             # ── Pre-close checklist gate (opt-in) ────────────────────
             # If the organisation has a default checklist template,
@@ -514,20 +606,34 @@ class ClosingService:
                 organization, fiscal_year, user=user
             )
 
+            preview['invariants_passed'] = True
+            preview['snapshot_captured'] = True
+
             # ── Step 5: Mark fiscal year FINALIZED ────────────────────
             # This completes the Year-End Close sequence by permanently locking the year.
             # Transition lattice is OPEN → CLOSED → FINALIZED; bridge via CLOSED when
             # the caller hit finalize directly on an open year (the accounting work
             # above has already done the soft-close equivalent).
-            if fiscal_year.status == 'OPEN':
-                fiscal_year.transition_to('CLOSED', user=user)
-            fiscal_year.transition_to('FINALIZED', user=user)
+            if not dry_run:
+                if fiscal_year.status == 'OPEN':
+                    fiscal_year.transition_to('CLOSED', user=user)
+                fiscal_year.transition_to('FINALIZED', user=user)
 
-            logger.info(
-                f"ClosingService: Fiscal year {fiscal_year.name} finalized by "
-                f"{user.username if user else 'system'}"
+                logger.info(
+                    f"ClosingService: Fiscal year {fiscal_year.name} finalized by "
+                    f"{user.username if user else 'system'}"
+                )
+                return fiscal_year
+
+            # ── Dry-run terminator ──
+            # All invariants passed, JEs wrote, snapshot captured, status
+            # would transition. Raise to roll the atomic block back and
+            # surface the preview to the outer boundary.
+            preview['final_status'] = 'FINALIZED (simulated)'
+            preview['messages'].insert(
+                0, 'Dry-run complete — all invariants passed. No changes persisted.'
             )
-            return fiscal_year
+            raise _DryRunComplete(preview)
 
     # Tolerance for reconciliation checks — accounts for rounding from
     # multi-line closing JEs with decimal splits. 1 cent is generous for
@@ -1720,6 +1826,66 @@ class ClosingService:
             if account_drifted:
                 report['drifted'] += 1
                 report['clean'] = False
+
+        return report
+
+    @staticmethod
+    def check_tax_coverage(organization):
+        """Tax-pack coverage tripwire.
+
+        Walks every CounterpartyTaxProfile and OrgTaxPolicy on this org,
+        collects distinct country_codes, and flags any that don't have a
+        matching CountryTaxTemplate in the global library. Missing
+        coverage means transactions with that counterparty will fall
+        through to default VAT handling — usually wrong.
+
+        Also surfaces the org's OWN country if no tax policy is defined.
+
+        Skipped silently (reports clean) if the tax engine models aren't
+        installed in this deployment.
+        """
+        report = {
+            'organization_id': organization.id,
+            'organization_slug': getattr(organization, 'slug', None),
+            'clean': True,
+            'covered_countries': 0,
+            'uncovered_countries': [],
+        }
+
+        try:
+            from apps.finance.models import (
+                CountryTaxTemplate, OrgTaxPolicy, CounterpartyTaxProfile,
+            )
+        except Exception:
+            return report
+
+        supported = set(
+            CountryTaxTemplate.objects.filter(is_active=True)
+            .values_list('country_code', flat=True)
+        )
+        report['covered_countries'] = len(supported)
+
+        referenced = set()
+        try:
+            referenced |= set(
+                OrgTaxPolicy.objects.filter(organization=organization)
+                .values_list('country_code', flat=True)
+            )
+        except Exception:
+            pass
+        try:
+            referenced |= set(
+                CounterpartyTaxProfile.objects.filter(organization=organization)
+                .values_list('country_code', flat=True)
+            )
+        except Exception:
+            pass
+
+        referenced = {c for c in referenced if c and c.strip()}
+        missing = sorted(referenced - supported)
+        if missing:
+            report['uncovered_countries'] = missing
+            report['clean'] = False
 
         return report
 

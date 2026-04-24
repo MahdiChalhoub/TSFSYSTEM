@@ -3,20 +3,24 @@ import { getStatusStyle } from '../_lib/constants'
 import { PeriodsGrid } from './PeriodsGrid'
 import { SummaryTab } from './SummaryTab'
 import { HistoryTab } from './HistoryTab'
+import { CloseChecklistPanel } from './CloseChecklistPanel'
 import type { YearSummary, YearHistoryEvent } from '@/app/actions/finance/fiscal-year'
 
 const TABS = [
     { id: 'periods' as const, label: 'Periods' },
     { id: 'summary' as const, label: 'Summary' },
+    { id: 'checklist' as const, label: 'Close Checklist' },
     { id: 'history' as const, label: 'History' },
 ]
+
+type YearTab = 'periods' | 'summary' | 'checklist' | 'history'
 
 interface YearPanelProps {
     year: Record<string, any>
     isExpanded: boolean
     onToggle: () => void
-    activeTab: 'periods' | 'summary' | 'history'
-    onTabChange: (tab: 'periods' | 'summary' | 'history') => void
+    activeTab: YearTab
+    onTabChange: (tab: YearTab) => void
     isPending: boolean
     closingYearId: number | null
     summary: YearSummary | undefined
@@ -102,6 +106,7 @@ export function YearPanel({
                         <PeriodsGrid periods={periods} year={year} isPending={isPending} handlePeriodStatus={handlePeriodStatus} handlePeriodAction={handlePeriodAction} />
                     )}
                     {activeTab === 'summary' && <SummaryTab summary={summary} />}
+                    {activeTab === 'checklist' && <CloseChecklistPanel fiscalYearId={year.id} />}
                     {activeTab === 'history' && <HistoryTab history={history} />}
                 </div>
             )}
