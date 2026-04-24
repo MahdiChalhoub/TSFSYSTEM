@@ -1,0 +1,201 @@
+// @ts-nocheck
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import {
+    ChevronRight, Plus, Pencil, Trash2, MapPin,
+    Building2, Store, Warehouse as WarehouseIcon, Cloud, Package,
+} from 'lucide-react'
+
+/* ═══════════════════════════════════════════════════════════
+ *  WAREHOUSE ROW — recursive tree row (same pattern as UnitRow).
+ *  Parent/child hierarchy is Warehouse → Store → Warehouse → …
+ *  via the `parent` FK; the generic buildTree in TreeMasterPage
+ *  stitches the flat list into nested `children` arrays.
+ * ═══════════════════════════════════════════════════════════ */
+
+const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string }> = {
+    BRANCH:    { icon: Building2,    label: 'Branch',    color: 'var(--app-success)' },
+    STORE:     { icon: Store,        label: 'Store',     color: 'var(--app-info)' },
+    WAREHOUSE: { icon: WarehouseIcon,label: 'Warehouse', color: 'var(--app-warning)' },
+    VIRTUAL:   { icon: Cloud,        label: 'Virtual',   color: 'var(--app-primary)' },
+}
+
+export const WarehouseRow = ({
+    node, level, onEdit, onAdd, onDelete, onSelect,
+    searchQuery, forceExpanded,
+}: any) => {
+    const isParent = node.children && node.children.length > 0
+    const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
+    const prevForceExpanded = useRef(forceExpanded)
+    useEffect(() => { if (searchQuery) setIsOpen(true) }, [searchQuery])
+    useEffect(() => {
+        if (forceExpanded !== undefined && forceExpanded !== prevForceExpanded.current) setIsOpen(forceExpanded)
+        prevForceExpanded.current = forceExpanded
+    }, [forceExpanded])
+
+    const cfg = TYPE_CONFIG[node.location_type] || TYPE_CONFIG.WAREHOUSE
+    const Icon = cfg.icon
+    const isRoot = level === 0
+    const skuCount = node.inventory_count ?? 0
+    const childCount = node.children?.length ?? 0
+
+    return (
+        <div>
+            <div
+                className={`group flex items-center gap-2 transition-colors duration-150 relative cursor-pointer
+                    ${isRoot ? 'py-2.5' : 'py-2'} hover:bg-app-surface-hover`}
+                onClick={(e) => { e.stopPropagation(); if (isParent) setIsOpen(o => !o); else onSelect?.(node) }}
+                onDoubleClick={(e) => { e.stopPropagation(); onSelect?.(node) }}
+                style={{
+                    paddingLeft: `${12 + (level > 0 ? level * 20 : 0)}px`,
+                    paddingRight: '12px',
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
+                }}
+            >
+                {/* Left accent for root */}
+                {isRoot && (
+                    <div className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full"
+                        style={{ background: cfg.color }} />
+                )}
+                {/* Indent connector */}
+                {level > 0 && (
+                    <div className="absolute top-0 bottom-0"
+                        style={{
+                            left: `${10 + (level - 1) * 20}px`,
+                            width: '1px',
+                            background: 'color-mix(in srgb, var(--app-border) 25%, transparent)',
+                        }} />
+                )}
+
+                {/* Chevron */}
+                <button onClick={(e) => { e.stopPropagation(); isParent && setIsOpen(!isOpen) }}
+                    className={`w-5 h-5 flex items-center justify-center rounded-md flex-shrink-0 ${isParent ? 'hover:bg-app-border/40' : ''}`}>
+                    {isParent ? (
+                        <ChevronRight size={14}
+                            className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
+                            style={{ color: isOpen ? cfg.color : 'var(--app-muted-foreground)' }} />
+                    ) : (
+                        <div className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
+                    )}
+                </button>
+
+                {/* Icon */}
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                        background: `color-mix(in srgb, ${cfg.color} ${isRoot ? 15 : 10}%, transparent)`,
+                        color: cfg.color,
+                    }}>
+                    <Icon size={13} />
+                </div>
+
+                {/* Name block */}
+                <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); onSelect?.(node) }}>
+                    <div className="flex items-center gap-1.5">
+                        <span className={`truncate text-tp-lg ${isRoot ? 'font-bold text-app-foreground' : 'font-medium text-app-foreground'}`}>
+                            {node.name}
+                        </span>
+                        <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full flex-shrink-0"
+                            style={{
+                                background: `color-mix(in srgb, ${cfg.color} 12%, transparent)`,
+                                color: cfg.color,
+                            }}>
+                            {cfg.label}
+                        </span>
+                        {node.can_sell && (
+                            <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-[1px] rounded flex-shrink-0"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
+                                    color: 'var(--app-success)',
+                                }}>POS</span>
+                        )}
+                        {node.is_active === false && (
+                            <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-[1px] rounded flex-shrink-0"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-error) 10%, transparent)',
+                                    color: 'var(--app-error)',
+                                }}>Inactive</span>
+                        )}
+                    </div>
+                    {(node.reference_code || node.code || node.city) && (
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            {node.reference_code && (
+                                <span className="font-mono text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                        color: 'var(--app-primary)',
+                                    }}>
+                                    {node.reference_code}
+                                </span>
+                            )}
+                            {node.code && (
+                                <span className="font-mono text-tp-xxs font-medium text-app-muted-foreground">
+                                    {node.code}
+                                </span>
+                            )}
+                            {node.city && (
+                                <span className="text-tp-xxs font-medium text-app-muted-foreground flex items-center gap-0.5">
+                                    <MapPin size={9} />{node.city}
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Sub count */}
+                <div className="hidden sm:flex w-10 flex-shrink-0 justify-center">
+                    <span className="text-tp-xs font-semibold tabular-nums"
+                        style={{ color: isParent ? 'var(--app-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
+                        {isParent ? childCount : '–'}
+                    </span>
+                </div>
+
+                {/* Country */}
+                <div className="hidden md:flex w-16 flex-shrink-0 justify-center">
+                    {node.country_name ? (
+                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                            style={{ color: cfg.color, background: `color-mix(in srgb, ${cfg.color} 8%, transparent)` }}>
+                            {node.country_iso2 || node.country_name}
+                        </span>
+                    ) : (
+                        <span className="text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>—</span>
+                    )}
+                </div>
+
+                {/* SKU count */}
+                <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
+                    <span className="text-tp-xs font-semibold tabular-nums flex items-center gap-0.5"
+                        style={{ color: skuCount > 0 ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
+                        <Package size={10} />{skuCount}
+                    </span>
+                </div>
+
+                {/* Actions */}
+                <div className="w-[68px] flex items-center justify-end gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    <button onClick={(e) => { e.stopPropagation(); onEdit(node) }}
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Edit">
+                        <Pencil size={12} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); onAdd(node.id) }}
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-info transition-colors" title="Add child">
+                        <Plus size={13} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); onDelete(node) }}
+                        className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors">
+                        <Trash2 size={12} />
+                    </button>
+                </div>
+            </div>
+            {isParent && isOpen && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                    {node.children.map((child: any) => (
+                        <WarehouseRow key={child.id} node={child} level={level + 1}
+                            onEdit={onEdit} onAdd={onAdd} onDelete={onDelete} onSelect={onSelect}
+                            searchQuery={searchQuery} forceExpanded={forceExpanded} />
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}

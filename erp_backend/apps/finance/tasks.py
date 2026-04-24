@@ -283,6 +283,60 @@ def run_close_chain_canary(org_id: int | None = None):
                 for br in snap.get('breaks', [])[:3]
             ]
 
+        # Consolidation integrity — failed runs, groups missing IC rules,
+        # recent closed periods without a COMPLETED consolidation.
+        # Skipped silently for orgs with no ConsolidationGroup rows.
+        try:
+            from apps.finance.services.consolidation_service import (
+                ConsolidationService,
+            )
+            cons_rpt = ConsolidationService.check_consolidation_integrity(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: check_consolidation_integrity crashed for org %s: %s",
+                org.id, exc,
+            )
+            cons_rpt = {'clean': True, 'error': str(exc)}  # fail-open on missing models
+        detail['consolidation_clean'] = cons_rpt.get('clean', True)
+        detail['consolidation_failed_runs'] = len(cons_rpt.get('failed_runs', []))
+        detail['consolidation_missing_ic'] = len(cons_rpt.get('groups_missing_ic_rules', []))
+        detail['consolidation_missing_runs'] = len(cons_rpt.get('periods_missing_consolidation', []))
+
+        # Revenue-recognition integrity — overdue releases, orphan
+        # satisfied obligations, over-recognised rows.
+        try:
+            from apps.finance.services.revenue_recognition_service import (
+                RevenueRecognitionService,
+            )
+            rev_rpt = RevenueRecognitionService.check_revenue_recognition_integrity(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: check_revenue_recognition_integrity crashed for org %s: %s",
+                org.id, exc,
+            )
+            rev_rpt = {'clean': False, 'error': str(exc)}
+        detail['revenue_recognition_clean'] = rev_rpt.get('clean', False)
+        detail['revenue_overdue_rows'] = len(rev_rpt.get('overdue_rows', []))
+        detail['revenue_orphan_obligations'] = len(rev_rpt.get('orphan_obligations', []))
+        detail['revenue_over_recognised'] = len(rev_rpt.get('over_recognised_rows', []))
+
+        # FX integrity — stale-rate, missing-revaluation, orphaned
+        # revaluation detection. Skipped silently if no base currency
+        # is configured (org doesn't use multi-currency yet).
+        try:
+            fx_rpt = ClosingService.check_fx_integrity(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: check_fx_integrity crashed for org %s: %s",
+                org.id, exc,
+            )
+            fx_rpt = {'clean': False, 'stale_rate_lines': 0, 'error': str(exc)}
+
+        detail['fx_integrity_clean'] = fx_rpt['clean']
+        detail['fx_stale_rate_lines'] = fx_rpt.get('stale_rate_lines', 0)
+        detail['fx_missing_revaluations'] = len(fx_rpt.get('missing_revaluation_periods', []))
+        detail['fx_orphaned_revaluations'] = len(fx_rpt.get('orphaned_revaluations', []))
+
         # Denormalized-balance validator — confirms COA.balance /
         # COA.balance_official match a fresh JE-line aggregation. Drift
         # is the fingerprint of a race, a manual DB edit, or a bug in
@@ -312,6 +366,9 @@ def run_close_chain_canary(org_id: int | None = None):
             and subledger['clean']
             and snap['clean']
             and bal_rpt['clean']
+            and fx_rpt['clean']
+            and rev_rpt.get('clean', False)
+            and cons_rpt.get('clean', True)
         )
         if overall_safe:
             out['orgs_clean'] += 1

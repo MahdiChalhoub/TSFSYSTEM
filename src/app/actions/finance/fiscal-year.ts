@@ -263,6 +263,21 @@ export type CanaryReport = {
         balance_integrity_drifted_accounts: number
         balance_integrity_rows: number
         balance_integrity_drifts_top?: Array<Record<string, string>>
+        // FX integrity
+        fx_integrity_clean?: boolean
+        fx_stale_rate_lines?: number
+        fx_missing_revaluations?: number
+        fx_orphaned_revaluations?: number
+        // Revenue recognition
+        revenue_recognition_clean?: boolean
+        revenue_overdue_rows?: number
+        revenue_orphan_obligations?: number
+        revenue_over_recognised?: number
+        // Consolidation
+        consolidation_clean?: boolean
+        consolidation_failed_runs?: number
+        consolidation_missing_ic?: number
+        consolidation_missing_runs?: number
     }>
 }
 

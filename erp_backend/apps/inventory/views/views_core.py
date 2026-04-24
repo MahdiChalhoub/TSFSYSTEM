@@ -47,13 +47,55 @@ from apps.inventory.serializers import StockAlertSerializer
 from apps.inventory.models import StockAlert, StockAlertService
 from apps.inventory.serializers import StockAlertSerializer
 from rest_framework import permissions
+from rest_framework.pagination import PageNumberPagination
 from erp.permissions import InventoryReadOnlyOrManage, permission_required
 
 from apps.inventory.mixins.branch_scoped import BranchScopedMixin
 
 
+class InventoryFastPagination(PageNumberPagination):
+    """
+    Pagination that skips the global ``SELECT COUNT(*)`` DRF normally
+    issues for every list response. On a tenant with tens of thousands
+    of inventory rows that COUNT alone costs multiple seconds; the
+    sidebar only needs the first page, so the count is wasted work.
+
+    We instead fetch ``page_size + 1`` rows and report ``has_more``
+    based on whether the overshoot row came back. Response shape keeps
+    the ``results`` key so existing frontends that do
+    ``res?.results ?? res`` keep working.
+    """
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 500
+
+    def paginate_queryset(self, queryset, request, view=None):
+        self.request = request
+        page_size = self.get_page_size(request)
+        if not page_size:
+            return None
+        try:
+            page_number = max(1, int(request.query_params.get(self.page_query_param, 1)))
+        except (TypeError, ValueError):
+            page_number = 1
+        offset = (page_number - 1) * page_size
+        results = list(queryset[offset: offset + page_size + 1])
+        self._has_more = len(results) > page_size
+        self._page_number = page_number
+        return results[:page_size]
+
+    def get_paginated_response(self, data):
+        return Response({
+            'results': data,
+            'has_more': getattr(self, '_has_more', False),
+            'page': getattr(self, '_page_number', 1),
+            'page_size': self.get_page_size(self.request),
+        })
+
+
 class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
     permission_classes = [permissions.IsAuthenticated, InventoryReadOnlyOrManage]
+    pagination_class = InventoryFastPagination
     queryset = Inventory.objects.select_related('product', 'warehouse', 'branch').all()
     serializer_class = InventorySerializer
     branch_field = 'branch'

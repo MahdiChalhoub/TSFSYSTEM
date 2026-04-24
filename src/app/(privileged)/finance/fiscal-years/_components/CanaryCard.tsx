@@ -46,6 +46,24 @@ function buildSignals(d: CanaryReport['details'][number]): Signal[] {
             clean: d.balance_integrity_clean,
             count: d.balance_integrity_drifted_accounts,
         },
+        {
+            key: 'fx_integrity',
+            label: 'FX revaluation',
+            clean: d.fx_integrity_clean ?? true,
+            count: (d.fx_stale_rate_lines ?? 0) + (d.fx_missing_revaluations ?? 0) + (d.fx_orphaned_revaluations ?? 0),
+        },
+        {
+            key: 'revenue_recognition',
+            label: 'Revenue recognition',
+            clean: d.revenue_recognition_clean ?? true,
+            count: (d.revenue_overdue_rows ?? 0) + (d.revenue_orphan_obligations ?? 0) + (d.revenue_over_recognised ?? 0),
+        },
+        {
+            key: 'consolidation',
+            label: 'Consolidation',
+            clean: d.consolidation_clean ?? true,
+            count: (d.consolidation_failed_runs ?? 0) + (d.consolidation_missing_ic ?? 0) + (d.consolidation_missing_runs ?? 0),
+        },
     ]
 }
 
@@ -94,7 +112,7 @@ export function CanaryCard() {
                     </span>
                     {!loading && detail && (
                         <span className="text-tp-xs font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>
-                            {allClean ? 'All 5 signals clean' : `${dirtyCount} of 5 signal(s) need attention`}
+                            {allClean ? `All ${signals.length} signals clean` : `${dirtyCount} of ${signals.length} signal(s) need attention`}
                         </span>
                     )}
                 </div>

@@ -21,6 +21,10 @@ import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 import type { CategoryNode, PanelTab } from './components/types'
 import { CategoryRow } from './components/CategoryRow'
 import { CategoryDetailPanel } from './components/CategoryDetailPanel'
+import { BulkActionBar } from './components/BulkActionBar'
+import { BulkDialog } from './components/BulkDialog'
+import { CsvImportDialog } from './components/CsvImportDialog'
+import { Upload } from 'lucide-react'
 
 /* ═══════════════════════════════════════════════════════════
  *  CategoriesClient — thin consumer; TreeMasterPage is the single
@@ -33,7 +37,27 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
     const [deleteConflict, setDeleteConflict] = useState<any>(null)
+    // Bulk-edit selection state — Set of category ids the user has ticked.
+    // When non-empty, a floating action bar offers Bulk Delete / Bulk Move /
+    // Bulk Prefix. Selection clears on save or Esc.
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+    const [bulkDialog, setBulkDialog] = useState<null | 'move' | 'prefix' | 'delete'>(null)
+    const [bulkBusy, setBulkBusy] = useState(false)
+    const [showImport, setShowImport] = useState(false)
     const data = initialCategories
+
+    const toggleSelect = useCallback((id: number) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id); else next.add(id)
+            return next
+        })
+    }, [])
+    const clearSelection = useCallback(() => setSelectedIds(new Set()), [])
+    useEffect(() => {
+        const h = (e: KeyboardEvent) => { if (e.key === 'Escape') clearSelection() }
+        window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h)
+    }, [clearSelection])
 
     // Warm up the CATEGORY sequence cache on page mount so the first New
     // dialog opens with a pre-filled code instantly (no network wait).
@@ -142,6 +166,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
                 primaryAction: { label: 'New Category', icon: <Plus size={14} />, onClick: () => openAddModal(), dataTour: 'add-category-btn' },
                 secondaryActions: [
+                    { label: 'Import CSV', icon: <Upload size={13} />, onClick: () => setShowImport(true) },
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],
                 columnHeaders: [
@@ -273,10 +298,41 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                             searchQuery={searchQuery}
                             forceExpanded={expandAll}
                             compact={isCompact}
+                            selectable
+                            isCheckedFn={(id) => selectedIds.has(id)}
+                            onToggleCheck={toggleSelect}
                         />
                     </div>
                 ))
             }}
+            {/* Extra floating surfaces rendered via children don't fit the
+             *  TreeMasterPage API — keep them as siblings outside. */}
+            {selectedIds.size > 0 && (
+                <BulkActionBar
+                    count={selectedIds.size}
+                    onMove={() => setBulkDialog('move')}
+                    onPrefix={() => setBulkDialog('prefix')}
+                    onDelete={() => setBulkDialog('delete')}
+                    onClear={clearSelection}
+                />
+            )}
+            {bulkDialog && (
+                <BulkDialog
+                    mode={bulkDialog}
+                    selectedIds={Array.from(selectedIds)}
+                    allCategories={data}
+                    busy={bulkBusy}
+                    onClose={() => setBulkDialog(null)}
+                    onDone={() => { setBulkDialog(null); clearSelection(); router.refresh() }}
+                />
+            )}
+            {showImport && (
+                <CsvImportDialog
+                    allCategories={data}
+                    onClose={() => setShowImport(false)}
+                    onDone={() => { setShowImport(false); router.refresh() }}
+                />
+            )}
         </TreeMasterPage>
     )
 }

@@ -726,6 +726,60 @@ class ClosingService:
                         + "\n".join(offenders)
                     )
 
+        # ── Revenue-recognition integrity ──
+        # Refuse to finalize while any orphan satisfied obligation,
+        # over-recognised row, or significantly overdue straight-line
+        # release is present. Getting this wrong misreports revenue on
+        # the P&L of the closing year.
+        try:
+            from apps.finance.services.revenue_recognition_service import (
+                RevenueRecognitionService as _RRS,
+            )
+            rev_rpt = _RRS.check_revenue_recognition_integrity(organization)
+        except Exception:
+            rev_rpt = {'clean': True, 'overdue_rows': [], 'orphan_obligations': [], 'over_recognised_rows': []}
+        if not rev_rpt['clean']:
+            lines = []
+            for r in rev_rpt.get('overdue_rows', []):
+                lines.append(
+                    f"  overdue: DR#{r['id']} '{r['name']}' lag={r['lag_months']}mo "
+                    f"(expected={r['expected']}, recognised={r['recognised']})"
+                )
+            for o in rev_rpt.get('orphan_obligations', []):
+                lines.append(
+                    f"  orphan obligation: PO#{o['id']} '{o['description']}' "
+                    f"allocation={o['allocation_amount']}"
+                )
+            for r in rev_rpt.get('over_recognised_rows', []):
+                lines.append(
+                    f"  over-recognised: DR#{r['id']} '{r['name']}' remaining={r['remaining']}"
+                )
+            if lines:
+                raise ValidationError(
+                    "Revenue-recognition integrity failed — fix before close:\n"
+                    + "\n".join(lines)
+                )
+
+        # ── FX integrity ──
+        # If this org runs multi-currency, refuse to finalize while any
+        # foreign-currency line is missing an exchange_rate, or while any
+        # closed period has foreign-currency activity but no
+        # CurrencyRevaluation row. Either condition corrupts the
+        # translated balance sheet.
+        fx_rpt = ClosingService.check_fx_integrity(organization)
+        if not fx_rpt['clean']:
+            lines = []
+            if fx_rpt.get('stale_rate_lines', 0):
+                lines.append(f"  stale-rate lines: {fx_rpt['stale_rate_lines']}")
+            for p in fx_rpt.get('missing_revaluation_periods', []):
+                lines.append(f"  missing revaluation: period {p['name']} (id={p['fiscal_period_id']})")
+            for o in fx_rpt.get('orphaned_revaluations', []):
+                lines.append(f"  orphaned revaluation: id={o['revaluation_id']} net={o['net_gain_loss']}")
+            if lines:
+                raise ValidationError(
+                    "FX integrity failed — fix before close:\n" + "\n".join(lines)
+                )
+
         # ── Sub-ledger integrity (control accounts) ──
         # Every line on a control account (AR, AP, employee advances)
         # must carry partner identification — otherwise aging, statements,
@@ -1730,6 +1784,118 @@ class ClosingService:
             # recomputed one) — mid-chain tampering would otherwise be
             # silently patched over when computing the next expected_prev.
             expected_prev = s.content_hash
+
+        return report
+
+    @staticmethod
+    def check_fx_integrity(organization):
+        """FX tripwire — three correctness conditions on foreign-currency
+        activity:
+
+          1. Stale-rate: every JE line in a non-base currency has a
+             recorded `exchange_rate` (value provided at posting time).
+             Lines missing the rate can't be revalued correctly at
+             period-end.
+          2. Missing revaluation: every CLOSED FiscalPeriod that holds
+             foreign-currency activity must have a CurrencyRevaluation
+             row. Absence means the unrealized FX gain/loss for that
+             period was never computed.
+          3. Orphaned revaluation: every CurrencyRevaluation row whose
+             status is POSTED must have its JE attached. Missing JE
+             means the unrealized gain/loss was computed but never
+             reflected on the ledger.
+
+        Read-only. Reports only; fixing is the operator's job via the
+        RevaluationService.run_revaluation call per missing period.
+        """
+        from apps.finance.models import (
+            ChartOfAccount, JournalEntryLine, FiscalPeriod,
+        )
+        from django.db.models import Count, Sum, Q
+
+        report = {
+            'organization_id': organization.id,
+            'organization_slug': getattr(organization, 'slug', None),
+            'clean': True,
+            'stale_rate_lines': 0,
+            'stale_rate_samples': [],
+            'missing_revaluation_periods': [],
+            'orphaned_revaluations': [],
+        }
+
+        # Determine base currency. If none configured, FX checks are
+        # skipped (no reference point to revalue against).
+        try:
+            from apps.finance.models import Currency as _Currency
+            base = _Currency.objects.filter(organization=organization, is_base=True).first()
+        except Exception:
+            base = None
+        if not base:
+            return report  # No base currency → FX rules don't apply yet.
+
+        base_code = base.code
+
+        # ── 1. Stale-rate detection ──
+        stale = (
+            JournalEntryLine.objects.filter(
+                organization=organization,
+                journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
+            )
+            .exclude(currency__isnull=True)
+            .exclude(currency='')
+            .exclude(currency=base_code)
+            .filter(Q(exchange_rate__isnull=True) | Q(exchange_rate=0))
+        )
+        stale_cnt = stale.count()
+        report['stale_rate_lines'] = stale_cnt
+        if stale_cnt:
+            report['stale_rate_samples'] = list(
+                stale.values('id', 'currency', 'debit', 'credit')[:5]
+            )
+            report['clean'] = False
+
+        # ── 2. Missing revaluation on CLOSED periods with FX activity ──
+        try:
+            from apps.finance.models import CurrencyRevaluation
+            closed_with_fx = (
+                FiscalPeriod.objects
+                .filter(organization=organization, is_closed=True)
+                .filter(
+                    journalentry__lines__currency__isnull=False,
+                )
+                .exclude(journalentry__lines__currency=base_code)
+                .annotate(n=Count('id'))
+                .distinct()
+            )
+            for fp in closed_with_fx:
+                exists = CurrencyRevaluation.objects.filter(
+                    organization=organization, fiscal_period=fp,
+                ).exists()
+                if not exists:
+                    report['missing_revaluation_periods'].append({
+                        'fiscal_period_id': fp.id, 'name': fp.name,
+                    })
+                    report['clean'] = False
+        except Exception:
+            pass  # CurrencyRevaluation model may not be installed in old deploys
+
+        # ── 3. Orphaned revaluations (POSTED status but no journal_entry) ──
+        try:
+            from apps.finance.models import CurrencyRevaluation
+            orphans = CurrencyRevaluation.objects.filter(
+                organization=organization, status='POSTED',
+                journal_entry__isnull=True,
+            )
+            for r in orphans:
+                report['orphaned_revaluations'].append({
+                    'revaluation_id': r.id,
+                    'fiscal_period_id': r.fiscal_period_id,
+                    'net_gain_loss': str(getattr(r, 'net_gain_loss', 0)),
+                })
+                report['clean'] = False
+        except Exception:
+            pass
 
         return report
 

@@ -31,11 +31,11 @@ export const saasControl: MenuItem = {
             title: 'Reference Data',
             icon: Globe,
             children: [
-                { title: 'Countries & Regions', path: '/countries' },
+                { title: 'Countries & Regions', path: '/countries', stage: 'in-progress' },
                 { title: 'Currencies', path: '/currencies' },
-                { title: 'Country Tax Templates', path: '/country-tax-templates' },
-                { title: 'E-Invoice Standards', path: '/e-invoice-standards' },
-                { title: 'Listview Policies', path: '/listview-policies' },
+                { title: 'Country Tax Templates', path: '/country-tax-templates', stage: 'in-progress' },
+                { title: 'E-Invoice Standards', path: '/e-invoice-standards', stage: 'in-progress' },
+                { title: 'Listview Policies', path: '/listview-policies', stage: 'in-progress' },
             ],
         },
         {

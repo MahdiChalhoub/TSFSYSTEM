@@ -5,6 +5,7 @@ from .ledger_models import JournalEntry, JournalEntryLine, PaymentMethod
 from .transaction_models import Transaction, TransactionSequence
 from .loan_models import Loan, LoanInstallment, FinancialEvent
 from .expense_models import DeferredExpense, DirectExpense
+from .revenue_models import DeferredRevenue, RevenuePerformanceObligation
 from .asset_models import Asset, AmortizationSchedule
 from .voucher_models import Voucher
 from .audit_models import ProfitDistribution, ForensicAuditLog

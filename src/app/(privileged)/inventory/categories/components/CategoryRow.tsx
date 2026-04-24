@@ -16,6 +16,7 @@ import { MobileCategoryRow } from '../mobile/MobileCategoryRow'
 export const CategoryRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
     onViewProducts, onViewBrands, onViewAttributes, onSelect, compact,
+    selectable, isChecked, onToggleCheck,
 }: {
     node: CategoryNode; level: number; searchQuery: string; forceExpanded?: boolean;
     onEdit: (n: CategoryNode) => void; onAdd: (parentId?: number) => void; onDelete: (n: CategoryNode) => void;
@@ -25,7 +26,15 @@ export const CategoryRow = ({
      *  list pane is narrow, keep only Category (name + code). Secondary
      *  data stays available in the detail panel. */
     compact?: boolean;
+    /** When true, render a selection checkbox for bulk edit. */
+    selectable?: boolean;
+    /** Per-id predicate — each node queries the shared selection set. */
+    isCheckedFn?: (id: number) => boolean;
+    onToggleCheck?: (id: number) => void;
+    /** @deprecated kept for one-off top-level call — prefer `isCheckedFn`. */
+    isChecked?: boolean;
 }) => {
+    const rowChecked = isCheckedFn ? isCheckedFn(node.id) : !!isChecked;
     // When the list pane is narrow (compact), reuse the richer mobile card
     // renderer — same component, same feel, already tuned for small widths.
     // That gives us the "mobile look" whenever real estate is tight, whether
@@ -103,6 +112,25 @@ export const CategoryRow = ({
                 {isRoot && (
                     <div className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full"
                         style={{ background: 'var(--app-primary)' }} />
+                )}
+
+                {/* Selection checkbox — shown only when the bulk-edit mode is
+                 *  armed (selectable=true). Invisible by default; appears on
+                 *  hover OR when the row is already selected, so the UI isn't
+                 *  noisy until the user starts picking. */}
+                {selectable && (
+                    <button type="button"
+                        onClick={(e) => { e.stopPropagation(); onToggleCheck?.(node.id) }}
+                        className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${rowChecked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                        style={{
+                            borderColor: rowChecked ? 'var(--app-primary)' : 'var(--app-border)',
+                            background: rowChecked ? 'var(--app-primary)' : 'transparent',
+                        }}
+                        aria-checked={rowChecked}
+                        role="checkbox"
+                        aria-label={`Select ${node.name}`}>
+                        {rowChecked && <span className="text-white text-[10px] font-bold">✓</span>}
+                    </button>
                 )}
 
                 {/* Indent connector line */}
@@ -296,6 +324,9 @@ export const CategoryRow = ({
                             searchQuery={searchQuery}
                             forceExpanded={forceExpanded}
                             compact={compact}
+                            selectable={selectable}
+                            isCheckedFn={isCheckedFn}
+                            onToggleCheck={onToggleCheck}
                         />
                     ))}
                 </div>

@@ -38,80 +38,108 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
 
     return (
         <div className="flex flex-col h-full">
-            {/* Header — three columns: identity · barcode cell · actions.
-             *  Clear hierarchy: big name on top, small mono code + short
-             *  name on a second line, and a dedicated barcode chip next to
-             *  the action buttons so it reads as a real "field", not a
-             *  loose badge mixed with other metadata. */}
+            {/* Header — four zones: icon · identity · barcode field · actions.
+             *  Designed to read like a record header in any premium admin UI:
+             *  defined regions, field-style labels, no dots-as-separators. */}
             <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3"
                 style={{
-                    background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))',
+                    background: 'linear-gradient(180deg, color-mix(in srgb, var(--app-primary) 5%, var(--app-surface)), var(--app-surface))',
                     borderBottom: '1px solid var(--app-border)',
                 }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                {/* Icon — soft tile, gradient tint, subtle shadow */}
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
-                        background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)',
-                        color: 'var(--app-primary)',
+                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 75%, #8b5cf6))',
+                        color: 'white',
+                        boxShadow: '0 3px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)',
                     }}>
-                    <Bookmark size={14} />
+                    <Bookmark size={15} />
                 </div>
 
-                {/* Identity column — name + code + short name (ordered + sized) */}
+                {/* Identity — name headline, thin meta row with boxed field labels */}
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-tp-lg font-bold text-app-foreground truncate leading-tight">{node.name}</h3>
+                    <h3 className="text-tp-lg font-bold tracking-tight truncate leading-tight"
+                        style={{ color: 'var(--app-foreground)' }}>
+                        {node.name}
+                    </h3>
                     {(node.code || node.short_name) && (
-                        <div className="flex items-center gap-2 mt-0.5 text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <div className="flex items-center gap-2 mt-1">
                             {node.code && (
-                                <>
-                                    <span className="font-bold uppercase tracking-widest">Code</span>
-                                    <span className="font-mono font-bold" style={{ color: 'var(--app-primary)' }}>{node.code}</span>
-                                </>
+                                <span className="inline-flex items-center gap-1 text-tp-xxs font-bold">
+                                    <span className="uppercase tracking-widest opacity-60" style={{ color: 'var(--app-muted-foreground)' }}>Code</span>
+                                    <span className="font-mono px-1.5 py-0.5 rounded"
+                                        style={{
+                                            background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                            color: 'var(--app-primary)',
+                                        }}>
+                                        {node.code}
+                                    </span>
+                                </span>
                             )}
                             {node.short_name && (
-                                <>
-                                    {node.code && <span className="opacity-40">·</span>}
-                                    <span className="font-medium truncate">{node.short_name}</span>
-                                </>
+                                <span className="inline-flex items-center text-tp-xxs font-medium italic truncate"
+                                    style={{ color: 'var(--app-muted-foreground)' }}
+                                    title={node.short_name}>
+                                    {node.short_name}
+                                </span>
                             )}
                         </div>
                     )}
                 </div>
 
-                {/* Barcode cell — its own box, matching the column it represents */}
-                <div className="hidden sm:flex flex-col items-start flex-shrink-0 px-2.5 py-1.5 rounded-lg"
+                {/* Barcode field-card — right-aligned value, refined shadow */}
+                <div className="hidden sm:flex flex-col items-end flex-shrink-0 px-3 py-1.5 rounded-xl transition-all"
                     style={{
                         background: node.barcode_prefix
-                            ? 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)'
-                            : 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)',
+                            ? 'linear-gradient(135deg, color-mix(in srgb, var(--app-success, #22c55e) 10%, var(--app-surface)), var(--app-surface))'
+                            : 'var(--app-background)',
                         border: `1px solid ${node.barcode_prefix
-                            ? 'color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)'
+                            ? 'color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)'
                             : 'var(--app-border)'}`,
+                        boxShadow: node.barcode_prefix
+                            ? '0 1px 4px color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)'
+                            : 'none',
+                        minWidth: '92px',
                     }}
                     title={node.barcode_prefix
                         ? `Barcode prefix — products get ${node.barcode_prefix}NNN`
                         : 'No barcode prefix set'}>
-                    <span className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                    <span className="text-tp-xxs font-bold uppercase tracking-widest leading-none" style={{ color: 'var(--app-muted-foreground)' }}>
                         Barcode
                     </span>
-                    <span className="font-mono text-tp-sm font-bold"
-                        style={{ color: node.barcode_prefix ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
-                        {node.barcode_prefix ? `🏷 ${node.barcode_prefix}` : '—'}
+                    <span className="font-mono text-tp-sm font-bold tabular-nums mt-0.5"
+                        style={{ color: node.barcode_prefix ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)', opacity: node.barcode_prefix ? 1 : 0.45 }}>
+                        {node.barcode_prefix || '— —'}
                     </span>
                 </div>
 
-                <div className="flex items-center gap-1 flex-shrink-0">
+                {/* Actions — pill bar, one source of hover styling */}
+                <div className="flex items-center gap-0.5 flex-shrink-0 px-1 py-1 rounded-xl"
+                     style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid var(--app-border)' }}>
                     <button onClick={() => onEdit(node)}
-                        className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/40 transition-colors" title="Edit">
+                        className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+                        style={{ color: 'var(--app-muted-foreground)' }}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 10%, transparent)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent'; }}
+                        title="Edit">
                         <Pencil size={13} />
                     </button>
                     {onPin && (
                         <button onClick={() => onPin(node)}
-                            className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-primary hover:bg-app-primary/10 transition-colors" title="Pin sidebar">
+                            className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+                            style={{ color: 'var(--app-muted-foreground)' }}
+                            onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 10%, transparent)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent'; }}
+                            title="Pin sidebar">
                             <Pin size={13} />
                         </button>
                     )}
                     <button onClick={onClose}
-                        className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/40 transition-colors" title="Close">
+                        className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+                        style={{ color: 'var(--app-muted-foreground)' }}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-error, #ef4444)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent'; }}
+                        title="Close">
                         <X size={14} />
                     </button>
                 </div>
