@@ -490,6 +490,33 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'je_by_month': je_by_month,
         })
 
+    @action(detail=False, methods=['get'], url_path='integrity-canary')
+    def integrity_canary(self, request):
+        """Run the close-chain canary synchronously for the current org.
+
+        Returns the same 5 signals the daily scheduled task reports:
+          1. OB↔JE drift per fiscal year
+          2. Parent-balance purity
+          3. Sub-ledger (control-account partner linkage) integrity
+          4. FiscalYearCloseSnapshot hash-chain
+          5. Denormalized balance vs recomputed JE-line aggregation
+
+        Read-only, completes in ~1s for a typical single-tenant book.
+        Shape mirrors the Celery task result so the UI layer can render
+        the same pills whether data comes from live or from a stored
+        task result.
+        """
+        from apps.finance.tasks import run_close_chain_canary
+
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response(
+                {'error': 'No organization context'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        result = run_close_chain_canary(org_id=organization_id)
+        return Response(result)
+
     @action(detail=False, methods=['get'], url_path='current')
     def current(self, request):
         """Return the fiscal year whose [start_date, end_date] contains today."""

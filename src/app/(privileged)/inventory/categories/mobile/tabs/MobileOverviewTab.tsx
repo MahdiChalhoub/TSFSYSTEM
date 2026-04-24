@@ -163,6 +163,17 @@ export function MobileOverviewTab({
                                     <span className="flex-1 font-bold text-app-foreground truncate" style={{ fontSize: 'var(--tp-lg)' }}>
                                         {child.name}
                                     </span>
+                                    {child.barcode_prefix && (
+                                        <span className="font-mono font-bold px-1.5 py-0.5 rounded-md inline-flex items-center gap-1"
+                                            title={`Barcode prefix — products get ${child.barcode_prefix}NNN`}
+                                            style={{
+                                                fontSize: 'var(--tp-xxs)',
+                                                background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                                color: 'var(--app-success, #22c55e)',
+                                            }}>
+                                            🏷 {child.barcode_prefix}
+                                        </span>
+                                    )}
                                     {cb > 0 && (
                                         <span className="font-bold tabular-nums px-1.5 py-0.5 rounded-md"
                                             style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 10%, transparent)' }}>

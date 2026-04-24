@@ -237,6 +237,44 @@ export async function updatePeriodStatus(periodId: number, newStatus: string) {
 
 // NOTE: Fiscal year lock is intentionally one-way (no unlock).
 // Once locked/finalized, a fiscal year cannot be reopened per accounting standards.
+export type CanaryReport = {
+    ran_at: string
+    orgs_total: number
+    orgs_clean: number
+    orgs_drifted: number
+    details: Array<{
+        org_id: string
+        org_slug: string | null
+        safe: boolean
+        years_drift: number
+        years_missing_je: number
+        first_broken_year: string | null
+        parent_purity_clean: boolean
+        parent_offender_count: number
+        parent_offenders_top?: Array<Record<string, string>>
+        subledger_clean: boolean
+        subledger_offender_count: number
+        subledger_offenders_top?: Array<Record<string, string>>
+        snapshot_chain_clean: boolean
+        snapshot_chain_rows: number
+        snapshot_chain_breaks: number
+        snapshot_chain_breaks_top?: Array<Record<string, string>>
+        balance_integrity_clean: boolean
+        balance_integrity_drifted_accounts: number
+        balance_integrity_rows: number
+        balance_integrity_drifts_top?: Array<Record<string, string>>
+    }>
+}
+
+export async function getIntegrityCanary(): Promise<CanaryReport | null> {
+    try {
+        return await erpFetch('fiscal-years/integrity-canary/') as CanaryReport
+    } catch (error) {
+        console.error('Failed to fetch integrity canary:', error)
+        return null
+    }
+}
+
 export async function lockFiscalYear(id: number) {
     try {
         await erpFetch(`fiscal-years/${id}/lock/`, {

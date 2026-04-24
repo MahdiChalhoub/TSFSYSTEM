@@ -15,6 +15,7 @@ import { YearEndCloseModal } from './_components/YearEndCloseModal'
 import { KpiStrip } from './_components/KpiStrip'
 import { Toolbar } from './_components/Toolbar'
 import { YearPanel } from './_components/YearPanel'
+import { CanaryCard } from './_components/CanaryCard'
 import { useFiscalYears } from './_hooks/useFiscalYears'
 
 function TaskSettingsModal({ onClose }: { onClose: () => void }) {
@@ -313,6 +314,9 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
 
             {/* ── KPI Strip ── */}
             {!fy.focusMode && <KpiStrip kpis={fy.kpis} statusFilter={fy.statusFilter} setStatusFilter={fy.setStatusFilter} />}
+
+            {/* ── Close-chain integrity canary ── */}
+            {!fy.focusMode && <CanaryCard />}
 
             {/* ── Toolbar ── */}
             <Toolbar

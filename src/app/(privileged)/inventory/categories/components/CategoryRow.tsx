@@ -7,7 +7,8 @@ import {
     Pencil, Trash2, AlertCircle, Bookmark,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { CategoryNode } from './types'
+import type { CategoryNode, PanelTab } from './types'
+import { MobileCategoryRow } from '../mobile/MobileCategoryRow'
 
 /* ═══════════════════════════════════════════════════════════
  *  RECURSIVE TREE NODE — simplified visual hierarchy
@@ -25,6 +26,32 @@ export const CategoryRow = ({
      *  data stays available in the detail panel. */
     compact?: boolean;
 }) => {
+    // When the list pane is narrow (compact), reuse the richer mobile card
+    // renderer — same component, same feel, already tuned for small widths.
+    // That gives us the "mobile look" whenever real estate is tight, whether
+    // from a narrow window, the split panel, or a sidebar widened by the user.
+    if (compact) {
+        return (
+            <MobileCategoryRow
+                node={node}
+                level={level}
+                searchQuery={searchQuery}
+                forceExpanded={forceExpanded}
+                tapOpensSheet
+                onOpenSheet={(n, tab: PanelTab) => {
+                    if (tab === 'brands') onViewBrands(n)
+                    else if (tab === 'attributes') onViewAttributes(n)
+                    else if (tab === 'products') onViewProducts(n)
+                    else onSelect?.(n)
+                }}
+                onEdit={onEdit}
+                onAdd={onAdd}
+                onDelete={onDelete}
+                onDrillIn={(n) => onSelect?.(n)}
+            />
+        )
+    }
+
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
     const prevForceExpanded = useRef(forceExpanded)
@@ -53,6 +80,13 @@ export const CategoryRow = ({
                 `}
                 onClick={(e) => {
                     e.stopPropagation()
+                    // When split panel is open / pane is compact, a single click
+                    // should OPEN the row in the detail panel instead of just
+                    // toggling children — otherwise a root with sub-categories
+                    // can never populate the panel without a double-click, which
+                    // feels broken (especially when the root has no products).
+                    // Expand/collapse stays available via the chevron button.
+                    if (compact) { onSelect?.(node); return }
                     if (isParent) { setIsOpen(o => !o) } else { onSelect?.(node) }
                 }}
                 onDoubleClick={(e) => {

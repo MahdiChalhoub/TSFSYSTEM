@@ -38,8 +38,12 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
 
     return (
         <div className="flex flex-col h-full">
-            {/* Header — flat, no gradient */}
-            <div className="flex-shrink-0 px-4 py-3 flex items-center gap-2"
+            {/* Header — three columns: identity · barcode cell · actions.
+             *  Clear hierarchy: big name on top, small mono code + short
+             *  name on a second line, and a dedicated barcode chip next to
+             *  the action buttons so it reads as a real "field", not a
+             *  loose badge mixed with other metadata. */}
+            <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3"
                 style={{
                     background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))',
                     borderBottom: '1px solid var(--app-border)',
@@ -51,23 +55,50 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
                     }}>
                     <Bookmark size={14} />
                 </div>
+
+                {/* Identity column — name + code + short name (ordered + sized) */}
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-tp-lg font-bold text-app-foreground truncate">{node.name}</h3>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                        {node.code && <span className="text-tp-xs font-mono font-semibold text-app-primary">{node.code}</span>}
-                        {node.barcode_prefix && (
-                            <span className="text-tp-xxs font-mono font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
-                                title={`Barcode prefix — products get ${node.barcode_prefix}NNN`}
-                                style={{
-                                    background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
-                                    color: 'var(--app-success, #22c55e)',
-                                }}>
-                                🏷 {node.barcode_prefix}
-                            </span>
-                        )}
-                        {node.short_name && <span className="text-tp-xs font-medium text-app-muted-foreground">{node.short_name}</span>}
-                    </div>
+                    <h3 className="text-tp-lg font-bold text-app-foreground truncate leading-tight">{node.name}</h3>
+                    {(node.code || node.short_name) && (
+                        <div className="flex items-center gap-2 mt-0.5 text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
+                            {node.code && (
+                                <>
+                                    <span className="font-bold uppercase tracking-widest">Code</span>
+                                    <span className="font-mono font-bold" style={{ color: 'var(--app-primary)' }}>{node.code}</span>
+                                </>
+                            )}
+                            {node.short_name && (
+                                <>
+                                    {node.code && <span className="opacity-40">·</span>}
+                                    <span className="font-medium truncate">{node.short_name}</span>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
+
+                {/* Barcode cell — its own box, matching the column it represents */}
+                <div className="hidden sm:flex flex-col items-start flex-shrink-0 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                        background: node.barcode_prefix
+                            ? 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)'
+                            : 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)',
+                        border: `1px solid ${node.barcode_prefix
+                            ? 'color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)'
+                            : 'var(--app-border)'}`,
+                    }}
+                    title={node.barcode_prefix
+                        ? `Barcode prefix — products get ${node.barcode_prefix}NNN`
+                        : 'No barcode prefix set'}>
+                    <span className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                        Barcode
+                    </span>
+                    <span className="font-mono text-tp-sm font-bold"
+                        style={{ color: node.barcode_prefix ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
+                        {node.barcode_prefix ? `🏷 ${node.barcode_prefix}` : '—'}
+                    </span>
+                </div>
+
                 <div className="flex items-center gap-1 flex-shrink-0">
                     <button onClick={() => onEdit(node)}
                         className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/40 transition-colors" title="Edit">

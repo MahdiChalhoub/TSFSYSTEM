@@ -103,6 +103,16 @@ export function OverviewTab({ node, onAdd, onDelete, isParent, childCount, produ
                                     style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 12%, transparent)' }}>
                                     <Folder size={12} style={{ color: 'var(--app-muted-foreground)', flexShrink: 0 }} />
                                     <span className="flex-1 text-tp-md font-medium text-app-foreground truncate">{child.name}</span>
+                                    {child.barcode_prefix && (
+                                        <span className="font-mono text-tp-xxs font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                                            title={`Barcode prefix — products get ${child.barcode_prefix}NNN`}
+                                            style={{
+                                                background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                                color: 'var(--app-success, #22c55e)',
+                                            }}>
+                                            🏷 {child.barcode_prefix}
+                                        </span>
+                                    )}
                                     {cb > 0 && <span className="text-tp-xs font-semibold tabular-nums" style={{ color: 'var(--app-info)' }}>{cb}b</span>}
                                     {cp > 0 && <span className="text-tp-xs font-semibold tabular-nums" style={{ color: 'var(--app-success, #22c55e)' }}>{cp}p</span>}
                                 </div>

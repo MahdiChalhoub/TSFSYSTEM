@@ -146,11 +146,11 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 ],
                 columnHeaders: [
                     { label: 'Category', width: 'auto' },
-                    { label: 'Barcode', width: '96px', color: 'var(--app-success)', hideOnMobile: true, hideOnSplit: true },
-                    { label: 'Sub', width: '48px', hideOnMobile: true, hideOnSplit: true },
-                    { label: 'Brands', width: '56px', color: 'var(--app-info)', hideOnMobile: true, hideOnSplit: true },
-                    { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true, hideOnSplit: true },
-                    { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true, hideOnSplit: true },
+                    { label: 'Barcode', width: '96px', color: 'var(--app-success)', hideOnMobile: true },
+                    { label: 'Sub', width: '48px', hideOnMobile: true },
+                    { label: 'Brands', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
+                    { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true },
+                    { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
                 ],
 
                 // ── Template owns filtering ──

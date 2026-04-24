@@ -25,9 +25,10 @@ export interface ColumnHeader {
     label: string; width: string; color?: string;
     /** Hide below the `sm` breakpoint (viewport-based). */
     hideOnMobile?: boolean
-    /** Hide when the split panel is open — the list pane gets roughly
-     *  half the viewport, so secondary columns collapse to keep the
-     *  Category column readable. */
+    /** Rarely needed — the template auto-hides every non-primary column
+     *  when the list pane is compact. Set this to `false` to OPT OUT of
+     *  that behavior for a specific secondary column you need visible
+     *  even in narrow panes. Default: auto-hide (treated as true). */
     hideOnSplit?: boolean
 }
 
@@ -410,17 +411,20 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                 <div ref={listWrapperRef}
                      data-tour={config.treeTourId || 'tree-container'}
                      className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
-                    {/* Column Headers */}
-                    {config.columnHeaders && (
+                    {/* Column Headers — hidden when the list pane is compact;
+                     *  the card-style row renderer draws its own layout. */}
+                    {config.columnHeaders && !isCompact && (
                         <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-tp-xxs font-black text-app-muted-foreground uppercase tracking-widest"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '2px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                             <div className="w-5 flex-shrink-0" />
                             <div className="w-7 flex-shrink-0" />
                             {config.columnHeaders.map((col, i) => {
-                                // Width-based: hide `hideOnSplit` columns when the list
-                                // pane is actually narrow, NOT just when the split flag
-                                // is on. Wide monitors + split keeps everything visible.
-                                if (col.hideOnSplit && isCompact) return null;
+                                // Default: auto-hide every non-primary column when the
+                                // list pane is narrow (isCompact). Opt out with
+                                // `hideOnSplit: false` on a per-column basis if a
+                                // specific secondary column must stay visible.
+                                const shouldHideWhenCompact = col.hideOnSplit !== false && i > 0;
+                                if (shouldHideWhenCompact && isCompact) return null;
                                 return (
                                     <div key={i} className={`${col.hideOnMobile ? 'hidden sm:block' : ''} flex-shrink-0 text-center overflow-hidden whitespace-nowrap text-ellipsis`}
                                         style={{ width: col.width, color: col.color, ...(i === 0 ? { flex: '1 1 0%', minWidth: 0, textAlign: 'left' } : {}) }}>

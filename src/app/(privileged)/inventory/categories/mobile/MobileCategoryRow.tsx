@@ -29,11 +29,19 @@ interface Props {
     onLongPress?: (n: CategoryNode) => void
     onDrillIn?: (n: CategoryNode) => void
     selected?: boolean
+    /** When true, a single tap on the row body opens the detail sheet
+     *  (via `onOpenSheet`) even if the node has children. Used when the
+     *  card layout renders inside a desktop split panel — expanding the
+     *  tree is secondary there, the right-hand panel is what the user
+     *  actually wants to populate. Expand/collapse stays on the chevron.
+     *  Default `false` keeps the phone UX (tap = drill into children). */
+    tapOpensSheet?: boolean
 }
 
 export function MobileCategoryRow({
     node, level, searchQuery, forceExpanded,
     onOpenSheet, onEdit, onAdd, onDelete, onLongPress, onDrillIn, selected,
+    tapOpensSheet,
 }: Props) {
     const isParent = node.children && node.children.length > 0
     // Mobile: default open only at level 0 (keeps the first screen less dense)
@@ -96,6 +104,9 @@ export function MobileCategoryRow({
                 ref={rowRef}
                 onClick={() => {
                     if (isLongPressing) return  // swallow tap right after long-press
+                    // Desktop split/compact mode: tap always opens the panel.
+                    // Phone (default): tap toggles children, chevron is smaller.
+                    if (tapOpensSheet) { onOpenSheet(node, 'overview'); return }
                     if (isParent) setIsOpen(o => !o)
                     else onOpenSheet(node, 'overview')
                 }}
