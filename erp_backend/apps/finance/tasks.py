@@ -214,16 +214,127 @@ def run_close_chain_canary(org_id: int | None = None):
         }
         out['details'].append(detail)
 
-        if rpt['safe']:
+        # Parent-purity tripwire — SUM(balance) per parent must be 0.
+        # Run unconditionally so we surface violations even on orgs whose
+        # OB↔JE chain is otherwise clean. A non-zero parent means a JE
+        # slipped past the posting guard (manual DB write, pre-guard
+        # historical lines, future regression) and the close gate would
+        # later refuse to finalize — better to know now.
+        try:
+            purity = ClosingService.check_parent_purity(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: check_parent_purity crashed for org %s: %s",
+                org.id, exc,
+            )
+            purity = {'clean': False, 'offenders': [], 'error': str(exc)}
+
+        detail['parent_purity_clean'] = purity['clean']
+        detail['parent_offender_count'] = len(purity.get('offenders', []))
+        if not purity['clean']:
+            # Top 3 in the detail row so the task result stays compact;
+            # full list still lands in the warning log below.
+            detail['parent_offenders_top'] = [
+                {k: str(v) for k, v in off.items()}
+                for off in purity.get('offenders', [])[:3]
+            ]
+
+        # Sub-ledger integrity — control accounts must have partner data
+        # on every line. Missing or orphan partner links break aging,
+        # statements, and collection reports.
+        try:
+            subledger = ClosingService.check_subledger_integrity(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: check_subledger_integrity crashed for org %s: %s",
+                org.id, exc,
+            )
+            subledger = {'clean': False, 'offenders': [], 'error': str(exc)}
+
+        detail['subledger_clean'] = subledger['clean']
+        detail['subledger_offender_count'] = len(subledger.get('offenders', []))
+        if not subledger['clean']:
+            detail['subledger_offenders_top'] = [
+                {k: str(v) for k, v in off.items() if k != 'partner_ids'}
+                for off in subledger.get('offenders', [])[:3]
+            ]
+
+        # Snapshot hash-chain — tamper detection over
+        # FiscalYearCloseSnapshot rows. Any direct DB write bypassing
+        # save() invalidates the stored hash and is picked up here. If
+        # this ever trips, treat it as a possible breach: a later
+        # snapshot cannot compensate for a tampered earlier one because
+        # the chain walk uses stored (not recomputed) hashes.
+        try:
+            snap = ClosingService.verify_snapshot_chain(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: verify_snapshot_chain crashed for org %s: %s",
+                org.id, exc,
+            )
+            snap = {'clean': False, 'breaks': [], 'error': str(exc)}
+
+        detail['snapshot_chain_clean'] = snap['clean']
+        detail['snapshot_chain_rows'] = snap.get('rows_checked', 0)
+        detail['snapshot_chain_breaks'] = len(snap.get('breaks', []))
+        if not snap['clean']:
+            detail['snapshot_chain_breaks_top'] = [
+                {k: str(v) for k, v in br.items()}
+                for br in snap.get('breaks', [])[:3]
+            ]
+
+        # Denormalized-balance validator — confirms COA.balance /
+        # COA.balance_official match a fresh JE-line aggregation. Drift
+        # is the fingerprint of a race, a manual DB edit, or a bug in
+        # the posting pipeline. Auto-fix is NOT triggered here — operator
+        # must run `recalc_balances` after investigating why it drifted.
+        try:
+            bal_rpt = ClosingService.validate_balance_integrity(org)
+        except Exception as exc:
+            logger.exception(
+                "Canary: validate_balance_integrity crashed for org %s: %s",
+                org.id, exc,
+            )
+            bal_rpt = {'clean': False, 'drifts': [], 'error': str(exc)}
+
+        detail['balance_integrity_clean'] = bal_rpt['clean']
+        detail['balance_integrity_drifted_accounts'] = bal_rpt.get('drifted', 0)
+        detail['balance_integrity_rows'] = len(bal_rpt.get('drifts', []))
+        if not bal_rpt['clean']:
+            detail['balance_integrity_drifts_top'] = [
+                {k: str(v) for k, v in dr.items()}
+                for dr in bal_rpt.get('drifts', [])[:3]
+            ]
+
+        overall_safe = (
+            rpt['safe']
+            and purity['clean']
+            and subledger['clean']
+            and snap['clean']
+            and bal_rpt['clean']
+        )
+        if overall_safe:
             out['orgs_clean'] += 1
         else:
             out['orgs_drifted'] += 1
             logger.warning(
                 "Canary ALERT org=%s slug=%s: years_drift=%s years_missing_je=%s "
-                "first_broken=%s — investigate before next year close.",
+                "first_broken=%s parent_offenders=%s subledger_offenders=%s "
+                "snapshot_breaks=%s — investigate before next year close.",
                 org.id, detail['org_slug'], rpt['years_drift'],
                 rpt['years_missing_je'], first_broken,
+                detail['parent_offender_count'],
+                detail['subledger_offender_count'],
+                detail['snapshot_chain_breaks'],
             )
+            if purity.get('offenders'):
+                for off in purity['offenders']:
+                    logger.warning(
+                        "Canary PARENT-DIRTY org=%s %s %s [%s]: net=%s "
+                        "across %s line(s)",
+                        org.id, off['code'], off['name'], off['scope'],
+                        off['net'], off['n_lines'],
+                    )
 
     logger.info(
         "Canary: %s/%s orgs clean, %s drifted",

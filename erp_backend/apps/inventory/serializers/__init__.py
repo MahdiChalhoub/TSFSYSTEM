@@ -6,7 +6,7 @@ from .taxonomy_serializers import (
 )
 from .product_serializers import (
     ProductAttributeValueSerializer, ProductVariantSerializer,
-    ProductSerializer, ProductCreateSerializer, StorefrontProductSerializer,
+    ProductSerializer, ProductLiteSerializer, ProductCreateSerializer, StorefrontProductSerializer,
     ComboComponentSerializer, ProductAnalyticsSerializer, ProductPackagingSerializer
 )
 from .warehouse_serializers import (
@@ -39,7 +39,7 @@ __all__ = [
     'BrandSerializer', 'BrandDetailSerializer', 'StorefrontBrandSerializer',
     'ParfumSerializer', 'ProductGroupSerializer',
     'ProductAttributeValueSerializer', 'ProductVariantSerializer',
-    'ProductSerializer', 'ProductCreateSerializer', 'StorefrontProductSerializer',
+    'ProductSerializer', 'ProductLiteSerializer', 'ProductCreateSerializer', 'StorefrontProductSerializer',
     'ComboComponentSerializer', 'ProductAnalyticsSerializer', 'ProductPackagingSerializer',
     'WarehouseSerializer', 'InventorySerializer', 'InventoryMovementSerializer',
     'StockAdjustmentLineSerializer', 'StockAdjustmentOrderSerializer',

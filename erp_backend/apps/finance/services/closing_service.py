@@ -726,6 +726,31 @@ class ClosingService:
                         + "\n".join(offenders)
                     )
 
+        # ── Sub-ledger integrity (control accounts) ──
+        # Every line on a control account (AR, AP, employee advances)
+        # must carry partner identification — otherwise aging, statements,
+        # and collection reports silently go wrong. Cross-scope since
+        # control accounts can have lines in either. Runs once at the
+        # end of the scope loop so both OFFICIAL and INTERNAL surface.
+        sub_rpt = ClosingService.check_subledger_integrity(organization)
+        if not sub_rpt['clean']:
+            offender_lines = []
+            for off in sub_rpt['offenders']:
+                extra = (
+                    f" partner_ids={off.get('partner_ids')}"
+                    if off.get('partner_ids') else ''
+                )
+                offender_lines.append(
+                    f"  [{off['scope']}] {off['code']} {off['name']} "
+                    f"kind={off['kind']}: {off['n_lines']} line(s), "
+                    f"net={off['net']}{extra}"
+                )
+            raise ValidationError(
+                f"Sub-ledger integrity failed — control-account lines "
+                f"missing or orphan partner references. Fix before close:\n"
+                + "\n".join(offender_lines)
+            )
+
         # ── Full closing-chain continuity (every BS account) ──
         # Every balance-sheet account's closing net in FY N must equal its
         # opening net in FY N+1 per scope. This is the strongest possible
@@ -1441,6 +1466,408 @@ class ClosingService:
             f"deleted {report['rows_deleted']}, wrote {report['rows_written']} "
             f"across {report['scopes_rebuilt']} scopes."
         )
+        return report
+
+    @staticmethod
+    def check_parent_purity(organization):
+        """Return a report of any parent/header account that currently
+        holds non-zero direct postings, per scope.
+
+        Invariant: a parent account's balance must equal the sum of its
+        children — meaning no direct JE lines target the parent itself.
+        This method implements that invariant as a live tripwire that
+        runs independently of close. The close-integrity gate enforces
+        it at finalize time; this method surfaces violations continuously
+        so someone notices before the year rolls.
+
+        Shape:
+          {
+            'organization_id': int, 'organization_slug': str,
+            'clean': bool,
+            'offenders': [
+              {'account_id': int, 'code': str, 'name': str, 'type': str,
+               'scope': 'OFFICIAL'|'INTERNAL',
+               'debit': Decimal, 'credit': Decimal, 'net': Decimal,
+               'n_lines': int},
+              ...
+            ],
+          }
+        """
+        from apps.finance.models import ChartOfAccount, JournalEntryLine
+        from django.db.models import Count, Sum
+
+        tol = ClosingService._RECON_TOLERANCE
+        parent_ids = list(
+            ChartOfAccount.objects
+            .filter(organization=organization)
+            .annotate(n_children=Count('children'))
+            .filter(n_children__gt=0)
+            .values_list('id', flat=True)
+        )
+
+        report = {
+            'organization_id': organization.id,
+            'organization_slug': getattr(organization, 'slug', None),
+            'clean': True,
+            'offenders': [],
+        }
+
+        if not parent_ids:
+            return report
+
+        for scope in ('OFFICIAL', 'INTERNAL'):
+            rows = (
+                JournalEntryLine.objects
+                .filter(
+                    organization=organization,
+                    account_id__in=parent_ids,
+                    journal_entry__scope=scope,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                )
+                .values('account_id', 'account__code', 'account__name', 'account__type')
+                .annotate(d=Sum('debit'), c=Sum('credit'), n=Count('id'))
+            )
+            for r in rows:
+                net = (r['d'] or Decimal('0.00')) - (r['c'] or Decimal('0.00'))
+                if net.copy_abs() > tol or r['n'] > 0:
+                    report['offenders'].append({
+                        'account_id': r['account_id'],
+                        'code': r['account__code'],
+                        'name': r['account__name'],
+                        'type': r['account__type'],
+                        'scope': scope,
+                        'debit': r['d'] or Decimal('0.00'),
+                        'credit': r['c'] or Decimal('0.00'),
+                        'net': net,
+                        'n_lines': r['n'],
+                    })
+                    report['clean'] = False
+        return report
+
+    @staticmethod
+    def validate_balance_integrity(organization):
+        """Independent recomputation of every ChartOfAccount balance
+        from POSTED, non-superseded JE lines, compared to the
+        denormalized `balance` / `balance_official` fields on the COA
+        row. Any difference > 1¢ is drift.
+
+        Mirrors the formula in `recalc_balances`:
+          balance          = SUM(debit - credit) over all POSTED lines
+          balance_official = same, scope='OFFICIAL' only
+
+        Read-only. Reports, does not fix. Use the `recalc_balances`
+        command to actually rewrite the denormalized fields when drift
+        is found.
+
+        Report shape:
+          {
+            'organization_id', 'organization_slug', 'clean': bool,
+            'accounts_checked': int, 'drifted': int,
+            'drifts': [
+              {'account_id', 'code', 'name',
+               'field': 'balance' | 'balance_official',
+               'stored': Decimal, 'recomputed': Decimal, 'diff': Decimal},
+              ...
+            ],
+          }
+        """
+        from apps.finance.models import ChartOfAccount, JournalEntryLine
+        from django.db.models import Sum
+
+        tol = ClosingService._RECON_TOLERANCE
+        report = {
+            'organization_id': organization.id,
+            'organization_slug': getattr(organization, 'slug', None),
+            'clean': True,
+            'accounts_checked': 0,
+            'drifted': 0,
+            'drifts': [],
+        }
+
+        # One pass across all lines — aggregate by (account, scope),
+        # cheaper than N queries per account.
+        agg_all = (
+            JournalEntryLine.objects
+            .filter(
+                organization=organization,
+                journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
+            )
+            .values('account_id')
+            .annotate(d=Sum('debit'), c=Sum('credit'))
+        )
+        all_by_acc = {
+            r['account_id']: (r['d'] or Decimal('0.00')) - (r['c'] or Decimal('0.00'))
+            for r in agg_all
+        }
+
+        agg_off = (
+            JournalEntryLine.objects
+            .filter(
+                organization=organization,
+                journal_entry__status='POSTED',
+                journal_entry__is_superseded=False,
+                journal_entry__scope='OFFICIAL',
+            )
+            .values('account_id')
+            .annotate(d=Sum('debit'), c=Sum('credit'))
+        )
+        off_by_acc = {
+            r['account_id']: (r['d'] or Decimal('0.00')) - (r['c'] or Decimal('0.00'))
+            for r in agg_off
+        }
+
+        for acc in ChartOfAccount.objects.filter(organization=organization):
+            report['accounts_checked'] += 1
+            account_drifted = False
+
+            stored_bal = acc.balance or Decimal('0.00')
+            recomp_bal = all_by_acc.get(acc.id, Decimal('0.00'))
+            if (stored_bal - recomp_bal).copy_abs() > tol:
+                report['drifts'].append({
+                    'account_id': acc.id,
+                    'code': acc.code, 'name': acc.name,
+                    'field': 'balance',
+                    'stored': stored_bal,
+                    'recomputed': recomp_bal,
+                    'diff': stored_bal - recomp_bal,
+                })
+                account_drifted = True
+
+            stored_off = acc.balance_official or Decimal('0.00')
+            recomp_off = off_by_acc.get(acc.id, Decimal('0.00'))
+            if (stored_off - recomp_off).copy_abs() > tol:
+                report['drifts'].append({
+                    'account_id': acc.id,
+                    'code': acc.code, 'name': acc.name,
+                    'field': 'balance_official',
+                    'stored': stored_off,
+                    'recomputed': recomp_off,
+                    'diff': stored_off - recomp_off,
+                })
+                account_drifted = True
+
+            if account_drifted:
+                report['drifted'] += 1
+                report['clean'] = False
+
+        return report
+
+    @staticmethod
+    def verify_snapshot_chain(organization):
+        """Walk the FiscalYearCloseSnapshot hash chain for this org and
+        confirm:
+          1. Each row's content_hash matches a fresh recompute of its
+             canonical payload (no silent field mutation).
+          2. Each row's prev_hash matches the content_hash of its
+             predecessor in capture-time order (no re-ordering / insert /
+             delete of an earlier snapshot).
+
+        Returns:
+          {
+            'organization_id', 'organization_slug',
+            'clean': bool, 'rows_checked': int,
+            'breaks': [
+              {'snapshot_id', 'fiscal_year_id', 'scope',
+               'kind': 'content_drift' | 'chain_break',
+               'stored_hash', 'computed_hash',
+               'stored_prev', 'expected_prev'},
+              ...
+            ],
+          }
+        """
+        from apps.finance.models import FiscalYearCloseSnapshot
+
+        report = {
+            'organization_id': organization.id,
+            'organization_slug': getattr(organization, 'slug', None),
+            'clean': True,
+            'rows_checked': 0,
+            'breaks': [],
+        }
+
+        chain = list(
+            FiscalYearCloseSnapshot.objects
+            .filter(organization=organization)
+            .order_by('captured_at', 'id')
+        )
+        expected_prev = None
+        for s in chain:
+            report['rows_checked'] += 1
+
+            # 1) Content integrity — recompute and compare.
+            recomputed = s.compute_content_hash()
+            if s.content_hash != recomputed:
+                report['breaks'].append({
+                    'snapshot_id': s.id,
+                    'fiscal_year_id': s.fiscal_year_id,
+                    'scope': s.scope,
+                    'kind': 'content_drift',
+                    'stored_hash': s.content_hash,
+                    'computed_hash': recomputed,
+                    'stored_prev': s.prev_hash,
+                    'expected_prev': expected_prev,
+                })
+                report['clean'] = False
+
+            # 2) Chain integrity — the prev_hash must point at the
+            # content_hash of the previous snapshot in capture order.
+            if s.prev_hash != expected_prev:
+                report['breaks'].append({
+                    'snapshot_id': s.id,
+                    'fiscal_year_id': s.fiscal_year_id,
+                    'scope': s.scope,
+                    'kind': 'chain_break',
+                    'stored_hash': s.content_hash,
+                    'computed_hash': recomputed,
+                    'stored_prev': s.prev_hash,
+                    'expected_prev': expected_prev,
+                })
+                report['clean'] = False
+
+            # Walk forward using the STORED content_hash (not the
+            # recomputed one) — mid-chain tampering would otherwise be
+            # silently patched over when computing the next expected_prev.
+            expected_prev = s.content_hash
+
+        return report
+
+    @staticmethod
+    def check_subledger_integrity(organization):
+        """Sub-ledger tripwire — enforces the invariant that every JE
+        line targeting a control account (AR, AP, employee advances, etc.)
+        carries partner identification.
+
+        A control account is a roll-up of per-party balances: its total
+        net MUST equal the sum of its per-party nets. If a line is
+        posted without a `contact` / `partner_id` link, that amount
+        floats outside the sub-ledger and breaks aging, statements, and
+        collection reports silently.
+
+        Also flags orphan references — lines that name a partner_id
+        whose Contact row no longer exists.
+
+        Report shape:
+          {
+            'organization_id': ..., 'organization_slug': ...,
+            'clean': bool,
+            'control_accounts_checked': int,
+            'offenders': [
+              {'account_id', 'code', 'name', 'scope', 'kind',
+               'n_lines', 'debit', 'credit', 'net',
+               'partner_ids': [...] (only for 'orphan_partner' kind),
+              },
+              ...
+            ],
+          }
+
+        `kind` is one of:
+          'missing_partner' — contact IS NULL AND partner_id IS NULL
+          'orphan_partner'  — partner_id references a non-existent Contact
+        """
+        from apps.finance.models import ChartOfAccount, JournalEntryLine
+        from django.db.models import Count, Sum, Q
+
+        report = {
+            'organization_id': organization.id,
+            'organization_slug': getattr(organization, 'slug', None),
+            'clean': True,
+            'control_accounts_checked': 0,
+            'offenders': [],
+        }
+
+        control_accounts = list(
+            ChartOfAccount.objects.filter(
+                organization=organization,
+                is_control_account=True,
+                is_active=True,
+            )
+        )
+        report['control_accounts_checked'] = len(control_accounts)
+        if not control_accounts:
+            return report
+
+        # Build orphan-partner lookup: partner_ids referenced on this org's
+        # JE lines that don't map to an existing Contact. One query,
+        # reused across scopes.
+        try:
+            from apps.crm.models import Contact
+            referenced_ids = set(
+                JournalEntryLine.objects
+                .filter(
+                    organization=organization,
+                    account__in=control_accounts,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    partner_id__isnull=False,
+                )
+                .values_list('partner_id', flat=True)
+                .distinct()
+            )
+            existing_ids = set(
+                Contact.objects.filter(
+                    organization=organization,
+                    id__in=referenced_ids,
+                ).values_list('id', flat=True)
+            )
+            orphan_ids = referenced_ids - existing_ids
+        except Exception:
+            # CRM app import failed (rare in tests); skip orphan check
+            # rather than break the entire integrity pass.
+            orphan_ids = set()
+
+        for acc in control_accounts:
+            for scope in ('OFFICIAL', 'INTERNAL'):
+                base = JournalEntryLine.objects.filter(
+                    organization=organization,
+                    account=acc,
+                    journal_entry__scope=scope,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                )
+
+                # 1) Missing partner: no contact FK AND no partner_id
+                missing = base.filter(
+                    contact__isnull=True, partner_id__isnull=True,
+                ).aggregate(d=Sum('debit'), c=Sum('credit'), n=Count('id'))
+                if missing['n']:
+                    net = (missing['d'] or Decimal('0.00')) - (missing['c'] or Decimal('0.00'))
+                    report['offenders'].append({
+                        'account_id': acc.id,
+                        'code': acc.code, 'name': acc.name,
+                        'scope': scope, 'kind': 'missing_partner',
+                        'n_lines': missing['n'],
+                        'debit': missing['d'] or Decimal('0.00'),
+                        'credit': missing['c'] or Decimal('0.00'),
+                        'net': net,
+                    })
+                    report['clean'] = False
+
+                # 2) Orphan partner: partner_id points nowhere
+                if orphan_ids:
+                    orphan = base.filter(
+                        partner_id__in=orphan_ids,
+                    ).aggregate(d=Sum('debit'), c=Sum('credit'), n=Count('id'))
+                    if orphan['n']:
+                        net = (orphan['d'] or Decimal('0.00')) - (orphan['c'] or Decimal('0.00'))
+                        orphan_refs = list(
+                            base.filter(partner_id__in=orphan_ids)
+                            .values_list('partner_id', flat=True)
+                            .distinct()
+                        )
+                        report['offenders'].append({
+                            'account_id': acc.id,
+                            'code': acc.code, 'name': acc.name,
+                            'scope': scope, 'kind': 'orphan_partner',
+                            'n_lines': orphan['n'],
+                            'debit': orphan['d'] or Decimal('0.00'),
+                            'credit': orphan['c'] or Decimal('0.00'),
+                            'net': net,
+                            'partner_ids': orphan_refs,
+                        })
+                        report['clean'] = False
+
         return report
 
     @staticmethod

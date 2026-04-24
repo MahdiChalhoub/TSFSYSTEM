@@ -62,6 +62,16 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
 
     serializer_class = ProductSerializer
 
+    def get_serializer_class(self):
+        # Pickers / dropdowns can request a skinny payload with
+        # ``?lite=1`` — it drops the nested serializers and
+        # per-row SerializerMethodFields that make the default
+        # shape expensive for large lists.
+        if self.action == 'list' and self.request.query_params.get('lite') in ('1', 'true', 'yes'):
+            from apps.inventory.serializers import ProductLiteSerializer
+            return ProductLiteSerializer
+        return super().get_serializer_class()
+
     filterset_fields = ['category', 'brand', 'product_type', 'is_active', 'tracks_serials',
                         'data_completeness_level', 'is_verified', 'status']
 

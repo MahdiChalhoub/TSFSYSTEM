@@ -88,8 +88,17 @@ const categoriesTour: TourConfig = {
         {
             target: '[data-tour="category-tree"]',
             title: 'The Category Tree',
-            description: 'Your hierarchical product taxonomy. Single-click any parent row to expand or collapse it. Double-click to open its detail panel. Leaf categories open the panel on single-click.',
+            description: 'Your hierarchical product taxonomy. Each row shows Category · Barcode prefix · Sub · Brands · Attrs · Products. Single-click any parent to expand/collapse; double-click to open its detail panel. Leaf categories open the panel on single-click.',
             icon: createElement(FolderTree, { size: 16 }),
+            color: 'var(--app-success, #22c55e)',
+            placement: 'top',
+        },
+        // 4b — Barcode column highlight
+        {
+            target: '[data-tour="category-tree"]',
+            title: '🏷 Barcode Prefix Column',
+            description: 'The green badge shows each category\'s barcode prefix — the leading digits products in this category inherit when their barcode is auto-generated (e.g. "0410" → products become "0410001", "0410002"...). A "–" means no prefix set. Edit the category to change it; the value must be unique per tenant.',
+            icon: createElement(Tag, { size: 16 }),
             color: 'var(--app-success, #22c55e)',
             placement: 'top',
         },

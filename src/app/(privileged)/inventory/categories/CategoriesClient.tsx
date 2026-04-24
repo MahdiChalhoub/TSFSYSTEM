@@ -146,11 +146,11 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 ],
                 columnHeaders: [
                     { label: 'Category', width: 'auto' },
-                    { label: 'Barcode', width: '96px', color: 'var(--app-success)', hideOnMobile: true },
-                    { label: 'Sub', width: '48px', hideOnMobile: true },
-                    { label: 'Brands', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
-                    { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true },
-                    { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
+                    { label: 'Barcode', width: '96px', color: 'var(--app-success)', hideOnMobile: true, hideOnSplit: true },
+                    { label: 'Sub', width: '48px', hideOnMobile: true, hideOnSplit: true },
+                    { label: 'Brands', width: '56px', color: 'var(--app-info)', hideOnMobile: true, hideOnSplit: true },
+                    { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true, hideOnSplit: true },
+                    { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true, hideOnSplit: true },
                 ],
 
                 // ── Template owns filtering ──
@@ -254,7 +254,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             )}
         >
             {(renderProps) => {
-                const { tree, expandKey, expandAll, searchQuery, isSelected, openNode } = renderProps
+                const { tree, expandKey, expandAll, searchQuery, isSelected, openNode, isCompact } = renderProps
                 renderPropsRef.current = renderProps
 
                 return tree.map((node: CategoryNode) => (
@@ -272,6 +272,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                             onViewAttributes={(n) => openNode(n, 'attributes')}
                             searchQuery={searchQuery}
                             forceExpanded={expandAll}
+                            compact={isCompact}
                         />
                     </div>
                 ))

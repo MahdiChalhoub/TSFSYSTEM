@@ -22,7 +22,13 @@ import type { MasterPageConfig } from '@/components/templates/master-page-config
 export type { KPI, ActionButton } from '@/components/templates/master-page-config'
 
 export interface ColumnHeader {
-    label: string; width: string; color?: string; hideOnMobile?: boolean
+    label: string; width: string; color?: string;
+    /** Hide below the `sm` breakpoint (viewport-based). */
+    hideOnMobile?: boolean
+    /** Hide when the split panel is open — the list pane gets roughly
+     *  half the viewport, so secondary columns collapse to keep the
+     *  Category column readable. */
+    hideOnSplit?: boolean
 }
 
 export interface TreeMasterConfig extends MasterPageConfig {
@@ -39,6 +45,9 @@ export interface TreeMasterRenderProps {
     expandAll: boolean | undefined
     expandKey: number
     splitPanel: boolean
+    /** True when the list pane's measured width is below the compact
+     *  threshold. Use this (not `splitPanel`) to hide secondary columns. */
+    isCompact: boolean
     pinnedSidebar: boolean
     selectedNode: any | null
     setSelectedNode: (n: any | null) => void
@@ -91,6 +100,28 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     }, [searchQuery, config.onSearchChange])
     const [focusMode, setFocusMode] = useState(false)
     const [splitPanel, setSplitPanel] = useState(false)
+    // Width-based responsive state — "compact" = list pane is too narrow to
+    // comfortably fit all columns. Kicks in whenever the list wrapper shrinks
+    // below the threshold, regardless of cause (split panel, narrow window,
+    // sidebar widened, zoom, etc.). Far better than a binary split flag.
+    const COMPACT_THRESHOLD_PX = 720
+    const listWrapperRef = useRef<HTMLDivElement | null>(null)
+    const [isCompact, setIsCompact] = useState(false)
+    useEffect(() => {
+        const el = listWrapperRef.current
+        if (!el) return
+        const ro = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                const w = entry.contentRect.width
+                setIsCompact(prev => {
+                    const next = w < COMPACT_THRESHOLD_PX
+                    return prev === next ? prev : next
+                })
+            }
+        })
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
     const [pinnedSidebar, setPinnedSidebar] = useState(false)
     const [selectedNode, setSelectedNode] = useState<any | null>(null)
     const [panelTab, setPanelTab] = useState('overview')
@@ -155,7 +186,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     }, [])
 
     const renderProps: TreeMasterRenderProps = {
-        searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar,
+        searchQuery, expandAll, expandKey, splitPanel, isCompact, pinnedSidebar,
         selectedNode, setSelectedNode,
         sidebarNode, setSidebarNode,
         sidebarTab, setSidebarTab,
@@ -376,19 +407,27 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
             <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
 
                 {/* Left: Tree */}
-                <div data-tour={config.treeTourId || 'tree-container'} className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
+                <div ref={listWrapperRef}
+                     data-tour={config.treeTourId || 'tree-container'}
+                     className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
                     {/* Column Headers */}
                     {config.columnHeaders && (
                         <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-tp-xxs font-black text-app-muted-foreground uppercase tracking-widest"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '2px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                             <div className="w-5 flex-shrink-0" />
                             <div className="w-7 flex-shrink-0" />
-                            {config.columnHeaders.map((col, i) => (
-                                <div key={i} className={`${col.hideOnMobile ? 'hidden sm:block' : ''} flex-shrink-0 text-center`}
-                                    style={{ width: col.width, color: col.color, ...(i === 0 ? { flex: '1 1 0%', minWidth: 0, textAlign: 'left' } : {}) }}>
-                                    {col.label}
-                                </div>
-                            ))}
+                            {config.columnHeaders.map((col, i) => {
+                                // Width-based: hide `hideOnSplit` columns when the list
+                                // pane is actually narrow, NOT just when the split flag
+                                // is on. Wide monitors + split keeps everything visible.
+                                if (col.hideOnSplit && isCompact) return null;
+                                return (
+                                    <div key={i} className={`${col.hideOnMobile ? 'hidden sm:block' : ''} flex-shrink-0 text-center overflow-hidden whitespace-nowrap text-ellipsis`}
+                                        style={{ width: col.width, color: col.color, ...(i === 0 ? { flex: '1 1 0%', minWidth: 0, textAlign: 'left' } : {}) }}>
+                                        {col.label}
+                                    </div>
+                                );
+                            })}
                             <div className="w-[68px] flex-shrink-0" />
                         </div>
                     )}

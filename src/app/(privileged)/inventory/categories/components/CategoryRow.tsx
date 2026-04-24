@@ -14,12 +14,16 @@ import type { CategoryNode } from './types'
  * ═══════════════════════════════════════════════════════════ */
 export const CategoryRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
-    onViewProducts, onViewBrands, onViewAttributes, onSelect,
+    onViewProducts, onViewBrands, onViewAttributes, onSelect, compact,
 }: {
     node: CategoryNode; level: number; searchQuery: string; forceExpanded?: boolean;
     onEdit: (n: CategoryNode) => void; onAdd: (parentId?: number) => void; onDelete: (n: CategoryNode) => void;
     onViewProducts: (n: CategoryNode) => void; onViewBrands: (n: CategoryNode) => void; onViewAttributes: (n: CategoryNode) => void;
     onSelect?: (n: CategoryNode) => void;
+    /** When true, hide secondary column cells — split-panel is open, the
+     *  list pane is narrow, keep only Category (name + code). Secondary
+     *  data stays available in the detail panel. */
+    compact?: boolean;
 }) => {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
@@ -148,70 +152,77 @@ export const CategoryRow = ({
                 </div>
 
                 {/* ── Stat Badges — numbers only, clean ── */}
-                {/* Barcode prefix */}
-                <div className="hidden sm:flex w-24 flex-shrink-0 justify-center">
-                    {node.barcode_prefix ? (
-                        <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
-                            title={`Products in this category get barcodes starting ${node.barcode_prefix}`}
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
-                                color: 'var(--app-success, #22c55e)',
-                            }}>
-                            🏷 {node.barcode_prefix}
-                        </span>
-                    ) : (
-                        <span className="text-tp-xs tabular-nums"
-                            style={{ color: 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
-                            –
-                        </span>
-                    )}
-                </div>
+                {/* Secondary columns — hidden when `compact` (split panel is open)
+                 *  so the list keeps a readable Category column in a narrow pane.
+                 *  Counts & barcode remain available in the right-hand detail panel. */}
+                {!compact && (
+                    <>
+                        {/* Barcode prefix */}
+                        <div className="hidden sm:flex w-24 flex-shrink-0 justify-center">
+                            {node.barcode_prefix ? (
+                                <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
+                                    title={`Products in this category get barcodes starting ${node.barcode_prefix}`}
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                        color: 'var(--app-success, #22c55e)',
+                                    }}>
+                                    🏷 {node.barcode_prefix}
+                                </span>
+                            ) : (
+                                <span className="text-tp-xs tabular-nums"
+                                    style={{ color: 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
+                                    –
+                                </span>
+                            )}
+                        </div>
 
-                {/* Children */}
-                <div className="hidden sm:flex w-10 flex-shrink-0 justify-center">
-                    <span className="text-tp-xs font-semibold tabular-nums"
-                        style={{
-                            color: isParent ? 'var(--app-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)',
-                        }}>
-                        {isParent ? node.children!.length : '–'}
-                    </span>
-                </div>
+                        {/* Children */}
+                        <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
+                            <span className="text-tp-xs font-semibold tabular-nums"
+                                style={{
+                                    color: isParent ? 'var(--app-foreground)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)',
+                                }}>
+                                {isParent ? node.children!.length : '–'}
+                            </span>
+                        </div>
 
-                {/* Brands */}
-                <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onViewBrands(node) }}
-                        className="text-tp-xs font-semibold tabular-nums transition-colors hover:underline"
-                        style={{ color: brandCount > 0 ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
-                        title={`${brandCount} brand${brandCount !== 1 ? 's' : ''}`}
-                    >
-                        {brandCount}
-                    </button>
-                </div>
+                        {/* Brands */}
+                        <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onViewBrands(node) }}
+                                className="text-tp-xs font-semibold tabular-nums transition-colors hover:underline"
+                                style={{ color: brandCount > 0 ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
+                                title={`${brandCount} brand${brandCount !== 1 ? 's' : ''}`}
+                            >
+                                {brandCount}
+                            </button>
+                        </div>
 
-                {/* Attributes */}
-                <div className="hidden sm:flex w-10 flex-shrink-0 justify-center">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onViewAttributes(node) }}
-                        className="text-tp-xs font-semibold tabular-nums transition-colors hover:underline"
-                        style={{ color: attributeCount > 0 ? 'var(--app-warning)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
-                        title={`${attributeCount} attribute${attributeCount !== 1 ? 's' : ''}`}
-                    >
-                        {attributeCount}
-                    </button>
-                </div>
+                        {/* Attributes */}
+                        <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onViewAttributes(node) }}
+                                className="text-tp-xs font-semibold tabular-nums transition-colors hover:underline"
+                                style={{ color: attributeCount > 0 ? 'var(--app-warning)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
+                                title={`${attributeCount} attribute${attributeCount !== 1 ? 's' : ''}`}
+                            >
+                                {attributeCount}
+                            </button>
+                        </div>
 
-                {/* Products */}
-                <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onViewProducts(node) }}
-                        className="text-tp-xs font-semibold tabular-nums transition-colors hover:underline"
-                        style={{ color: productCount > 0 ? 'var(--app-success)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
-                        title={`${productCount} product${productCount !== 1 ? 's' : ''}`}
-                    >
-                        {productCount}
-                    </button>
-                </div>
+                        {/* Products */}
+                        <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onViewProducts(node) }}
+                                className="text-tp-xs font-semibold tabular-nums transition-colors hover:underline"
+                                style={{ color: productCount > 0 ? 'var(--app-success)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
+                                title={`${productCount} product${productCount !== 1 ? 's' : ''}`}
+                            >
+                                {productCount}
+                            </button>
+                        </div>
+                    </>
+                )}
 
                 {/* Actions — appear on hover */}
                 <div className="flex items-center justify-end gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
@@ -250,6 +261,7 @@ export const CategoryRow = ({
                             onSelect={onSelect}
                             searchQuery={searchQuery}
                             forceExpanded={forceExpanded}
+                            compact={compact}
                         />
                     ))}
                 </div>

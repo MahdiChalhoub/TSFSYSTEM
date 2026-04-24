@@ -65,10 +65,11 @@ interface Props {
     categories: Option[]
     brands: Option[]
     attributes: Option[]
+    attributeValuesByParent?: Record<number, Option[]>
     loadErrors?: Record<string, string>
 }
 
-export default function PackagesClient({ initialTemplates, units, categories, brands, attributes, loadErrors }: Props) {
+export default function PackagesClient({ initialTemplates, units, categories, brands, attributes, attributeValuesByParent, loadErrors }: Props) {
     const router = useRouter()
     const [templates, setTemplates] = useState<Template[]>(initialTemplates)
     const [editing, setEditing] = useState<Template | null>(null)
@@ -279,6 +280,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                         categories={categories}
                         brands={brands}
                         attributes={attributes}
+                        attributeValuesByParent={attributeValuesByParent}
                         onEdit={() => openEditForm(node._tpl)}
                         onDelete={() => setDeleteTarget(node._tpl)}
                         onClose={onClose}
@@ -561,7 +563,7 @@ function UsageCountBadge({ tpl }: { tpl: Template }) {
  * ═══════════════════════════════════════════════════════════ */
 type DetailTab = 'overview' | 'links' | 'usage'
 
-function TemplateDetailPanel({ tpl, categories, brands, attributes, onEdit, onDelete, onClose, onPin }: any) {
+function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeValuesByParent, onEdit, onDelete, onClose, onPin }: any) {
     const [tab, setTab] = useState<DetailTab>('overview')
     const [rules, setRules] = useState<any[]>([])
     const [rulesLoaded, setRulesLoaded] = useState(false)
@@ -688,6 +690,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, onEdit, onDe
                         adding={adding} setAdding={setAdding}
                         newLink={newLink} setNewLink={setNewLink}
                         categories={categories} brands={brands} attributes={attributes}
+                        attributeValuesByParent={attributeValuesByParent}
                         onAdd={handleAddLink} onRemove={handleRemoveLink}
                     />
                 )}
@@ -734,7 +737,13 @@ function OverviewTab({ tpl }: any) {
     )
 }
 
-function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, categories, brands, attributes, onAdd, onRemove }: any) {
+function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, categories, brands, attributes, attributeValuesByParent, onAdd, onRemove }: any) {
+    // Children of the attribute the user just picked — e.g. for
+    // ``Size`` this is the list ``[Small, Medium, Big]``. The Value
+    // field becomes a dropdown of these instead of a free-text input,
+    // with a "Custom value…" fallback for one-off tags.
+    const attributeChildren: { id: number; name: string }[] = (newLink.attribute && attributeValuesByParent?.[newLink.attribute]) || []
+    const isCustomValue = newLink.attribute_value && !attributeChildren.some((c: any) => c.name === newLink.attribute_value)
     return (
         <div className="p-3 space-y-2 animate-in fade-in duration-150">
             <div className="flex items-center justify-between">
@@ -757,9 +766,39 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
                     {newLink.attribute && (
                         <div>
                             <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Value</label>
-                            <input value={newLink.attribute_value} onChange={(e) => setNewLink({ ...newLink, attribute_value: e.target.value })}
-                                placeholder="e.g. Big" className="w-full px-2.5 py-1.5 rounded-lg text-tp-sm font-bold outline-none"
-                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                            {attributeChildren.length > 0 ? (
+                                <>
+                                    <select
+                                        value={isCustomValue ? '__custom__' : (newLink.attribute_value || '')}
+                                        onChange={(e) => {
+                                            const v = e.target.value
+                                            if (v === '__custom__') setNewLink({ ...newLink, attribute_value: '' })
+                                            else setNewLink({ ...newLink, attribute_value: v })
+                                        }}
+                                        className="w-full px-2.5 py-1.5 rounded-lg text-tp-sm font-bold outline-none"
+                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                        <option value="">Any value (attribute present)</option>
+                                        {attributeChildren.map((c: any) => (
+                                            <option key={c.id} value={c.name}>{c.name}</option>
+                                        ))}
+                                        <option value="__custom__">Custom value…</option>
+                                    </select>
+                                    {isCustomValue && (
+                                        <input value={newLink.attribute_value}
+                                            onChange={(e) => setNewLink({ ...newLink, attribute_value: e.target.value })}
+                                            placeholder="Custom value"
+                                            className="w-full mt-1.5 px-2.5 py-1.5 rounded-lg text-tp-sm font-bold outline-none"
+                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                    )}
+                                </>
+                            ) : (
+                                // No children defined under this attribute yet — fall back to free text.
+                                <input value={newLink.attribute_value}
+                                    onChange={(e) => setNewLink({ ...newLink, attribute_value: e.target.value })}
+                                    placeholder="e.g. Big"
+                                    className="w-full px-2.5 py-1.5 rounded-lg text-tp-sm font-bold outline-none"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                            )}
                         </div>
                     )}
                     <button onClick={onAdd}

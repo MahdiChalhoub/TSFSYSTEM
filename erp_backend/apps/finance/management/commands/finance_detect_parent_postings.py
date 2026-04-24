@@ -51,6 +51,16 @@ class Command(BaseCommand):
                             help='Child account CODE to receive the balance (required with --migrate)')
         parser.add_argument('--fiscal-year', type=int, default=None,
                             help='Restrict scan to one FiscalYear ID')
+        parser.add_argument('--force-collapse', action='store_true', default=False,
+                            help=('Acknowledge that collapsing a parent into a single '
+                                  'leaf may flatten segmentation the original postings '
+                                  'implied (e.g. per-customer buckets under AR). '
+                                  'Required whenever --from-account has more than one '
+                                  'child — otherwise the migrate step refuses.'))
+        parser.add_argument('--audit-reason', type=str, default=None,
+                            help=('Free-text reason stamped onto the reclassification JE '
+                                  'description. Highly recommended — becomes the only '
+                                  'forensic breadcrumb for why this collapse was made.'))
 
     def handle(self, *args, **opts):
         from apps.finance.models import ChartOfAccount, JournalEntryLine, FiscalYear
@@ -176,6 +186,28 @@ class Command(BaseCommand):
             ))
             return
 
+        # Segmentation-collapse guard. Parents with multiple children
+        # probably encode meaningful groupings (per-customer AR, per-tax
+        # jurisdiction VAT, per-region revenue). Redirecting all parent
+        # postings into one child flattens that structure — a loss the
+        # operator must explicitly acknowledge. Single-child parents are
+        # usually just malformed hierarchies (one leaf under a wrapper)
+        # and don't need the extra gate.
+        n_children = parent.children.count()
+        if n_children > 1 and not opts['force_collapse']:
+            self.stdout.write(self.style.ERROR(
+                f"  {parent.code} has {n_children} child accounts — redirecting "
+                f"all direct postings into a single leaf ({to_code}) will "
+                f"flatten any segmentation they encoded. Pass --force-collapse "
+                f"to acknowledge and proceed."
+            ))
+            return
+
+        if not opts['audit_reason']:
+            self.stdout.write(self.style.WARNING(
+                f"  (no --audit-reason supplied — consider adding one for traceability)"
+            ))
+
         for scope in scopes:
             agg = JournalEntryLine.objects.filter(
                 organization=org, account=parent,
@@ -206,10 +238,21 @@ class Command(BaseCommand):
                      'description': f"Reclass {from_code}→{to_code}: zero parent"},
                 ]
 
+            # Stamp the audit reason into the JE description — it's
+            # immutable once POSTED, so this is the canonical forensic
+            # record of WHY the collapse happened. Users who skip the
+            # reason get a placeholder that flags the gap.
+            reason = opts.get('audit_reason') or '(no reason provided)'
+            flatten_flag = ' [segmentation-collapsed]' if n_children > 1 else ''
+            description = (
+                f"Reclassification: {parent.code} → {child.code} ({scope})"
+                f"{flatten_flag} — reason: {reason}"
+            )
+
             je = LedgerCoreMixin.create_journal_entry(
                 organization=org,
                 transaction_date=timezone.now(),
-                description=f"Reclassification: {parent.code} → {child.code} ({scope})",
+                description=description,
                 lines=lines,
                 status='POSTED',
                 scope=scope,

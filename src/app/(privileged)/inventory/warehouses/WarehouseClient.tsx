@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useCallback, useRef, useEffect, useDeferredValue } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect, useDeferredValue } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteWarehouse } from '@/app/actions/inventory/warehouses'
 import { erpFetch } from '@/lib/erp-api'
@@ -441,6 +441,44 @@ function OrphanRow({ node, onEdit, onDelete, onSkuClick }: {
 }
 
 /* ═══════════════════════════════════════════════════════════
+ *  WINDOWED LIST — render only visible rows
+ *
+ *  Fixed-height rows + a scroll listener keep the DOM tiny no
+ *  matter how many items are in the source array. We pick this
+ *  over react-window so the page stays dependency-free.
+ * ═══════════════════════════════════════════════════════════ */
+function useWindowedList<T>(items: T[], rowHeight: number, overscan: number = 8) {
+    const scrollRef = useRef<HTMLDivElement | null>(null)
+    const [metrics, setMetrics] = useState({ top: 0, height: 0 })
+
+    useLayoutEffect(() => {
+        const el = scrollRef.current
+        if (!el) return
+        const update = () => setMetrics({ top: el.scrollTop, height: el.clientHeight })
+        update()
+        el.addEventListener('scroll', update, { passive: true })
+        const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null
+        ro?.observe(el)
+        return () => {
+            el.removeEventListener('scroll', update)
+            ro?.disconnect()
+        }
+    }, [])
+
+    const viewport = metrics.height || 600  // before first measure, assume ~600px
+    const start = Math.max(0, Math.floor(metrics.top / rowHeight) - overscan)
+    const visible = Math.ceil(viewport / rowHeight) + overscan * 2
+    const end = Math.min(items.length, start + visible)
+    return {
+        scrollRef,
+        visibleItems: items.slice(start, end),
+        startIndex: start,
+        offsetY: start * rowHeight,
+        totalHeight: items.length * rowHeight,
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
  *  SKU SIDE PANEL — Enhanced with search, filters, add/remove
  * ═══════════════════════════════════════════════════════════ */
 
@@ -507,13 +545,16 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
         }
     }, [filterMode, compareLocationId])
 
-    // Fetch all products for the Add picker
+    // Fetch all products for the Add picker. `lite=1` drops the
+    // variants/packaging/on_hand_qty fields — without it each row
+    // triggers ~6 extra DB queries, so a 200-row picker can take
+    // seconds. Lite gives us { id, name, sku, barcode, category_name }.
     const openProductPicker = async () => {
         setShowAddPicker(true)
         if (allProducts.length > 0) return // cached
         setLoadingProducts(true)
         try {
-            const res = await erpFetch('products/?page_size=200&is_active=true')
+            const res = await erpFetch('products/?page_size=500&is_active=true&lite=1')
             const list = Array.isArray(res) ? res : (res?.results ?? [])
             setAllProducts(list)
         } catch { setAllProducts([]) }
@@ -559,17 +600,25 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
     // Other locations (for the compare dropdown)
     const otherLocations = allLocations.filter(l => l.id !== skuPanel.location?.id)
 
-    // Products available to add (not already in this location)
+    // Products available to add (not already in this location).
+    // No artificial cap — virtualization renders only visible rows,
+    // so 500+ candidates stay responsive.
     const addableProducts = useMemo(() => {
         const list = allProducts.filter(p => !currentProductIds.has(p.id))
-        if (!pickerSearch.trim()) return list.slice(0, 50)
+        if (!pickerSearch.trim()) return list
         const q = pickerSearch.toLowerCase()
         return list.filter(p =>
             (p.name || '').toLowerCase().includes(q) ||
             (p.sku || '').toLowerCase().includes(q) ||
             (p.barcode || '').toLowerCase().includes(q)
-        ).slice(0, 50)
+        )
     }, [allProducts, currentProductIds, pickerSearch])
+
+    // Virtualized rows for the two long lists inside this panel.
+    const INVENTORY_ROW_HEIGHT = 48
+    const PICKER_ROW_HEIGHT = 48
+    const inventoryVirt = useWindowedList(filteredItems, INVENTORY_ROW_HEIGHT)
+    const pickerVirt = useWindowedList(addableProducts, PICKER_ROW_HEIGHT)
 
     return (
         <div className="fixed inset-0 z-40 flex justify-end" onClick={() => setSkuPanel(p => ({ ...p, open: false }))}>
@@ -683,8 +732,8 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                     )}
                 </div>
 
-                {/* ── Panel Body ── */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                {/* ── Panel Body (virtualized) ── */}
+                <div ref={inventoryVirt.scrollRef} className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
                     {(skuPanel.loading || loadingCompare) ? (
                         <div className="flex flex-col items-center justify-center py-16">
                             <Loader2 size={24} className="animate-spin text-app-primary mb-3" />
@@ -704,43 +753,50 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                             </p>
                         </div>
                     ) : (
-                        <div>
-                            {filteredItems.map((item: any, idx: number) => (
-                                <div
-                                    key={item.id || idx}
-                                    className="group flex items-center gap-2 px-3 py-2 hover:bg-app-surface/60 transition-colors"
-                                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}
-                                >
-                                    <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-                                        style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
-                                        <Package size={11} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-tp-sm font-bold text-app-foreground truncate">
-                                            {item.product_name || item.product?.name || `Product #${item.product ?? item.product_id}`}
-                                        </p>
-                                        <p className="text-tp-xxs font-mono text-app-muted-foreground">
-                                            {item.sku || item.product?.sku || ''}
-                                            {item.batch_number && ` · Batch: ${item.batch_number}`}
-                                        </p>
-                                    </div>
-                                    <div className="text-right flex-shrink-0 mr-1">
-                                        <p className="text-tp-md font-bold text-app-foreground tabular-nums">
-                                            {typeof item.quantity === 'number' ? Number(item.quantity).toLocaleString() : 0}
-                                        </p>
-                                    </div>
-                                    {/* Remove button */}
-                                    <button
-                                        onClick={() => handleRemove(item.id)}
-                                        disabled={removingId === item.id}
-                                        className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-                                        style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}
-                                        title="Remove from location"
-                                    >
-                                        {removingId === item.id ? <Loader2 size={10} className="animate-spin" /> : <Minus size={10} />}
-                                    </button>
-                                </div>
-                            ))}
+                        <div style={{ height: inventoryVirt.totalHeight, position: 'relative' }}>
+                            <div style={{ transform: `translateY(${inventoryVirt.offsetY}px)` }}>
+                                {inventoryVirt.visibleItems.map((item: any, i: number) => {
+                                    const idx = inventoryVirt.startIndex + i
+                                    return (
+                                        <div
+                                            key={item.id || idx}
+                                            className="group flex items-center gap-2 px-3 hover:bg-app-surface/60 transition-colors"
+                                            style={{
+                                                height: INVENTORY_ROW_HEIGHT,
+                                                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
+                                            }}
+                                        >
+                                            <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
+                                                <Package size={11} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-tp-sm font-bold text-app-foreground truncate">
+                                                    {item.product_name || item.product?.name || `Product #${item.product ?? item.product_id}`}
+                                                </p>
+                                                <p className="text-tp-xxs font-mono text-app-muted-foreground truncate">
+                                                    {item.sku || item.product?.sku || ''}
+                                                    {item.batch_number && ` · Batch: ${item.batch_number}`}
+                                                </p>
+                                            </div>
+                                            <div className="text-right flex-shrink-0 mr-1">
+                                                <p className="text-tp-md font-bold text-app-foreground tabular-nums">
+                                                    {typeof item.quantity === 'number' ? Number(item.quantity).toLocaleString() : 0}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemove(item.id)}
+                                                disabled={removingId === item.id}
+                                                className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                                                style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}
+                                                title="Remove from location"
+                                            >
+                                                {removingId === item.id ? <Loader2 size={10} className="animate-spin" /> : <Minus size={10} />}
+                                            </button>
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -798,8 +854,8 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                             </div>
                         </div>
 
-                        {/* Picker Body */}
-                        <div className="flex-1 overflow-y-auto min-h-0">
+                        {/* Picker Body (virtualized) */}
+                        <div ref={pickerVirt.scrollRef} className="flex-1 overflow-y-auto min-h-0">
                             {loadingProducts ? (
                                 <div className="flex flex-col items-center justify-center py-16">
                                     <Loader2 size={24} className="animate-spin text-app-success mb-3" />
@@ -812,31 +868,38 @@ function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
                                     </p>
                                 </div>
                             ) : (
-                                addableProducts.map(p => (
-                                    <button
-                                        key={p.id}
-                                        onClick={() => handleAddProduct(p.id)}
-                                        disabled={addingProductId === p.id}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-app-surface/60 transition-colors disabled:opacity-50"
-                                        style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)' }}
-                                    >
-                                        <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-                                            style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
-                                            {addingProductId === p.id ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-tp-sm font-bold text-app-foreground truncate">{p.name}</p>
-                                            <p className="text-tp-xxs font-mono text-app-muted-foreground">
-                                                {p.sku || p.barcode || ''}
-                                                {p.category_name && ` · ${p.category_name}`}
-                                            </p>
-                                        </div>
-                                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
-                                            style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', color: 'var(--app-success)' }}>
-                                            Add
-                                        </span>
-                                    </button>
-                                ))
+                                <div style={{ height: pickerVirt.totalHeight, position: 'relative' }}>
+                                    <div style={{ transform: `translateY(${pickerVirt.offsetY}px)` }}>
+                                        {pickerVirt.visibleItems.map((p: any) => (
+                                            <button
+                                                key={p.id}
+                                                onClick={() => handleAddProduct(p.id)}
+                                                disabled={addingProductId === p.id}
+                                                className="w-full flex items-center gap-2 px-3 text-left hover:bg-app-surface/60 transition-colors disabled:opacity-50"
+                                                style={{
+                                                    height: PICKER_ROW_HEIGHT,
+                                                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)',
+                                                }}
+                                            >
+                                                <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                                    {addingProductId === p.id ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-tp-sm font-bold text-app-foreground truncate">{p.name}</p>
+                                                    <p className="text-tp-xxs font-mono text-app-muted-foreground truncate">
+                                                        {p.sku || p.barcode || ''}
+                                                        {p.category_name && ` · ${p.category_name}`}
+                                                    </p>
+                                                </div>
+                                                <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', color: 'var(--app-success)' }}>
+                                                    Add
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>

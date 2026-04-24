@@ -251,6 +251,23 @@ class FiscalYearCloseSnapshot(TenantModel):
         related_name='fy_close_snapshots_captured',
     )
 
+    # Anti-tamper hash chain. content_hash is SHA-256 over a
+    # deterministic serialization of this snapshot's financial payload
+    # (excluding captured_at / captured_by, which are audit metadata).
+    # prev_hash points to the content_hash of the chronologically
+    # previous snapshot for this organization, forming a chain: editing
+    # any historical snapshot invalidates every snapshot that came after
+    # it. Both fields are populated in save() and verified by
+    # `ClosingService.verify_snapshot_chain(org)`.
+    content_hash = models.CharField(
+        max_length=64, null=True, blank=True, db_index=True,
+        help_text='SHA-256 of canonical payload — changes if snapshot is tampered with.',
+    )
+    prev_hash = models.CharField(
+        max_length=64, null=True, blank=True,
+        help_text='content_hash of the prior snapshot in chronological order (per org). Null for the first row.',
+    )
+
     class Meta:
         db_table = 'finance_fy_close_snapshot'
         constraints = [
@@ -266,3 +283,61 @@ class FiscalYearCloseSnapshot(TenantModel):
 
     def __str__(self):
         return f"CloseSnapshot({self.fiscal_year_id}, {self.scope})"
+
+    # ── Hash chain ────────────────────────────────────────────
+    def canonical_payload(self) -> dict:
+        """Deterministic dict used as the hash input. Any field that
+        should be tamper-protected goes here; audit-metadata (captured_at
+        / captured_by / the hash fields themselves) is excluded so
+        recomputing is stable across rehydrations.
+        """
+        # Sort trial_balance for determinism — Python dict iteration is
+        # insertion-ordered but relying on that across re-saves is fragile.
+        tb_sorted = sorted(
+            self.trial_balance or [],
+            key=lambda x: (str(x.get('code', '')), x.get('account_id', 0)),
+        )
+        return {
+            'organization_id': str(self.organization_id),
+            'fiscal_year_id': self.fiscal_year_id,
+            'scope': self.scope,
+            'closing_journal_entry_id': self.closing_journal_entry_id,
+            'opening_journal_entry_id': self.opening_journal_entry_id,
+            'total_assets': str(self.total_assets),
+            'total_liabilities': str(self.total_liabilities),
+            'total_equity': str(self.total_equity),
+            'net_income': str(self.net_income),
+            'retained_earnings': str(self.retained_earnings),
+            'trial_balance': tb_sorted,
+            'prev_hash': self.prev_hash,
+        }
+
+    def compute_content_hash(self) -> str:
+        import hashlib, json
+        payload = json.dumps(
+            self.canonical_payload(),
+            sort_keys=True, default=str, separators=(',', ':'),
+        )
+        return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+
+    def save(self, *args, **kwargs):
+        # On first save, resolve prev_hash by looking up the most
+        # recent snapshot for this org (any year/scope). On re-save
+        # (update_or_create after a close redo), re-anchor to whatever
+        # the latest OTHER snapshot is at save time — we must exclude
+        # ourselves so we don't point at our own prior hash and form a
+        # self-loop.
+        if self.organization_id:
+            latest_other = (
+                FiscalYearCloseSnapshot.objects
+                .filter(organization_id=self.organization_id)
+                .exclude(pk=self.pk) if self.pk else
+                FiscalYearCloseSnapshot.objects
+                .filter(organization_id=self.organization_id)
+            )
+            prev = latest_other.order_by('-captured_at', '-id').first()
+            self.prev_hash = prev.content_hash if prev else None
+        # Compute hash LAST so it reflects the finalized field values
+        # including the just-resolved prev_hash.
+        self.content_hash = self.compute_content_hash()
+        super().save(*args, **kwargs)

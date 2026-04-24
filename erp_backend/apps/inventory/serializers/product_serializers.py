@@ -69,6 +69,23 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             total=Sum('quantity'))['total'] or 0)
 
 
+class ProductLiteSerializer(serializers.ModelSerializer):
+    """
+    Lightweight product payload for pickers / dropdowns. Drops the
+    variants + packaging_levels nested serializers and every
+    SerializerMethodField (on_hand_qty, reserved_qty, …) — those each
+    issue a separate query per row and turn a 200-row list into ~1200
+    queries. Use with ``?lite=1`` on the product viewset.
+    """
+    brand_name = serializers.CharField(source='brand.name', read_only=True, default=None)
+    category_name = serializers.CharField(source='category.name', read_only=True, default=None)
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'sku', 'barcode', 'brand_name', 'category_name', 'is_active']
+        read_only_fields = fields
+
+
 class ProductSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source='brand.name', read_only=True, default=None)
     country_name = serializers.CharField(source='country.name', read_only=True, default=None)
