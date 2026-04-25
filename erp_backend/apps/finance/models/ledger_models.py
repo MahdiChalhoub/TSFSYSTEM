@@ -302,6 +302,19 @@ class JournalEntryLine(TenantModel):
                 f"so it is a header node. Post to one of its children "
                 f"instead — parent balances are pure aggregations."
             )
+        # Internal-only accounts cannot receive OFFICIAL postings. Enforced at
+        # the model layer so admin tools (COA migration engine, debug scripts)
+        # that call .objects.create() directly can't bypass it.
+        if (
+            acc.is_internal
+            and self.journal_entry_id
+            and self.journal_entry.scope == 'OFFICIAL'
+        ):
+            raise ValidationError(
+                f"Account '{acc.code} — {acc.name}' is internal-only and cannot "
+                f"receive OFFICIAL journal entries. Post under INTERNAL scope, "
+                f"or unmark the account as internal."
+            )
         super().clean()
 
     def save(self, *args, **kwargs):

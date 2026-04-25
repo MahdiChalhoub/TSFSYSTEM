@@ -879,8 +879,18 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization = Organization.objects.get(id=organization_id)
         
         # --- STRICT SCOPE ISOLATION ---
+        # Authorized scope comes from the X-Scope-Access header, forwarded by
+        # the Next.js proxy from the httpOnly `scope_access` cookie set at login.
+        # The legacy ContextVar (get_authorized_scope) was never wired to a
+        # middleware, so it always returned 'official' and silently caged every
+        # INTERNAL request — that's why the OFFICIAL/INTERNAL toggle had no
+        # effect on balances.
         from erp.middleware import get_authorized_scope
-        authorized = get_authorized_scope() or 'official'
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'   # safe default: no header → caged to OFFICIAL
+        ).lower()
         requested = (request.query_params.get('scope') or 'OFFICIAL').upper()
         if authorized == 'official' and requested == 'INTERNAL':
             requested = 'OFFICIAL'
@@ -1467,8 +1477,18 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         end_date = request.query_params.get('end_date')
         
         # --- STRICT SCOPE ISOLATION ---
+        # Authorized scope comes from the X-Scope-Access header, forwarded by
+        # the Next.js proxy from the httpOnly `scope_access` cookie set at login.
+        # The legacy ContextVar (get_authorized_scope) was never wired to a
+        # middleware, so it always returned 'official' and silently caged every
+        # INTERNAL request — that's why the OFFICIAL/INTERNAL toggle had no
+        # effect on balances.
         from erp.middleware import get_authorized_scope
-        authorized = get_authorized_scope() or 'official'
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'   # safe default: no header → caged to OFFICIAL
+        ).lower()
         requested = (request.query_params.get('scope') or 'OFFICIAL').upper()
         if authorized == 'official' and requested == 'INTERNAL':
             requested = 'OFFICIAL'
@@ -1505,8 +1525,18 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         )
 
         # --- STRICT SCOPE ISOLATION ---
+        # Authorized scope comes from the X-Scope-Access header, forwarded by
+        # the Next.js proxy from the httpOnly `scope_access` cookie set at login.
+        # The legacy ContextVar (get_authorized_scope) was never wired to a
+        # middleware, so it always returned 'official' and silently caged every
+        # INTERNAL request — that's why the OFFICIAL/INTERNAL toggle had no
+        # effect on balances.
         from erp.middleware import get_authorized_scope
-        authorized = get_authorized_scope() or 'official'
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'   # safe default: no header → caged to OFFICIAL
+        ).lower()
         requested = (request.query_params.get('scope') or 'OFFICIAL').upper()
         if authorized == 'official' and requested == 'INTERNAL':
             requested = 'OFFICIAL'

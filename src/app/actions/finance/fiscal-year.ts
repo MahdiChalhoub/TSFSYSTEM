@@ -690,15 +690,25 @@ export type DraftAuditEntry = {
     id: number; reference: string; date: string; description: string; total_debit: number; total_credit: number
 }
 
+async function _readScopeFromCookie(): Promise<'OFFICIAL' | 'INTERNAL'> {
+    const { cookies } = await import('next/headers')
+    const v = (await cookies()).get('tsf_view_scope')?.value
+    return v === 'INTERNAL' ? 'INTERNAL' : 'OFFICIAL'
+}
+
 export async function getYearSummary(yearId: number): Promise<YearSummary | null> {
     try {
-        return await erpFetch(`fiscal-years/${yearId}/summary/`)
+        // Scope in URL → different cache entries per scope. Toggling back hits
+        // the warm cache instantly instead of paying the full backend cost.
+        const scope = await _readScopeFromCookie()
+        return await erpFetch(`fiscal-years/${yearId}/summary/?scope=${scope}`)
     } catch { return null }
 }
 
 export async function getYearHistory(yearId: number): Promise<{ events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }> {
     try {
-        return await erpFetch(`fiscal-years/${yearId}/history/`)
+        const scope = await _readScopeFromCookie()
+        return await erpFetch(`fiscal-years/${yearId}/history/?scope=${scope}`)
     } catch { return { events: [], je_by_month: [] } }
 }
 
@@ -707,7 +717,7 @@ export async function getDraftAudit(yearId: number, periodId?: number): Promise<
         const url = periodId
             ? `fiscal-years/${yearId}/draft-audit/?period_id=${periodId}`
             : `fiscal-years/${yearId}/draft-audit/`
-        return await erpFetch(url)
+        return await erpFetch(url, { cache: 'no-store' })
     } catch { return { drafts: [], total: 0 } }
 }
 

@@ -269,6 +269,32 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         from django.db.models import Sum, Count, Q
         from decimal import Decimal
 
+        # ── Scope filter ──────────────────────────────────────────────
+        # Same contract as the COA endpoint: when scope=OFFICIAL we sum
+        # only OFFICIAL-tagged journal entries; INTERNAL = all journals.
+        # The frontend cookie/header is forwarded by the Next.js proxy.
+        from erp.middleware import get_authorized_scope
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'   # safe default for direct-token API calls
+        ).lower()
+        requested = (
+            request.query_params.get('scope')
+            or request.headers.get('X-Scope')
+            or 'OFFICIAL'
+        ).upper()
+        if authorized == 'official' and requested == 'INTERNAL':
+            requested = 'OFFICIAL'
+        scope = requested
+
+        def _scope_filter(qs, prefix=''):
+            """Apply the OFFICIAL filter to a JE/JE-line queryset; INTERNAL = no filter."""
+            if scope == 'OFFICIAL':
+                key = f'{prefix}scope' if prefix else 'scope'
+                return qs.filter(**{key: 'OFFICIAL'})
+            return qs
+
         periods = fiscal_year.periods.all().order_by('start_date')
 
         # Journal entry stats — match by FK OR by date range for orphan JEs
@@ -281,6 +307,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
               transaction_date__date__gte=fiscal_year.start_date,
               transaction_date__date__lte=fiscal_year.end_date)
         )
+        je_qs = _scope_filter(je_qs)
         je_stats = je_qs.aggregate(
             total=Count('id'),
             posted=Count('id', filter=Q(status='POSTED')),
@@ -329,6 +356,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             )
             if _exclude_je_ids:
                 qs = qs.exclude(journal_entry_id__in=_exclude_je_ids)
+            qs = _scope_filter(qs, 'journal_entry__')
             agg = qs.aggregate(d=Sum('debit'), c=Sum('credit'))
             d = agg['d'] or Decimal(0)
             c = agg['c'] or Decimal(0)
@@ -349,7 +377,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # This gives full transparency: user sees BOTH views.
         def _net_by_types_raw(types):
             """Same as _net_by_types but WITHOUT excluding closing/opening JEs."""
-            agg = (
+            qs = (
                 JournalEntryLine.objects
                 .filter(
                     organization=org,
@@ -363,8 +391,9 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                       journal_entry__transaction_date__date__lte=fiscal_year.end_date)
                 )
                 .filter(account__type__in=types)
-                .aggregate(d=Sum('debit'), c=Sum('credit'))
             )
+            qs = _scope_filter(qs, 'journal_entry__')
+            agg = qs.aggregate(d=Sum('debit'), c=Sum('credit'))
             d = agg['d'] or Decimal(0)
             c = agg['c'] or Decimal(0)
             return d - c
@@ -389,11 +418,17 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             }
 
         closing_entries = []
+        # OFFICIAL view shows only the OFFICIAL closing JE; INTERNAL view shows
+        # both, so the user can audit either book under the toggle they expect.
         if fiscal_year.closing_journal_entry_id:
             ce = _serialize_closing_je(fiscal_year.closing_journal_entry, 'OFFICIAL')
             if ce:
                 closing_entries.append(ce)
-        if hasattr(fiscal_year, 'internal_closing_journal_entry_id') and fiscal_year.internal_closing_journal_entry_id:
+        if (
+            scope == 'INTERNAL'
+            and hasattr(fiscal_year, 'internal_closing_journal_entry_id')
+            and fiscal_year.internal_closing_journal_entry_id
+        ):
             ce = _serialize_closing_je(fiscal_year.internal_closing_journal_entry, 'INTERNAL')
             if ce:
                 closing_entries.append(ce)
@@ -427,6 +462,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                     .select_related('account')
                     .order_by('account__type', 'account__code')
                 )
+                lines = _scope_filter(lines, 'journal_entry__')
                 return [{
                     'code': l.account.code, 'name': l.account.name, 'type': l.account.type,
                     'debit': float(l.debit or 0), 'credit': float(l.credit or 0),
@@ -465,6 +501,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 status='POSTED',
                 is_superseded=False,
             ).order_by('scope', 'transaction_date')
+            qs = _scope_filter(qs)
             for je in qs:
                 rows.append({
                     'id': je.id,
@@ -483,7 +520,8 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # Period breakdown
         period_data = []
         for p in periods:
-            p_je_count = JournalEntry.objects.filter(fiscal_period=p, status='POSTED').count()
+            p_je_qs = JournalEntry.objects.filter(fiscal_period=p, status='POSTED')
+            p_je_count = _scope_filter(p_je_qs).count()
             period_data.append({
                 'name': p.name, 'status': p.status,
                 'start_date': str(p.start_date), 'end_date': str(p.end_date),
@@ -526,6 +564,17 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
         from apps.finance.models import JournalEntry
         from django.db.models import Count, Q
+
+        # Scope filter — same contract as the summary endpoint.
+        from erp.middleware import get_authorized_scope
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'
+        ).lower()
+        scope = (request.headers.get('X-Scope') or request.query_params.get('scope') or 'OFFICIAL').upper()
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
 
         events = []
 
@@ -573,14 +622,16 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # JE count by month — portable (no TO_CHAR)
         # Match by FK OR date range to catch orphan JEs (fiscal_year=NULL)
         from django.db.models.functions import TruncMonth
+        _je_qs = JournalEntry.objects.filter(organization=org, status='POSTED').filter(
+            Q(fiscal_year=fiscal_year) |
+            Q(fiscal_year__isnull=True,
+              transaction_date__date__gte=fiscal_year.start_date,
+              transaction_date__date__lte=fiscal_year.end_date)
+        )
+        if scope == 'OFFICIAL':
+            _je_qs = _je_qs.filter(scope='OFFICIAL')
         je_by_month_rows = (
-            JournalEntry.objects.filter(organization=org, status='POSTED')
-            .filter(
-                Q(fiscal_year=fiscal_year) |
-                Q(fiscal_year__isnull=True,
-                  transaction_date__date__gte=fiscal_year.start_date,
-                  transaction_date__date__lte=fiscal_year.end_date)
-            )
+            _je_qs
             .annotate(month_dt=TruncMonth('transaction_date'))
             .values('month_dt')
             .annotate(count=Count('id'))
@@ -1380,6 +1431,19 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             qs = qs.filter(fiscal_period_id=period_id)
         else:
             qs = qs.filter(fiscal_year=fiscal_year)
+
+        # Scope filter — match the rest of the fiscal-year endpoints.
+        from erp.middleware import get_authorized_scope
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'
+        ).lower()
+        scope = (request.headers.get('X-Scope') or request.query_params.get('scope') or 'OFFICIAL').upper()
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
+        if scope == 'OFFICIAL':
+            qs = qs.filter(scope='OFFICIAL')
 
         # Only expose JE references to users who can read journal entries.
         # Everyone with view_fiscal_years gets the count (it's a blocker indicator).

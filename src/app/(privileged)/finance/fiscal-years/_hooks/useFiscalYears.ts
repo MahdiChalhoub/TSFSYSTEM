@@ -14,8 +14,10 @@ import { notifyPeriodChange } from '@/components/finance/period-warning-banner'
 import type { WizardFormData } from '../_components/WizardModal'
 import type { UseFiscalYearsReturn } from '../_lib/types'
 import { computeWizardDefaults } from '../_lib/wizard-defaults'
+import { useScope } from '@/hooks/useScope'
 
 export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYearsReturn {
+    const { scope: viewScope } = useScope()
     const [isPending, startTransition] = useTransition()
     const [years, setYears] = useState(initialYears)
     const [expandedYear, setExpandedYear] = useState<number | null>(years[0]?.id ?? null)
@@ -58,6 +60,35 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
         window.addEventListener('tsf:period-change', handler)
         return () => window.removeEventListener('tsf:period-change', handler)
     }, [])
+
+    // Scope toggle: clear caches AND immediately refetch for whichever year+tab
+    // the user is currently viewing. Without the refetch, the SummaryTab sees
+    // an empty cache and sticks on its "Calculating year-end totals…" loader
+    // until the user clicks away to a different tab and back — confusing.
+    // Use a ref so we only react to *actual* scope changes, not yearTab churn.
+    const lastScopeRef = useRef(viewScope)
+    const yearTabRef = useRef(yearTab)
+    yearTabRef.current = yearTab
+    useEffect(() => {
+        if (viewScope === lastScopeRef.current) return
+        lastScopeRef.current = viewScope
+        setSummaryCache({})
+        setHistoryCache({})
+        for (const [yidStr, tab] of Object.entries(yearTabRef.current)) {
+            const yid = Number(yidStr)
+            if (tab === 'summary' || tab === 'entries') {
+                startTransition(async () => {
+                    const s = await getYearSummary(yid)
+                    if (s) setSummaryCache(p => ({ ...p, [yid]: s }))
+                })
+            } else if (tab === 'history') {
+                startTransition(async () => {
+                    const h = await getYearHistory(yid)
+                    setHistoryCache(p => ({ ...p, [yid]: h }))
+                })
+            }
+        }
+    }, [viewScope])
 
     const stats = useMemo(() => {
         const all = years.flatMap(y => y.periods || [])
