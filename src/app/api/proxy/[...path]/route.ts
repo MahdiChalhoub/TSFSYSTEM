@@ -97,6 +97,13 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
         headers.set('X-Scope', scope.toUpperCase());
     }
 
+    // 4b. Forward the user's authorized-scope (set httpOnly at login). Lets the
+    // backend tell whether the requester is allowed to ask for INTERNAL data.
+    const scopeAccess = req.cookies.get('scope_access')?.value;
+    if (scopeAccess) {
+        headers.set('X-Scope-Access', scopeAccess.toLowerCase());
+    }
+
     console.log(`[ERP_PROXY] ${req.method} ${targetUrl} | Tenant: ${tenantSlug || 'None'} | Auth: ${headers.has('Authorization') ? 'Present' : 'Missing'}`);
 
     try {

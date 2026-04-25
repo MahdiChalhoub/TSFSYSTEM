@@ -183,6 +183,16 @@ class LedgerCoreMixin:
                         raise ValidationError(
                             f"Account '{acc.code} - {acc.name}' is deactivated. Cannot post."
                         )
+
+                    # 4e. Internal-only accounts reject OFFICIAL postings.
+                    # Pairs with the COA visibility filter: an account that's
+                    # invisible in OFFICIAL view must also be unpostable from it.
+                    if scope == 'OFFICIAL' and acc.is_internal:
+                        raise ValidationError(
+                            f"Account '{acc.code} - {acc.name}' is marked internal-only. "
+                            f"It cannot receive OFFICIAL journal entries. "
+                            f"Post under INTERNAL scope, or unmark the account as internal."
+                        )
             
             # ── Step 5: Create Journal Entry ──────────────────────────
             journal_type = kwargs.get('journal_type', 'GENERAL')

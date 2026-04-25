@@ -2,6 +2,7 @@
 
 import { Loader2, Lock } from 'lucide-react'
 import { TYPE_CONFIG } from './types'
+import { useScope } from '@/hooks/useScope'
 
 interface AccountFormProps {
     accounts: Record<string, any>[]
@@ -22,6 +23,7 @@ export function AccountForm({
     onCancel,
     title
 }: AccountFormProps) {
+    const { isOfficial } = useScope()
     return (
         <form action={onSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', alignItems: 'end' }}>
             <div className="col-span-full mb-1 flex items-center justify-between">
@@ -72,21 +74,28 @@ export function AccountForm({
                 <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>SYSCOHADA Code</label>
                 <input name="syscohadaCode" defaultValue={initialData?.syscohadaCode || ''} placeholder="e.g. 57" className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }} />
             </div>
-            <div className="col-span-full">
-                <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
-                    <input
-                        type="checkbox"
-                        name="isInternal"
-                        defaultChecked={!!initialData?.isInternal}
-                        className="w-4 h-4 rounded accent-app-warning"
-                    />
-                    <Lock size={13} style={{ color: 'var(--app-warning, #F59E0B)' }} />
-                    <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Internal-only</span>
-                    <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
-                        — Hidden from the Official view
-                    </span>
-                </label>
-            </div>
+            {/* Internal-only flag is meaningless in OFFICIAL view (you can't see what you mark).
+                Hide it there; preserve the value with a hidden input so editing an existing
+                internal account from OFFICIAL view doesn't silently flip it to public. */}
+            {isOfficial ? (
+                <input type="hidden" name="isInternal" value={initialData?.isInternal ? 'on' : ''} />
+            ) : (
+                <div className="col-span-full">
+                    <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
+                        <input
+                            type="checkbox"
+                            name="isInternal"
+                            defaultChecked={!!initialData?.isInternal}
+                            className="w-4 h-4 rounded accent-app-warning"
+                        />
+                        <Lock size={13} style={{ color: 'var(--app-warning, #F59E0B)' }} />
+                        <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Internal-only</span>
+                        <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                            — Hidden from the Official view
+                        </span>
+                    </label>
+                </div>
+            )}
             <div className="flex gap-2 items-end">
                 <button
                     type="submit"

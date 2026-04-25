@@ -70,6 +70,7 @@ export const systemSettings: MenuItem = {
         { title: 'Regional Settings', path: '/settings/regional', stage: 'in-progress' },
         { title: 'Sequences', path: '/settings/sequences', stage: 'in-progress' },
         { title: 'WhatsApp', path: '/settings/whatsapp' },
+        { title: 'Print Branding', path: '/settings/print-branding', stage: 'in-progress' },
         {
             title: 'Integrations',
             icon: Network,

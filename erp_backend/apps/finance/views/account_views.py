@@ -903,6 +903,7 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 "parentId": acc.parent_id,
                 "syscohadaCode": acc.syscohada_code,
                 "syscohadaClass": acc.syscohada_class,
+                "isInternal": acc.is_internal,
                 "temp_balance": float(acc.temp_balance),
                 "rollup_balance": float(acc.rollup_balance),
                 # ── Fields needed by migration page ──

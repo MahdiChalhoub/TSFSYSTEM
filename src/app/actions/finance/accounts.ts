@@ -32,7 +32,10 @@ export async function getChartOfAccounts(includeInactive: boolean = false, scope
             scope,
             include_inactive: includeInactive.toString()
         }).toString()
-        const result = await erpFetch(`coa/coa/?${query}`)
+        // no-store: the scope toggle must reflect immediately. The default 30s
+        // revalidate window would let a stale OFFICIAL response stick around
+        // after the user flips to INTERNAL, making the toggle look broken.
+        const result = await erpFetch(`coa/coa/?${query}`, { cache: 'no-store' })
         return serialize(result.map((acc: Record<string, any>) => ({
             ...acc,
             balance: Number(acc.rollup_balance ?? 0),

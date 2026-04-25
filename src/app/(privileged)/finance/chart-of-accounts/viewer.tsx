@@ -15,9 +15,10 @@ import '@/lib/tours/definitions/finance-chart-of-accounts'
 import { KPIStrip } from './_components/KPIStrip'
 import { AccountNode } from './_components/AccountNode'
 import { AccountForm } from './_components/AccountForm'
-import { TYPE_CONFIG } from './_components/types'
 
-export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, any>[] }) {
+export function ChartOfAccountsViewer({ accounts }: {
+    accounts: Record<string, any>[]
+}) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [searchQuery, setSearchQuery] = useState('')

@@ -209,6 +209,9 @@ class ChartOfAccount(TenantModel):
     is_active = models.BooleanField(default=True)
     is_system_only = models.BooleanField(default=False)
     is_hidden = models.BooleanField(default=False)
+    # When True, account is excluded from OFFICIAL view (internal-only).
+    # Default False → all existing accounts remain visible in both views.
+    is_internal = models.BooleanField(default=False, db_index=True)
     requires_zero_balance = models.BooleanField(default=False)
 
     # ── Cross-Standard References ──────────────────────────────────

@@ -156,6 +156,11 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
                 const scope = cookieStore.get('tsf_view_scope')?.value;
                 if (scope) headersRaw.set('X-Scope', scope.toUpperCase());
             }
+
+            if (!headersRaw.has('X-Scope-Access')) {
+                const scopeAccess = cookieStore.get('scope_access')?.value;
+                if (scopeAccess) headersRaw.set('X-Scope-Access', scopeAccess.toLowerCase());
+            }
         } catch (e) {
             // Cookies not available in static generation context
         }

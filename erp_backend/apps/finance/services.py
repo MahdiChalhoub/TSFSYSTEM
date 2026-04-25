@@ -65,6 +65,16 @@ class LedgerService:
                 if system_accounts.exists():
                     codes = ", ".join([acc.code for acc in system_accounts])
                     raise ValidationError(f"Manual posting to system-only accounts is forbidden: {codes}")
+
+                # Internal-only accounts cannot receive OFFICIAL postings.
+                if scope == 'OFFICIAL':
+                    internal_accounts = ChartOfAccount.objects.filter(id__in=account_ids, is_internal=True)
+                    if internal_accounts.exists():
+                        codes = ", ".join(f"{a.code} - {a.name}" for a in internal_accounts)
+                        raise ValidationError(
+                            f"Internal-only accounts cannot receive OFFICIAL entries: {codes}. "
+                            f"Use INTERNAL scope, or unmark these accounts as internal."
+                        )
             
             entry = JournalEntry.objects.create(
                 organization=organization, 
