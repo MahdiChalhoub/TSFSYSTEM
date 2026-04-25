@@ -21,6 +21,7 @@ const CoaAccountSchema = z.object({
     syscohadaCode: z.string().optional(),
     syscohadaClass: z.string().optional(),
     isActive: z.boolean().optional(),
+    isInternal: z.boolean().optional(),
 }).passthrough()
 
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE'
@@ -79,7 +80,8 @@ export async function createAccount(data: unknown) {
                 sub_type: parsed.subType,
                 parent: parsed.parentId,
                 syscohada_code: parsed.syscohadaCode,
-                syscohada_class: parsed.syscohadaClass
+                syscohada_class: parsed.syscohadaClass,
+                is_internal: parsed.isInternal ?? false
             })
         })
         revalidatePath('/finance/chart-of-accounts')
@@ -103,7 +105,8 @@ export async function updateChartOfAccount(id: number, data: unknown) {
                 parent: parsed.parentId,
                 syscohada_code: parsed.syscohadaCode,
                 syscohada_class: parsed.syscohadaClass,
-                is_active: parsed.isActive
+                is_active: parsed.isActive,
+                is_internal: parsed.isInternal
             })
         })
         revalidatePath('/finance/chart-of-accounts')

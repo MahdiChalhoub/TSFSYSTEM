@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { LayoutGrid, BookMarked, Package, ListTree, GitBranch } from 'lucide-react'
+import { LayoutGrid, BookMarked, Package, ListTree, GitBranch, Table } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +21,15 @@ const DEMOS = [
         color: 'var(--app-success)',
         blurb: 'Desktop page shell used by Units, Categories, Packages, Attributes, Countries, Warehouses, Purchases. Owns search, KPI filter, tree build, split panel, pinned sidebar, focus mode.',
         lines: 574,
+    },
+    {
+        href: '/dev/templates/master-list',
+        title: 'MasterListPage',
+        kind: 'Page shell',
+        icon: Table,
+        color: 'var(--app-info)',
+        blurb: 'One-component registry page — wires DajingoPageShell + DajingoListView + customize panel + search + filters + pagination + selection + policy enforcement. New registries drop in at ~80 lines.',
+        lines: 240,
     },
     {
         href: '/dev/templates/entity-products-tab',

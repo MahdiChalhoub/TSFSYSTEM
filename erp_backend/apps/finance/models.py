@@ -65,6 +65,9 @@ class ChartOfAccount(TenantModel):
     is_active = models.BooleanField(default=True)
     is_system_only = models.BooleanField(default=False)
     is_hidden = models.BooleanField(default=False)
+    # When True, account is excluded from OFFICIAL view (internal-only).
+    # Default False → all existing accounts remain visible in both views after migration.
+    is_internal = models.BooleanField(default=False, db_index=True)
     requires_zero_balance = models.BooleanField(default=False)
     syscohada_code = models.CharField(max_length=20, null=True, blank=True)
     syscohada_class = models.CharField(max_length=10, null=True, blank=True)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronRight, ChevronDown, FolderOpen, Folder, FileText, Pencil, Plus, Power } from 'lucide-react'
+import { ChevronRight, ChevronDown, FolderOpen, Folder, FileText, Pencil, Plus, Power, Lock } from 'lucide-react'
 import { TYPE_CONFIG } from './types'
 
 interface AccountNodeProps {
@@ -95,6 +95,16 @@ export const AccountNode = ({
                         <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded flex-shrink-0"
                             style={{ background: 'var(--app-error-bg, rgba(239,68,68,0.12))', color: 'var(--app-error, #EF4444)' }}>
                             Inactive
+                        </span>
+                    )}
+                    {node.isInternal && (
+                        <span
+                            title="Internal-only — hidden from the Official view"
+                            className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
+                            style={{ background: 'color-mix(in srgb, var(--app-warning, #F59E0B) 15%, transparent)', color: 'var(--app-warning, #F59E0B)' }}
+                        >
+                            <Lock size={9} />
+                            Internal
                         </span>
                     )}
                 </div>

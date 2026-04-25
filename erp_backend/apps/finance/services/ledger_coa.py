@@ -543,6 +543,9 @@ class LedgerCOAMixin:
         qs = ChartOfAccount.objects.filter(organization=organization).order_by('code')
         if not include_inactive:
             qs = qs.filter(is_active=True)
+        # OFFICIAL view hides accounts flagged as internal-only.
+        if scope == 'OFFICIAL':
+            qs = qs.filter(is_internal=False)
 
         # SQL Aggregation (Massive speed gain over manual mapping)
         balance_qs = JournalEntryLine.objects.filter(

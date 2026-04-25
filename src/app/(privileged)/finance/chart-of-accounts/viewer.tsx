@@ -85,6 +85,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
             subType: formData.get('subType') as string,
             parentId: formData.get('parentId') ? parseInt(formData.get('parentId') as string) : undefined,
             syscohadaCode: formData.get('syscohadaCode') as string,
+            isInternal: formData.get('isInternal') === 'on',
         }
         startTransition(async () => {
             const { createAccount } = await import('@/app/actions/finance/accounts')
@@ -106,6 +107,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
             parentId: formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null,
             syscohadaCode: formData.get('syscohadaCode') as string,
             isActive: true,
+            isInternal: formData.get('isInternal') === 'on',
         }
         startTransition(async () => {
             const { updateChartOfAccount } = await import('@/app/actions/finance/accounts')

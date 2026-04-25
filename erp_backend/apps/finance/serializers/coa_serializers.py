@@ -31,6 +31,42 @@ class ChartOfAccountSerializer(serializers.ModelSerializer):
             return obj._children_count
         return obj.children.count()
 
+    def validate_is_internal(self, value):
+        """
+        Block flipping a parent account to internal-only if any descendant
+        is still public. Otherwise OFFICIAL view would show orphan children
+        whose parent is hidden — confusing and lossy.
+        """
+        if value and self.instance:
+            offending = self.instance.children.filter(is_internal=False).values_list('code', 'name')[:5]
+            if offending:
+                preview = ", ".join(f"{c} {n}" for c, n in offending)
+                raise serializers.ValidationError(
+                    f"Cannot mark this account as internal — it has child accounts that are still public: {preview}. "
+                    f"Mark the children internal first, or move them under a different parent."
+                )
+        return value
+
+    def validate(self, attrs):
+        """
+        Symmetric guard: a public account cannot live under an internal parent
+        (it would orphan in the OFFICIAL view, where the parent is hidden but
+        the child becomes a visible root). Reject the create/move with a clear
+        error rather than silently inheriting — keeps the toggle predictable.
+        """
+        attrs = super().validate(attrs)
+        # Effective values after this write
+        is_internal = attrs.get('is_internal', getattr(self.instance, 'is_internal', False))
+        parent = attrs.get('parent', getattr(self.instance, 'parent', None))
+        if parent is not None and parent.is_internal and not is_internal:
+            raise serializers.ValidationError({
+                'is_internal': (
+                    f"Parent account '{parent.code} — {parent.name}' is internal-only. "
+                    f"This account must also be marked internal, or pick a different parent."
+                )
+            })
+        return attrs
+
 
 class ChartOfAccountTreeSerializer(serializers.ModelSerializer):
     """Lightweight serializer for tree/dropdown views."""
