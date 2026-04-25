@@ -41,7 +41,7 @@ export function YearsListPanel({ fy }: { fy: ReturnType<typeof useFiscalYears> }
     return (
         <div className="flex-1 min-h-0 flex gap-3">
             {/* ── Left: Year Cards ── */}
-            <div className="w-52 md:w-60 flex-shrink-0 rounded-2xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
+            <div data-tour="years-list" className="w-52 md:w-60 flex-shrink-0 rounded-2xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
                 {fy.filteredYears.map(year => {
                     const isSelected = fy.expandedYear === year.id
                     const status = year.isHardLocked ? 'FINALIZED' : (year.status || 'OPEN')

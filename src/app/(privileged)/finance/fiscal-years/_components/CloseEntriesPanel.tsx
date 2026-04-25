@@ -2,6 +2,7 @@
 
 import { BookOpen, ArrowRight, FileText, TrendingUp, DollarSign } from 'lucide-react'
 import type { YearSummary } from '@/app/actions/finance/fiscal-year'
+import { useScope } from '@/hooks/useScope'
 
 interface CloseEntriesPanelProps {
     summary: YearSummary | undefined
@@ -11,7 +12,16 @@ function fmt(n: number) {
     return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 
+// Strip the redundant "(OFFICIAL)" / "(INTERNAL)" tag from a JE description
+// when the user is already in that view — they don't need to be told the scope
+// of an entry they're already filtering for.
+function _stripScopeTag(s: string | undefined | null): string {
+    if (!s) return ''
+    return s.replace(/\s*\((OFFICIAL|INTERNAL)\)\s*/i, ' ').replace(/\s+/g, ' ').trim()
+}
+
 export function CloseEntriesPanel({ summary }: CloseEntriesPanelProps) {
+    const { isOfficial } = useScope()
     if (!summary) {
         return (
             <div className="flex-1 flex items-center justify-center p-8">
@@ -63,8 +73,11 @@ export function CloseEntriesPanel({ summary }: CloseEntriesPanelProps) {
                 {/* ── Closing Entries (P&L → Retained Earnings) — one per scope ── */}
                 {hasClosingEntry && closingEntries.map((ce, idx) => (
                     <div key={ce.id || idx} style={{ borderBottom: '1px solid var(--app-border)' }}>
-                        <SectionHeader icon={BookOpen} label={`Closing JE — ${ce.scope || 'OFFICIAL'}`}
-                            color="var(--app-warning, #f59e0b)" />
+                        <SectionHeader
+                            icon={BookOpen}
+                            label={isOfficial ? 'Closing JE' : `Closing JE — ${ce.scope || 'OFFICIAL'}`}
+                            color="var(--app-warning, #f59e0b)"
+                        />
                         <div className="px-5 py-2">
                             <div className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{
                                 background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 4%, transparent)',
@@ -74,14 +87,18 @@ export function CloseEntriesPanel({ summary }: CloseEntriesPanelProps) {
                                 <div className="min-w-0 flex-1">
                                     <div className="text-[11px] font-black" style={{ color: 'var(--app-foreground)' }}>
                                         {ce.reference}
-                                        <span className="ml-2 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{
-                                            background: ce.scope === 'INTERNAL'
-                                                ? 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)'
-                                                : 'color-mix(in srgb, var(--app-success, #22c55e) 12%, transparent)',
-                                            color: ce.scope === 'INTERNAL' ? 'var(--app-info, #3b82f6)' : 'var(--app-success, #22c55e)',
-                                        }}>{ce.scope || 'OFFICIAL'}</span>
+                                        {!isOfficial && (
+                                            <span className="ml-2 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{
+                                                background: ce.scope === 'INTERNAL'
+                                                    ? 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)'
+                                                    : 'color-mix(in srgb, var(--app-success, #22c55e) 12%, transparent)',
+                                                color: ce.scope === 'INTERNAL' ? 'var(--app-info, #3b82f6)' : 'var(--app-success, #22c55e)',
+                                            }}>{ce.scope || 'OFFICIAL'}</span>
+                                        )}
                                     </div>
-                                    <div className="text-[10px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>{ce.description}</div>
+                                    <div className="text-[10px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {isOfficial ? _stripScopeTag(ce.description) : ce.description}
+                                    </div>
                                 </div>
                                 <span className="text-[10px] font-mono tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
                                     {new Date(ce.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -132,10 +149,12 @@ export function CloseEntriesPanel({ summary }: CloseEntriesPanelProps) {
                                     }}>
                                         <FileText size={12} style={{ color: 'var(--app-success, #22c55e)' }} />
                                         <span className="text-[10px] font-bold" style={{ color: 'var(--app-foreground)' }}>{e.reference}</span>
-                                        <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded" style={{
-                                            color: 'var(--app-success, #22c55e)',
-                                            background: 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)',
-                                        }}>{e.scope}</span>
+                                        {!isOfficial && (
+                                            <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded" style={{
+                                                color: 'var(--app-success, #22c55e)',
+                                                background: 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)',
+                                            }}>{e.scope}</span>
+                                        )}
                                         <span className="text-[9px] font-mono tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
                                             {e.line_count} lines · DR {fmt(e.total_debit)} / CR {fmt(e.total_credit)}
                                         </span>
@@ -161,10 +180,12 @@ export function CloseEntriesPanel({ summary }: CloseEntriesPanelProps) {
                                     }}>
                                         <FileText size={12} style={{ color: 'var(--app-info, #3b82f6)' }} />
                                         <span className="text-[10px] font-bold" style={{ color: 'var(--app-foreground)' }}>{e.reference}</span>
-                                        <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded" style={{
-                                            color: 'var(--app-info, #3b82f6)',
-                                            background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
-                                        }}>{e.scope}</span>
+                                        {!isOfficial && (
+                                            <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded" style={{
+                                                color: 'var(--app-info, #3b82f6)',
+                                                background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
+                                            }}>{e.scope}</span>
+                                        )}
                                         <span className="text-[9px] font-mono tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
                                             {e.line_count} lines · DR {fmt(e.total_debit)} / CR {fmt(e.total_credit)}
                                         </span>

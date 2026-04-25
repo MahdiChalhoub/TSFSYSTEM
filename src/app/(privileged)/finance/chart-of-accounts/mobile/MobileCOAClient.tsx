@@ -17,6 +17,7 @@ import { MobileAccountRow } from './MobileAccountRow'
 import { MobileAccountDetailSheet } from './MobileAccountDetailSheet'
 import { PageTour } from '@/components/ui/PageTour'
 import '@/lib/tours/definitions/finance-chart-of-accounts-mobile'
+import { RecalculateBalancesDialog } from '../_components/RecalculateBalancesDialog'
 
 export function MobileCOAClient({ accounts }: { accounts: any[] }) {
     const router = useRouter()
@@ -25,6 +26,7 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
     const [actionNode, setActionNode] = useState<any | null>(null)
     const [showInactive, setShowInactive] = useState(false)
     const [typeFilter, setTypeFilter] = useState<string | null>(null)
+    const [recalcOpen, setRecalcOpen] = useState(false)
 
     const stats = useMemo(() => {
         const byType = (t: string) => accounts.filter((a: any) => a.type === t)
@@ -66,17 +68,23 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
         })
     }, [router])
 
+    // Open the structured warning dialog instead of running the recalc silently.
+    // The dialog explains that closed periods are protected and that the action
+    // is global (journal-wide). Mobile users now see the same safeguards as desktop.
     const handleRecalc = useCallback((_n: any) => {
-        // recalculateAccountBalances is a global (journal-wide) op
-        startTransition(async () => {
-            try {
-                await recalculateAccountBalances()
-                toast.success('Balances recalculated')
-                router.refresh()
-            } catch (e: any) {
-                toast.error(e?.message || 'Recalc failed')
-            }
-        })
+        setRecalcOpen(true)
+        setActionNode(null)   // dismiss the per-account action sheet behind the dialog
+    }, [])
+
+    const runRecalc = useCallback(async () => {
+        try {
+            await recalculateAccountBalances()
+            setRecalcOpen(false)
+            toast.success('Balances recalculated')
+            router.refresh()
+        } catch (e: any) {
+            toast.error(e?.message || 'Recalc failed — closed periods protect themselves; nothing changed.')
+        }
     }, [router])
 
     const actionItems = useMemo(() => {
@@ -176,6 +184,11 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                         items={actionItems}
                     />
                     <PageTour tourId="finance-chart-of-accounts-mobile" renderButton={false} />
+                    <RecalculateBalancesDialog
+                        open={recalcOpen}
+                        onOpenChange={setRecalcOpen}
+                        onConfirm={runRecalc}
+                    />
                 </>
             }
             sheet={

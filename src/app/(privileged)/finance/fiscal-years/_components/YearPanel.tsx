@@ -65,9 +65,10 @@ export function YearPanel({
             {isExpanded && (
                 <div className="flex flex-col h-full" style={{ background: 'var(--app-bg)' }}>
                     {/* Tab bar + year actions — sticky */}
-                    <div className="flex items-center gap-2 px-4 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                    <div data-tour="year-tabs" className="flex items-center gap-2 px-4 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--app-border)' }}>
                         {TABS.map(t => (
                             <button key={t.id} onClick={() => onTabChange(t.id)}
+                                data-tour={`${t.id}-tab`}
                                 className="text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all"
                                 style={{ background: activeTab === t.id ? 'var(--app-primary)' : 'transparent', color: activeTab === t.id ? 'white' : 'var(--app-muted-foreground)' }}>
                                 {t.label}
@@ -90,7 +91,7 @@ export function YearPanel({
                             </button>
                         )}
                         {yearStatus === 'OPEN' && (
-                            <button onClick={onYearEndClose} disabled={isPending}
+                            <button data-tour="year-close-btn" onClick={onYearEndClose} disabled={isPending}
                                 className="flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg border transition-all"
                                 title={isPartial ? 'Year not finished yet — will perform partial close and auto-create remainder year' : 'Close fiscal year and post P&L to Retained Earnings'}
                                 style={{ color: isPartial ? 'var(--app-warning, #f59e0b)' : 'var(--app-error, #ef4444)', borderColor: isPartial ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' : 'color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)' }}>

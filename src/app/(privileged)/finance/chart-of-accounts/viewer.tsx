@@ -15,6 +15,7 @@ import '@/lib/tours/definitions/finance-chart-of-accounts'
 import { KPIStrip } from './_components/KPIStrip'
 import { AccountNode } from './_components/AccountNode'
 import { AccountForm } from './_components/AccountForm'
+import { RecalculateBalancesDialog } from './_components/RecalculateBalancesDialog'
 
 export function ChartOfAccountsViewer({ accounts }: {
     accounts: Record<string, any>[]
@@ -29,6 +30,7 @@ export function ChartOfAccountsViewer({ accounts }: {
     const [preselectedParentId, setPreselectedParentId] = useState<number | undefined>(undefined)
     const [editingAccount, setEditingAccount] = useState<Record<string, any> | null>(null)
     const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info'; id?: number } | null>(null)
+    const [recalcOpen, setRecalcOpen] = useState(false)
     const searchRef = useRef<HTMLInputElement>(null)
 
     // Keyboard shortcuts
@@ -160,7 +162,7 @@ export function ChartOfAccountsViewer({ accounts }: {
                         <button data-tour="posting-rules-btn" onClick={() => router.push('/finance/settings/posting-rules?from=coa')} className="toolbar-btn text-app-success border-app-success/30 bg-app-success/10"><Settings2 size={13} /> Posting Rules</button>
                         <button data-tour="migration-btn" onClick={() => router.push('/finance/chart-of-accounts/migrate?from=coa')} className="toolbar-btn text-app-warning border-app-warning/30 bg-app-warning/10"><Zap size={13} /> Migration</button>
                         <button data-tour="templates-btn" onClick={() => router.push('/finance/chart-of-accounts/templates?from=coa')} className="toolbar-btn text-app-muted-foreground"><Library size={13} /> Templates</button>
-                        <button data-tour="audit-btn" onClick={() => setPendingAction({ type: 'recalculate', title: 'Recalculate Balances?', description: 'Rebuild balances from journal entries.', variant: 'warning' })} className="toolbar-btn text-app-muted-foreground"><RefreshCcw size={13} /> Audit</button>
+                        <button data-tour="audit-btn" onClick={() => setRecalcOpen(true)} className="toolbar-btn text-app-muted-foreground"><RefreshCcw size={13} /> Audit</button>
                         <button data-tour="add-account-btn" onClick={() => setIsAdding(true)} className="toolbar-btn-primary"><Plus size={14} /> New Account</button>
                         <PageTour tourId="finance-chart-of-accounts" />
                         <button onClick={() => setFocusMode(p => !p)} className="p-1.5 rounded-xl border border-app-border text-app-muted-foreground">{focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}</button>
@@ -205,6 +207,20 @@ export function ChartOfAccountsViewer({ accounts }: {
                 </div>
             )}
             <ConfirmDialog open={!!pendingAction} onOpenChange={(o) => { if (!o) setPendingAction(null) }} title={pendingAction?.title || ''} description={pendingAction?.description || ''} onConfirm={handleConfirmAction} variant={pendingAction?.variant || 'info'} />
+            <RecalculateBalancesDialog
+                open={recalcOpen}
+                onOpenChange={setRecalcOpen}
+                onConfirm={async () => {
+                    try {
+                        await recalculateAccountBalances()
+                        setRecalcOpen(false)
+                        router.refresh()
+                        toast.success('Balances recalculated.')
+                    } catch (e: any) {
+                        toast.error(e?.message || 'Recalculate failed — closed periods protect themselves; nothing changed.')
+                    }
+                }}
+            />
             <style jsx>{`
                 .toolbar-btn { display: flex; items-center: centerbox; gap: 0.375rem; font-size: 0.6875rem; font-weight: 700; border: 1px solid var(--app-border); padding: 0.375rem 0.625rem; border-radius: 0.75rem; transition: all 0.2s; }
                 .toolbar-btn:hover { background: var(--app-surface); color: var(--app-foreground); }

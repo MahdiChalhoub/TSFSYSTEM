@@ -14,7 +14,7 @@ export function PeriodsGrid({ periods, year, isPending, handlePeriodStatus, hand
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
     return (
-        <div className="flex flex-col h-full bg-(--app-bg)">
+        <div data-tour="periods-grid" className="flex flex-col h-full bg-(--app-bg)">
             {/* Toolbar / Header row */}
             <div className="flex items-center gap-4 px-6 py-2 border-b border-(--app-border) bg-(--app-surface)/30">
                 {viewMode === 'list' ? (

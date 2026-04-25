@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ShieldCheck, ShieldAlert, Link2, Link2Off, RefreshCw, Loader2, ChevronDown, Copy, ChevronUp, HelpCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { getSnapshotChain, type SnapshotChainReport } from '@/app/actions/finance/fiscal-year'
+import { useScope } from '@/hooks/useScope'
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string; icon: typeof ShieldCheck }> = {
     intact:         { color: 'var(--app-success, #22c55e)', bg: 'color-mix(in srgb, var(--app-success, #22c55e) 12%, transparent)', label: 'intact',   icon: ShieldCheck },
@@ -17,6 +18,7 @@ const KIND_STYLE: Record<string, { color: string; bg: string }> = {
 }
 
 export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boolean }) {
+    const { isOfficial } = useScope()
     const [report, setReport] = useState<SnapshotChainReport | null>(null)
     const [loading, setLoading] = useState(true)
     const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -30,6 +32,15 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
         finally { setLoading(false) }
     }, [])
     useEffect(() => { void load() }, [load])
+
+    // OFFICIAL view shows only OFFICIAL snapshots; the chain status was already
+    // computed against the full set on the backend, we just hide INTERNAL rows here.
+    const visibleChain = useMemo(() => {
+        if (!report) return []
+        return isOfficial
+            ? report.chain.filter(r => (r.scope || '').toUpperCase() === 'OFFICIAL')
+            : report.chain
+    }, [report, isOfficial])
 
     // Auto-expand only when the chain is broken — stay calm when intact.
     useEffect(() => {
@@ -63,7 +74,7 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
                             ? <ShieldCheck size={14} style={{ color: 'var(--app-success, #22c55e)' }} />
                             : <ShieldAlert size={14} style={{ color: 'var(--app-error, #ef4444)' }} />}
                         <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
-                            {report.rows_checked} snapshots · {report.breaks} break{report.breaks === 1 ? '' : 's'}
+                            {visibleChain.length} snapshots · {report.breaks} break{report.breaks === 1 ? '' : 's'}
                         </span>
                     </div>
                     <button onClick={() => void load()} disabled={loading}
@@ -93,7 +104,7 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
                         Snapshot hash chain
                     </span>
                     <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
-                        {report.rows_checked} snapshots · {report.breaks} break{report.breaks === 1 ? '' : 's'}
+                        {visibleChain.length} snapshots · {report.breaks} break{report.breaks === 1 ? '' : 's'}
                     </span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -134,28 +145,29 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
                     </div>
                 )}
 
-                {report.chain.length === 0 ? (
+                {visibleChain.length === 0 ? (
                 <div className="px-3 py-6 text-center text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
                     No snapshots yet. First year- or period-close will seed the chain.
                 </div>
             ) : (
                 <div>
-                    {/* Column headers */}
+                    {/* Column headers — Scope column hidden in OFFICIAL view since
+                        all visible rows are OFFICIAL by definition. */}
                     <div className="grid gap-2 px-3 py-1 text-tp-xxs font-bold uppercase tracking-wide"
                         style={{
-                            gridTemplateColumns: '90px 1fr 90px 160px 140px 100px',
+                            gridTemplateColumns: isOfficial ? '90px 1fr 160px 140px 100px' : '90px 1fr 90px 160px 140px 100px',
                             color: 'var(--app-muted-foreground)',
                             borderBottom: '1px solid var(--app-border)',
                         }}>
                         <div>Kind</div>
                         <div>Subject</div>
-                        <div>Scope</div>
+                        {!isOfficial && <div>Scope</div>}
                         <div>Captured</div>
                         <div>Hash · Prev</div>
                         <div className="text-right">Status</div>
                     </div>
 
-                    {report.chain.map((row, idx) => {
+                    {visibleChain.map((row, idx) => {
                         const statusStyle = STATUS_STYLE[row.status] || STATUS_STYLE.intact
                         const kindStyle = KIND_STYLE[row.kind]
                         const StatusIcon = statusStyle.icon
@@ -165,7 +177,7 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
                                 <button onClick={() => setExpandedId(isExpanded ? null : row.id)}
                                     className="w-full grid gap-2 px-3 py-2 items-center text-left transition-colors hover:bg-app-surface/50"
                                     style={{
-                                        gridTemplateColumns: '90px 1fr 90px 160px 140px 100px',
+                                        gridTemplateColumns: isOfficial ? '90px 1fr 160px 140px 100px' : '90px 1fr 90px 160px 140px 100px',
                                         borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
                                     }}>
                                     {/* Kind pill */}
@@ -179,10 +191,12 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
                                     <div className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
                                         {row.label}
                                     </div>
-                                    {/* Scope */}
-                                    <div className="text-tp-xxs font-mono" style={{ color: 'var(--app-muted-foreground)' }}>
-                                        {row.scope}
-                                    </div>
+                                    {/* Scope — hidden in OFFICIAL view */}
+                                    {!isOfficial && (
+                                        <div className="text-tp-xxs font-mono" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            {row.scope}
+                                        </div>
+                                    )}
                                     {/* Captured */}
                                     <div className="text-tp-xxs font-mono" style={{ color: 'var(--app-muted-foreground)' }}>
                                         {row.captured_at ? new Date(row.captured_at).toLocaleString() : '—'}
@@ -215,7 +229,7 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
                                     <div className="px-3 py-3 space-y-2"
                                         style={{ background: 'color-mix(in srgb, var(--app-border) 20%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
                                         <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
-                                            Chain position #{idx + 1} of {report.chain.length}
+                                            Chain position #{idx + 1} of {visibleChain.length}
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 text-tp-xs font-mono">
                                             <div>

@@ -16,6 +16,8 @@ import { TaskSettingsModal } from './_components/TaskSettingsModal'
 import { PageTabs, type PageTab } from './_components/PageTabs'
 import { useFiscalYears } from './_hooks/useFiscalYears'
 import { YearsListPanel } from './_components/YearsListPanel'
+import { PageTour } from '@/components/ui/PageTour'
+import '@/lib/tours/definitions/finance-fiscal-years'
 
 export default function FiscalYearsViewer({ initialYears }: { initialYears: Record<string, any>[] }) {
     const fy = useFiscalYears(initialYears)
@@ -149,16 +151,17 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        <button onClick={() => setShowTaskSettings(true)}
+                        <button data-tour="task-settings-btn" onClick={() => setShowTaskSettings(true)}
                             title="Reminders, routing & auto-task rules for Finance"
                             className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                             <Zap size={13} /> Task Settings
                         </button>
-                        <button onClick={fy.openWizard} disabled={fy.isPending}
+                        <button data-tour="create-year-btn" onClick={fy.openWizard} disabled={fy.isPending}
                             className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                             <Plus size={14} /> <span className="hidden sm:inline">Create Fiscal Year</span>
                         </button>
+                        <PageTour tourId="finance-fiscal-years" />
                     </div>
                 </div>
             )}
