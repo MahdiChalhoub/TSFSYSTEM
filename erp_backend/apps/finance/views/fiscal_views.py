@@ -156,9 +156,24 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization_id = get_current_tenant_id()
         organization = Organization.objects.get(id=organization_id)
 
-        from apps.finance.models import ChartOfAccount, JournalEntry, FiscalPeriod
+        from apps.finance.models import ChartOfAccount, JournalEntry, JournalEntryLine, FiscalPeriod
         from django.db.models import Sum, Q, Count
         from decimal import Decimal
+
+        # Resolve scope (preview should match the view the user is currently in).
+        from erp.middleware import get_authorized_scope
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'
+        ).lower()
+        scope = (
+            request.headers.get('X-Scope')
+            or request.query_params.get('scope')
+            or 'OFFICIAL'
+        ).upper()
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
 
         periods = FiscalPeriod.objects.filter(fiscal_year=fiscal_year)
         open_periods = periods.filter(status='OPEN').count()
@@ -174,27 +189,58 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
               transaction_date__date__gte=fiscal_year.start_date,
               transaction_date__date__lte=fiscal_year.end_date)
         )
+        if scope == 'OFFICIAL':
+            draft_qs = draft_qs.filter(scope='OFFICIAL')
         draft_je = draft_qs.count()
-        posted_je = JournalEntry.objects.filter(
+
+        posted_qs = JournalEntry.objects.filter(
             organization=organization, status='POSTED',
         ).filter(
             Q(fiscal_year=fiscal_year) |
             Q(fiscal_year__isnull=True,
               transaction_date__date__gte=fiscal_year.start_date,
               transaction_date__date__lte=fiscal_year.end_date)
-        ).count()
+        )
+        if scope == 'OFFICIAL':
+            posted_qs = posted_qs.filter(scope='OFFICIAL')
+        posted_je = posted_qs.count()
 
-        # P&L summary
+        # P&L summary — compute from POSTED JE lines for THIS year (scope-filtered),
+        # NOT from `balance_official` (which is a denormalized lifetime balance).
+        def _net_for_types(types):
+            qs = (
+                JournalEntryLine.objects
+                .filter(
+                    organization=organization,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                )
+                .filter(
+                    Q(journal_entry__fiscal_year=fiscal_year) |
+                    Q(journal_entry__fiscal_year__isnull=True,
+                      journal_entry__transaction_date__date__gte=fiscal_year.start_date,
+                      journal_entry__transaction_date__date__lte=fiscal_year.end_date)
+                )
+                .filter(account__type__in=types)
+                .exclude(journal_entry__journal_type='CLOSING')
+                .exclude(journal_entry__journal_role='SYSTEM_OPENING')
+            )
+            if scope == 'OFFICIAL':
+                qs = qs.filter(journal_entry__scope='OFFICIAL')
+            agg = qs.aggregate(d=Sum('debit'), c=Sum('credit'))
+            return (agg['d'] or Decimal(0)) - (agg['c'] or Decimal(0))
+
+        # Revenue is credit-normal → flip sign so the displayed number is positive
+        total_revenue = abs(_net_for_types(['INCOME']))
+        total_expenses = _net_for_types(['EXPENSE'])
+        net_income = total_revenue - total_expenses
+
         income_accounts = ChartOfAccount.objects.filter(
             organization=organization, type='INCOME', is_active=True,
         )
         expense_accounts = ChartOfAccount.objects.filter(
             organization=organization, type='EXPENSE', is_active=True,
         )
-
-        total_revenue = abs(income_accounts.aggregate(s=Sum('balance_official'))['s'] or Decimal(0))
-        total_expenses = expense_accounts.aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
-        net_income = total_revenue - total_expenses
 
         # Retained earnings — read from PostingRule (source of truth)
         from apps.finance.models.posting_rule import PostingRule
@@ -210,18 +256,22 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             organization=organization, start_date__gt=fiscal_year.end_date
         ).order_by('start_date').first()
 
-        # Balance sheet accounts for opening balances preview
+        # Balance-sheet accounts for opening-balances preview.
+        # Use the right balance column for the scope:
+        #   OFFICIAL  → balance_official (OFFICIAL journals only)
+        #   INTERNAL  → balance           (all journals — full picture)
+        bal_field = 'balance_official' if scope == 'OFFICIAL' else 'balance'
         bs_accounts = ChartOfAccount.objects.filter(
             organization=organization, type__in=['ASSET', 'LIABILITY', 'EQUITY'],
             is_active=True,
-        ).exclude(balance_official=Decimal(0)).order_by('type', 'code')
+        ).exclude(**{bal_field: Decimal(0)}).order_by('type', 'code')
         bs_accounts_count = bs_accounts.count()
 
         opening_preview = []
         for acc in bs_accounts[:30]:  # Limit to 30 for performance
             opening_preview.append({
                 'code': acc.code, 'name': acc.name, 'type': acc.type,
-                'balance': float(acc.balance_official),
+                'balance': float(getattr(acc, bal_field)),
             })
 
         # Blockers
@@ -711,7 +761,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='prior-period-adjustments')
     def list_prior_period_adjustments(self, request, pk=None):
-        """List PPA JEs targeting this fiscal year."""
+        """List PPA JEs targeting this fiscal year (scope-filtered)."""
         from apps.finance.services.prior_period_adjustment_service import (
             PriorPeriodAdjustmentService,
         )
@@ -719,9 +769,28 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization_id = get_current_tenant_id()
         organization = Organization.objects.get(id=organization_id)
 
+        # Scope: OFFICIAL view should never see INTERNAL PPAs.
+        from erp.middleware import get_authorized_scope
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'
+        ).lower()
+        scope = (
+            request.headers.get('X-Scope')
+            or request.query_params.get('scope')
+            or 'OFFICIAL'
+        ).upper()
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
+
         jes = PriorPeriodAdjustmentService.list_adjustments(
             organization=organization, target_fiscal_year=fy,
         )
+        # The service returns a queryset/list of JEs; narrow by scope.
+        if scope == 'OFFICIAL':
+            jes = [je for je in jes if getattr(je, 'scope', 'OFFICIAL') == 'OFFICIAL']
+
         return Response([
             {
                 'id': je.id,

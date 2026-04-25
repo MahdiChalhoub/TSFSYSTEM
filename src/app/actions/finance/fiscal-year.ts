@@ -547,7 +547,8 @@ export type PPAHistoryRow = {
 
 export async function listPriorPeriodAdjustments(yearId: number): Promise<PPAHistoryRow[]> {
     try {
-        return await erpFetch(`fiscal-years/${yearId}/prior-period-adjustments/`) as PPAHistoryRow[]
+        const scope = await _readScopeFromCookie()
+        return await erpFetch(`fiscal-years/${yearId}/prior-period-adjustments/?scope=${scope}`) as PPAHistoryRow[]
     } catch (error) {
         console.error('Failed to list PPAs:', error)
         return []
@@ -657,7 +658,8 @@ export type ClosePreview = {
 
 export async function getClosePreview(yearId: number): Promise<ClosePreview | null> {
     try {
-        return await erpFetch(`fiscal-years/${yearId}/close-preview/`)
+        const scope = await _readScopeFromCookie()
+        return await erpFetch(`fiscal-years/${yearId}/close-preview/?scope=${scope}`)
     } catch (error: unknown) {
         console.error("Failed to get close preview:", error)
         return null
