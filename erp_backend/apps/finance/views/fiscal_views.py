@@ -289,16 +289,44 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             total_credit=Sum('total_credit'),
         )
 
-        # P&L
-        income_bal = ChartOfAccount.objects.filter(organization=org, type='INCOME', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
-        expense_bal = ChartOfAccount.objects.filter(organization=org, type='EXPENSE', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
-        revenue = abs(income_bal)
+        # P&L + Balance Sheet — aggregate from posted JE lines within THIS
+        # fiscal year (same proven formula as multi_year_comparison).
+        # Using balance_official is wrong here: it's a live running total
+        # across ALL years, not scoped to this one.
+        from decimal import Decimal
+        def _net_by_types(types):
+            """Sum net (debit-credit) for given account types within this FY."""
+            agg = (
+                JournalEntryLine.objects
+                .filter(
+                    organization=org,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    journal_entry__scope='OFFICIAL',
+                )
+                .filter(
+                    Q(journal_entry__fiscal_year=fiscal_year) |
+                    Q(journal_entry__fiscal_year__isnull=True,
+                      journal_entry__transaction_date__date__gte=fiscal_year.start_date,
+                      journal_entry__transaction_date__date__lte=fiscal_year.end_date)
+                )
+                .filter(account__type__in=types)
+                .aggregate(d=Sum('debit'), c=Sum('credit'))
+            )
+            d = agg['d'] or Decimal(0)
+            c = agg['c'] or Decimal(0)
+            return d - c  # raw net
+
+        # P&L: Income is credit-normal → negate; Expense is debit-normal
+        raw_income = _net_by_types(['INCOME'])
+        revenue = abs(raw_income)  # Income has negative raw net (credits > debits)
+        expense_bal = _net_by_types(['EXPENSE'])
         net_income = revenue - expense_bal
 
-        # Balance sheet
-        asset_bal = ChartOfAccount.objects.filter(organization=org, type='ASSET', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
-        liability_bal = ChartOfAccount.objects.filter(organization=org, type='LIABILITY', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
-        equity_bal = ChartOfAccount.objects.filter(organization=org, type='EQUITY', is_active=True).aggregate(s=Sum('balance_official'))['s'] or Decimal(0)
+        # Balance Sheet
+        asset_bal = _net_by_types(['ASSET'])
+        raw_liability = _net_by_types(['LIABILITY'])
+        raw_equity = _net_by_types(['EQUITY'])
 
         # Closing entry
         closing_je = None
@@ -413,8 +441,8 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             },
             'pnl': {'revenue': float(revenue), 'expenses': float(expense_bal), 'net_income': float(net_income)},
             'balance_sheet': {
-                'assets': float(asset_bal), 'liabilities': float(abs(liability_bal)),
-                'equity': float(abs(equity_bal)),
+                'assets': float(asset_bal), 'liabilities': float(abs(raw_liability)),
+                'equity': float(abs(raw_equity)),
             },
             'closing_entry': closing_je,
             'opening_balances': opening_bals,
@@ -1128,6 +1156,72 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'run_status': run.status,
             'ready_to_close': run.is_ready_to_close(),
         })
+
+    @action(detail=True, methods=['post'], url_path='close-checklist/add-item')
+    def close_checklist_add_item(self, request, pk=None):
+        """Add a custom checklist item to the running close checklist.
+
+        Body: { name: str, category?: str, is_required?: bool }
+        Creates the item on the template and adds a state to the active run.
+        """
+        from apps.finance.models import (
+            CloseChecklistItem, CloseChecklistItemState, CloseChecklistRun,
+        )
+        from django.db import models as db_models
+
+        fy = self.get_object()
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({'error': 'No organization context'}, status=status.HTTP_400_BAD_REQUEST)
+
+        name = (request.data.get('name') or '').strip()
+        if not name:
+            return Response({'error': 'name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        category = request.data.get('category', 'OTHER')
+        is_required = bool(request.data.get('is_required', False))
+
+        run = CloseChecklistRun.objects.filter(
+            organization_id=organization_id, fiscal_year=fy,
+            status__in=('OPEN', 'READY'),
+        ).select_related('template').order_by('-created_at').first()
+
+        if run is None:
+            return Response({'error': 'No active checklist run for this year'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get next order
+        max_order = CloseChecklistItem.objects.filter(
+            organization_id=organization_id, template=run.template,
+        ).aggregate(mx=db_models.Max('order'))['mx'] or 0
+
+        item = CloseChecklistItem.objects.create(
+            organization_id=organization_id,
+            template=run.template,
+            order=max_order + 1,
+            name=name,
+            category=category,
+            is_required=is_required,
+        )
+
+        state = CloseChecklistItemState.objects.create(
+            organization_id=organization_id,
+            run=run,
+            item=item,
+            is_complete=False,
+        )
+
+        # Re-check run status
+        if is_required and run.status == 'READY':
+            run.status = 'OPEN'
+            run.save(update_fields=['status'])
+
+        return Response({
+            'state_id': state.id,
+            'item_id': item.id,
+            'name': item.name,
+            'category': item.category,
+            'is_required': item.is_required,
+        }, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'], url_path='integrity-canary')
     def integrity_canary(self, request):

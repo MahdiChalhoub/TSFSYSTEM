@@ -1,4 +1,5 @@
-import { PlayCircle, ShieldCheck, Lock, Clock, LockKeyhole, RotateCcw } from 'lucide-react'
+import { useState } from 'react'
+import { PlayCircle, ShieldCheck, Lock, Clock, LockKeyhole, RotateCcw, LayoutGrid, List } from 'lucide-react'
 import { getStatusStyle } from '../_lib/constants'
 
 interface PeriodsGridProps {
@@ -10,36 +11,146 @@ interface PeriodsGridProps {
 }
 
 export function PeriodsGrid({ periods, year, isPending, handlePeriodStatus, handlePeriodAction }: PeriodsGridProps) {
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+
     return (
-        <div className="p-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: '8px' }}>
-            {periods.map((p: Record<string, any>, pidx: number) => {
-                const pStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
-                const ps = getStatusStyle(pStatus)
-                const pLabel = p.name || `P${String(pidx + 1).padStart(2, '0')}`
-                const monthLabel = p.start_date ? new Date(p.start_date).toLocaleDateString('en', { month: 'short', year: '2-digit' }) : ''
-                return (
-                    <div key={p.id} data-period-id={p.id} className="rounded-xl p-2.5 text-center transition-all" style={{ background: ps.bg, border: `1px solid ${ps.color}20` }}>
-                        <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{pLabel}</div>
-                        <div className="text-tp-sm font-bold mt-0.5" style={{ color: 'var(--app-foreground)' }}>{monthLabel}</div>
-                        <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded-full mt-1 inline-block" style={{ background: ps.bg, color: ps.color, border: `1px solid ${ps.color}30` }}>{pStatus}</span>
-                        {(p.journal_entry_count || 0) > 0 && (
-                            <div className="text-tp-xxs font-bold mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{p.journal_entry_count} JEs</div>
-                        )}
-                        {!year.isHardLocked && (
-                            <div className="flex items-center justify-center gap-1 mt-1.5 flex-wrap">
-                                <button onClick={() => handlePeriodStatus(p.id, 'OPEN')} title="Open" disabled={isPending || pStatus === 'OPEN'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'OPEN' ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}><PlayCircle size={13} /></button>
-                                <button onClick={() => handlePeriodAction(p.id, 'softLock', p.name)} title="Soft-lock (supervisors only)" disabled={isPending || pStatus === 'SOFT_LOCKED'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'SOFT_LOCKED' ? 'var(--app-warning, #f59e0b)' : 'var(--app-muted-foreground)' }}><ShieldCheck size={13} /></button>
-                                <button onClick={() => handlePeriodAction(p.id, 'hardLock', p.name)} title="Hard-lock (no posting)" disabled={isPending || pStatus === 'HARD_LOCKED'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'HARD_LOCKED' ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}><LockKeyhole size={13} /></button>
-                                <button onClick={() => handlePeriodAction(p.id, 'close', p.name)} title="Close" disabled={isPending || pStatus === 'CLOSED'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'CLOSED' ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}><Lock size={13} /></button>
-                                <button onClick={() => handlePeriodStatus(p.id, 'FUTURE')} title="Future" disabled={isPending || pStatus === 'FUTURE'} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: pStatus === 'FUTURE' ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }}><Clock size={13} /></button>
-                                {(pStatus === 'CLOSED' || pStatus === 'HARD_LOCKED' || pStatus === 'SOFT_LOCKED') && (
-                                    <button onClick={() => handlePeriodAction(p.id, 'reopen', p.name)} title="Reopen (superuser only)" disabled={isPending} className="p-1 rounded-lg transition-all disabled:opacity-30" style={{ color: 'var(--app-muted-foreground)' }}><RotateCcw size={13} /></button>
-                                )}
-                            </div>
-                        )}
+        <div className="flex flex-col h-full bg-(--app-bg)">
+            {/* Toolbar / Header row */}
+            <div className="flex items-center gap-4 px-6 py-2 border-b border-(--app-border) bg-(--app-surface)/30">
+                {viewMode === 'list' ? (
+                    <>
+                        <div className="flex-1 text-[10px] font-black uppercase tracking-wider text-(--app-muted-foreground)">Period Name</div>
+                        <div className="w-24 text-[10px] font-black uppercase tracking-wider text-(--app-muted-foreground) text-center">Status</div>
+                        <div className="w-16 text-[10px] font-black uppercase tracking-wider text-(--app-muted-foreground) text-center">Log</div>
+                        <div className="w-40 text-[10px] font-black uppercase tracking-wider text-(--app-muted-foreground) text-right">Actions</div>
+                    </>
+                ) : (
+                    <div className="flex-1 text-[10px] font-black uppercase tracking-wider text-(--app-muted-foreground)">Period Overview (Grid)</div>
+                )}
+                
+                {/* Switcher */}
+                <div className="flex items-center bg-(--app-surface) rounded-lg p-0.5 border border-(--app-border)/40 ml-2">
+                    <button onClick={() => setViewMode('grid')}
+                        className={`p-1 rounded-md transition-all ${viewMode === 'grid' ? 'bg-(--app-primary) text-white' : 'text-(--app-muted-foreground) hover:bg-(--app-surface-hover)'}`}>
+                        <LayoutGrid size={11} />
+                    </button>
+                    <button onClick={() => setViewMode('list')}
+                        className={`p-1 rounded-md transition-all ${viewMode === 'list' ? 'bg-(--app-primary) text-white' : 'text-(--app-muted-foreground) hover:bg-(--app-surface-hover)'}`}>
+                        <List size={11} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                {viewMode === 'list' ? (
+                    <div className="flex flex-col">
+                        {periods.map((p, pidx) => {
+                            const pStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
+                            const ps = getStatusStyle(pStatus)
+                            const pLabel = p.name || `P${String(pidx + 1).padStart(2, '0')}`
+                            const jeCount = p.journal_entry_count || 0
+                            
+                            return (
+                                <div key={p.id} className="flex items-center gap-4 px-6 py-2.5 transition-all hover:bg-(--app-surface)/50 border-b border-(--app-border)/40 group">
+                                    <div className="flex-1 flex flex-col min-w-0">
+                                        <div className="text-[12px] font-bold text-(--app-foreground) truncate">{pLabel}</div>
+                                        <div className="text-[10px] text-(--app-muted-foreground) truncate">
+                                            {new Date(p.start_date || p.startDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })} – {new Date(p.end_date || p.endDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                                        </div>
+                                    </div>
+                                    <div className="w-24 flex justify-center">
+                                        <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-current flex items-center gap-1"
+                                            style={{ color: ps.color, background: `${ps.color}10`, borderColor: `${ps.color}30` }}>
+                                            {pStatus}
+                                        </span>
+                                    </div>
+                                    <div className="w-16 text-center text-[11px] font-bold tabular-nums text-(--app-foreground)">
+                                        {jeCount > 0 ? jeCount : <span className="opacity-20">—</span>}
+                                    </div>
+                                    <div className="w-40 flex items-center justify-end gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+                                        {!year.isHardLocked && (
+                                            <Actions p={p} pStatus={pStatus} isPending={isPending} handlePeriodStatus={handlePeriodStatus} handlePeriodAction={handlePeriodAction} />
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
-                )
-            })}
+                ) : (
+                    <div className="p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-9 gap-2">
+                        {periods.map((p, pidx) => {
+                            const pStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
+                            const ps = getStatusStyle(pStatus)
+                            const pLabel = p.name || `P${String(pidx + 1).padStart(2, '0')}`
+                            const jeCount = p.journal_entry_count || 0
+                            
+                            return (
+                                <div key={p.id} className="rounded-xl p-3 border transition-all hover:shadow-md text-center flex flex-col items-center gap-1"
+                                    style={{ background: ps.bg, borderColor: `color-mix(in srgb, ${ps.color} 25%, transparent)` }}>
+                                    {/* Period name */}
+                                    <div className="text-[10px] font-black uppercase tracking-wider text-(--app-muted-foreground) leading-tight">{pLabel}</div>
+                                    {/* Status badge */}
+                                    <div className="text-[10px] font-black uppercase mt-0.5"
+                                        style={{ color: ps.color }}>
+                                        {pStatus}
+                                    </div>
+                                    {/* JE count */}
+                                    <div className="text-[10px] font-bold text-(--app-muted-foreground)">
+                                        {jeCount > 0 ? `${jeCount} JEs` : '—'}
+                                    </div>
+                                    {/* Action icons row */}
+                                    {!year.isHardLocked && (
+                                        <div className="flex items-center justify-center gap-0 mt-1">
+                                            <Actions p={p} pStatus={pStatus} isPending={isPending} handlePeriodStatus={handlePeriodStatus} handlePeriodAction={handlePeriodAction} size={14} />
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
+
+function Actions({ p, pStatus, isPending, handlePeriodStatus, handlePeriodAction, size = 14 }: any) {
+    return (
+        <>
+            <button onClick={() => handlePeriodStatus(p.id, 'FUTURE')} title="Set as Future" disabled={isPending || pStatus === 'FUTURE'}
+                className="p-1.5 rounded-lg transition-all disabled:opacity-20 hover:bg-(--app-surface)"
+                style={{ color: pStatus === 'FUTURE' ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }}>
+                <Clock size={size} />
+            </button>
+            <button onClick={() => handlePeriodStatus(p.id, 'OPEN')} title="Open" disabled={isPending || pStatus === 'OPEN'}
+                className="p-1.5 rounded-lg transition-all disabled:opacity-20 hover:bg-(--app-surface)"
+                style={{ color: pStatus === 'OPEN' ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
+                <PlayCircle size={size} />
+            </button>
+            <button onClick={() => handlePeriodAction(p.id, 'softLock', p.name)} title="Soft-lock" disabled={isPending || pStatus === 'SOFT_LOCKED'}
+                className="p-1.5 rounded-lg transition-all disabled:opacity-20 hover:bg-(--app-surface)"
+                style={{ color: pStatus === 'SOFT_LOCKED' ? 'var(--app-warning, #f59e0b)' : 'var(--app-muted-foreground)' }}>
+                <ShieldCheck size={size} />
+            </button>
+            <button onClick={() => handlePeriodAction(p.id, 'hardLock', p.name)} title="Hard-lock" disabled={isPending || pStatus === 'HARD_LOCKED'}
+                className="p-1.5 rounded-lg transition-all disabled:opacity-20 hover:bg-(--app-surface)"
+                style={{ color: pStatus === 'HARD_LOCKED' ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                <LockKeyhole size={size} />
+            </button>
+            <button onClick={() => handlePeriodAction(p.id, 'close', p.name)} title="Close" disabled={isPending || pStatus === 'CLOSED'}
+                className="p-1.5 rounded-lg transition-all disabled:opacity-20 hover:bg-(--app-surface)"
+                style={{ color: pStatus === 'CLOSED' ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
+                <Lock size={size} />
+            </button>
+            {(pStatus === 'CLOSED' || pStatus === 'HARD_LOCKED' || pStatus === 'SOFT_LOCKED') && (
+                <button onClick={() => handlePeriodAction(p.id, 'reopen', p.name)} title="Reopen" disabled={isPending}
+                    className="p-1.5 rounded-lg transition-all disabled:opacity-20 hover:bg-(--app-surface) ml-auto"
+                    style={{ color: 'var(--app-error)' }}>
+                    <RotateCcw size={size} />
+                </button>
+            )}
+        </>
+    )
+}
+
+

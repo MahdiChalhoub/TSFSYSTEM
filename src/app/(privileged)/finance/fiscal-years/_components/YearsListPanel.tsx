@@ -22,13 +22,13 @@ export function YearsListPanel({ fy }: { fy: ReturnType<typeof useFiscalYears> }
             <div className="flex-1 min-h-0 flex items-center justify-center rounded-2xl" style={{ border: '1px solid var(--app-border)' }}>
                 <div className="text-center py-20">
                     <Calendar size={36} className="text-app-muted-foreground mb-3 opacity-40 mx-auto" />
-                    <p className="text-tp-lg font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                    <p className="text-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                         {fy.years.length === 0 ? 'No fiscal years configured' : 'No matching fiscal years'}
                     </p>
                     {fy.years.length === 0 && (
                         <>
-                            <p className="text-tp-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>Create a year to start recording transactions</p>
-                            <button onClick={fy.openWizard} className="mt-4 flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl mx-auto" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            <p className="text-[11px] mt-1" style={{ color: 'var(--app-muted-foreground)' }}>Create a year to start recording transactions</p>
+                            <button onClick={fy.openWizard} className="mt-4 flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl mx-auto" style={{ background: 'var(--app-primary)', color: 'white' }}>
                                 <Plus size={13} /> Create First Year
                             </button>
                         </>
@@ -58,17 +58,17 @@ export function YearsListPanel({ fy }: { fy: ReturnType<typeof useFiscalYears> }
                                 borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
                             }}>
                             <div className="flex items-center gap-2 mb-0.5">
-                                <span className="text-tp-md font-bold truncate" style={{ color: isSelected ? 'var(--app-primary)' : 'var(--app-foreground)' }}>
+                                <span className="text-[13px] font-bold truncate" style={{ color: isSelected ? 'var(--app-primary)' : 'var(--app-foreground)' }}>
                                     {year.name}
                                 </span>
-                                <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: ss.bg, color: ss.color }}>
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: ss.bg, color: ss.color }}>
                                     {ss.label}
                                 </span>
                             </div>
-                            <div className="text-tp-xs font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <div className="text-[11px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {new Date(year.startDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })} – {new Date(year.endDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
                             </div>
-                            <div className="text-tp-xs font-bold tabular-nums mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                            <div className="text-[11px] font-bold tabular-nums mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {periods.length} periods · {openCount} open
                             </div>
                         </button>
@@ -102,7 +102,7 @@ export function YearsListPanel({ fy }: { fy: ReturnType<typeof useFiscalYears> }
                     />
                 ) : (
                     <div className="flex-1 flex items-center justify-center">
-                        <p className="text-tp-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Select a fiscal year</p>
+                        <p className="text-[11px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Select a fiscal year</p>
                     </div>
                 )}
             </div>

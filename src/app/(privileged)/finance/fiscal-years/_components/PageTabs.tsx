@@ -29,7 +29,7 @@ export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode, sear
                     <button
                         key={t.id}
                         onClick={() => onTabChange(t.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-sm font-bold transition-all justify-center"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all justify-center"
                         style={{
                             background: isActive ? 'var(--app-primary)' : 'transparent',
                             color: isActive ? 'white' : 'var(--app-muted-foreground)',
@@ -49,7 +49,7 @@ export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode, sear
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search… (Ctrl+K)"
-                    className="w-full pl-7 pr-2 py-1.5 text-tp-sm rounded-lg outline-none transition-all"
+                    className="w-full pl-7 pr-2 py-1.5 text-[11px] rounded-lg outline-none transition-all"
                     style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                 />
             </div>
@@ -58,7 +58,7 @@ export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode, sear
                 onClick={() => setFocusMode(p => !p)}
                 title={focusMode ? 'Exit focus mode — Ctrl+Q' : 'Focus mode — Ctrl+Q'}
                 aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all flex-shrink-0 text-tp-sm font-bold"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all flex-shrink-0 text-[11px] font-bold"
                 style={{
                     color: focusMode ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                     background: focusMode ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',

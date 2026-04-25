@@ -14,47 +14,62 @@ const TYPE_ICON: Record<string, { Icon: typeof Calendar; color: string }> = {
 }
 
 export function HistoryTab({ history }: HistoryTabProps) {
-    if (!history) return <div className="p-8 text-center"><Loader2 size={20} className="animate-spin mx-auto text-app-muted-foreground" /></div>
+    if (!history) return <div className="p-8 text-center flex flex-col items-center gap-2">
+        <Loader2 size={24} className="animate-spin text-(--app-primary)" />
+        <span className="text-[11px] font-bold text-(--app-muted-foreground)">Indexing journal history...</span>
+    </div>
 
     const h = history
     return (
-        <div className="p-4 space-y-3">
-            {/* Timeline */}
-            <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                <div className="text-tp-xxs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Event Log</div>
-                <div className="space-y-1">
+        <div className="flex flex-col min-h-0">
+            {/* Monthly stats header — simplified from cards to a clean badge row */}
+            <div className="px-6 py-4 border-b border-(--app-border)/40 bg-(--app-surface)/10">
+                <div className="text-[10px] font-black uppercase tracking-[0.1em] mb-3 text-(--app-muted-foreground)">Activity Density (JEs per month)</div>
+                <div className="flex gap-2 flex-wrap">
+                    {h.je_by_month.map(m => (
+                        <div key={m.month} className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-(--app-border)/40 bg-(--app-bg)" title={`${m.count} Journal Entries`}>
+                            <span className="text-[9px] font-black uppercase text-(--app-muted-foreground)">{m.month.slice(0, 3)}</span>
+                            <span className="text-[12px] font-black tabular-nums text-(--app-primary)">{m.count}</span>
+                        </div>
+                    ))}
+                    {h.je_by_month.length === 0 && <span className="text-[11px] text-(--app-muted-foreground) italic opacity-50">No ledger activity recorded yet</span>}
+                </div>
+            </div>
+
+            {/* Event Timeline */}
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
+                <div className="text-[10px] font-black uppercase tracking-[0.1em] mb-4 text-(--app-muted-foreground)">Governance Timeline</div>
+                <div className="space-y-4">
                     {h.events.map((ev, i) => {
                         const ti = TYPE_ICON[ev.type] || { Icon: Calendar, color: 'var(--app-muted-foreground)' }
                         return (
-                            <div key={i} className="flex items-center gap-2 py-1" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                                <ti.Icon size={12} style={{ color: ti.color }} />
-                                <span className="text-tp-xs font-medium flex-1" style={{ color: 'var(--app-foreground)' }}>{ev.description}</span>
-                                {ev.user && <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>{ev.user}</span>}
-                                <span className="text-tp-xxs font-mono tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
-                                    {ev.date ? new Date(ev.date).toLocaleDateString() : ''}
-                                </span>
+                            <div key={i} className="flex gap-4 group">
+                                <div className="flex flex-col items-center pt-1">
+                                    <div className="p-1.5 rounded-full border border-current bg-current/10" style={{ color: ti.color }}>
+                                        <ti.Icon size={12} />
+                                    </div>
+                                    {i < h.events.length - 1 && <div className="flex-1 w-px bg-(--app-border)/40 mt-1" />}
+                                </div>
+                                <div className="flex-1 pb-4">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <span className="text-[12px] font-bold text-(--app-foreground)">{ev.description}</span>
+                                        <span className="text-[10px] font-mono opacity-50">{ev.date ? new Date(ev.date).toLocaleDateString() : ''}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {ev.user && (
+                                            <span className="text-[10px] font-bold px-1.5 py-0.25 rounded bg-(--app-surface) text-(--app-muted-foreground) border border-(--app-border)/40">
+                                                {ev.user}
+                                            </span>
+                                        )}
+                                        <span className="text-[9px] font-bold uppercase tracking-wider opacity-30 group-hover:opacity-60 transition-opacity">{ev.type}</span>
+                                    </div>
+                                </div>
                             </div>
                         )
                     })}
-                    {h.events.length === 0 && (
-                        <div className="text-tp-sm font-medium py-4 text-center" style={{ color: 'var(--app-muted-foreground)' }}>No events recorded</div>
-                    )}
                 </div>
             </div>
-            {/* JE by Month */}
-            {h.je_by_month.length > 0 && (
-                <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                    <div className="text-tp-xxs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Journal Entries by Month</div>
-                    <div className="flex gap-2 flex-wrap">
-                        {h.je_by_month.map(m => (
-                            <div key={m.month} className="text-center px-2 py-1 rounded-lg" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                <div className="text-tp-md font-bold tabular-nums" style={{ color: 'var(--app-primary)' }}>{m.count}</div>
-                                <div className="text-tp-xxs font-bold uppercase" style={{ color: 'var(--app-muted-foreground)' }}>{m.month}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
+

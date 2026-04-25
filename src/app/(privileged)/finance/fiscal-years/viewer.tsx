@@ -137,11 +137,11 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                         <div className="min-w-0">
                             <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight leading-tight">Fiscal Years</h1>
                             <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Accounting Periods & Closing Cycles</p>
+                                <p className="text-[11px] md:text-[12px] font-bold text-app-muted-foreground uppercase tracking-widest">Accounting Periods & Closing Cycles</p>
                                 {currentContext && (
                                     <button onClick={focusCurrentPeriod}
                                         title={`Jump to ${currentContext.period.name} in ${currentContext.year.name}`}
-                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full transition-all hover:brightness-110"
+                                        className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full transition-all hover:brightness-110"
                                         style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
                                         <Target size={9} />
                                         {currentContext.period.name} · {currentContext.daysToEnd <= 0 ? 'ends today' : `${currentContext.daysToEnd}d left`}
