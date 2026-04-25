@@ -11,9 +11,7 @@ import PeriodEditor from './period-editor'
 import { WizardModal } from './_components/WizardModal'
 import { DraftAuditModal } from './_components/DraftAuditModal'
 import { YearEndCloseModal } from './_components/YearEndCloseModal'
-import { CanaryCard } from './_components/CanaryCard'
 import { MultiYearCard } from './_components/MultiYearCard'
-import { SnapshotBrowserCard } from './_components/SnapshotBrowserCard'
 import { TaskSettingsModal } from './_components/TaskSettingsModal'
 import { PageTabs, type PageTab } from './_components/PageTabs'
 import { useFiscalYears } from './_hooks/useFiscalYears'
@@ -29,7 +27,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     const pathname = usePathname()
 
     const rawTab = searchParams?.get('tab') as PageTab | null
-    const pageTab: PageTab = rawTab && ['years', 'multiyear', 'snapshots', 'integrity'].includes(rawTab) ? rawTab : 'years'
+    const pageTab: PageTab = rawTab && ['years', 'multiyear'].includes(rawTab) ? rawTab : 'years'
 
     const setPageTab = useCallback((tab: PageTab) => {
         const params = new URLSearchParams(searchParams?.toString() || '')
@@ -170,8 +168,6 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             <div className="flex-1 min-h-0 flex flex-col">
                 {pageTab === 'years' && <YearsListPanel fy={fy} />}
                 {pageTab === 'multiyear' && <MultiYearCard fullHeight />}
-                {pageTab === 'snapshots' && <SnapshotBrowserCard fullHeight />}
-                {pageTab === 'integrity' && <CanaryCard fullHeight />}
             </div>
 
             {/* ── Modals ── */}

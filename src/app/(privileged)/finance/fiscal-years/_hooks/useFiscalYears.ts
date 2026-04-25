@@ -31,7 +31,7 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
     const [closingYearId, setClosingYearId] = useState<number | null>(null)
     const [closeConfirmText, setCloseConfirmText] = useState('')
     const pendingPeriodChange = useRef<{ periodId: number; newStatus: string; period: Record<string, any> } | null>(null)
-    const [yearTab, setYearTab] = useState<Record<number, 'periods' | 'summary' | 'checklist' | 'history'>>({})
+    const [yearTab, setYearTab] = useState<Record<number, 'periods' | 'summary' | 'checklist' | 'history' | 'entries' | 'snapshots' | 'integrity'>>({})
     const [summaryCache, setSummaryCache] = useState<Record<number, YearSummary>>({})
     const [historyCache, setHistoryCache] = useState<Record<number, { events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }>>({})
     const [draftAudit, setDraftAudit] = useState<{ drafts: DraftAuditEntry[]; total: number; periodName: string } | null>(null)

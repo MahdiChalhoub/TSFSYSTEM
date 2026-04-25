@@ -5,17 +5,23 @@ import { PeriodsGrid } from './PeriodsGrid'
 import { SummaryTab } from './SummaryTab'
 import { HistoryTab } from './HistoryTab'
 import { CloseChecklistPanel } from './CloseChecklistPanel'
+import { SnapshotBrowserCard } from './SnapshotBrowserCard'
+import { CanaryCard } from './CanaryCard'
+import { CloseEntriesPanel } from './CloseEntriesPanel'
 import { PriorPeriodAdjustmentModal } from './PriorPeriodAdjustmentModal'
 import type { YearSummary, YearHistoryEvent } from '@/app/actions/finance/fiscal-year'
 
 const TABS = [
     { id: 'periods' as const, label: 'Periods' },
     { id: 'summary' as const, label: 'Summary' },
-    { id: 'checklist' as const, label: 'Close Checklist' },
+    { id: 'checklist' as const, label: 'Checklist' },
     { id: 'history' as const, label: 'History' },
+    { id: 'entries' as const, label: 'Close Entries' },
+    { id: 'snapshots' as const, label: 'Snapshots' },
+    { id: 'integrity' as const, label: 'Integrity' },
 ]
 
-type YearTab = 'periods' | 'summary' | 'checklist' | 'history'
+type YearTab = 'periods' | 'summary' | 'checklist' | 'history' | 'entries' | 'snapshots' | 'integrity'
 
 interface YearPanelProps {
     year: Record<string, any>
@@ -120,6 +126,9 @@ export function YearPanel({
                         {activeTab === 'summary' && <SummaryTab summary={summary} fiscalYearId={year.id} />}
                         {activeTab === 'checklist' && <CloseChecklistPanel fiscalYearId={year.id} />}
                         {activeTab === 'history' && <HistoryTab history={history} />}
+                        {activeTab === 'entries' && <CloseEntriesPanel summary={summary} />}
+                        {activeTab === 'snapshots' && <SnapshotBrowserCard fullHeight />}
+                        {activeTab === 'integrity' && <CanaryCard />}
                     </div>
                 </div>
             )}

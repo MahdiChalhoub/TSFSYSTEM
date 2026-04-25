@@ -1223,6 +1223,44 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'is_required': item.is_required,
         }, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['post'], url_path='close-checklist/delete-item')
+    def close_checklist_delete_item(self, request, pk=None):
+        """Delete a checklist item from the running close checklist.
+
+        Body: { state_id: int }
+        Removes the item state and the underlying template item.
+        """
+        from apps.finance.models import CloseChecklistItemState
+
+        fy = self.get_object()
+        state_id = request.data.get('state_id')
+        if not state_id:
+            return Response({'error': 'state_id required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            state = CloseChecklistItemState.objects.select_related('run', 'item').get(
+                id=state_id, run__fiscal_year=fy,
+            )
+        except CloseChecklistItemState.DoesNotExist:
+            return Response({'error': 'item state not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        run = state.run
+        item = state.item
+
+        # Delete the state and the template item
+        state.delete()
+        item.delete()
+
+        # Re-check run status
+        if run.is_ready_to_close() and run.status == 'OPEN':
+            run.status = 'READY'
+            run.save(update_fields=['status'])
+        elif not run.is_ready_to_close() and run.status == 'READY':
+            run.status = 'OPEN'
+            run.save(update_fields=['status'])
+
+        return Response({'deleted': True, 'run_status': run.status})
+
     @action(detail=False, methods=['get'], url_path='integrity-canary')
     def integrity_canary(self, request):
         """Run the close-chain canary synchronously for the current org.

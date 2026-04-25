@@ -1,12 +1,10 @@
-import { Calendar, BarChart3, ShieldCheck, Link2, Maximize2, Minimize2, Search } from 'lucide-react'
+import { Calendar, BarChart3, Maximize2, Minimize2, Search } from 'lucide-react'
 
-export type PageTab = 'years' | 'multiyear' | 'snapshots' | 'integrity'
+export type PageTab = 'years' | 'multiyear'
 
 const TABS: { id: PageTab; label: string; icon: typeof Calendar }[] = [
     { id: 'years', label: 'Fiscal Years', icon: Calendar },
     { id: 'multiyear', label: 'Multi-Year', icon: BarChart3 },
-    { id: 'snapshots', label: 'Snapshots', icon: Link2 },
-    { id: 'integrity', label: 'Integrity', icon: ShieldCheck },
 ]
 
 interface PageTabsProps {

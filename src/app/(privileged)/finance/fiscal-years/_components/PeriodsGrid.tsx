@@ -11,7 +11,7 @@ interface PeriodsGridProps {
 }
 
 export function PeriodsGrid({ periods, year, isPending, handlePeriodStatus, handlePeriodAction }: PeriodsGridProps) {
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
     return (
         <div className="flex flex-col h-full bg-(--app-bg)">
@@ -80,22 +80,61 @@ export function PeriodsGrid({ periods, year, isPending, handlePeriodStatus, hand
                     <div className="p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-9 gap-2">
                         {periods.map((p, pidx) => {
                             const pStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
-                            const ps = getStatusStyle(pStatus)
                             const pLabel = p.name || `P${String(pidx + 1).padStart(2, '0')}`
                             const jeCount = p.journal_entry_count || 0
-                            
+                            const isClosed = pStatus === 'CLOSED'
+                            const isLocked = pStatus === 'HARD_LOCKED' || pStatus === 'SOFT_LOCKED'
+                            const isFuture = pStatus === 'FUTURE'
+                            const isOpen = pStatus === 'OPEN'
+
+                            // Visual state config
+                            const cardBg = isClosed
+                                ? 'color-mix(in srgb, var(--app-success, #22c55e) 8%, var(--app-surface))'
+                                : isLocked
+                                ? 'color-mix(in srgb, var(--app-error, #ef4444) 6%, var(--app-surface))'
+                                : isFuture
+                                ? 'color-mix(in srgb, var(--app-info, #3b82f6) 5%, var(--app-surface))'
+                                : 'color-mix(in srgb, var(--app-success, #22c55e) 4%, var(--app-surface))'
+                            const borderColor = isClosed
+                                ? 'color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)'
+                                : isLocked
+                                ? 'color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)'
+                                : isFuture
+                                ? 'color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)'
+                                : 'color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)'
+                            const statusColor = isClosed
+                                ? 'var(--app-success, #22c55e)'
+                                : isLocked
+                                ? 'var(--app-error, #ef4444)'
+                                : isFuture
+                                ? 'var(--app-info, #3b82f6)'
+                                : 'var(--app-success, #22c55e)'
+
                             return (
-                                <div key={p.id} className="rounded-xl p-3 border transition-all hover:shadow-md text-center flex flex-col items-center gap-1"
-                                    style={{ background: ps.bg, borderColor: `color-mix(in srgb, ${ps.color} 25%, transparent)` }}>
+                                <div key={p.id} className="rounded-xl p-3 border transition-all hover:shadow-md text-center flex flex-col items-center gap-0.5 relative overflow-hidden"
+                                    style={{ background: cardBg, borderColor }}>
+                                    {/* Sealed overlay watermark for closed/locked */}
+                                    {(isClosed || isLocked) && (
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ opacity: 0.04 }}>
+                                            <Lock size={60} style={{ color: statusColor }} />
+                                        </div>
+                                    )}
                                     {/* Period name */}
-                                    <div className="text-[10px] font-black uppercase tracking-wider text-(--app-muted-foreground) leading-tight">{pLabel}</div>
+                                    <div className="text-[10px] font-black uppercase tracking-wider leading-tight" style={{ color: 'var(--app-foreground)' }}>
+                                        {pLabel}
+                                    </div>
                                     {/* Status badge */}
-                                    <div className="text-[10px] font-black uppercase mt-0.5"
-                                        style={{ color: ps.color }}>
-                                        {pStatus}
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                        {isClosed && <ShieldCheck size={10} style={{ color: statusColor }} />}
+                                        {isLocked && <LockKeyhole size={10} style={{ color: statusColor }} />}
+                                        {isFuture && <Clock size={10} style={{ color: statusColor }} />}
+                                        {isOpen && <PlayCircle size={10} style={{ color: statusColor }} />}
+                                        <span className="text-[9px] font-black uppercase" style={{ color: statusColor }}>
+                                            {pStatus === 'HARD_LOCKED' ? 'LOCKED' : pStatus === 'SOFT_LOCKED' ? 'SOFT-LOCK' : pStatus}
+                                        </span>
                                     </div>
                                     {/* JE count */}
-                                    <div className="text-[10px] font-bold text-(--app-muted-foreground)">
+                                    <div className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
                                         {jeCount > 0 ? `${jeCount} JEs` : '—'}
                                     </div>
                                     {/* Action icons row */}

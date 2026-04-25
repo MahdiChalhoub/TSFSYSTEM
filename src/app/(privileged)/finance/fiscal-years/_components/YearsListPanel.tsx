@@ -86,7 +86,7 @@ export function YearsListPanel({ fy }: { fy: ReturnType<typeof useFiscalYears> }
                         activeTab={fy.yearTab[selectedYear.id] || 'periods'}
                         onTabChange={tab => {
                             fy.setYearTab(prev => ({ ...prev, [selectedYear.id]: tab }))
-                            if (tab === 'summary') fy.loadSummary(selectedYear.id)
+                            if (tab === 'summary' || tab === 'entries') fy.loadSummary(selectedYear.id)
                             if (tab === 'history') fy.loadHistory(selectedYear.id)
                         }}
                         isPending={fy.isPending}

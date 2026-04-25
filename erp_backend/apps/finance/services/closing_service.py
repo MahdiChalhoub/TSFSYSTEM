@@ -191,7 +191,11 @@ class ClosingService:
             for period in periods_to_close:
                 period.transition_to('CLOSED', user=user)
                 closed_count += 1
-                
+
+            # Transition the fiscal year itself to CLOSED
+            fiscal_year.status = 'CLOSED'
+            fiscal_year.save(update_fields=['status'])
+
             logger.info(
                 f"ClosingService: Soft-closed {closed_count} periods for {fiscal_year.name} by "
                 f"{user.username if user else 'system'}"

@@ -1,12 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { CheckSquare, Square, Loader2, RefreshCw, Sparkles, Plus, X, ChevronDown } from 'lucide-react'
+import { CheckSquare, Square, Loader2, RefreshCw, Sparkles, Plus, X, ChevronDown, Trash2 } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import {
     getCloseChecklist,
     toggleCloseChecklistItem,
     addCloseChecklistItem,
+    deleteCloseChecklistItem,
     type CloseChecklistItem,
     type CloseChecklistReport,
 } from '@/app/actions/finance/fiscal-year'
@@ -33,6 +35,8 @@ export function CloseChecklistPanel({ fiscalYearId }: { fiscalYearId: number }) 
     const [newCat, setNewCat] = useState('OTHER')
     const [newRequired, setNewRequired] = useState(false)
     const [adding, setAdding] = useState(false)
+    const [deleting, setDeleting] = useState<number | null>(null)
+    const [pendingDelete, setPendingDelete] = useState<CloseChecklistItem | null>(null)
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -65,6 +69,23 @@ export function CloseChecklistPanel({ fiscalYearId }: { fiscalYearId: number }) 
             setNewName(''); setNewCat('OTHER'); setNewRequired(false); setShowAdd(false)
             await load()
         } finally { setAdding(false) }
+    }
+
+    const handleDelete = async (item: CloseChecklistItem) => {
+        setPendingDelete(item)
+    }
+
+    const confirmDelete = async () => {
+        if (!pendingDelete) return
+        const item = pendingDelete
+        setPendingDelete(null)
+        setDeleting(item.state_id)
+        try {
+            const res = await deleteCloseChecklistItem(fiscalYearId, item.state_id)
+            if (!res.success) { toast.error(res.error || 'Delete failed'); return }
+            toast.success('Item removed')
+            await load()
+        } finally { setDeleting(null) }
     }
 
     if (loading && !report) {
@@ -154,17 +175,27 @@ export function CloseChecklistPanel({ fiscalYearId }: { fiscalYearId: number }) 
                 </div>
             )}
 
-            {/* ── Items List ── */}
+            {/* ── Items Table ── */}
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                {/* Column headers */}
+                <div className="flex items-center gap-3 px-5 py-1.5" style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
+                    <div className="w-5 flex-shrink-0" />
+                    <div className="w-[90px] flex-shrink-0 text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Category</div>
+                    <div className="flex-1 text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Task</div>
+                    <div className="w-[100px] flex-shrink-0 text-right text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Completed</div>
+                    <div className="w-6 flex-shrink-0" />
+                </div>
+
                 {report.items.map((item) => {
                     const catColor = getCatColor(item.category)
                     return (
                         <div key={item.state_id}
-                            className="flex items-center gap-3 px-5 py-2.5 transition-all group"
+                            className="flex items-center gap-3 px-5 py-2 transition-all group hover:bg-[color-mix(in_srgb,var(--app-surface)_40%,transparent)]"
                             style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                             
+                            {/* Checkbox — fixed 20px */}
                             <button onClick={() => toggle(item)} disabled={toggling === item.state_id}
-                                className="flex-shrink-0 transition-transform active:scale-90 disabled:opacity-50">
+                                className="w-5 flex-shrink-0 transition-transform active:scale-90 disabled:opacity-50">
                                 {toggling === item.state_id ? (
                                     <Loader2 size={16} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
                                 ) : item.is_complete ? (
@@ -174,11 +205,15 @@ export function CloseChecklistPanel({ fiscalYearId }: { fiscalYearId: number }) 
                                 )}
                             </button>
 
-                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded flex-shrink-0"
-                                style={{ background: `color-mix(in srgb, ${catColor} 12%, transparent)`, color: catColor, border: `1px solid color-mix(in srgb, ${catColor} 20%, transparent)` }}>
-                                {item.category}
-                            </span>
+                            {/* Category badge — fixed 90px */}
+                            <div className="w-[90px] flex-shrink-0">
+                                <span className="inline-block text-[8px] font-black uppercase px-1.5 py-0.5 rounded tracking-wide"
+                                    style={{ background: `color-mix(in srgb, ${catColor} 12%, transparent)`, color: catColor, border: `1px solid color-mix(in srgb, ${catColor} 20%, transparent)` }}>
+                                    {item.category}
+                                </span>
+                            </div>
 
+                            {/* Task name + required badge — flex */}
                             <div className="min-w-0 flex-1 flex items-center gap-2">
                                 <span className="text-[12px] font-bold truncate"
                                     style={{
@@ -196,21 +231,50 @@ export function CloseChecklistPanel({ fiscalYearId }: { fiscalYearId: number }) 
                                 )}
                             </div>
 
-                            {item.is_complete && item.completed_by && (
-                                <div className="text-[9px] font-bold flex items-center gap-1 flex-shrink-0" style={{ color: 'var(--app-muted-foreground)' }}>
-                                    {item.auto_checked && <Sparkles size={9} style={{ color: 'var(--app-primary)' }} />}
-                                    <span>{item.auto_checked ? 'Auto' : item.completed_by}</span>
-                                    {item.completed_at && (
-                                        <span className="opacity-50 font-mono text-[8px]">
-                                            {new Date(item.completed_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
+                            {/* Completed info — fixed 100px */}
+                            <div className="w-[100px] flex-shrink-0 text-right">
+                                {item.is_complete && item.completed_by ? (
+                                    <div className="text-[9px] font-bold flex items-center justify-end gap-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {item.auto_checked && <Sparkles size={9} style={{ color: 'var(--app-primary)' }} />}
+                                        <span>{item.auto_checked ? 'Auto' : item.completed_by}</span>
+                                        {item.completed_at && (
+                                            <span className="opacity-50 font-mono text-[8px]">
+                                                {new Date(item.completed_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            </span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <span className="text-[9px] font-medium" style={{ color: 'var(--app-muted-foreground)', opacity: 0.3 }}>—</span>
+                                )}
+                            </div>
+
+                            {/* Delete — fixed 24px */}
+                            <div className="w-6 flex-shrink-0 flex justify-center">
+                                {!item.auto_check_signal ? (
+                                    <button onClick={() => handleDelete(item)} disabled={deleting === item.state_id}
+                                        className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-all p-1 rounded disabled:opacity-30"
+                                        title="Delete item">
+                                        {deleting === item.state_id
+                                            ? <Loader2 size={12} className="animate-spin" style={{ color: 'var(--app-error)' }} />
+                                            : <Trash2 size={12} style={{ color: 'var(--app-error, #ef4444)' }} />}
+                                    </button>
+                                ) : null}
+                            </div>
                         </div>
                     )
                 })}
             </div>
+
+            {/* Delete Confirmation */}
+            <ConfirmDialog
+                open={pendingDelete !== null}
+                onOpenChange={o => { if (!o) setPendingDelete(null) }}
+                onConfirm={confirmDelete}
+                title="Delete Checklist Item?"
+                description={`Remove "${pendingDelete?.name}" from the close checklist. This action cannot be undone.`}
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     )
 }

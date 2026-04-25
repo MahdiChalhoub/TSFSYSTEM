@@ -367,6 +367,24 @@ export async function addCloseChecklistItem(
     }
 }
 
+export async function deleteCloseChecklistItem(
+    fiscalYearId: number,
+    stateId: number,
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        await erpFetch(`fiscal-years/${fiscalYearId}/close-checklist/delete-item/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state_id: stateId }),
+        })
+        revalidatePath('/finance/fiscal-years')
+        return { success: true }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message }
+    }
+}
+
 export type YoyDelta = {
     current: string
     prior: string
