@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ShieldCheck, ShieldAlert, RefreshCw, Loader2, ChevronDown, Info } from 'lucide-react'
+import { ShieldCheck, ShieldAlert, RefreshCw, Loader2, ChevronDown, Info, HelpCircle } from 'lucide-react'
 import { getIntegrityCanary, type CanaryReport } from '@/app/actions/finance/fiscal-year'
 
 type Signal = {
@@ -91,8 +91,7 @@ function buildSignals(d: CanaryReport['details'][number]): Signal[] {
 export function CanaryCard({ fullHeight = false }: { fullHeight?: boolean }) {
     const [report, setReport] = useState<CanaryReport | null>(null)
     const [loading, setLoading] = useState(true)
-    const [expanded, setExpanded] = useState(fullHeight)
-    const [userToggled, setUserToggled] = useState(fullHeight)
+    const [expanded, setExpanded] = useState(fullHeight), [userToggled, setUserToggled] = useState(fullHeight), [showHelp, setShowHelp] = useState(false)
 
     const run = async () => {
         setLoading(true)
@@ -151,6 +150,10 @@ export function CanaryCard({ fullHeight = false }: { fullHeight?: boolean }) {
                             className="p-1 rounded hover:opacity-70 disabled:opacity-30" title="Re-run canary">
                             <RefreshCw size={12} style={{ color: 'var(--app-muted-foreground)' }} className={loading ? 'animate-spin' : ''} />
                         </button>
+                        <button onClick={() => setShowHelp(h => !h)}
+                            className="p-1 rounded hover:opacity-70" title="What is this?">
+                            <HelpCircle size={12} style={{ color: showHelp ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }} />
+                        </button>
                     </div>
                 </div>
             ) : (
@@ -200,7 +203,7 @@ export function CanaryCard({ fullHeight = false }: { fullHeight?: boolean }) {
             )}
 
             {/* Explanation banner — shown in tab mode */}
-            {fullHeight && !loading && (
+            {fullHeight && showHelp && !loading && (
                 <div className="rounded-xl p-3 mt-2 mb-1" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)' }}>
                     <div className="flex items-start gap-2">
                         <Info size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-info, #3b82f6)' }} />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, Lock, ShieldCheck, Trash2, Loader2, ArrowRightLeft, FastForward } from 'lucide-react'
+import { Lock, ShieldCheck, Trash2, Loader2, ArrowRightLeft, FastForward } from 'lucide-react'
 import { getStatusStyle } from '../_lib/constants'
 import { PeriodsGrid } from './PeriodsGrid'
 import { SummaryTab } from './SummaryTab'
@@ -55,25 +55,9 @@ export function YearPanel({
     ).length
 
     return (
-        <div style={{ borderBottom: '1px solid var(--app-border)' }}>
-            {/* Collapse header */}
-            <button onClick={onToggle}
-                className="w-full flex items-center gap-3 px-4 py-3 transition-all hover:bg-app-surface/50 text-left"
-                style={{ background: isExpanded ? 'var(--app-surface)' : 'transparent' }}>
-                {isExpanded ? <ChevronDown size={14} style={{ color: 'var(--app-muted-foreground)' }} /> : <ChevronRight size={14} style={{ color: 'var(--app-muted-foreground)' }} />}
-                <div className="flex-1 min-w-0">
-                    <div className="text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>{year.name}</div>
-                    <div className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                        {new Date(year.startDate).toLocaleDateString()} — {new Date(year.endDate).toLocaleDateString()}
-                    </div>
-                </div>
-                <span className="text-tp-xxs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: ss.bg, color: ss.color }}>{ss.label}</span>
-                <span className="text-tp-xs font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{periods.length} periods · {openCount} open</span>
-            </button>
-
-            {/* Expanded content */}
+        <div className="flex flex-col h-full">
             {isExpanded && (
-                <div style={{ background: 'var(--app-bg)' }}>
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar" style={{ background: 'var(--app-bg)' }}>
                     {/* Tab bar + year actions */}
                     <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid var(--app-border)' }}>
                         {TABS.map(t => (

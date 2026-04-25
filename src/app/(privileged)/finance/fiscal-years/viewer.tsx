@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
-import { Calendar, Plus, Zap, RefreshCcw, Target } from 'lucide-react'
+import { Calendar, Plus, Zap, Target } from 'lucide-react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
@@ -11,20 +11,17 @@ import PeriodEditor from './period-editor'
 import { WizardModal } from './_components/WizardModal'
 import { DraftAuditModal } from './_components/DraftAuditModal'
 import { YearEndCloseModal } from './_components/YearEndCloseModal'
-import { KpiStrip } from './_components/KpiStrip'
-import { Toolbar } from './_components/Toolbar'
-import { YearPanel } from './_components/YearPanel'
 import { CanaryCard } from './_components/CanaryCard'
 import { MultiYearCard } from './_components/MultiYearCard'
 import { SnapshotBrowserCard } from './_components/SnapshotBrowserCard'
 import { TaskSettingsModal } from './_components/TaskSettingsModal'
 import { PageTabs, type PageTab } from './_components/PageTabs'
 import { useFiscalYears } from './_hooks/useFiscalYears'
+import { YearsListPanel } from './_components/YearsListPanel'
 
 export default function FiscalYearsViewer({ initialYears }: { initialYears: Record<string, any>[] }) {
     const fy = useFiscalYears(initialYears)
     const [showTaskSettings, setShowTaskSettings] = useState(false)
-    const [refreshing, setRefreshing] = useState(false)
 
     // ── Top-level tab routing ──
     const searchParams = useSearchParams()
@@ -67,11 +64,6 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             const node = document.querySelector(`[data-period-id="${currentContext.period.id}"]`)
             if (node) (node as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' })
         }, 150)
-    }
-
-    const doRefresh = async () => {
-        setRefreshing(true)
-        try { await fy.refreshData() } finally { setRefreshing(false) }
     }
 
     // ── Keyboard shortcuts ──
@@ -134,74 +126,49 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     }
 
     return (
-        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300 overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
+        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300" style={{ minHeight: 'calc(100dvh - 6rem)' }}>
             {/* ── Header ── */}
             {!fy.focusMode && (
-                <div className="flex items-start justify-between gap-4 mb-4 flex-wrap flex-shrink-0">
-                    <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center justify-between gap-3 mb-3 flex-shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                             <Calendar size={20} className="text-white" />
                         </div>
-                        <div>
-                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Fiscal Years</h1>
-                            <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">Accounting Periods & Closing Cycles</p>
+                        <div className="min-w-0">
+                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight leading-tight">Fiscal Years</h1>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Accounting Periods & Closing Cycles</p>
+                                {currentContext && (
+                                    <button onClick={focusCurrentPeriod}
+                                        title={`Jump to ${currentContext.period.name} in ${currentContext.year.name}`}
+                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full transition-all hover:brightness-110"
+                                        style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
+                                        <Target size={9} />
+                                        {currentContext.period.name} · {currentContext.daysToEnd <= 0 ? 'ends today' : `${currentContext.daysToEnd}d left`}
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        {currentContext && (
-                            <button onClick={focusCurrentPeriod}
-                                title={`Jump to ${currentContext.period.name} in ${currentContext.year.name}`}
-                                className="flex items-center gap-1.5 text-tp-xs font-bold px-2.5 py-1.5 rounded-xl transition-all hover:brightness-110"
-                                style={{
-                                    background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
-                                    border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 25%, transparent)',
-                                    color: 'var(--app-success, #22c55e)',
-                                }}>
-                                <Target size={12} />
-                                <span className="uppercase tracking-wide">Current:</span>
-                                <span className="normal-case">{currentContext.year.name} · {currentContext.period.name}</span>
-                                <span className="opacity-70 normal-case">
-                                    · {currentContext.daysToEnd <= 0 ? 'ends today' : `${currentContext.daysToEnd} day${currentContext.daysToEnd === 1 ? '' : 's'} left`}
-                                </span>
-                            </button>
-                        )}
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button onClick={doRefresh} disabled={refreshing || fy.isPending}
-                            title="Refresh fiscal years data" aria-label="Refresh"
-                            className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl transition-all hover:bg-app-surface disabled:opacity-50"
-                            style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
-                            <RefreshCcw size={13} className={refreshing ? 'animate-spin' : ''} />
-                        </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                         <button onClick={() => setShowTaskSettings(true)}
                             title="Reminders, routing & auto-task rules for Finance"
-                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"
-                            style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
+                            className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                             <Zap size={13} /> Task Settings
                         </button>
                         <button onClick={fy.openWizard} disabled={fy.isPending}
-                            className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl transition-all"
-                            style={{ background: 'var(--app-primary)', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                            <Plus size={13} /> Create Fiscal Year
+                            className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            <Plus size={14} /> <span className="hidden sm:inline">Create Fiscal Year</span>
                         </button>
                     </div>
                 </div>
             )}
-            {/* ── KPI Strip ── */}
-            {!fy.focusMode && <KpiStrip kpis={fy.kpis} statusFilter={fy.statusFilter} setStatusFilter={fy.setStatusFilter} />}
 
-            <PageTabs activeTab={pageTab} onTabChange={setPageTab} focusMode={fy.focusMode} setFocusMode={fy.setFocusMode} />
+            <PageTabs activeTab={pageTab} onTabChange={setPageTab} focusMode={fy.focusMode} setFocusMode={fy.setFocusMode} searchQuery={fy.searchQuery} setSearchQuery={fy.setSearchQuery} />
 
             <div className="flex-1 min-h-0 flex flex-col">
-                {pageTab === 'years' && (
-                    <>
-                        <Toolbar
-                            focusMode={fy.focusMode} setFocusMode={fy.setFocusMode}
-                            searchQuery={fy.searchQuery} setSearchQuery={fy.setSearchQuery}
-                            statusFilter={fy.statusFilter} setStatusFilter={fy.setStatusFilter}
-                            stats={fy.stats} openWizard={fy.openWizard}
-                        />
-                        <YearsListPanel fy={fy} />
-                    </>
-                )}
+                {pageTab === 'years' && <YearsListPanel fy={fy} />}
                 {pageTab === 'multiyear' && <MultiYearCard fullHeight />}
                 {pageTab === 'snapshots' && <SnapshotBrowserCard fullHeight />}
                 {pageTab === 'integrity' && <CanaryCard fullHeight />}
@@ -238,62 +205,5 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                 confirmText="Reopen Period"
                 variant="warning" />
         </div>
-    )
-}
-/** Years List Sub-Panel */
-function YearsListPanel({ fy }: { fy: ReturnType<typeof useFiscalYears> }) {
-    return (
-        <>
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar rounded-2xl" style={{ border: '1px solid var(--app-border)' }}>
-                {fy.filteredYears.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <Calendar size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-                        <p className="text-tp-lg font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                            {fy.years.length === 0 ? 'No fiscal years configured' : fy.searchQuery || fy.statusFilter ? 'No matching fiscal years' : 'No fiscal years'}
-                        </p>
-                        {fy.years.length === 0 && (
-                            <>
-                                <p className="text-tp-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>Create a year to start recording transactions</p>
-                                <button onClick={fy.openWizard} className="mt-4 flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl" style={{ background: 'var(--app-primary)', color: 'white' }}>
-                                    <Plus size={13} /> Create First Year
-                                </button>
-                            </>
-                        )}
-                    </div>
-                ) : fy.filteredYears.map(year => (
-                    <YearPanel
-                        key={year.id}
-                        year={year}
-                        isExpanded={fy.expandedYear === year.id}
-                        onToggle={() => fy.setExpandedYear(fy.expandedYear === year.id ? null : year.id)}
-                        activeTab={fy.yearTab[year.id] || 'periods'}
-                        onTabChange={tab => {
-                            fy.setYearTab(prev => ({ ...prev, [year.id]: tab }))
-                            if (tab === 'summary') fy.loadSummary(year.id)
-                            if (tab === 'history') fy.loadHistory(year.id)
-                        }}
-                        isPending={fy.isPending}
-                        closingYearId={fy.closingYearId}
-                        summary={fy.summaryCache[year.id]}
-                        history={fy.historyCache[year.id]}
-                        handlePeriodStatus={fy.handlePeriodStatus}
-                        handlePeriodAction={fy.handlePeriodAction}
-                        onSoftClose={() => fy.setPendingAction({ type: 'close', yearId: year.id, title: 'Soft Close?', description: 'Closes all periods. No P&L closing.', variant: 'warning' })}
-                        onYearEndClose={() => fy.startYearEndClose(year.id)}
-                        onDelete={() => fy.setPendingAction({ type: 'delete', yearId: year.id, title: 'Delete Fiscal Year?', description: 'Permanently remove this year and all periods.', variant: 'danger' })}
-                        onCloseBacklog={() => fy.handleCloseBacklog(year.id)}
-                    />
-                ))}
-            </div>
-
-            {/* ── Stats Footer ── */}
-            <div className="flex-shrink-0 flex items-center justify-between gap-4 px-4 py-2.5"
-                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', marginTop: '-1px', borderBottomLeftRadius: '1rem', borderBottomRightRadius: '1rem' }}>
-                <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-foreground)' }}>
-                    {fy.filteredYears.length === fy.years.length ? `${fy.years.length} fiscal years` : `${fy.filteredYears.length} of ${fy.years.length} fiscal years`}
-                </span>
-                <span className="text-tp-xs font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{fy.stats.totalPeriods} periods · {fy.stats.openPeriods} open</span>
-            </div>
-        </>
     )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ShieldCheck, ShieldAlert, Link2, Link2Off, RefreshCw, Loader2, ChevronDown, Copy, ChevronUp } from 'lucide-react'
+import { ShieldCheck, ShieldAlert, Link2, Link2Off, RefreshCw, Loader2, ChevronDown, Copy, ChevronUp, HelpCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { getSnapshotChain, type SnapshotChainReport } from '@/app/actions/finance/fiscal-year'
 
@@ -22,6 +22,7 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
     const [expandedId, setExpandedId] = useState<number | null>(null)
     const [cardExpanded, setCardExpanded] = useState(fullHeight)
     const [userToggled, setUserToggled] = useState(fullHeight)
+    const [showHelp, setShowHelp] = useState(false)
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -69,6 +70,10 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
                         className="p-1 rounded hover:opacity-70" title="Re-verify chain">
                         <RefreshCw size={12} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--app-muted-foreground)' }} />
                     </button>
+                    <button onClick={() => setShowHelp(h => !h)}
+                        className="p-1 rounded hover:opacity-70" title="What is this?">
+                        <HelpCircle size={12} style={{ color: showHelp ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }} />
+                    </button>
                 </div>
             ) : (
             <button onClick={() => { setCardExpanded(v => !v); setUserToggled(true) }}
@@ -107,7 +112,7 @@ export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boole
 
             {(cardExpanded || fullHeight) && (<>
                 {/* Explanation banner — shown in tab mode */}
-                {fullHeight && (
+                {fullHeight && showHelp && (
                     <div className="px-4 py-3 flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
                         <p className="text-tp-sm font-medium" style={{ color: 'var(--app-foreground)' }}>
                             Every time you close a period or year, the system takes a <strong>cryptographic snapshot</strong> of your financial data. These snapshots are chained together — if anyone modifies data after the close, the chain breaks and you'll know.

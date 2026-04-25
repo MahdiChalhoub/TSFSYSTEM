@@ -1,4 +1,4 @@
-import { Calendar, BarChart3, ShieldCheck, Link2, Maximize2, Minimize2 } from 'lucide-react'
+import { Calendar, BarChart3, ShieldCheck, Link2, Maximize2, Minimize2, Search } from 'lucide-react'
 
 export type PageTab = 'years' | 'multiyear' | 'snapshots' | 'integrity'
 
@@ -14,9 +14,11 @@ interface PageTabsProps {
     onTabChange: (tab: PageTab) => void
     focusMode: boolean
     setFocusMode: (fn: (prev: boolean) => boolean) => void
+    searchQuery: string
+    setSearchQuery: (q: string) => void
 }
 
-export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode }: PageTabsProps) {
+export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode, searchQuery, setSearchQuery }: PageTabsProps) {
     return (
         <div className="flex items-center gap-1 flex-shrink-0 mb-3 px-1 py-1 rounded-xl"
             style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
@@ -27,7 +29,7 @@ export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode }: Pa
                     <button
                         key={t.id}
                         onClick={() => onTabChange(t.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-sm font-bold transition-all flex-1 justify-center"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-sm font-bold transition-all justify-center"
                         style={{
                             background: isActive ? 'var(--app-primary)' : 'transparent',
                             color: isActive ? 'white' : 'var(--app-muted-foreground)',
@@ -39,7 +41,19 @@ export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode }: Pa
                     </button>
                 )
             })}
-            <div className="w-px h-5 mx-1 flex-shrink-0" style={{ background: 'var(--app-border)' }} />
+            <div className="flex-1 relative mx-1">
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--app-muted-foreground)' }} />
+                <input
+                    id="fy-search-input"
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search… (Ctrl+K)"
+                    className="w-full pl-7 pr-2 py-1.5 text-tp-sm rounded-lg outline-none transition-all"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                />
+            </div>
+            <div className="w-px h-5 flex-shrink-0" style={{ background: 'var(--app-border)' }} />
             <button
                 onClick={() => setFocusMode(p => !p)}
                 title={focusMode ? 'Exit focus mode — Ctrl+Q' : 'Focus mode — Ctrl+Q'}
