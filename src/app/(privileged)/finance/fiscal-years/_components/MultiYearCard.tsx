@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Loader2, RefreshCw, BarChart3, ChevronDown, ChevronUp } from 'lucide-react'
 import { getMultiYearComparison, type MultiYearReport } from '@/app/actions/finance/fiscal-year'
+import { useScope } from '@/hooks/useScope'
 
 function fmtMoney(s: string): string {
     const n = Number(s)
@@ -19,6 +20,7 @@ function cellColor(v: string, leftmost: string): string | undefined {
 }
 
 export function MultiYearCard({ fullHeight = false }: { fullHeight?: boolean }) {
+    const { scope } = useScope()
     const [yearsToShow, setYearsToShow] = useState(3)
     const [report, setReport] = useState<MultiYearReport | null>(null)
     const [loading, setLoading] = useState(true)
@@ -31,7 +33,8 @@ export function MultiYearCard({ fullHeight = false }: { fullHeight?: boolean }) 
         finally { setLoading(false) }
     }, [yearsToShow])
 
-    useEffect(() => { void load() }, [load])
+    // Refetch when years-to-show changes OR the scope toggle flips.
+    useEffect(() => { void load() }, [load, scope])
 
     if (loading && !report) {
         return <div className="p-4 text-center"><Loader2 size={16} className="animate-spin mx-auto" style={{ color: 'var(--app-muted-foreground)' }} /></div>

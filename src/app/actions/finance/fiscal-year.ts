@@ -405,7 +405,8 @@ export type YoyReport = {
 
 export async function getYoyComparison(yearId: number): Promise<YoyReport | null> {
     try {
-        return await erpFetch(`fiscal-years/${yearId}/yoy-comparison/`) as YoyReport
+        const scope = await _readScopeFromCookie()
+        return await erpFetch(`fiscal-years/${yearId}/yoy-comparison/?scope=${scope}`) as YoyReport
     } catch (error) {
         console.error('Failed to fetch YoY comparison:', error)
         return null
@@ -424,7 +425,8 @@ export type MultiYearReport = {
 
 export async function getMultiYearComparison(years: number = 3): Promise<MultiYearReport | null> {
     try {
-        return await erpFetch(`fiscal-years/multi-year-comparison/?years=${years}`) as MultiYearReport
+        const scope = await _readScopeFromCookie()
+        return await erpFetch(`fiscal-years/multi-year-comparison/?years=${years}&scope=${scope}`) as MultiYearReport
     } catch (error) {
         console.error('Failed to fetch multi-year comparison:', error)
         return null

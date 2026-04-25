@@ -861,6 +861,21 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
         organization_id = get_current_tenant_id()
 
+        # Resolve scope (header + query param), respecting authorized scope
+        from erp.middleware import get_authorized_scope
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'
+        ).lower()
+        scope = (
+            request.headers.get('X-Scope')
+            or request.query_params.get('scope')
+            or 'OFFICIAL'
+        ).upper()
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
+
         try:
             n = max(2, min(10, int(request.query_params.get('years') or 3)))
         except (TypeError, ValueError):
@@ -893,15 +908,14 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             prev = nxt
         # years list is [newest … oldest]; we'll emit columns in that order
 
-        # Per-year aggregation (same formula as yoy_comparison)
+        # Per-year aggregation (same formula as yoy_comparison) — scope-filtered
         def _agg(fy):
-            rows = (
+            qs = (
                 JournalEntryLine.objects
                 .filter(
                     organization_id=organization_id,
                     journal_entry__status='POSTED',
                     journal_entry__is_superseded=False,
-                    journal_entry__scope='OFFICIAL',
                 )
                 .filter(
                     Q(journal_entry__fiscal_year=fy) |
@@ -909,6 +923,11 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                       journal_entry__transaction_date__date__gte=fy.start_date,
                       journal_entry__transaction_date__date__lte=fy.end_date)
                 )
+            )
+            if scope == 'OFFICIAL':
+                qs = qs.filter(journal_entry__scope='OFFICIAL')
+            rows = (
+                qs
                 .values('account_id', 'account__code', 'account__name', 'account__type')
                 .annotate(d=Sum('debit'), c=Sum('credit'))
             )
@@ -1007,7 +1026,11 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
         Compares THIS fiscal year's totals to the immediately prior
         fiscal year (by end_date). Reads directly from POSTED, non-
-        superseded JE lines so numbers match the closing JE.
+        superseded JE lines.
+
+        Scope contract (matches `summary` and the COA endpoint):
+          OFFICIAL → only OFFICIAL-tagged journals
+          INTERNAL → all journals (OFFICIAL + INTERNAL combined)
 
         Response shape:
           {
@@ -1028,6 +1051,21 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         current = self.get_object()
         organization_id = get_current_tenant_id()
 
+        # Resolve scope (header + query param), respecting authorized scope
+        from erp.middleware import get_authorized_scope
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'
+        ).lower()
+        scope = (
+            request.headers.get('X-Scope')
+            or request.query_params.get('scope')
+            or 'OFFICIAL'
+        ).upper()
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
+
         # Find the immediately-prior fiscal year by end_date
         prior = (
             FiscalYear.objects
@@ -1036,19 +1074,18 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         )
 
         def _agg(fy):
-            """Per-account aggregation for a fiscal year (OFFICIAL scope).
+            """Per-account aggregation for a fiscal year, scope-filtered.
             Returns {account_id: {code, name, type, net}} where
             net is signed with normal-balance convention flipped for
             display (debit-positive for ASSET/EXPENSE, credit-positive
             for LIABILITY/EQUITY/INCOME).
             """
-            rows = (
+            qs = (
                 JournalEntryLine.objects
                 .filter(
                     organization_id=organization_id,
                     journal_entry__status='POSTED',
                     journal_entry__is_superseded=False,
-                    journal_entry__scope='OFFICIAL',
                 )
                 .filter(
                     Q(journal_entry__fiscal_year=fy) |
@@ -1056,6 +1093,11 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                       journal_entry__transaction_date__date__gte=fy.start_date,
                       journal_entry__transaction_date__date__lte=fy.end_date)
                 )
+            )
+            if scope == 'OFFICIAL':
+                qs = qs.filter(journal_entry__scope='OFFICIAL')
+            rows = (
+                qs
                 .values('account_id', 'account__code', 'account__name', 'account__type')
                 .annotate(d=Sum('debit'), c=Sum('credit'))
             )

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { TrendingUp, TrendingDown, Minus, Loader2, RefreshCw, Info } from 'lucide-react'
 import { getYoyComparison, type YoyReport, type YoyDelta } from '@/app/actions/finance/fiscal-year'
+import { useScope } from '@/hooks/useScope'
 
 function fmtMoney(s: string): string {
     const n = Number(s)
@@ -36,6 +37,7 @@ function DeltaRow({ label, d, color }: { label: string; d: YoyDelta; color?: str
 }
 
 export function YoyComparisonCard({ fiscalYearId }: { fiscalYearId: number }) {
+    const { scope } = useScope()
     const [report, setReport] = useState<YoyReport | null>(null)
     const [loading, setLoading] = useState(true)
 
@@ -44,7 +46,9 @@ export function YoyComparisonCard({ fiscalYearId }: { fiscalYearId: number }) {
         try { setReport(await getYoyComparison(fiscalYearId)) }
         finally { setLoading(false) }
     }
-    useEffect(() => { void load() }, [fiscalYearId])
+    // Refetch when the year changes OR the OFFICIAL/INTERNAL toggle flips —
+    // the backend returns scope-filtered numbers and we want them live.
+    useEffect(() => { void load() }, [fiscalYearId, scope])
 
     if (loading && !report) {
         return (
