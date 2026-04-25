@@ -140,9 +140,19 @@ export function PrintDialog({ isOpen, onClose, spec }: Props) {
 
     if (!isOpen) return null;
 
-    const doPrint = () => {
+    const doPrint = async () => {
         if (selectedColumns.length === 0) return;
         setPrinting(true);
+
+        // Make sure the tenant brand has resolved before we build the
+        // print HTML — otherwise a fast clicker outruns the fetch and
+        // the letterhead silently drops out. getTenantBrand() is cached,
+        // so post-first-call this is a no-op resolve.
+        let activeBrand: TenantBrand | null = brand;
+        if (prefs.showBranding && !activeBrand) {
+            try { activeBrand = await getTenantBrand(); } catch { activeBrand = null; }
+            if (activeBrand) setBrand(activeBrand);
+        }
 
         const cols = selectedColumns;
         const rows = spec.rows;
@@ -150,19 +160,22 @@ export function PrintDialog({ isOpen, onClose, spec }: Props) {
         // Tenant letterhead — logo + legal name + contact. Rendered above the
         // page title when `showBranding` is on (default). Logos come back as
         // relative URLs from Django; we resolve to absolute so the iframe can
-        // load them without same-origin surprises.
-        const logoSrc = brand?.logo && typeof window !== 'undefined'
-            ? (brand.logo.startsWith('http') ? brand.logo : new URL(brand.logo, window.location.origin).href)
+        // load them without same-origin surprises. If the org profile is
+        // empty (no name, no logo, no address) we suppress the block entirely
+        // rather than printing an empty divider line.
+        const logoSrc = activeBrand?.logo && typeof window !== 'undefined'
+            ? (activeBrand.logo.startsWith('http') ? activeBrand.logo : new URL(activeBrand.logo, window.location.origin).href)
             : '';
-        const addressLine = brand ? formatAddress(brand) : '';
-        const contactLine = brand
-            ? [brand.businessEmail, brand.phone, brand.website].filter(Boolean).join(' · ')
+        const addressLine = activeBrand ? formatAddress(activeBrand) : '';
+        const contactLine = activeBrand
+            ? [activeBrand.businessEmail, activeBrand.phone, activeBrand.website].filter(Boolean).join(' · ')
             : '';
-        const brandHtml = (prefs.showBranding && brand) ? `
+        const hasAnyBrand = !!(activeBrand && (activeBrand.name || logoSrc || addressLine || contactLine));
+        const brandHtml = (prefs.showBranding && hasAnyBrand) ? `
             <div class="letterhead">
                 ${logoSrc ? `<img class="logo" src="${xmlEscape(logoSrc)}" alt="" />` : ''}
                 <div class="lh-body">
-                    <h2 class="lh-name">${xmlEscape(brand.name)}</h2>
+                    ${activeBrand!.name ? `<h2 class="lh-name">${xmlEscape(activeBrand!.name)}</h2>` : ''}
                     ${addressLine ? `<p class="lh-line">${xmlEscape(addressLine)}</p>` : ''}
                     ${contactLine ? `<p class="lh-line muted">${xmlEscape(contactLine)}</p>` : ''}
                 </div>
@@ -181,8 +194,8 @@ export function PrintDialog({ isOpen, onClose, spec }: Props) {
             </div>
         ` : '';
 
-        const footerBrandText = (prefs.showBranding && brand) ? brand.name : spec.title;
-        const footerNote = (prefs.showBranding && brand?.printFooterNote) ? brand.printFooterNote : '';
+        const footerBrandText = (prefs.showBranding && activeBrand?.name) ? activeBrand.name : spec.title;
+        const footerNote = (prefs.showBranding && activeBrand?.printFooterNote) ? activeBrand.printFooterNote : '';
         const footerHtml = prefs.showFooter ? `
             <div class="doc-footer">
                 <span class="left">${xmlEscape(footerBrandText)}${footerNote ? ` · ${xmlEscape(footerNote)}` : ''}</span>
@@ -412,6 +425,14 @@ export function PrintDialog({ isOpen, onClose, spec }: Props) {
                             </div>
 
                             {/* Toggles */}
+                            <ToggleRow
+                                label="Tenant letterhead"
+                                hint={brand
+                                    ? `Logo + ${brand.name}${brand.city ? ' · ' + brand.city : ''}`
+                                    : 'Loading tenant info…'}
+                                checked={prefs.showBranding}
+                                disabled={!brand}
+                                onChange={v => setPrefs(p => ({ ...p, showBranding: v }))} />
                             <ToggleRow label="Title header" hint="Page title + count + date" checked={prefs.showHeader}
                                        onChange={v => setPrefs(p => ({ ...p, showHeader: v }))} />
                             <ToggleRow label="Footer" hint="Page numbers + timestamp" checked={prefs.showFooter}
@@ -422,6 +443,67 @@ export function PrintDialog({ isOpen, onClose, spec }: Props) {
                                        onChange={v => setPrefs(p => ({ ...p, showSummary: v }))} />
                         </div>
                     </div>
+
+                    {/* Tenant brand preview — clear, honest about what will print.
+                     *  If the org profile is empty we say so loudly with a link
+                     *  to the place to fix it — otherwise the user is left
+                     *  wondering why their print came out without a letterhead. */}
+                    {prefs.showBranding && (() => {
+                        const hasName = !!brand?.name;
+                        const hasLogo = !!brand?.logo;
+                        const hasAddress = !!(brand && formatAddress(brand));
+                        const hasAny = hasName || hasLogo || hasAddress;
+                        if (!brand) {
+                            return (
+                                <div className="p-2.5 rounded-xl text-tp-xs font-bold"
+                                     style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}>
+                                    Loading tenant info…
+                                </div>
+                            );
+                        }
+                        if (!hasAny) {
+                            return (
+                                <div className="p-2.5 rounded-xl flex items-start gap-2.5"
+                                     style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
+                                    <Building2 size={14} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                    <div className="flex-1 text-tp-xs">
+                                        <p className="font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                            Your organization profile is empty
+                                        </p>
+                                        <p className="font-bold mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Add a logo, name, and address at <a href="/settings/print-branding" className="underline" style={{ color: 'var(--app-warning, #f59e0b)' }}>Print Letterhead</a> — without them, prints will skip the letterhead.
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div className="p-2.5 rounded-xl flex items-center gap-2.5"
+                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
+                                {hasLogo ? (
+                                    <img src={brand.logo!} alt="" className="w-9 h-9 rounded-lg object-contain"
+                                         style={{ background: 'white', border: '1px solid var(--app-border)' }} />
+                                ) : (
+                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                         style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                        <Building2 size={15} />
+                                    </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
+                                        {hasName ? brand.name : <span className="italic">No name set</span>}
+                                    </p>
+                                    <p className="text-tp-xxs font-bold truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {hasAddress ? formatAddress(brand) : <span className="italic">No address — <a href="/settings/print-branding" className="underline">add one</a></span>}
+                                    </p>
+                                </div>
+                                <span className="text-tp-xxs font-bold uppercase tracking-wide flex-shrink-0"
+                                      style={{ color: 'var(--app-primary)' }}>
+                                    Letterhead
+                                </span>
+                            </div>
+                        );
+                    })()}
 
                     {/* Preview note */}
                     <div className="p-3 rounded-xl flex items-start gap-2 text-tp-xs font-bold"
@@ -458,19 +540,21 @@ export function PrintDialog({ isOpen, onClose, spec }: Props) {
 }
 
 function ToggleRow({
-    label, hint, checked, onChange,
+    label, hint, checked, onChange, disabled = false,
 }: {
     label: string;
     hint: string;
     checked: boolean;
     onChange: (v: boolean) => void;
+    disabled?: boolean;
 }) {
     return (
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className={`flex items-center gap-2 ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
             <button
                 type="button"
-                onClick={() => onChange(!checked)}
-                className="relative w-9 h-5 rounded-full transition-all flex-shrink-0"
+                disabled={disabled}
+                onClick={() => !disabled && onChange(!checked)}
+                className="relative w-9 h-5 rounded-full transition-all flex-shrink-0 disabled:cursor-not-allowed"
                 style={{
                     background: checked ? 'var(--app-primary)' : 'var(--app-border)',
                 }}

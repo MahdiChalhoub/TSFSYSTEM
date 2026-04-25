@@ -31,6 +31,10 @@ export type MasterListBadge = {
 }
 
 export type MasterListCardProps = {
+    /** Optional slot rendered before the icon tile — use for tree-row
+     *  chevrons, multi-select checkboxes, drag handles. Leave unset on
+     *  flat lists. */
+    leadingSlot?: ReactNode
     /** Icon rendered inside the tinted tile on the left. */
     icon?: ReactNode
     /** Icon-tile color. Defaults to `var(--app-primary)`. */
@@ -58,6 +62,7 @@ export type MasterListCardProps = {
 }
 
 export function MasterListCard({
+    leadingSlot,
     icon,
     accentColor = 'var(--app-primary)',
     title,
@@ -98,6 +103,9 @@ export function MasterListCard({
                     aria-hidden
                 />
             )}
+
+            {/* Leading slot — e.g. tree chevron, checkbox, drag handle. */}
+            {leadingSlot}
 
             {/* Icon tile — same rounded-lg 7x7 tinted pattern as the filter chips. */}
             {icon && (

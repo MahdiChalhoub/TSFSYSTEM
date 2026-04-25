@@ -293,16 +293,68 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         # fiscal year (same proven formula as multi_year_comparison).
         # Using balance_official is wrong here: it's a live running total
         # across ALL years, not scoped to this one.
+        #
+        # IMPORTANT: Exclude the closing JE (which zeroes P&L into Retained
+        # Earnings) and system-opening JEs (prior-year carry-forward) so the
+        # summary shows actual business activity for this year.
         from decimal import Decimal
+
+        # IDs to exclude from aggregation
+        _exclude_je_ids = set()
+        if fiscal_year.closing_journal_entry_id:
+            _exclude_je_ids.add(fiscal_year.closing_journal_entry_id)
+        if hasattr(fiscal_year, 'internal_closing_journal_entry_id') and fiscal_year.internal_closing_journal_entry_id:
+            _exclude_je_ids.add(fiscal_year.internal_closing_journal_entry_id)
+
         def _net_by_types(types):
             """Sum net (debit-credit) for given account types within this FY."""
+            qs = (
+                JournalEntryLine.objects
+                .filter(
+                    organization=org,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                )
+                .filter(
+                    Q(journal_entry__fiscal_year=fiscal_year) |
+                    Q(journal_entry__fiscal_year__isnull=True,
+                      journal_entry__transaction_date__date__gte=fiscal_year.start_date,
+                      journal_entry__transaction_date__date__lte=fiscal_year.end_date)
+                )
+                .filter(account__type__in=types)
+                # Exclude closing JE (zeroes P&L) and system-opening JEs
+                # (prior-year carry-forward) so we see THIS year's activity.
+                .exclude(journal_entry__journal_type='CLOSING')
+                .exclude(journal_entry__journal_role='SYSTEM_OPENING')
+            )
+            if _exclude_je_ids:
+                qs = qs.exclude(journal_entry_id__in=_exclude_je_ids)
+            agg = qs.aggregate(d=Sum('debit'), c=Sum('credit'))
+            d = agg['d'] or Decimal(0)
+            c = agg['c'] or Decimal(0)
+            return d - c  # raw net
+
+        # P&L: Income is credit-normal → negate; Expense is debit-normal
+        raw_income = _net_by_types(['INCOME'])
+        revenue = abs(raw_income)  # Income has negative raw net (credits > debits)
+        expense_bal = _net_by_types(['EXPENSE'])
+        net_income = revenue - expense_bal
+
+        # Balance Sheet (also excludes closing/opening mechanics)
+        asset_bal = _net_by_types(['ASSET'])
+        raw_liability = _net_by_types(['LIABILITY'])
+        raw_equity = _net_by_types(['EQUITY'])
+
+        # Post-close P&L — includes closing JE (shows zeros after close).
+        # This gives full transparency: user sees BOTH views.
+        def _net_by_types_raw(types):
+            """Same as _net_by_types but WITHOUT excluding closing/opening JEs."""
             agg = (
                 JournalEntryLine.objects
                 .filter(
                     organization=org,
                     journal_entry__status='POSTED',
                     journal_entry__is_superseded=False,
-                    journal_entry__scope='OFFICIAL',
                 )
                 .filter(
                     Q(journal_entry__fiscal_year=fiscal_year) |
@@ -315,31 +367,38 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             )
             d = agg['d'] or Decimal(0)
             c = agg['c'] or Decimal(0)
-            return d - c  # raw net
+            return d - c
 
-        # P&L: Income is credit-normal → negate; Expense is debit-normal
-        raw_income = _net_by_types(['INCOME'])
-        revenue = abs(raw_income)  # Income has negative raw net (credits > debits)
-        expense_bal = _net_by_types(['EXPENSE'])
-        net_income = revenue - expense_bal
+        raw_income_pc = _net_by_types_raw(['INCOME'])
+        revenue_pc = abs(raw_income_pc)
+        expense_pc = _net_by_types_raw(['EXPENSE'])
+        net_income_pc = revenue_pc - expense_pc
 
-        # Balance Sheet
-        asset_bal = _net_by_types(['ASSET'])
-        raw_liability = _net_by_types(['LIABILITY'])
-        raw_equity = _net_by_types(['EQUITY'])
-
-        # Closing entry
-        closing_je = None
-        if fiscal_year.closing_journal_entry_id:
-            cje = fiscal_year.closing_journal_entry
-            closing_lines = JournalEntryLine.objects.filter(journal_entry=cje).select_related('account').order_by('-debit', 'credit')
-            closing_je = {
-                'id': cje.id,
-                'reference': cje.reference,
-                'date': str(cje.transaction_date),
-                'description': cje.description,
-                'lines': [{'code': l.account.code, 'name': l.account.name, 'debit': float(l.debit), 'credit': float(l.credit)} for l in closing_lines],
+        # Closing entries — one per scope (OFFICIAL + INTERNAL)
+        def _serialize_closing_je(je_obj, scope_label):
+            if not je_obj:
+                return None
+            lines = JournalEntryLine.objects.filter(journal_entry=je_obj).select_related('account').order_by('-debit', 'credit')
+            return {
+                'id': je_obj.id,
+                'reference': je_obj.reference,
+                'date': str(je_obj.transaction_date),
+                'description': je_obj.description,
+                'scope': scope_label,
+                'lines': [{'code': l.account.code, 'name': l.account.name, 'debit': float(l.debit), 'credit': float(l.credit)} for l in lines],
             }
+
+        closing_entries = []
+        if fiscal_year.closing_journal_entry_id:
+            ce = _serialize_closing_je(fiscal_year.closing_journal_entry, 'OFFICIAL')
+            if ce:
+                closing_entries.append(ce)
+        if hasattr(fiscal_year, 'internal_closing_journal_entry_id') and fiscal_year.internal_closing_journal_entry_id:
+            ce = _serialize_closing_je(fiscal_year.internal_closing_journal_entry, 'INTERNAL')
+            if ce:
+                closing_entries.append(ce)
+        # Legacy compat: closing_entry = first entry or None
+        closing_je = closing_entries[0] if closing_entries else None
 
         # Opening balances rendering — feature-flagged migration from the
         # OpeningBalance table to OPENING journal-entry lines. When
@@ -440,11 +499,13 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 'total_debit': float(je_stats['total_debit'] or 0), 'total_credit': float(je_stats['total_credit'] or 0),
             },
             'pnl': {'revenue': float(revenue), 'expenses': float(expense_bal), 'net_income': float(net_income)},
+            'pnl_post_close': {'revenue': float(revenue_pc), 'expenses': float(expense_pc), 'net_income': float(net_income_pc)},
             'balance_sheet': {
                 'assets': float(asset_bal), 'liabilities': float(abs(raw_liability)),
                 'equity': float(abs(raw_equity)),
             },
             'closing_entry': closing_je,
+            'closing_entries': closing_entries,
             'opening_balances': opening_bals,
             'opening_balances_target': next_fy.name if next_fy else None,
             'opening_balances_received': opening_bals_received,
