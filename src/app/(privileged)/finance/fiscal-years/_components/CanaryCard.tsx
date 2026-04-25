@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ShieldCheck, ShieldAlert, RefreshCw, Loader2, ChevronDown } from 'lucide-react'
+import { ShieldCheck, ShieldAlert, RefreshCw, Loader2, ChevronDown, Info } from 'lucide-react'
 import { getIntegrityCanary, type CanaryReport } from '@/app/actions/finance/fiscal-year'
 
 type Signal = {
@@ -88,11 +88,11 @@ function buildSignals(d: CanaryReport['details'][number]): Signal[] {
     ]
 }
 
-export function CanaryCard() {
+export function CanaryCard({ fullHeight = false }: { fullHeight?: boolean }) {
     const [report, setReport] = useState<CanaryReport | null>(null)
     const [loading, setLoading] = useState(true)
-    const [expanded, setExpanded] = useState(false)
-    const [userToggled, setUserToggled] = useState(false)
+    const [expanded, setExpanded] = useState(fullHeight)
+    const [userToggled, setUserToggled] = useState(fullHeight)
 
     const run = async () => {
         setLoading(true)
@@ -117,11 +117,43 @@ export function CanaryCard() {
     }, [loading, detail, allClean, userToggled])
 
     return (
-        <div className="rounded-2xl p-3 mb-2" style={{
+        <div className={`rounded-2xl p-3 ${fullHeight ? 'flex flex-col flex-1 min-h-0' : 'mb-2'}`} style={{
             background: 'var(--app-surface)',
             border: '1px solid var(--app-border)',
         }}>
             {/* Header row */}
+            {fullHeight ? (
+                <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                        {loading ? (
+                            <Loader2 size={16} className="animate-spin" style={{ color: 'var(--app-muted-foreground)' }} />
+                        ) : allClean ? (
+                            <ShieldCheck size={16} style={{ color: 'var(--app-success, #22c55e)' }} />
+                        ) : (
+                            <ShieldAlert size={16} style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                        )}
+                        <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            Close-chain integrity
+                        </span>
+                        {!loading && detail && (
+                            <span className="text-tp-xs font-medium truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                                {allClean ? `All ${signals.length} signals clean` : `${dirtyCount} of ${signals.length} signal(s) need attention`}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        {report?.ran_at && (
+                            <span className="text-tp-xxs font-mono" style={{ color: 'var(--app-muted-foreground)' }}>
+                                {new Date(report.ran_at).toLocaleTimeString()}
+                            </span>
+                        )}
+                        <button onClick={() => void run()} disabled={loading}
+                            className="p-1 rounded hover:opacity-70 disabled:opacity-30" title="Re-run canary">
+                            <RefreshCw size={12} style={{ color: 'var(--app-muted-foreground)' }} className={loading ? 'animate-spin' : ''} />
+                        </button>
+                    </div>
+                </div>
+            ) : (
             <button
                 onClick={() => { setExpanded(e => !e); setUserToggled(true) }}
                 aria-expanded={expanded}
@@ -165,9 +197,32 @@ export function CanaryCard() {
                     }} />
                 </div>
             </button>
+            )}
+
+            {/* Explanation banner — shown in tab mode */}
+            {fullHeight && !loading && (
+                <div className="rounded-xl p-3 mt-2 mb-1" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)' }}>
+                    <div className="flex items-start gap-2">
+                        <Info size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-info, #3b82f6)' }} />
+                        <div>
+                            <p className="text-tp-sm font-medium" style={{ color: 'var(--app-foreground)' }}>
+                                The integrity check automatically scans your accounting data for <strong>balance mismatches, orphaned entries, and structural issues</strong>. Run it before closing a period or year to make sure your books are clean.
+                            </p>
+                            <div className="flex flex-wrap gap-3 mt-2">
+                                <span className="inline-flex items-center gap-1 text-tp-xs font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>
+                                    <ShieldCheck size={11} /> Green — this check passed
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-tp-xs font-bold" style={{ color: 'var(--app-warning, #f59e0b)' }}>
+                                    <ShieldAlert size={11} /> Orange — needs attention before closing
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Signal pills — shown when expanded (auto-expanded when dirty) */}
-            {expanded && !loading && signals.length > 0 && (
+            {(expanded || fullHeight) && !loading && signals.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                     {signals.map(s => (
                         <span

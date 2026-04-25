@@ -86,4 +86,7 @@ export interface UseFiscalYearsReturn {
 
     // Refresh
     refreshData: () => Promise<void>
+
+    // Bulk: close all OPEN periods whose end_date is in the past, in order.
+    handleCloseBacklog: (yearId: number) => void
 }

@@ -16,12 +16,12 @@ const KIND_STYLE: Record<string, { color: string; bg: string }> = {
     period: { color: 'var(--app-info, #3b82f6)', bg: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)' },
 }
 
-export function SnapshotBrowserCard() {
+export function SnapshotBrowserCard({ fullHeight = false }: { fullHeight?: boolean }) {
     const [report, setReport] = useState<SnapshotChainReport | null>(null)
     const [loading, setLoading] = useState(true)
     const [expandedId, setExpandedId] = useState<number | null>(null)
-    const [cardExpanded, setCardExpanded] = useState(false)
-    const [userToggled, setUserToggled] = useState(false)
+    const [cardExpanded, setCardExpanded] = useState(fullHeight)
+    const [userToggled, setUserToggled] = useState(fullHeight)
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -47,8 +47,30 @@ export function SnapshotBrowserCard() {
     if (!report) return null
 
     return (
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-            {/* Header — click to toggle card expand/collapse */}
+        <div className={`rounded-xl overflow-hidden flex flex-col ${fullHeight ? 'flex-1 min-h-0' : ''}`} style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+            {/* Header */}
+            {fullHeight ? (
+                <div className="px-3 py-2 flex items-center justify-between gap-2 flex-shrink-0"
+                    style={{
+                        borderBottom: '1px solid var(--app-border)',
+                        background: report.clean
+                            ? 'color-mix(in srgb, var(--app-success, #22c55e) 5%, transparent)'
+                            : 'color-mix(in srgb, var(--app-error, #ef4444) 6%, transparent)',
+                    }}>
+                    <div className="flex items-center gap-2 min-w-0">
+                        {report.clean
+                            ? <ShieldCheck size={14} style={{ color: 'var(--app-success, #22c55e)' }} />
+                            : <ShieldAlert size={14} style={{ color: 'var(--app-error, #ef4444)' }} />}
+                        <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            {report.rows_checked} snapshots · {report.breaks} break{report.breaks === 1 ? '' : 's'}
+                        </span>
+                    </div>
+                    <button onClick={() => void load()} disabled={loading}
+                        className="p-1 rounded hover:opacity-70" title="Re-verify chain">
+                        <RefreshCw size={12} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--app-muted-foreground)' }} />
+                    </button>
+                </div>
+            ) : (
             <button onClick={() => { setCardExpanded(v => !v); setUserToggled(true) }}
                 aria-expanded={cardExpanded}
                 className="w-full px-3 py-2 flex items-center justify-between gap-2 text-left"
@@ -81,8 +103,33 @@ export function SnapshotBrowserCard() {
                         : <ChevronDown size={14} style={{ color: 'var(--app-muted-foreground)' }} />}
                 </div>
             </button>
+            )}
 
-            {cardExpanded && (report.chain.length === 0 ? (
+            {(cardExpanded || fullHeight) && (<>
+                {/* Explanation banner — shown in tab mode */}
+                {fullHeight && (
+                    <div className="px-4 py-3 flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                        <p className="text-tp-sm font-medium" style={{ color: 'var(--app-foreground)' }}>
+                            Every time you close a period or year, the system takes a <strong>cryptographic snapshot</strong> of your financial data. These snapshots are chained together — if anyone modifies data after the close, the chain breaks and you'll know.
+                        </p>
+                        <div className="flex flex-wrap gap-3 mt-2">
+                            <span className="inline-flex items-center gap-1 text-tp-xs font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>
+                                <ShieldCheck size={11} /> Intact — data unchanged since close
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-tp-xs font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
+                                <ShieldAlert size={11} /> Tampered — data was modified after close
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-tp-xs font-bold" style={{ color: 'var(--app-warning, #f59e0b)' }}>
+                                <Link2Off size={11} /> Chain break — snapshot deleted or corrupted
+                            </span>
+                        </div>
+                        <p className="text-tp-xs font-medium mt-1.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                            Check before audits or if you suspect unauthorized changes. For daily work, green = you're good.
+                        </p>
+                    </div>
+                )}
+
+                {report.chain.length === 0 ? (
                 <div className="px-3 py-6 text-center text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
                     No snapshots yet. First year- or period-close will seed the chain.
                 </div>
@@ -217,7 +264,8 @@ export function SnapshotBrowserCard() {
                         )
                     })}
                 </div>
-            ))}
+            )}
+            </>)}
         </div>
     )
 }

@@ -18,12 +18,12 @@ function cellColor(v: string, leftmost: string): string | undefined {
     return undefined
 }
 
-export function MultiYearCard() {
+export function MultiYearCard({ fullHeight = false }: { fullHeight?: boolean }) {
     const [yearsToShow, setYearsToShow] = useState(3)
     const [report, setReport] = useState<MultiYearReport | null>(null)
     const [loading, setLoading] = useState(true)
     const [showAllAccounts, setShowAllAccounts] = useState(false)
-    const [cardExpanded, setCardExpanded] = useState(false)
+    const [cardExpanded, setCardExpanded] = useState(fullHeight)
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -46,8 +46,36 @@ export function MultiYearCard() {
     const nYears = report.years.length
 
     return (
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-            {/* Header — click to expand (default collapsed, this is ambient context) */}
+        <div className={`rounded-xl overflow-hidden flex flex-col ${fullHeight ? 'flex-1 min-h-0' : ''}`} style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+            {/* Header — in fullHeight tab mode: static bar, otherwise collapsible toggle */}
+            {fullHeight ? (
+                <div className="px-3 py-2 flex items-center justify-between gap-2 flex-shrink-0"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-info, #3b82f6) 5%, transparent)' }}>
+                    <div className="flex items-center gap-2 min-w-0">
+                        <BarChart3 size={14} style={{ color: 'var(--app-info, #3b82f6)' }} />
+                        <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            {nYears}-year comparative view
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        {[2, 3, 5].map(n => (
+                            <button key={n} onClick={() => setYearsToShow(n)}
+                                className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-md transition-all cursor-pointer"
+                                style={{
+                                    background: yearsToShow === n ? 'var(--app-info, #3b82f6)' : 'transparent',
+                                    color: yearsToShow === n ? 'white' : 'var(--app-muted-foreground)',
+                                    border: yearsToShow === n ? 'none' : '1px solid var(--app-border)',
+                                }}>
+                                {n}Y
+                            </button>
+                        ))}
+                        <button onClick={() => void load()} disabled={loading}
+                            className="p-1 rounded hover:opacity-70" title="Reload">
+                            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--app-muted-foreground)' }} />
+                        </button>
+                    </div>
+                </div>
+            ) : (
             <button onClick={() => setCardExpanded(v => !v)}
                 aria-expanded={cardExpanded}
                 className="w-full px-3 py-2 flex items-center justify-between gap-2 text-left"
@@ -87,8 +115,9 @@ export function MultiYearCard() {
                         : <ChevronDown size={14} style={{ color: 'var(--app-muted-foreground)' }} />}
                 </div>
             </button>
+            )}
 
-            {cardExpanded && (<>
+            {(cardExpanded || fullHeight) && (<>
             {/* Year headers */}
             <div className="grid gap-2 px-3 py-1 text-tp-xxs font-bold uppercase tracking-wide"
                 style={{

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, Lock, ShieldCheck, Trash2, Loader2, ArrowRightLeft } from 'lucide-react'
+import { ChevronDown, ChevronRight, Lock, ShieldCheck, Trash2, Loader2, ArrowRightLeft, FastForward } from 'lucide-react'
 import { getStatusStyle } from '../_lib/constants'
 import { PeriodsGrid } from './PeriodsGrid'
 import { SummaryTab } from './SummaryTab'
@@ -33,11 +33,12 @@ interface YearPanelProps {
     onSoftClose: () => void
     onYearEndClose: () => void
     onDelete: () => void
+    onCloseBacklog: () => void
 }
 
 export function YearPanel({
     year, isExpanded, onToggle, activeTab, onTabChange, isPending, closingYearId,
-    summary, history, handlePeriodStatus, handlePeriodAction, onSoftClose, onYearEndClose, onDelete,
+    summary, history, handlePeriodStatus, handlePeriodAction, onSoftClose, onYearEndClose, onDelete, onCloseBacklog,
 }: YearPanelProps) {
     const yearStatus = year.isHardLocked ? 'FINALIZED' : (year.status || 'OPEN')
     const ss = getStatusStyle(yearStatus)
@@ -46,6 +47,12 @@ export function YearPanel({
     const isPartial = new Date() < new Date(year.endDate || year.end_date)
     const isClosed = yearStatus === 'CLOSED' || yearStatus === 'FINALIZED'
     const [ppaOpen, setPpaOpen] = useState(false)
+
+    // Backlog = OPEN periods whose end_date is in the past (ready to be closed).
+    const todayISO = new Date().toISOString().slice(0, 10)
+    const backlogCount = periods.filter((p: any) =>
+        (p.status || 'OPEN') === 'OPEN' && p.end_date && p.end_date < todayISO
+    ).length
 
     return (
         <div style={{ borderBottom: '1px solid var(--app-border)' }}>
@@ -77,6 +84,14 @@ export function YearPanel({
                             </button>
                         ))}
                         <div className="flex-1" />
+                        {yearStatus === 'OPEN' && backlogCount > 0 && !year.isHardLocked && (
+                            <button onClick={onCloseBacklog} disabled={isPending}
+                                title={`Sequentially close ${backlogCount} open period${backlogCount === 1 ? '' : 's'} whose end date has passed`}
+                                className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg border transition-all"
+                                style={{ color: 'var(--app-info, #3b82f6)', borderColor: 'color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)', background: 'color-mix(in srgb, var(--app-info, #3b82f6) 6%, transparent)' }}>
+                                <FastForward size={11} /> Close Backlog ({backlogCount})
+                            </button>
+                        )}
                         {yearStatus === 'OPEN' && (
                             <button onClick={onSoftClose} disabled={isPending}
                                 className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg border transition-all"

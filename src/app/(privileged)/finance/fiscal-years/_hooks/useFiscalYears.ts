@@ -119,6 +119,45 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
         })
     }
 
+    /**
+     * Close-Backlog: sequentially close all OPEN periods in a year whose
+     * end_date is strictly before today, walking earliest → latest so the
+     * server's sequential-close guard is respected.
+     *
+     * Stops on the first error (leaves remaining periods OPEN for retry).
+     */
+    const handleCloseBacklog = (yearId: number) => {
+        const year = years.find(y => y.id === yearId)
+        if (!year) return
+        const todayISO = new Date().toISOString().slice(0, 10)
+        const backlog = [...(year.periods || [])]
+            .filter((p: any) =>
+                (p.status || 'OPEN') === 'OPEN' &&
+                p.end_date &&
+                p.end_date < todayISO
+            )
+            .sort((a: any, b: any) => (a.start_date || '').localeCompare(b.start_date || ''))
+        if (backlog.length === 0) { toast.info('No due periods to close'); return }
+
+        startTransition(async () => {
+            let closedCount = 0
+            for (const p of backlog) {
+                const res = await closePeriodAction(p.id)
+                if (res.success) {
+                    closedCount++
+                } else {
+                    toast.error(`Stopped after ${closedCount}: ${p.name} — ${res.error || 'failed'}`)
+                    notifyPeriodChange()
+                    refreshData()
+                    return
+                }
+            }
+            toast.success(`Closed ${closedCount} backlog period${closedCount === 1 ? '' : 's'}`)
+            notifyPeriodChange()
+            refreshData()
+        })
+    }
+
     const handlePeriodAction = (periodId: number, action: 'close' | 'softLock' | 'hardLock' | 'reopen', periodName: string) => {
         startTransition(async () => {
             const fn = action === 'close' ? closePeriodAction
@@ -284,7 +323,7 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
         years, filteredYears, expandedYear, setExpandedYear, focusMode, setFocusMode,
         searchQuery, setSearchQuery, statusFilter, setStatusFilter, isPending,
         stats, kpis, showWizard, wizardData, setWizardData, openWizard, closeWizard, handleCreateYear,
-        handlePeriodStatus, handlePeriodAction, editingPeriod, setEditingPeriod,
+        handlePeriodStatus, handlePeriodAction, handleCloseBacklog, editingPeriod, setEditingPeriod,
         pendingAction, setPendingAction, confirmAction,
         yearTab, setYearTab, summaryCache, historyCache, loadSummary, loadHistory,
         closeStep, closePreview, closeResult, closeConfirmText, setCloseConfirmText,

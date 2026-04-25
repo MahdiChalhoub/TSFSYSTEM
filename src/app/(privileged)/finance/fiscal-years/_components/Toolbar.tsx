@@ -46,6 +46,8 @@ export function Toolbar({ focusMode, setFocusMode, searchQuery, setSearchQuery, 
                 </button>
             )}
             <button onClick={() => setFocusMode(p => !p)}
+                title={focusMode ? 'Exit focus mode — Ctrl+Q' : 'Focus mode — Ctrl+Q'}
+                aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}
                 className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl border transition-all flex-shrink-0 text-tp-sm font-bold"
                 style={{ color: focusMode ? 'var(--app-primary)' : 'var(--app-muted-foreground)', borderColor: focusMode ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)' : 'var(--app-border)', background: focusMode ? 'color-mix(in srgb, var(--app-primary) 6%, transparent)' : 'transparent' }}>
                 {focusMode ? <><Minimize2 size={13} /> Exit</> : <Maximize2 size={13} />}
