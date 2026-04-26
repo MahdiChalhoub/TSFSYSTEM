@@ -119,6 +119,7 @@ class OrgCurrencySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'currency', 'is_enabled', 'is_default', 'display_order',
             'exchange_rate_source', 'is_reporting_currency', 'is_transaction_currency',
+            'enabled_in_country_ids',
             'currency_code', 'currency_name', 'currency_symbol', 'currency_minor_unit',
         ]
         read_only_fields = ['id']
@@ -131,6 +132,7 @@ class OrgCurrencyWriteSerializer(serializers.ModelSerializer):
         fields = [
             'currency', 'is_enabled', 'is_default', 'display_order',
             'exchange_rate_source', 'is_reporting_currency', 'is_transaction_currency',
+            'enabled_in_country_ids',
         ]
 
 

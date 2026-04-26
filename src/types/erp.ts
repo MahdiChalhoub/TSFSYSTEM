@@ -1283,9 +1283,14 @@ export interface OrgCurrency {
     currency: number
     currency_code?: string
     currency_name?: string
+    currency_symbol?: string
     is_enabled?: boolean
     is_default?: boolean
     is_transaction_currency?: boolean
     is_reporting_currency?: boolean
+    /** Per-country activation list. Empty = available in every enabled country.
+     *  Stores Country (global ref) FK ids. Base currency is always implicitly
+     *  enabled everywhere regardless of this list. */
+    enabled_in_country_ids?: number[]
     [key: string]: any
 }

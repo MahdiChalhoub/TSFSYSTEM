@@ -79,16 +79,25 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
             /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
 
         if (!isBareRoot) {
-            // Extract subdomain — includes 'saas' as a real tenant
             const parts = hostname.split('.');
             if (parts.length > 2 || (parts.length === 2 && hostname.endsWith(`.${rootDomain}`))) {
                 tenantSlug = parts[0];
-                tenantId = tenantSlug;
+                // NOTE: tenantId stays null here — never use the slug as the
+                // tenant id. The backend's TenantMiddleware parses X-Tenant-Id
+                // as a UUID and 500s on a non-UUID string. When tenantId is
+                // missing, the middleware falls back to resolving from the
+                // auth token (user.organization_id) — that's the safe path.
             }
         }
     }
 
-    if (tenantId) headers.set('X-Tenant-Id', tenantId);
+    // Only forward X-Tenant-Id when it actually looks like a UUID.
+    // A slug-as-id (the previous behaviour) caused every page request to
+    // crash the backend with `'saas' is not a valid UUID`.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (tenantId && UUID_RE.test(tenantId)) {
+        headers.set('X-Tenant-Id', tenantId);
+    }
     if (tenantSlug) headers.set('X-Tenant-Slug', tenantSlug);
 
     // 4. Extract scope from cookies (Official vs Internal)

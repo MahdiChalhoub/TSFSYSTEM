@@ -71,6 +71,7 @@ class AuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
     Filter by ?resource_type=category (or brand, parfum, etc.)
     Sorted by -timestamp.  Returns last 200 entries.
     """
+    queryset = AuditLog.objects.none()  # Required by DRF router — overridden by get_queryset()
     serializer_class = AuditLogSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = None  # No pagination — we limit in queryset

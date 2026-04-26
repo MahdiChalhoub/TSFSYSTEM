@@ -161,7 +161,54 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                             <Plus size={14} /> <span className="hidden sm:inline">Create Fiscal Year</span>
                         </button>
-                        <PageTour tourId="finance-fiscal-years" />
+                        <PageTour
+                            tourId="finance-fiscal-years"
+                            stepActions={{
+                                // Step indices are wired to the tour definition in
+                                // `lib/tours/definitions/finance-fiscal-years.ts` —
+                                // change in lockstep if you reorder steps.
+                                3: () => {
+                                    // Periods tab — make sure a year is open + on Periods
+                                    if (pageTab !== 'years') setPageTab('years')
+                                    if (fy.years[0]) {
+                                        fy.setExpandedYear(fy.years[0].id)
+                                        fy.setYearTab(p => ({ ...p, [fy.years[0].id]: 'periods' }))
+                                    }
+                                },
+                                4: () => {
+                                    // Summary tab
+                                    if (fy.years[0]) {
+                                        fy.setExpandedYear(fy.years[0].id)
+                                        fy.setYearTab(p => ({ ...p, [fy.years[0].id]: 'summary' }))
+                                        fy.loadSummary(fy.years[0].id)
+                                    }
+                                },
+                                5: () => {
+                                    // History tab
+                                    if (fy.years[0]) {
+                                        fy.setYearTab(p => ({ ...p, [fy.years[0].id]: 'history' }))
+                                        fy.loadHistory(fy.years[0].id)
+                                    }
+                                },
+                                6: () => {
+                                    // Close Entries tab
+                                    if (fy.years[0]) {
+                                        fy.setYearTab(p => ({ ...p, [fy.years[0].id]: 'entries' }))
+                                        fy.loadSummary(fy.years[0].id)
+                                    }
+                                },
+                                7: () => {
+                                    // Snapshots tab
+                                    if (fy.years[0]) {
+                                        fy.setYearTab(p => ({ ...p, [fy.years[0].id]: 'snapshots' }))
+                                    }
+                                },
+                                11: () => {
+                                    // Multi-Year tab — top-level page switch
+                                    setPageTab('multiyear')
+                                },
+                            }}
+                        />
                     </div>
                 </div>
             )}

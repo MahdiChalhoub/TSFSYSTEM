@@ -231,6 +231,21 @@ class OrgCurrency(AuditLogMixin, TenantOwnedModel):
         help_text='Allowed in transactional documents (invoices, POs, payments)'
     )
 
+    # Per-country activation matrix.
+    #
+    # Empty list (default) = currency is available in EVERY enabled OrgCountry
+    # for this org. The base currency (is_default=True) ALWAYS behaves as if
+    # this list is empty, regardless of value (you cannot scope-restrict the
+    # base — it's the books' anchor).
+    #
+    # Populated list = restrict this currency to those Country (global ref)
+    # FK ids only. Useful for "EUR is available for our France entity, not
+    # our US entity" scenarios.
+    enabled_in_country_ids = models.JSONField(
+        default=list, blank=True,
+        help_text='List of Country FK ids this currency is enabled in. Empty = all enabled countries.',
+    )
+
     class Meta:
         db_table = 'ref_org_currencies'
         unique_together = ('organization', 'currency')

@@ -325,6 +325,32 @@ class OrgCurrencyViewSet(viewsets.ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
+    @action(detail=True, methods=['post'], url_path='set-countries')
+    def set_countries(self, request, pk=None):
+        """
+        Set the per-country activation list for this currency.
+        Body: { country_ids: [1, 2, 3] } — list of global Country FK ids.
+        Empty list = available in every enabled country (default behavior).
+        Base currency rejects this — base is always available everywhere.
+        """
+        org_currency = self.get_object()
+        if org_currency.is_default:
+            return Response(
+                {'error': 'Base currency is always available in every enabled country and cannot be restricted.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        country_ids = request.data.get('country_ids', [])
+        if not isinstance(country_ids, list):
+            return Response({'error': 'country_ids must be a list'}, status=status.HTTP_400_BAD_REQUEST)
+        # Coerce to ints, drop bad values silently.
+        try:
+            cleaned = sorted({int(x) for x in country_ids if x is not None})
+        except (TypeError, ValueError):
+            return Response({'error': 'country_ids must contain integers'}, status=status.HTTP_400_BAD_REQUEST)
+        org_currency.enabled_in_country_ids = cleaned
+        org_currency.save(update_fields=['enabled_in_country_ids'])
+        return Response(OrgCurrencySerializer(org_currency).data)
+
     @action(detail=False, methods=['post'], url_path='set-default')
     def set_default(self, request):
         """Set a currency as the org's base/default. Unsets all others."""

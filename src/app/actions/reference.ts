@@ -288,6 +288,32 @@ export async function disableOrgCurrency(orgCurrencyId: number): Promise<ActionR
     }
 }
 
+/**
+ * Set the per-country activation list for a currency.
+ *
+ * Empty array = available in every enabled country (default behavior).
+ * Non-empty = restrict to those Country (global ref) FK ids only.
+ *
+ * Backend rejects when the currency is the org's base — base is always
+ * available in every enabled country and cannot be restricted.
+ */
+export async function setOrgCurrencyCountries(
+    orgCurrencyId: number,
+    countryIds: number[],
+): Promise<ActionResult & { data?: { id: number; enabled_in_country_ids: number[] } }> {
+    try {
+        const res = await erpFetch(`reference/org-currencies/${orgCurrencyId}/set-countries/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ country_ids: countryIds }),
+        }) as { id: number; enabled_in_country_ids: number[] }
+        revalidatePath('/settings')
+        return { success: true, data: res }
+    } catch (error: unknown) {
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to update country activation' }
+    }
+}
+
 // =============================================================================
 // SOURCING COUNTRIES (Tenant-scoped — Product Origin Countries)
 // =============================================================================

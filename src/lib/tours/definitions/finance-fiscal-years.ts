@@ -30,7 +30,7 @@ const fiscalYearsTour: TourConfig = {
     title: 'Fiscal Years',
     module: 'finance',
     description: 'Periods, closing cycles, snapshots, and routing rules for the accounting calendar.',
-    version: 1,
+    version: 2,
     steps: [
         // 0 — Welcome
         {
@@ -59,7 +59,7 @@ const fiscalYearsTour: TourConfig = {
             color: 'var(--app-success, #22c55e)',
             placement: 'bottom',
         },
-        // 3 — Periods grid
+        // 3 — Periods grid (auto-opens the Periods tab)
         {
             target: '[data-tour="periods-grid"]',
             title: 'Periods & Their Status',
@@ -67,8 +67,10 @@ const fiscalYearsTour: TourConfig = {
             icon: createElement(Calendar, { size: 16 }),
             color: 'var(--app-warning, #f59e0b)',
             placement: 'top',
+            behavior: 'action',
+            actionDelay: 600,
         },
-        // 4 — Summary tab
+        // 4 — Summary tab (auto-opens)
         {
             target: '[data-tour="summary-tab"]',
             title: 'Year Summary',
@@ -76,8 +78,10 @@ const fiscalYearsTour: TourConfig = {
             icon: createElement(BarChart3, { size: 16 }),
             color: 'var(--app-info, #3b82f6)',
             placement: 'bottom',
+            behavior: 'action',
+            actionDelay: 600,
         },
-        // 5 — History tab
+        // 5 — History tab (auto-opens)
         {
             target: '[data-tour="history-tab"]',
             title: 'Audit Log + Activity',
@@ -85,8 +89,10 @@ const fiscalYearsTour: TourConfig = {
             icon: createElement(History, { size: 16 }),
             color: '#8b5cf6',
             placement: 'bottom',
+            behavior: 'action',
+            actionDelay: 600,
         },
-        // 6 — Close Entries tab
+        // 6 — Close Entries tab (auto-opens)
         {
             target: '[data-tour="entries-tab"]',
             title: 'Closing & Opening Entries',
@@ -94,8 +100,10 @@ const fiscalYearsTour: TourConfig = {
             icon: createElement(BookOpen, { size: 16 }),
             color: 'var(--app-warning, #f59e0b)',
             placement: 'bottom',
+            behavior: 'action',
+            actionDelay: 600,
         },
-        // 7 — Snapshots tab
+        // 7 — Snapshots tab (auto-opens)
         {
             target: '[data-tour="snapshots-tab"]',
             title: 'Snapshot Hash Chain',
@@ -103,6 +111,8 @@ const fiscalYearsTour: TourConfig = {
             icon: createElement(ShieldCheck, { size: 16 }),
             color: 'var(--app-success, #22c55e)',
             placement: 'bottom',
+            behavior: 'action',
+            actionDelay: 600,
         },
         // 8 — Year-End Close action
         {
@@ -131,7 +141,7 @@ const fiscalYearsTour: TourConfig = {
             color: 'var(--app-primary)',
             placement: 'bottom',
         },
-        // 11 — Multi-year comparison
+        // 11 — Multi-year comparison (auto-opens)
         {
             target: '[data-tour="multiyear-tab"]',
             title: 'Multi-Year Comparison',
@@ -139,6 +149,8 @@ const fiscalYearsTour: TourConfig = {
             icon: createElement(GitCompare, { size: 16 }),
             color: 'var(--app-info, #3b82f6)',
             placement: 'bottom',
+            behavior: 'action',
+            actionDelay: 600,
         },
         // 12 — Keyboard shortcuts
         {

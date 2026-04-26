@@ -93,9 +93,11 @@ export function AuditTrailPanel({ config, isOpen, onClose }: Props) {
         setLoading(true)
         try {
             const data = await erpFetch(`${config.endpoint}/?resource_type=${config.resourceType}`)
+            console.log('[AuditTrailPanel] Response:', data)
             setEntries(Array.isArray(data) ? data : data?.results || [])
-        } catch {
-            toast.error('Failed to load audit trail')
+        } catch (err: any) {
+            console.error('[AuditTrailPanel] Fetch error:', err, err?.status, err?.data, err?.message)
+            toast.error(`Failed to load audit trail: ${err?.message || err}`)
         } finally {
             setLoading(false)
         }

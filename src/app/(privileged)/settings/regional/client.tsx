@@ -29,12 +29,14 @@ import {
     Globe, DollarSign, Search, Plus, Star, Check, X, MapPin,
     Phone, Loader2, Coins, AlertTriangle, RefreshCcw,
     Crown, Trash2, TrendingUp, Languages, Save,
+    ChevronRight, ChevronDown,
 } from 'lucide-react';
 import type { RefCountry, RefCurrency, OrgCountry, OrgCurrency } from '@/types/erp';
 import {
     enableOrgCountry, enableOrgCurrency,
     setDefaultOrgCountry, setDefaultOrgCurrency,
     disableOrgCountry, disableOrgCurrency,
+    setOrgCurrencyCountries,
 } from '@/app/actions/reference';
 import { toast } from 'sonner';
 import { getCatalogueLanguages, setCatalogueLanguages, labelFor, isRTL } from '@/lib/catalogue-languages';
@@ -246,6 +248,58 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
         setConfirmAction({ type: 'disable-currency', label: c ? `${c.code} — ${c.name}` : oc.currency_code || 'this currency', onConfirm: () => { setConfirmAction(null); doDisableCurrency(oc); } });
     };
 
+    /**
+     * Toggle a country's activation for a specific (non-base) currency.
+     *
+     * Data semantics:
+     *   `enabled_in_country_ids = []`  → currency available in EVERY enabled country (default).
+     *   `enabled_in_country_ids = [X]` → currency restricted to that list only.
+     *
+     * UX semantics:
+     *   - Empty list shows every country chip as ON.
+     *   - Toggling one OFF when list was empty: list becomes "all OTHER countries".
+     *   - Toggling all chips back ON normalizes the list to empty.
+     */
+    const toggleCurrencyCountry = (oc: OrgCurrency, countryFkId: number) => {
+        if (oc.is_default) return; // base currency cannot be restricted
+        const allEnabledCountryFkIds = orgCountries.map(c => c.country);
+        const current: number[] = (oc.enabled_in_country_ids as number[] | undefined) ?? [];
+        const allOn = current.length === 0;
+        const isCurrentlyEnabled = allOn || current.includes(countryFkId);
+
+        let next: number[];
+        if (isCurrentlyEnabled) {
+            // turning OFF
+            const baseList = allOn ? allEnabledCountryFkIds : current;
+            next = baseList.filter(id => id !== countryFkId);
+        } else {
+            // turning ON
+            next = [...current, countryFkId];
+            // normalize: if the list now equals every enabled country, store empty
+            const setAll = new Set(allEnabledCountryFkIds);
+            const setNext = new Set(next);
+            if (setAll.size === setNext.size && [...setAll].every(id => setNext.has(id))) {
+                next = [];
+            }
+        }
+
+        // Optimistic update
+        setOrgCurrencies(prev => prev.map(x => x.id === oc.id ? { ...x, enabled_in_country_ids: next } : x));
+        startTransition(async () => {
+            const res = await setOrgCurrencyCountries(oc.id, next);
+            if (!res.success) {
+                toast.error(res.error || 'Failed to update country activation');
+                // revert
+                setOrgCurrencies(prev => prev.map(x => x.id === oc.id ? { ...x, enabled_in_country_ids: current } : x));
+                return;
+            }
+            const ccyCode = oc.currency_code || allCurrencies.find(c => c.id === oc.currency)?.code || 'currency';
+            toast.success(next.length === 0
+                ? `${ccyCode} now available in all enabled countries`
+                : `${ccyCode} restricted to ${next.length} ${next.length === 1 ? 'country' : 'countries'}`);
+        });
+    };
+
     /* ─── KPI definitions ────────────────────────────────────────── */
     const KPIS = [
         { label: 'Countries', value: orgCountries.length, icon: Globe, color: 'var(--app-primary)' },
@@ -405,10 +459,11 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                             onEnable={handleEnableCountry as any}
                             onSetDefault={handleSetDefaultCountry}
                             onDisable={handleDisableCountry as any}
-                            // Country → currency linkage: pass the codes of
-                            // already-enabled currencies so country cards can
-                            // highlight which currency will be auto-activated.
                             enabledCurrencyCodes={new Set(orgCurrencies.map(oc => oc.currency_code).filter((c): c is string => Boolean(c)))}
+                            // Tree expansion (Country → enabled currencies):
+                            orgCurrencies={orgCurrencies}
+                            allCurrencies={allCurrencies}
+                            onToggleCurrencyCountry={toggleCurrencyCountry}
                         />
                     )}
                     {tab === 'currencies' && (
@@ -448,6 +503,12 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                         onEnable={handleEnableCurrency as any}
                                         onSetDefault={handleSetDefaultCurrency}
                                         onDisable={handleDisableCurrency as any}
+                                        // Tree expansion (Currency → activation per country):
+                                        orgCountries={orgCountries}
+                                        allCountries={allCountries}
+                                        orgCurrencies={orgCurrencies}
+                                        allCurrencies={allCurrencies}
+                                        onToggleCurrencyCountry={toggleCurrencyCountry}
                                     />
                                 )}
                                 {currencySubTab === 'rules' && (
@@ -495,6 +556,7 @@ function TwoPanePicker({
     enabledIds, defaultId,
     onEnable, onSetDefault, onDisable,
     enabledCurrencyCodes,
+    orgCountries, allCountries, orgCurrencies, allCurrencies, onToggleCurrencyCountry,
 }: {
     kind: 'country' | 'currency';
     allItems: any[]; filteredItems: any[]; orgItems: any[];
@@ -504,6 +566,12 @@ function TwoPanePicker({
     enabledIds: Set<number>; defaultId: number | null;
     onEnable: (item: any) => void; onSetDefault: (id: number) => void; onDisable: (oc: any) => void;
     enabledCurrencyCodes?: Set<string>;
+    /** Cross-axis data — used when an active row expands into the inverse list. */
+    orgCountries?: OrgCountry[];
+    allCountries?: RefCountry[];
+    orgCurrencies?: OrgCurrency[];
+    allCurrencies?: RefCurrency[];
+    onToggleCurrencyCountry?: (oc: OrgCurrency, countryFkId: number) => void;
 }) {
     const accent = kind === 'country' ? '--app-primary' : '--app-warning';
     const PanelIcon = kind === 'country' ? Globe : Coins;
@@ -532,6 +600,11 @@ function TwoPanePicker({
                             isPending={isPending}
                             onSetDefault={onSetDefault}
                             onDisable={onDisable}
+                            orgCountries={orgCountries}
+                            allCountries={allCountries}
+                            orgCurrencies={orgCurrencies}
+                            allCurrencies={allCurrencies}
+                            onToggleCurrencyCountry={onToggleCurrencyCountry}
                         />
                     ))}
                 </div>
@@ -595,45 +668,91 @@ function TwoPanePicker({
     );
 }
 
-/* ─── Active row in left pane ──────────────────────────────────── */
-function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisable }: any) {
+/* ─── Active row in left pane (tree node — expands into inverse axis) ── */
+function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisable, orgCountries, allCountries, orgCurrencies, allCurrencies, onToggleCurrencyCountry }: any) {
+    const [expanded, setExpanded] = useState(false);
     const isDefault = oc.is_default;
     const isCountry = kind === 'country';
     const ref = isCountry
-        ? allItems.find((x: any) => x.id === oc.country)
-        : allItems.find((x: any) => x.id === oc.currency);
+        ? (allItems as any[]).find((x: any) => x.id === oc.country)
+        : (allItems as any[]).find((x: any) => x.id === oc.currency);
     const code = isCountry ? (ref?.iso2 || oc.country_iso2 || '') : (ref?.code || oc.currency_code);
     const name = isCountry ? (ref?.name || oc.country_name) : (ref?.name || oc.currency_name);
 
+    /* ── Children — inverse-axis list ──
+     *   Country row → list currencies (which are active for this country)
+     *   Currency row → list countries (where this currency is active)
+     */
+    const isExpandable = isCountry
+        ? Array.isArray(orgCurrencies) && orgCurrencies.length > 0
+        : !isDefault && Array.isArray(orgCountries) && orgCountries.length > 0;
+
     return (
-        <div className={`group/item flex items-center gap-2.5 p-2.5 rounded-xl transition-all border ${isDefault ? '' : 'border-transparent hover:bg-app-background hover:border-app-border/30'}`}
+        <div className={`group/item rounded-xl transition-all border ${isDefault && !expanded ? '' : 'border-transparent hover:border-app-border/30'} ${expanded ? 'bg-app-background/40' : 'hover:bg-app-background'}`}
             style={isDefault ? { ...soft(accent, 8), border: `1px solid color-mix(in srgb, var(${accent}) 30%, transparent)` } : {}}>
-            {isCountry ? (
-                <span className="text-2xl shrink-0">{flag(code)}</span>
-            ) : (
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ ...soft(accent, 15), color: `var(${accent})` }}>
-                    <span className="text-sm font-black">{ref?.symbol || oc.currency_symbol || code?.charAt(0) || '$'}</span>
+            {/* ── Main row ── */}
+            <div className="flex items-center gap-2 p-2.5">
+                {/* Chevron toggle (or spacer) */}
+                {isExpandable ? (
+                    <button onClick={() => setExpanded(e => !e)}
+                        className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-app-border/50 text-app-muted-foreground hover:text-app-foreground transition-colors shrink-0"
+                        title={expanded ? 'Collapse' : 'Expand'}>
+                        {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                    </button>
+                ) : <div className="w-5 shrink-0" />}
+
+                {isCountry ? (
+                    <span className="text-2xl shrink-0">{flag(code)}</span>
+                ) : (
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ ...soft(accent, 15), color: `var(${accent})` }}>
+                        <span className="font-black" style={{ fontSize: 14 }}>{ref?.symbol || oc.currency_symbol || code?.charAt(0) || '$'}</span>
+                    </div>
+                )}
+                <div className="flex-1 min-w-0">
+                    <div className="font-bold text-app-foreground truncate" style={{ fontSize: 12, lineHeight: 1.3 }}>{name}</div>
+                    <div className="font-mono uppercase text-app-muted-foreground" style={{ fontSize: 9 }}>{code}</div>
                 </div>
-            )}
-            <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-bold text-app-foreground truncate">{name}</div>
-                <div className="text-[9px] font-mono uppercase text-app-muted-foreground">{code}</div>
+                {isDefault ? (
+                    <span className="px-1.5 py-0.5 rounded font-black uppercase tracking-widest text-white shrink-0" style={{ ...grad(accent), fontSize: 8 }}>
+                        <Crown size={8} className="inline mr-0.5 -mt-px" /> {isCountry ? 'Default' : 'Base'}
+                    </span>
+                ) : (
+                    <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                        <button onClick={() => onSetDefault(isCountry ? oc.country : oc.currency)} disabled={isPending}
+                            className="p-1.5 rounded-lg hover:bg-app-border/50 transition-colors" title={`Set as ${isCountry ? 'default' : 'base'}`}>
+                            <Star size={12} style={{ color: `var(${accent})` }} />
+                        </button>
+                        <button onClick={() => onDisable(oc)} disabled={isPending}
+                            className="p-1.5 rounded-lg hover:bg-app-error/10 transition-colors" title="Remove">
+                            <Trash2 size={12} style={{ color: 'var(--app-error)' }} />
+                        </button>
+                    </div>
+                )}
             </div>
-            {isDefault ? (
-                <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest text-white shrink-0" style={grad(accent)}>
-                    <Crown size={8} className="inline mr-0.5 -mt-px" /> {isCountry ? 'Default' : 'Base'}
-                </span>
-            ) : (
-                <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                    <button onClick={() => onSetDefault(isCountry ? oc.country : oc.currency)} disabled={isPending}
-                        className="p-1.5 rounded-lg hover:bg-app-border/50 transition-colors" title={`Set as ${isCountry ? 'default' : 'base'}`}>
-                        <Star size={12} style={{ color: `var(${accent})` }} />
-                    </button>
-                    <button onClick={() => onDisable(oc)} disabled={isPending}
-                        className="p-1.5 rounded-lg hover:bg-app-error/10 transition-colors" title="Remove">
-                        <Trash2 size={12} style={{ color: 'var(--app-error)' }} />
-                    </button>
+
+            {/* ── Expanded children ── */}
+            {expanded && isExpandable && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150 border-t border-app-border/30 px-2.5 py-2 space-y-1">
+                    {isCountry ? (
+                        <CurrenciesForCountry
+                            countryOc={oc}
+                            orgCurrencies={orgCurrencies as OrgCurrency[]}
+                            allCurrencies={allCurrencies as RefCurrency[]}
+                            onToggleCurrencyCountry={onToggleCurrencyCountry}
+                            isPending={isPending}
+                        />
+                    ) : (
+                        <CountriesForCurrency
+                            currencyOc={oc}
+                            orgCountries={orgCountries as OrgCountry[]}
+                            allCountries={allCountries as RefCountry[]}
+                            onToggleCurrencyCountry={onToggleCurrencyCountry}
+                            accent={accent}
+                            currencyCode={code}
+                            isPending={isPending}
+                        />
+                    )}
                 </div>
             )}
         </div>
@@ -828,13 +947,126 @@ function PaneHeader({ icon, title, subtitle, action }: {
 }
 
 function EmptyState({ icon, title, hint }: { icon: React.ReactNode; title: string; hint?: string }) {
-    // Inline font-size on the body text — protects against any global
-    // p / .prose CSS that would otherwise inflate it in production builds.
     return (
         <div className="flex flex-col items-center justify-center py-14 px-4 text-center">
             <div className="mb-3">{icon}</div>
             <p className="font-bold text-app-muted-foreground" style={{ fontSize: 13, lineHeight: 1.4 }}>{title}</p>
             {hint && <p className="text-app-muted-foreground mt-1 max-w-md" style={{ fontSize: 11, lineHeight: 1.5 }}>{hint}</p>}
         </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ *  Tree expansion children — both directions of the matrix
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/** Country row → expand to show every enabled currency, with toggle for non-base ones. */
+function CurrenciesForCountry({ countryOc, orgCurrencies, allCurrencies, onToggleCurrencyCountry, isPending }: {
+    countryOc: OrgCountry;
+    orgCurrencies: OrgCurrency[];
+    allCurrencies: RefCurrency[];
+    onToggleCurrencyCountry?: (oc: OrgCurrency, countryFkId: number) => void;
+    isPending: boolean;
+}) {
+    return (
+        <>
+            {orgCurrencies.map(ccyOc => {
+                const refCcy = allCurrencies.find(c => c.id === ccyOc.currency);
+                const code = refCcy?.code || ccyOc.currency_code || '';
+                const symbol = refCcy?.symbol || ccyOc.currency_symbol || '$';
+                const isBase = ccyOc.is_default;
+                const enabledList: number[] = (ccyOc.enabled_in_country_ids as number[] | undefined) ?? [];
+                const allOn = enabledList.length === 0;
+                const isActiveHere = isBase || allOn || enabledList.includes(countryOc.country);
+                return (
+                    <div key={ccyOc.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
+                        <div className="w-5 shrink-0" />{/* indent */}
+                        <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                            style={isActiveHere ? { ...soft('--app-warning', 15), color: 'var(--app-warning)' } : { ...soft('--app-muted-foreground', 8), color: 'var(--app-muted-foreground)' }}>
+                            <span className="font-black" style={{ fontSize: 11 }}>{symbol}</span>
+                        </div>
+                        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                            <span className="font-mono font-bold uppercase truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{code}</span>
+                            {isBase && (
+                                <span className="font-black uppercase tracking-widest px-1 py-0.5 rounded text-white" style={{ ...grad('--app-warning'), fontSize: 7 }}>
+                                    Base
+                                </span>
+                            )}
+                        </div>
+                        {isBase ? (
+                            <span className="font-bold uppercase tracking-widest px-1.5 py-0.5 rounded shrink-0"
+                                style={{ ...soft('--app-success', 10), color: 'var(--app-success)', fontSize: 8 }}
+                                title="Base currency is always available in every enabled country">
+                                Always
+                            </span>
+                        ) : (
+                            <button onClick={() => onToggleCurrencyCountry?.(ccyOc, countryOc.country)}
+                                disabled={isPending}
+                                className="w-9 h-4 rounded-full relative transition-all shrink-0"
+                                style={{ background: isActiveHere ? 'var(--app-warning)' : 'var(--app-border)' }}
+                                title={`${isActiveHere ? 'Disable' : 'Enable'} ${code} for ${countryOc.country_name || 'this country'}`}>
+                                <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`} />
+                            </button>
+                        )}
+                    </div>
+                );
+            })}
+        </>
+    );
+}
+
+/** Currency row → expand to show every enabled country with per-country toggle. */
+function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggleCurrencyCountry, accent, currencyCode, isPending }: {
+    currencyOc: OrgCurrency;
+    orgCountries: OrgCountry[];
+    allCountries: RefCountry[];
+    onToggleCurrencyCountry?: (oc: OrgCurrency, countryFkId: number) => void;
+    accent: string;
+    currencyCode: string;
+    isPending: boolean;
+}) {
+    const enabledList: number[] = (currencyOc.enabled_in_country_ids as number[] | undefined) ?? [];
+    const allOn = enabledList.length === 0;
+    return (
+        <>
+            {allOn && (
+                <div className="px-2 py-1.5 mb-0.5 rounded-lg flex items-center gap-2"
+                    style={{ ...soft('--app-success', 8), border: '1px solid color-mix(in srgb, var(--app-success) 25%, transparent)' }}>
+                    <Check size={12} style={{ color: 'var(--app-success)' }} />
+                    <span className="font-bold" style={{ fontSize: 11, color: 'var(--app-success)' }}>
+                        Available in every enabled country
+                    </span>
+                    <span className="text-app-muted-foreground" style={{ fontSize: 10 }}>· toggle any below to restrict</span>
+                </div>
+            )}
+            {orgCountries.map(country_oc => {
+                const refCountry = allCountries.find(c => c.id === country_oc.country);
+                const iso = refCountry?.iso2 || country_oc.country_iso2 || '??';
+                const cName = refCountry?.name || country_oc.country_name || iso;
+                const isActiveHere = allOn || enabledList.includes(country_oc.country);
+                return (
+                    <div key={country_oc.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
+                        <div className="w-5 shrink-0" />
+                        <span className="text-lg shrink-0">{flag(iso)}</span>
+                        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                            <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{cName}</span>
+                            <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{iso}</span>
+                            {country_oc.is_default && (
+                                <span className="font-black uppercase tracking-widest px-1 py-0.5 rounded text-white" style={{ ...grad('--app-primary'), fontSize: 7 }}>
+                                    <Crown size={6} className="inline mr-0.5 -mt-px" /> Home
+                                </span>
+                            )}
+                        </div>
+                        <button onClick={() => onToggleCurrencyCountry?.(currencyOc, country_oc.country)}
+                            disabled={isPending}
+                            className="w-9 h-4 rounded-full relative transition-all shrink-0"
+                            style={{ background: isActiveHere ? `var(${accent})` : 'var(--app-border)' }}
+                            title={`${isActiveHere ? 'Disable' : 'Enable'} ${currencyCode} for ${cName}`}>
+                            <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`} />
+                        </button>
+                    </div>
+                );
+            })}
+        </>
     );
 }
