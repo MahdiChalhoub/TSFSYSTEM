@@ -1239,7 +1239,12 @@ export interface RefCountry {
     id: number
     name: string
     code: string
+    iso2: string
+    iso3?: string
     region?: string
+    subregion?: string | null
+    default_currency?: number | null
+    default_currency_code?: string | null
     is_active?: boolean
     [key: string]: any
 }

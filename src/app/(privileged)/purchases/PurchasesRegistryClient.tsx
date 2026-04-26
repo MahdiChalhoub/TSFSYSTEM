@@ -141,10 +141,18 @@ export function PurchasesRegistryClient({
                 icon: <Plus size={14} />,
                 onClick: () => router.push('/purchases/new-order')
             }}
-            secondaryActions={[
-                { label: 'Sourcing', icon: <BarChart3 size={13} />, href: '/purchases/sourcing' },
-                { label: 'Dashboard', icon: <DollarSign size={13} />, href: '/purchases/dashboard' },
-            ]}
+            secondaryActions={
+                <>
+                    <button onClick={() => router.push('/purchases/sourcing')}
+                        className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                        <BarChart3 size={13} /> <span className="hidden md:inline">Sourcing</span>
+                    </button>
+                    <button onClick={() => router.push('/purchases/dashboard')}
+                        className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                        <DollarSign size={13} /> <span className="hidden md:inline">Dashboard</span>
+                    </button>
+                </>
+            }
             search={state.search}
             onSearchChange={state.setSearch}
             searchPlaceholder="Search POs or Suppliers... (Ctrl+K)"
@@ -152,6 +160,10 @@ export function PurchasesRegistryClient({
             activeFilterCount={activeFilterCount}
             showFilters={state.showFilters}
             onToggleFilters={() => state.setShowFilters(!state.showFilters)}
+            filteredCount={filtered.length}
+            totalCount={orders.length}
+            focusMode={state.focusMode}
+            onFocusModeChange={state.setFocusMode}
             renderFilters={() => (
                 <POFiltersPanel 
                     orders={orders} 

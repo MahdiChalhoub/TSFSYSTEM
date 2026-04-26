@@ -16,6 +16,7 @@ import {
     Scale,
     Sigma,
     Landmark,
+    Coins,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -26,6 +27,7 @@ export const financeProduction: MenuItem = {
     stage: 'production',
     children: [
         { title: 'Chart of Accounts', path: '/finance/chart-of-accounts', icon: BookOpen },
+        { title: 'Currencies & FX', path: '/finance/currencies', icon: Coins },
         {
             title: 'Settings',
             icon: Settings,
@@ -46,6 +48,7 @@ export const financeInProgress: MenuItem = {
     children: [
         { title: 'General Ledger', path: '/finance/ledger', icon: BookOpen },
         { title: 'Fiscal Years', path: '/finance/fiscal-years', icon: Calendar },
+        { title: 'Currencies & FX', path: '/finance/currencies', icon: Coins },
         {
             title: 'Accounts',
             icon: Wallet,
@@ -84,6 +87,7 @@ export const financeMain: MenuItem = {
     children: [
         { title: 'Performance Dashboard', path: '/finance/dashboard', icon: BarChart3 },
         { title: 'Financial Setup', path: '/finance/setup', icon: Settings },
+        { title: 'Currencies & FX', path: '/finance/currencies', icon: Coins },
         {
             title: 'Accounts & Ledger',
             icon: BookOpen,

@@ -171,6 +171,11 @@ export async function getTrialBalanceReport(
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         return serialize(result.map((acc: Record<string, any>) => ({
             ...acc,
+            // Backend returns parent_id (snake_case); viewers expect parentId
+            // (matches the COA endpoint convention). Without this remap the
+            // root-only filter `!a.parentId` matched every account, parents
+            // double-counted children, and Σ DR ≠ Σ CR.
+            parentId: acc.parent_id ?? acc.parentId ?? null,
             balance: Number(acc.rollup_balance ?? 0),
             directBalance: Number(acc.temp_balance ?? 0),
             // Opening / movement split (non-zero only when fyStartDate is set)
@@ -199,6 +204,7 @@ export async function getProfitAndLossReport(startDate: Date, endDate: Date, sco
                 .filter((acc: Record<string, any>) => acc.type === 'INCOME' || acc.type === 'EXPENSE')
                 .map((acc: Record<string, any>) => ({
                     ...acc,
+                    parentId: acc.parent_id ?? acc.parentId ?? null,
                     balance: Number(acc.rollup_balance ?? 0),
                     directBalance: Number(acc.temp_balance ?? 0)
                 }))
@@ -218,18 +224,19 @@ export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         const mapped = result.map((acc: Record<string, any>) => ({
             ...acc,
+            parentId: acc.parent_id ?? acc.parentId ?? null,
             balance: Number(acc.rollup_balance ?? 0),
             directBalance: Number(acc.temp_balance ?? 0)
         }))
 
         // Net Profit = Total Income - Total Expense
-        // We use root-level accounts only (!a.parent) because rollup_balance
-        // already aggregates all child account balances into parents.
+        // Root-level accounts only (rollup_balance already aggregates children).
+        // Use parentId, not the legacy `parent` field which the API doesn't return.
         const totalIncome = mapped
-            .filter((a: Record<string, any>) => a.type === 'INCOME' && !a.parent)
+            .filter((a: Record<string, any>) => a.type === 'INCOME' && !a.parentId)
             .reduce((sum: number, a: Record<string, any>) => sum + a.balance, 0)
         const totalExpense = mapped
-            .filter((a: Record<string, any>) => a.type === 'EXPENSE' && !a.parent)
+            .filter((a: Record<string, any>) => a.type === 'EXPENSE' && !a.parentId)
             .reduce((sum: number, a: Record<string, any>) => sum + a.balance, 0)
 
         return serialize({

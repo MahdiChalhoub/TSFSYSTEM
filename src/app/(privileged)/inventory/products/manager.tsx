@@ -49,7 +49,7 @@ import { renderProductCell } from './_components/ProductColumns'
  *  MAIN PAGE
  * ═══════════════════════════════════════════════════════════ */
 
-export default function ProductMasterManager({ initialProducts = [], lookups = EMPTY_LOOKUPS }: { initialProducts?: Product[]; lookups?: Lookups }) {
+export default function ProductMasterManager({ initialProducts = [], lookups = EMPTY_LOOKUPS }: { initialProducts?: Product[]; lookups?: Lookups; initialFilters?: Record<string, string> }) {
   const router = useRouter()
   const { openTab } = useAdmin()
   const [items, setItems] = useState<Product[]>(initialProducts)

@@ -13,7 +13,12 @@
  */
 
 import { Hash, Scale, Milestone, Ruler, Grid2X2, Clock } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import type { ComponentType, SVGProps } from 'react';
+
+// Lucide icons render as forward-ref SVG components. Express their shape
+// directly instead of relying on lucide-react's `LucideIcon` export (which
+// is exported as a namespace in some versions and trips TS2709).
+type LucideIcon = ComponentType<SVGProps<SVGSVGElement> & { size?: number | string }>;
 
 export type UnitTypeId =
     | 'COUNT' | 'WEIGHT' | 'VOLUME' | 'LENGTH' | 'AREA' | 'TIME';

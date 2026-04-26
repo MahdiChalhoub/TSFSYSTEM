@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, CheckCircle2, FileText, Loader2, Download } from 'lucide-react'
-import type { TemplatePreset } from '../_components/TemplateBanner'
+import type { TemplatePreset } from '../../_components/TemplateBanner'
 
 /* ═══════════════════════════════════════════════════════════
  *  PRESET CARD — For displaying available template presets
