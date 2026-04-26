@@ -15,6 +15,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { TourTriggerButton } from '@/components/ui/GuidedTour'
 import { usePageTour } from '@/lib/tours/useTour'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
+import { DataMenu } from '@/components/admin/_shared/DataMenu'
+import { useDataToolsEngine } from '@/components/templates/useDataToolsEngine'
 import type { MasterPageConfig } from '@/components/templates/master-page-config'
 
 // Re-export for callers; kept as aliases to the shared types.
@@ -67,6 +69,13 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
     const [scrolled, setScrolled] = useState(false)  // for shadow
     const [pullY, setPullY] = useState(0)
     const [refreshing, setRefreshing] = useState(false)
+
+    // Data-tools engine — same hook as desktop TreeMasterPage
+    const { menuCallbacks: dtMenuCallbacks, modals: dtModals } = useDataToolsEngine({
+        dataTools: config.dataTools,
+        data: config.data as any[] | undefined,
+        titleFallback: config.title,
+    })
 
     const scrollRef = useRef<HTMLDivElement>(null)
     const lastScrollY = useRef(0)
@@ -183,6 +192,16 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
 
                     {tourActive && <TourTriggerButton onClick={tourHook.start} />}
 
+                    {/* Data tools dropdown — Export/Print */}
+                    {dtMenuCallbacks && (
+                        <DataMenu
+                            onExport={dtMenuCallbacks.onExport}
+                            onExportExcel={dtMenuCallbacks.onExportExcel}
+                            onImport={dtMenuCallbacks.onImport}
+                            onPrint={dtMenuCallbacks.onPrint}
+                            title={dtMenuCallbacks.title}
+                        />
+                    )}
 
                     {config.secondaryActions && config.secondaryActions.length > 0 && (
                         <div className="relative">

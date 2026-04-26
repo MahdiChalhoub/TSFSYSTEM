@@ -27,6 +27,7 @@ export const financeProduction: MenuItem = {
     stage: 'production',
     children: [
         { title: 'Chart of Accounts', path: '/finance/chart-of-accounts', icon: BookOpen },
+        { title: 'Fiscal Years', path: '/finance/fiscal-years', icon: Calendar },
         {
             title: 'Settings',
             icon: Settings,
@@ -46,7 +47,6 @@ export const financeInProgress: MenuItem = {
     stage: 'in-progress',
     children: [
         { title: 'General Ledger', path: '/finance/ledger', icon: BookOpen },
-        { title: 'Fiscal Years', path: '/finance/fiscal-years', icon: Calendar },
         { title: 'Currencies & FX', path: '/settings/regional?tab=fx', icon: Coins },
         {
             title: 'Accounts',

@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useCallback, useTransition, useRef } from 'react'
+import { useState, useMemo, useCallback, useTransition } from 'react'
 import {
     FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
     Eye, Pencil, Trash2, Move, Copy, Package, Tag, CornerDownRight,
@@ -25,6 +25,7 @@ import { MobileCategoryDetailSheet } from './MobileCategoryDetailSheet'
 import type { CategoryNode, PanelTab } from '../components/types'
 import { PageTour } from '@/components/ui/PageTour'
 import { AuditTrailPanel } from '@/components/templates/AuditTrailPanel'
+import { CsvImportDialog } from '../components/CsvImportDialog'
 import '@/lib/tours/definitions/inventory-categories-mobile'
 
 export function MobileCategoriesClient({ initialCategories }: { initialCategories: any[] }) {
@@ -38,6 +39,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
     const [moveNode, setMoveNode] = useState<CategoryNode | null>(null)
     const [scopeId, setScopeId] = useState<number | null>(null)
     const [showAuditTrail, setShowAuditTrail] = useState(false)
+    const [showImport, setShowImport] = useState(false)
 
     const data = initialCategories
 
@@ -225,8 +227,8 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                             { key: 'name', label: 'Name', defaultOn: true },
                             { key: 'code', label: 'Code', mono: true, defaultOn: true, width: '90px' },
                             { key: 'prefix', label: 'Barcode Prefix', mono: true, defaultOn: true, width: '110px' },
-                            { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
-                            { key: 'brands', label: 'Brands', align: 'right', defaultOn: false, width: '70px' },
+                            { key: 'products', label: 'Products', align: 'right' as const, defaultOn: true, width: '80px' },
+                            { key: 'brands', label: 'Brands', align: 'right' as const, defaultOn: false, width: '70px' },
                         ],
                         rowMapper: (c: any) => ({
                             name: c.name,
@@ -236,6 +238,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                             brands: c.brand_count || 0,
                         }),
                     },
+                    onImport: () => setShowImport(true),
                 },
                 kpis: [
                     { label: 'Total', value: stats.total, icon: <Layers size={13} />, color: 'var(--app-primary)' },
@@ -296,6 +299,13 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                         isOpen={showAuditTrail}
                         onClose={() => setShowAuditTrail(false)}
                     />
+                    {showImport && (
+                        <CsvImportDialog
+                            allCategories={data}
+                            onClose={() => setShowImport(false)}
+                            onDone={() => { setShowImport(false); router.refresh() }}
+                        />
+                    )}
                     <DeleteConflictDialog
                         conflict={deleteConflict?.conflict || null}
                         sourceName={deleteConflict?.source?.name || ''}

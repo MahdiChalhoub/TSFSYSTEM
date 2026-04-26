@@ -9,6 +9,7 @@ import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { MobileYearRow } from './MobileYearRow'
 import { MobileYearDetailSheet } from './MobileYearDetailSheet'
+import { MobileYearCreateSheet } from './MobileYearCreateSheet'
 import { hardLockFiscalYear } from '@/app/actions/finance/fiscal-year'
 
 interface YearShape {
@@ -26,6 +27,7 @@ export function MobileFiscalYearsClient({ initialYears }: { initialYears: YearSh
     const [years] = useState<YearShape[]>(initialYears)
     const [sheetYear, setSheetYear] = useState<YearShape | null>(null)
     const [actionYear, setActionYear] = useState<YearShape | null>(null)
+    const [createOpen, setCreateOpen] = useState(false)
 
     // KPI computation
     const stats = useMemo(() => {
@@ -117,8 +119,7 @@ export function MobileFiscalYearsClient({ initialYears }: { initialYears: YearSh
                 primaryAction: {
                     label: 'New Year',
                     icon: <Plus size={16} strokeWidth={2.6} />,
-                    // Wizard isn't mobile-yet — direct user back to desktop for create flow.
-                    onClick: () => toast.info('Open this page on desktop to create a new fiscal year — the wizard is desktop-only.'),
+                    onClick: () => setCreateOpen(true),
                 },
                 kpis: [
                     { label: 'Years', value: stats.total, icon: <Layers size={13} />, color: 'var(--app-primary)' },
@@ -148,6 +149,12 @@ export function MobileFiscalYearsClient({ initialYears }: { initialYears: YearSh
                         subtitle={actionYear ? `${actionYear.startDate} → ${actionYear.endDate}` : undefined}
                         items={actionItems}
                     />
+                    <MobileBottomSheet
+                        open={createOpen}
+                        onClose={() => setCreateOpen(false)}
+                        initialSnap="expanded">
+                        <MobileYearCreateSheet onClose={() => setCreateOpen(false)} />
+                    </MobileBottomSheet>
                 </>
             }
             sheet={
