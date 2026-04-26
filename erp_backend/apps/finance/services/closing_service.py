@@ -394,12 +394,49 @@ class ClosingService:
 
             if is_partial:
                 # ── PARTIAL CLOSE: Split the year ──
-                # Truncate fiscal_year to close_date
-                # Move/delete periods after close_date
+                # Truncate fiscal_year to close_date, delete future periods,
+                # spin up a remainder fiscal year covering close_date+1 → end.
                 remainder_start = close_date + timedelta(days=1)
                 remainder_end = fiscal_year.end_date
 
-                # Delete periods entirely after close_date
+                # ── PRE-FLIGHT: Refuse if JEs exist in periods we're about
+                # to delete. Without this, Django's PROTECT FK throws a raw
+                # IntegrityError mid-transaction and the user just sees the
+                # close go silent. Far more useful: tell them exactly which
+                # months hold the blocking entries so they can decide to
+                # move them, void them, or run a full close instead.
+                blocking_periods = list(
+                    FiscalPeriod.objects
+                    .filter(fiscal_year=fiscal_year, start_date__gt=close_date)
+                    .order_by('start_date')
+                )
+                if blocking_periods:
+                    blocking_ids = [p.id for p in blocking_periods]
+                    je_qs = JournalEntry.objects.filter(
+                        fiscal_period_id__in=blocking_ids,
+                        organization=organization,
+                    )
+                    je_total = je_qs.count()
+                    if je_total > 0:
+                        # Group by period for a useful error message
+                        from django.db.models import Count
+                        per_period = {
+                            row['fiscal_period_id']: row['n']
+                            for row in je_qs.values('fiscal_period_id').annotate(n=Count('id'))
+                        }
+                        offenders = [
+                            f"{p.name} ({per_period.get(p.id, 0)} JE{'s' if per_period.get(p.id, 0) != 1 else ''})"
+                            for p in blocking_periods if per_period.get(p.id, 0) > 0
+                        ]
+                        raise ValidationError(
+                            f"Cannot partial-close {fiscal_year.name} at {close_date}: "
+                            f"{je_total} journal {'entries exist' if je_total != 1 else 'entry exists'} "
+                            f"in periods after the close date — {', '.join(offenders)}. "
+                            f"Move or void those entries before partial-closing, or run a "
+                            f"full year-end close instead."
+                        )
+
+                # Delete periods entirely after close_date (now safe — no JEs reference them)
                 FiscalPeriod.objects.filter(
                     fiscal_year=fiscal_year,
                     start_date__gt=close_date,

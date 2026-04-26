@@ -126,6 +126,17 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 searchFields: ['name', 'code', 'short_name', 'type'],
                 treeParentKey: 'base_unit',
                 selectable: true,
+                onBulkDelete: async (ids, clear) => {
+                    if (!confirm(`Delete ${ids.length} unit(s)? This cannot be undone.`)) return
+                    let ok = 0, fail = 0
+                    for (const id of ids) {
+                        const res = await deleteUnit(id)
+                        if (res?.success) ok++; else fail++
+                    }
+                    if (ok) toast.success(`Deleted ${ok} unit(s)`)
+                    if (fail) toast.error(`${fail} unit(s) failed to delete`)
+                    clear(); router.refresh()
+                },
                 kpiPredicates: {
                     base: (u) => !u.base_unit,
                     derived: (u) => !!u.base_unit,

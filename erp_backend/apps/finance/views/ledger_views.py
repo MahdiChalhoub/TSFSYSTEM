@@ -183,10 +183,79 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         organization = Organization.objects.get(id=organization_id)
         LedgerService.recalculate_balances(organization)
         return Response({"message": "Balances recalculated successfully"})
+
+    @action(detail=False, methods=['post'], url_path='recalculate_balances_soft')
+    def recalculate_balances_soft(self, request):
+        """Sync stored ChartOfAccount.balance / .balance_official to the
+        JE-line truth via a single SQL UPDATE. NO journal-entry replay,
+        NO closed-period guard triggered, no hash chain rebuild.
+
+        Use this when the integrity canary reports drift between stored
+        balances and recomputed totals — a far safer "fix the cache" path
+        than the full `recalculate_balances` re-post which fails atomically
+        on any org with a finalized fiscal year.
+
+        Returns: { drifted_before, drifted_after, total_accounts }
+        """
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        from django.db import connection
+        cur = connection.cursor()
+
+        # Count drifts BEFORE (so we can report what we fixed)
+        cur.execute("""
+            WITH truth AS (
+              SELECT a.id, a.balance, a.balance_official,
+                COALESCE((SELECT SUM(jl.debit) - SUM(jl.credit)
+                          FROM journalentryline jl
+                          JOIN journalentry je ON je.id = jl.journal_entry_id
+                          WHERE jl.account_id=a.id AND je.status='POSTED' AND je.is_superseded=FALSE), 0) AS true_int,
+                COALESCE((SELECT SUM(jl.debit) - SUM(jl.credit)
+                          FROM journalentryline jl
+                          JOIN journalentry je ON je.id = jl.journal_entry_id
+                          WHERE jl.account_id=a.id AND je.status='POSTED' AND je.is_superseded=FALSE
+                            AND je.scope='OFFICIAL'), 0) AS true_off
+              FROM chartofaccount a WHERE a.tenant_id = %s
+            )
+            SELECT COUNT(*) FROM truth
+            WHERE ABS(balance - true_int) > 0.005 OR ABS(balance_official - true_off) > 0.005
+        """, [organization_id])
+        drifted_before = cur.fetchone()[0]
+
+        # Apply the sync (per-org, no JE replay)
+        cur.execute("""
+            UPDATE chartofaccount SET
+                balance = COALESCE((
+                    SELECT SUM(jl.debit) - SUM(jl.credit)
+                    FROM journalentryline jl
+                    JOIN journalentry je ON jl.journal_entry_id = je.id
+                    WHERE jl.account_id = chartofaccount.id
+                      AND je.status='POSTED' AND je.is_superseded=FALSE
+                ), 0),
+                balance_official = COALESCE((
+                    SELECT SUM(jl.debit) - SUM(jl.credit)
+                    FROM journalentryline jl
+                    JOIN journalentry je ON jl.journal_entry_id = je.id
+                    WHERE jl.account_id = chartofaccount.id
+                      AND je.status='POSTED' AND je.is_superseded=FALSE
+                      AND je.scope='OFFICIAL'
+                ), 0)
+            WHERE tenant_id = %s
+        """, [organization_id])
+        total_accounts = cur.rowcount
+
+        return Response({
+            "message": f"Synced {total_accounts} account balances; resolved {drifted_before} drift{'s' if drifted_before != 1 else ''}.",
+            "drifted_before": drifted_before,
+            "drifted_after": 0,
+            "total_accounts": total_accounts,
+        })
 
     @action(detail=False, methods=['post'])
     def clear_all(self, request):

@@ -13,9 +13,6 @@ import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { BrandFormModal } from '@/components/admin/BrandFormModal'
 import { erpFetch } from '@/lib/erp-api'
-import { exportExcel } from '@/components/admin/_shared/excel-export'
-import { GenericCsvImportDialog } from '@/components/admin/_shared/GenericCsvImportDialog'
-import { PrintDialog, type PrintSpec } from '@/components/admin/_shared/PrintDialog'
 
 type Brand = {
     id: number
@@ -45,8 +42,6 @@ export function BrandsClient({ brands, countries, categories }: Props) {
     const [editingBrand, setEditingBrand] = useState<Brand | null>(null)
     const [modalOpen, setModalOpen] = useState(false)
     const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null)
-    const [showImport, setShowImport] = useState(false)
-    const [showPrint, setShowPrint] = useState(false)
 
     // Every brand is a root — give them parent=null so buildTree returns a flat list.
     const data = useMemo(() => brands.map(b => ({ ...b, parent: null })), [brands])
@@ -55,81 +50,6 @@ export function BrandsClient({ brands, countries, categories }: Props) {
     const openEdit = useCallback((b: Brand) => { setEditingBrand(b); setModalOpen(true) }, [])
     const closeModal = useCallback(() => { setModalOpen(false); setEditingBrand(null) }, [])
 
-    // ── Data tools: Export CSV / Export Excel / Import / Print ────────
-    // Column set kept minimal & round-trippable: name + short_name. Rich
-    // relations (countries, categories) live on the brand's edit dialog
-    // because CSV ergonomics are awful for many-to-many fields.
-    const handleExport = useCallback(() => {
-        if (!brands?.length) { toast.info('No brands to export'); return }
-        const escape = (v: any) => {
-            const s = (v ?? '').toString()
-            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-        }
-        const headers = ['name', 'short_name', 'countries', 'categories', 'product_count']
-        const lines = [headers.join(',')]
-        brands.forEach(b => {
-            lines.push([
-                b.name,
-                b.short_name || '',
-                (b.countries || []).map(c => c.code || c.name).join(' | '),
-                (b.categories || []).map(c => c.code || c.name).join(' | '),
-                b.product_count || 0,
-            ].map(escape).join(','))
-        })
-        const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `brands-${new Date().toISOString().slice(0, 10)}.csv`
-        a.click()
-        URL.revokeObjectURL(url)
-        toast.success(`Exported ${brands.length} brands`)
-    }, [brands])
-
-    const handleExportExcel = useCallback(() => {
-        if (!brands?.length) { toast.info('No brands to export'); return }
-        const rows = brands.map(b => [
-            b.name,
-            b.short_name || '',
-            (b.countries || []).map(c => c.code || c.name).join(' | '),
-            (b.categories || []).map(c => c.code || c.name).join(' | '),
-            b.product_count || 0,
-        ])
-        exportExcel({
-            filename: `brands-${new Date().toISOString().slice(0, 10)}.xls`,
-            sheetName: 'Brands',
-            columns: ['Name', 'Short Name', 'Countries', 'Categories', 'Products'],
-            rows,
-        })
-        toast.success(`Exported ${brands.length} brands to Excel`)
-    }, [brands])
-
-    const printSpec: PrintSpec = useMemo(() => {
-        const sorted = [...brands].sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-        return {
-            title: 'Brands',
-            subtitle: 'Manufacturer Taxonomy',
-            prefKey: 'print.brands',
-            columns: [
-                { key: 'name', label: 'Name', defaultOn: true },
-                { key: 'short', label: 'Short Name', mono: true, defaultOn: true, width: '110px' },
-                { key: 'countries', label: 'Countries', defaultOn: true },
-                { key: 'country_count', label: 'Country #', align: 'right', defaultOn: false, width: '90px' },
-                { key: 'categories', label: 'Categories', defaultOn: false },
-                { key: 'cat_count', label: 'Cat #', align: 'right', defaultOn: true, width: '70px' },
-                { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
-            ],
-            rows: sorted.map(b => ({
-                name: b.name,
-                short: b.short_name || '',
-                countries: (b.countries || []).map(c => c.code || c.name).join(', '),
-                country_count: (b.countries || []).length,
-                categories: (b.categories || []).map(c => c.code || c.name).join(', '),
-                cat_count: (b.categories || []).length,
-                products: b.product_count || 0,
-            })),
-        }
-    }, [brands])
 
     const handleConfirmDelete = () => {
         const t = deleteTarget
@@ -156,11 +76,57 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                 searchPlaceholder: 'Search brands by name, short name… (Ctrl+K)',
                 primaryAction: { label: 'New Brand', icon: <Plus size={14} />, onClick: openNew },
                 dataTools: {
-                    onExport: handleExport,
-                    onExportExcel: handleExportExcel,
-                    onImport: () => setShowImport(true),
-                    onPrint: () => setShowPrint(true),
                     title: 'Brand Data',
+                    exportFilename: 'brands',
+                    exportColumns: [
+                        { key: 'name', label: 'Name' },
+                        { key: 'short_name', label: 'Short Name', format: (b: Brand) => b.short_name || '' },
+                        { key: 'countries', label: 'Countries', format: (b: Brand) => (b.countries || []).map(c => c.code || c.name).join(' | ') },
+                        { key: 'categories', label: 'Categories', format: (b: Brand) => (b.categories || []).map(c => c.code || c.name).join(' | ') },
+                        { key: 'product_count', label: 'Products', format: (b: Brand) => b.product_count || 0 },
+                    ],
+                    print: {
+                        title: 'Brands',
+                        subtitle: 'Manufacturer Taxonomy',
+                        prefKey: 'print.brands',
+                        sortBy: 'name',
+                        columns: [
+                            { key: 'name', label: 'Name', defaultOn: true },
+                            { key: 'short', label: 'Short Name', mono: true, defaultOn: true, width: '110px' },
+                            { key: 'countries', label: 'Countries', defaultOn: true },
+                            { key: 'country_count', label: 'Country #', align: 'right', defaultOn: false, width: '90px' },
+                            { key: 'categories', label: 'Categories', defaultOn: false },
+                            { key: 'cat_count', label: 'Cat #', align: 'right', defaultOn: true, width: '70px' },
+                            { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
+                        ],
+                        rowMapper: (b: Brand) => ({
+                            name: b.name,
+                            short: b.short_name || '',
+                            countries: (b.countries || []).map(c => c.code || c.name).join(', '),
+                            country_count: (b.countries || []).length,
+                            categories: (b.categories || []).map(c => c.code || c.name).join(', '),
+                            cat_count: (b.categories || []).length,
+                            products: b.product_count || 0,
+                        }),
+                    },
+                    import: {
+                        entity: 'brand',
+                        endpoint: 'brands/',
+                        columns: [
+                            { name: 'name', required: true, desc: 'Brand name — unique per tenant', example: 'Nestle' },
+                            { name: 'short_name', required: false, desc: 'Short abbreviation', example: 'NES' },
+                        ],
+                        sampleCsv: 'name,short_name\nNestle,NES\nCoca Cola,COKE\nPepsi,PEP',
+                        previewColumns: [
+                            { key: 'name', label: 'Name' },
+                            { key: 'short_name', label: 'Short', mono: true },
+                        ],
+                        buildPayload: (row: Record<string, string>) => ({
+                            name: row.name,
+                            short_name: row.short_name || null,
+                        }),
+                        tip: <><strong>Note:</strong> Countries and categories can't be set from CSV — link them per-brand in the edit dialog after import.</>,
+                    },
                 },
                 secondaryActions: [
                     { label: 'Reorganize', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=brand' },
@@ -176,6 +142,17 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                 data,
                 searchFields: ['name', 'short_name'],
                 selectable: true,
+                onBulkDelete: async (ids, clear) => {
+                    if (!confirm(`Delete ${ids.length} brand(s)? Products referencing them will be unlinked.`)) return
+                    let ok = 0, fail = 0
+                    for (const id of ids) {
+                        try { await erpFetch(`brands/${id}/`, { method: 'DELETE' }); ok++ }
+                        catch { fail++ }
+                    }
+                    if (ok) toast.success(`Deleted ${ok} brand(s)`)
+                    if (fail) toast.error(`${fail} brand(s) failed to delete`)
+                    clear(); router.refresh()
+                },
                 kpiPredicates: {
                     withCategory: (b) => (b.categories?.length || 0) > 0,
                     orphan: (b) => (b.categories?.length || 0) === 0,
@@ -256,37 +233,6 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                         description="This permanently removes the brand. Products referencing it will be unlinked."
                         confirmText="Delete"
                         variant="danger"
-                    />
-                    <GenericCsvImportDialog
-                        isOpen={showImport}
-                        onClose={() => setShowImport(false)}
-                        onDone={() => { setShowImport(false); router.refresh() }}
-                        entity="brand"
-                        endpoint="brands/"
-                        columns={[
-                            { name: 'name', required: true, desc: 'Brand name — unique per tenant', example: 'Nestle' },
-                            { name: 'short_name', required: false, desc: 'Short abbreviation', example: 'NES' },
-                        ]}
-                        sampleCsv={[
-                            'name,short_name',
-                            'Nestle,NES',
-                            'Coca Cola,COKE',
-                            'Pepsi,PEP',
-                        ].join('\n')}
-                        previewColumns={[
-                            { key: 'name', label: 'Name' },
-                            { key: 'short_name', label: 'Short', mono: true },
-                        ]}
-                        buildPayload={(row) => ({
-                            name: row.name,
-                            short_name: row.short_name || null,
-                        })}
-                        tip={<><strong>Note:</strong> Countries and categories can't be set from CSV — link them per-brand in the edit dialog after import.</>}
-                    />
-                    <PrintDialog
-                        isOpen={showPrint}
-                        onClose={() => setShowPrint(false)}
-                        spec={printSpec}
                     />
                 </>
             }

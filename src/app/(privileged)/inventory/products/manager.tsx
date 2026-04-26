@@ -197,6 +197,51 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
       onToggleFilters={() => setShowFilters(!showFilters)}
       activeFilterCount={activeFilterCount}
       onRefresh={fetchData}
+      dataTools={{
+        title: 'Product Data',
+        exportFilename: 'products',
+        exportColumns: [
+          { key: 'name', label: 'Name' },
+          { key: 'sku', label: 'SKU', format: (p: Product) => p.sku || '' },
+          { key: 'barcode', label: 'Barcode', format: (p: Product) => p.barcode || '' },
+          { key: 'type', label: 'Type', format: (p: Product) => p.product_type || '' },
+          { key: 'category', label: 'Category', format: (p: Product) => p.category_name || '' },
+          { key: 'brand', label: 'Brand', format: (p: Product) => p.brand_name || '' },
+          { key: 'unit', label: 'Unit', format: (p: Product) => p.unit_name || '' },
+          { key: 'cost', label: 'Cost Price', format: (p: Product) => p.cost_price ?? '' },
+          { key: 'selling', label: 'Selling Price', format: (p: Product) => p.selling_price ?? '' },
+          { key: 'stock', label: 'On Hand Qty', format: (p: Product) => p.total_stock ?? 0 },
+          { key: 'status', label: 'Status', format: (p: Product) => p.status || 'ACTIVE' },
+        ],
+        print: {
+          title: 'Products',
+          subtitle: 'Product Master Registry',
+          prefKey: 'print.products',
+          columns: [
+            { key: 'name', label: 'Name', defaultOn: true },
+            { key: 'sku', label: 'SKU', mono: true, defaultOn: true, width: '120px' },
+            { key: 'type', label: 'Type', defaultOn: true, width: '80px' },
+            { key: 'category', label: 'Category', defaultOn: true, width: '120px' },
+            { key: 'brand', label: 'Brand', defaultOn: false, width: '100px' },
+            { key: 'cost', label: 'Cost', align: 'right', defaultOn: true, width: '90px' },
+            { key: 'selling', label: 'Selling', align: 'right', defaultOn: true, width: '90px' },
+            { key: 'stock', label: 'Stock', align: 'right', defaultOn: true, width: '70px' },
+            { key: 'status', label: 'Status', defaultOn: true, width: '80px' },
+          ],
+          rowMapper: (p: Product) => ({
+            name: p.name,
+            sku: p.sku || '',
+            type: p.product_type || '',
+            category: p.category_name || '',
+            brand: p.brand_name || '',
+            cost: p.cost_price != null ? fmt(p.cost_price) : '',
+            selling: p.selling_price != null ? fmt(p.selling_price) : '',
+            stock: p.total_stock ?? 0,
+            status: p.status || 'ACTIVE',
+          }),
+        },
+      }}
+      data={items}
       renderFilters={() => (
         <FiltersPanel
           items={items}

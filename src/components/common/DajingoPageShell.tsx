@@ -44,6 +44,9 @@ import {
   Maximize2, Minimize2, RefreshCcw,
 } from 'lucide-react'
 import { KPIStrip, type KPIStat } from '@/components/ui/KPIStrip'
+import { DataMenu } from '@/components/admin/_shared/DataMenu'
+import type { DataToolsConfig } from '@/components/templates/master-page-config'
+import { useDataToolsEngine } from '@/components/templates/useDataToolsEngine'
 
 
 /* ═══════════════════════════════════════════════════════════
@@ -99,6 +102,11 @@ export interface DajingoPageShellProps {
   /* ── Height mode ── */
   className?: string
 
+  /* ── Declarative DataTools (export / import / print) ── */
+  dataTools?: DataToolsConfig
+  /** Source dataset for declarative export/print. */
+  data?: any[]
+
   /* ── Children = DajingoListView + CustomizePanel ── */
   children: React.ReactNode
 }
@@ -119,8 +127,16 @@ export function DajingoPageShell({
   onRefresh,
   renderFilters,
   className,
+  dataTools, data,
   children,
 }: DajingoPageShellProps) {
+
+  /* ── Declarative DataTools engine ── */
+  const { menuCallbacks: dtMenuCallbacks, modals: dtModals } = useDataToolsEngine({
+    dataTools,
+    data,
+    titleFallback: title,
+  })
 
   return (
     <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${className || 'h-[calc(100vh-8rem)]'}`}>
@@ -216,6 +232,15 @@ export function DajingoPageShell({
                     <span className="hidden sm:inline">{primaryAction.label}</span>
                   </button>
                 )}
+                {dtMenuCallbacks && (
+                  <DataMenu
+                    onExport={dtMenuCallbacks.onExport}
+                    onExportExcel={dtMenuCallbacks.onExportExcel}
+                    onImport={dtMenuCallbacks.onImport}
+                    onPrint={dtMenuCallbacks.onPrint}
+                    title={dtMenuCallbacks.title}
+                  />
+                )}
                 {secondaryActions}
                 {onRefresh && (
                   <button
@@ -250,6 +275,9 @@ export function DajingoPageShell({
 
       {/* ── Main Content: DajingoListView + CustomizePanel ── */}
       {children}
+
+      {/* ── DataTools engine modals (Print + Import) ── */}
+      {dtModals}
     </div>
   )
 }

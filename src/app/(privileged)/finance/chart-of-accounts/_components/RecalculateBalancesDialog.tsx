@@ -79,38 +79,38 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
                         icon={BookOpen}
                         color="var(--app-info, #3b82f6)"
                         title="What this does"
-                        body="Wipes every account's cached balance and replays every POSTED journal entry from the very first one to the most recent. The entries themselves (date, amounts, accounts) are unchanged — only the running totals are rebuilt to match the journal history exactly."
+                        body="Re-aggregates every account's cached balance directly from POSTED journal-entry lines. The aggregation is scope-aware (OFFICIAL / INTERNAL kept separate) and runs as a single SQL update — no journal re-posting, no period transitions."
                     />
 
-                    {/* What's protected */}
+                    {/* Safe on closed years */}
                     <Section
                         icon={Lock}
                         color="var(--app-success, #22c55e)"
-                        title="Closed years are protected"
-                        body="Closed fiscal periods reject re-posting. The moment the replay touches an entry inside a CLOSED period, the whole operation aborts and rolls back atomically — no balance is changed. Snapshots are immune either way (they store their own frozen trial balance)."
+                        title="Safe on closed and finalized years"
+                        body="Only the cached balance fields on each account are updated. Journal entries, hash chains, snapshots, and closed-period locks are not touched. You can run this on any org, even ones with finalized fiscal years."
                     >
                         <ul className="mt-1.5 space-y-1 text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
                             <li className="flex items-center gap-1.5">
                                 <Check size={10} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                Snapshots stay intact (frozen at close time)
+                                Journal entries and snapshots unchanged
                             </li>
                             <li className="flex items-center gap-1.5">
                                 <Check size={10} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                Journal entry content (date, amounts) untouched
+                                Hash chain unchanged (no re-post)
                             </li>
                             <li className="flex items-center gap-1.5">
                                 <Check size={10} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                Atomic — if anything fails, nothing changes
+                                Atomic — single SQL update per org
                             </li>
                         </ul>
                     </Section>
 
-                    {/* When NOT to use */}
+                    {/* When to run it */}
                     <Section
                         icon={AlertTriangle}
                         color="var(--app-warning, #f59e0b)"
-                        title="Don't use this on a closed-year org"
-                        body="If you have any CLOSED fiscal periods, this will fail at the first one and revert. It's only useful on an org with no closed years yet — typically right after migration, data import, or manual fixes you want to verify against the journal source of truth."
+                        title="When to run it"
+                        body="If the integrity canary on the Fiscal Years → Integrity tab reports drift between stored and recomputed balances, click here to sync. Also useful after data imports, manual fixes, or if a balance ever looks wrong on the COA tree. Hard-recalc with full hash-chain rebuild is reserved for migrations and not exposed here."
                     />
                 </div>
 

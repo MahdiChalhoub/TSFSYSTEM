@@ -5,15 +5,16 @@ import { useState, useMemo, useRef, useEffect, useCallback, ReactNode } from 're
 import {
     Search, Plus, Layers,
     Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp,
-    X, LayoutPanelLeft, PanelLeftClose, Bookmark, RefreshCw, FolderTree
+    X, LayoutPanelLeft, PanelLeftClose, Bookmark, RefreshCw, FolderTree, Trash2
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { TourTriggerButton } from '@/components/ui/GuidedTour'
 import { usePageTour } from '@/lib/tours/useTour'
 import { buildTree } from '@/lib/utils/tree'
-import type { MasterPageConfig } from '@/components/templates/master-page-config'
+import type { MasterPageConfig, KPI } from '@/components/templates/master-page-config'
 import { DataMenu } from '@/components/admin/_shared/DataMenu'
+import { useDataToolsEngine } from './useDataToolsEngine'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
@@ -45,6 +46,12 @@ export interface TreeMasterConfig extends MasterPageConfig {
      *  are exposed via the render-prop so the consumer's row component can
      *  bind isCheckedFn / onToggleCheck without managing state itself. */
     selectable?: boolean
+    /** Callback when user clicks "Delete" in the bulk-action island.
+     *  Receives the array of selected IDs. Clear selection after success. */
+    onBulkDelete?: (ids: number[], clearSelection: () => void) => void
+    /** Callback when user clicks "Move" in the bulk-action island.
+     *  Receives the array of selected IDs. Only shown for hierarchical data. */
+    onBulkMove?: (ids: number[], clearSelection: () => void) => void
 }
 
 export interface TreeMasterRenderProps {
@@ -160,6 +167,13 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     }, [])
     const clearSelection = useCallback(() => setSelectedIds(new Set()), [])
     const searchRef = useRef<HTMLInputElement>(null)
+
+    /* ── Declarative DataTools engine (opt-in via config.dataTools) ── */
+    const { menuCallbacks: dtMenuCallbacks, modals: dtModals } = useDataToolsEngine({
+        dataTools: config.dataTools,
+        data: config.data as any[] | undefined,
+        titleFallback: config.title,
+    })
 
     /* ── Template-owned filtering + tree (opt-in via config.data) ── */
     const ownsData = Array.isArray(config.data)
@@ -318,13 +332,13 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                  *  actions so Export/Import/Print always sit in
                                  *  the same spot regardless of what else the page
                                  *  adds to the toolbar. */}
-                                {config.dataTools && (
+                                {dtMenuCallbacks && (
                                     <DataMenu
-                                        onExport={config.dataTools.onExport}
-                                        onExportExcel={config.dataTools.onExportExcel}
-                                        onImport={config.dataTools.onImport}
-                                        onPrint={config.dataTools.onPrint}
-                                        title={config.dataTools.title}
+                                        onExport={dtMenuCallbacks.onExport}
+                                        onExportExcel={dtMenuCallbacks.onExportExcel}
+                                        onImport={dtMenuCallbacks.onImport}
+                                        onPrint={dtMenuCallbacks.onPrint}
+                                        title={dtMenuCallbacks.title}
                                     />
                                 )}
                                 {config.secondaryActions?.map((action, i) => (
@@ -462,6 +476,8 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
 
             {/* ═══════════════ MODALS ═══════════════ */}
             {modals}
+            {/* DataTools engine modals (Print + Import) */}
+            {dtModals}
 
             {/* ═══════════════ BODY ═══════════════ */}
             <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
@@ -600,7 +616,50 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
             )}
 
             {/* ═══════════════ BULK ACTION BAR ═══════════════ */}
-            {config.selectable && selectedIds.size > 0 && bulkActions && bulkActions({ count: selectedIds.size, clearSelection })}
+            {config.selectable && selectedIds.size > 0 && (
+                bulkActions
+                    ? bulkActions({ count: selectedIds.size, clearSelection })
+                    : (config.onBulkDelete || config.onBulkMove) && (
+                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2 py-1.5 rounded-2xl animate-in slide-in-from-bottom-4 duration-200"
+                            style={{
+                                background: 'var(--app-surface)',
+                                border: '1px solid var(--app-border)',
+                                boxShadow: '0 12px 36px rgba(0,0,0,0.22)',
+                            }}>
+                            <div className="px-3 py-1.5 rounded-xl text-tp-sm font-bold"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                                    color: 'var(--app-primary)',
+                                }}>
+                                {selectedIds.size} selected
+                            </div>
+                            {config.onBulkMove && (
+                                <button onClick={() => config.onBulkMove!(Array.from(selectedIds), clearSelection)}
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5"
+                                    style={{ background: 'var(--app-background)', color: 'var(--app-foreground)', border: '1px solid var(--app-border)' }}>
+                                    <FolderTree size={13} /> Move
+                                </button>
+                            )}
+                            {config.onBulkDelete && (
+                                <button onClick={() => config.onBulkDelete!(Array.from(selectedIds), clearSelection)}
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)',
+                                        color: 'var(--app-error, #ef4444)',
+                                        border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)',
+                                    }}>
+                                    <Trash2 size={13} /> Delete
+                                </button>
+                            )}
+                            <button onClick={clearSelection}
+                                title="Clear selection (Esc)"
+                                className="w-8 h-8 flex items-center justify-center rounded-xl transition-all hover:bg-app-border/40"
+                                style={{ color: 'var(--app-muted-foreground)' }}>
+                                <X size={14} />
+                            </button>
+                        </div>
+                    )
+            )}
 
             {/* ── Footer ── */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold rounded-b-2xl animate-in slide-in-from-bottom-2 duration-300"

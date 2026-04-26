@@ -338,8 +338,15 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
             try {
                 let closeDate: string | undefined
                 if (isPartial) { const d = new Date(); d.setDate(d.getDate() - 1); closeDate = d.toISOString().split('T')[0] }
-                await hardLockFiscalYear(closingYearId, closeDate)
+                // hardLockFiscalYear catches errors and returns { success, error }
+                // — must inspect the result; awaiting alone is not enough or a
+                // backend failure shows up as "Close complete!" to the user.
+                const res = await hardLockFiscalYear(closingYearId, closeDate)
                 setCloseStep('result'); setCloseConfirmText('')
+                if (!res.success) {
+                    setCloseResult(`Error: ${res.error || 'Unknown error during close.'}`)
+                    return
+                }
                 setCloseResult(isPartial
                     ? 'Partial year-end close complete. P&L closed into Retained Earnings. New fiscal year auto-created for the remaining period.'
                     : 'Year-end close completed successfully. P&L accounts closed into Retained Earnings. Opening balances generated for the next year.')

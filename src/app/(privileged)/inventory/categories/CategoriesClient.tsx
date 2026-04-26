@@ -19,18 +19,12 @@ import '@/lib/tours/definitions/inventory-categories'
 
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 
-/** Minimal HTML escape for print output — we assemble the document by hand
- *  so we never insert untrusted names straight into a new-window DOM. */
-const escapeHtml = (s: string) => (s ?? '').replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c])
 import type { CategoryNode, PanelTab } from './components/types'
 import { CategoryRow } from './components/CategoryRow'
 import { CategoryDetailPanel } from './components/CategoryDetailPanel'
 import { BulkActionBar } from './components/BulkActionBar'
 import { BulkDialog } from './components/BulkDialog'
 import { CsvImportDialog } from './components/CsvImportDialog'
-import { exportExcel } from '@/components/admin/_shared/excel-export'
-import { PrintDialog, type PrintSpec } from '@/components/admin/_shared/PrintDialog'
 
 /* ═══════════════════════════════════════════════════════════
  *  CategoriesClient — thin consumer; TreeMasterPage is the single
@@ -46,7 +40,6 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [bulkDialog, setBulkDialog] = useState<null | 'move' | 'delete'>(null)
     const [bulkBusy, setBulkBusy] = useState(false)
     const [showImport, setShowImport] = useState(false)
-    const [showPrint, setShowPrint] = useState(false)
     const data = initialCategories
     // Selection state is now managed by TreeMasterPage via config.selectable.
     // We keep a ref so bulk dialogs can read the current selection.
@@ -56,105 +49,18 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     // dialog opens with a pre-filled code instantly (no network wait).
     useEffect(() => { prefetchNextCode('CATEGORY') }, [])
 
-    // Export current categories as CSV — format mirrors CsvImportDialog so a
-    // round-trip works. `parent_code` is resolved to the parent's `code` or
-    // falls back to its `name` so humans editing in Excel can still rebuild
-    // the tree without knowing internal ids.
-    const handleExport = useCallback(() => {
-        if (!data?.length) { toast.info('No categories to export'); return }
-        const byId = new Map<number, any>()
-        data.forEach((c: any) => byId.set(c.id, c))
-        const escape = (v: any) => {
-            const s = (v ?? '').toString()
-            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-        }
-        const headers = ['name', 'code', 'short_name', 'barcode_prefix', 'parent_code']
-        const lines = [headers.join(',')]
-        data.forEach((c: any) => {
-            const parent = c.parent ? byId.get(c.parent) : null
-            const parentCode = parent ? (parent.code || parent.name || '') : ''
-            lines.push([c.name, c.code || '', c.short_name || '', c.barcode_prefix || '', parentCode].map(escape).join(','))
-        })
-        const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `categories-${new Date().toISOString().slice(0, 10)}.csv`
-        a.click()
-        URL.revokeObjectURL(url)
-        toast.success(`Exported ${data.length} categories`)
+    // Build a path lookup for category hierarchy — reused by export/print
+    const byId = useMemo(() => {
+        const map = new Map<number, any>()
+        data.forEach((c: any) => map.set(c.id, c))
+        return map
     }, [data])
-
-    // Excel export — writes a SpreadsheetML file (.xls) that opens natively in
-    // Excel. Includes the parent path so the hierarchy is readable without
-    // cross-referencing codes. For quick visual review (no re-import needed).
-    const handleExportExcel = useCallback(() => {
-        if (!data?.length) { toast.info('No categories to export'); return }
-        const byId = new Map<number, any>()
-        data.forEach((c: any) => byId.set(c.id, c))
-        const pathFor = (c: any): string => {
-            const parts: string[] = [c.name]
-            let cur = c.parent ? byId.get(c.parent) : null
-            while (cur) { parts.unshift(cur.name); cur = cur.parent ? byId.get(cur.parent) : null }
-            return parts.join(' › ')
-        }
-        const sorted = [...data].sort((a: any, b: any) => pathFor(a).localeCompare(pathFor(b)))
-        const rows = sorted.map((c: any) => [
-            pathFor(c),
-            c.code || '',
-            c.short_name || '',
-            c.barcode_prefix || '',
-            c.product_count || 0,
-            c.brand_count || 0,
-        ])
-        exportExcel({
-            filename: `categories-${new Date().toISOString().slice(0, 10)}.xls`,
-            sheetName: 'Categories',
-            columns: ['Category Path', 'Code', 'Short Name', 'Barcode Prefix', 'Products', 'Brands'],
-            rows,
-        })
-        toast.success(`Exported ${sorted.length} categories to Excel`)
-    }, [data])
-
-    // Print spec — flatten each category into a row with every printable
-    // field. PrintDialog handles column-picker + layout; the iframe-based
-    // print trigger lives in there so this page stays declarative.
-    const printSpec: PrintSpec = useMemo(() => {
-        const byId = new Map<number, any>()
-        data.forEach((c: any) => byId.set(c.id, c))
-        const pathFor = (c: any): string => {
-            const parts: string[] = [c.name]
-            let cur = c.parent ? byId.get(c.parent) : null
-            while (cur) { parts.unshift(cur.name); cur = cur.parent ? byId.get(cur.parent) : null }
-            return parts.join(' › ')
-        }
-        const sorted = [...data].sort((a: any, b: any) => pathFor(a).localeCompare(pathFor(b)))
-        return {
-            title: 'Categories',
-            subtitle: 'Product Taxonomy',
-            prefKey: 'print.categories',
-            columns: [
-                { key: 'path', label: 'Category Path', defaultOn: true, width: '30%' },
-                { key: 'name', label: 'Name', defaultOn: false },
-                { key: 'code', label: 'Code', mono: true, defaultOn: true, width: '90px' },
-                { key: 'short', label: 'Short Name', defaultOn: false, width: '100px' },
-                { key: 'prefix', label: 'Barcode Prefix', mono: true, defaultOn: true, width: '110px' },
-                { key: 'subs', label: 'Sub-cats', align: 'right', defaultOn: false, width: '70px' },
-                { key: 'brands', label: 'Brands', align: 'right', defaultOn: false, width: '70px' },
-                { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
-            ],
-            rows: sorted.map((c: any) => ({
-                path: pathFor(c),
-                name: c.name,
-                code: c.code || '',
-                short: c.short_name || '',
-                prefix: c.barcode_prefix || '',
-                subs: data.filter((x: any) => x.parent === c.id).length,
-                brands: c.brand_count || 0,
-                products: c.product_count || 0,
-            })),
-        }
-    }, [data])
+    const pathFor = useCallback((c: any): string => {
+        const parts: string[] = [c.name]
+        let cur = c.parent ? byId.get(c.parent) : null
+        while (cur) { parts.unshift(cur.name); cur = cur.parent ? byId.get(cur.parent) : null }
+        return parts.join(' \u203A ')
+    }, [byId])
 
     // Actions
     const openAddModal = useCallback((parentId?: number) => { setModalState({ open: true, parentId }) }, [])
@@ -260,11 +166,49 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 searchPlaceholder: 'Search by name, code, or short name... (Ctrl+K)',
                 primaryAction: { label: 'New Category', icon: <Plus size={14} />, onClick: () => openAddModal(), dataTour: 'add-category-btn' },
                 dataTools: {
-                    onExportExcel: handleExportExcel,
-                    onExport: handleExport,
-                    onImport: () => setShowImport(true),
-                    onPrint: () => setShowPrint(true),
                     title: 'Category Data',
+                    exportFilename: 'categories',
+                    exportColumns: [
+                        { key: 'name', label: 'Name' },
+                        { key: 'code', label: 'Code', format: (c: any) => c.code || '' },
+                        { key: 'short_name', label: 'Short Name', format: (c: any) => c.short_name || '' },
+                        { key: 'barcode_prefix', label: 'Barcode Prefix', format: (c: any) => c.barcode_prefix || '' },
+                        { key: 'parent_code', label: 'Parent Code', format: (c: any) => {
+                            const parent = c.parent ? byId.get(c.parent) : null
+                            return parent ? (parent.code || parent.name || '') : ''
+                        }},
+                        { key: 'path', label: 'Category Path', format: (c: any) => pathFor(c) },
+                        { key: 'product_count', label: 'Products', format: (c: any) => c.product_count || 0 },
+                        { key: 'brand_count', label: 'Brands', format: (c: any) => c.brand_count || 0 },
+                    ],
+                    print: {
+                        title: 'Categories',
+                        subtitle: 'Product Taxonomy',
+                        prefKey: 'print.categories',
+                        sortBy: 'path',
+                        columns: [
+                            { key: 'path', label: 'Category Path', defaultOn: true, width: '30%' },
+                            { key: 'name', label: 'Name', defaultOn: false },
+                            { key: 'code', label: 'Code', mono: true, defaultOn: true, width: '90px' },
+                            { key: 'short', label: 'Short Name', defaultOn: false, width: '100px' },
+                            { key: 'prefix', label: 'Barcode Prefix', mono: true, defaultOn: true, width: '110px' },
+                            { key: 'subs', label: 'Sub-cats', align: 'right', defaultOn: false, width: '70px' },
+                            { key: 'brands', label: 'Brands', align: 'right', defaultOn: false, width: '70px' },
+                            { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
+                        ],
+                        rowMapper: (c: any) => ({
+                            path: pathFor(c),
+                            name: c.name,
+                            code: c.code || '',
+                            short: c.short_name || '',
+                            prefix: c.barcode_prefix || '',
+                            subs: data.filter((x: any) => x.parent === c.id).length,
+                            brands: c.brand_count || 0,
+                            products: c.product_count || 0,
+                        }),
+                    },
+                    // Categories keeps its custom CsvImportDialog (needs allCategories for parent resolution)
+                    onImport: () => setShowImport(true),
                 },
                 selectable: true,
                 secondaryActions: [
@@ -436,11 +380,6 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 onDone={() => { setShowImport(false); router.refresh() }}
             />
         )}
-        <PrintDialog
-            isOpen={showPrint}
-            onClose={() => setShowPrint(false)}
-            spec={printSpec}
-        />
         </>
     )
 }

@@ -7,10 +7,7 @@ Three resources:
   - CurrencyRevaluation — read-only audit + a `run` action that calls
                           RevaluationService.run_revaluation for a period
 """
-from datetime import date
-
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Q
 from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -99,6 +96,24 @@ class CurrencyRevaluationSerializer(serializers.ModelSerializer):
 class CurrencyViewSet(TenantModelViewSet):
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
+
+    def list(self, request, *args, **kwargs):
+        # Auto-materialize the per-org `apps.finance.Currency` row from
+        # `Organization.base_currency` (set in /settings/regional) on first
+        # read. Without this, tenants who configured their base via the
+        # global FK see "No base currency" until they manually re-add it
+        # here — which would be a duplicate source of truth. Reading from
+        # /settings/regional is the canonical input, this view just mirrors.
+        from apps.finance.services import CurrencyService
+        org_id = get_current_tenant_id()
+        if org_id:
+            try:
+                from erp.models import Organization
+                org = Organization.objects.get(id=org_id)
+                CurrencyService.get_base_currency(org)
+            except Organization.DoesNotExist:
+                pass
+        return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
         org_id = get_current_tenant_id()

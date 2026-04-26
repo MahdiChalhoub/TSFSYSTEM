@@ -21,9 +21,6 @@ import {
     AddGroupForm, AddValueForm, EditModal,
     CategoryLinkModal, BrandLinkModal,
 } from './ComponentParts'
-import { exportExcel } from '@/components/admin/_shared/excel-export'
-import { GenericCsvImportDialog } from '@/components/admin/_shared/GenericCsvImportDialog'
-import { PrintDialog, type PrintSpec } from '@/components/admin/_shared/PrintDialog'
 
 /* ═══════════════════════════════════════════════════════════
  *  Data shapes mirror the /tree/ endpoint.
@@ -67,93 +64,7 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
     const [deleteConflict, setDeleteConflict] = useState<{ conflict: any; source: { id: number; name: string; isRoot: boolean } } | null>(null)
     const [allCategories] = useState<any[]>(initialCategories)
     const [allBrands] = useState<any[]>(initialBrands)
-    const [showImport, setShowImport] = useState(false)
-    const [showPrint, setShowPrint] = useState(false)
 
-    // Data-tools handlers: flatten the group→value tree so each row is a
-    // usable, spreadsheet-friendly record. Groups and values share the
-    // file with a `type` column so round-tripping stays unambiguous.
-    const handleExport = useCallback(() => {
-        if (!tree?.length) { toast.info('No attributes to export'); return }
-        const escape = (v: any) => {
-            const s = (v ?? '').toString()
-            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-        }
-        const headers = ['name', 'short_name', 'type', 'group', 'values', 'products']
-        const lines = [headers.join(',')]
-        tree.forEach(g => {
-            lines.push([g.name, g.short_label || g.code || '', 'group', '',
-                        g.children.length, g.products_count].map(escape).join(','))
-            g.children.forEach(ch => {
-                lines.push([ch.name, ch.code || '', 'value', g.name, '', ch.products_count].map(escape).join(','))
-            })
-        })
-        const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `attributes-${new Date().toISOString().slice(0, 10)}.csv`
-        a.click()
-        URL.revokeObjectURL(url)
-        toast.success(`Exported ${tree.length} groups`)
-    }, [tree])
-
-    const handleExportExcel = useCallback(() => {
-        if (!tree?.length) { toast.info('No attributes to export'); return }
-        const rows: (string | number)[][] = []
-        tree.forEach(g => {
-            rows.push([g.name, g.short_label || g.code || '', 'group', '', g.children.length, g.products_count])
-            g.children.forEach(ch => {
-                rows.push([ch.name, ch.code || '', 'value', g.name, '', ch.products_count])
-            })
-        })
-        exportExcel({
-            filename: `attributes-${new Date().toISOString().slice(0, 10)}.xls`,
-            sheetName: 'Attributes',
-            columns: ['Name', 'Short', 'Type', 'Group', 'Values', 'Products'],
-            rows,
-        })
-        toast.success(`Exported ${tree.length} attribute groups to Excel`)
-    }, [tree])
-
-    const printSpec: PrintSpec = useMemo(() => {
-        const rows: Record<string, any>[] = []
-        tree.forEach(g => {
-            rows.push({
-                name: g.name,
-                short: g.short_label || g.code || '',
-                type: 'group',
-                group: '',
-                values: g.children.length,
-                products: g.products_count,
-            })
-            g.children.forEach(ch => {
-                rows.push({
-                    // indent value names so the hierarchy reads on paper
-                    name: `  ↳ ${ch.name}`,
-                    short: ch.code || '',
-                    type: 'value',
-                    group: g.name,
-                    values: '',
-                    products: ch.products_count,
-                })
-            })
-        })
-        return {
-            title: 'Attributes',
-            subtitle: 'Attribute groups & values',
-            prefKey: 'print.attributes',
-            columns: [
-                { key: 'name', label: 'Name', defaultOn: true },
-                { key: 'short', label: 'Short Code', mono: true, defaultOn: true, width: '110px' },
-                { key: 'type', label: 'Type', defaultOn: true, width: '70px' },
-                { key: 'group', label: 'Group', defaultOn: false, width: '140px' },
-                { key: 'values', label: 'Values', align: 'right', defaultOn: true, width: '70px' },
-                { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
-            ],
-            rows,
-        }
-    }, [tree])
 
     // Re-sync state when the server re-renders with fresh data (router.refresh()).
     useEffect(() => { setTree(initialTree) }, [initialTree])
@@ -242,11 +153,51 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                     searchPlaceholder: 'Search by name, code… (Ctrl+K)',
                     primaryAction: { label: 'New Attribute', icon: <Plus size={14} />, onClick: () => setShowAddGroup(true) },
                     dataTools: {
-                        onExport: handleExport,
-                        onExportExcel: handleExportExcel,
-                        onImport: () => setShowImport(true),
-                        onPrint: () => setShowPrint(true),
                         title: 'Attribute Data',
+                        exportFilename: 'attributes',
+                        exportColumns: [
+                            { key: 'name', label: 'Name' },
+                            { key: 'short', label: 'Short', format: (n: any) => n._type === 'group' ? (n.short_label || n.code || '') : (n.code || '') },
+                            { key: 'type', label: 'Type', format: (n: any) => n._type },
+                            { key: 'group', label: 'Group', format: (n: any) => n._type === 'value' ? (tree.find(g => g.id === n.parent)?.name || '') : '' },
+                            { key: 'values', label: 'Values', format: (n: any) => n._type === 'group' ? n._valueCount : '' },
+                            { key: 'products', label: 'Products', format: (n: any) => n._productsTotal || 0 },
+                        ],
+                        print: {
+                            title: 'Attributes',
+                            subtitle: 'Attribute groups & values',
+                            prefKey: 'print.attributes',
+                            columns: [
+                                { key: 'name', label: 'Name', defaultOn: true },
+                                { key: 'short', label: 'Short Code', mono: true, defaultOn: true, width: '110px' },
+                                { key: 'type', label: 'Type', defaultOn: true, width: '70px' },
+                                { key: 'group', label: 'Group', defaultOn: false, width: '140px' },
+                                { key: 'values', label: 'Values', align: 'right', defaultOn: true, width: '70px' },
+                                { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
+                            ],
+                            rowMapper: (n: any) => ({
+                                name: n._type === 'value' ? `  \u21B3 ${n.name}` : n.name,
+                                short: n._type === 'group' ? (n.short_label || n.code || '') : (n.code || ''),
+                                type: n._type,
+                                group: n._type === 'value' ? (tree.find(g => g.id === n.parent)?.name || '') : '',
+                                values: n._type === 'group' ? n._valueCount : '',
+                                products: n._productsTotal || 0,
+                            }),
+                        },
+                        import: {
+                            entity: 'attribute',
+                            endpoint: 'attributes/',
+                            columns: [
+                                { name: 'name', required: true, desc: 'Attribute group or value name', example: 'Color' },
+                                { name: 'code', required: false, desc: 'Short code', example: 'CLR' },
+                            ],
+                            sampleCsv: 'name,code\nColor,CLR\nSize,SZ',
+                            previewColumns: [
+                                { key: 'name', label: 'Name' },
+                                { key: 'code', label: 'Code', mono: true },
+                            ],
+                            buildPayload: (row: Record<string, string>) => ({ name: row.name, code: row.code || undefined }),
+                        },
                     },
                     secondaryActions: [
                         { label: 'Product Matrix', icon: <Sparkles size={13} />, href: '/inventory/attributes/matrix' },
@@ -263,6 +214,17 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                     searchFields: ['name', 'code', 'short_label'],
                     treeParentKey: 'parent',
                     selectable: true,
+                    onBulkDelete: async (ids, clear) => {
+                        if (!confirm(`Delete ${ids.length} attribute(s)? Products tagged with them will lose those tags.`)) return
+                        let ok = 0, fail = 0
+                        for (const id of ids) {
+                            const res: any = await deleteAttribute(id)
+                            if (res?.success) ok++; else fail++
+                        }
+                        if (ok) toast.success(`Deleted ${ok} attribute(s)`)
+                        if (fail) toast.error(`${fail} attribute(s) failed to delete`)
+                        clear(); router.refresh()
+                    },
                     kpiPredicates: {
                         groups: (n) => n._type === 'group',
                         values: (n) => n._type === 'value',
@@ -411,37 +373,6 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                             onMigrate={async () => { /* disabled */ }}
                             onForceDelete={handleForceDelete}
                             onCancel={() => setDeleteConflict(null)}
-                        />
-                        <GenericCsvImportDialog
-                            isOpen={showImport}
-                            onClose={() => setShowImport(false)}
-                            onDone={() => { setShowImport(false); router.refresh() }}
-                            entity="attribute"
-                            endpoint="parfums/"
-                            columns={[
-                                { name: 'name', required: true, desc: 'Attribute group name — unique per tenant', example: 'Color' },
-                                { name: 'short_name', required: false, desc: 'Short label', example: 'CLR' },
-                            ]}
-                            sampleCsv={[
-                                'name,short_name',
-                                'Color,CLR',
-                                'Size,SZ',
-                                'Material,MAT',
-                            ].join('\n')}
-                            previewColumns={[
-                                { key: 'name', label: 'Name' },
-                                { key: 'short_name', label: 'Short', mono: true },
-                            ]}
-                            buildPayload={(row) => ({
-                                name: row.name,
-                                short_name: row.short_name || null,
-                            })}
-                            tip={<><strong>Note:</strong> Importing creates <em>attribute groups</em> only. Add values and link categories/brands after import from the row's edit menu.</>}
-                        />
-                        <PrintDialog
-                            isOpen={showPrint}
-                            onClose={() => setShowPrint(false)}
-                            spec={printSpec}
                         />
                     </>
                 }

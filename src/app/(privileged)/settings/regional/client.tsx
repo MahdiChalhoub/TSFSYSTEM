@@ -4,7 +4,7 @@ import { useState, useMemo, useTransition, useEffect } from 'react';
 import {
     Globe, DollarSign, Search, Plus, Star, Check, X, MapPin,
     Phone, Loader2, Coins, ArrowLeft, AlertTriangle,
-    Crown, Trash2, Shield
+    Crown, Trash2, Shield, TrendingUp
 } from 'lucide-react';
 import Link from 'next/link';
 import type { RefCountry, RefCurrency, OrgCountry, OrgCurrency } from '@/types/erp';
@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner';
 import { Languages } from 'lucide-react';
 import { getCatalogueLanguages, setCatalogueLanguages, labelFor, isRTL } from '@/lib/catalogue-languages';
+import { FxManagementSection } from './_components/FxManagementSection';
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 const grad = (v: string) => ({ background: `linear-gradient(135deg, var(${v}), color-mix(in srgb, var(${v}) 60%, black))` });
@@ -24,7 +25,7 @@ function flag(iso2: string) { if (!iso2 || iso2.length !== 2) return '🏳️'; 
 
 /* ─── Types ────────────────────────────────────────────────────── */
 interface Props { allCountries: RefCountry[]; allCurrencies: RefCurrency[]; initialOrgCountries: OrgCountry[]; initialOrgCurrencies: OrgCurrency[]; }
-type Tab = 'countries' | 'currencies' | 'languages';
+type Tab = 'countries' | 'currencies' | 'languages' | 'fx';
 
 const COMMON_LOCALES: { code: string; native: string }[] = [
     { code: 'en', native: 'English' }, { code: 'fr', native: 'Français' }, { code: 'ar', native: 'العربية' },
@@ -278,6 +279,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                     {([
                                         { key: 'countries' as Tab, label: 'Countries', icon: Globe, color: '--app-primary' },
                                         { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-warning' },
+                                        { key: 'fx' as Tab, label: 'FX & Rates', icon: TrendingUp, color: '--app-success' },
                                         { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-info' },
                                     ]).map(t => {
                                         const Icon = t.icon; const active = tab === t.key;
@@ -296,8 +298,15 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                 </div>
 
                 {/* ── CONTENT AREA (fills remaining viewport) ─────── */}
-                <div className="flex-1 overflow-hidden px-4 md:px-8 py-4">
-                    {tab === 'languages' ? (
+                <div className="flex-1 overflow-auto px-4 md:px-8 py-4">
+                    {tab === 'fx' ? (
+                    /* ── FX & RATES PANEL — single source of truth for the
+                          finance multi-currency stack: rate history, auto-
+                          sync policies, and period-end revaluations. ── */
+                    <div className="max-w-[1400px] mx-auto">
+                        <FxManagementSection />
+                    </div>
+                    ) : tab === 'languages' ? (
                     /* ── LANGUAGES PANEL — single column picker ── */
                     <div className="max-w-[900px] mx-auto h-full bg-app-surface rounded-xl border border-app-border/50 flex flex-col overflow-hidden">
                         <div className="px-5 py-3 border-b border-app-border/50 flex items-center justify-between"

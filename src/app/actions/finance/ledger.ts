@@ -205,13 +205,39 @@ export async function bulkDeleteJournalEntries(ids: number[]) {
 
 export async function recalculateAccountBalances() {
     try {
-        await erpFetch('journal/recalculate_balances/', {
-            method: 'POST'
+        // Soft sync: rebuilds ChartOfAccount.balance / .balance_official from
+        // POSTED JE-line aggregation via a single SQL UPDATE. Doesn't replay
+        // entries, doesn't touch hash chains, doesn't trigger the closed-period
+        // guard — so it works on orgs with finalized fiscal years (where the
+        // hard `recalculate_balances` would atomically roll back).
+        const result: any = await erpFetch('journal/recalculate_balances_soft/', {
+            method: 'POST',
         })
+        revalidatePath('/finance/chart-of-accounts')
+        return {
+            success: true,
+            drifted_before: result?.drifted_before ?? 0,
+            total_accounts: result?.total_accounts ?? 0,
+            message: result?.message,
+        }
+    } catch (error) {
+        console.error("Failed to recalculate balances:", error)
+        return { success: false }
+    }
+}
+
+/**
+ * Hard recalculate: replays every POSTED JE through post_journal_entry.
+ * Rebuilds balances AND the hash chain, but FAILS atomically on any JE in
+ * a closed/finalized period. Reserved for fresh orgs / pre-close situations.
+ */
+export async function recalculateAccountBalancesHard() {
+    try {
+        await erpFetch('journal/recalculate_balances/', { method: 'POST' })
         revalidatePath('/finance/chart-of-accounts')
         return { success: true }
     } catch (error) {
-        console.error("Failed to recalculate balances:", error)
+        console.error("Failed to recalculate balances (hard):", error)
         return { success: false }
     }
 }

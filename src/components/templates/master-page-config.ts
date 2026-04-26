@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import type { PrintColumn } from '@/components/admin/_shared/PrintDialog'
+import type { ColumnSpec, PreviewColumn } from '@/components/admin/_shared/GenericCsvImportDialog'
 
 /* ═══════════════════════════════════════════════════════════
  *  Shared page-config surface for desktop TreeMasterPage and
@@ -64,21 +66,82 @@ export interface EmptyStateConfig {
     actionLabel?: string
 }
 
+/* ── Declarative data-tools primitives ───────────────────────────── */
+
+/** Column definition for CSV / Excel exports. */
+export interface ExportColumn {
+    key: string
+    label: string
+    /** Custom formatter — defaults to `String(item[key] ?? '')` */
+    format?: (item: any) => string | number
+}
+
+/** Declarative print config — drives the unified PrintDialog. */
+export interface DataToolsPrintConfig {
+    title: string
+    subtitle?: string
+    prefKey?: string
+    columns: PrintColumn[]
+    /** Map each data item to a flat row object keyed by column.key */
+    rowMapper: (item: any) => Record<string, any>
+    /** Optional pre-print sort field (sorts ascending on this key) */
+    sortBy?: string
+    filterLine?: string
+}
+
+/** Declarative import config — drives the unified GenericCsvImportDialog. */
+export interface DataToolsImportConfig {
+    /** Singular noun, e.g. "brand", "category". */
+    entity: string
+    /** Plural noun — defaults to entity + 's'. */
+    entityPlural?: string
+    /** POST endpoint path (e.g. "brands/", "parfums/"). */
+    endpoint: string
+    /** Column specs shown in the tutorial's column table. */
+    columns: ColumnSpec[]
+    /** Full sample CSV text (header + a few rows). */
+    sampleCsv: string
+    /** Preview table columns. */
+    previewColumns: PreviewColumn[]
+    /** Map a parsed row to the JSON body posted to the endpoint. */
+    buildPayload: (row: Record<string, string>) => Record<string, any>
+    /** Optional extra tutorial hint text. */
+    tip?: ReactNode
+}
+
 /**
  * Data toolbox — Export / Import / Print affordances for a master-data page.
- * When set on MasterPageConfig, the shell renders a single "Data" dropdown in
- * the header toolbar, adjacent to the other secondary actions. Any handler you
- * omit simply hides that menu row (e.g. a page with no bulk import only sets
- * onExport/onPrint). The dropdown lives in one slot regardless of how many
- * sub-actions are wired, keeping the toolbar tidy.
+ *
+ * **Declarative mode** (preferred): supply `exportColumns`, `print`, and/or
+ * `import`. The shell auto-generates all handlers, state, and modal UI
+ * internally. Any improvement to the engine propagates to every page.
+ *
+ * **Legacy callback mode** (backward compat): supply `onExport`, `onPrint`,
+ * etc. The shell calls them as-is. Both modes can coexist — explicit
+ * callbacks override the declarative engine for that action.
  */
 export interface DataToolsConfig {
+    /** Menu-header override (e.g. "Brand Data"). */
+    title?: string
+
+    /* ── Declarative shape (auto-generates handlers) ── */
+
+    /** Export column definitions — drives BOTH CSV and Excel exports.
+     *  Omit to hide export actions (unless legacy `onExport` is set). */
+    exportColumns?: ExportColumn[]
+    /** Filename prefix for export files (e.g. "brands"). Defaults to page title. */
+    exportFilename?: string
+    /** Print config — omit to hide print action (unless legacy `onPrint` is set). */
+    print?: DataToolsPrintConfig
+    /** Import config — omit to hide import action (unless legacy `onImport` is set). */
+    import?: DataToolsImportConfig
+
+    /* ── Legacy callback shape (backward compat) ── */
+
     onExport?: () => void
     onExportExcel?: () => void
     onImport?: () => void
     onPrint?: () => void
-    /** Optional menu-header override (e.g. "Brand Data"). */
-    title?: string
 }
 
 export interface MasterPageConfig {
