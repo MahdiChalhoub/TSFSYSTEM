@@ -225,6 +225,15 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                         if (fail) toast.error(`${fail} attribute(s) failed to delete`)
                         clear(); router.refresh()
                     },
+                    bulkMove: {
+                        targetLabel: 'group',
+                        field: 'parent',
+                        endpoint: 'inventory/parfums',
+                        targets: tree.map(g => ({ id: g.id, name: g.name })),
+                        allowNull: true,
+                        nullLabel: '— Make root group —',
+                    },
+                    onRefresh: fetchTree,
                     kpiPredicates: {
                         groups: (n) => n._type === 'group',
                         values: (n) => n._type === 'value',

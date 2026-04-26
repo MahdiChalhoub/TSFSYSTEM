@@ -394,49 +394,143 @@ class ClosingService:
 
             if is_partial:
                 # ── PARTIAL CLOSE: Split the year ──
-                # Truncate fiscal_year to close_date, delete future periods,
-                # spin up a remainder fiscal year covering close_date+1 → end.
+                # Truncate fiscal_year to close_date, relocate any JEs from
+                # post-close periods into the remainder fiscal year, then
+                # safely delete the old post-close periods.
                 remainder_start = close_date + timedelta(days=1)
                 remainder_end = fiscal_year.end_date
 
-                # ── PRE-FLIGHT: Refuse if JEs exist in periods we're about
-                # to delete. Without this, Django's PROTECT FK throws a raw
-                # IntegrityError mid-transaction and the user just sees the
-                # close go silent. Far more useful: tell them exactly which
-                # months hold the blocking entries so they can decide to
-                # move them, void them, or run a full close instead.
-                blocking_periods = list(
+                # ── Step A: Find or create the remainder fiscal year ─────
+                # Exclude the FY being closed — its full range trivially
+                # overlaps the remainder range, but it can't be its own
+                # remainder.
+                remainder_fy = (
+                    FiscalYear.objects
+                    .filter(
+                        organization=organization,
+                        start_date__lte=remainder_end,
+                        end_date__gte=remainder_start,
+                    )
+                    .exclude(id=fiscal_year.id)
+                    .first()
+                )
+
+                if remainder_fy is None:
+                    # Auto-create. Name it explicitly to make the split
+                    # visible in the fiscal-year list — no silent ghost FYs.
+                    remainder_fy = FiscalYear.objects.create(
+                        organization=organization,
+                        name=f"{fiscal_year.name} (remainder)",
+                        start_date=remainder_start,
+                        end_date=remainder_end,
+                        is_closed=False,
+                        is_hard_locked=False,
+                    )
+                    logger.info(
+                        f"ClosingService: Auto-created remainder fiscal year "
+                        f"'{remainder_fy.name}' ({remainder_start} → {remainder_end})"
+                    )
+
+                # ── Step B: Ensure the remainder FY has periods ──────────
+                # If user pre-created a bare FY, generate matching periods
+                # using the same frequency (monthly / quarterly) inferred
+                # from the original year.
+                if not FiscalPeriod.objects.filter(fiscal_year=remainder_fy).exists():
+                    import calendar as _cal
+                    from datetime import date as _date
+
+                    # Infer frequency: average period length in original FY.
+                    # ≥ 80 days → quarterly; otherwise monthly (default).
+                    orig_periods = list(
+                        FiscalPeriod.objects
+                        .filter(fiscal_year=fiscal_year)
+                        .order_by('start_date')
+                    )
+                    avg_len = (
+                        sum((p.end_date - p.start_date).days + 1 for p in orig_periods) /
+                        max(len(orig_periods), 1)
+                    ) if orig_periods else 30
+                    quarterly = avg_len >= 80
+
+                    cur = remainder_start
+                    while cur <= remainder_end:
+                        if quarterly:
+                            qe_month = ((cur.month - 1) // 3 + 1) * 3
+                            last_day = _cal.monthrange(cur.year, qe_month)[1]
+                            p_end = _date(cur.year, qe_month, last_day)
+                            p_name = f"Q{(qe_month // 3)}-{cur.year}"
+                        else:
+                            last_day = _cal.monthrange(cur.year, cur.month)[1]
+                            p_end = _date(cur.year, cur.month, last_day)
+                            p_name = cur.strftime('%B %Y')
+                        if p_end > remainder_end:
+                            p_end = remainder_end
+                        FiscalPeriod.objects.create(
+                            organization=organization,
+                            fiscal_year=remainder_fy,
+                            name=p_name,
+                            start_date=cur,
+                            end_date=p_end,
+                            status='OPEN',
+                            is_closed=False,
+                        )
+                        cur = p_end + timedelta(days=1)
+                    logger.info(
+                        f"ClosingService: Generated periods for remainder FY '{remainder_fy.name}'"
+                    )
+
+                # ── Step C: Relocate post-close JEs into remainder periods ──
+                blocking_period_ids = list(
                     FiscalPeriod.objects
                     .filter(fiscal_year=fiscal_year, start_date__gt=close_date)
-                    .order_by('start_date')
+                    .values_list('id', flat=True)
                 )
-                if blocking_periods:
-                    blocking_ids = [p.id for p in blocking_periods]
-                    je_qs = JournalEntry.objects.filter(
-                        fiscal_period_id__in=blocking_ids,
-                        organization=organization,
+                if blocking_period_ids:
+                    remainder_periods = list(
+                        FiscalPeriod.objects
+                        .filter(fiscal_year=remainder_fy)
+                        .order_by('start_date')
                     )
-                    je_total = je_qs.count()
-                    if je_total > 0:
-                        # Group by period for a useful error message
-                        from django.db.models import Count
-                        per_period = {
-                            row['fiscal_period_id']: row['n']
-                            for row in je_qs.values('fiscal_period_id').annotate(n=Count('id'))
-                        }
-                        offenders = [
-                            f"{p.name} ({per_period.get(p.id, 0)} JE{'s' if per_period.get(p.id, 0) != 1 else ''})"
-                            for p in blocking_periods if per_period.get(p.id, 0) > 0
-                        ]
-                        raise ValidationError(
-                            f"Cannot partial-close {fiscal_year.name} at {close_date}: "
-                            f"{je_total} journal {'entries exist' if je_total != 1 else 'entry exists'} "
-                            f"in periods after the close date — {', '.join(offenders)}. "
-                            f"Move or void those entries before partial-closing, or run a "
-                            f"full year-end close instead."
+
+                    def _period_for(d):
+                        for p in remainder_periods:
+                            if p.start_date <= d <= p.end_date:
+                                return p
+                        return None
+
+                    relocated = 0
+                    blocking_jes = JournalEntry.objects.filter(
+                        organization=organization,
+                        fiscal_period_id__in=blocking_period_ids,
+                    )
+                    for je in blocking_jes:
+                        if je.transaction_date is None:
+                            raise ValidationError(
+                                f"Cannot relocate journal entry {je.reference} during partial "
+                                f"close: it has no transaction_date."
+                            )
+                        je_date = je.transaction_date.date() if hasattr(je.transaction_date, 'date') else je.transaction_date
+                        target = _period_for(je_date)
+                        if target is None:
+                            raise ValidationError(
+                                f"Cannot relocate journal entry {je.reference} dated {je_date}: "
+                                f"no period in remainder year '{remainder_fy.name}' covers that date. "
+                                f"Adjust the remainder year's date range or fix the JE date."
+                            )
+                        je.fiscal_period = target
+                        je.fiscal_year = remainder_fy
+                        # force_audit_bypass: lets us update POSTED entries.
+                        # We're not modifying lines/amounts/hash, only re-pointing
+                        # to the correct period after a structural year split.
+                        je.save(force_audit_bypass=True)
+                        relocated += 1
+                    if relocated:
+                        logger.info(
+                            f"ClosingService: Relocated {relocated} journal entries from "
+                            f"{fiscal_year.name} to {remainder_fy.name}"
                         )
 
-                # Delete periods entirely after close_date (now safe — no JEs reference them)
+                # ── Step D: Delete now-empty post-close periods ──────────
                 FiscalPeriod.objects.filter(
                     fiscal_year=fiscal_year,
                     start_date__gt=close_date,
@@ -658,18 +752,24 @@ class ClosingService:
             # makes the split visible in the fiscal-year list and forces a
             # deliberate decision about naming and period structure.
             if is_partial and remainder_start and remainder_end:
-                # Look for a user-created year covering the remainder
-                next_year = FiscalYear.objects.filter(
-                    organization=organization,
-                    start_date__lte=remainder_end,
-                    end_date__gte=remainder_start,
-                ).first()
+                # Look for a year covering the remainder (auto-created above
+                # OR user-created beforehand). Exclude the FY being closed:
+                # its full range trivially overlaps the remainder window.
+                next_year = (
+                    FiscalYear.objects
+                    .filter(
+                        organization=organization,
+                        start_date__lte=remainder_end,
+                        end_date__gte=remainder_start,
+                    )
+                    .exclude(id=fiscal_year.id)
+                    .first()
+                )
                 if not next_year:
                     logger.warning(
                         f"ClosingService: Partial close of {fiscal_year.name} leaves uncovered "
                         f"range {remainder_start} → {remainder_end}. No remainder year exists. "
-                        f"Opening balances NOT generated. Create the remainder year manually, "
-                        f"then re-run generate_opening_balances()."
+                        f"Opening balances NOT generated."
                     )
             else:
                 next_year = FiscalYear.objects.filter(

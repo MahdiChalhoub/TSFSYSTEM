@@ -153,6 +153,13 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                     if (fail) toast.error(`${fail} brand(s) failed to delete`)
                     clear(); router.refresh()
                 },
+                bulkMove: {
+                    targetLabel: 'category',
+                    field: 'categories',
+                    endpoint: 'brands',
+                    targets: categories.map((c: any) => ({ id: c.id, name: c.name })),
+                },
+                onRefresh: () => router.refresh(),
                 kpiPredicates: {
                     withCategory: (b) => (b.categories?.length || 0) > 0,
                     orphan: (b) => (b.categories?.length || 0) === 0,

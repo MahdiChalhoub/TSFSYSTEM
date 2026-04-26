@@ -124,11 +124,19 @@ class LedgerCoreMixin:
                 # here would block every regeneration of system-owned JEs
                 # (OPENING, CLOSING) which is exactly the flow the supersede
                 # mechanic was designed to support.
+                #
+                # journal_type IS part of the dedup key — a single
+                # FiscalYear legitimately anchors both an OPENING and a
+                # CLOSING JE per scope. Without this, generating a CLOSING
+                # entry on a year that already has an OPENING entry (the
+                # normal flow) wrongly trips the duplicate check.
+                journal_type = kwargs.get('journal_type', 'GENERAL')
                 existing = JournalEntry.objects.filter(
                     organization=organization,
                     source_module=source_module,
                     source_model=source_model or '',
                     source_id=source_id,
+                    journal_type=journal_type,
                     scope=scope,
                     status='POSTED',
                     is_superseded=False,
@@ -136,7 +144,8 @@ class LedgerCoreMixin:
                 if existing:
                     raise ValidationError(
                         f"Duplicate posting detected: {source_module}/{source_model}#{source_id} "
-                        f"already posted as {existing.reference}. Use reversal to correct."
+                        f"({journal_type}) already posted as {existing.reference}. "
+                        f"Use reversal to correct."
                     )
             
             # ── Step 4: Account Validation ────────────────────────────

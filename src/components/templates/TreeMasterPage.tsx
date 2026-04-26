@@ -12,9 +12,10 @@ import { toast } from 'sonner'
 import { TourTriggerButton } from '@/components/ui/GuidedTour'
 import { usePageTour } from '@/lib/tours/useTour'
 import { buildTree } from '@/lib/utils/tree'
-import type { MasterPageConfig, KPI } from '@/components/templates/master-page-config'
+import type { MasterPageConfig, KPI, BulkMoveConfig } from '@/components/templates/master-page-config'
 import { DataMenu } from '@/components/admin/_shared/DataMenu'
 import { useDataToolsEngine } from './useDataToolsEngine'
+import { BulkMoveDialog } from './BulkMoveDialog'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
@@ -52,6 +53,9 @@ export interface TreeMasterConfig extends MasterPageConfig {
     /** Callback when user clicks "Move" in the bulk-action island.
      *  Receives the array of selected IDs. Only shown for hierarchical data. */
     onBulkMove?: (ids: number[], clearSelection: () => void) => void
+    /** Declarative move config — when set, TreeMasterPage auto-renders a
+     *  built-in Move dialog with target picker + PATCH lifecycle. */
+    bulkMove?: BulkMoveConfig
 }
 
 export interface TreeMasterRenderProps {
@@ -158,6 +162,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     const [refreshing, setRefreshing] = useState(false)
     /* ── Bulk-selection state (opt-in via config.selectable) ── */
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+    const [showBulkMove, setShowBulkMove] = useState(false)
     const toggleSelect = useCallback((id: number) => {
         setSelectedIds(prev => {
             const next = new Set(prev)
@@ -283,6 +288,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     }
 
     return (
+        <>
         <div className="flex flex-col p-4 md:px-6 md:pt-6 md:pb-2 animate-in fade-in duration-300 transition-all overflow-hidden"
             style={{ height: 'calc(100dvh - 6rem)', paddingRight: pinnedSidebar ? '34rem' : undefined }}>
 
@@ -619,7 +625,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
             {config.selectable && selectedIds.size > 0 && (
                 bulkActions
                     ? bulkActions({ count: selectedIds.size, clearSelection })
-                    : (config.onBulkDelete || config.onBulkMove) && (
+                    : (config.onBulkDelete || config.onBulkMove || config.bulkMove) && (
                         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2 py-1.5 rounded-2xl animate-in slide-in-from-bottom-4 duration-200"
                             style={{
                                 background: 'var(--app-surface)',
@@ -633,8 +639,11 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 }}>
                                 {selectedIds.size} selected
                             </div>
-                            {config.onBulkMove && (
-                                <button onClick={() => config.onBulkMove!(Array.from(selectedIds), clearSelection)}
+                            {(config.onBulkMove || config.bulkMove) && (
+                                <button onClick={() => {
+                                    if (config.onBulkMove) config.onBulkMove(Array.from(selectedIds), clearSelection)
+                                    else setShowBulkMove(true)
+                                }}
                                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5"
                                     style={{ background: 'var(--app-background)', color: 'var(--app-foreground)', border: '1px solid var(--app-border)' }}>
                                     <FolderTree size={13} /> Move
@@ -684,6 +693,25 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                 </div>
             </div>
         </div>
+
+        {/* ═══════════════ BUILT-IN BULK MOVE DIALOG ═══════════════ */}
+        {showBulkMove && config.bulkMove && (
+            <BulkMoveDialog
+                config={config.bulkMove}
+                selectedIds={Array.from(selectedIds)}
+                allItems={config.data}
+                onClose={() => setShowBulkMove(false)}
+                onDone={() => {
+                    setShowBulkMove(false)
+                    clearSelection()
+                    if (config.onRefresh) config.onRefresh()
+                }}
+            />
+        )}
+
+        {/* Data-tools modals (export/import/print) */}
+        {dtModals}
+        </>
     )
 }
 

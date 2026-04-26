@@ -242,62 +242,73 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
              * ═══════════════════════════════════════════════════════════ */}
             <div className="flex flex-col h-full -m-4 md:-m-5 overflow-hidden animate-in fade-in duration-500">
 
-                {/* ── FIXED HEADER AREA ──────────────────────────────── */}
+                {/* ── FIXED HEADER AREA — Dajingo Pro V2 design language ── */}
                 <div className="shrink-0 px-4 md:px-8 pt-4 pb-3 border-b border-app-border/40"
                     style={{ backgroundColor: 'var(--app-background)' }}>
-                    <div className="max-w-[1400px] mx-auto">
-                        {/* Back */}
-                        <Link href="/settings" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest hover:text-app-foreground transition-colors mb-3">
-                            <ArrowLeft size={14} /> Settings
+                    <div className="max-w-[1400px] mx-auto space-y-3">
+                        {/* Back link */}
+                        <Link href="/settings" className="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest hover:text-app-foreground transition-colors">
+                            <ArrowLeft size={13} /> Settings
                         </Link>
 
-                        {/* Header row */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        {/* Title row — page-header-icon pattern from design.md §2 */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg" style={grad('--app-primary')}>
+                                <div className="page-header-icon bg-app-primary"
+                                     style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                                     <Globe size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-xl font-black text-app-foreground tracking-tight">Regional Settings</h1>
-                                    <p className="text-[10px] text-app-muted-foreground mt-0.5">
-                                        Configure countries and currencies for your organization
+                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Regional Settings</h1>
+                                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                        {orgCountries.length} Countries · {orgCurrencies.length} Currencies · Languages · FX
                                     </p>
                                 </div>
                             </div>
-
-                            {/* KPIs + Tabs inline */}
-                            <div className="flex items-center gap-3 flex-wrap">
-                                {/* Quick KPIs */}
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-app-surface border border-app-border/50">
-                                    <Globe size={12} style={{ color: 'var(--app-primary)' }} />
-                                    <span className="text-sm font-black text-app-foreground">{orgCountries.length}</span>
-                                    <span className="text-[8px] font-bold text-app-muted-foreground uppercase">countries</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-app-surface border border-app-border/50">
-                                    <Coins size={12} style={{ color: 'var(--app-warning)' }} />
-                                    <span className="text-sm font-black text-app-foreground">{orgCurrencies.length}</span>
-                                    <span className="text-[8px] font-bold text-app-muted-foreground uppercase">currencies</span>
-                                </div>
-
-                                {/* Tab Switcher */}
-                                <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-app-surface border border-app-border/50">
-                                    {([
-                                        { key: 'countries' as Tab, label: 'Countries', icon: Globe, color: '--app-primary' },
-                                        { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-warning' },
-                                        { key: 'fx' as Tab, label: 'FX & Rates', icon: TrendingUp, color: '--app-success' },
-                                        { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-info' },
-                                    ]).map(t => {
-                                        const Icon = t.icon; const active = tab === t.key;
-                                        return (
-                                            <button key={t.key} onClick={() => { setTab(t.key); setSearch(''); setRegionFilter(''); }}
-                                                className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-[11px] font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
-                                                style={active ? grad(t.color) : {}}>
-                                                <Icon size={13} /> {t.label}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                            {/* Tab Switcher — production pages style: pill-on-surface bar */}
+                            <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-app-surface border border-app-border/50 self-start sm:self-auto">
+                                {([
+                                    { key: 'countries' as Tab, label: 'Countries', icon: Globe, color: '--app-primary' },
+                                    { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-warning' },
+                                    { key: 'fx' as Tab, label: 'FX & Rates', icon: TrendingUp, color: '--app-success' },
+                                    { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-info' },
+                                ]).map(t => {
+                                    const Icon = t.icon; const active = tab === t.key;
+                                    return (
+                                        <button key={t.key} onClick={() => { setTab(t.key); setSearch(''); setRegionFilter(''); }}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
+                                            style={active ? { ...grad(t.color), boxShadow: `0 2px 8px color-mix(in srgb, var(${t.color}) 25%, transparent)` } : {}}>
+                                            <Icon size={12} /> {t.label}
+                                        </button>
+                                    );
+                                })}
                             </div>
+                        </div>
+
+                        {/* KPI Strip — adaptive grid per design.md §4 */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                            {([
+                                { label: 'Countries', value: orgCountries.length, icon: Globe, color: 'var(--app-primary)' },
+                                { label: 'Currencies', value: orgCurrencies.length, icon: Coins, color: 'var(--app-warning)' },
+                                { label: 'Base', value: orgCurrencies.find(o => o.is_default)?.currency_code ?? '—', icon: Star, color: 'var(--app-success)' },
+                                { label: 'Languages', value: langCodes.length || '—', icon: Languages, color: 'var(--app-info)' },
+                            ] as const).map(s => (
+                                <div key={s.label}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                    }}>
+                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                                        style={{ background: `color-mix(in srgb, ${s.color} 12%, transparent)`, color: s.color }}>
+                                        <s.icon size={13} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">{s.label}</div>
+                                        <div className="text-sm font-black text-app-foreground tabular-nums truncate">{s.value}</div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -313,7 +324,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                     </div>
                     ) : tab === 'languages' ? (
                     /* ── LANGUAGES PANEL — single column picker ── */
-                    <div className="max-w-[900px] mx-auto h-full bg-app-surface rounded-xl border border-app-border/50 flex flex-col overflow-hidden">
+                    <div className="max-w-[900px] mx-auto h-full bg-app-surface rounded-2xl border border-app-border/50 flex flex-col overflow-hidden">
                         <div className="px-5 py-3 border-b border-app-border/50 flex items-center justify-between"
                              style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
                             <div>
@@ -400,7 +411,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                     <div className="max-w-[1400px] mx-auto h-full grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
 
                         {/* ── LEFT PANEL: Active Selection ── */}
-                        <div className="bg-app-surface rounded-xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
+                        <div className="bg-app-surface rounded-2xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
                             <div className="px-4 py-3 border-b border-app-border/50 shrink-0"
                                 style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
                                 <h2 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-2">
@@ -501,7 +512,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                         </div>
 
                         {/* ── RIGHT PANEL: Browse & Add ── */}
-                        <div className="bg-app-surface rounded-xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
+                        <div className="bg-app-surface rounded-2xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
                             {/* Fixed search header */}
                             <div className="px-4 py-3 border-b border-app-border/50 shrink-0"
                                 style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>

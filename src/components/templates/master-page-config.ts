@@ -189,3 +189,25 @@ export interface MasterPageConfig {
     /** Config for the automatic empty-state panel shown when tree is empty. */
     emptyState?: EmptyStateConfig
 }
+
+/* ── Declarative bulk-move primitives ───────────────────────────── */
+
+/** Declarative config for the built-in bulk-move dialog.
+ *  When provided, TreeMasterPage auto-renders a Move button in the
+ *  bulk-action bar and handles the full move lifecycle internally.
+ */
+export interface BulkMoveConfig {
+    /** Label for the target entity, e.g. "category", "group". */
+    targetLabel: string
+    /** API field name to PATCH, e.g. "parent", "category". */
+    field: string
+    /** API endpoint prefix — items are PATCHed at `{endpoint}/{id}/`.
+     *  e.g. "inventory/categories" → PATCH /inventory/categories/42/ */
+    endpoint: string
+    /** Available move targets. */
+    targets: Array<{ id: number; name: string; path?: string }>
+    /** When true, adds a "None" / root option that sets field to null. */
+    allowNull?: boolean
+    /** Label for the null option (default: "— None —"). */
+    nullLabel?: string
+}
