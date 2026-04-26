@@ -14,6 +14,7 @@ from .closing_service import ClosingService
 from .reconciliation_service import ReconciliationService
 # Phase 3: Enterprise Services
 from .revaluation_service import RevaluationService
+from .currency_service import CurrencyService
 from .recurring_journal_service import RecurringJournalService
 from .budget_service import BudgetService
 
@@ -30,7 +31,7 @@ __all__ = [
     # v2.0 Engine Services
     'BalanceService', 'ClosingService', 'ReconciliationService',
     # Phase 3: Enterprise
-    'RevaluationService', 'RecurringJournalService', 'BudgetService',
+    'RevaluationService', 'CurrencyService', 'RecurringJournalService', 'BudgetService',
 ]
 
 

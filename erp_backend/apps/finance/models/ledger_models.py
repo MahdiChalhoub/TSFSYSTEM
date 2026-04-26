@@ -148,6 +148,67 @@ class JournalEntry(VerifiableModel):
             if abs(total_debit - total_credit) > Decimal('0.001'):
                 raise ValidationError(f"Immutable Ledger: 'POSTED' entry is out of balance (Dr: {total_debit}, Cr: {total_credit}).")
 
+            # ── Multi-currency integrity ─────────────────────────────
+            # Any line touching a currency-pinned foreign account must
+            # carry amount_currency + exchange_rate, and the resulting
+            # base-currency amount (debit − credit) must reconcile to
+            # amount_currency × exchange_rate. Without this guard, the
+            # revaluation engine and FX-aware reports run on garbage.
+            self._validate_line_currencies(lines)
+
+    def _validate_line_currencies(self, lines):
+        """
+        Raises if any line on a currency-pinned (foreign) account is missing
+        FX metadata or fails to reconcile base = foreign × rate.
+
+        Why: ChartOfAccount.currency declares "this account is denominated in
+        currency X". When X != org base currency, the line MUST also store the
+        foreign amount and the rate used at posting time so:
+          - period-end revaluation can recompute base from foreign
+          - statements presented in any currency can be re-derived
+          - audit can prove the historical conversion
+        """
+        from apps.finance.models.currency_models import Currency
+        base = Currency.objects.filter(
+            organization_id=self.organization_id, is_base=True
+        ).only('code').first()
+        if base:
+            base_code = base.code
+        else:
+            org_base = getattr(self.organization, 'base_currency', None)
+            base_code = getattr(org_base, 'code', None)
+            if not base_code:
+                # Org has no base currency at all — legacy state. Skip the
+                # guard so we don't break existing posting paths; bootstrap
+                # the base currency to enable the guard.
+                return
+
+        TOLERANCE = Decimal('0.01')
+        for line in lines:
+            acc = line.account
+            if not acc or not acc.currency:
+                continue
+            if acc.currency == base_code:
+                continue  # account is in base currency; no foreign-side required
+
+            if line.amount_currency is None or line.exchange_rate is None:
+                raise ValidationError(
+                    f"Line on account {acc.code} ({acc.currency}) is foreign-"
+                    f"currency-denominated but is missing amount_currency or "
+                    f"exchange_rate. Both are required so the revaluation "
+                    f"engine can recompute base balances."
+                )
+
+            signed_base = (line.debit or Decimal('0')) - (line.credit or Decimal('0'))
+            expected = (line.amount_currency * line.exchange_rate).quantize(Decimal('0.01'))
+            if abs(signed_base - expected) > TOLERANCE:
+                raise ValidationError(
+                    f"Line on account {acc.code}: base amount {signed_base} "
+                    f"does not reconcile to {line.amount_currency} "
+                    f"{acc.currency} × {line.exchange_rate} = {expected}. "
+                    f"Tolerance is {TOLERANCE}."
+                )
+
     def save(self, *args, **kwargs):
         bypass = kwargs.pop('force_audit_bypass', False)
         if self.pk:

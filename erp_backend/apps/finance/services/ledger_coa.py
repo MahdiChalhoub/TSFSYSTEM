@@ -645,6 +645,10 @@ class LedgerCOAMixin:
         """
         from apps.finance.models import ChartOfAccount, JournalEntryLine
         accounts_qs = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
+        # OFFICIAL view hides internal-only accounts entirely (matches the COA
+        # endpoint contract — same flag, same semantics, every report).
+        if scope == 'OFFICIAL':
+            accounts_qs = accounts_qs.filter(is_internal=False)
 
         start_dt = LedgerCOAMixin._coerce_day_boundary(start_date, end=False)
         end_dt = LedgerCOAMixin._coerce_day_boundary(as_of_date, end=True)

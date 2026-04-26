@@ -11,8 +11,33 @@ from rest_framework import status
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 from erp.views import TenantViewMixin
-from erp.middleware import get_current_tenant_id
+from erp.middleware import get_current_tenant_id, get_authorized_scope
 from apps.finance.services.financial_report_service import FinancialReportService
+
+
+def _resolve_scope(request) -> str:
+    """Resolve OFFICIAL/INTERNAL scope from headers + auth, with safe fallback.
+
+    Same contract as the COA / fiscal-years endpoints:
+      • X-Scope-Access header (forwarded by Next.js proxy from the httpOnly
+        scope_access cookie set at login) declares the user's authorized scope.
+      • X-Scope header (or ?scope= param) declares the requested view.
+      • Default OFFICIAL — safe for direct-token API callers without the header.
+      • Authorized=official + requested=INTERNAL is silently caged to OFFICIAL.
+    """
+    authorized = (
+        request.headers.get('X-Scope-Access')
+        or get_authorized_scope()
+        or 'official'
+    ).lower()
+    requested = (
+        request.headers.get('X-Scope')
+        or request.query_params.get('scope')
+        or 'OFFICIAL'
+    ).upper()
+    if authorized == 'official' and requested == 'INTERNAL':
+        requested = 'OFFICIAL'
+    return requested
 from apps.finance.serializers.report_serializers import (
     TrialBalanceSerializer,
     ProfitLossSerializer,
@@ -49,7 +74,7 @@ class TrialBalanceView(TenantViewMixin, APIView):
         from erp.models import Organization
         org_id = get_current_tenant_id()
         organization = Organization.objects.get(id=org_id)
-        service = FinancialReportService(organization, start_date, end_date)
+        service = FinancialReportService(organization, start_date, end_date, scope=_resolve_scope(request))
         report = service.generate_trial_balance(
             include_opening=include_opening,
             include_closing=include_closing
@@ -88,7 +113,7 @@ class ProfitLossView(TenantViewMixin, APIView):
         from erp.models import Organization
         org_id = get_current_tenant_id()
         organization = Organization.objects.get(id=org_id)
-        service = FinancialReportService(organization, start_date, end_date)
+        service = FinancialReportService(organization, start_date, end_date, scope=_resolve_scope(request))
         report = service.generate_profit_loss(
             comparative_period=comparative,
             previous_start=previous_start,
@@ -136,7 +161,7 @@ class BalanceSheetView(TenantViewMixin, APIView):
         from erp.models import Organization
         org_id = get_current_tenant_id()
         organization = Organization.objects.get(id=org_id)
-        service = FinancialReportService(organization, start_date, as_of_date)
+        service = FinancialReportService(organization, start_date, as_of_date, scope=_resolve_scope(request))
         report = service.generate_balance_sheet(
             as_of_date=as_of_date,
             comparative=comparative,
@@ -172,7 +197,7 @@ class CashFlowView(TenantViewMixin, APIView):
         from erp.models import Organization
         org_id = get_current_tenant_id()
         organization = Organization.objects.get(id=org_id)
-        service = FinancialReportService(organization, start_date, end_date)
+        service = FinancialReportService(organization, start_date, end_date, scope=_resolve_scope(request))
         report = service.generate_cash_flow_statement(method=method)
 
         serializer = CashFlowSerializer(report)
@@ -216,7 +241,7 @@ class FinancialReportsDashboardView(TenantViewMixin, APIView):
         from erp.models import Organization
         org_id = get_current_tenant_id()
         organization = Organization.objects.get(id=org_id)
-        service = FinancialReportService(organization, start_date, end_date)
+        service = FinancialReportService(organization, start_date, end_date, scope=_resolve_scope(request))
 
         # Get P&L summary
         pl = service.generate_profit_loss()
@@ -301,7 +326,7 @@ class AccountDrillDownView(TenantViewMixin, APIView):
         transaction_list = []
         from erp.models import Organization
         organization = Organization.objects.get(id=org_id)
-        service = FinancialReportService(organization, start_date, end_date)
+        service = FinancialReportService(organization, start_date, end_date, scope=_resolve_scope(request))
         running_balance = service._calculate_account_balance(
             account,
             end_date=start_date - timedelta(days=1)

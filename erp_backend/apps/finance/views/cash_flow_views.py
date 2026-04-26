@@ -36,11 +36,27 @@ class CashFlowForecastViewSet(viewsets.ViewSet):
         include_recurring_raw = request.query_params.get('include_recurring', '1')
         include_recurring = include_recurring_raw not in ('0', 'false', 'False')
 
+        # Resolve scope (matches the rest of the finance read endpoints).
+        from erp.middleware import get_authorized_scope
+        authorized = (
+            request.headers.get('X-Scope-Access')
+            or get_authorized_scope()
+            or 'official'
+        ).lower()
+        scope = (
+            request.headers.get('X-Scope')
+            or request.query_params.get('scope')
+            or 'OFFICIAL'
+        ).upper()
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
+
         return Response(
             CashFlowForecastService.forecast(
                 organization,
                 horizon_days=horizon_days,
                 granularity=granularity,
                 include_recurring=include_recurring,
+                scope=scope,
             )
         )

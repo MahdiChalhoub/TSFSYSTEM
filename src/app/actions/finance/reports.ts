@@ -2,6 +2,12 @@
 
 import { erpFetch } from "@/lib/erp-api"
 
+async function _readScopeFromCookie(): Promise<'OFFICIAL' | 'INTERNAL'> {
+    const { cookies } = await import('next/headers')
+    const v = (await cookies()).get('tsf_view_scope')?.value
+    return v === 'INTERNAL' ? 'INTERNAL' : 'OFFICIAL'
+}
+
 // ─── Aged Reports ────────────────────────────────────────────────
 
 export async function getAgedReceivables() {
@@ -23,7 +29,8 @@ export async function getTrialBalance(asOf?: string, scope?: string) {
 }
 
 export async function getAccountStatement(accountId: number) {
-    return await erpFetch(`finance/coa/${accountId}/statement/`)
+    const scope = await _readScopeFromCookie()
+    return await erpFetch(`finance/coa/${accountId}/statement/?scope=${scope}`)
 }
 
 // ─── Helper: Financial Accounts ──────────────────────────────────

@@ -38,7 +38,7 @@ class CashFlowForecastService:
 
     @staticmethod
     def forecast(organization, *, horizon_days=90, granularity='DAILY',
-                 as_of=None, include_recurring=True):
+                 as_of=None, include_recurring=True, scope='OFFICIAL'):
         """Run a cash-flow forecast.
 
         Args:
@@ -78,7 +78,7 @@ class CashFlowForecastService:
 
         # ── Starting position ──
         starting, cash_accounts = CashFlowForecastService._starting_position(
-            organization, as_of=today,
+            organization, as_of=today, scope=scope,
         )
 
         # ── Collect all future cash-impacting events ──
@@ -208,8 +208,12 @@ class CashFlowForecastService:
         return date(d.year, d.month + 1, 1)
 
     @staticmethod
-    def _starting_position(organization, *, as_of):
-        """Sum authoritative JE-line balance on cash/bank accounts as-of `as_of`."""
+    def _starting_position(organization, *, as_of, scope='OFFICIAL'):
+        """Sum authoritative JE-line balance on cash/bank accounts as-of `as_of`.
+
+        OFFICIAL → counts only OFFICIAL-tagged journals (cash position you'd
+        report externally). INTERNAL → counts all journals (true cash on hand).
+        """
         from apps.finance.models import ChartOfAccount, JournalEntryLine
 
         cash_qs = ChartOfAccount.objects.filter(
@@ -221,18 +225,23 @@ class CashFlowForecastService:
             organization=organization, is_active=True,
             system_role__in=['CASH_ACCOUNT', 'BANK_ACCOUNT'],
         )
+        # OFFICIAL view hides internal-only accounts (they wouldn't be reportable).
+        if scope == 'OFFICIAL':
+            cash_qs = cash_qs.filter(is_internal=False)
         cash_qs = cash_qs.distinct()
 
         cash_accounts = []
         total = Decimal('0.00')
         for acc in cash_qs:
-            agg = JournalEntryLine.objects.filter(
+            line_qs = JournalEntryLine.objects.filter(
                 organization=organization, account=acc,
                 journal_entry__status='POSTED',
                 journal_entry__is_superseded=False,
-                journal_entry__scope='OFFICIAL',
                 journal_entry__transaction_date__date__lte=as_of,
-            ).aggregate(d=Sum('debit'), c=Sum('credit'))
+            )
+            if scope == 'OFFICIAL':
+                line_qs = line_qs.filter(journal_entry__scope='OFFICIAL')
+            agg = line_qs.aggregate(d=Sum('debit'), c=Sum('credit'))
             d = agg['d'] or Decimal('0.00')
             c = agg['c'] or Decimal('0.00')
             net = d - c  # cash accounts are debit-positive

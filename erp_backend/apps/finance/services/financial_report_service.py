@@ -28,7 +28,7 @@ from collections import defaultdict
 class FinancialReportService:
     """Service for generating financial reports."""
 
-    def __init__(self, organization, start_date: date, end_date: date):
+    def __init__(self, organization, start_date: date, end_date: date, scope: str = 'OFFICIAL'):
         """
         Initialize report service.
 
@@ -36,10 +36,29 @@ class FinancialReportService:
             organization: Organization instance
             start_date: Report start date
             end_date: Report end date
+            scope: 'OFFICIAL' (only OFFICIAL journals) or 'INTERNAL' (all journals).
+                   Determines which journal entries contribute to every report
+                   this service produces. Default OFFICIAL = safe for direct
+                   API callers without the X-Scope header.
         """
         self.organization = organization
         self.start_date = start_date
         self.end_date = end_date
+        self.scope = (scope or 'OFFICIAL').upper()
+
+    def _scope_filter_qs(self, qs, prefix='journal_entry__'):
+        """Apply OFFICIAL filter to a JE/JE-line queryset; INTERNAL = no filter."""
+        if self.scope == 'OFFICIAL':
+            return qs.filter(**{f'{prefix}scope': 'OFFICIAL'})
+        return qs
+
+    def _account_qs(self):
+        """Account base queryset, scope-aware (hides internal-only in OFFICIAL view)."""
+        from apps.finance.models import ChartOfAccount
+        qs = ChartOfAccount.objects.filter(organization=self.organization)
+        if self.scope == 'OFFICIAL':
+            qs = qs.filter(is_internal=False)
+        return qs
 
     def generate_cash_flow_statement(self, method: str = 'INDIRECT') -> Dict:
         """
@@ -71,13 +90,10 @@ class FinancialReportService:
         Returns:
             Dict with trial balance data
         """
-        from apps.finance.models import ChartOfAccount, JournalEntryLine
+        from apps.finance.models import JournalEntryLine
 
-        # Get all accounts
-        accounts = ChartOfAccount.objects.filter(
-            organization=self.organization,
-            is_active=True
-        ).order_by('code')
+        # Scope-aware account selection (hides internal-only in OFFICIAL view)
+        accounts = self._account_qs().filter(is_active=True).order_by('code')
 
         trial_balance_lines = []
         total_opening_debit = Decimal('0.00')
@@ -96,14 +112,16 @@ class FinancialReportService:
                     end_date=self.start_date - timedelta(days=1)
                 )
 
-            # Period activity
-            period_totals = JournalEntryLine.objects.filter(
+            # Period activity (scope-filtered)
+            period_qs = JournalEntryLine.objects.filter(
                 organization=self.organization,
                 account=account,
                 entry__status='POSTED',
                 entry__transaction_date__gte=self.start_date,
                 entry__transaction_date__lte=self.end_date
-            ).aggregate(
+            )
+            period_qs = self._scope_filter_qs(period_qs, prefix='entry__')
+            period_totals = period_qs.aggregate(
                 debit=Sum('debit'),
                 credit=Sum('credit')
             )
@@ -253,7 +271,7 @@ class FinancialReportService:
 
         # Add comparative period if requested
         if comparative_period and previous_start and previous_end:
-            prev_service = FinancialReportService(self.organization, previous_start, previous_end)
+            prev_service = FinancialReportService(self.organization, previous_start, previous_end, scope=self.scope)
             prev_pl = prev_service.generate_profit_loss()
 
             result['previous_period'] = {
@@ -380,7 +398,8 @@ class FinancialReportService:
             prev_service = FinancialReportService(
                 self.organization,
                 self.start_date,
-                previous_date
+                previous_date,
+                scope=self.scope,
             )
             prev_bs = prev_service.generate_balance_sheet(as_of_date=previous_date)
 
@@ -509,7 +528,7 @@ class FinancialReportService:
         start_date: date = None,
         end_date: date = None
     ) -> Decimal:
-        """Calculate account balance for date range."""
+        """Calculate account balance for date range (scope-aware)."""
         from apps.finance.models import JournalEntryLine
 
         query = Q(
@@ -522,6 +541,10 @@ class FinancialReportService:
             query &= Q(entry__transaction_date__lte=end_date)
         if start_date:
             query &= Q(entry__transaction_date__gte=start_date)
+
+        # OFFICIAL view → only OFFICIAL journals; INTERNAL → all journals.
+        if self.scope == 'OFFICIAL':
+            query &= Q(entry__scope='OFFICIAL')
 
         totals = JournalEntryLine.objects.filter(query).aggregate(
             debit=Sum('debit'),
