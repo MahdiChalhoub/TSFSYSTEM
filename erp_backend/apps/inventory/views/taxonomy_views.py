@@ -987,28 +987,85 @@ class CategoryViewSet(TenantModelViewSet):
     def catalogue_languages(self, request):
         """Get / set the list of locale codes the tenant wants in the catalogue.
         Stored in Organization.settings['catalogue_languages']. Default: ['fr','ar'].
-        Codes are arbitrary strings (ISO 639-1 recommended). Empty list =
-        single-language mode (only the base `name` field shows up in forms)."""
+
+        Storage shape (canonical, mixed with legacy support on read):
+            [{ 'code': 'fr', 'country_ids': [1, 2] }, ...]
+        Empty country_ids = active in every enabled country (default).
+
+        Response always includes both `languages` (codes only — legacy contract
+        for category/brand/attribute forms) and `entries` (rich shape — used by
+        the Regional Settings page).
+
+        POST accepts either:
+            { 'languages': ['fr', 'ar'] }                      # legacy (preserves existing country_ids)
+            { 'entries': [{'code':'fr','country_ids':[1]}] }   # rich shape
+        """
         organization, err = _get_org_or_400()
         if err: return err
         settings = organization.settings or {}
+
+        def _to_entries(stored):
+            out = []
+            for item in (stored or []):
+                if isinstance(item, str):
+                    code = item.strip().lower()
+                    if code:
+                        out.append({'code': code, 'country_ids': []})
+                elif isinstance(item, dict) and item.get('code'):
+                    code = str(item['code']).strip().lower()
+                    if not code:
+                        continue
+                    cids = sorted({int(x) for x in (item.get('country_ids') or []) if x is not None})
+                    out.append({'code': code, 'country_ids': cids})
+            return out
+
+        raw = settings.get('catalogue_languages', ['fr', 'ar'])
+
         if request.method == 'POST':
-            codes = request.data.get('languages') or []
-            if not isinstance(codes, list):
-                return Response({'error': 'languages must be an array of codes'}, status=400)
-            # Normalise: lowercase, strip, dedupe, keep max 20 entries
-            cleaned = []
-            seen = set()
-            for c in codes:
-                s = str(c or '').strip().lower()
-                if s and s not in seen:
-                    cleaned.append(s); seen.add(s)
-                if len(cleaned) >= 20: break
+            if 'entries' in request.data:
+                entries = request.data.get('entries') or []
+                if not isinstance(entries, list):
+                    return Response({'error': 'entries must be an array'}, status=400)
+                cleaned = []
+                seen = set()
+                for e in entries:
+                    if not isinstance(e, dict):
+                        continue
+                    code = str(e.get('code') or '').strip().lower()
+                    if not code or code in seen:
+                        continue
+                    cids = sorted({int(x) for x in (e.get('country_ids') or []) if x is not None})
+                    cleaned.append({'code': code, 'country_ids': cids})
+                    seen.add(code)
+                    if len(cleaned) >= 20:
+                        break
+            else:
+                codes = request.data.get('languages') or []
+                if not isinstance(codes, list):
+                    return Response({'error': 'languages must be an array of codes'}, status=400)
+                existing = {e['code']: e for e in _to_entries(raw)}
+                cleaned = []
+                seen = set()
+                for c in codes:
+                    s = str(c or '').strip().lower()
+                    if s and s not in seen:
+                        cleaned.append(existing.get(s, {'code': s, 'country_ids': []}))
+                        seen.add(s)
+                    if len(cleaned) >= 20:
+                        break
             settings['catalogue_languages'] = cleaned
             organization.settings = settings
             organization.save(update_fields=['settings'])
-            return Response({'languages': cleaned})
-        return Response({'languages': settings.get('catalogue_languages', ['fr', 'ar'])})
+            return Response({
+                'languages': [e['code'] for e in cleaned],
+                'entries': cleaned,
+            })
+
+        entries = _to_entries(raw)
+        return Response({
+            'languages': [e['code'] for e in entries],
+            'entries': entries,
+        })
 
     @action(detail=True, methods=['get'])
     def audit(self, request, pk=None):

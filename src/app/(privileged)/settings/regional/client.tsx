@@ -39,7 +39,11 @@ import {
     setOrgCurrencyCountries,
 } from '@/app/actions/reference';
 import { toast } from 'sonner';
-import { getCatalogueLanguages, setCatalogueLanguages, labelFor, isRTL } from '@/lib/catalogue-languages';
+import {
+    getCatalogueLanguageEntries, setCatalogueLanguageEntries,
+    labelFor, isRTL,
+    type CatalogueLanguageEntry,
+} from '@/lib/catalogue-languages';
 import { FxManagementSection } from './_components/FxManagementSection';
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
@@ -96,37 +100,66 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     const [isPending, startTransition] = useTransition();
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
-    // Catalogue languages
-    const [langCodes, setLangCodes] = useState<string[]>([]);
+    // Catalogue languages — rich shape (code + per-country activation list).
+    // Empty country_ids = "active in every enabled country".
+    const [langEntries, setLangEntries] = useState<CatalogueLanguageEntry[]>([]);
     const [langCustom, setLangCustom] = useState('');
+    const [langSearch, setLangSearch] = useState('');
     const [langLoading, setLangLoading] = useState(false);
-    const [langSaving, setLangSaving] = useState(false);
+    const langCodes = useMemo(() => langEntries.map(e => e.code), [langEntries]);
     useEffect(() => {
-        if (tab !== 'languages' || langCodes.length > 0) return;
+        if (tab !== 'languages' || langEntries.length > 0) return;
         setLangLoading(true);
-        getCatalogueLanguages()
-            .then(setLangCodes)
-            .catch(() => setLangCodes(['fr', 'ar']))
+        getCatalogueLanguageEntries()
+            .then(setLangEntries)
+            .catch(() => setLangEntries([{ code: 'fr', country_ids: [] }, { code: 'ar', country_ids: [] }]))
             .finally(() => setLangLoading(false));
-    }, [tab, langCodes.length]);
-    const toggleLang = (c: string) => setLangCodes(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]);
+    }, [tab, langEntries.length]);
+
+    // Persist + revert-on-failure helper. Mirrors the optimistic pattern used
+    // by handleEnableCountry / handleEnableCurrency in this file.
+    const persistLangEntries = async (next: CatalogueLanguageEntry[]) => {
+        const prev = langEntries;
+        setLangEntries(next);
+        try {
+            const saved = await setCatalogueLanguageEntries(next);
+            setLangEntries(saved);
+        } catch (e: any) {
+            setLangEntries(prev);
+            toast.error(e?.message || 'Failed to save languages');
+        }
+    };
+
+    const toggleLang = (c: string) => {
+        const has = langEntries.some(e => e.code === c);
+        const next = has
+            ? langEntries.filter(e => e.code !== c)
+            : [...langEntries, { code: c, country_ids: [] }];
+        persistLangEntries(next);
+    };
     const addCustomLang = () => {
         const n = langCustom.trim().toLowerCase().slice(0, 10);
         if (!n) return;
-        if (!langCodes.includes(n)) setLangCodes(p => [...p, n]);
+        if (!langCodes.includes(n)) {
+            persistLangEntries([...langEntries, { code: n, country_ids: [] }]);
+        }
         setLangCustom('');
     };
-    const saveLangs = async () => {
-        setLangSaving(true);
-        try {
-            const saved = await setCatalogueLanguages(langCodes);
-            setLangCodes(saved);
-            toast.success(`${saved.length} language${saved.length === 1 ? '' : 's'} enabled for the catalogue`);
-        } catch (e: any) {
-            toast.error(e?.message || 'Failed to save');
-        } finally {
-            setLangSaving(false);
-        }
+
+    /** Toggle a single Country FK id on a language entry. Empty country_ids
+     *  is the canonical "all enabled countries" state. */
+    const toggleLangCountry = (code: string, countryFkId: number) => {
+        const next = langEntries.map(e => {
+            if (e.code !== code) return e;
+            const has = e.country_ids.includes(countryFkId);
+            return {
+                ...e,
+                country_ids: has
+                    ? e.country_ids.filter(x => x !== countryFkId)
+                    : [...e.country_ids, countryFkId].sort((a, b) => a - b),
+            };
+        });
+        persistLangEntries(next);
     };
 
     /* ─── Derived ────────────────────────────────────────────────── */
@@ -303,22 +336,25 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     /* ─── KPI definitions ────────────────────────────────────────── */
     const KPIS = [
         { label: 'Countries', value: orgCountries.length, icon: Globe, color: 'var(--app-primary)' },
-        { label: 'Currencies', value: orgCurrencies.length, icon: Coins, color: 'var(--app-warning)' },
-        { label: 'Base', value: baseCurrencyCode ?? '—', icon: Crown, color: 'var(--app-success)' },
-        { label: 'Languages', value: langCodes.length || '—', icon: Languages, color: 'var(--app-info)' },
+        { label: 'Currencies', value: orgCurrencies.length, icon: Coins, color: 'var(--app-primary)' },
+        { label: 'Base', value: baseCurrencyCode ?? '—', icon: Crown, color: 'var(--app-primary)' },
+        { label: 'Languages', value: langCodes.length || '—', icon: Languages, color: 'var(--app-primary)' },
     ] as const;
 
     /* ─── Tab definitions ────────────────────────────────────────── */
+    // All top-level tabs share the page's primary accent so the active pill
+    // is always the same theme color regardless of which tab is open.
     const TABS = [
         { key: 'countries' as Tab, label: 'Countries', icon: Globe, color: '--app-primary' },
-        { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-warning' },
-        { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-info' },
+        { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-primary' },
+        { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-primary' },
     ];
 
+    // Sub-tabs share the page's primary theme accent so the strip reads as one set.
     const CURRENCY_SUB_TABS: { key: CurrencySubTab; label: string; icon: typeof Globe; color: string }[] = [
-        { key: 'select', label: 'Select Currency', icon: Coins, color: '--app-warning' },
-        { key: 'rules', label: 'Rate Rules', icon: RefreshCcw, color: '--app-info' },
-        { key: 'history', label: 'Rate History', icon: TrendingUp, color: '--app-success' },
+        { key: 'select', label: 'Select Currency', icon: Coins, color: '--app-primary' },
+        { key: 'rules', label: 'Rate Rules', icon: RefreshCcw, color: '--app-primary' },
+        { key: 'history', label: 'Rate History', icon: TrendingUp, color: '--app-primary' },
         { key: 'revaluations', label: 'Revaluations', icon: Crown, color: '--app-primary' },
     ];
 
@@ -421,13 +457,6 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                 );
                             })}
                         </div>
-                        {tab === 'languages' && (
-                            <button onClick={saveLangs} disabled={langSaving || langLoading}
-                                className="regional-tbtn-primary disabled:opacity-50">
-                                {langSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={13} />}
-                                <span>Save</span>
-                            </button>
-                        )}
                     </div>
                 </div>
 
@@ -480,16 +509,16 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                             onToggleCurrencyCountry={toggleCurrencyCountry}
                         />
                     )}
-                    {tab === 'currencies' && (
-                        <div className="h-full flex flex-col gap-3 min-h-0">
-                            {/* Sub-tab strip — ghost style (tint + border + colored text), not solid filled.
-                                Same recipe as the COA-style toolbar buttons in the page header. */}
-                            <div className="flex items-center gap-1.5 self-start shrink-0 flex-wrap">
+                    {tab === 'currencies' && (() => {
+                        // Sub-tab pill row — rendered INSIDE the right-pane card header
+                        // (alongside the search bar on select, alone on the other views).
+                        const subTabStrip = (
+                            <div className="flex items-center gap-1 flex-wrap shrink-0">
                                 {CURRENCY_SUB_TABS.map(s => {
                                     const SIcon = s.icon; const active = currencySubTab === s.key;
                                     return (
                                         <button key={s.key} onClick={() => setCurrencySubTab(s.key)}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all duration-200"
+                                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl font-bold transition-all duration-200"
                                             style={active
                                                 ? {
                                                     fontSize: 11,
@@ -501,67 +530,68 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                                     fontSize: 11,
                                                     color: 'var(--app-muted-foreground)',
                                                     background: 'transparent',
-                                                    border: '1px solid var(--app-border)',
+                                                    border: '1px solid transparent',
                                                 }}>
                                             <SIcon size={12} /> <span className="hidden sm:inline">{s.label}</span>
                                         </button>
                                     );
                                 })}
                             </div>
+                        );
 
-                            {/* Sub-tab content */}
-                            <div className="flex-1 min-h-0">
-                                {currencySubTab === 'select' && (
-                                    <TwoPanePicker
-                                        kind="currency"
-                                        allItems={allCurrencies}
-                                        filteredItems={filteredCurrencies}
-                                        orgItems={orgCurrencies}
-                                        search={search}
-                                        setSearch={setSearch}
-                                        regions={[]}
-                                        regionFilter=""
-                                        setRegionFilter={() => {}}
-                                        isPending={isPending}
-                                        enabledIds={enabledCurrencyIds}
-                                        defaultId={defaultCurrencyId}
-                                        onEnable={handleEnableCurrency as any}
-                                        onSetDefault={handleSetDefaultCurrency}
-                                        onDisable={handleDisableCurrency as any}
-                                        // Tree expansion (Currency → activation per country):
-                                        orgCountries={orgCountries}
-                                        allCountries={allCountries}
-                                        orgCurrencies={orgCurrencies}
-                                        allCurrencies={allCurrencies}
-                                        onToggleCurrencyCountry={toggleCurrencyCountry}
-                                    />
-                                )}
-                                {currencySubTab === 'rules' && (
-                                    <div className="h-full overflow-y-auto custom-scrollbar pr-1">
-                                        <FxManagementSection view="policies" />
-                                    </div>
-                                )}
-                                {currencySubTab === 'history' && (
-                                    <div className="h-full overflow-y-auto custom-scrollbar pr-1">
-                                        <FxManagementSection view="rates" />
-                                    </div>
-                                )}
-                                {currencySubTab === 'revaluations' && (
-                                    <div className="h-full overflow-y-auto custom-scrollbar pr-1">
-                                        <FxManagementSection view="revaluations" />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                        // The "Your Currencies" pane stays mounted across all sub-tabs;
+                        // only the right-pane body swaps between the catalogue grid and
+                        // the FX management sections.
+                        const rightBody =
+                            currencySubTab === 'rules' ? <FxManagementSection view="policies" />
+                            : currencySubTab === 'history' ? <FxManagementSection view="rates" />
+                            : currencySubTab === 'revaluations' ? <FxManagementSection view="revaluations" />
+                            : undefined;
+
+                        return (
+                            <TwoPanePicker
+                                kind="currency"
+                                allItems={allCurrencies}
+                                filteredItems={filteredCurrencies}
+                                orgItems={orgCurrencies}
+                                search={search}
+                                setSearch={setSearch}
+                                regions={[]}
+                                regionFilter=""
+                                setRegionFilter={() => {}}
+                                isPending={isPending}
+                                enabledIds={enabledCurrencyIds}
+                                defaultId={defaultCurrencyId}
+                                onEnable={handleEnableCurrency as any}
+                                onSetDefault={handleSetDefaultCurrency}
+                                onDisable={handleDisableCurrency as any}
+                                // Tree expansion (Currency → activation per country):
+                                orgCountries={orgCountries}
+                                allCountries={allCountries}
+                                orgCurrencies={orgCurrencies}
+                                allCurrencies={allCurrencies}
+                                onToggleCurrencyCountry={toggleCurrencyCountry}
+                                // Sub-tabs share the right-pane header band with the search.
+                                rightPaneHeaderLeft={subTabStrip}
+                                // On non-select sub-tabs, replace catalogue body with FX section.
+                                rightPaneBody={rightBody}
+                                hideRightPaneSearch={currencySubTab !== 'select'}
+                            />
+                        );
+                    })()}
                     {tab === 'languages' && (
                         <LanguagesPanel
-                            langCodes={langCodes}
+                            langEntries={langEntries}
                             langCustom={langCustom}
                             setLangCustom={setLangCustom}
+                            langSearch={langSearch}
+                            setLangSearch={setLangSearch}
                             langLoading={langLoading}
                             toggleLang={toggleLang}
                             addCustomLang={addCustomLang}
+                            toggleLangCountry={toggleLangCountry}
+                            orgCountries={orgCountries}
+                            allCountries={allCountries}
                         />
                     )}
                     </div>{/* close content inner */}
@@ -624,6 +654,7 @@ function TwoPanePicker({
     onEnable, onSetDefault, onDisable,
     enabledCurrencyCodes,
     orgCountries, allCountries, orgCurrencies, allCurrencies, onToggleCurrencyCountry,
+    rightPaneHeaderLeft, rightPaneBody, hideRightPaneSearch,
 }: {
     kind: 'country' | 'currency';
     allItems: any[]; filteredItems: any[]; orgItems: any[];
@@ -639,8 +670,19 @@ function TwoPanePicker({
     orgCurrencies?: OrgCurrency[];
     allCurrencies?: RefCurrency[];
     onToggleCurrencyCountry?: (oc: OrgCurrency, countryFkId: number) => void;
+    /** Optional content rendered inside the right-pane header band, before the
+     *  search input — used by the Currencies tab to host its sub-tab strip. */
+    rightPaneHeaderLeft?: React.ReactNode;
+    /** Replace the right-pane body (catalogue grid) with custom content. Used by
+     *  the Currencies tab to swap in FxManagementSection on non-select sub-tabs
+     *  while keeping the left "Your Currencies" pane mounted. */
+    rightPaneBody?: React.ReactNode;
+    /** Hide the search/region filter inside the right-pane header. */
+    hideRightPaneSearch?: boolean;
 }) {
-    const accent = kind === 'country' ? '--app-primary' : '--app-warning';
+    // Both Countries and Currencies share the page's primary accent so the
+    // page reads as one cohesive theme — no warning-amber drift.
+    const accent = '--app-primary';
     const PanelIcon = kind === 'country' ? Globe : Coins;
     const placeholder = kind === 'country' ? 'Search 250+ countries…' : 'Search 150+ currencies…';
 
@@ -685,27 +727,34 @@ function TwoPanePicker({
 
             {/* ── RIGHT PANE: Browse + add ── */}
             <section className="bg-app-surface/30 rounded-2xl border border-app-border flex flex-col overflow-hidden min-h-0">
-                <div className="px-4 py-3 border-b border-app-border/50 shrink-0 flex items-center gap-2"
+                <div className="px-4 py-2.5 border-b border-app-border/50 shrink-0 flex items-center gap-2 flex-wrap"
                     style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-                    <div className="flex-1 relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={placeholder}
-                            className="w-full pl-9 pr-9 py-2 text-[12px] font-medium bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
-                        {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-foreground"><X size={13} /></button>}
-                    </div>
-                    {kind === 'country' && regions.length > 0 && (
-                        <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
-                            className="h-9 px-2.5 rounded-xl border border-app-border/50 bg-app-surface/50 text-[11px] font-bold text-app-foreground focus:bg-app-surface outline-none cursor-pointer">
-                            <option value="">All Regions</option>
-                            {regions.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
+                    {rightPaneHeaderLeft}
+                    {!hideRightPaneSearch && (
+                        <>
+                            <div className="flex-1 relative min-w-[200px]">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                                <input value={search} onChange={e => setSearch(e.target.value)} placeholder={placeholder}
+                                    className="w-full pl-9 pr-9 py-1.5 text-[12px] font-medium bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
+                                {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-foreground"><X size={13} /></button>}
+                            </div>
+                            {kind === 'country' && regions.length > 0 && (
+                                <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
+                                    className="h-8 px-2.5 rounded-xl border border-app-border/50 bg-app-surface/50 text-[11px] font-bold text-app-foreground focus:bg-app-surface outline-none cursor-pointer">
+                                    <option value="">All Regions</option>
+                                    {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                                </select>
+                            )}
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground whitespace-nowrap shrink-0">
+                                {filteredItems.length} results
+                            </span>
+                        </>
                     )}
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground whitespace-nowrap shrink-0">
-                        {filteredItems.length} results
-                    </span>
                 </div>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-3">
-                    {filteredItems.length === 0 ? (
+                    {rightPaneBody !== undefined ? (
+                        rightPaneBody
+                    ) : filteredItems.length === 0 ? (
                         <EmptyState
                             icon={<Search size={36} className="text-app-muted-foreground opacity-40" />}
                             title={`No ${kind === 'country' ? 'countries' : 'currencies'} match your search`}
@@ -910,91 +959,261 @@ function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, on
 }
 
 /* ═══════════════════════════════════════════════════════════════════
- *  LanguagesPanel — single-card multi-select
+ *  LanguagesPanel — 2-pane picker matching Countries / Currencies
+ *    Left:  "Your Languages" — active selection (delete to remove)
+ *    Right: catalogue with search + custom-code add-row footer
  * ═══════════════════════════════════════════════════════════════════ */
-function LanguagesPanel({ langCodes, langCustom, setLangCustom, langLoading, toggleLang, addCustomLang }: {
-    langCodes: string[]; langCustom: string; setLangCustom: (s: string) => void;
+function LanguagesPanel({
+    langEntries, langCustom, setLangCustom, langSearch, setLangSearch,
+    langLoading, toggleLang, addCustomLang, toggleLangCountry,
+    orgCountries, allCountries,
+}: {
+    langEntries: CatalogueLanguageEntry[];
+    langCustom: string; setLangCustom: (s: string) => void;
+    langSearch: string; setLangSearch: (s: string) => void;
     langLoading: boolean; toggleLang: (c: string) => void; addCustomLang: () => void;
+    toggleLangCountry: (code: string, countryFkId: number) => void;
+    orgCountries: OrgCountry[]; allCountries: RefCountry[];
 }) {
-    const customCodes = langCodes.filter(c => !COMMON_LOCALES.some(l => l.code === c));
-    return (
-        <div className="h-full max-w-[900px] mx-auto bg-app-surface/30 rounded-2xl border border-app-border flex flex-col overflow-hidden">
-            <PaneHeader
-                icon={<Languages size={13} style={{ color: 'var(--app-info)' }} />}
-                title="Catalogue Languages"
-                subtitle={`${langCodes.length} enabled · used across category + product translation inputs`}
-            />
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
-                {langLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <Loader2 size={24} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
-                    </div>
-                ) : (
-                    <>
-                        <p className="text-[11px] font-medium text-app-muted-foreground leading-relaxed">
-                            Pick the languages your catalogue needs. Category / product forms render one translation input
-                            per enabled locale. The default language is the main <code className="font-mono px-1 py-0.5 rounded bg-app-background text-app-foreground">name</code> field — never duplicated.
-                        </p>
+    const accent = '--app-primary';
+    const enabledSet = new Set(langEntries.map(e => e.code));
 
-                        {/* Common locale grid — adaptive */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
-                            {COMMON_LOCALES.map(l => {
-                                const active = langCodes.includes(l.code);
+    // Active rows (left pane) — preserve user order, custom codes mixed in.
+    const activeItems = langEntries.map(e => {
+        const known = COMMON_LOCALES.find(l => l.code === e.code);
+        return { code: e.code, native: known?.native ?? labelFor(e.code), country_ids: e.country_ids };
+    });
+
+    // Catalogue (right pane) — common locales filtered by search.
+    const q = langSearch.trim().toLowerCase();
+    const filteredLocales = q
+        ? COMMON_LOCALES.filter(l => l.code.includes(q) || l.native.toLowerCase().includes(q))
+        : COMMON_LOCALES;
+
+    return (
+        <div className="h-full grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
+            {/* ── LEFT PANE — Your Languages ── */}
+            <section className="bg-app-surface/30 rounded-2xl border border-app-border flex flex-col overflow-hidden min-h-0">
+                <PaneHeader
+                    icon={<Languages size={13} style={{ color: `var(${accent})` }} />}
+                    title="Your Languages"
+                    subtitle={`${langEntries.length} active · hover to remove · expand to scope`}
+                />
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1.5">
+                    {langLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <Loader2 size={20} className="animate-spin" style={{ color: `var(${accent})` }} />
+                        </div>
+                    ) : activeItems.length === 0 ? (
+                        <EmptyState
+                            icon={<Languages size={36} className="text-app-muted-foreground opacity-40" />}
+                            title="No languages enabled"
+                            hint="Click items in the catalogue on the right to enable them →"
+                        />
+                    ) : activeItems.map((l, idx) => (
+                        <ActiveLangRow
+                            key={l.code}
+                            entry={l}
+                            isDefault={idx === 0}
+                            accent={accent}
+                            orgCountries={orgCountries}
+                            allCountries={allCountries}
+                            onRemove={() => toggleLang(l.code)}
+                            onToggleCountry={(cid) => toggleLangCountry(l.code, cid)}
+                        />
+                    ))}
+                </div>
+            </section>
+
+            {/* ── RIGHT PANE — Catalogue + custom-add footer ── */}
+            <section className="bg-app-surface/30 rounded-2xl border border-app-border flex flex-col overflow-hidden min-h-0">
+                <div className="px-4 py-2.5 border-b border-app-border/50 shrink-0 flex items-center gap-2 flex-wrap"
+                    style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+                    <div className="flex-1 relative min-w-[200px]">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input value={langSearch} onChange={e => setLangSearch(e.target.value)}
+                            placeholder="Search languages…"
+                            className="w-full pl-9 pr-9 py-1.5 text-[12px] font-medium bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
+                        {langSearch && <button onClick={() => setLangSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-foreground"><X size={13} /></button>}
+                    </div>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground whitespace-nowrap shrink-0">
+                        {filteredLocales.length} results
+                    </span>
+                </div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-3">
+                    {filteredLocales.length === 0 ? (
+                        <EmptyState
+                            icon={<Search size={36} className="text-app-muted-foreground opacity-40" />}
+                            title="No languages match your search"
+                            hint="Try a different search term, or add a custom code below."
+                        />
+                    ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
+                            {filteredLocales.map(l => {
+                                const active = enabledSet.has(l.code);
                                 return (
                                     <button key={l.code} type="button" onClick={() => toggleLang(l.code)}
-                                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl transition-all text-left"
-                                        style={{
-                                            background: active ? 'color-mix(in srgb, var(--app-info) 10%, transparent)' : 'var(--app-surface)',
-                                            border: `1px solid ${active ? 'color-mix(in srgb, var(--app-info) 40%, transparent)' : 'color-mix(in srgb, var(--app-border) 50%, transparent)'}`,
-                                        }}>
-                                        <span className="flex-1 min-w-0">
-                                            <span className={`text-[12px] font-bold truncate block ${active ? '' : 'text-app-foreground'}`}
-                                                style={active ? { color: 'var(--app-info)' } : {}}
-                                                dir={isRTL(l.code) ? 'rtl' : undefined}>
-                                                {l.native}
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all text-left"
+                                        style={active
+                                            ? {
+                                                background: `color-mix(in srgb, var(${accent}) 8%, transparent)`,
+                                                border: `1px solid color-mix(in srgb, var(${accent}) 30%, transparent)`,
+                                            }
+                                            : {
+                                                background: 'var(--app-surface)',
+                                                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                            }}>
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border"
+                                            style={active
+                                                ? { ...soft(accent, 14), color: `var(${accent})`, borderColor: `color-mix(in srgb, var(${accent}) 30%, transparent)` }
+                                                : {
+                                                    background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                                    color: 'var(--app-foreground)',
+                                                    borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                                }}>
+                                            <span className="font-black uppercase" style={{ fontSize: 11 }}>{l.code.slice(0, 2)}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-bold text-app-foreground truncate" style={{ fontSize: 12, lineHeight: 1.3 }}
+                                                dir={isRTL(l.code) ? 'rtl' : undefined}>{l.native}</div>
+                                            <div className="font-mono uppercase text-app-muted-foreground" style={{ fontSize: 9 }}>{l.code}</div>
+                                        </div>
+                                        {active && (
+                                            <span className="px-1.5 py-0.5 rounded uppercase tracking-widest font-black text-white shrink-0"
+                                                style={{ ...grad(accent), fontSize: 8 }}>
+                                                <Check size={9} className="inline -mt-px" /> Active
                                             </span>
-                                            <span className="text-[9px] font-mono uppercase text-app-muted-foreground">{l.code}</span>
-                                        </span>
-                                        {active && <Check size={14} style={{ color: 'var(--app-info)' }} />}
+                                        )}
                                     </button>
                                 );
                             })}
                         </div>
+                    )}
+                </div>
+                {/* Custom code footer — same band style as the picker header. */}
+                <div className="px-4 py-2.5 border-t border-app-border/50 shrink-0 flex items-center gap-2"
+                    style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground shrink-0">Custom</span>
+                    <input value={langCustom}
+                        onChange={e => setLangCustom(e.target.value.replace(/[^a-z-]/gi, ''))}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomLang(); } }}
+                        placeholder="Locale code (e.g. ber, ku)"
+                        className="flex-1 px-3 py-1.5 rounded-xl text-[12px] font-mono bg-app-surface/50 border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface outline-none" />
+                    <button type="button" onClick={addCustomLang}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-white"
+                        style={{ ...grad(accent), fontSize: 11 }}>
+                        <Plus size={12} /> Add
+                    </button>
+                </div>
+            </section>
+        </div>
+    );
+}
 
-                        {/* Custom codes */}
-                        {customCodes.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-app-border/50">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mr-2">Custom</span>
-                                {customCodes.map(c => (
-                                    <span key={c} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold"
-                                        style={{ ...soft('--app-info', 12), color: 'var(--app-info)' }}>
-                                        {labelFor(c)}
-                                        <button type="button" onClick={() => toggleLang(c)} className="hover:opacity-70" aria-label={`Remove ${c}`}>
-                                            <X size={11} />
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
+/* ─── Active language row — chevron expands to per-country activation ── */
+function ActiveLangRow({ entry, isDefault, accent, orgCountries, allCountries, onRemove, onToggleCountry }: {
+    entry: { code: string; native: string; country_ids: number[] };
+    isDefault: boolean;
+    accent: string;
+    orgCountries: OrgCountry[];
+    allCountries: RefCountry[];
+    onRemove: () => void;
+    onToggleCountry: (countryFkId: number) => void;
+}) {
+    const [expanded, setExpanded] = useState(false);
+    const isExpandable = orgCountries.length > 0;
+    // Empty country_ids = "active in every enabled country" (canonical default).
+    const isAllCountries = entry.country_ids.length === 0;
+
+    return (
+        <div className={`group/item rounded-xl transition-all border ${isDefault && !expanded ? '' : 'border-transparent hover:border-app-border/30'} ${expanded ? 'bg-app-background/40' : 'hover:bg-app-background'}`}
+            style={isDefault ? { ...soft(accent, 8), border: `1px solid color-mix(in srgb, var(${accent}) 30%, transparent)` } : {}}>
+            <div className="flex items-center gap-2 p-2.5">
+                {isExpandable ? (
+                    <button onClick={() => setExpanded(e => !e)}
+                        className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-app-border/50 text-app-muted-foreground hover:text-app-foreground transition-colors shrink-0"
+                        title={expanded ? 'Collapse' : 'Expand to set countries'}>
+                        {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                    </button>
+                ) : <div className="w-5 shrink-0" />}
+
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border"
+                    style={isDefault
+                        ? { ...soft(accent, 14), color: `var(${accent})`, borderColor: `color-mix(in srgb, var(${accent}) 30%, transparent)` }
+                        : {
+                            background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                            color: 'var(--app-foreground)',
+                            borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                        }}>
+                    <span className="font-black uppercase" style={{ fontSize: 11 }}>{entry.code.slice(0, 2)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="font-bold text-app-foreground truncate" style={{ fontSize: 12, lineHeight: 1.3 }}
+                        dir={isRTL(entry.code) ? 'rtl' : undefined}>{entry.native}</div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="font-mono uppercase text-app-muted-foreground" style={{ fontSize: 9 }}>{entry.code}</div>
+                        {isExpandable && (
+                            <span className="font-bold uppercase tracking-wider text-app-muted-foreground" style={{ fontSize: 8 }}>
+                                · {isAllCountries ? `all ${orgCountries.length}` : `${entry.country_ids.length}/${orgCountries.length}`} countries
+                            </span>
                         )}
-
-                        {/* Add custom — design.md §12 inline form */}
-                        <div className="rounded-2xl p-3 border-l-2 flex items-center gap-2"
-                            style={{ background: 'color-mix(in srgb, var(--app-info) 4%, var(--app-surface))', borderColor: 'var(--app-info)' }}>
-                            <input value={langCustom}
-                                onChange={e => setLangCustom(e.target.value.replace(/[^a-z-]/gi, ''))}
-                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomLang(); } }}
-                                placeholder="Custom locale code (e.g. ber, ku)"
-                                className="flex-1 px-3 py-2 rounded-lg text-[12px] font-mono outline-none"
-                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                            <button type="button" onClick={addCustomLang}
-                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white"
-                                style={{ ...grad('--app-info'), ...glow('--app-info', 25) }}>
-                                <Plus size={12} /> Add
-                            </button>
-                        </div>
-                    </>
+                    </div>
+                </div>
+                {isDefault ? (
+                    <span className="rounded font-black uppercase tracking-widest text-white shrink-0 inline-flex items-center"
+                        style={{ ...grad(accent), fontSize: 8, padding: '2px 6px', lineHeight: 1.2 }}>
+                        <Crown size={8} className="inline mr-0.5 -mt-px" /> Default
+                    </span>
+                ) : (
+                    <button onClick={onRemove}
+                        className="p-1.5 rounded-lg hover:bg-app-error/10 transition-colors opacity-0 group-hover/item:opacity-100" title="Remove">
+                        <Trash2 size={12} style={{ color: 'var(--app-error)' }} />
+                    </button>
                 )}
             </div>
+
+            {expanded && isExpandable && (
+                <div className="px-3 pb-3 pt-1 space-y-1">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground px-1.5 mb-1">
+                        Active in countries
+                    </div>
+                    {orgCountries.map(oc => {
+                        const ref = allCountries.find(c => c.id === oc.country);
+                        const code = ref?.iso2 || oc.country_iso2 || '';
+                        const name = ref?.name || oc.country_name;
+                        // Empty country_ids array means "all countries" — every row reads as active.
+                        const isOn = isAllCountries || entry.country_ids.includes(oc.id);
+                        return (
+                            <button key={oc.id} type="button" onClick={() => onToggleCountry(oc.id)}
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all text-left"
+                                style={isOn
+                                    ? {
+                                        background: `color-mix(in srgb, var(${accent}) 8%, transparent)`,
+                                        border: `1px solid color-mix(in srgb, var(${accent}) 25%, transparent)`,
+                                    }
+                                    : {
+                                        background: 'transparent',
+                                        border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                    }}>
+                                <span className="text-base shrink-0">{flag(code)}</span>
+                                <span className="flex-1 min-w-0 font-bold truncate" style={{ fontSize: 11, color: isOn ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{name}</span>
+                                <span className="rounded font-black uppercase tracking-widest shrink-0"
+                                    style={isOn
+                                        ? { ...grad(accent), color: 'var(--app-primary-foreground, white)', fontSize: 8, padding: '2px 6px', lineHeight: 1.2 }
+                                        : { background: 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: 'var(--app-muted-foreground)', fontSize: 8, padding: '2px 6px', lineHeight: 1.2 }}>
+                                    {isOn ? <><Check size={8} className="inline -mt-px" /> Active</> : 'Off'}
+                                </span>
+                            </button>
+                        );
+                    })}
+                    {isAllCountries && (
+                        <div className="px-2.5 pt-1 text-app-muted-foreground" style={{ fontSize: 9, lineHeight: 1.3 }}>
+                            <Lock size={9} className="inline -mt-px mr-1" />
+                            Default — active in every enabled country. Tap a country to restrict.
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

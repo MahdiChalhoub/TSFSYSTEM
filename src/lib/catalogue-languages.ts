@@ -55,3 +55,30 @@ export async function setCatalogueLanguages(codes: LocaleCode[]): Promise<Locale
     });
     return Array.isArray(res?.languages) ? res.languages : codes;
 }
+
+/** Rich shape — locale code plus the list of OrgCountry FK ids the language
+ *  is restricted to. Empty country_ids = "active in every enabled country". */
+export interface CatalogueLanguageEntry {
+    code: LocaleCode;
+    country_ids: number[];
+}
+
+export async function getCatalogueLanguageEntries(): Promise<CatalogueLanguageEntry[]> {
+    try {
+        const res: any = await erpFetch('inventory/categories/catalogue-languages/');
+        if (Array.isArray(res?.entries)) return res.entries;
+        if (Array.isArray(res?.languages)) {
+            return res.languages.map((c: string) => ({ code: c, country_ids: [] as number[] }));
+        }
+    } catch { /* fall through */ }
+    return [{ code: 'fr', country_ids: [] }, { code: 'ar', country_ids: [] }];
+}
+
+export async function setCatalogueLanguageEntries(entries: CatalogueLanguageEntry[]): Promise<CatalogueLanguageEntry[]> {
+    const res: any = await erpFetch('inventory/categories/catalogue-languages/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entries }),
+    });
+    return Array.isArray(res?.entries) ? res.entries : entries;
+}
