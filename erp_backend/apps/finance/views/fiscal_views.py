@@ -42,10 +42,10 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         'update': 'finance.manage_fiscal_years',
         'partial_update': 'finance.manage_fiscal_years',
         'destroy': 'finance.manage_fiscal_years',
-        'close': 'finance.close_fiscal_year',
-        'finalize': 'finance.close_fiscal_year',
+        'close': 'finance.soft_close_year',
+        'finalize': 'finance.hard_close_year',
         'close_preview': 'finance.view_fiscal_years',
-        'lock': 'finance.close_fiscal_year',
+        'lock': 'finance.hard_close_year',
         'summary': 'finance.view_fiscal_years',
         'year_history': 'finance.view_fiscal_years',
         'draft_audit': 'finance.view_fiscal_years',
@@ -131,9 +131,21 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         override_checklist = bool(request.data.get('override_checklist', False)) if hasattr(request, 'data') else False
         override_reason = (request.data.get('override_reason') or '').strip() if hasattr(request, 'data') else ''
         if override_checklist:
-            if not (request.user and request.user.is_authenticated and request.user.is_superuser):
+            allowed = False
+            if request.user and request.user.is_authenticated:
+                if request.user.is_superuser:
+                    allowed = True
+                else:
+                    try:
+                        from kernel.rbac.permissions import check_permission
+                        allowed = check_permission(
+                            request.user, 'finance.override_close_checklist', organization,
+                        )
+                    except ImportError:
+                        allowed = False
+            if not allowed:
                 return Response(
-                    {"error": "Checklist override is restricted to superusers."},
+                    {"error": "Checklist override requires the 'finance.override_close_checklist' permission (or superuser)."},
                     status=status.HTTP_403_FORBIDDEN,
                 )
             if not override_reason:

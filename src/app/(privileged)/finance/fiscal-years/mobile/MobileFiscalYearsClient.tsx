@@ -154,7 +154,7 @@ export function MobileFiscalYearsClient({ initialYears }: { initialYears: YearSh
                 <MobileBottomSheet
                     open={sheetYear !== null}
                     onClose={closeSheet}
-                    initialSnap="full">
+                    initialSnap="expanded">
                     {sheetYear && (
                         <MobileYearDetailSheet
                             year={sheetYear}

@@ -9,6 +9,7 @@ import {
 import { toast } from 'sonner'
 import type { CategoryNode, PanelTab } from './types'
 import { MobileCategoryRow } from '../mobile/MobileCategoryRow'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 
 /* ═══════════════════════════════════════════════════════════
  *  RECURSIVE TREE NODE — simplified visual hierarchy
@@ -34,19 +35,21 @@ export const CategoryRow = ({
     /** @deprecated kept for one-off top-level call — prefer `isCheckedFn`. */
     isChecked?: boolean;
 }) => {
-    const rowChecked = isCheckedFn ? isCheckedFn(node.id) : !!isChecked;
-    // When the list pane is narrow (compact), reuse the richer mobile card
-    // renderer — same component, same feel, already tuned for small widths.
-    // That gives us the "mobile look" whenever real estate is tight, whether
-    // from a narrow window, the split panel, or a sidebar widened by the user.
-    if (compact) {
+    const rowChecked = isCheckedFn ? isCheckedFn(node.id) : !!isChecked
+    const isMobile = useIsMobile()
+
+    // When the list pane is narrow (compact) OR on mobile screens,
+    // reuse the richer mobile card renderer — same component, same feel,
+    // already tuned for small widths. Shows all features: product/brand/
+    // attribute chips, barcode, add/edit/delete — nothing hidden.
+    if (compact || isMobile) {
         return (
             <MobileCategoryRow
                 node={node}
                 level={level}
                 searchQuery={searchQuery}
                 forceExpanded={forceExpanded}
-                tapOpensSheet
+                tapOpensSheet={compact}
                 onOpenSheet={(n, tab: PanelTab) => {
                     if (tab === 'brands') onViewBrands(n)
                     else if (tab === 'attributes') onViewAttributes(n)

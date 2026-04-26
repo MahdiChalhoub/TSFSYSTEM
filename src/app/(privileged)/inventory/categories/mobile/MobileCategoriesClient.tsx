@@ -1,10 +1,11 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useCallback, useTransition } from 'react'
+import { useState, useMemo, useCallback, useTransition, useRef } from 'react'
 import {
     FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
     Eye, Pencil, Trash2, Move, Copy, Package, Tag, CornerDownRight,
+    ClipboardList,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -23,6 +24,7 @@ import { MobileBreadcrumb } from './MobileBreadcrumb'
 import { MobileCategoryDetailSheet } from './MobileCategoryDetailSheet'
 import type { CategoryNode, PanelTab } from '../components/types'
 import { PageTour } from '@/components/ui/PageTour'
+import { AuditTrailPanel } from '@/components/templates/AuditTrailPanel'
 import '@/lib/tours/definitions/inventory-categories-mobile'
 
 export function MobileCategoriesClient({ initialCategories }: { initialCategories: any[] }) {
@@ -35,6 +37,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
     const [actionNode, setActionNode] = useState<CategoryNode | null>(null)
     const [moveNode, setMoveNode] = useState<CategoryNode | null>(null)
     const [scopeId, setScopeId] = useState<number | null>(null)
+    const [showAuditTrail, setShowAuditTrail] = useState(false)
 
     const data = initialCategories
 
@@ -198,8 +201,42 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                     onClick: () => openAddModal(),
                 },
                 secondaryActions: [
+                    { label: 'Audit Trail', icon: <ClipboardList size={14} />, onClick: () => setShowAuditTrail(true) },
                     { label: 'Cleanup', icon: <FolderTree size={14} />, href: '/inventory/maintenance?tab=category' },
                 ],
+                data,
+                dataTools: {
+                    title: 'Category Data',
+                    exportFilename: 'categories',
+                    exportColumns: [
+                        { key: 'name', label: 'Name' },
+                        { key: 'code', label: 'Code', format: (c: any) => c.code || '' },
+                        { key: 'short_name', label: 'Short Name', format: (c: any) => c.short_name || '' },
+                        { key: 'barcode_prefix', label: 'Barcode Prefix', format: (c: any) => c.barcode_prefix || '' },
+                        { key: 'product_count', label: 'Products', format: (c: any) => c.product_count || 0 },
+                        { key: 'brand_count', label: 'Brands', format: (c: any) => c.brand_count || 0 },
+                    ],
+                    print: {
+                        title: 'Categories',
+                        subtitle: 'Product Taxonomy',
+                        prefKey: 'print.categories',
+                        sortBy: 'name',
+                        columns: [
+                            { key: 'name', label: 'Name', defaultOn: true },
+                            { key: 'code', label: 'Code', mono: true, defaultOn: true, width: '90px' },
+                            { key: 'prefix', label: 'Barcode Prefix', mono: true, defaultOn: true, width: '110px' },
+                            { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
+                            { key: 'brands', label: 'Brands', align: 'right', defaultOn: false, width: '70px' },
+                        ],
+                        rowMapper: (c: any) => ({
+                            name: c.name,
+                            code: c.code || '',
+                            prefix: c.barcode_prefix || '',
+                            products: c.product_count || 0,
+                            brands: c.brand_count || 0,
+                        }),
+                    },
+                },
                 kpis: [
                     { label: 'Total', value: stats.total, icon: <Layers size={13} />, color: 'var(--app-primary)' },
                     { label: 'Root', value: stats.roots, icon: <FolderTree size={13} />, color: 'var(--app-success, #10b981)' },
@@ -254,6 +291,11 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                         onClose={() => setMoveNode(null)}
                     />
                     <PageTour tourId="inventory-categories-mobile" renderButton={false} />
+                    <AuditTrailPanel
+                        config={{ endpoint: 'audit-trail', resourceType: 'category', title: 'Category Audit Trail' }}
+                        isOpen={showAuditTrail}
+                        onClose={() => setShowAuditTrail(false)}
+                    />
                     <DeleteConflictDialog
                         conflict={deleteConflict?.conflict || null}
                         sourceName={deleteConflict?.source?.name || ''}

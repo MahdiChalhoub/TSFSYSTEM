@@ -245,6 +245,16 @@ PERMISSION_CATALOGUE: dict[str, dict[str, str]] = {
         'finance.view_cash_flow':            'View cash flow report',
         'finance.view_audit_trail':          'View financial audit trail',
         'finance.view_statements':           'View financial statements',
+        # Close-gate permissions — bypass period locks at posting time.
+        # post_locked_period: post into a soft-closed (CLOSED) standard period.
+        # post_adjustment_period: post into the 13th audit/adjustment period
+        # after soft-close (auditor / controller role only).
+        'finance.post_locked_period':        'Post journal entries into a soft-closed (CLOSED) period',
+        'finance.post_adjustment_period':    'Post adjusting entries into the audit / 13th-month period',
+        # Year-close orchestration
+        'finance.soft_close_year':           'Run soft year-end close (closes months, leaves audit period open)',
+        'finance.hard_close_year':           'Run hard year-end close (finalize / lock fiscal year forever)',
+        'finance.override_close_checklist':  'Override an unmet close checklist to proceed with year-end close',
     },
 
     # ─── Tax Engine ───────────────────────────────────────────────────────────
@@ -440,6 +450,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from erp.models import Permission
+        from kernel.rbac.models import KernelPermission
 
         # Cleanup orphans first if requested
         if options.get('cleanup'):
@@ -459,6 +470,10 @@ class Command(BaseCommand):
 
         total_created = 0
         total_existing = 0
+        # Mirror into KernelPermission so the kernel.rbac.check_permission()
+        # path (used at JE-posting time + by FiscalActionPermission) can
+        # see the same codes the legacy admin UI shows.
+        kernel_created = 0
 
         for module_name, perms in PERMISSION_CATALOGUE.items():
             created_count = 0
@@ -473,11 +488,27 @@ class Command(BaseCommand):
                 else:
                     total_existing += 1
 
+                _, k_created = KernelPermission.objects.get_or_create(
+                    code=code,
+                    defaults={
+                        'name': description,
+                        'description': description,
+                        'module': module_name,
+                    },
+                )
+                if k_created:
+                    kernel_created += 1
+
             perm_count = len(perms)
             self.stdout.write(
                 f'  [{module_name:12s}] {perm_count:3d} permissions '
                 f'({created_count} new, {perm_count - created_count} existing)'
             )
+
+        if kernel_created:
+            self.stdout.write(self.style.SUCCESS(
+                f'  [kernel.rbac] mirrored {kernel_created} new codes into KernelPermission'
+            ))
 
         self.stdout.write(self.style.SUCCESS(
             f'\n✅ Done. {total_created} created, {total_existing} already existed. '

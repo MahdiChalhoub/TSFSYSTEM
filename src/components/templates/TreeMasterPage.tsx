@@ -340,7 +340,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                            <div className="flex items-center gap-1.5 flex-wrap justify-end">
                                 {/* Data dropdown — rendered before other secondary
                                  *  actions so Export/Import/Print always sit in
                                  *  the same spot regardless of what else the page
@@ -360,7 +360,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     ) : action.href ? (
                                         <Link key={i} href={action.href}
                                             className="flex items-center gap-1.5 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
-                                            {action.icon}<span className="hidden md:inline">{action.label}</span>
+                                            {action.icon}<span>{action.label}</span>
                                         </Link>
                                     ) : (
                                         <button key={i} onClick={action.onClick}
@@ -373,7 +373,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                                 color: 'var(--app-muted-foreground)',
                                                 borderColor: 'var(--app-border)',
                                             }}>
-                                            {action.icon}<span className="hidden md:inline">{action.label}</span>
+                                            {action.icon}<span>{action.label}</span>
                                         </button>
                                     )
                                 ))}
@@ -385,15 +385,15 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                         className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all"
                                         style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                                         <ClipboardList size={13} />
-                                        <span className="hidden md:inline">Audit</span>
+                                        <span>Audit</span>
                                     </button>
                                 )}
-                                {/* Split Panel toggle */}
+                                {/* Split Panel toggle — desktop only, makes no sense on phone */}
                                 <button
                                     data-tour="split-panel-btn"
                                     onClick={() => { setSplitPanel(p => !p); if (splitPanel) setSelectedNode(null) }}
                                     title={splitPanel ? 'Exit split panel' : 'Split panel view'}
-                                    className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all"
+                                    className="hidden sm:flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all"
                                     style={splitPanel ? {
                                         background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                                         color: 'var(--app-primary)',
@@ -405,7 +405,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 <button data-tour={config.primaryAction.dataTour || 'add-btn'} onClick={() => config.primaryAction.onClick()}
                                     className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                                     style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                                    <Plus size={14} /><span className="hidden sm:inline">{config.primaryAction.label}</span>
+                                    <Plus size={14} /><span>{config.primaryAction.label}</span>
                                 </button>
                                 {tourActive && <TourTriggerButton onClick={tourHook.start} />}
                                 {config.onRefresh && (
@@ -415,7 +415,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     </button>
                                 )}
                                 <button onClick={() => setFocusMode(true)} title="Focus mode (Ctrl+Q)"
-                                    className="flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                                    className="hidden sm:flex items-center gap-1 text-tp-sm font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                     <Maximize2 size={13} />
                                 </button>
                             </div>
@@ -484,7 +484,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 className="flex items-center gap-1 text-tp-sm font-bold px-2.5 py-2 rounded-xl border transition-all flex-shrink-0"
                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', color: 'var(--app-primary)', borderColor: 'color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
                                 {expandAll ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
-                                <span className="hidden sm:inline">{expandAll ? 'Collapse' : 'Expand'}</span>
+                                <span>{expandAll ? 'Collapse' : 'Expand'}</span>
                             </button>
                             {searchQuery && (
                                 <button onClick={() => setSearchQuery('')}

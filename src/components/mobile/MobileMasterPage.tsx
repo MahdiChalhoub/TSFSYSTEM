@@ -183,6 +183,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
 
                     {tourActive && <TourTriggerButton onClick={tourHook.start} />}
 
+
                     {config.secondaryActions && config.secondaryActions.length > 0 && (
                         <div className="relative">
                             <button onClick={() => setOverflowOpen(o => !o)}
@@ -371,6 +372,7 @@ export function MobileMasterPage({ config, children, sheet, modals, belowTopBar 
             </AnimatePresence>
 
             {modals}
+            {dtModals}
             {sheet}
         </div>
     )

@@ -74,7 +74,7 @@ export function DataMenu({ onExport, onExportExcel, onImport, onPrint, title = '
                     style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}
                 >
                     <Database size={13} />
-                    <span className="hidden md:inline">Data</span>
+                    <span>Data</span>
                     <ChevronDown size={11} className="opacity-60 transition-transform data-[state=open]:rotate-180" />
                 </button>
             </DM.Trigger>
