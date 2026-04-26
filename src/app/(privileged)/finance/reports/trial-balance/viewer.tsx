@@ -14,6 +14,7 @@ import { TYPE_CONFIG } from '@/app/(privileged)/finance/chart-of-accounts/_compo
 import { ReportAccountNode, ReportAccountHeader } from '../_shared/ReportAccountNode'
 import { FiscalYearSelector, useActiveFiscalYear } from '../_shared/FiscalYearSelector'
 import { useMoneyFormatter, exportCSV, flattenAccounts } from '../_shared/components'
+import { useScope } from '@/hooks/useScope'
 
 /* ═══════════════════════════════════════════════════════════
  *  TRIAL BALANCE — thin consumer
@@ -31,6 +32,7 @@ const ORDER = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'] as const
 export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
     initialAccounts: any[]; fiscalYears: any[]
 }) {
+    const { scope: viewScope } = useScope()
     const [asOfDate, setAsOfDate] = useState(todayLocalIso())
     const [accounts, setAccounts] = useState(initialAccounts)
     const [isPending, startTransition] = useTransition()
@@ -104,25 +106,25 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
 
     const handleRefresh = () => {
         startTransition(async () => {
-            const d = await getTrialBalanceReport(toFetchDate(asOfDate), fyStartForFetch)
+            const d = await getTrialBalanceReport(toFetchDate(asOfDate), fyStartForFetch, viewScope)
             setAccounts(d)
         })
     }
 
-    // Auto-refresh on as-of-date OR fy-start change (preset pick, FY
-    // switch, or manual). Skip the very first render since SSR already
-    // hydrated the page.
+    // Auto-refresh on as-of-date, fy-start, or scope change (preset pick, FY
+    // switch, manual, or OFFICIAL/INTERNAL toggle). Skip the very first render
+    // since SSR already hydrated the page.
     const didMountRef = useRef(false)
     useEffect(() => {
         if (!didMountRef.current) { didMountRef.current = true; return }
         const t = setTimeout(() => {
             startTransition(async () => {
-                const d = await getTrialBalanceReport(toFetchDate(asOfDate), fyStartForFetch)
+                const d = await getTrialBalanceReport(toFetchDate(asOfDate), fyStartForFetch, viewScope)
                 setAccounts(d)
             })
         }, 150)
         return () => clearTimeout(t)
-    }, [asOfDate, fyBounds?.start])
+    }, [asOfDate, fyBounds?.start, viewScope])
 
     // Subtotals per type
     const typeSubtotals = useMemo(() => {

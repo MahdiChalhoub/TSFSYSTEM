@@ -297,6 +297,69 @@ class ClosingService:
                     f"(includes orphan JEs by date). Post or delete them first."
                 )
 
+            # ── FX revaluation pre-check ──────────────────────────────
+            # If any period in this year holds activity on a foreign-
+            # currency-pinned account, that period must have a POSTED
+            # CurrencyRevaluation. Closing without it produces wrong
+            # retained earnings: the unrealized FX gain/loss never hits
+            # the P&L and gets baked into the wrong account at year-end.
+            #
+            # We refuse rather than auto-run revaluation because the
+            # operator must pick the closing rate per period; doing it
+            # silently would book at whatever rate happens to be on file
+            # at close time, which is not the same as period-end rate.
+            from apps.finance.models import (
+                JournalEntryLine, FiscalPeriod, ChartOfAccount,
+            )
+            from apps.finance.models.currency_models import (
+                Currency as _Currency, CurrencyRevaluation,
+            )
+
+            base_ccy = _Currency.objects.filter(
+                organization=organization, is_base=True,
+            ).first()
+            if base_ccy:
+                in_window_periods = FiscalPeriod.objects.filter(
+                    fiscal_year=fiscal_year,
+                    start_date__lte=yr_end,
+                )
+                foreign_account_ids = list(
+                    ChartOfAccount.objects.filter(
+                        organization=organization,
+                        is_active=True,
+                    ).exclude(currency=base_ccy.code).exclude(currency__isnull=True)
+                    .values_list('id', flat=True)
+                )
+                if foreign_account_ids:
+                    missing = []
+                    for fp in in_window_periods:
+                        has_fx_activity = JournalEntryLine.objects.filter(
+                            organization=organization,
+                            account_id__in=foreign_account_ids,
+                            journal_entry__fiscal_period=fp,
+                            journal_entry__status='POSTED',
+                        ).exists()
+                        if not has_fx_activity:
+                            continue
+                        has_revaluation = CurrencyRevaluation.objects.filter(
+                            organization=organization,
+                            fiscal_period=fp,
+                            status='POSTED',
+                        ).exists()
+                        if not has_revaluation:
+                            missing.append(fp.name)
+                    if missing:
+                        raise ValidationError(
+                            f"Cannot close year — foreign-currency activity in "
+                            f"{len(missing)} period(s) was never revalued: "
+                            f"{', '.join(missing[:5])}{'…' if len(missing) > 5 else ''}. "
+                            f"Run RevaluationService.run_revaluation per missing "
+                            f"period (or click Revalue in the period UI) before "
+                            f"closing the year. Closing without it would bake the "
+                            f"unrealized FX gain/loss into retained earnings at "
+                            f"the wrong rate."
+                        )
+
             # Backfill orphan JEs (NULL fiscal_year_id) into this year — these
             # were created before fiscal_year linkage existed and would otherwise
             # be invisible to balance / audit queries.

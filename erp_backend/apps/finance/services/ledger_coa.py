@@ -757,18 +757,62 @@ class LedgerCOAMixin:
     @staticmethod
     def validate_closure(organization, fiscal_period=None, fiscal_year=None):
         """
-        Validates that all control accounts (requires_zero_balance=True) 
-        have a zero balance before closure.
+        Validates that all control accounts (requires_zero_balance=True)
+        have a zero balance before closure, and — when called for a single
+        fiscal_period — that any foreign-currency activity in that period
+        has been revalued.
         """
         from apps.finance.models import ChartOfAccount
         control_accounts = ChartOfAccount.objects.filter(
-            organization=organization, 
+            organization=organization,
             requires_zero_balance=True,
             is_active=True
         )
         for acc in control_accounts:
             if abs(acc.balance) > Decimal('0.001'):
                 raise ValidationError(f"Control account {acc.code} ({acc.name}) must have zero balance before closure. Current balance: {acc.balance}")
+
+        # ── FX revaluation gate (period-level) ───────────────────────
+        # Mirror of the year-end check in ClosingService: a period that
+        # holds activity on a foreign-currency-pinned account must have
+        # a POSTED CurrencyRevaluation. Closing without it freezes the
+        # unrealized FX into the wrong account at the wrong rate.
+        if fiscal_period is not None:
+            from apps.finance.models import JournalEntryLine
+            from apps.finance.models.currency_models import (
+                Currency as _Currency, CurrencyRevaluation,
+            )
+            base = _Currency.objects.filter(
+                organization=organization, is_base=True,
+            ).first()
+            if base:
+                foreign_account_ids = list(
+                    ChartOfAccount.objects.filter(
+                        organization=organization, is_active=True,
+                    ).exclude(currency=base.code).exclude(currency__isnull=True)
+                    .values_list('id', flat=True)
+                )
+                if foreign_account_ids:
+                    has_fx_activity = JournalEntryLine.objects.filter(
+                        organization=organization,
+                        account_id__in=foreign_account_ids,
+                        journal_entry__fiscal_period=fiscal_period,
+                        journal_entry__status='POSTED',
+                    ).exists()
+                    if has_fx_activity:
+                        has_revaluation = CurrencyRevaluation.objects.filter(
+                            organization=organization,
+                            fiscal_period=fiscal_period,
+                            status='POSTED',
+                        ).exists()
+                        if not has_revaluation:
+                            raise ValidationError(
+                                f"Cannot close {fiscal_period.name}: foreign-"
+                                f"currency activity has not been revalued. Run "
+                                f"RevaluationService.run_revaluation(org, "
+                                f"period) first to book the unrealized FX "
+                                f"gain/loss before closing."
+                            )
         return True
 
 

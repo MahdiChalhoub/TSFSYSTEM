@@ -3,6 +3,7 @@
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect } from "react"
 import { getFinancialReportsDashboard } from "@/app/actions/finance/reports"
+import { useScope } from '@/hooks/useScope'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,15 +18,19 @@ import Link from 'next/link'
 
 export default function FinancialReportsDashboardPage() {
   const { fmt } = useCurrency()
+  const { scope: viewScope } = useScope()
 
   const [period, setPeriod] = useState<'CURRENT_MONTH' | 'CURRENT_QUARTER' | 'CURRENT_YEAR' | 'YTD'>('CURRENT_MONTH')
   const [dashboard, setDashboard] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
+  // Refetch on period change OR scope toggle. The action reads the cookie
+  // for scope so no param plumbing is needed here.
   useEffect(() => {
     loadDashboard()
-  }, [period])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period, viewScope])
 
   async function loadDashboard() {
     setLoading(true)

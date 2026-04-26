@@ -32,6 +32,8 @@ from apps.finance.views import (
     ReverseChargeSelfAssessmentViewSet, VATRateChangeHistoryViewSet,
     # --- Tax Rate Categories (per-product VAT rate overrides) ---
     TaxRateCategoryViewSet,
+    # --- Multi-Currency ---
+    CurrencyViewSet, ExchangeRateViewSet, CurrencyRevaluationViewSet,
 )
 
 router = SimpleRouter()
@@ -104,6 +106,11 @@ router.register(r'reverse-charge-self-assessments', ReverseChargeSelfAssessmentV
 router.register(r'vat-rate-change-history', VATRateChangeHistoryViewSet, basename='vat-rate-change-history')
 # --- Tax Rate Categories (multi-rate VAT per product) ---
 router.register(r'tax-rate-categories', TaxRateCategoryViewSet, basename='tax-rate-category')
+
+# --- Multi-Currency ---
+router.register(r'currencies', CurrencyViewSet, basename='currency')
+router.register(r'exchange-rates', ExchangeRateViewSet, basename='exchange-rate')
+router.register(r'currency-revaluations', CurrencyRevaluationViewSet, basename='currency-revaluation')
 
 urlpatterns = [
     path('', include(router.urls)),

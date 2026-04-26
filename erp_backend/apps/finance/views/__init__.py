@@ -18,6 +18,7 @@ from .report_views import ReportViewSet
 from .einvoice_views import EInvoiceViewSet
 from .form_views import FormDefinitionViewSet, FormResponseViewSet
 from .payment_method_views import PaymentMethodViewSet
+from .currency_views import CurrencyViewSet, ExchangeRateViewSet, CurrencyRevaluationViewSet
 from .tax_engine_ext_views import (
     WithholdingTaxRuleViewSet, BadDebtVATClaimViewSet, ImportDeclarationViewSet,
     SelfSupplyVATEventViewSet, AdvancePaymentVATViewSet,
@@ -61,4 +62,5 @@ __all__ = [
     'ReverseChargeSelfAssessmentViewSet', 'VATRateChangeHistoryViewSet',
     'FormDefinitionViewSet', 'FormResponseViewSet',
     'TaxRateCategoryViewSet',
+    'CurrencyViewSet', 'ExchangeRateViewSet', 'CurrencyRevaluationViewSet',
 ]

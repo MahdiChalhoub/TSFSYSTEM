@@ -37,6 +37,7 @@ import {
 
 /* ── Local components ── */
 import { POFiltersPanel } from './_components/POFiltersPanel'
+import { POCustomizePanel } from './_components/POCustomizePanel'
 
 /* ── Column widths & alignment ── */
 const COLUMN_WIDTHS: Record<string, string> = {
@@ -350,6 +351,7 @@ export default function PurchaseOrdersManager() {
         showFilters={state.showFilters}
         onToggleFilters={() => state.setShowFilters(!state.showFilters)}
         activeFilterCount={activeFilterCount}
+        onToggleCustomize={() => state.setShowCustomize(true)}
         onSetVisibleColumns={state.setVisibleColumns}
         onSetColumnOrder={state.setColumnOrder}
         moduleKey={state.moduleKey}
@@ -392,6 +394,18 @@ export default function PurchaseOrdersManager() {
         onClearFilters={() => { state.setSearch(''); setFilters(EMPTY_FILTERS) }}
         emptyIcon={<ClipboardList size={36} />}
         pagination={state.buildPagination(filtered.length, activeFilterCount)}
+      />
+
+      {/* Customize Panel — column / filter visibility (matches /inventory/products) */}
+      <POCustomizePanel
+        isOpen={state.showCustomize}
+        onClose={() => state.setShowCustomize(false)}
+        visibleColumns={state.visibleColumns}
+        setVisibleColumns={state.setVisibleColumns}
+        visibleFilters={state.visibleFilters}
+        setVisibleFilters={state.setVisibleFilters}
+        policyHiddenColumns={state.policyHiddenColumns}
+        policyHiddenFilters={state.policyHiddenFilters}
       />
     </DajingoPageShell>
   )

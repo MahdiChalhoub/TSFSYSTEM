@@ -11,6 +11,7 @@ import {
     exportCSV, flattenAccounts,
 } from '../_shared/components'
 import { useActiveFiscalYear } from '../_shared/FiscalYearSelector'
+import { useScope } from '@/hooks/useScope'
 
 /* ═══════════════════════════════════════════════════════════
  *  P&L — narrative, accounting-style
@@ -36,6 +37,7 @@ export default function PnlViewer({ initialData, initialPriorData, fiscalYears }
     initialPriorData: any[]
     fiscalYears: any[]
 }) {
+    const { scope: viewScope } = useScope()
     const now = new Date()
     const [startDate, setStartDate] = useState(
         new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
@@ -69,21 +71,22 @@ export default function PnlViewer({ initialData, initialPriorData, fiscalYears }
             const priorEnd = new Date(s); priorEnd.setDate(priorEnd.getDate() - 1)
             const priorStart = new Date(priorEnd); priorStart.setDate(priorStart.getDate() - span + 1)
             const [cur, pri] = await Promise.all([
-                getProfitAndLossReport(s, e),
-                getProfitAndLossReport(priorStart, priorEnd),
+                getProfitAndLossReport(s, e, viewScope),
+                getProfitAndLossReport(priorStart, priorEnd, viewScope),
             ])
             setData(cur); setPrior(pri)
         })
     }
 
-    // Auto-refresh whenever start or end changes (FY pick / preset / manual).
-    // Skip the first render — SSR already hydrated the page.
+    // Auto-refresh whenever start, end, or the OFFICIAL/INTERNAL toggle
+    // changes (FY pick / preset / manual / scope flip). Skip the first
+    // render — SSR already hydrated the page.
     const didMountRef = useRef(false)
     useEffect(() => {
         if (!didMountRef.current) { didMountRef.current = true; return }
         const t = setTimeout(() => handleRefresh(), 150)
         return () => clearTimeout(t)
-    }, [startDate, endDate])
+    }, [startDate, endDate, viewScope])
 
     const { incomes, expenses, totalIncome, totalExpense, netProfit, priorMap, priorTotals } = useMemo(() => {
         const inc = data.filter(a => a.type === 'INCOME' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))

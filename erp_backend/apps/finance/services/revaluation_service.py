@@ -69,18 +69,42 @@ class RevaluationService:
             processed = 0
 
             for acc in revaluation_accounts:
-                # Get balances in foreign currency from JEL
-                fc_balance = JournalEntryLine.objects.filter(
+                # Cumulative balances through period.end_date — both sides
+                # MUST be measured the same way or we compare apples to
+                # oranges (this-period FC vs all-time base produced absurd
+                # diffs in the original implementation).
+                #
+                # foreign_balance: sum of amount_currency on every posted line
+                # touching this account whose JE transaction_date is on/before
+                # period.end_date and whose scope matches the revaluation scope.
+                # base_balance: same filter but on (debit - credit) in base.
+                # Only revalue lines that were posted with FX metadata —
+                # i.e. amount_currency IS NOT NULL. A line on a now-foreign-
+                # pinned account that was originally posted in base currency
+                # (legacy data, or a manual base-only adjustment) carries no
+                # FX exposure: its debit/credit IS the truth, and revaluing
+                # it would create phantom gains/losses out of thin air.
+                # Both sums must use the same filter or we mismatch sides.
+                cumulative_filter = dict(
                     organization=organization,
                     account=acc,
                     journal_entry__status='POSTED',
-                    journal_entry__fiscal_period=fiscal_period,
-                ).aggregate(
+                    journal_entry__is_superseded=False,
+                    journal_entry__transaction_date__date__lte=fiscal_period.end_date,
+                    journal_entry__scope=scope,
+                    amount_currency__isnull=False,
+                )
+                fc_balance = JournalEntryLine.objects.filter(**cumulative_filter).aggregate(
                     total_fc=models.Sum('amount_currency')
                 )
                 balance_in_fc = fc_balance['total_fc'] or Decimal('0.00')
                 if balance_in_fc == Decimal('0.00'):
                     continue
+
+                base_agg = JournalEntryLine.objects.filter(**cumulative_filter).aggregate(
+                    dr=models.Sum('debit'), cr=models.Sum('credit'),
+                )
+                old_base_amount = (base_agg['dr'] or Decimal('0.00')) - (base_agg['cr'] or Decimal('0.00'))
 
                 # Get closing rate
                 closing_rate_obj = ExchangeRate.objects.filter(
@@ -108,9 +132,8 @@ class RevaluationService:
                     continue
 
                 closing_rate = closing_rate_obj.rate
-                old_base_amount = acc.balance_official  # Current base currency balance
-                new_base_amount = balance_in_fc * closing_rate
-                difference = new_base_amount - old_base_amount
+                new_base_amount = (balance_in_fc * closing_rate).quantize(Decimal('0.01'))
+                difference = (new_base_amount - old_base_amount).quantize(Decimal('0.01'))
 
                 CurrencyRevaluationLine.objects.create(
                     organization=organization,
@@ -147,11 +170,32 @@ class RevaluationService:
 
                 processed += 1
 
-            # Add FX gain/loss counter-lines from posting rules
+            # Add FX gain/loss counter-lines from posting rules, falling back to
+            # system_role lookup so an org doesn't need explicit posting-rule
+            # mappings if it has accounts tagged FX_GAIN / FX_LOSS in the COA.
             if posting_lines:
                 rules = ConfigurationService.get_posting_rules(organization)
                 fx_gain_id = rules.get('fx', {}).get('unrealized_gain')
                 fx_loss_id = rules.get('fx', {}).get('unrealized_loss')
+                if not fx_gain_id:
+                    fx_gain_acc = ChartOfAccount.objects.filter(
+                        organization=organization, system_role='FX_GAIN',
+                        is_active=True, allow_posting=True,
+                    ).order_by('code').first()
+                    fx_gain_id = fx_gain_acc.id if fx_gain_acc else None
+                if not fx_loss_id:
+                    fx_loss_acc = ChartOfAccount.objects.filter(
+                        organization=organization, system_role='FX_LOSS',
+                        is_active=True, allow_posting=True,
+                    ).order_by('code').first()
+                    fx_loss_id = fx_loss_acc.id if fx_loss_acc else None
+                if (total_gain > 0 and not fx_gain_id) or (total_loss > 0 and not fx_loss_id):
+                    raise ValidationError(
+                        "RevaluationService: FX_GAIN / FX_LOSS account is not "
+                        "configured. Either set posting rules fx.unrealized_gain "
+                        "/ fx.unrealized_loss, or tag a COA account with "
+                        "system_role='FX_GAIN' / 'FX_LOSS'."
+                    )
 
                 if total_gain > Decimal('0'):
                     posting_lines.append({

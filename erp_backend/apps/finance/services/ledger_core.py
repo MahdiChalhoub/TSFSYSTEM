@@ -193,6 +193,23 @@ class LedgerCoreMixin:
                             f"It cannot receive OFFICIAL journal entries. "
                             f"Post under INTERNAL scope, or unmark the account as internal."
                         )
+
+                    # 4f. Currency-pinned accounts: caller MUST supply foreign
+                    # amount + rate so revaluation can recompute base balances.
+                    # Pre-flight check at write time gives a clearer error than
+                    # waiting for the model.clean() guard at POST time.
+                    if acc.currency:
+                        from apps.finance.services.currency_service import CurrencyService
+                        base_code = CurrencyService.get_base_code(organization)
+                        if base_code and acc.currency != base_code:
+                            if l.get('amount_currency') is None or l.get('exchange_rate') is None:
+                                raise ValidationError(
+                                    f"Account '{acc.code}' is denominated in {acc.currency} "
+                                    f"(org base is {base_code}). The line must include "
+                                    f"amount_currency and exchange_rate. Use "
+                                    f"CurrencyService.make_foreign_line(...) to build the "
+                                    f"line — it computes both for you from the live rate."
+                                )
             
             # ── Step 5: Create Journal Entry ──────────────────────────
             journal_type = kwargs.get('journal_type', 'GENERAL')

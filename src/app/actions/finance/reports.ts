@@ -62,8 +62,26 @@ export async function getReportDataSources() {
     return await erpFetch('finance/reports/data-sources/');
 }
 export async function getFinancialReportsDashboard(period?: string) {
-    return await erpFetch(`finance/reports/dashboard/?period=${period || 'CURRENT_MONTH'}`);
+    const scope = await _readScopeFromCookie()
+    return await erpFetch(`finance/reports/dashboard/?period=${period || 'CURRENT_MONTH'}&scope=${scope}`);
 }
 export async function getCashFlowStatement(startDate: string, endDate: string, method: string) {
-    return await erpFetch(`finance/reports/cash-flow/?start_date=${startDate}&end_date=${endDate}&method=${method}`);
+    const scope = await _readScopeFromCookie()
+    return await erpFetch(`finance/reports/cash-flow/?start_date=${startDate}&end_date=${endDate}&method=${method}&scope=${scope}`);
+}
+export async function getTrialBalanceStatement(startDate: string, endDate: string) {
+    const scope = await _readScopeFromCookie()
+    return await erpFetch(`finance/reports/trial-balance/?start_date=${startDate}&end_date=${endDate}&scope=${scope}`);
+}
+export async function getProfitLossStatement(startDate: string, endDate: string) {
+    const scope = await _readScopeFromCookie()
+    return await erpFetch(`finance/reports/profit-loss/?start_date=${startDate}&end_date=${endDate}&scope=${scope}`);
+}
+export async function getBalanceSheetStatement(asOfDate: string) {
+    const scope = await _readScopeFromCookie()
+    return await erpFetch(`finance/reports/balance-sheet/?as_of_date=${asOfDate}&scope=${scope}`);
+}
+export async function getCashFlowForecast(horizonDays = 90, granularity = 'DAILY', includeRecurring = true) {
+    const scope = await _readScopeFromCookie()
+    return await erpFetch(`finance/cash-flow/forecast/?horizon_days=${horizonDays}&granularity=${granularity}&include_recurring=${includeRecurring ? 1 : 0}&scope=${scope}`);
 }

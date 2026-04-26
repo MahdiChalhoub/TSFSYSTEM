@@ -3,6 +3,7 @@
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect } from "react"
 import { getCashFlowStatement } from "@/app/actions/finance/reports"
+import { useScope } from '@/hooks/useScope'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ import {
 
 export default function CashFlowReportPage() {
   const { fmt } = useCurrency()
+  const { scope: viewScope } = useScope()
 
   const [startDate, setStartDate] = useState(() => {
     const date = new Date()
@@ -34,9 +36,12 @@ export default function CashFlowReportPage() {
   const [report, setReport] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
+  // Refetch on first mount AND whenever the OFFICIAL/INTERNAL toggle flips.
+  // The action reads the live scope cookie so no param is needed.
   useEffect(() => {
     loadReport()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewScope])
 
   async function loadReport() {
     if (!startDate || !endDate) {

@@ -16,6 +16,7 @@ import { TYPE_CONFIG } from '@/app/(privileged)/finance/chart-of-accounts/_compo
 import { ReportAccountNode, ReportAccountHeader } from '../_shared/ReportAccountNode'
 import { FiscalYearSelector, useActiveFiscalYear } from '../_shared/FiscalYearSelector'
 import { useMoneyFormatter, exportCSV, flattenAccounts } from '../_shared/components'
+import { useScope } from '@/hooks/useScope'
 
 /* ═══════════════════════════════════════════════════════════
  *  BALANCE SHEET — same design language as Chart of Accounts
@@ -33,6 +34,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
     fiscalYears: any[]
 }) {
     const router = useRouter()
+    const { scope: viewScope } = useScope()
     const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0])
     const [data, setData] = useState(initialData)
     const [isPending, startTransition] = useTransition()
@@ -67,26 +69,26 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
 
     const handleRefresh = () => {
         startTransition(async () => {
-            const report = await getBalanceSheetReport(new Date(asOfDate))
+            const report = await getBalanceSheetReport(new Date(asOfDate), viewScope)
             setData(report)
         })
     }
 
-    // Auto-refresh whenever the as-of date changes (preset click OR manual
-    // pick). The initial render already has `initialData` from SSR so we
-    // skip the very first run. Debounced so rapid picker changes don't
-    // hammer the endpoint.
+    // Auto-refresh whenever the as-of date OR the OFFICIAL/INTERNAL toggle
+    // changes (preset click OR manual pick OR scope flip). Initial render
+    // already has `initialData` from SSR so we skip the very first run.
+    // Debounced so rapid picker changes don't hammer the endpoint.
     const didMountRef = useRef(false)
     useEffect(() => {
         if (!didMountRef.current) { didMountRef.current = true; return }
         const t = setTimeout(() => {
             startTransition(async () => {
-                const report = await getBalanceSheetReport(new Date(asOfDate))
+                const report = await getBalanceSheetReport(new Date(asOfDate), viewScope)
                 setData(report)
             })
         }, 150)
         return () => clearTimeout(t)
-    }, [asOfDate])
+    }, [asOfDate, viewScope])
 
     const runDiag = useCallback(async () => {
         const issues = await diagnoseFinancialDiscrepancy()
