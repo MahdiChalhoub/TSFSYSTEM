@@ -29,7 +29,7 @@ import {
     Globe, DollarSign, Search, Plus, Star, Check, X, MapPin,
     Phone, Loader2, Coins, AlertTriangle, RefreshCcw,
     Crown, Trash2, TrendingUp, Languages, Save,
-    ChevronRight, ChevronDown,
+    ChevronRight, ChevronDown, Lock,
 } from 'lucide-react';
 import type { RefCountry, RefCurrency, OrgCountry, OrgCurrency } from '@/types/erp';
 import {
@@ -337,10 +337,10 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
             {/* ── Modal — design.md §11 ── */}
             {confirmAction && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
-                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+                    style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
                     onClick={e => { if (e.target === e.currentTarget) setConfirmAction(null); }}>
                     <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
-                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px color-mix(in srgb, var(--app-foreground) 30%, transparent)' }}>
                         <div className="px-5 py-3 flex items-center gap-2.5"
                             style={{ background: `color-mix(in srgb, var(${isDestructive ? '--app-error' : '--app-warning'}) 6%, var(--app-surface))`, borderBottom: '1px solid var(--app-border)' }}>
                             <div className="w-8 h-8 rounded-xl flex items-center justify-center"
@@ -374,74 +374,88 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                 </div>
             )}
 
-            {/* ── Full-bleed viewport shell (page fills the workspace) ── */}
-            <div className="flex flex-col h-full -m-4 md:-m-5 overflow-hidden animate-in fade-in duration-300">
+            {/* ── COA-style page shell ── */}
+            <div className="flex flex-col overflow-hidden animate-in fade-in duration-300" style={{ height: 'calc(100dvh - 6rem)' }}>
 
-                {/* ── FIXED HEADER AREA (full-bleed bg, content centered) ── */}
-                <div className="shrink-0 px-4 md:px-8 pt-4 pb-3 border-b border-app-border/40"
-                    style={{ backgroundColor: 'var(--app-background)' }}>
-                    <div className="max-w-[1400px] mx-auto space-y-3">
-                        {/* Page header — design.md §2 */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                                <div className="page-header-icon bg-app-primary" style={glow('--app-primary')}>
-                                    <Globe size={20} className="text-white" />
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="font-black text-app-foreground tracking-tight truncate" style={{ fontSize: 'clamp(18px, 2.5vw, 20px)', lineHeight: 1.2 }}>Regional Settings</div>
-                                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">
-                                        {orgCountries.length} Countries · {orgCurrencies.length} Currencies · {langCodes.length || 0} Languages
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 self-start sm:self-auto">
-                                {tab === 'languages' && (
-                                    <button onClick={saveLangs} disabled={langSaving || langLoading}
-                                        className="flex items-center gap-1.5 text-[11px] font-bold text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
-                                        style={{ ...grad('--app-info'), ...glow('--app-info', 25) }}>
-                                        {langSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={13} />}
-                                        <span>Save Languages</span>
+                {/* ── HEADER — same shape as Chart of Accounts ── */}
+                <div className="flex items-start justify-between gap-4 mb-4 flex-shrink-0 px-4 md:px-6 pt-4 md:pt-6">
+                    <div className="flex items-center gap-3">
+                        <div className="page-header-icon bg-app-primary">
+                            <Globe size={20} className="text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Regional Settings</h1>
+                            <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
+                                {orgCountries.length} Countries · {orgCurrencies.length} Currencies · {langCodes.length || 0} Languages
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                        {/* Top-level tab bar — single connected segmented control */}
+                        <div className="inline-flex items-stretch gap-0.5 p-0.5 rounded-xl border border-app-border bg-app-surface/50"
+                             role="tablist" aria-label="Regional sections">
+                            {TABS.map(t => {
+                                const Icon = t.icon; const active = tab === t.key;
+                                return (
+                                    <button key={t.key}
+                                        role="tab"
+                                        aria-selected={active}
+                                        onClick={() => { setTab(t.key); setSearch(''); setRegionFilter(''); }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all duration-200"
+                                        style={active
+                                            ? {
+                                                fontSize: 11,
+                                                color: `var(${t.color})`,
+                                                background: `color-mix(in srgb, var(${t.color}) 12%, transparent)`,
+                                                border: `1px solid color-mix(in srgb, var(${t.color}) 28%, transparent)`,
+                                                boxShadow: `0 1px 3px color-mix(in srgb, var(${t.color}) 18%, transparent)`,
+                                            }
+                                            : {
+                                                fontSize: 11,
+                                                color: 'var(--app-muted-foreground)',
+                                                background: 'transparent',
+                                                border: '1px solid transparent',
+                                            }}>
+                                        <Icon size={13} /> <span className="hidden sm:inline">{t.label}</span>
                                     </button>
-                                )}
-                                {/* Tab pills — pill-on-surface segmented control */}
-                                <div className="inline-flex items-stretch p-0.5 rounded-xl bg-app-surface border border-app-border/50">
-                                    {TABS.map(t => {
-                                        const Icon = t.icon; const active = tab === t.key;
-                                        return (
-                                            <button key={t.key} onClick={() => { setTab(t.key); setSearch(''); setRegionFilter(''); }}
-                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
-                                                style={active ? { ...grad(t.color), boxShadow: `0 2px 8px color-mix(in srgb, var(${t.color}) 25%, transparent)` } : {}}>
-                                                <Icon size={12} /> <span className="hidden sm:inline">{t.label}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                                );
+                            })}
                         </div>
-
-                        {/* KPI strip — design.md §3, §4 */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
-                            {KPIS.map(s => (
-                                <div key={s.label}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
-                                    style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                                        style={{ background: `color-mix(in srgb, ${s.color} 12%, transparent)`, color: s.color }}>
-                                        <s.icon size={13} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">{s.label}</div>
-                                        <div className="text-sm font-black text-app-foreground tabular-nums truncate">{s.value}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        {tab === 'languages' && (
+                            <button onClick={saveLangs} disabled={langSaving || langLoading}
+                                className="regional-tbtn-primary disabled:opacity-50">
+                                {langSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={13} />}
+                                <span>Save</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {/* ── CONTENT AREA — full-bleed, content centered to 1400px ── */}
-                <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-8 py-4">
-                    <div className="max-w-[1400px] mx-auto h-full">
+                {/* ── KPI STRIP — same pattern as COA's KPIStrip ── */}
+                <div className="flex-shrink-0 mb-3 px-4 md:px-6"
+                     style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                    {KPIS.map(s => (
+                        <div key={s.label}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                            }}>
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
+                                <s.icon size={14} />
+                            </div>
+                            <div className="min-w-0">
+                                <div className="text-tp-xxs font-bold uppercase tracking-wider truncate text-app-muted-foreground">{s.label}</div>
+                                <div className="text-sm font-bold tabular-nums text-app-foreground truncate">{s.value}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* ── CONTENT AREA — fills rest, internal margins like COA's tree ── */}
+                <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6 pb-4">
+                    <div className="h-full">
                     {tab === 'countries' && (
                         <TwoPanePicker
                             kind="country"
@@ -468,16 +482,27 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                     )}
                     {tab === 'currencies' && (
                         <div className="h-full flex flex-col gap-3 min-h-0">
-                            {/* Sub-tab strip — Select / Rate Rules / Rate History / Revaluations */}
-                            <div className="inline-flex items-stretch p-0.5 rounded-xl bg-app-surface border border-app-border/50 self-start shrink-0">
+                            {/* Sub-tab strip — ghost style (tint + border + colored text), not solid filled.
+                                Same recipe as the COA-style toolbar buttons in the page header. */}
+                            <div className="flex items-center gap-1.5 self-start shrink-0 flex-wrap">
                                 {CURRENCY_SUB_TABS.map(s => {
                                     const SIcon = s.icon; const active = currencySubTab === s.key;
                                     return (
                                         <button key={s.key} onClick={() => setCurrencySubTab(s.key)}
-                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all duration-200"
                                             style={active
-                                                ? { ...grad(s.color), fontSize: 11, boxShadow: `0 2px 8px color-mix(in srgb, var(${s.color}) 25%, transparent)` }
-                                                : { fontSize: 11 }}>
+                                                ? {
+                                                    fontSize: 11,
+                                                    color: `var(${s.color})`,
+                                                    background: `color-mix(in srgb, var(${s.color}) 10%, transparent)`,
+                                                    border: `1px solid color-mix(in srgb, var(${s.color}) 30%, transparent)`,
+                                                }
+                                                : {
+                                                    fontSize: 11,
+                                                    color: 'var(--app-muted-foreground)',
+                                                    background: 'transparent',
+                                                    border: '1px solid var(--app-border)',
+                                                }}>
                                             <SIcon size={12} /> <span className="hidden sm:inline">{s.label}</span>
                                         </button>
                                     );
@@ -539,9 +564,51 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                             addCustomLang={addCustomLang}
                         />
                     )}
-                    </div>{/* close max-w-[1400px] content inner */}
-                </div>{/* close flex-1 content area */}
-            </div>{/* close full-bleed shell */}
+                    </div>{/* close content inner */}
+                </div>{/* close content area */}
+            </div>{/* close COA-style page shell */}
+
+            {/* Local toolbar-button styles — same recipe as Chart of Accounts */}
+            <style jsx>{`
+                :global(.regional-tbtn) {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.375rem;
+                    font-size: 0.6875rem;
+                    font-weight: 700;
+                    border: 1px solid var(--app-border);
+                    color: var(--app-muted-foreground);
+                    padding: 0.375rem 0.625rem;
+                    border-radius: 0.75rem;
+                    transition: all 0.2s;
+                    background: transparent;
+                }
+                :global(.regional-tbtn:hover) {
+                    background: var(--app-surface);
+                    color: var(--app-foreground);
+                }
+                :global(.regional-tbtn[data-active]) {
+                    /* Active state inline-styled per tab color */
+                }
+                :global(.regional-tbtn-primary) {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.375rem;
+                    font-size: 0.6875rem;
+                    font-weight: 700;
+                    padding: 0.375rem 0.75rem;
+                    border-radius: 0.75rem;
+                    background: var(--app-primary);
+                    color: var(--app-primary-foreground, white);
+                    box-shadow: 0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent);
+                    transition: all 0.2s;
+                    border: 1px solid transparent;
+                }
+                :global(.regional-tbtn-primary:hover) {
+                    transform: translateY(-1px);
+                    filter: brightness(1.1);
+                }
+            `}</style>
         </>
     );
 }
@@ -580,7 +647,7 @@ function TwoPanePicker({
     return (
         <div className="h-full grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
             {/* ── LEFT PANE: Active selection ── */}
-            <section className="bg-app-surface/30 rounded-2xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
+            <section className="bg-app-surface/30 rounded-2xl border border-app-border flex flex-col overflow-hidden min-h-0">
                 <PaneHeader
                     icon={<PanelIcon size={13} style={{ color: `var(${accent})` }} />}
                     title={`Your ${kind === 'country' ? 'Countries' : 'Currencies'}`}
@@ -617,7 +684,7 @@ function TwoPanePicker({
             </section>
 
             {/* ── RIGHT PANE: Browse + add ── */}
-            <section className="bg-app-surface/30 rounded-2xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
+            <section className="bg-app-surface/30 rounded-2xl border border-app-border flex flex-col overflow-hidden min-h-0">
                 <div className="px-4 py-3 border-b border-app-border/50 shrink-0 flex items-center gap-2"
                     style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
                     <div className="flex-1 relative">
@@ -704,8 +771,17 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                 {isCountry ? (
                     <span className="text-2xl shrink-0">{flag(code)}</span>
                 ) : (
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ ...soft(accent, 15), color: `var(${accent})` }}>
+                    /* Symbol tile: only the BASE row carries the accent tint;
+                       every other currency uses a neutral border-tone tile so
+                       the panel doesn't drown in amber. */
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border"
+                        style={isDefault
+                            ? { ...soft(accent, 14), color: `var(${accent})`, borderColor: `color-mix(in srgb, var(${accent}) 30%, transparent)` }
+                            : {
+                                background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                color: 'var(--app-foreground)',
+                                borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                            }}>
                         <span className="font-black" style={{ fontSize: 14 }}>{ref?.symbol || oc.currency_symbol || code?.charAt(0) || '$'}</span>
                     </div>
                 )}
@@ -842,7 +918,7 @@ function LanguagesPanel({ langCodes, langCustom, setLangCustom, langLoading, tog
 }) {
     const customCodes = langCodes.filter(c => !COMMON_LOCALES.some(l => l.code === c));
     return (
-        <div className="h-full max-w-[900px] mx-auto bg-app-surface/30 rounded-2xl border border-app-border/50 flex flex-col overflow-hidden">
+        <div className="h-full max-w-[900px] mx-auto bg-app-surface/30 rounded-2xl border border-app-border flex flex-col overflow-hidden">
             <PaneHeader
                 icon={<Languages size={13} style={{ color: 'var(--app-info)' }} />}
                 title="Catalogue Languages"
@@ -974,6 +1050,15 @@ function CurrenciesForCountry({ countryOc, orgCurrencies, allCurrencies, onToggl
 }) {
     return (
         <>
+            {/*
+               Palette policy inside Country expansion:
+               – Single accent throughout = var(--app-primary) (country's color).
+               – Currency symbol tile is NEUTRAL (no extra hue) — it's just an
+                 identifier, not a state.
+               – Base currency: subtle muted tag, no big amber gradient.
+               – "Always available" → small Lock icon (muted), not a green pill.
+               – Toggle uses primary tint when on. Off = standard border gray.
+             */}
             {orgCurrencies.map(ccyOc => {
                 const refCcy = allCurrencies.find(c => c.id === ccyOc.currency);
                 const code = refCcy?.code || ccyOc.currency_code || '';
@@ -985,29 +1070,39 @@ function CurrenciesForCountry({ countryOc, orgCurrencies, allCurrencies, onToggl
                 return (
                     <div key={ccyOc.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
                         <div className="w-5 shrink-0" />{/* indent */}
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-                            style={isActiveHere ? { ...soft('--app-warning', 15), color: 'var(--app-warning)' } : { ...soft('--app-muted-foreground', 8), color: 'var(--app-muted-foreground)' }}>
+                        {/* Neutral symbol tile — same look whether active or not */}
+                        <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 border"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
+                            }}>
                             <span className="font-black" style={{ fontSize: 11 }}>{symbol}</span>
                         </div>
                         <div className="flex-1 min-w-0 flex items-center gap-1.5">
                             <span className="font-mono font-bold uppercase truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{code}</span>
                             {isBase && (
-                                <span className="font-black uppercase tracking-widest rounded text-white inline-flex items-center" style={{ ...grad('--app-warning'), fontSize: 8, padding: '1px 5px', lineHeight: 1.2 }}>
+                                <span className="font-black uppercase tracking-widest rounded inline-flex items-center"
+                                    style={{
+                                        ...soft('--app-muted-foreground', 12),
+                                        color: 'var(--app-muted-foreground)',
+                                        fontSize: 8, padding: '1px 5px', lineHeight: 1.2,
+                                        border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
+                                    }}>
                                     Base
                                 </span>
                             )}
                         </div>
                         {isBase ? (
-                            <span className="font-black uppercase tracking-widest rounded shrink-0 inline-flex items-center"
-                                style={{ ...soft('--app-success', 12), color: 'var(--app-success)', fontSize: 8, padding: '2px 6px', lineHeight: 1.2, border: '1px solid color-mix(in srgb, var(--app-success) 25%, transparent)' }}
+                            <span className="shrink-0 inline-flex items-center justify-center w-9 h-4"
                                 title="Base currency is always available in every enabled country">
-                                Always
+                                <Lock size={11} style={{ color: 'var(--app-muted-foreground)' }} />
                             </span>
                         ) : (
                             <button onClick={() => onToggleCurrencyCountry?.(ccyOc, countryOc.country)}
                                 disabled={isPending}
                                 className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
-                                style={{ background: isActiveHere ? 'color-mix(in srgb, var(--app-warning) 85%, transparent)' : 'var(--app-border)' }}
+                                style={{ background: isActiveHere ? 'color-mix(in srgb, var(--app-primary) 72%, transparent)' : 'var(--app-border)' }}
                                 title={`${isActiveHere ? 'Disable' : 'Enable'} ${code} for ${countryOc.country_name || 'this country'}`}>
                                 <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`} />
                             </button>
@@ -1033,11 +1128,14 @@ function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggle
     const allOn = enabledList.length === 0;
     return (
         <>
+            {/* Single accent inside Currency expansion = `accent` (passed in from the
+                row, which is --app-warning for the Currencies tab). No green/success
+                callouts — they fight with the row chrome. */}
             {allOn && (
                 <div className="px-2 py-1.5 mb-0.5 rounded-lg flex items-center gap-2"
-                    style={{ ...soft('--app-success', 8), border: '1px solid color-mix(in srgb, var(--app-success) 25%, transparent)' }}>
-                    <Check size={12} style={{ color: 'var(--app-success)' }} />
-                    <span className="font-bold" style={{ fontSize: 11, color: 'var(--app-success)' }}>
+                    style={{ ...soft(accent, 8), border: `1px solid color-mix(in srgb, var(${accent}) 25%, transparent)` }}>
+                    <Check size={12} style={{ color: `var(${accent})` }} />
+                    <span className="font-bold" style={{ fontSize: 11, color: `var(${accent})` }}>
                         Available in every enabled country
                     </span>
                     <span className="text-app-muted-foreground" style={{ fontSize: 10 }}>· toggle any below to restrict</span>
@@ -1056,7 +1154,14 @@ function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggle
                             <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{cName}</span>
                             <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{iso}</span>
                             {country_oc.is_default && (
-                                <span className="font-black uppercase tracking-widest rounded text-white inline-flex items-center" style={{ ...grad('--app-primary'), fontSize: 8, padding: '1px 5px', lineHeight: 1.2 }}>
+                                <span className="font-black uppercase tracking-widest rounded inline-flex items-center"
+                                    style={{
+                                        ...soft('--app-muted-foreground', 12),
+                                        color: 'var(--app-muted-foreground)',
+                                        fontSize: 8, padding: '1px 5px', lineHeight: 1.2,
+                                        border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
+                                    }}
+                                    title="Default country for this organization">
                                     <Crown size={7} className="inline mr-0.5 -mt-px" /> Home
                                 </span>
                             )}
@@ -1064,7 +1169,7 @@ function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggle
                         <button onClick={() => onToggleCurrencyCountry?.(currencyOc, country_oc.country)}
                             disabled={isPending}
                             className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
-                            style={{ background: isActiveHere ? `color-mix(in srgb, var(${accent}) 85%, transparent)` : 'var(--app-border)' }}
+                            style={{ background: isActiveHere ? `color-mix(in srgb, var(${accent}) 72%, transparent)` : 'var(--app-border)' }}
                             title={`${isActiveHere ? 'Disable' : 'Enable'} ${currencyCode} for ${cName}`}>
                             <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`} />
                         </button>
