@@ -181,15 +181,26 @@ class ExchangeRateViewSet(TenantModelViewSet):
     serializer_class = ExchangeRateSerializer
 
     def get_queryset(self):
+        # Only return rates whose BOTH endpoints are still in the org's
+        # currency list (is_active=True). This hides historical rate rows
+        # like EUR→USD when the operator has since removed EUR or USD from
+        # /settings/regional Currencies tab. The data isn't deleted — just
+        # not surfaced — so audit history is preserved on the model.
         org_id = get_current_tenant_id()
-        qs = ExchangeRate.objects.filter(organization_id=org_id)
-        # Optional filters
+        qs = ExchangeRate.objects.filter(
+            organization_id=org_id,
+            from_currency__is_active=True,
+            to_currency__is_active=True,
+        )
         from_code = self.request.query_params.get('from_code')
         if from_code:
             qs = qs.filter(from_currency__code=from_code)
         rate_type = self.request.query_params.get('rate_type')
         if rate_type:
             qs = qs.filter(rate_type=rate_type)
+        # Allow `?include_inactive=1` for an admin/audit view if needed.
+        if self.request.query_params.get('include_inactive') == '1':
+            qs = ExchangeRate.objects.filter(organization_id=org_id)
         return qs.select_related('from_currency', 'to_currency').order_by('-effective_date', 'from_currency__code')
 
     def perform_create(self, serializer):
@@ -274,10 +285,19 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
     serializer_class = CurrencyRatePolicySerializer
 
     def get_queryset(self):
+        # Hide policies for currencies that have been removed from the
+        # /settings/regional Currencies tab. The policy row stays in the
+        # DB (sync history preserved) but doesn't surface in the UI.
         org_id = get_current_tenant_id()
-        return CurrencyRatePolicy.objects.filter(organization_id=org_id)\
-            .select_related('from_currency', 'to_currency')\
-            .order_by('from_currency__code')
+        qs = CurrencyRatePolicy.objects.filter(
+            organization_id=org_id,
+            from_currency__is_active=True,
+            to_currency__is_active=True,
+        )
+        if self.request.query_params.get('include_inactive') == '1':
+            qs = CurrencyRatePolicy.objects.filter(organization_id=org_id)
+        return qs.select_related('from_currency', 'to_currency')\
+                 .order_by('from_currency__code')
 
     def perform_create(self, serializer):
         serializer.save(organization_id=get_current_tenant_id())

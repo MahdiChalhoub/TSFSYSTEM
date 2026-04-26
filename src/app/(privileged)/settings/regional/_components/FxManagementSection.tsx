@@ -508,20 +508,24 @@ export function FxManagementSection() {
 
 function BasePill({ base }: { base?: Currency }) {
     if (!base) {
+        // Clickable — one click takes the operator to the Currencies tab
+        // where they can mark one as ⭐ default.
         return (
-            <span className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg"
-                title="Set a base currency in the Currencies tab (mark one as ⭐ default)"
-                style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)' }}>
-                <ShieldAlert size={11} /> Set base in Currencies tab
-            </span>
+            <a href="?tab=currencies"
+                title="Click to open the Currencies tab and mark one as ⭐ default"
+                className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg cursor-pointer hover:brightness-110 transition-all"
+                style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)' }}>
+                <ShieldAlert size={11} /> Set base in Currencies tab →
+            </a>
         )
     }
     return (
-        <span className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg"
-            title="Base currency comes from the Currencies tab (⭐). Change it there."
+        <a href="?tab=currencies"
+            title={`Base = ${base.code}. Click to change it in the Currencies tab.`}
+            className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg cursor-pointer hover:brightness-110 transition-all"
             style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
             <ShieldCheck size={11} /> Base: {base.code}
-        </span>
+        </a>
     )
 }
 
