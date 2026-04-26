@@ -15,7 +15,9 @@ import { MasterListCard } from '@/components/templates/MasterListCard'
 export const UnitRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
     onViewProducts, onSelect, allUnits,
+    selectable, isCheckedFn, onToggleCheck,
 }: any) => {
+    const rowChecked = isCheckedFn ? isCheckedFn(node.id) : false
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
     const prevForceExpanded = useRef(forceExpanded)
@@ -53,17 +55,33 @@ export const UnitRow = ({
                     onClick={() => { if (isParent) setIsOpen(o => !o); else onSelect?.(node) }}
                     onDoubleClick={() => onSelect?.(node)}
                     leadingSlot={
-                        <button onClick={(e) => { e.stopPropagation(); if (isParent) setIsOpen(!isOpen) }}
-                            className={`w-5 h-5 flex items-center justify-center rounded-md flex-shrink-0 ${isParent ? 'hover:bg-app-border/40' : ''}`}>
-                            {isParent ? (
-                                <ChevronRight size={14}
-                                    className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
-                                    style={{ color: isOpen ? 'var(--app-info)' : 'var(--app-muted-foreground)' }} />
-                            ) : (
-                                <div className="w-1.5 h-1.5 rounded-full"
-                                    style={{ background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
+                        <>
+                            {selectable && (
+                                <button type="button"
+                                    onClick={(e) => { e.stopPropagation(); onToggleCheck?.(node.id) }}
+                                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all mr-1 ${rowChecked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                                    style={{
+                                        borderColor: rowChecked ? 'var(--app-primary)' : 'var(--app-border)',
+                                        background: rowChecked ? 'var(--app-primary)' : 'transparent',
+                                    }}
+                                    aria-checked={rowChecked}
+                                    role="checkbox"
+                                    aria-label={`Select ${node.name}`}>
+                                    {rowChecked && <span className="text-white text-[10px] font-bold">✓</span>}
+                                </button>
                             )}
-                        </button>
+                            <button onClick={(e) => { e.stopPropagation(); if (isParent) setIsOpen(!isOpen) }}
+                                className={`w-5 h-5 flex items-center justify-center rounded-md flex-shrink-0 ${isParent ? 'hover:bg-app-border/40' : ''}`}>
+                                {isParent ? (
+                                    <ChevronRight size={14}
+                                        className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
+                                        style={{ color: isOpen ? 'var(--app-info)' : 'var(--app-muted-foreground)' }} />
+                                ) : (
+                                    <div className="w-1.5 h-1.5 rounded-full"
+                                        style={{ background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
+                                )}
+                            </button>
+                        </>
                     }
                     title={
                         <span onClick={(e) => { e.stopPropagation(); onSelect?.(node) }} className="cursor-pointer flex items-center gap-1.5">
@@ -145,10 +163,12 @@ export const UnitRow = ({
                         <UnitRow key={child.id} node={child} level={level + 1}
                             onEdit={onEdit} onAdd={onAdd} onDelete={onDelete}
                             onViewProducts={onViewProducts} onSelect={onSelect}
-                            searchQuery={searchQuery} forceExpanded={forceExpanded} allUnits={allUnits} />
+                            searchQuery={searchQuery} forceExpanded={forceExpanded} allUnits={allUnits}
+                            selectable={selectable} isCheckedFn={isCheckedFn} onToggleCheck={onToggleCheck} />
                     ))}
                 </div>
             )}
         </div>
     )
 }
+

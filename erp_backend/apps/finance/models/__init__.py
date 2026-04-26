@@ -58,7 +58,7 @@ from .dynamic_form import FormDefinition, FormResponse
 from .reconciliation_models import ReconciliationMatch, ReconciliationLine
 from .bank_reconciliation_models import BankStatement, BankStatementLine, ReconciliationSession
 # ── Phase 3: Enterprise Models ─────────────────────────────────
-from .currency_models import Currency, ExchangeRate, CurrencyRevaluation, CurrencyRevaluationLine
+from .currency_models import Currency, ExchangeRate, CurrencyRevaluation, CurrencyRevaluationLine, CurrencyRatePolicy
 from .recurring_journal_models import RecurringJournalTemplate, RecurringJournalLine, RecurringJournalExecution
 from .budget_models import Budget, BudgetLine
 from .consolidation_models import (
@@ -86,7 +86,7 @@ __all__ = [
     'NORMAL_BALANCE_MAP', 'ACCOUNT_CLASS_MAP', 'ACCOUNT_CLASS_NAMES',
     'FinanceDailySummary',
     # Phase 3: Enterprise
-    'Currency', 'ExchangeRate', 'CurrencyRevaluation', 'CurrencyRevaluationLine',
+    'Currency', 'ExchangeRate', 'CurrencyRevaluation', 'CurrencyRevaluationLine', 'CurrencyRatePolicy',
     'RecurringJournalTemplate', 'RecurringJournalLine', 'RecurringJournalExecution',
     'Budget', 'BudgetLine',
     'ConsolidationGroup', 'ConsolidationEntity', 'IntercompanyRule',

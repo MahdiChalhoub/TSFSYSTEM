@@ -772,11 +772,12 @@ class LedgerCOAMixin:
             if abs(acc.balance) > Decimal('0.001'):
                 raise ValidationError(f"Control account {acc.code} ({acc.name}) must have zero balance before closure. Current balance: {acc.balance}")
 
-        # ── FX revaluation gate (period-level) ───────────────────────
-        # Mirror of the year-end check in ClosingService: a period that
-        # holds activity on a foreign-currency-pinned account must have
-        # a POSTED CurrencyRevaluation. Closing without it freezes the
-        # unrealized FX into the wrong account at the wrong rate.
+        # ── FX revaluation check (HYBRID MODE: warn-only) ────────────
+        # Hybrid model: foreign-pinned accounts hold base-currency balances
+        # with per-line FX metadata. Period-end revaluation is OPTIONAL —
+        # operators run it on demand from the Currencies page when they
+        # need IFRS-style mark-to-market. Don't block period close on it.
+        # We log a warning so the signal isn't lost.
         if fiscal_period is not None:
             from apps.finance.models import JournalEntryLine
             from apps.finance.models.currency_models import (
@@ -806,12 +807,13 @@ class LedgerCOAMixin:
                             status='POSTED',
                         ).exists()
                         if not has_revaluation:
-                            raise ValidationError(
-                                f"Cannot close {fiscal_period.name}: foreign-"
-                                f"currency activity has not been revalued. Run "
-                                f"RevaluationService.run_revaluation(org, "
-                                f"period) first to book the unrealized FX "
-                                f"gain/loss before closing."
+                            import logging as _l
+                            _l.getLogger(__name__).warning(
+                                f"Closing {fiscal_period.name} in hybrid mode: "
+                                f"foreign-currency activity present but no "
+                                f"period-end revaluation. Foreign balances stay "
+                                f"at booked rates. Run Revalue on the Currencies "
+                                f"page if IFRS mark-to-market is needed."
                             )
         return True
 

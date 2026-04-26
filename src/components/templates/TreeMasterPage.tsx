@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useRef, useEffect, ReactNode } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback, ReactNode } from 'react'
 import {
     Search, Plus, Layers,
     Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp,
@@ -40,6 +40,11 @@ export interface TreeMasterConfig extends MasterPageConfig {
     treeTourId?: string  // Custom data-tour for the tree container (default: 'tree-container')
     /** Fires on every search-input change. Use to recompute KPIs against the filtered view. */
     onSearchChange?: (query: string) => void
+    /** When true, the template manages bulk-selection state and renders a
+     *  checkbox gutter + "Select All" in the column header. Selection props
+     *  are exposed via the render-prop so the consumer's row component can
+     *  bind isCheckedFn / onToggleCheck without managing state itself. */
+    selectable?: boolean
 }
 
 export interface TreeMasterRenderProps {
@@ -73,6 +78,15 @@ export interface TreeMasterRenderProps {
     openNode: (n: any, tab?: string) => void
     /** Active KPI filter key, or null. */
     kpiFilter: string | null
+    /* ── Selection (only meaningful when config.selectable is true) ── */
+    /** Set of currently selected node ids. */
+    selectedIds: Set<number>
+    /** Toggle a single node's selection. */
+    toggleSelect: (id: number) => void
+    /** Select / deselect all currently visible (filtered) nodes. */
+    selectAll: () => void
+    /** Clear the selection. */
+    clearSelection: () => void
 }
 
 interface TreeMasterPageProps {
@@ -86,12 +100,15 @@ interface TreeMasterPageProps {
     }) => ReactNode
     modals?: ReactNode
     aboveTree?: ReactNode
+    /** Slot for a floating bulk-action bar rendered when items are selected.
+     *  Receives the count and a clearSelection callback. */
+    bulkActions?: (props: { count: number; clearSelection: () => void }) => ReactNode
 }
 
 /* ═══════════════════════════════════════════════════════════
  *  TREE MASTER PAGE — Reusable shell matching Categories design
  * ═══════════════════════════════════════════════════════════ */
-export function TreeMasterPage({ config, children, detailPanel, modals, aboveTree }: TreeMasterPageProps) {
+export function TreeMasterPage({ config, children, detailPanel, modals, aboveTree, bulkActions }: TreeMasterPageProps) {
     const [searchQuery, setSearchQuery] = useState('')
     const [kpiFilter, setKpiFilter] = useState<string | null>(null)
 
@@ -132,6 +149,16 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     const [sidebarNode, setSidebarNode] = useState<any | null>(null)
     const [sidebarTab, setSidebarTab] = useState('overview')
     const [refreshing, setRefreshing] = useState(false)
+    /* ── Bulk-selection state (opt-in via config.selectable) ── */
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+    const toggleSelect = useCallback((id: number) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id); else next.add(id)
+            return next
+        })
+    }, [])
+    const clearSelection = useCallback(() => setSelectedIds(new Set()), [])
     const searchRef = useRef<HTMLInputElement>(null)
 
     /* ── Template-owned filtering + tree (opt-in via config.data) ── */
@@ -154,6 +181,21 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
         () => (ownsData ? buildTree(filteredData, config.treeParentKey || 'parent') : []),
         [ownsData, filteredData, config.treeParentKey]
     )
+
+    /* selectAll needs filteredData — defined after the useMemo above. */
+    const selectAll = useCallback(() => {
+        setSelectedIds(prev => {
+            if (prev.size > 0 && prev.size === filteredData.length) return new Set()
+            return new Set(filteredData.map((d: any) => d.id))
+        })
+    }, [filteredData])
+    // Escape clears selection
+    useEffect(() => {
+        if (!config.selectable) return
+        const h = (e: KeyboardEvent) => { if (e.key === 'Escape') clearSelection() }
+        window.addEventListener('keydown', h)
+        return () => window.removeEventListener('keydown', h)
+    }, [config.selectable, clearSelection])
 
     const isSelected = (n: any) => {
         if (!n) return false
@@ -195,6 +237,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
         panelTab, setPanelTab,
         setExpandAll, setExpandKey,
         filteredData, tree, isSelected, openNode, kpiFilter,
+        selectedIds, toggleSelect, selectAll, clearSelection,
     }
 
     /* ── Resolve config callables against the filtered view ── */
@@ -432,6 +475,32 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                     {config.columnHeaders && !isCompact && (
                         <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-tp-xxs font-black text-app-muted-foreground uppercase tracking-widest"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '2px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                            {/* Checkbox gutter header — "Select All" when selectable */}
+                            {config.selectable ? (
+                                <div className="w-9 flex-shrink-0 flex items-center justify-center">
+                                    <button type="button"
+                                        onClick={selectAll}
+                                        className="w-5 h-5 rounded border-2 flex items-center justify-center transition-all"
+                                        style={{
+                                            borderColor: selectedIds.size > 0 ? 'var(--app-primary)' : 'var(--app-border)',
+                                            background: selectedIds.size > 0 && selectedIds.size === filteredData.length
+                                                ? 'var(--app-primary)'
+                                                : selectedIds.size > 0
+                                                    ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)'
+                                                    : 'transparent',
+                                        }}
+                                        aria-checked={selectedIds.size > 0 && selectedIds.size === filteredData.length ? 'true' : selectedIds.size > 0 ? 'mixed' : 'false'}
+                                        role="checkbox"
+                                        aria-label="Select all">
+                                        {selectedIds.size > 0 && selectedIds.size === filteredData.length && (
+                                            <span className="text-white text-[10px] font-bold">✓</span>
+                                        )}
+                                        {selectedIds.size > 0 && selectedIds.size < filteredData.length && (
+                                            <span className="text-white text-[10px] font-bold">–</span>
+                                        )}
+                                    </button>
+                                </div>
+                            ) : null}
                             <div className="w-5 flex-shrink-0" />
                             <div className="w-7 flex-shrink-0" />
                             {config.columnHeaders.map((col, i) => {
@@ -529,6 +598,9 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                     </div>
                 </div>
             )}
+
+            {/* ═══════════════ BULK ACTION BAR ═══════════════ */}
+            {config.selectable && selectedIds.size > 0 && bulkActions && bulkActions({ count: selectedIds.size, clearSelection })}
 
             {/* ── Footer ── */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold rounded-b-2xl animate-in slide-in-from-bottom-2 duration-300"

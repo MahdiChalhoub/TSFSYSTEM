@@ -28,7 +28,12 @@ export function SummaryTab({ summary, fiscalYearId }: SummaryTabProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-(--app-border)/40 border-b border-(--app-border)/40">
                     {/* P&L */}
                     <div className="p-5 bg-(--app-bg)">
-                        <div className="text-[10px] font-black uppercase tracking-[0.1em] mb-4 text-(--app-muted-foreground)">Performance Snapshot</div>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="text-[10px] font-black uppercase tracking-[0.1em] text-(--app-muted-foreground)">Profit &amp; Loss</div>
+                            <div className="text-[9px] font-bold uppercase tracking-wide opacity-40" title="Sum of revenue and expense activity inside this fiscal year. Closes to Retained Earnings on year-end.">
+                                Activity this year
+                            </div>
+                        </div>
                         <div className="grid grid-cols-3 gap-4">
                             {[
                                 { label: 'Revenue', value: s.pnl.revenue, color: 'var(--app-success, #22c55e)' },
@@ -45,7 +50,12 @@ export function SummaryTab({ summary, fiscalYearId }: SummaryTabProps) {
 
                     {/* Balance Sheet */}
                     <div className="p-5 bg-(--app-bg)">
-                        <div className="text-[10px] font-black uppercase tracking-[0.1em] mb-4 text-(--app-muted-foreground)">Position Snapshot</div>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="text-[10px] font-black uppercase tracking-[0.1em] text-(--app-muted-foreground)">Balance Sheet</div>
+                            <div className="text-[9px] font-bold uppercase tracking-wide opacity-40" title="Cumulative position on every balance-sheet account, as of the fiscal year's end date. Includes prior-year carry-forward.">
+                                Position at year-end
+                            </div>
+                        </div>
                         <div className="grid grid-cols-3 gap-4">
                             {[
                                 { label: 'Assets', value: s.balance_sheet.assets, color: 'var(--app-info, #3b82f6)' },
@@ -58,6 +68,34 @@ export function SummaryTab({ summary, fiscalYearId }: SummaryTabProps) {
                                 </div>
                             ))}
                         </div>
+                        {/* Accounting identity hint — visible while year is open */}
+                        {(() => {
+                            const a = s.balance_sheet.assets
+                            const l = s.balance_sheet.liabilities
+                            const e = s.balance_sheet.equity
+                            const ni = s.pnl.net_income
+                            const gap = a - l - e
+                            const isClosed = (s.year?.status === 'CLOSED' || s.year?.status === 'FINALIZED') && s.closing_entry
+                            // After close: A=L+E (gap=0). Before close: gap should equal P&L net.
+                            const looksRight = isClosed
+                                ? Math.abs(gap) < 0.01
+                                : Math.abs(gap - ni) < 0.01
+                            if (looksRight) {
+                                return (
+                                    <div className="mt-3 text-[9px] font-medium opacity-50" title="Accounting identity: A = L + E + (Income − Expenses) until year-end close.">
+                                        A − L − E = {gap.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        {!isClosed && <> · matches P&amp;L net ✓</>}
+                                        {isClosed && <> · year closed ✓</>}
+                                    </div>
+                                )
+                            }
+                            return (
+                                <div className="mt-3 text-[9px] font-bold opacity-80" style={{ color: 'var(--app-error, #ef4444)' }}
+                                    title="Books look out of balance — A − L − E should equal current-year net income (open year) or 0 (closed year).">
+                                    ⚠ A − L − E = {gap.toLocaleString(undefined, { minimumFractionDigits: 2 })} · expected {(isClosed ? 0 : ni).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </div>
+                            )
+                        })()}
                     </div>
                 </div>
 

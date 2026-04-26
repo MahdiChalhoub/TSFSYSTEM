@@ -43,28 +43,14 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
     const [deleteConflict, setDeleteConflict] = useState<any>(null)
-    // Bulk-edit selection state — Set of category ids the user has ticked.
-    // When non-empty, a floating action bar offers Bulk Delete / Bulk Move /
-    // Bulk Prefix. Selection clears on save or Esc.
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
     const [bulkDialog, setBulkDialog] = useState<null | 'move' | 'delete'>(null)
     const [bulkBusy, setBulkBusy] = useState(false)
     const [showImport, setShowImport] = useState(false)
     const [showPrint, setShowPrint] = useState(false)
     const data = initialCategories
-
-    const toggleSelect = useCallback((id: number) => {
-        setSelectedIds(prev => {
-            const next = new Set(prev)
-            if (next.has(id)) next.delete(id); else next.add(id)
-            return next
-        })
-    }, [])
-    const clearSelection = useCallback(() => setSelectedIds(new Set()), [])
-    useEffect(() => {
-        const h = (e: KeyboardEvent) => { if (e.key === 'Escape') clearSelection() }
-        window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h)
-    }, [clearSelection])
+    // Selection state is now managed by TreeMasterPage via config.selectable.
+    // We keep a ref so bulk dialogs can read the current selection.
+    const selectionRef = useRef<{ selectedIds: Set<number>; clearSelection: () => void }>({ selectedIds: new Set(), clearSelection: () => {} })
 
     // Warm up the CATEGORY sequence cache on page mount so the first New
     // dialog opens with a pre-filled code instantly (no network wait).
@@ -280,6 +266,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     onPrint: () => setShowPrint(true),
                     title: 'Category Data',
                 },
+                selectable: true,
                 secondaryActions: [
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],
@@ -391,10 +378,20 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     onPin={onPin ? (n) => onPin(n) : undefined}
                 />
             )}
+            bulkActions={({ count, clearSelection: clear }) => (
+                <BulkActionBar
+                    count={count}
+                    onMove={() => setBulkDialog('move')}
+                    onDelete={() => setBulkDialog('delete')}
+                    onClear={clear}
+                />
+            )}
         >
             {(renderProps) => {
-                const { tree, expandKey, expandAll, searchQuery, isSelected, openNode, isCompact } = renderProps
+                const { tree, expandKey, expandAll, searchQuery, isSelected, openNode, isCompact, selectedIds, toggleSelect } = renderProps
                 renderPropsRef.current = renderProps
+                // Keep ref in sync for bulk dialogs
+                selectionRef.current = { selectedIds, clearSelection: renderProps.clearSelection }
 
                 return tree.map((node: CategoryNode) => (
                     <div key={`${node.id}-${expandKey}`}
@@ -421,24 +418,15 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             }}
         </TreeMasterPage>
 
-        {/* Floating surfaces — mounted outside the render-prop tree so
-         *  TreeMasterPage's `children` stays a single function. */}
-        {selectedIds.size > 0 && (
-            <BulkActionBar
-                count={selectedIds.size}
-                onMove={() => setBulkDialog('move')}
-                onDelete={() => setBulkDialog('delete')}
-                onClear={clearSelection}
-            />
-        )}
+        {/* Floating surfaces — mounted outside the render-prop tree */}
         {bulkDialog && (
             <BulkDialog
                 mode={bulkDialog}
-                selectedIds={Array.from(selectedIds)}
+                selectedIds={Array.from(selectionRef.current.selectedIds)}
                 allCategories={data}
                 busy={bulkBusy}
                 onClose={() => setBulkDialog(null)}
-                onDone={() => { setBulkDialog(null); clearSelection(); router.refresh() }}
+                onDone={() => { setBulkDialog(null); selectionRef.current.clearSelection(); router.refresh() }}
             />
         )}
         {showImport && (

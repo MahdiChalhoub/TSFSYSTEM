@@ -20,6 +20,7 @@ from erp.models import Organization
 
 from apps.finance.models.currency_models import (
     Currency, ExchangeRate, CurrencyRevaluation, CurrencyRevaluationLine,
+    CurrencyRatePolicy,
 )
 from apps.finance.views.base import TenantModelViewSet
 
@@ -56,6 +57,26 @@ class CurrencyRevaluationLineSerializer(serializers.ModelSerializer):
                   'currency', 'currency_code',
                   'balance_in_currency', 'old_rate', 'new_rate',
                   'old_base_amount', 'new_base_amount', 'difference']
+
+
+class CurrencyRatePolicySerializer(serializers.ModelSerializer):
+    from_code = serializers.CharField(source='from_currency.code', read_only=True)
+    to_code = serializers.CharField(source='to_currency.code', read_only=True)
+
+    class Meta:
+        model = CurrencyRatePolicy
+        fields = [
+            'id', 'from_currency', 'from_code', 'to_currency', 'to_code',
+            'rate_type', 'provider', 'provider_config',
+            'auto_sync', 'multiplier', 'markup_pct',
+            'last_synced_at', 'last_sync_status', 'last_sync_error',
+            'is_active', 'created_at', 'updated_at',
+        ]
+        read_only_fields = [
+            'id', 'from_code', 'to_code',
+            'last_synced_at', 'last_sync_status', 'last_sync_error',
+            'created_at', 'updated_at',
+        ]
 
 
 class CurrencyRevaluationSerializer(serializers.ModelSerializer):
@@ -186,3 +207,46 @@ class CurrencyRevaluationViewSet(TenantModelViewSet):
             }, status=200)
 
         return Response(self.get_serializer(reval).data, status=201)
+
+
+class CurrencyRatePolicyViewSet(TenantModelViewSet):
+    """
+    CRUD over rate-sync policies + a `sync_now` per-row action and a
+    `sync_all` collection action.
+    """
+    queryset = CurrencyRatePolicy.objects.all()
+    serializer_class = CurrencyRatePolicySerializer
+
+    def get_queryset(self):
+        org_id = get_current_tenant_id()
+        return CurrencyRatePolicy.objects.filter(organization_id=org_id)\
+            .select_related('from_currency', 'to_currency')\
+            .order_by('from_currency__code')
+
+    def perform_create(self, serializer):
+        serializer.save(organization_id=get_current_tenant_id())
+
+    @action(detail=True, methods=['post'], url_path='sync-now')
+    def sync_now(self, request, pk=None):
+        from apps.finance.services import CurrencyRateSyncService
+        policy = self.get_object()
+        ok, msg = CurrencyRateSyncService.sync_pair(policy)
+        policy.refresh_from_db()
+        return Response({
+            'ok': ok,
+            'message': msg,
+            'policy': self.get_serializer(policy).data,
+        }, status=200 if ok else 400)
+
+    @action(detail=False, methods=['post'], url_path='sync-all')
+    def sync_all(self, request):
+        from erp.models import Organization
+        from apps.finance.services import CurrencyRateSyncService
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({'error': 'tenant context missing'}, status=400)
+        org = Organization.objects.get(id=org_id)
+        # only_auto=False so the operator's "Sync All" button hits every
+        # active non-MANUAL policy, regardless of the auto_sync flag.
+        results = CurrencyRateSyncService.sync_org(org, only_auto=False)
+        return Response({'results': results, 'count': len(results)}, status=200)

@@ -297,17 +297,19 @@ class ClosingService:
                     f"(includes orphan JEs by date). Post or delete them first."
                 )
 
-            # ── FX revaluation pre-check ──────────────────────────────
-            # If any period in this year holds activity on a foreign-
-            # currency-pinned account, that period must have a POSTED
-            # CurrencyRevaluation. Closing without it produces wrong
-            # retained earnings: the unrealized FX gain/loss never hits
-            # the P&L and gets baked into the wrong account at year-end.
+            # ── FX revaluation pre-check (HYBRID MODE: warn-only) ────────
+            # Hybrid model: foreign-pinned accounts store the foreign amount
+            # + rate per line, but the books stay in base currency. Period-end
+            # revaluation is OPTIONAL — operators run it on demand from the
+            # Currencies page when they need IFRS-style mark-to-market for a
+            # reporting deliverable. We don't block the close.
             #
-            # We refuse rather than auto-run revaluation because the
-            # operator must pick the closing rate per period; doing it
-            # silently would book at whatever rate happens to be on file
-            # at close time, which is not the same as period-end rate.
+            # We still surface the situation as a `messages` warning in the
+            # close preview so it shows up in the audit/operator UI without
+            # being a hard stop. Anyone running in strict-IFRS mode can opt
+            # back in by enabling `finance.fx_revaluation_required_at_close`
+            # in org settings (not yet wired — block is currently disabled by
+            # default).
             from apps.finance.models import (
                 JournalEntryLine, FiscalPeriod, ChartOfAccount,
             )
@@ -349,16 +351,18 @@ class ClosingService:
                         if not has_revaluation:
                             missing.append(fp.name)
                     if missing:
-                        raise ValidationError(
-                            f"Cannot close year — foreign-currency activity in "
-                            f"{len(missing)} period(s) was never revalued: "
+                        warn_msg = (
+                            f"Hybrid mode: closing without period-end revaluation "
+                            f"in {len(missing)} period(s) — "
                             f"{', '.join(missing[:5])}{'…' if len(missing) > 5 else ''}. "
-                            f"Run RevaluationService.run_revaluation per missing "
-                            f"period (or click Revalue in the period UI) before "
-                            f"closing the year. Closing without it would bake the "
-                            f"unrealized FX gain/loss into retained earnings at "
-                            f"the wrong rate."
+                            f"Foreign balances stay at booked rates. Run Revalue "
+                            f"on the Currencies page if you need IFRS mark-to-market."
                         )
+                        logger.warning(warn_msg)
+                        try:
+                            preview['messages'].append(warn_msg)
+                        except Exception:
+                            pass
 
             # Backfill orphan JEs (NULL fiscal_year_id) into this year — these
             # were created before fiscal_year linkage existed and would otherwise

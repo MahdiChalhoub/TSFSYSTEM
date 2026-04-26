@@ -125,6 +125,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 data,
                 searchFields: ['name', 'code', 'short_name', 'type'],
                 treeParentKey: 'base_unit',
+                selectable: true,
                 kpiPredicates: {
                     base: (u) => !u.base_unit,
                     derived: (u) => !!u.base_unit,
@@ -204,7 +205,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
             )}
         >
             {(renderProps) => {
-                const { tree, expandKey, expandAll, searchQuery, isSelected, openNode } = renderProps
+                const { tree, expandKey, expandAll, searchQuery, isSelected, openNode, selectedIds, toggleSelect } = renderProps
                 renderPropsRef.current = renderProps
 
                 return tree.map((node: any) => (
@@ -221,6 +222,9 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                             searchQuery={searchQuery}
                             forceExpanded={expandAll}
                             allUnits={data}
+                            selectable
+                            isCheckedFn={(id: number) => selectedIds.has(id)}
+                            onToggleCheck={toggleSelect}
                         />
                     </div>
                 ))

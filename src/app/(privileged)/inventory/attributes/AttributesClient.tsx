@@ -262,6 +262,7 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                     data,
                     searchFields: ['name', 'code', 'short_label'],
                     treeParentKey: 'parent',
+                    selectable: true,
                     kpiPredicates: {
                         groups: (n) => n._type === 'group',
                         values: (n) => n._type === 'value',
@@ -457,7 +458,7 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                     />
                 )}
             >
-                {({ tree: rendered, expandKey, expandAll, searchQuery, isSelected, openNode }) => (
+                {({ tree: rendered, expandKey, expandAll, searchQuery, isSelected, openNode, selectedIds, toggleSelect }) => (
                     rendered.map((node: any) => (
                         <div key={`${node.id}-${expandKey}`}
                             className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
@@ -472,6 +473,9 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                                 onLinkCategories={(n) => setLinkingCategoryFor(n)}
                                 onLinkBrands={(n) => setLinkingBrandFor(n)}
                                 onDelete={(n) => setDeleteTarget({ id: n.id, name: n.name, isRoot: n._type === 'group' })}
+                                selectable
+                                isCheckedFn={(id: number) => selectedIds.has(id)}
+                                onToggleCheck={toggleSelect}
                             />
                         </div>
                     ))
@@ -487,6 +491,7 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
 function AttributeRow({
     node, level, forceExpanded, searchQuery,
     onSelect, onEdit, onAddValue, onLinkCategories, onLinkBrands, onDelete,
+    selectable, isCheckedFn, onToggleCheck,
 }: {
     node: any
     level: number
@@ -498,10 +503,14 @@ function AttributeRow({
     onLinkCategories: (n: any) => void
     onLinkBrands: (n: any) => void
     onDelete: (n: any) => void
+    selectable?: boolean
+    isCheckedFn?: (id: number) => boolean
+    onToggleCheck?: (id: number) => void
 }) {
     const isGroup = node._type === 'group'
     const hasChildren = isGroup && (node.children?.length || 0) > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 1)
+    const rowChecked = isCheckedFn ? isCheckedFn(node.id) : false
     useEffect(() => { if (searchQuery) setIsOpen(true) }, [searchQuery])
     useEffect(() => { if (forceExpanded !== undefined) setIsOpen(forceExpanded) }, [forceExpanded])
 
@@ -527,6 +536,22 @@ function AttributeRow({
                 {isGroup && (
                     <div className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full"
                         style={{ background: 'var(--app-primary)' }} />
+                )}
+
+                {/* Checkbox (selectable) */}
+                {selectable && (
+                    <button type="button"
+                        onClick={(e) => { e.stopPropagation(); onToggleCheck?.(node.id) }}
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${rowChecked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                        style={{
+                            borderColor: rowChecked ? 'var(--app-primary)' : 'var(--app-border)',
+                            background: rowChecked ? 'var(--app-primary)' : 'transparent',
+                        }}
+                        aria-checked={rowChecked}
+                        role="checkbox"
+                        aria-label={`Select ${node.name}`}>
+                        {rowChecked && <span className="text-white text-[10px] font-bold">✓</span>}
+                    </button>
                 )}
 
                 {/* Chevron or dot */}
@@ -655,6 +680,9 @@ function AttributeRow({
                             onLinkCategories={onLinkCategories}
                             onLinkBrands={onLinkBrands}
                             onDelete={onDelete}
+                            selectable={selectable}
+                            isCheckedFn={isCheckedFn}
+                            onToggleCheck={onToggleCheck}
                         />
                     ))}
                 </div>

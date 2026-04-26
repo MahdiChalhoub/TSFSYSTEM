@@ -9,7 +9,8 @@ import {
 import {
     getCurrencies, getExchangeRates, getRevaluations,
     createCurrency, createExchangeRate, runRevaluation,
-    type Currency, type ExchangeRate, type CurrencyRevaluation,
+    getRatePolicies, createRatePolicy, updateRatePolicy, syncRatePolicy, syncAllRatePolicies,
+    type Currency, type ExchangeRate, type CurrencyRevaluation, type CurrencyRatePolicy,
 } from '@/app/actions/finance/currency'
 import { erpFetch } from '@/lib/erp-api'
 
@@ -31,32 +32,38 @@ type FiscalYear = {
 const RATE_TYPES: ExchangeRate['rate_type'][] = ['SPOT', 'AVERAGE', 'CLOSING', 'BUDGET']
 
 export default function CurrenciesPage() {
-    const [tab, setTab] = useState<'currencies' | 'rates' | 'revaluations'>('currencies')
+    const [tab, setTab] = useState<'currencies' | 'rates' | 'policies' | 'revaluations'>('currencies')
     const [currencies, setCurrencies] = useState<Currency[]>([])
     const [rates, setRates] = useState<ExchangeRate[]>([])
     const [revals, setRevals] = useState<CurrencyRevaluation[]>([])
+    const [policies, setPolicies] = useState<CurrencyRatePolicy[]>([])
     const [years, setYears] = useState<FiscalYear[]>([])
     const [loading, setLoading] = useState(true)
     const [running, setRunning] = useState<number | null>(null)
+    const [syncingId, setSyncingId] = useState<number | null>(null)
+    const [syncingAll, setSyncingAll] = useState(false)
 
     // Quick-add forms
     const [newCcyOpen, setNewCcyOpen] = useState(false)
     const [newRateOpen, setNewRateOpen] = useState(false)
+    const [newPolicyOpen, setNewPolicyOpen] = useState(false)
 
     useEffect(() => { void loadAll() }, [])
 
     async function loadAll() {
         setLoading(true)
         try {
-            const [cs, rs, vs, ys] = await Promise.all([
+            const [cs, rs, vs, ps, ys] = await Promise.all([
                 getCurrencies(),
                 getExchangeRates(),
                 getRevaluations(),
+                getRatePolicies(),
                 erpFetch('fiscal-years/').then((r: any) => Array.isArray(r) ? r : (r?.results ?? [])),
             ])
             setCurrencies(cs)
             setRates(rs)
             setRevals(vs)
+            setPolicies(ps)
             setYears(ys)
         } catch (e) {
             toast.error(`Failed to load: ${e instanceof Error ? e.message : String(e)}`)
@@ -107,6 +114,32 @@ export default function CurrenciesPage() {
         }
     }
 
+    async function handleSyncPolicy(id: number) {
+        setSyncingId(id)
+        try {
+            const res = await syncRatePolicy(id)
+            if (res.success) toast.success(res.message || 'Sync OK')
+            else toast.error(res.message || res.error || 'Sync failed')
+            await loadAll()
+        } finally {
+            setSyncingId(null)
+        }
+    }
+
+    async function handleSyncAll() {
+        setSyncingAll(true)
+        try {
+            const res = await syncAllRatePolicies()
+            if (!res.success) { toast.error(res.error || 'Sync-all failed'); return }
+            const ok = (res.results ?? []).filter(r => r.ok).length
+            const fail = (res.results ?? []).filter(r => !r.ok).length
+            toast.success(`Synced ${ok} policy${ok === 1 ? '' : 'ies'}${fail > 0 ? `, ${fail} failed` : ''}`)
+            await loadAll()
+        } finally {
+            setSyncingAll(false)
+        }
+    }
+
     if (loading) {
         return <div className="p-6 text-app-muted-foreground">Loading…</div>
     }
@@ -143,6 +176,7 @@ export default function CurrenciesPage() {
                 {([
                     ['currencies', `Currencies · ${currencies.length}`],
                     ['rates', `Rates · ${rates.length}`],
+                    ['policies', `Auto-Sync · ${policies.length}`],
                     ['revaluations', `Revaluations · ${revals.length}`],
                 ] as const).map(([k, label]) => (
                     <button key={k} onClick={() => setTab(k)}
@@ -296,6 +330,124 @@ export default function CurrenciesPage() {
                             </div>
                         ))}
                     </div>
+                </div>
+            )}
+
+            {/* Policies tab — auto-sync + adjustment factor */}
+            {tab === 'policies' && (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                        <p className="text-tp-sm text-app-muted-foreground">
+                            One policy per pair: choose a provider (ECB is free), an adjustment
+                            multiplier (e.g. <code className="text-tp-xs">1.035</code> for a 3.5% spread),
+                            and whether the daily cron auto-syncs it.
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button onClick={handleSyncAll} disabled={syncingAll || policies.length === 0}
+                                title="Sync every active non-MANUAL policy now"
+                                className="flex items-center gap-1.5 text-tp-sm font-bold px-3 py-1.5 rounded-xl border disabled:opacity-50"
+                                style={{ color: 'var(--app-primary)', borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                                <RefreshCcw size={13} className={syncingAll ? 'animate-spin' : ''} />
+                                {syncingAll ? 'Syncing…' : 'Sync All'}
+                            </button>
+                            <button onClick={() => setNewPolicyOpen(true)}
+                                disabled={currencies.length < 2}
+                                title={currencies.length < 2 ? 'Add a non-base currency first' : 'Configure a new auto-sync pair'}
+                                className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary text-white px-3 py-1.5 rounded-xl disabled:opacity-50">
+                                <Plus size={13} /> New Policy
+                            </button>
+                        </div>
+                    </div>
+                    {newPolicyOpen && baseCurrency && (
+                        <NewPolicyForm
+                            currencies={currencies}
+                            base={baseCurrency}
+                            onCancel={() => setNewPolicyOpen(false)}
+                            onSubmit={async (payload) => {
+                                const r = await createRatePolicy(payload)
+                                if (!r.success) { toast.error(r.error || 'Create failed'); return }
+                                toast.success('Policy created')
+                                setNewPolicyOpen(false)
+                                await loadAll()
+                            }}
+                        />
+                    )}
+                    {policies.length === 0
+                        ? <div className="rounded-xl p-8 text-center text-app-muted-foreground"
+                            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                            No policies yet. Click <strong>New Policy</strong> to wire ECB (or another provider) into a currency pair.
+                        </div>
+                        : <div className="rounded-xl overflow-hidden"
+                            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                            <table className="w-full text-tp-sm">
+                                <thead className="text-tp-xs font-bold uppercase tracking-wide text-app-muted-foreground">
+                                    <tr style={{ background: 'color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
+                                        <th className="px-3 py-1.5 text-left">Pair</th>
+                                        <th className="px-3 py-1.5 text-left">Type</th>
+                                        <th className="px-3 py-1.5 text-left">Provider</th>
+                                        <th className="px-3 py-1.5 text-right">×</th>
+                                        <th className="px-3 py-1.5 text-right">+ %</th>
+                                        <th className="px-3 py-1.5 text-center">Auto</th>
+                                        <th className="px-3 py-1.5 text-left">Last sync</th>
+                                        <th className="px-3 py-1.5"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {policies.map(p => (
+                                        <tr key={p.id} style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 35%, transparent)' }}>
+                                            <td className="px-3 py-1.5 font-mono font-bold">{p.from_code}→{p.to_code}</td>
+                                            <td className="px-3 py-1.5">
+                                                <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)' }}>
+                                                    {p.rate_type}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-1.5 text-tp-xs">{p.provider}</td>
+                                            <td className="px-3 py-1.5 text-right font-mono tabular-nums">{Number(p.multiplier).toFixed(4)}</td>
+                                            <td className="px-3 py-1.5 text-right font-mono tabular-nums">{Number(p.markup_pct).toFixed(2)}</td>
+                                            <td className="px-3 py-1.5 text-center">
+                                                <button onClick={async () => {
+                                                    const r = await updateRatePolicy(p.id, { auto_sync: !p.auto_sync })
+                                                    if (!r.success) toast.error(r.error || 'Update failed')
+                                                    await loadAll()
+                                                }}
+                                                    title={p.auto_sync ? 'Disable daily auto-sync' : 'Enable daily auto-sync'}
+                                                    className={`w-9 h-4 rounded-full relative transition-all ${p.auto_sync ? 'bg-app-primary' : 'bg-app-border'}`}>
+                                                    <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${p.auto_sync ? 'left-[22px]' : 'left-0.5'}`} />
+                                                </button>
+                                            </td>
+                                            <td className="px-3 py-1.5 text-tp-xs">
+                                                {p.last_synced_at
+                                                    ? <span title={p.last_sync_error ?? ''}
+                                                        style={{ color: p.last_sync_status === 'OK' ? 'var(--app-success, #22c55e)' : p.last_sync_status === 'FAIL' ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                                                        {p.last_sync_status} · {new Date(p.last_synced_at).toLocaleString()}
+                                                    </span>
+                                                    : <span className="text-app-muted-foreground">never</span>}
+                                            </td>
+                                            <td className="px-3 py-1.5 text-right">
+                                                <button onClick={() => handleSyncPolicy(p.id)}
+                                                    disabled={syncingId === p.id || p.provider === 'MANUAL'}
+                                                    title={p.provider === 'MANUAL' ? 'MANUAL provider cannot be synced' : 'Fetch fresh rate from provider'}
+                                                    className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg border ml-auto disabled:opacity-50"
+                                                    style={{ color: 'var(--app-primary)', borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                                                    <RefreshCcw size={11} className={syncingId === p.id ? 'animate-spin' : ''} />
+                                                    {syncingId === p.id ? 'Syncing…' : 'Sync Now'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>}
+                    {policies.length > 0 && (
+                        <div className="rounded-xl p-3 text-tp-xs"
+                            style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)' }}>
+                            <strong>Auto-sync schedule:</strong> add{' '}
+                            <code className="font-mono">python manage.py sync_currency_rates</code>{' '}
+                            to a daily cron (e.g. <code className="font-mono">0 9 * * *</code>) to refresh all policies with <em>auto-sync on</em>.
+                            "Sync All" above ignores the auto-sync flag and runs every active policy on demand.
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -540,6 +692,96 @@ function NewRateForm({ currencies, base, onCancel, onSubmit }: {
                     className="text-tp-xs font-bold px-3 py-1.5 rounded-lg bg-app-primary text-white disabled:opacity-50">
                     {busy ? 'Adding…' : 'Add Rate'}
                 </button>
+            </div>
+        </div>
+    )
+}
+
+function NewPolicyForm({ currencies, base, onCancel, onSubmit }: {
+    currencies: Currency[]
+    base: Currency
+    onCancel: () => void
+    onSubmit: (p: {
+        from_currency: number
+        to_currency: number
+        rate_type: CurrencyRatePolicy['rate_type']
+        provider: CurrencyRatePolicy['provider']
+        auto_sync: boolean
+        multiplier: string
+        markup_pct: string
+    }) => Promise<void>
+}) {
+    const non_base = currencies.filter(c => c.id !== base.id && c.is_active)
+    const [fromId, setFromId] = useState<number | null>(non_base[0]?.id ?? null)
+    const [provider, setProvider] = useState<CurrencyRatePolicy['provider']>('ECB')
+    const [rateType, setRateType] = useState<CurrencyRatePolicy['rate_type']>('SPOT')
+    const [multiplier, setMultiplier] = useState('1.000000')
+    const [markupPct, setMarkupPct] = useState('0.0000')
+    const [autoSync, setAutoSync] = useState(true)
+    const [busy, setBusy] = useState(false)
+    if (!fromId) return <div className="text-tp-sm text-app-muted-foreground">Add a non-base currency before creating a policy.</div>
+    return (
+        <div className="rounded-xl p-3 space-y-3"
+            style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-2 items-center">
+                <div className="md:col-span-2 flex items-center gap-1">
+                    <select value={fromId} onChange={e => setFromId(Number(e.target.value))}
+                        className="px-2 py-1.5 rounded-lg text-tp-sm font-mono outline-none flex-1"
+                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                        {non_base.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
+                    </select>
+                    <span className="text-tp-sm font-mono text-app-muted-foreground">→ {base.code}</span>
+                </div>
+                <select value={rateType} onChange={e => setRateType(e.target.value as CurrencyRatePolicy['rate_type'])}
+                    className="px-2 py-1.5 rounded-lg text-tp-sm outline-none"
+                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                    <option value="SPOT">SPOT</option>
+                    <option value="AVERAGE">AVERAGE</option>
+                    <option value="CLOSING">CLOSING</option>
+                </select>
+                <select value={provider} onChange={e => setProvider(e.target.value as CurrencyRatePolicy['provider'])}
+                    className="px-2 py-1.5 rounded-lg text-tp-sm outline-none"
+                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                    <option value="ECB">ECB (free)</option>
+                    <option value="MANUAL">MANUAL (no sync)</option>
+                    <option value="FIXER">FIXER (TODO)</option>
+                    <option value="OPENEXCHANGERATES">OPENEXCHANGERATES (TODO)</option>
+                </select>
+                <input value={multiplier} onChange={e => setMultiplier(e.target.value)} placeholder="× 1.0000"
+                    title="Multiplier — e.g. 1.035 for 3.5% spread above the official rate"
+                    className="px-2 py-1.5 rounded-lg text-tp-sm font-mono tabular-nums outline-none"
+                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                <input value={markupPct} onChange={e => setMarkupPct(e.target.value)} placeholder="+ 0%"
+                    title="Markup percent — applied AFTER multiplier"
+                    className="px-2 py-1.5 rounded-lg text-tp-sm font-mono tabular-nums outline-none"
+                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+            </div>
+            <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-tp-xs cursor-pointer">
+                    <input type="checkbox" checked={autoSync} onChange={e => setAutoSync(e.target.checked)} />
+                    Run on daily cron (auto-sync)
+                </label>
+                <div className="flex items-center gap-2">
+                    <button onClick={onCancel} className="text-tp-xs font-bold px-3 py-1.5 rounded-lg border"
+                        style={{ borderColor: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}>Cancel</button>
+                    <button disabled={busy} onClick={async () => {
+                        setBusy(true)
+                        try {
+                            await onSubmit({
+                                from_currency: fromId!,
+                                to_currency: base.id,
+                                rate_type: rateType,
+                                provider,
+                                auto_sync: autoSync,
+                                multiplier,
+                                markup_pct: markupPct,
+                            })
+                        } finally { setBusy(false) }
+                    }}
+                        className="text-tp-xs font-bold px-3 py-1.5 rounded-lg bg-app-primary text-white disabled:opacity-50">
+                        {busy ? 'Creating…' : 'Create Policy'}
+                    </button>
+                </div>
             </div>
         </div>
     )

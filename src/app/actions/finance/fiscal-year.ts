@@ -406,7 +406,9 @@ export type YoyReport = {
 export async function getYoyComparison(yearId: number): Promise<YoyReport | null> {
     try {
         const scope = await _readScopeFromCookie()
-        return await erpFetch(`fiscal-years/${yearId}/yoy-comparison/?scope=${scope}`) as YoyReport
+        // no-store: avoids a stale-data window after backend deploys; the
+        // toggle is interactive enough that any caching gets confusing fast.
+        return await erpFetch(`fiscal-years/${yearId}/yoy-comparison/?scope=${scope}`, { cache: 'no-store' }) as YoyReport
     } catch (error) {
         console.error('Failed to fetch YoY comparison:', error)
         return null
@@ -426,7 +428,7 @@ export type MultiYearReport = {
 export async function getMultiYearComparison(years: number = 3): Promise<MultiYearReport | null> {
     try {
         const scope = await _readScopeFromCookie()
-        return await erpFetch(`fiscal-years/multi-year-comparison/?years=${years}&scope=${scope}`) as MultiYearReport
+        return await erpFetch(`fiscal-years/multi-year-comparison/?years=${years}&scope=${scope}`, { cache: 'no-store' }) as MultiYearReport
     } catch (error) {
         console.error('Failed to fetch multi-year comparison:', error)
         return null
@@ -702,17 +704,17 @@ async function _readScopeFromCookie(): Promise<'OFFICIAL' | 'INTERNAL'> {
 
 export async function getYearSummary(yearId: number): Promise<YearSummary | null> {
     try {
-        // Scope in URL → different cache entries per scope. Toggling back hits
-        // the warm cache instantly instead of paying the full backend cost.
+        // no-store: numbers must be live; tiny perf cost (~50ms hot DB) is the
+        // right trade-off for an interactive toggle that drives accounting UI.
         const scope = await _readScopeFromCookie()
-        return await erpFetch(`fiscal-years/${yearId}/summary/?scope=${scope}`)
+        return await erpFetch(`fiscal-years/${yearId}/summary/?scope=${scope}`, { cache: 'no-store' })
     } catch { return null }
 }
 
 export async function getYearHistory(yearId: number): Promise<{ events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }> {
     try {
         const scope = await _readScopeFromCookie()
-        return await erpFetch(`fiscal-years/${yearId}/history/?scope=${scope}`)
+        return await erpFetch(`fiscal-years/${yearId}/history/?scope=${scope}`, { cache: 'no-store' })
     } catch { return { events: [], je_by_month: [] } }
 }
 

@@ -1038,7 +1038,45 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 }
             return out
 
-        per_year = [_agg(y) for y in years]
+        # P&L = period activity (per FY). BS = cumulative position as-of FY end.
+        # Same correction as YoY — without this, Multi-Year BS rows show only
+        # in-year movements (e.g. closed FY's Equity=0 instead of accumulated RE).
+        def _bs_agg_cumulative(fy):
+            qs = (
+                JournalEntryLine.objects
+                .filter(
+                    organization_id=organization_id,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    account__type__in=('ASSET', 'LIABILITY', 'EQUITY'),
+                    journal_entry__transaction_date__date__lte=fy.end_date,
+                )
+            )
+            if scope == 'OFFICIAL':
+                qs = qs.filter(journal_entry__scope='OFFICIAL')
+            rows = (
+                qs
+                .values('account_id', 'account__code', 'account__name', 'account__type')
+                .annotate(d=Sum('debit'), c=Sum('credit'))
+            )
+            out = {}
+            for r in rows:
+                d = r['d'] or Decimal('0.00')
+                c = r['c'] or Decimal('0.00')
+                raw_net = d - c
+                atype = r['account__type']
+                net = (-raw_net) if atype in ('LIABILITY', 'EQUITY') else raw_net
+                out[r['account_id']] = {
+                    'code': r['account__code'], 'name': r['account__name'],
+                    'type': atype, 'net': net,
+                }
+            return out
+
+        per_year_pnl = [_agg(y) for y in years]
+        per_year_bs = [_bs_agg_cumulative(y) for y in years]
+        # Merge P&L (period) + BS (cumulative) — keys don't collide (account ids
+        # are uniquely typed and each side filtered to its own type set).
+        per_year = [{**p, **b} for p, b in zip(per_year_pnl, per_year_bs)]
 
         def _rollup_across(types):
             vals = []
@@ -1210,8 +1248,53 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 }
             return out
 
-        curr_by_acc = _agg(current)
-        prior_by_acc = _agg(prior) if prior else {}
+        # P&L is period-only → _agg uses date range. BS is a *position*: the
+        # snapshot at year-end must include every prior JE. Without this, a
+        # closed FY's BS shows only in-year movement (e.g. Equity=0 even though
+        # retained earnings were swept years ago) — same bug class that the
+        # Position Snapshot in the Summary tab had.
+        def _bs_agg_cumulative(fy):
+            qs = (
+                JournalEntryLine.objects
+                .filter(
+                    organization_id=organization_id,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    account__type__in=('ASSET', 'LIABILITY', 'EQUITY'),
+                    journal_entry__transaction_date__date__lte=fy.end_date,
+                )
+            )
+            if scope == 'OFFICIAL':
+                qs = qs.filter(journal_entry__scope='OFFICIAL')
+            rows = (
+                qs
+                .values('account_id', 'account__code', 'account__name', 'account__type')
+                .annotate(d=Sum('debit'), c=Sum('credit'))
+            )
+            out = {}
+            for r in rows:
+                d = r['d'] or Decimal('0.00')
+                c = r['c'] or Decimal('0.00')
+                raw_net = d - c
+                atype = r['account__type']
+                net = (-raw_net) if atype in ('LIABILITY', 'EQUITY') else raw_net
+                out[r['account_id']] = {
+                    'code': r['account__code'], 'name': r['account__name'],
+                    'type': atype, 'net': net,
+                }
+            return out
+
+        # P&L by-account uses period activity (_agg). BS by-account uses
+        # cumulative position. Merge them so per-account display works for
+        # both sections in one table.
+        curr_by_acc_pnl = _agg(current)
+        prior_by_acc_pnl = _agg(prior) if prior else {}
+        curr_by_acc_bs = _bs_agg_cumulative(current)
+        prior_by_acc_bs = _bs_agg_cumulative(prior) if prior else {}
+
+        # Combined map: BS rows from cumulative, P&L rows from period.
+        curr_by_acc = {**curr_by_acc_pnl, **curr_by_acc_bs}
+        prior_by_acc = {**prior_by_acc_pnl, **prior_by_acc_bs}
 
         def _delta(a, b):
             delta = a - b

@@ -139,6 +139,92 @@ class CurrencyRevaluation(TenantModel):
         return f"Revaluation {self.revaluation_date} ({self.status})"
 
 
+class CurrencyRatePolicy(TenantModel):
+    """
+    Per-pair rate-sync configuration.
+
+    Bridges an external rate feed (ECB, Fixer, OpenExchangeRates, …) to the
+    org's ExchangeRate history, with two operator levers:
+
+      - `multiplier`   — Decimal applied to the fetched rate before save.
+                         Captures the spread between an official quote and
+                         the rate the business actually uses (e.g. official
+                         USD/MAD = 9.85, but the bank charges 1.03×, so the
+                         operational rate stored is 10.15).
+      - `markup_pct`   — alternative way to express the same thing in %.
+                         Applied AFTER multiplier. Both default to 1× / 0%.
+
+    `last_synced_at` tracks freshness so the UI can show "synced 3h ago".
+    """
+    PROVIDER_CHOICES = [
+        ('MANUAL', 'Manual entry only'),
+        ('ECB', 'European Central Bank (free, daily, EUR-base)'),
+        ('FIXER', 'Fixer.io (API key required)'),
+        ('OPENEXCHANGERATES', 'OpenExchangeRates.org (API key required)'),
+    ]
+    RATE_TYPE_CHOICES = [
+        ('SPOT', 'Spot Rate'),
+        ('AVERAGE', 'Monthly Average'),
+        ('CLOSING', 'Period Closing Rate'),
+    ]
+
+    from_currency = models.ForeignKey(
+        Currency, on_delete=models.CASCADE, related_name='rate_policies_from',
+    )
+    to_currency = models.ForeignKey(
+        Currency, on_delete=models.CASCADE, related_name='rate_policies_to',
+    )
+    rate_type = models.CharField(max_length=20, choices=RATE_TYPE_CHOICES, default='SPOT')
+
+    provider = models.CharField(max_length=30, choices=PROVIDER_CHOICES, default='MANUAL')
+    provider_config = models.JSONField(
+        default=dict, blank=True,
+        help_text='Provider-specific config (e.g. api_key, endpoint override).',
+    )
+    auto_sync = models.BooleanField(
+        default=False,
+        help_text='If True, the daily cron sync command writes a fresh rate '
+                  'each run. False = manual / on-demand only.',
+    )
+    multiplier = models.DecimalField(
+        max_digits=10, decimal_places=6, default=Decimal('1.000000'),
+        help_text='Multiply the fetched provider rate by this factor before '
+                  'saving. Example: 1.03 for a 3% spread above official.',
+    )
+    markup_pct = models.DecimalField(
+        max_digits=6, decimal_places=4, default=Decimal('0.0000'),
+        help_text='Additional percentage adjustment applied after multiplier '
+                  '(0.5 = +0.5%). Useful when bank charges a fixed % spread.',
+    )
+
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    last_sync_status = models.CharField(max_length=20, null=True, blank=True,
+                                        help_text='OK / FAIL / SKIPPED — see last_sync_error for detail.')
+    last_sync_error = models.TextField(null=True, blank=True)
+
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'finance_currency_rate_policy'
+        unique_together = ('organization', 'from_currency', 'to_currency', 'rate_type')
+        indexes = [
+            models.Index(fields=['organization', 'auto_sync']),
+        ]
+
+    def __str__(self):
+        return f"{self.from_currency.code}→{self.to_currency.code} via {self.provider}"
+
+    def adjusted_rate(self, raw_rate: Decimal) -> Decimal:
+        """Apply multiplier + markup_pct to a freshly-fetched provider rate."""
+        rate = Decimal(raw_rate) * (self.multiplier or Decimal('1'))
+        if self.markup_pct:
+            rate = rate * (Decimal('1') + self.markup_pct / Decimal('100'))
+        # 6 decimal places matches ExchangeRate.rate precision tail.
+        return rate.quantize(Decimal('0.000001'))
+
+
 class CurrencyRevaluationLine(TenantModel):
     """Per-account detail of a revaluation run."""
     revaluation = models.ForeignKey(

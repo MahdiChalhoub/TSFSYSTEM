@@ -156,6 +156,101 @@ export async function getRevaluations(periodId?: number): Promise<CurrencyRevalu
     }
 }
 
+// ── Rate policies (auto-sync + adjustment factor) ────────────────────────
+
+export type CurrencyRatePolicy = {
+    id: number
+    from_currency: number
+    from_code: string
+    to_currency: number
+    to_code: string
+    rate_type: 'SPOT' | 'AVERAGE' | 'CLOSING'
+    provider: 'MANUAL' | 'ECB' | 'FIXER' | 'OPENEXCHANGERATES'
+    provider_config: Record<string, any>
+    auto_sync: boolean
+    multiplier: string
+    markup_pct: string
+    last_synced_at: string | null
+    last_sync_status: 'OK' | 'FAIL' | 'SKIPPED' | null
+    last_sync_error: string | null
+    is_active: boolean
+    created_at: string
+    updated_at: string
+}
+
+export async function getRatePolicies(): Promise<CurrencyRatePolicy[]> {
+    try {
+        const r = await erpFetch('currency-rate-policies/', { cache: 'no-store' })
+        return Array.isArray(r) ? r : (r?.results ?? [])
+    } catch (e) {
+        console.error('getRatePolicies failed:', e)
+        return []
+    }
+}
+
+export async function createRatePolicy(payload: {
+    from_currency: number
+    to_currency: number
+    rate_type: CurrencyRatePolicy['rate_type']
+    provider: CurrencyRatePolicy['provider']
+    auto_sync?: boolean
+    multiplier?: string
+    markup_pct?: string
+    provider_config?: Record<string, any>
+}): Promise<{ success: boolean; data?: CurrencyRatePolicy; error?: string }> {
+    try {
+        const data = await erpFetch('currency-rate-policies/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_active: true, multiplier: '1.000000', markup_pct: '0.0000', ...payload }),
+        }) as CurrencyRatePolicy
+        revalidatePath('/finance/currencies')
+        return { success: true, data }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+export async function updateRatePolicy(
+    id: number, payload: Partial<CurrencyRatePolicy>,
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        await erpFetch(`currency-rate-policies/${id}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+        revalidatePath('/finance/currencies')
+        return { success: true }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+export async function syncRatePolicy(id: number): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+        const r = await erpFetch(`currency-rate-policies/${id}/sync-now/`, {
+            method: 'POST',
+        }) as { ok: boolean; message: string }
+        revalidatePath('/finance/currencies')
+        return { success: r.ok, message: r.message }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+export async function syncAllRatePolicies(): Promise<{ success: boolean; results?: Array<{ ok: boolean; message: string }>; error?: string }> {
+    try {
+        const r = await erpFetch('currency-rate-policies/sync-all/', {
+            method: 'POST',
+        }) as { results: Array<{ ok: boolean; message: string }>; count: number }
+        revalidatePath('/finance/currencies')
+        return { success: true, results: r.results }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
 export async function runRevaluation(
     fiscalPeriodId: number,
     scope: 'OFFICIAL' | 'INTERNAL' = 'OFFICIAL',

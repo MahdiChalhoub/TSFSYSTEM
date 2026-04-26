@@ -175,6 +175,7 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                 // ── Template owns filtering ──
                 data,
                 searchFields: ['name', 'short_name'],
+                selectable: true,
                 kpiPredicates: {
                     withCategory: (b) => (b.categories?.length || 0) > 0,
                     orphan: (b) => (b.categories?.length || 0) === 0,
@@ -299,7 +300,7 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                 />
             )}
         >
-            {({ tree, expandKey, isSelected, openNode }) => (
+            {({ tree, expandKey, isSelected, openNode, selectedIds, toggleSelect }) => (
                 tree.map((node: Brand) => (
                     <div key={`${node.id}-${expandKey}`}
                         className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
@@ -308,6 +309,9 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                             onEdit={openEdit}
                             onDelete={(b) => setDeleteTarget(b)}
                             onSelect={(b) => openNode(b, 'overview')}
+                            selectable
+                            isChecked={selectedIds.has(node.id)}
+                            onToggleCheck={() => toggleSelect(node.id)}
                         />
                     </div>
                 ))
@@ -319,11 +323,14 @@ export function BrandsClient({ brands, countries, categories }: Props) {
 /* ═══════════════════════════════════════════════════════════
  *  BRAND ROW
  * ═══════════════════════════════════════════════════════════ */
-function BrandRow({ brand, onEdit, onDelete, onSelect }: {
+function BrandRow({ brand, onEdit, onDelete, onSelect, selectable, isChecked, onToggleCheck }: {
     brand: Brand
     onEdit: (b: Brand) => void
     onDelete: (b: Brand) => void
     onSelect: (b: Brand) => void
+    selectable?: boolean
+    isChecked?: boolean
+    onToggleCheck?: () => void
 }) {
     const cats = brand.categories?.length || 0
     const countries = brand.countries?.length || 0
@@ -343,7 +350,21 @@ function BrandRow({ brand, onEdit, onDelete, onSelect }: {
             <div className="absolute left-0 top-2 bottom-2 w-[2px] rounded-r-full"
                 style={{ background: 'var(--app-primary)' }} />
 
-            {/* Empty slot so alignment matches Categories' chevron column */}
+            {/* Checkbox (selectable) + chevron alignment slot */}
+            {selectable && (
+                <button type="button"
+                    onClick={(e) => { e.stopPropagation(); onToggleCheck?.() }}
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${isChecked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                    style={{
+                        borderColor: isChecked ? 'var(--app-primary)' : 'var(--app-border)',
+                        background: isChecked ? 'var(--app-primary)' : 'transparent',
+                    }}
+                    aria-checked={isChecked}
+                    role="checkbox"
+                    aria-label={`Select ${brand.name}`}>
+                    {isChecked && <span className="text-white text-[10px] font-bold">✓</span>}
+                </button>
+            )}
             <div className="w-5 flex-shrink-0" />
 
             {/* Logo or icon */}

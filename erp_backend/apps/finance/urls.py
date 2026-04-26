@@ -34,6 +34,7 @@ from apps.finance.views import (
     TaxRateCategoryViewSet,
     # --- Multi-Currency ---
     CurrencyViewSet, ExchangeRateViewSet, CurrencyRevaluationViewSet,
+    CurrencyRatePolicyViewSet,
 )
 
 router = SimpleRouter()
@@ -111,6 +112,7 @@ router.register(r'tax-rate-categories', TaxRateCategoryViewSet, basename='tax-ra
 router.register(r'currencies', CurrencyViewSet, basename='currency')
 router.register(r'exchange-rates', ExchangeRateViewSet, basename='exchange-rate')
 router.register(r'currency-revaluations', CurrencyRevaluationViewSet, basename='currency-revaluation')
+router.register(r'currency-rate-policies', CurrencyRatePolicyViewSet, basename='currency-rate-policy')
 
 urlpatterns = [
     path('', include(router.urls)),
