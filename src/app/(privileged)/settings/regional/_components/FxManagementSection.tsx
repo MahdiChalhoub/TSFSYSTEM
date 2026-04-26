@@ -32,7 +32,9 @@ type FiscalYear = {
 const RATE_TYPES: ExchangeRate['rate_type'][] = ['SPOT', 'AVERAGE', 'CLOSING', 'BUDGET']
 
 export function FxManagementSection() {
-    const [tab, setTab] = useState<'currencies' | 'rates' | 'policies' | 'revaluations'>('currencies')
+    // Currencies are managed in the parent /settings/regional Currencies tab
+    // — this section is purely operational. Default landing tab = Rates.
+    const [tab, setTab] = useState<'rates' | 'policies' | 'revaluations'>('rates')
     const [currencies, setCurrencies] = useState<Currency[]>([])
     const [rates, setRates] = useState<ExchangeRate[]>([])
     const [revals, setRevals] = useState<CurrencyRevaluation[]>([])
@@ -169,7 +171,6 @@ export function FxManagementSection() {
             {/* Tab strip */}
             <div className="flex items-center gap-1.5 border-b" style={{ borderColor: 'var(--app-border)' }}>
                 {([
-                    ['currencies', `Currencies · ${currencies.length}`],
                     ['rates', `Rates · ${rates.length}`],
                     ['policies', `Auto-Sync · ${policies.length}`],
                     ['revaluations', `Revaluations · ${revals.length}`],
@@ -185,69 +186,8 @@ export function FxManagementSection() {
                 ))}
             </div>
 
-            {/* Currencies tab */}
-            {tab === 'currencies' && (
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <p className="text-tp-sm text-app-muted-foreground">Currencies your books recognize. Exactly one is the base.</p>
-                        <button onClick={() => setNewCcyOpen(true)}
-                            className="flex items-center gap-1.5 text-tp-sm font-bold bg-app-primary text-white px-3 py-1.5 rounded-xl">
-                            <Plus size={13} /> New Currency
-                        </button>
-                    </div>
-                    {newCcyOpen && (
-                        <NewCurrencyForm
-                            onCancel={() => setNewCcyOpen(false)}
-                            onSubmit={async (payload) => {
-                                const r = await createCurrency(payload)
-                                if (!r.success) { toast.error(r.error || 'Create failed'); return }
-                                toast.success(`Added ${payload.code}`)
-                                setNewCcyOpen(false)
-                                await loadAll()
-                            }}
-                        />
-                    )}
-                    <div className="rounded-xl overflow-hidden" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                        <table className="w-full text-tp-sm">
-                            <thead style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
-                                <tr className="text-tp-xs font-bold uppercase tracking-wide text-app-muted-foreground">
-                                    <th className="px-3 py-2 text-left">Code</th>
-                                    <th className="px-3 py-2 text-left">Name</th>
-                                    <th className="px-3 py-2 text-center">Symbol</th>
-                                    <th className="px-3 py-2 text-center">Decimals</th>
-                                    <th className="px-3 py-2 text-center">Base</th>
-                                    <th className="px-3 py-2 text-center">Active</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {currencies.length === 0 && (
-                                    <tr><td colSpan={6} className="text-center py-8 text-app-muted-foreground">
-                                        No currencies. Run <code className="text-tp-xs">manage.py bootstrap_currencies</code> or click New Currency.
-                                    </td></tr>
-                                )}
-                                {currencies.map(c => (
-                                    <tr key={c.id} style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                                        <td className="px-3 py-2 font-mono font-bold">{c.code}</td>
-                                        <td className="px-3 py-2">{c.name}</td>
-                                        <td className="px-3 py-2 text-center">{c.symbol}</td>
-                                        <td className="px-3 py-2 text-center tabular-nums">{c.decimal_places}</td>
-                                        <td className="px-3 py-2 text-center">
-                                            {c.is_base
-                                                ? <ShieldCheck size={14} className="inline" style={{ color: 'var(--app-success, #22c55e)' }} />
-                                                : <span className="text-app-muted-foreground">—</span>}
-                                        </td>
-                                        <td className="px-3 py-2 text-center">
-                                            {c.is_active
-                                                ? <span className="text-tp-xs">✓</span>
-                                                : <span className="text-app-muted-foreground">—</span>}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
+            {/* Currencies are managed in the parent Currencies tab — no
+                duplicate sub-tab here. The FX section just consumes them. */}
 
             {/* Rates tab */}
             {tab === 'rates' && (
@@ -570,13 +510,15 @@ function BasePill({ base }: { base?: Currency }) {
     if (!base) {
         return (
             <span className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg"
+                title="Set a base currency in the Currencies tab (mark one as ⭐ default)"
                 style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)' }}>
-                <ShieldAlert size={11} /> No base currency
+                <ShieldAlert size={11} /> Set base in Currencies tab
             </span>
         )
     }
     return (
         <span className="flex items-center gap-1 text-tp-xs font-bold px-2 py-1 rounded-lg"
+            title="Base currency comes from the Currencies tab (⭐). Change it there."
             style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
             <ShieldCheck size={11} /> Base: {base.code}
         </span>

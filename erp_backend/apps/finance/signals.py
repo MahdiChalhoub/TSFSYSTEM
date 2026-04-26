@@ -5,12 +5,84 @@ Event-driven signal handlers for:
   - Payment lifecycle and balance updates
   - PaymentAllocation → Invoice auto-status (Gap 6)
   - Invoice → JournalEntry auto-posting (Gap 11)
+  - reference.OrgCurrency → finance.Currency auto-mirror (single source of truth)
 """
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# reference.OrgCurrency → finance.Currency MIRROR
+# =============================================================================
+# Why: /settings/regional manages OrgCurrency (the user-facing "which
+# currencies do we use" toggle + base flag). The finance app uses its own
+# apps.finance.Currency model for ExchangeRate / Revaluation / RatePolicy
+# FKs. Without this mirror, the FX tab can't see what's enabled in the
+# Currencies tab — two parallel sources of truth. This signal keeps them
+# in lockstep so /settings/regional remains the single source of truth.
+
+def _mirror_org_currency_to_finance(instance):
+    """Materialize / update the matching apps.finance.Currency row. Idempotent."""
+    from apps.finance.models.currency_models import Currency as FinanceCurrency
+    ref_ccy = instance.currency
+    if not ref_ccy:
+        return
+
+    defaults = {
+        'name': getattr(ref_ccy, 'name', ref_ccy.code),
+        'symbol': getattr(ref_ccy, 'symbol', '') or ref_ccy.code,
+        'decimal_places': getattr(ref_ccy, 'decimal_places', 2),
+        'is_active': bool(instance.is_enabled),
+        'is_base': bool(instance.is_default),
+    }
+    fin_ccy, created = FinanceCurrency.objects.update_or_create(
+        organization=instance.organization,
+        code=ref_ccy.code,
+        defaults=defaults,
+    )
+
+    # Single-base invariant: demote any other base row when this becomes base.
+    if fin_ccy.is_base:
+        FinanceCurrency.objects.filter(
+            organization=instance.organization, is_base=True,
+        ).exclude(pk=fin_ccy.pk).update(is_base=False)
+
+    if created:
+        logger.info(
+            f"[OrgCurrency→finance.Currency] Materialized {ref_ccy.code} "
+            f"for {instance.organization} (is_base={fin_ccy.is_base})"
+        )
+
+
+@receiver(post_save, sender='reference.OrgCurrency')
+def on_org_currency_saved(sender, instance, **kwargs):
+    try:
+        _mirror_org_currency_to_finance(instance)
+    except Exception as e:
+        logger.error(f"[OrgCurrency mirror] failed for {instance}: {e}")
+
+
+@receiver(post_delete, sender='reference.OrgCurrency')
+def on_org_currency_deleted(sender, instance, **kwargs):
+    """
+    Soft-deactivate the mirror when an org disables a currency. We don't
+    hard-delete because ExchangeRate / JournalEntryLine PROTECT FKs would
+    block it — deactivation is the right semantic (history preserved, new
+    postings rejected via is_active).
+    """
+    try:
+        from apps.finance.models.currency_models import Currency as FinanceCurrency
+        ref_ccy = instance.currency
+        if not ref_ccy:
+            return
+        FinanceCurrency.objects.filter(
+            organization=instance.organization, code=ref_ccy.code,
+        ).update(is_active=False)
+    except Exception as e:
+        logger.error(f"[OrgCurrency mirror] delete failed for {instance}: {e}")
 
 
 # =============================================================================

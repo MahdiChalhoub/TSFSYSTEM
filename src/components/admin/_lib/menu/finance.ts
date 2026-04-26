@@ -27,7 +27,6 @@ export const financeProduction: MenuItem = {
     stage: 'production',
     children: [
         { title: 'Chart of Accounts', path: '/finance/chart-of-accounts', icon: BookOpen },
-        { title: 'Currencies & FX', path: '/settings/regional?tab=fx', icon: Coins },
         {
             title: 'Settings',
             icon: Settings,
@@ -87,7 +86,6 @@ export const financeMain: MenuItem = {
     children: [
         { title: 'Performance Dashboard', path: '/finance/dashboard', icon: BarChart3 },
         { title: 'Financial Setup', path: '/finance/setup', icon: Settings },
-        { title: 'Currencies & FX', path: '/settings/regional?tab=fx', icon: Coins },
         {
             title: 'Accounts & Ledger',
             icon: BookOpen,

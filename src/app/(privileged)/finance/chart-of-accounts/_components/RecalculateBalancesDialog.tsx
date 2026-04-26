@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { RefreshCcw, Lock, Check, AlertTriangle, BookOpen, X } from 'lucide-react'
+import { useScope } from '@/hooks/useScope'
 
 interface Props {
     open: boolean
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Props) {
+    const { isOfficial } = useScope()
     const [running, setRunning] = useState(false)
 
     const handleConfirm = async () => {
@@ -74,12 +76,16 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
 
                 {/* ── Body — three structured sections (scrolls on short screens) ── */}
                 <div className="px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-4 flex-1 overflow-y-auto">
-                    {/* What this does */}
+                    {/* What this does — wording adapts to current scope */}
                     <Section
                         icon={BookOpen}
                         color="var(--app-info, #3b82f6)"
                         title="What this does"
-                        body="Re-aggregates every account's cached balance directly from POSTED journal-entry lines. The aggregation is scope-aware (OFFICIAL / INTERNAL kept separate) and runs as a single SQL update — no journal re-posting, no period transitions."
+                        body={
+                            isOfficial
+                                ? "Re-aggregates every account's cached balance directly from POSTED journal-entry lines. Runs as a single SQL update — no journal re-posting, no period transitions."
+                                : "Re-aggregates every account's cached balance directly from POSTED journal-entry lines. The aggregation keeps the two scopes separate and runs as a single SQL update — no journal re-posting, no period transitions."
+                        }
                     />
 
                     {/* Safe on closed years */}
@@ -110,7 +116,7 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
                         icon={AlertTriangle}
                         color="var(--app-warning, #f59e0b)"
                         title="When to run it"
-                        body="If the integrity canary on the Fiscal Years → Integrity tab reports drift between stored and recomputed balances, click here to sync. Also useful after data imports, manual fixes, or if a balance ever looks wrong on the COA tree. Hard-recalc with full hash-chain rebuild is reserved for migrations and not exposed here."
+                        body="If the integrity canary on the Fiscal Years → Integrity tab reports drift between stored and recomputed balances, click here to sync. Also useful after data imports, manual fixes, or if a balance ever looks wrong on the accounts tree. The lower-level hard-recalc is reserved for migrations and not exposed here."
                     />
                 </div>
 

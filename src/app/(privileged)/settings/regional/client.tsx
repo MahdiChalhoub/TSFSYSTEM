@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
     Globe, DollarSign, Search, Plus, Star, Check, X, MapPin,
     Phone, Loader2, Coins, ArrowLeft, AlertTriangle,
@@ -44,7 +45,11 @@ type ConfirmAction = {
  *  COMPONENT — Fixed viewport layout, only panels scroll
  * ═══════════════════════════════════════════════════════════════════ */
 export default function RegionalSettingsClient({ allCountries, allCurrencies, initialOrgCountries, initialOrgCurrencies }: Props) {
-    const [tab, setTab] = useState<Tab>('countries');
+    const searchParams = useSearchParams();
+    const initialTab = (searchParams?.get('tab') as Tab | null) ?? 'countries';
+    const validTab: Tab = (['countries', 'currencies', 'fx', 'languages'] as const).includes(initialTab as any)
+        ? initialTab : 'countries';
+    const [tab, setTab] = useState<Tab>(validTab);
     const [search, setSearch] = useState('');
     const [regionFilter, setRegionFilter] = useState('');
     const [orgCountries, setOrgCountries] = useState<OrgCountry[]>(initialOrgCountries);

@@ -98,26 +98,67 @@ class CurrencyViewSet(TenantModelViewSet):
     serializer_class = CurrencySerializer
 
     def list(self, request, *args, **kwargs):
-        # Auto-materialize the per-org `apps.finance.Currency` row from
-        # `Organization.base_currency` (set in /settings/regional) on first
-        # read. Without this, tenants who configured their base via the
-        # global FK see "No base currency" until they manually re-add it
-        # here — which would be a duplicate source of truth. Reading from
-        # /settings/regional is the canonical input, this view just mirrors.
+        # Single-source-of-truth bridge to /settings/regional Currencies tab.
+        #
+        # Strategy: on every read, walk OrgCurrency for this org and run the
+        # same mirror logic the post_save signal uses. This means pre-signal
+        # rows (existing tenants, prod data, demo seed leftovers) get caught
+        # up the first time the FX page loads — without needing a backfill
+        # migration or asking the operator to re-toggle currencies.
+        #
+        #  Pass 1: materialize / update finance.Currency from each OrgCurrency
+        #          (creates new rows, sets is_active, propagates is_default→is_base).
+        #  Pass 2: deactivate any orphan finance.Currency (= currency the
+        #          operator removed from the regional list).
         from apps.finance.services import CurrencyService
         org_id = get_current_tenant_id()
         if org_id:
             try:
                 from erp.models import Organization
+                from apps.reference.models import OrgCurrency
+                from apps.finance.signals import _mirror_org_currency_to_finance
                 org = Organization.objects.get(id=org_id)
-                CurrencyService.get_base_currency(org)
+
+                # Pass 1: mirror every OrgCurrency row (handles legacy data
+                # that pre-dates the signal — same code path as on_save).
+                for oc in OrgCurrency.objects.filter(
+                    organization=org,
+                ).select_related('currency'):
+                    try:
+                        _mirror_org_currency_to_finance(oc)
+                    except Exception:
+                        # Don't fail the whole list call on one bad row.
+                        continue
+
+                # Pass 2: deactivate orphans not in the regional list.
+                enabled_codes = set(OrgCurrency.objects.filter(
+                    organization=org, is_enabled=True,
+                ).values_list('currency__code', flat=True))
+                if enabled_codes:
+                    Currency.objects.filter(
+                        organization=org, is_active=True,
+                    ).exclude(code__in=enabled_codes).update(is_active=False)
+
+                # Last-resort: if there's still no base, fall back to
+                # Organization.base_currency FK auto-materialize.
+                if not Currency.objects.filter(
+                    organization=org, is_base=True, is_active=True,
+                ).exists():
+                    CurrencyService.get_base_currency(org)
             except Organization.DoesNotExist:
                 pass
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
+        # Only return currencies that are actively enabled. Disabled rows
+        # (those whose OrgCurrency in /settings/regional was unchecked) get
+        # is_active=False via the OrgCurrency→finance.Currency mirror signal
+        # — we filter them out here so the FX dropdowns / rate forms only
+        # see currencies the user actually enabled.
         org_id = get_current_tenant_id()
-        return Currency.objects.filter(organization_id=org_id).order_by('-is_base', 'code')
+        return Currency.objects.filter(
+            organization_id=org_id, is_active=True,
+        ).order_by('-is_base', 'code')
 
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
