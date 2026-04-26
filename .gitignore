@@ -13,6 +13,13 @@
 # testing
 /coverage
 
+# Playwright e2e — local auth state, screenshots, traces, downloaded browsers.
+# Auth state contains the bearer token; never commit.
+/e2e/.auth-state.json
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # next.js
 /.next/
 /out/

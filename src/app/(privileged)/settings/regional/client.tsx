@@ -27,7 +27,7 @@ import { useState, useMemo, useTransition, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
     Globe, DollarSign, Search, Plus, Star, Check, X, MapPin,
-    Phone, Loader2, Coins, AlertTriangle,
+    Phone, Loader2, Coins, AlertTriangle, RefreshCcw,
     Crown, Trash2, TrendingUp, Languages, Save,
 } from 'lucide-react';
 import type { RefCountry, RefCurrency, OrgCountry, OrgCurrency } from '@/types/erp';
@@ -51,7 +51,8 @@ function flag(iso2: string) {
 
 /* ─── Types ────────────────────────────────────────────────────── */
 interface Props { allCountries: RefCountry[]; allCurrencies: RefCurrency[]; initialOrgCountries: OrgCountry[]; initialOrgCurrencies: OrgCurrency[]; }
-type Tab = 'countries' | 'currencies' | 'fx' | 'languages';
+type Tab = 'countries' | 'currencies' | 'languages';
+type CurrencySubTab = 'select' | 'rules' | 'history' | 'revaluations';
 
 const COMMON_LOCALES: { code: string; native: string }[] = [
     { code: 'en', native: 'English' }, { code: 'fr', native: 'Français' }, { code: 'ar', native: 'العربية' },
@@ -74,8 +75,18 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     /* ─── State ─────────────────────────────────────────────────── */
     const searchParams = useSearchParams();
     const initialTab = (searchParams?.get('tab') as Tab | null) ?? 'countries';
-    const validTab: Tab = (['countries', 'currencies', 'fx', 'languages'] as const).includes(initialTab as any) ? initialTab : 'countries';
+    const validTab: Tab = (['countries', 'currencies', 'languages'] as const).includes(initialTab as any) ? initialTab : 'countries';
     const [tab, setTab] = useState<Tab>(validTab);
+    // Sub-tab state for the Currencies top-tab. Backwards-compat:
+    // ?tab=fx redirects here onto the Rate History sub-tab so old links keep working.
+    const initialSub = (searchParams?.get('sub') as CurrencySubTab | null);
+    const fxLegacy = searchParams?.get('tab') === 'fx';
+    const [currencySubTab, setCurrencySubTab] = useState<CurrencySubTab>(
+        fxLegacy ? 'history' : (['select', 'rules', 'history', 'revaluations'] as const).includes(initialSub as any) ? (initialSub as CurrencySubTab) : 'select'
+    );
+    useEffect(() => {
+        if (fxLegacy) setTab('currencies');
+    }, [fxLegacy]);
     const [search, setSearch] = useState('');
     const [regionFilter, setRegionFilter] = useState('');
     const [orgCountries, setOrgCountries] = useState<OrgCountry[]>(initialOrgCountries);
@@ -146,9 +157,34 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     /* ─── Country Actions ────────────────────────────────────────── */
     const handleEnableCountry = (country: RefCountry) => {
         startTransition(async () => {
-            const res = await enableOrgCountry(country.id, enabledCountryIds.size === 0);
-            if (res.success) { setOrgCountries(prev => [...prev, { id: Date.now(), country: country.id, is_enabled: true, is_default: enabledCountryIds.size === 0, country_name: country.name, country_iso2: country.iso2 }]); toast.success(`${country.name} enabled`); }
-            else toast.error(res.error || 'Failed');
+            const isFirst = enabledCountryIds.size === 0;
+            const res = await enableOrgCountry(country.id, isFirst);
+            if (!res.success) { toast.error(res.error || 'Failed'); return; }
+            // CRITICAL: use the real DB id from the server response, NOT
+            // Date.now(). The OrgCountry primary key is what `disableOrgCountry`
+            // queries against — fake ids cause "No OrgCountry matches the
+            // given query" errors on the next click.
+            const newId = res.data?.id ?? Date.now();
+            setOrgCountries(prev => [...prev, { id: newId, country: country.id, is_enabled: true, is_default: isFirst, country_name: country.name, country_iso2: country.iso2 }]);
+
+            // Country → Currency auto-link
+            const ccyCode = country.default_currency_code;
+            if (ccyCode) {
+                const refCcy = allCurrencies.find(c => c.code === ccyCode);
+                if (refCcy && !enabledCurrencyIds.has(refCcy.id)) {
+                    const isBaseTime = enabledCurrencyIds.size === 0;
+                    const ccyRes = await enableOrgCurrency(refCcy.id, { is_default: isBaseTime, is_transaction_currency: true });
+                    if (ccyRes.success) {
+                        const newCcyId = ccyRes.data?.id ?? Date.now() + 1;
+                        setOrgCurrencies(prev => [...prev, { id: newCcyId, currency: refCcy.id, is_enabled: true, is_default: isBaseTime, is_transaction_currency: true, is_reporting_currency: false, currency_code: refCcy.code, currency_name: refCcy.name, currency_symbol: refCcy.symbol }]);
+                        toast.success(`${country.name} enabled · ${refCcy.code} ${isBaseTime ? 'set as base' : 'activated'} automatically`);
+                    } else {
+                        toast.success(`${country.name} enabled (couldn't auto-add ${ccyCode}: ${ccyRes.error || 'failed'})`);
+                    }
+                    return;
+                }
+            }
+            toast.success(`${country.name} enabled`);
         });
     };
     const doSetDefaultCountry = (id: number) => {
@@ -178,9 +214,12 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     /* ─── Currency Actions ───────────────────────────────────────── */
     const handleEnableCurrency = (currency: RefCurrency) => {
         startTransition(async () => {
-            const res = await enableOrgCurrency(currency.id, { is_default: enabledCurrencyIds.size === 0, is_transaction_currency: true });
-            if (res.success) { setOrgCurrencies(prev => [...prev, { id: Date.now(), currency: currency.id, is_enabled: true, is_default: enabledCurrencyIds.size === 0, is_transaction_currency: true, is_reporting_currency: false, currency_code: currency.code, currency_name: currency.name, currency_symbol: currency.symbol }]); toast.success(`${currency.code} enabled`); }
-            else toast.error(res.error || 'Failed');
+            const isFirst = enabledCurrencyIds.size === 0;
+            const res = await enableOrgCurrency(currency.id, { is_default: isFirst, is_transaction_currency: true });
+            if (!res.success) { toast.error(res.error || 'Failed'); return; }
+            const newId = res.data?.id ?? Date.now();
+            setOrgCurrencies(prev => [...prev, { id: newId, currency: currency.id, is_enabled: true, is_default: isFirst, is_transaction_currency: true, is_reporting_currency: false, currency_code: currency.code, currency_name: currency.name, currency_symbol: currency.symbol }]);
+            toast.success(`${currency.code} enabled`);
         });
     };
     const doSetDefaultCurrency = (id: number) => {
@@ -219,8 +258,14 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     const TABS = [
         { key: 'countries' as Tab, label: 'Countries', icon: Globe, color: '--app-primary' },
         { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-warning' },
-        { key: 'fx' as Tab, label: 'FX & Rates', icon: TrendingUp, color: '--app-success' },
         { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-info' },
+    ];
+
+    const CURRENCY_SUB_TABS: { key: CurrencySubTab; label: string; icon: typeof Globe; color: string }[] = [
+        { key: 'select', label: 'Select Currency', icon: Coins, color: '--app-warning' },
+        { key: 'rules', label: 'Rate Rules', icon: RefreshCcw, color: '--app-info' },
+        { key: 'history', label: 'Rate History', icon: TrendingUp, color: '--app-success' },
+        { key: 'revaluations', label: 'Revaluations', icon: Crown, color: '--app-primary' },
     ];
 
     /* ─── Confirm dialog ─────────────────────────────────────────── */
@@ -249,7 +294,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                 <AlertTriangle size={15} className="text-white" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black text-app-foreground">{confirmTitle}</h3>
+                                <div className="font-black text-app-foreground" style={{ fontSize: 14, lineHeight: 1.3 }}>{confirmTitle}</div>
                                 <p className="text-[10px] font-bold text-app-muted-foreground">{isDestructive ? 'Destructive action' : 'Affects future transactions'}</p>
                             </div>
                         </div>
@@ -289,7 +334,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                     <Globe size={20} className="text-white" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight truncate">Regional Settings</h1>
+                                    <div className="font-black text-app-foreground tracking-tight truncate" style={{ fontSize: 'clamp(18px, 2.5vw, 20px)', lineHeight: 1.2 }}>Regional Settings</div>
                                     <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">
                                         {orgCountries.length} Countries · {orgCurrencies.length} Currencies · {langCodes.length || 0} Languages
                                     </p>
@@ -360,30 +405,67 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                             onEnable={handleEnableCountry as any}
                             onSetDefault={handleSetDefaultCountry}
                             onDisable={handleDisableCountry as any}
+                            // Country → currency linkage: pass the codes of
+                            // already-enabled currencies so country cards can
+                            // highlight which currency will be auto-activated.
+                            enabledCurrencyCodes={new Set(orgCurrencies.map(oc => oc.currency_code).filter((c): c is string => Boolean(c)))}
                         />
                     )}
                     {tab === 'currencies' && (
-                        <TwoPanePicker
-                            kind="currency"
-                            allItems={allCurrencies}
-                            filteredItems={filteredCurrencies}
-                            orgItems={orgCurrencies}
-                            search={search}
-                            setSearch={setSearch}
-                            regions={[]}
-                            regionFilter=""
-                            setRegionFilter={() => {}}
-                            isPending={isPending}
-                            enabledIds={enabledCurrencyIds}
-                            defaultId={defaultCurrencyId}
-                            onEnable={handleEnableCurrency as any}
-                            onSetDefault={handleSetDefaultCurrency}
-                            onDisable={handleDisableCurrency as any}
-                        />
-                    )}
-                    {tab === 'fx' && (
-                        <div className="h-full overflow-y-auto custom-scrollbar pr-1">
-                            <FxManagementSection />
+                        <div className="h-full flex flex-col gap-3 min-h-0">
+                            {/* Sub-tab strip — Select / Rate Rules / Rate History / Revaluations */}
+                            <div className="inline-flex items-stretch p-0.5 rounded-xl bg-app-surface border border-app-border/50 self-start shrink-0">
+                                {CURRENCY_SUB_TABS.map(s => {
+                                    const SIcon = s.icon; const active = currencySubTab === s.key;
+                                    return (
+                                        <button key={s.key} onClick={() => setCurrencySubTab(s.key)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
+                                            style={active
+                                                ? { ...grad(s.color), fontSize: 11, boxShadow: `0 2px 8px color-mix(in srgb, var(${s.color}) 25%, transparent)` }
+                                                : { fontSize: 11 }}>
+                                            <SIcon size={12} /> <span className="hidden sm:inline">{s.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Sub-tab content */}
+                            <div className="flex-1 min-h-0">
+                                {currencySubTab === 'select' && (
+                                    <TwoPanePicker
+                                        kind="currency"
+                                        allItems={allCurrencies}
+                                        filteredItems={filteredCurrencies}
+                                        orgItems={orgCurrencies}
+                                        search={search}
+                                        setSearch={setSearch}
+                                        regions={[]}
+                                        regionFilter=""
+                                        setRegionFilter={() => {}}
+                                        isPending={isPending}
+                                        enabledIds={enabledCurrencyIds}
+                                        defaultId={defaultCurrencyId}
+                                        onEnable={handleEnableCurrency as any}
+                                        onSetDefault={handleSetDefaultCurrency}
+                                        onDisable={handleDisableCurrency as any}
+                                    />
+                                )}
+                                {currencySubTab === 'rules' && (
+                                    <div className="h-full overflow-y-auto custom-scrollbar pr-1">
+                                        <FxManagementSection view="policies" />
+                                    </div>
+                                )}
+                                {currencySubTab === 'history' && (
+                                    <div className="h-full overflow-y-auto custom-scrollbar pr-1">
+                                        <FxManagementSection view="rates" />
+                                    </div>
+                                )}
+                                {currencySubTab === 'revaluations' && (
+                                    <div className="h-full overflow-y-auto custom-scrollbar pr-1">
+                                        <FxManagementSection view="revaluations" />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                     {tab === 'languages' && (
@@ -412,6 +494,7 @@ function TwoPanePicker({
     isPending,
     enabledIds, defaultId,
     onEnable, onSetDefault, onDisable,
+    enabledCurrencyCodes,
 }: {
     kind: 'country' | 'currency';
     allItems: any[]; filteredItems: any[]; orgItems: any[];
@@ -420,6 +503,7 @@ function TwoPanePicker({
     isPending: boolean;
     enabledIds: Set<number>; defaultId: number | null;
     onEnable: (item: any) => void; onSetDefault: (id: number) => void; onDisable: (oc: any) => void;
+    enabledCurrencyCodes?: Set<string>;
 }) {
     const accent = kind === 'country' ? '--app-primary' : '--app-warning';
     const PanelIcon = kind === 'country' ? Globe : Coins;
@@ -489,15 +573,20 @@ function TwoPanePicker({
                         />
                     ) : (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px' }}>
-                            {filteredItems.map(item => (
-                                <CatalogueCard
-                                    key={item.id} kind={kind} item={item} accent={accent}
-                                    isEnabled={enabledIds.has(item.id)}
-                                    isDefault={defaultId === item.id}
-                                    isPending={isPending}
-                                    onAdd={() => onEnable(item)}
-                                />
-                            ))}
+                            {filteredItems.map(item => {
+                                const ccyCode = kind === 'country' ? (item.default_currency_code as string | undefined) : undefined;
+                                const willAutoEnableCurrency = !!ccyCode && !!enabledCurrencyCodes && !enabledCurrencyCodes.has(ccyCode);
+                                return (
+                                    <CatalogueCard
+                                        key={item.id} kind={kind} item={item} accent={accent}
+                                        isEnabled={enabledIds.has(item.id)}
+                                        isDefault={defaultId === item.id}
+                                        isPending={isPending}
+                                        onAdd={() => onEnable(item)}
+                                        willAutoEnableCurrency={willAutoEnableCurrency}
+                                    />
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -552,7 +641,7 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
 }
 
 /* ─── Catalogue card in right pane ─────────────────────────────── */
-function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, onAdd }: any) {
+function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, onAdd, willAutoEnableCurrency }: any) {
     const isCountry = kind === 'country';
     return (
         <button onClick={() => !isEnabled && !isPending && onAdd()}
@@ -579,13 +668,24 @@ function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, on
                     {isCountry && <span className="text-[8px] font-mono px-1 py-0.5 rounded shrink-0 bg-app-background text-app-muted-foreground">{item.iso2}</span>}
                 </div>
                 {isCountry ? (
-                    <div className="flex items-center gap-2 mt-0.5 text-[9px] font-medium text-app-muted-foreground truncate">
-                        {item.phone_code && <span className="flex items-center gap-0.5"><Phone size={8} /> {item.phone_code}</span>}
-                        {item.region && <span className="flex items-center gap-0.5"><MapPin size={8} /> {item.region}</span>}
-                        {item.default_currency_code && <span className="flex items-center gap-0.5"><DollarSign size={8} /> {item.default_currency_code}</span>}
+                    <div className="flex items-center gap-2 mt-0.5 truncate" style={{ fontSize: 9, lineHeight: 1.3 }}>
+                        {item.phone_code && <span className="flex items-center gap-0.5 font-medium text-app-muted-foreground"><Phone size={8} /> {item.phone_code}</span>}
+                        {item.region && <span className="flex items-center gap-0.5 font-medium text-app-muted-foreground"><MapPin size={8} /> {item.region}</span>}
+                        {item.default_currency_code && (
+                            <span className="flex items-center gap-0.5 font-bold px-1 py-0.5 rounded"
+                                title={!isEnabled && willAutoEnableCurrency
+                                    ? `Will auto-activate ${item.default_currency_code} when this country is enabled`
+                                    : `Default currency: ${item.default_currency_code}`}
+                                style={!isEnabled && willAutoEnableCurrency
+                                    ? { ...soft('--app-warning', 14), color: 'var(--app-warning)', border: '1px dashed color-mix(in srgb, var(--app-warning) 35%, transparent)' }
+                                    : { color: 'var(--app-muted-foreground)' }}>
+                                <DollarSign size={8} /> {item.default_currency_code}
+                                {!isEnabled && willAutoEnableCurrency && <span className="ml-0.5">+</span>}
+                            </span>
+                        )}
                     </div>
                 ) : (
-                    <p className="text-[9px] font-medium text-app-muted-foreground truncate mt-0.5">{item.name}</p>
+                    <p className="font-medium text-app-muted-foreground truncate mt-0.5" style={{ fontSize: 9, lineHeight: 1.3 }}>{item.name}</p>
                 )}
             </div>
             <div className="shrink-0 relative z-10">

@@ -20,7 +20,9 @@ export const inventoryProduction: MenuItem = {
     icon: Box,
     module: 'inventory',
     stage: 'production',
-    children: [],
+    children: [
+        { title: 'Categories', path: '/inventory/categories', icon: FolderTree },
+    ],
 };
 
 export const inventoryInProgress: MenuItem = {
@@ -29,7 +31,6 @@ export const inventoryInProgress: MenuItem = {
     module: 'inventory',
     stage: 'in-progress',
     children: [
-        { title: 'Categories', path: '/inventory/categories', icon: FolderTree },
         { title: 'Products', path: '/inventory/products', icon: Tag },
         { title: 'Warehouses', path: '/inventory/warehouses', icon: Warehouse },
         { title: 'Brands', path: '/inventory/brands', icon: Award },

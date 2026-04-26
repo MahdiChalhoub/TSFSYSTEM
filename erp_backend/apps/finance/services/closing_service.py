@@ -1650,13 +1650,24 @@ class ClosingService:
         # safe to trust here. This mirrors the closing-JE computation
         # which likewise reads JE lines directly.
         def _authoritative(acc, scope):
+            # Sum only the lines INSIDE from_year (or orphan-without-FY whose
+            # date falls in the year). Summing globally up to from_year.end_date
+            # double-counts when from_year already has its own SYSTEM_OPENING
+            # JE: the prior year's closing JE AND from_year's opening JE both
+            # carry the same balance, so adding them produces 2x the carry-in.
+            # This matches the close-integrity gate's `close_rows` filter so
+            # the two queries reconcile.
             agg = JournalEntryLine.objects.filter(
                 journal_entry__organization=organization,
                 journal_entry__status='POSTED',
                 journal_entry__is_superseded=False,
                 journal_entry__scope=scope,
                 account=acc,
-                journal_entry__transaction_date__date__lte=from_year.end_date,
+            ).filter(
+                Q(journal_entry__fiscal_year=from_year) |
+                Q(journal_entry__fiscal_year__isnull=True,
+                  journal_entry__transaction_date__date__gte=from_year.start_date,
+                  journal_entry__transaction_date__date__lte=from_year.end_date)
             ).aggregate(d=Sum('debit'), c=Sum('credit'))
             return (agg['d'] or Decimal('0.00')) - (agg['c'] or Decimal('0.00'))
 

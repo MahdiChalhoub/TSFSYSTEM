@@ -211,6 +211,11 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                     onImport: () => setShowImport(true),
                 },
                 selectable: true,
+                auditTrail: {
+                    endpoint: 'inventory/audit-trail',
+                    resourceType: 'category',
+                    title: 'Category Audit Trail',
+                },
                 secondaryActions: [
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],

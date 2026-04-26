@@ -175,47 +175,51 @@ export function FxManagementSection({ view, hideHeader }: {
 
     return (
         <div className="space-y-4 animate-in fade-in duration-300">
-            {/* ── Section header — same rhythm as the regional page chrome ── */}
-            <div className="bg-app-surface rounded-2xl border border-app-border/50 px-4 py-3 flex items-center justify-between flex-wrap gap-3"
-                 style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-                <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm shrink-0" style={grad('--app-success')}>
-                        <Coins size={14} className="text-white" />
+            {/* ── Section header (suppress when embedded — parent already shows context) ── */}
+            {!hideHeader && !isEmbedded && (
+                <div className="bg-app-surface rounded-2xl border border-app-border/50 px-4 py-3 flex items-center justify-between flex-wrap gap-3"
+                     style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm shrink-0" style={grad('--app-success')}>
+                            <Coins size={14} className="text-white" />
+                        </div>
+                        <div>
+                            <div className="font-black uppercase tracking-widest text-app-foreground" style={{ fontSize: 11 }}>FX & Rates</div>
+                            <p className="text-app-muted-foreground mt-0.5" style={{ fontSize: 9 }}>
+                                Exchange rate history · Auto-sync policies · Period-end revaluation
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-[11px] font-black uppercase tracking-widest text-app-foreground">FX & Rates</h2>
-                        <p className="text-[9px] text-app-muted-foreground mt-0.5">
-                            Exchange rate history · Auto-sync policies · Period-end revaluation
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <BasePill base={baseCurrency} />
-                    <button onClick={() => loadAll()}
-                        title="Refresh"
-                        className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border/50 hover:bg-app-background transition-colors"
-                        style={{ color: 'var(--app-muted-foreground)' }}>
-                        <RefreshCcw size={13} />
-                    </button>
-                </div>
-            </div>
-
-            {/* ── Sub-tab pill strip — matches parent regional tab style ── */}
-            <div className="inline-flex items-center gap-0.5 p-0.5 rounded-lg bg-app-surface border border-app-border/50">
-                {SUB_TABS.map(t => {
-                    const Icon = t.icon
-                    const active = tab === t.key
-                    const n = subCounts[t.key]
-                    return (
-                        <button key={t.key} onClick={() => setTab(t.key)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
-                            style={active ? grad(t.color) : {}}>
-                            <Icon size={12} /> {t.label}
-                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${active ? 'bg-white/20' : 'bg-app-background'} tabular-nums`}>{n}</span>
+                    <div className="flex items-center gap-2">
+                        <BasePill base={baseCurrency} />
+                        <button onClick={() => loadAll()}
+                            title="Refresh"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border/50 hover:bg-app-background transition-colors"
+                            style={{ color: 'var(--app-muted-foreground)' }}>
+                            <RefreshCcw size={13} />
                         </button>
-                    )
-                })}
-            </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Sub-tab pill strip (only when standalone — parent provides nav otherwise) ── */}
+            {!isEmbedded && (
+                <div className="inline-flex items-center gap-0.5 p-0.5 rounded-lg bg-app-surface border border-app-border/50">
+                    {SUB_TABS.map(t => {
+                        const Icon = t.icon
+                        const active = tab === t.key
+                        const n = subCounts[t.key]
+                        return (
+                            <button key={t.key} onClick={() => setTab(t.key)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
+                                style={active ? grad(t.color) : {}}>
+                                <Icon size={12} /> {t.label}
+                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${active ? 'bg-white/20' : 'bg-app-background'} tabular-nums`}>{n}</span>
+                            </button>
+                        )
+                    })}
+                </div>
+            )}
 
             {/* Currencies are managed in the parent Currencies tab — no
                 duplicate sub-tab here. The FX section just consumes them. */}
@@ -593,11 +597,12 @@ function SectionHeader({ icon, title, subtitle, action }: {
     return (
         <div className="px-4 py-3 border-b border-app-border/50 flex items-center justify-between gap-3 shrink-0"
             style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-            <div className="min-w-0">
-                <h3 className="text-[11px] font-black uppercase tracking-widest text-app-foreground flex items-center gap-2">
-                    {icon}{title}
-                </h3>
-                {subtitle && <p className="text-[9px] text-app-muted-foreground mt-0.5">{subtitle}</p>}
+            <div className="min-w-0 flex-1">
+                <div className="font-black uppercase tracking-widest text-app-foreground flex items-center gap-2"
+                     style={{ fontSize: 11, lineHeight: 1.3 }}>
+                    {icon}<span className="truncate">{title}</span>
+                </div>
+                {subtitle && <p className="text-app-muted-foreground mt-0.5 truncate" style={{ fontSize: 9, lineHeight: 1.3 }}>{subtitle}</p>}
             </div>
             {action}
         </div>

@@ -38,11 +38,24 @@ export function YearEndCloseModal({
         { ok: true; preview: DryRunClosePreview } | { ok: false; error: string } | null
     >(null)
 
+    const today = new Date()
+    const yearEnd = new Date(closePreview.year.end_date)
+    const isPartial = today < yearEnd
+
     const runDryClose = async () => {
         setDryRunning(true)
         setDryResult(null)
         try {
-            const r = await previewCloseFiscalYear(yearId)
+            // Match the real-close payload: pass close_date when partial so
+            // the dry-run exercises the *same* code path the user is about
+            // to commit. Without this, a partial-close preview silently
+            // simulates a full close and reports the wrong invariants.
+            let closeDate: string | undefined
+            if (isPartial) {
+                const d = new Date(); d.setDate(d.getDate() - 1)
+                closeDate = d.toISOString().split('T')[0]
+            }
+            const r = await previewCloseFiscalYear(yearId, closeDate)
             if (r.success) {
                 setDryResult({ ok: true, preview: r.preview })
                 if (r.preview.invariants_passed) {
@@ -56,10 +69,6 @@ export function YearEndCloseModal({
             setDryRunning(false)
         }
     }
-
-    const today = new Date()
-    const yearEnd = new Date(closePreview.year.end_date)
-    const isPartial = today < yearEnd
     const confirmed = !isPartial || closeConfirmText.trim() === closePreview.year.name
     const lastClosedDay = new Date(today); lastClosedDay.setDate(lastClosedDay.getDate() - 1)
     const lastClosedStr = lastClosedDay.toISOString().split('T')[0]

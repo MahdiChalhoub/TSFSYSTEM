@@ -5,7 +5,8 @@ import { useState, useMemo, useRef, useEffect, useCallback, ReactNode } from 're
 import {
     Search, Plus, Layers,
     Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp,
-    X, LayoutPanelLeft, PanelLeftClose, Bookmark, RefreshCw, FolderTree, Trash2
+    X, LayoutPanelLeft, PanelLeftClose, Bookmark, RefreshCw, FolderTree, Trash2,
+    ClipboardList,
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -16,6 +17,8 @@ import type { MasterPageConfig, KPI, BulkMoveConfig } from '@/components/templat
 import { DataMenu } from '@/components/admin/_shared/DataMenu'
 import { useDataToolsEngine } from './useDataToolsEngine'
 import { BulkMoveDialog } from './BulkMoveDialog'
+import { AuditTrailPanel } from './AuditTrailPanel'
+import type { AuditTrailConfig } from './AuditTrailPanel'
 
 /* ═══════════════════════════════════════════════════════════
  *  TYPES
@@ -56,6 +59,9 @@ export interface TreeMasterConfig extends MasterPageConfig {
     /** Declarative move config — when set, TreeMasterPage auto-renders a
      *  built-in Move dialog with target picker + PATCH lifecycle. */
     bulkMove?: BulkMoveConfig
+    /** Audit trail config — when set, renders an "Audit" button in the header
+     *  and a slide-out audit panel with verify/confirm/undo/task actions. */
+    auditTrail?: AuditTrailConfig
 }
 
 export interface TreeMasterRenderProps {
@@ -163,6 +169,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     /* ── Bulk-selection state (opt-in via config.selectable) ── */
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
     const [showBulkMove, setShowBulkMove] = useState(false)
+    const [showAuditTrail, setShowAuditTrail] = useState(false)
     const toggleSelect = useCallback((id: number) => {
         setSelectedIds(prev => {
             const next = new Set(prev)
@@ -370,6 +377,17 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                         </button>
                                     )
                                 ))}
+                                {/* Audit Trail toggle */}
+                                {config.auditTrail && (
+                                    <button
+                                        onClick={() => setShowAuditTrail(true)}
+                                        title="Audit Trail"
+                                        className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all"
+                                        style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
+                                        <ClipboardList size={13} />
+                                        <span className="hidden md:inline">Audit</span>
+                                    </button>
+                                )}
                                 {/* Split Panel toggle */}
                                 <button
                                     data-tour="split-panel-btn"
@@ -706,6 +724,15 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                     clearSelection()
                     if (config.onRefresh) config.onRefresh()
                 }}
+            />
+        )}
+
+        {/* ═══════════════ BUILT-IN AUDIT TRAIL PANEL ═══════════════ */}
+        {config.auditTrail && (
+            <AuditTrailPanel
+                config={config.auditTrail}
+                isOpen={showAuditTrail}
+                onClose={() => setShowAuditTrail(false)}
             />
         )}
 

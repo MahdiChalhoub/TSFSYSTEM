@@ -334,18 +334,28 @@ export function GuidedTour({
     } : null
 
     return (
-        <div className="fixed inset-0 z-[10000]" style={{ opacity: 1 }}>
+        // pointer-events: none so the entire tour root stays out of the
+        // way of normal page interaction. Children that need to be
+        // clickable (the tooltip, the centered-welcome backdrop) re-enable
+        // pointer-events explicitly.
+        <div className="fixed inset-0 z-[10000]" style={{ opacity: 1, pointerEvents: 'none' }}>
             {/* ── Overlay ── */}
             {isCentered ? (
-                /* Centered modal: simple dark overlay, NO blur */
+                /* Centered modal: simple dark overlay; click outside dismisses
+                   (welcome/end screens have no target — there's nothing else
+                   to interact with so dismissing on click is the right UX). */
                 <div
                     className="absolute inset-0"
-                    style={{ background: 'rgba(0,0,0,0.5)' }}
+                    style={{ background: 'rgba(0,0,0,0.5)', pointerEvents: 'auto' }}
                     onClick={completeTour}
                 />
             ) : (
                 <>
-                    {/* Spotlight overlay via box-shadow — single div, GPU-composited */}
+                    {/* Spotlight overlay via box-shadow — single div, GPU-composited.
+                        pointer-events: none → user can click highlighted element OR
+                        any other page element. For 'click' steps, the addEventListener
+                        attached to step.target advances the tour when target is clicked.
+                        For 'info' steps, Next/Skip in the tooltip drives navigation. */}
                     {spotlightStyle && <div style={spotlightStyle} />}
 
                     {/* Accent ring around target */}
@@ -363,16 +373,6 @@ export function GuidedTour({
                                 zIndex: 10000,
                             }}
                         />
-                    )}
-
-                    {/* Click-through: for 'click' steps, make the target clickable */}
-                    {isClickStep && targetRect && (
-                        <div className="absolute inset-0" style={{ pointerEvents: 'auto', zIndex: 9999 }} onClick={e => e.stopPropagation()} />
-                    )}
-
-                    {/* For non-click steps, block all interaction */}
-                    {!isClickStep && (
-                        <div className="absolute inset-0" style={{ zIndex: 9999 }} onClick={completeTour} />
                     )}
                 </>
             )}
@@ -418,6 +418,11 @@ export function GuidedTour({
                             : { width: 360, maxWidth: 'calc(100vw - 32px)' }),
                     borderRadius: isMobile && !isCentered ? 20 : 16,
                     overflow: 'hidden',
+                    // Re-enable interaction — the tour root has
+                    // pointer-events: none so the rest of the page stays
+                    // clickable; the tooltip needs to receive its own
+                    // Next/Skip clicks.
+                    pointerEvents: 'auto',
                     background: 'var(--app-surface)',
                     border: '1px solid var(--app-border)',
                     boxShadow: isMobile && !isCentered

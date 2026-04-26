@@ -8,7 +8,11 @@
     "postbuild": "cp -r public .next/standalone/ 2>/dev/null; cp -r .next/static .next/standalone/.next/ 2>/dev/null; echo '✅ Standalone assets copied'",
     "start": "next start",
     "lint": "eslint",
-    "kernel-check": "node scripts/check-kernel-integrity.js"
+    "kernel-check": "node scripts/check-kernel-integrity.js",
+    "e2e": "playwright test",
+    "e2e:auth": "playwright test --project=auth-setup",
+    "e2e:finance": "playwright test --project=finance",
+    "e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -46,6 +50,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
     "@types/react": "^19",

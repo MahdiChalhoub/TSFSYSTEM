@@ -22,6 +22,7 @@ from apps.inventory.views.location_views import (
     WarehouseZoneViewSet, WarehouseAisleViewSet, WarehouseRackViewSet,
     WarehouseShelfViewSet, WarehouseBinViewSet, ProductLocationViewSet,
 )
+from kernel.audit.views import AuditTrailViewSet
 
 router = DefaultRouter()
 router.register(r'products', ProductViewSet)
@@ -45,6 +46,7 @@ router.register(r'counting-lines', InventorySessionLineViewSet, basename='counti
 router.register(r'serials', ProductSerialViewSet)
 router.register(r'serial-logs', SerialLogViewSet)
 router.register(r'stock-alerts', StockAlertViewSet, basename='stock-alerts')
+router.register(r'audit-trail', AuditTrailViewSet, basename='audit-trail')
 
 # Warehouse Location System
 router.register(r'zones', WarehouseZoneViewSet, basename='warehouse-zones')

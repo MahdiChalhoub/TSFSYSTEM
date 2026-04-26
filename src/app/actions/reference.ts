@@ -126,10 +126,13 @@ export async function getOrgCountries(): Promise<OrgCountry[]> {
 
 /**
  * Enable a country for the current organization.
+ * Returns the created OrgCountry row in `data` so the frontend can use the
+ * real DB id for subsequent disable / set-default calls (instead of a fake
+ * optimistic ID that doesn't exist on the server).
  */
-export async function enableOrgCountry(countryId: number, isDefault = false): Promise<ActionResult> {
+export async function enableOrgCountry(countryId: number, isDefault = false): Promise<ActionResult & { data?: { id: number; country: number; is_default?: boolean } }> {
     try {
-        await erpFetch('reference/org-countries/', {
+        const created = await erpFetch('reference/org-countries/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -137,9 +140,9 @@ export async function enableOrgCountry(countryId: number, isDefault = false): Pr
                 is_enabled: true,
                 is_default: isDefault,
             }),
-        })
+        }) as { id: number; country: number; is_default?: boolean }
         revalidatePath('/settings')
-        return { success: true }
+        return { success: true, data: created }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to enable country' }
     }
@@ -210,13 +213,15 @@ export async function getOrgCurrencies(): Promise<OrgCurrency[]> {
 
 /**
  * Enable a currency for the current organization.
+ * Returns the created OrgCurrency row in `data` so the frontend can use the
+ * real DB id for subsequent disable / set-default calls.
  */
 export async function enableOrgCurrency(
     currencyId: number,
     options?: { is_default?: boolean; is_transaction_currency?: boolean; is_reporting_currency?: boolean }
-): Promise<ActionResult> {
+): Promise<ActionResult & { data?: { id: number; currency: number; is_default?: boolean } }> {
     try {
-        await erpFetch('reference/org-currencies/', {
+        const created = await erpFetch('reference/org-currencies/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -226,9 +231,9 @@ export async function enableOrgCurrency(
                 is_transaction_currency: options?.is_transaction_currency ?? true,
                 is_reporting_currency: options?.is_reporting_currency ?? false,
             }),
-        })
+        }) as { id: number; currency: number; is_default?: boolean }
         revalidatePath('/settings')
-        return { success: true }
+        return { success: true, data: created }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to enable currency' }
     }
