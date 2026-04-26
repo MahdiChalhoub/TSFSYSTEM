@@ -250,13 +250,19 @@ class CloseChecklistService:
 
     # ── Close-gate invariant ───────────────────────────────
     @staticmethod
-    def validate_ready_for_year(organization, fiscal_year):
+    def validate_ready_for_year(organization, fiscal_year, override=False, override_user=None, override_reason=None):
         """Called by close_fiscal_year before finalizing. If a run
         exists for this year and is not READY (all required done),
         raise ValidationError. If NO run exists, we auto-start one,
         apply auto-checks, then re-evaluate — this way the checklist
         discovers the close, rather than blocking orgs that never set
         one up.
+
+        ``override=True`` lets a superuser proceed past unmet items.
+        It does NOT mark them complete; it logs the override (forensic
+        + the run's notes field) so an auditor can later verify which
+        items were skipped, by whom, and why. ``override_user`` and
+        ``override_reason`` are required when override is True.
 
         Returns the run (always non-null on success).
         """
@@ -293,6 +299,43 @@ class CloseChecklistService:
                 f"  ({it.item.category}) {it.item.name}"
                 for it in missing
             ]
+
+            if override:
+                if not override_user or not override_reason:
+                    raise ValidationError(
+                        "Checklist override requires both override_user and "
+                        "override_reason. Refusing to skip the gate without "
+                        "an auditable record of who did it and why."
+                    )
+                # Forensic + checklist-run audit trail. Never silently bypass.
+                missing_summary = "; ".join(
+                    f"({it.item.category}) {it.item.name}" for it in missing
+                )
+                try:
+                    from apps.finance.services.audit_service import ForensicAuditService
+                    ForensicAuditService.log_mutation(
+                        organization=organization,
+                        user=override_user,
+                        model_name='CloseChecklistRun',
+                        object_id=run.id,
+                        change_type='OVERRIDE',
+                        payload={
+                            'fiscal_year': fiscal_year.name,
+                            'missing_count': missing.count(),
+                            'missing': missing_summary,
+                            'reason': override_reason,
+                        },
+                    )
+                except Exception:
+                    # Audit logging must never break the close itself.
+                    pass
+                logger.warning(
+                    f"CloseChecklistService: OVERRIDE applied to {fiscal_year.name} "
+                    f"by {getattr(override_user, 'username', '?')} — "
+                    f"{missing.count()} required items skipped. Reason: {override_reason}"
+                )
+                return run
+
             raise ValidationError(
                 f"Close checklist not ready for {fiscal_year.name}. "
                 f"Missing required items:\n" + "\n".join(lines)

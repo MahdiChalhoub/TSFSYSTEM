@@ -1,13 +1,35 @@
 'use client';
 
+/**
+ * Regional Settings — Dajingo Pro V2
+ * ==================================
+ * Per .agents/workflows/design-language.md:
+ *   §1  Page wrapper:        flex flex-col h-full p-4 md:p-6 animate-in fade-in
+ *   §2  Page header:         page-header-icon · text-lg md:text-xl font-black ·
+ *                            uppercase tracking-widest subtitle
+ *   §3  Adaptive grid:       repeat(auto-fit, minmax(140px, 1fr))
+ *   §4  KPI strip:           w-7 h-7 icon box · text-[10px] uppercase label ·
+ *                            text-sm font-black tabular-nums value
+ *   §6  Content shell:       bg-app-surface/30 border border-app-border/50 rounded-2xl
+ *   §9  Empty state:         icon @ opacity-40 · text-sm bold · text-[11px] hint
+ *   §11 Modal:               rounded-2xl shell with primary glow
+ *   §12 Inline form:         left-accent border, auto-fit field grid
+ *   §14 Color tokens:        var(--app-primary | info | success | warning | error)
+ *   §15 Typography scale:    explicit minimums
+ *
+ * Tabs (4): Countries · Currencies · FX & Rates · Languages
+ *   Countries / Currencies share a 2-pane picker (selection ← available)
+ *   FX delegates to FxManagementSection (already aligned)
+ *   Languages is a single-card multi-select picker
+ */
+
 import { useState, useMemo, useTransition, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
     Globe, DollarSign, Search, Plus, Star, Check, X, MapPin,
-    Phone, Loader2, Coins, ArrowLeft, AlertTriangle,
-    Crown, Trash2, Shield, TrendingUp
+    Phone, Loader2, Coins, AlertTriangle,
+    Crown, Trash2, TrendingUp, Languages, Save,
 } from 'lucide-react';
-import Link from 'next/link';
 import type { RefCountry, RefCurrency, OrgCountry, OrgCurrency } from '@/types/erp';
 import {
     enableOrgCountry, enableOrgCurrency,
@@ -15,18 +37,21 @@ import {
     disableOrgCountry, disableOrgCurrency,
 } from '@/app/actions/reference';
 import { toast } from 'sonner';
-import { Languages } from 'lucide-react';
 import { getCatalogueLanguages, setCatalogueLanguages, labelFor, isRTL } from '@/lib/catalogue-languages';
 import { FxManagementSection } from './_components/FxManagementSection';
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 const grad = (v: string) => ({ background: `linear-gradient(135deg, var(${v}), color-mix(in srgb, var(${v}) 60%, black))` });
 const soft = (v: string, p = 12) => ({ backgroundColor: `color-mix(in srgb, var(${v}) ${p}%, transparent)` });
-function flag(iso2: string) { if (!iso2 || iso2.length !== 2) return '🏳️'; return String.fromCodePoint(...[...iso2.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)); }
+const glow = (v: string, opacity = 30) => ({ boxShadow: `0 4px 14px color-mix(in srgb, var(${v}) ${opacity}%, transparent)` });
+function flag(iso2: string) {
+    if (!iso2 || iso2.length !== 2) return '🏳️';
+    return String.fromCodePoint(...[...iso2.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
 
 /* ─── Types ────────────────────────────────────────────────────── */
 interface Props { allCountries: RefCountry[]; allCurrencies: RefCurrency[]; initialOrgCountries: OrgCountry[]; initialOrgCurrencies: OrgCurrency[]; }
-type Tab = 'countries' | 'currencies' | 'languages' | 'fx';
+type Tab = 'countries' | 'currencies' | 'fx' | 'languages';
 
 const COMMON_LOCALES: { code: string; native: string }[] = [
     { code: 'en', native: 'English' }, { code: 'fr', native: 'Français' }, { code: 'ar', native: 'العربية' },
@@ -35,6 +60,7 @@ const COMMON_LOCALES: { code: string; native: string }[] = [
     { code: 'ru', native: 'Русский' }, { code: 'zh', native: '中文' }, { code: 'ja', native: '日本語' },
     { code: 'he', native: 'עברית' }, { code: 'fa', native: 'فارسی' },
 ];
+
 type ConfirmAction = {
     type: 'set-default-country' | 'set-default-currency' | 'disable-country' | 'disable-currency';
     label: string;
@@ -42,13 +68,13 @@ type ConfirmAction = {
 } | null;
 
 /* ═══════════════════════════════════════════════════════════════════
- *  COMPONENT — Fixed viewport layout, only panels scroll
+ *  COMPONENT
  * ═══════════════════════════════════════════════════════════════════ */
 export default function RegionalSettingsClient({ allCountries, allCurrencies, initialOrgCountries, initialOrgCurrencies }: Props) {
+    /* ─── State ─────────────────────────────────────────────────── */
     const searchParams = useSearchParams();
     const initialTab = (searchParams?.get('tab') as Tab | null) ?? 'countries';
-    const validTab: Tab = (['countries', 'currencies', 'fx', 'languages'] as const).includes(initialTab as any)
-        ? initialTab : 'countries';
+    const validTab: Tab = (['countries', 'currencies', 'fx', 'languages'] as const).includes(initialTab as any) ? initialTab : 'countries';
     const [tab, setTab] = useState<Tab>(validTab);
     const [search, setSearch] = useState('');
     const [regionFilter, setRegionFilter] = useState('');
@@ -56,8 +82,8 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     const [orgCurrencies, setOrgCurrencies] = useState<OrgCurrency[]>(initialOrgCurrencies);
     const [isPending, startTransition] = useTransition();
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
-    // Catalogue languages — tenant-wide list of locale codes used across
-    // product / category translations. Persisted to Organization.settings.
+
+    // Catalogue languages
     const [langCodes, setLangCodes] = useState<string[]>([]);
     const [langCustom, setLangCustom] = useState('');
     const [langLoading, setLangLoading] = useState(false);
@@ -90,16 +116,23 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
         }
     };
 
-    // Derived
+    /* ─── Derived ────────────────────────────────────────────────── */
     const enabledCountryIds = useMemo(() => new Set(orgCountries.map(oc => oc.country)), [orgCountries]);
     const defaultCountryId = useMemo(() => orgCountries.find(oc => oc.is_default)?.country ?? null, [orgCountries]);
     const enabledCurrencyIds = useMemo(() => new Set(orgCurrencies.map(oc => oc.currency)), [orgCurrencies]);
     const defaultCurrencyId = useMemo(() => orgCurrencies.find(oc => oc.is_default)?.currency ?? null, [orgCurrencies]);
-    const regions = useMemo(() => [...new Set(allCountries.map(c => c.region).filter(Boolean))].sort(), [allCountries]);
+    const baseCurrencyCode = useMemo(() => orgCurrencies.find(o => o.is_default)?.currency_code ?? null, [orgCurrencies]);
+    const regions = useMemo(
+        () => [...new Set(allCountries.map(c => c.region).filter((r): r is string => Boolean(r)))].sort(),
+        [allCountries],
+    );
 
     const filteredCountries = useMemo(() => {
         let list = allCountries;
-        if (search) { const q = search.toLowerCase(); list = list.filter(c => c.name.toLowerCase().includes(q) || c.iso2.toLowerCase().includes(q) || c.iso3?.toLowerCase().includes(q) || c.phone_code?.includes(q)); }
+        if (search) {
+            const q = search.toLowerCase();
+            list = list.filter(c => c.name.toLowerCase().includes(q) || c.iso2.toLowerCase().includes(q) || c.iso3?.toLowerCase().includes(q) || c.phone_code?.includes(q));
+        }
         if (regionFilter) list = list.filter(c => c.region === regionFilter);
         return list;
     }, [allCountries, search, regionFilter]);
@@ -110,7 +143,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
         return allCurrencies.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || c.symbol?.includes(q));
     }, [allCurrencies, search]);
 
-    /* ── Country Actions ────────────────────────────────────────── */
+    /* ─── Country Actions ────────────────────────────────────────── */
     const handleEnableCountry = (country: RefCountry) => {
         startTransition(async () => {
             const res = await enableOrgCountry(country.id, enabledCountryIds.size === 0);
@@ -118,7 +151,6 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
             else toast.error(res.error || 'Failed');
         });
     };
-
     const doSetDefaultCountry = (id: number) => {
         startTransition(async () => {
             const res = await setDefaultOrgCountry(id);
@@ -128,13 +160,8 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     };
     const handleSetDefaultCountry = (id: number) => {
         const c = allCountries.find(x => x.id === id);
-        setConfirmAction({
-            type: 'set-default-country',
-            label: c?.name || 'this country',
-            onConfirm: () => { setConfirmAction(null); doSetDefaultCountry(id); }
-        });
+        setConfirmAction({ type: 'set-default-country', label: c?.name || 'this country', onConfirm: () => { setConfirmAction(null); doSetDefaultCountry(id); } });
     };
-
     const doDisableCountry = (oc: OrgCountry) => {
         startTransition(async () => {
             const res = await disableOrgCountry(oc.id);
@@ -145,14 +172,10 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     const handleDisableCountry = (oc: OrgCountry) => {
         if (oc.is_default) return toast.error('Cannot disable the default country. Set another default first.');
         const c = allCountries.find(x => x.id === oc.country);
-        setConfirmAction({
-            type: 'disable-country',
-            label: c?.name || oc.country_name || 'this country',
-            onConfirm: () => { setConfirmAction(null); doDisableCountry(oc); }
-        });
+        setConfirmAction({ type: 'disable-country', label: c?.name || oc.country_name || 'this country', onConfirm: () => { setConfirmAction(null); doDisableCountry(oc); } });
     };
 
-    /* ── Currency Actions ───────────────────────────────────────── */
+    /* ─── Currency Actions ───────────────────────────────────────── */
     const handleEnableCurrency = (currency: RefCurrency) => {
         startTransition(async () => {
             const res = await enableOrgCurrency(currency.id, { is_default: enabledCurrencyIds.size === 0, is_transaction_currency: true });
@@ -160,7 +183,6 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
             else toast.error(res.error || 'Failed');
         });
     };
-
     const doSetDefaultCurrency = (id: number) => {
         startTransition(async () => {
             const res = await setDefaultOrgCurrency(id);
@@ -170,13 +192,8 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     };
     const handleSetDefaultCurrency = (id: number) => {
         const c = allCurrencies.find(x => x.id === id);
-        setConfirmAction({
-            type: 'set-default-currency',
-            label: c ? `${c.code} — ${c.name}` : 'this currency',
-            onConfirm: () => { setConfirmAction(null); doSetDefaultCurrency(id); }
-        });
+        setConfirmAction({ type: 'set-default-currency', label: c ? `${c.code} — ${c.name}` : 'this currency', onConfirm: () => { setConfirmAction(null); doSetDefaultCurrency(id); } });
     };
-
     const doDisableCurrency = (oc: OrgCurrency) => {
         startTransition(async () => {
             const res = await disableOrgCurrency(oc.id);
@@ -187,118 +204,128 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     const handleDisableCurrency = (oc: OrgCurrency) => {
         if (oc.is_default) return toast.error('Cannot disable the base currency. Set another default first.');
         const c = allCurrencies.find(x => x.id === oc.currency);
-        setConfirmAction({
-            type: 'disable-currency',
-            label: c ? `${c.code} — ${c.name}` : oc.currency_code || 'this currency',
-            onConfirm: () => { setConfirmAction(null); doDisableCurrency(oc); }
-        });
+        setConfirmAction({ type: 'disable-currency', label: c ? `${c.code} — ${c.name}` : oc.currency_code || 'this currency', onConfirm: () => { setConfirmAction(null); doDisableCurrency(oc); } });
     };
 
-    /* ── Confirm Dialog Derived ─────────────────────────────────── */
+    /* ─── KPI definitions ────────────────────────────────────────── */
+    const KPIS = [
+        { label: 'Countries', value: orgCountries.length, icon: Globe, color: 'var(--app-primary)' },
+        { label: 'Currencies', value: orgCurrencies.length, icon: Coins, color: 'var(--app-warning)' },
+        { label: 'Base', value: baseCurrencyCode ?? '—', icon: Crown, color: 'var(--app-success)' },
+        { label: 'Languages', value: langCodes.length || '—', icon: Languages, color: 'var(--app-info)' },
+    ] as const;
+
+    /* ─── Tab definitions ────────────────────────────────────────── */
+    const TABS = [
+        { key: 'countries' as Tab, label: 'Countries', icon: Globe, color: '--app-primary' },
+        { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-warning' },
+        { key: 'fx' as Tab, label: 'FX & Rates', icon: TrendingUp, color: '--app-success' },
+        { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-info' },
+    ];
+
+    /* ─── Confirm dialog ─────────────────────────────────────────── */
     const isDestructive = confirmAction?.type.startsWith('disable');
     const confirmTitle = confirmAction?.type.startsWith('set-default') ? 'Change Default' : 'Disable Item';
     const confirmMessage = confirmAction?.type.startsWith('set-default')
-        ? `Are you sure you want to set "${confirmAction?.label}" as the new default? This will affect all future transactions and documents.`
-        : `Are you sure you want to disable "${confirmAction?.label}"? It will be removed from your organization's active list.`;
+        ? `Set "${confirmAction?.label}" as the new default? This affects all future transactions and documents.`
+        : `Disable "${confirmAction?.label}"? It will be removed from your active list.`;
 
-    /* ═══════ RENDER ═══════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════════
+     *  RENDER
+     * ═══════════════════════════════════════════════════════════════ */
     return (
         <>
-            {/* ── Confirmation Modal ── */}
+            {/* ── Modal — design.md §11 ── */}
             {confirmAction && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setConfirmAction(null)}>
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                    <div className="relative w-full max-w-md bg-app-surface border border-app-border rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 fade-in duration-200" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-start gap-4">
-                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${isDestructive ? 'bg-rose-500/10' : ''}`}
-                                style={!isDestructive ? soft('--app-warning', 12) : {}}>
-                                <AlertTriangle size={22} className={isDestructive ? 'text-rose-500' : ''}
-                                    style={!isDestructive ? { color: 'var(--app-warning)' } : {}} />
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+                    onClick={e => { if (e.target === e.currentTarget) setConfirmAction(null); }}>
+                    <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                        <div className="px-5 py-3 flex items-center gap-2.5"
+                            style={{ background: `color-mix(in srgb, var(${isDestructive ? '--app-error' : '--app-warning'}) 6%, var(--app-surface))`, borderBottom: '1px solid var(--app-border)' }}>
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                style={{ background: `var(${isDestructive ? '--app-error' : '--app-warning'})`, ...glow(isDestructive ? '--app-error' : '--app-warning') }}>
+                                <AlertTriangle size={15} className="text-white" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-[15px] font-black text-app-foreground">{confirmTitle}</h3>
-                                <p className="text-[12px] text-app-muted-foreground mt-1.5 leading-relaxed">{confirmMessage}</p>
+                            <div>
+                                <h3 className="text-sm font-black text-app-foreground">{confirmTitle}</h3>
+                                <p className="text-[10px] font-bold text-app-muted-foreground">{isDestructive ? 'Destructive action' : 'Affects future transactions'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center justify-end gap-3 mt-6">
+                        <div className="px-5 py-4">
+                            <p className="text-[12px] font-medium text-app-foreground leading-relaxed">{confirmMessage}</p>
+                        </div>
+                        <div className="px-5 py-3 flex items-center justify-end gap-2 border-t border-app-border/50"
+                            style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
                             <button onClick={() => setConfirmAction(null)}
-                                className="px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider text-app-muted-foreground bg-app-background border border-app-border hover:bg-app-hover transition-all">
+                                className="px-3 py-1.5 rounded-xl text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border hover:bg-app-surface transition-all">
                                 Cancel
                             </button>
                             <button onClick={confirmAction.onConfirm} disabled={isPending}
-                                className={`px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider text-white transition-all shadow-lg ${isDestructive ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/25' : 'shadow-app-primary/25'
-                                    }`}
-                                style={!isDestructive ? grad('--app-warning') : {}}>
-                                {isPending && <Loader2 className="w-4 h-4 animate-spin inline mr-1.5" />}
-                                {isDestructive ? 'Yes, Disable' : 'Yes, Change Default'}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white transition-all disabled:opacity-50"
+                                style={isDestructive
+                                    ? { ...grad('--app-error'), ...glow('--app-error', 25) }
+                                    : { ...grad('--app-warning'), ...glow('--app-warning', 25) }}>
+                                {isPending && <Loader2 size={11} className="animate-spin" />}
+                                {isDestructive ? 'Yes, Disable' : 'Confirm'}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* ═══════════════════════════════════════════════════════════
-             *  FIXED VIEWPORT SHELL — fills parent <main> exactly, no page scroll
-             * ═══════════════════════════════════════════════════════════ */}
-            <div className="flex flex-col h-full -m-4 md:-m-5 overflow-hidden animate-in fade-in duration-500">
+            {/* ── Full-bleed viewport shell (page fills the workspace) ── */}
+            <div className="flex flex-col h-full -m-4 md:-m-5 overflow-hidden animate-in fade-in duration-300">
 
-                {/* ── FIXED HEADER AREA — Dajingo Pro V2 design language ── */}
+                {/* ── FIXED HEADER AREA (full-bleed bg, content centered) ── */}
                 <div className="shrink-0 px-4 md:px-8 pt-4 pb-3 border-b border-app-border/40"
                     style={{ backgroundColor: 'var(--app-background)' }}>
                     <div className="max-w-[1400px] mx-auto space-y-3">
-                        {/* Back link */}
-                        <Link href="/settings" className="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest hover:text-app-foreground transition-colors">
-                            <ArrowLeft size={13} /> Settings
-                        </Link>
-
-                        {/* Title row — page-header-icon pattern from design.md §2 */}
+                        {/* Page header — design.md §2 */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <div className="page-header-icon bg-app-primary"
-                                     style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="page-header-icon bg-app-primary" style={glow('--app-primary')}>
                                     <Globe size={20} className="text-white" />
                                 </div>
-                                <div>
-                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Regional Settings</h1>
-                                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                                        {orgCountries.length} Countries · {orgCurrencies.length} Currencies · Languages · FX
+                                <div className="min-w-0">
+                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight truncate">Regional Settings</h1>
+                                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">
+                                        {orgCountries.length} Countries · {orgCurrencies.length} Currencies · {langCodes.length || 0} Languages
                                     </p>
                                 </div>
                             </div>
-                            {/* Tab Switcher — production pages style: pill-on-surface bar */}
-                            <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-app-surface border border-app-border/50 self-start sm:self-auto">
-                                {([
-                                    { key: 'countries' as Tab, label: 'Countries', icon: Globe, color: '--app-primary' },
-                                    { key: 'currencies' as Tab, label: 'Currencies', icon: Coins, color: '--app-warning' },
-                                    { key: 'fx' as Tab, label: 'FX & Rates', icon: TrendingUp, color: '--app-success' },
-                                    { key: 'languages' as Tab, label: 'Languages', icon: Languages, color: '--app-info' },
-                                ]).map(t => {
-                                    const Icon = t.icon; const active = tab === t.key;
-                                    return (
-                                        <button key={t.key} onClick={() => { setTab(t.key); setSearch(''); setRegionFilter(''); }}
-                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
-                                            style={active ? { ...grad(t.color), boxShadow: `0 2px 8px color-mix(in srgb, var(${t.color}) 25%, transparent)` } : {}}>
-                                            <Icon size={12} /> {t.label}
-                                        </button>
-                                    );
-                                })}
+                            <div className="flex items-center gap-2 self-start sm:self-auto">
+                                {tab === 'languages' && (
+                                    <button onClick={saveLangs} disabled={langSaving || langLoading}
+                                        className="flex items-center gap-1.5 text-[11px] font-bold text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                                        style={{ ...grad('--app-info'), ...glow('--app-info', 25) }}>
+                                        {langSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={13} />}
+                                        <span>Save Languages</span>
+                                    </button>
+                                )}
+                                {/* Tab pills — pill-on-surface segmented control */}
+                                <div className="inline-flex items-stretch p-0.5 rounded-xl bg-app-surface border border-app-border/50">
+                                    {TABS.map(t => {
+                                        const Icon = t.icon; const active = tab === t.key;
+                                        return (
+                                            <button key={t.key} onClick={() => { setTab(t.key); setSearch(''); setRegionFilter(''); }}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
+                                                style={active ? { ...grad(t.color), boxShadow: `0 2px 8px color-mix(in srgb, var(${t.color}) 25%, transparent)` } : {}}>
+                                                <Icon size={12} /> <span className="hidden sm:inline">{t.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
 
-                        {/* KPI Strip — adaptive grid per design.md §4 */}
+                        {/* KPI strip — design.md §3, §4 */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
-                            {([
-                                { label: 'Countries', value: orgCountries.length, icon: Globe, color: 'var(--app-primary)' },
-                                { label: 'Currencies', value: orgCurrencies.length, icon: Coins, color: 'var(--app-warning)' },
-                                { label: 'Base', value: orgCurrencies.find(o => o.is_default)?.currency_code ?? '—', icon: Star, color: 'var(--app-success)' },
-                                { label: 'Languages', value: langCodes.length || '—', icon: Languages, color: 'var(--app-info)' },
-                            ] as const).map(s => (
+                            {KPIS.map(s => (
                                 <div key={s.label}
                                     className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                                    }}>
+                                    style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
                                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                                         style={{ background: `color-mix(in srgb, ${s.color} 12%, transparent)`, color: s.color }}>
                                         <s.icon size={13} />
@@ -313,344 +340,401 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                     </div>
                 </div>
 
-                {/* ── CONTENT AREA (fills remaining viewport) ─────── */}
-                <div className="flex-1 overflow-auto px-4 md:px-8 py-4">
-                    {tab === 'fx' ? (
-                    /* ── FX & RATES PANEL — single source of truth for the
-                          finance multi-currency stack: rate history, auto-
-                          sync policies, and period-end revaluations. ── */
-                    <div className="max-w-[1400px] mx-auto">
-                        <FxManagementSection />
-                    </div>
-                    ) : tab === 'languages' ? (
-                    /* ── LANGUAGES PANEL — single column picker ── */
-                    <div className="max-w-[900px] mx-auto h-full bg-app-surface rounded-2xl border border-app-border/50 flex flex-col overflow-hidden">
-                        <div className="px-5 py-3 border-b border-app-border/50 flex items-center justify-between"
-                             style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-                            <div>
-                                <h2 className="text-[11px] font-black uppercase tracking-widest text-app-foreground flex items-center gap-2">
-                                    <Languages size={13} style={{ color: 'var(--app-info)' }} />
-                                    Catalogue languages
-                                </h2>
-                                <p className="text-[10px] text-app-muted-foreground mt-0.5">
-                                    {langCodes.length} enabled · used across category + product translation inputs
-                                </p>
-                            </div>
-                            <button onClick={saveLangs} disabled={langSaving || langLoading}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-bold text-white transition-all disabled:opacity-50"
-                                    style={{ background: 'var(--app-primary)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 35%, transparent)' }}>
-                                {langSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-                                Save
-                            </button>
+                {/* ── CONTENT AREA — full-bleed, content centered to 1400px ── */}
+                <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-8 py-4">
+                    <div className="max-w-[1400px] mx-auto h-full">
+                    {tab === 'countries' && (
+                        <TwoPanePicker
+                            kind="country"
+                            allItems={allCountries}
+                            filteredItems={filteredCountries}
+                            orgItems={orgCountries}
+                            search={search}
+                            setSearch={setSearch}
+                            regions={regions}
+                            regionFilter={regionFilter}
+                            setRegionFilter={setRegionFilter}
+                            isPending={isPending}
+                            enabledIds={enabledCountryIds}
+                            defaultId={defaultCountryId}
+                            onEnable={handleEnableCountry as any}
+                            onSetDefault={handleSetDefaultCountry}
+                            onDisable={handleDisableCountry as any}
+                        />
+                    )}
+                    {tab === 'currencies' && (
+                        <TwoPanePicker
+                            kind="currency"
+                            allItems={allCurrencies}
+                            filteredItems={filteredCurrencies}
+                            orgItems={orgCurrencies}
+                            search={search}
+                            setSearch={setSearch}
+                            regions={[]}
+                            regionFilter=""
+                            setRegionFilter={() => {}}
+                            isPending={isPending}
+                            enabledIds={enabledCurrencyIds}
+                            defaultId={defaultCurrencyId}
+                            onEnable={handleEnableCurrency as any}
+                            onSetDefault={handleSetDefaultCurrency}
+                            onDisable={handleDisableCurrency as any}
+                        />
+                    )}
+                    {tab === 'fx' && (
+                        <div className="h-full overflow-y-auto custom-scrollbar pr-1">
+                            <FxManagementSection />
                         </div>
-                        <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                            {langLoading ? (
-                                <div className="flex justify-center py-10">
-                                    <Loader2 size={16} className="animate-spin text-app-muted-foreground" />
-                                </div>
-                            ) : (
-                                <>
-                                    <p className="text-[11px] text-app-muted-foreground">
-                                        Pick the languages your catalogue needs. Category / product forms render one translation input per enabled locale. The default language is the main <code className="font-mono text-app-foreground">name</code> field — never duplicated.
-                                    </p>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
-                                        {COMMON_LOCALES.map(l => {
-                                            const active = langCodes.includes(l.code);
-                                            return (
-                                                <button key={l.code} type="button"
-                                                        onClick={() => toggleLang(l.code)}
-                                                        className="flex items-center justify-between px-3 py-2 rounded-xl transition-all text-left"
-                                                        style={{
-                                                            background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-background)',
-                                                            border: `1px solid ${active ? 'color-mix(in srgb, var(--app-primary) 40%, transparent)' : 'var(--app-border)'}`,
-                                                            color: active ? 'var(--app-primary)' : 'var(--app-foreground)',
-                                                        }}>
-                                                    <span className="flex-1 min-w-0">
-                                                        <span className="text-[12px] font-bold truncate block" dir={isRTL(l.code) ? 'rtl' : undefined}>
-                                                            {l.native}
-                                                        </span>
-                                                        <span className="text-[9px] font-mono uppercase text-app-muted-foreground">
-                                                            {l.code}
-                                                        </span>
-                                                    </span>
-                                                    {active && <span className="text-[12px] font-bold ml-2">✓</span>}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    {langCodes.filter(c => !COMMON_LOCALES.some(l => l.code === c)).length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-app-border/50">
-                                            <span className="text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground self-center mr-2">Custom:</span>
-                                            {langCodes.filter(c => !COMMON_LOCALES.some(l => l.code === c)).map(c => (
-                                                <span key={c} className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded"
-                                                      style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
-                                                    {labelFor(c)}
-                                                    <button type="button" onClick={() => toggleLang(c)}>×</button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-2 pt-3 border-t border-app-border/50">
-                                        <input value={langCustom}
-                                               onChange={e => setLangCustom(e.target.value.replace(/[^a-z-]/gi, ''))}
-                                               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomLang() } }}
-                                               placeholder="Custom locale code (e.g. ber, ku)"
-                                               className="flex-1 px-3 py-2 rounded-lg text-[11px] font-mono outline-none"
-                                               style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                                        <button type="button" onClick={addCustomLang}
-                                                className="flex items-center gap-1 px-3 py-2 rounded-lg text-[10px] font-bold"
-                                                style={{ background: 'var(--app-primary)', color: 'white' }}>
-                                            <Plus size={11} /> Add
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                    )}
+                    {tab === 'languages' && (
+                        <LanguagesPanel
+                            langCodes={langCodes}
+                            langCustom={langCustom}
+                            setLangCustom={setLangCustom}
+                            langLoading={langLoading}
+                            toggleLang={toggleLang}
+                            addCustomLang={addCustomLang}
+                        />
+                    )}
+                    </div>{/* close max-w-[1400px] content inner */}
+                </div>{/* close flex-1 content area */}
+            </div>{/* close full-bleed shell */}
+        </>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ *  TwoPanePicker — shared layout for Countries + Currencies
+ * ═══════════════════════════════════════════════════════════════════ */
+function TwoPanePicker({
+    kind, allItems, filteredItems, orgItems,
+    search, setSearch, regions, regionFilter, setRegionFilter,
+    isPending,
+    enabledIds, defaultId,
+    onEnable, onSetDefault, onDisable,
+}: {
+    kind: 'country' | 'currency';
+    allItems: any[]; filteredItems: any[]; orgItems: any[];
+    search: string; setSearch: (s: string) => void;
+    regions: string[]; regionFilter: string; setRegionFilter: (r: string) => void;
+    isPending: boolean;
+    enabledIds: Set<number>; defaultId: number | null;
+    onEnable: (item: any) => void; onSetDefault: (id: number) => void; onDisable: (oc: any) => void;
+}) {
+    const accent = kind === 'country' ? '--app-primary' : '--app-warning';
+    const PanelIcon = kind === 'country' ? Globe : Coins;
+    const placeholder = kind === 'country' ? 'Search 250+ countries…' : 'Search 150+ currencies…';
+
+    return (
+        <div className="h-full grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
+            {/* ── LEFT PANE: Active selection ── */}
+            <section className="bg-app-surface/30 rounded-2xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
+                <PaneHeader
+                    icon={<PanelIcon size={13} style={{ color: `var(${accent})` }} />}
+                    title={`Your ${kind === 'country' ? 'Countries' : 'Currencies'}`}
+                    subtitle={`${orgItems.length} active · hover to manage`}
+                />
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1.5">
+                    {orgItems.length === 0 ? (
+                        <EmptyState
+                            icon={<PanelIcon size={36} className="text-app-muted-foreground opacity-40" />}
+                            title={`No ${kind === 'country' ? 'countries' : 'currencies'} enabled`}
+                            hint="Click items in the catalogue on the right to enable them →"
+                        />
+                    ) : orgItems.map(oc => (
+                        <ActiveRow
+                            key={oc.id} kind={kind} oc={oc} accent={accent}
+                            allItems={allItems}
+                            isPending={isPending}
+                            onSetDefault={onSetDefault}
+                            onDisable={onDisable}
+                        />
+                    ))}
+                </div>
+                {isPending && (
+                    <div className="px-3 py-2 border-t border-app-border/50 flex items-center gap-2 shrink-0" style={soft('--app-info', 8)}>
+                        <Loader2 size={12} className="animate-spin" style={{ color: 'var(--app-info)' }} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-info)' }}>Processing…</span>
                     </div>
+                )}
+            </section>
+
+            {/* ── RIGHT PANE: Browse + add ── */}
+            <section className="bg-app-surface/30 rounded-2xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
+                <div className="px-4 py-3 border-b border-app-border/50 shrink-0 flex items-center gap-2"
+                    style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+                    <div className="flex-1 relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={placeholder}
+                            className="w-full pl-9 pr-9 py-2 text-[12px] font-medium bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
+                        {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-foreground"><X size={13} /></button>}
+                    </div>
+                    {kind === 'country' && regions.length > 0 && (
+                        <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
+                            className="h-9 px-2.5 rounded-xl border border-app-border/50 bg-app-surface/50 text-[11px] font-bold text-app-foreground focus:bg-app-surface outline-none cursor-pointer">
+                            <option value="">All Regions</option>
+                            {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                    )}
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground whitespace-nowrap shrink-0">
+                        {filteredItems.length} results
+                    </span>
+                </div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-3">
+                    {filteredItems.length === 0 ? (
+                        <EmptyState
+                            icon={<Search size={36} className="text-app-muted-foreground opacity-40" />}
+                            title={`No ${kind === 'country' ? 'countries' : 'currencies'} match your search`}
+                            hint="Try a different search term or clear the filter."
+                        />
                     ) : (
-                    <div className="max-w-[1400px] mx-auto h-full grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
-
-                        {/* ── LEFT PANEL: Active Selection ── */}
-                        <div className="bg-app-surface rounded-2xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
-                            <div className="px-4 py-3 border-b border-app-border/50 shrink-0"
-                                style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-                                <h2 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-2">
-                                    <Shield size={11} style={{ color: tab === 'countries' ? 'var(--app-primary)' : 'var(--app-warning)' }} />
-                                    Your {tab === 'countries' ? 'Countries' : 'Currencies'}
-                                </h2>
-                                <p className="text-[9px] text-app-muted-foreground mt-0.5">
-                                    {tab === 'countries' ? 'Hover items — ⭐ Set default, ✕ Remove' : 'Hover items — ⭐ Set base, ✕ Remove'}
-                                </p>
-                            </div>
-
-                            {/* Scrollable active items */}
-                            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                                {tab === 'countries' ? (
-                                    orgCountries.length === 0 ? (
-                                        <div className="py-10 text-center">
-                                            <Globe size={24} className="mx-auto text-app-muted-foreground opacity-20" />
-                                            <p className="text-[10px] font-bold text-app-muted-foreground mt-2">No countries enabled yet</p>
-                                            <p className="text-[9px] text-app-muted-foreground mt-0.5">Click items on the right →</p>
-                                        </div>
-                                    ) : orgCountries.map(oc => {
-                                        const c = allCountries.find(x => x.id === oc.country);
-                                        return (
-                                            <div key={oc.id} className={`group/item flex items-center gap-2.5 p-2.5 rounded-lg transition-all ${oc.is_default ? 'border border-app-primary/20' : 'hover:bg-app-background border border-transparent'}`}
-                                                style={oc.is_default ? soft('--app-primary', 6) : {}}>
-                                                <span className="text-lg">{flag(c?.iso2 || oc.country_iso2 || '')}</span>
-                                                <div className="flex-1 min-w-0">
-                                                    <span className="text-[12px] font-bold text-app-foreground block truncate">{c?.name || oc.country_name}</span>
-                                                    <span className="text-[8px] text-app-muted-foreground font-mono">{c?.iso2 || oc.country_iso2}</span>
-                                                </div>
-                                                {oc.is_default ? (
-                                                    <span className="px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider text-white shrink-0" style={grad('--app-primary')}>
-                                                        <Crown size={7} className="inline mr-0.5 -mt-px" /> Default
-                                                    </span>
-                                                ) : (
-                                                    <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                                        <button onClick={() => handleSetDefaultCountry(oc.country)} disabled={isPending}
-                                                            className="p-1 rounded-md hover:bg-app-primary/10 transition-colors" title="Set as default">
-                                                            <Star size={12} style={{ color: 'var(--app-primary)' }} />
-                                                        </button>
-                                                        <button onClick={() => handleDisableCountry(oc)} disabled={isPending}
-                                                            className="p-1 rounded-md hover:bg-rose-500/10 transition-colors" title="Remove">
-                                                            <Trash2 size={12} className="text-rose-500" />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    orgCurrencies.length === 0 ? (
-                                        <div className="py-10 text-center">
-                                            <Coins size={24} className="mx-auto text-app-muted-foreground opacity-20" />
-                                            <p className="text-[10px] font-bold text-app-muted-foreground mt-2">No currencies enabled yet</p>
-                                            <p className="text-[9px] text-app-muted-foreground mt-0.5">Click items on the right →</p>
-                                        </div>
-                                    ) : orgCurrencies.map(oc => {
-                                        const c = allCurrencies.find(x => x.id === oc.currency);
-                                        return (
-                                            <div key={oc.id} className={`group/item flex items-center gap-2.5 p-2.5 rounded-lg transition-all ${oc.is_default ? 'border border-amber-500/20' : 'hover:bg-app-background border border-transparent'}`}
-                                                style={oc.is_default ? soft('--app-warning', 6) : {}}>
-                                                <div className="w-8 h-8 rounded-md flex items-center justify-center text-xs font-black shrink-0" style={soft('--app-warning', 15)}>
-                                                    <span style={{ color: 'var(--app-warning)' }}>{c?.symbol || oc.currency_symbol || '$'}</span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <span className="text-[12px] font-bold text-app-foreground block">{c?.code || oc.currency_code}</span>
-                                                    <span className="text-[8px] text-app-muted-foreground truncate block">{c?.name || oc.currency_name}</span>
-                                                </div>
-                                                {oc.is_default ? (
-                                                    <span className="px-1.5 py-0.5 rounded-md bg-amber-500 text-white text-[7px] font-black uppercase tracking-wider shrink-0">
-                                                        <Crown size={7} className="inline mr-0.5 -mt-px" /> Base
-                                                    </span>
-                                                ) : (
-                                                    <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                                        <button onClick={() => handleSetDefaultCurrency(oc.currency)} disabled={isPending}
-                                                            className="p-1 rounded-md hover:bg-amber-500/10 transition-colors" title="Set as base">
-                                                            <Star size={12} style={{ color: 'var(--app-warning)' }} />
-                                                        </button>
-                                                        <button onClick={() => handleDisableCurrency(oc)} disabled={isPending}
-                                                            className="p-1 rounded-md hover:bg-rose-500/10 transition-colors" title="Remove">
-                                                            <Trash2 size={12} className="text-rose-500" />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-
-                            {/* Processing bar */}
-                            {isPending && (
-                                <div className="px-4 py-2 border-t border-app-border/50 flex items-center gap-2 shrink-0" style={soft('--app-info', 8)}>
-                                    <Loader2 className="w-3 h-3 animate-spin" style={{ color: 'var(--app-info)' }} />
-                                    <span className="text-[10px] font-bold" style={{ color: 'var(--app-info)' }}>Processing...</span>
-                                </div>
-                            )}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px' }}>
+                            {filteredItems.map(item => (
+                                <CatalogueCard
+                                    key={item.id} kind={kind} item={item} accent={accent}
+                                    isEnabled={enabledIds.has(item.id)}
+                                    isDefault={defaultId === item.id}
+                                    isPending={isPending}
+                                    onAdd={() => onEnable(item)}
+                                />
+                            ))}
                         </div>
-
-                        {/* ── RIGHT PANEL: Browse & Add ── */}
-                        <div className="bg-app-surface rounded-2xl border border-app-border/50 flex flex-col overflow-hidden min-h-0">
-                            {/* Fixed search header */}
-                            <div className="px-4 py-3 border-b border-app-border/50 shrink-0"
-                                style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-app-muted-foreground" />
-                                        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                                            placeholder={tab === 'countries' ? 'Search 250+ countries...' : 'Search 150+ currencies...'}
-                                            className="w-full pl-9 pr-7 h-9 rounded-lg border border-app-border bg-app-surface text-[12px] font-semibold text-app-foreground placeholder:text-app-muted-foreground focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 outline-none transition-all" />
-                                        {search && <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-foreground"><X size={13} /></button>}
-                                    </div>
-                                    {tab === 'countries' && (
-                                        <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
-                                            className="h-9 px-3 rounded-lg border border-app-border bg-app-surface text-[11px] font-semibold text-app-foreground focus:ring-2 focus:ring-app-primary/20 outline-none cursor-pointer">
-                                            <option value="">All Regions</option>
-                                            {regions.map(r => <option key={r} value={r}>{r}</option>)}
-                                        </select>
-                                    )}
-                                    <span className="text-[9px] font-bold text-app-muted-foreground self-center whitespace-nowrap uppercase tracking-wider">
-                                        {tab === 'countries' ? `${filteredCountries.length} results` : `${filteredCurrencies.length} results`}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Scrollable grid — ONLY THIS SCROLLS */}
-                            <div className="flex-1 overflow-y-auto p-3">
-                                {tab === 'countries' ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {filteredCountries.length === 0 ? (
-                                            <div className="col-span-full py-14 text-center bg-app-background/50 rounded-xl border border-dashed border-app-border">
-                                                <Globe size={28} className="mx-auto text-app-muted-foreground opacity-20" />
-                                                <p className="text-[11px] font-bold text-app-muted-foreground mt-2">No countries match your search</p>
-                                            </div>
-                                        ) : filteredCountries.map(country => {
-                                            const isEnabled = enabledCountryIds.has(country.id);
-                                            const isDefault = defaultCountryId === country.id;
-                                            return (
-                                                <div key={country.id}
-                                                    className={`group relative flex items-center gap-2.5 p-2.5 rounded-lg border transition-all duration-200 ${isEnabled
-                                                        ? isDefault
-                                                            ? 'border-app-primary/30'
-                                                            : 'border-app-border/30'
-                                                        : 'border-app-border/20 hover:border-app-primary/30 hover:shadow-md cursor-pointer'
-                                                        }`}
-                                                    style={isEnabled ? (isDefault ? soft('--app-primary', 6) : soft('--app-success', 4)) : {}}
-                                                    onClick={() => !isEnabled && !isPending && handleEnableCountry(country)}>
-
-                                                    <span className="text-lg shrink-0">{flag(country.iso2)}</span>
-
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="font-bold text-[12px] text-app-foreground truncate">{country.name}</span>
-                                                            <span className="text-[7px] font-mono px-1 py-0.5 rounded bg-app-background text-app-muted-foreground shrink-0">{country.iso2}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 mt-0.5 text-[8px] text-app-muted-foreground">
-                                                            {country.phone_code && <span className="flex items-center gap-0.5"><Phone size={7} /> {country.phone_code}</span>}
-                                                            {country.region && <span className="flex items-center gap-0.5"><MapPin size={7} /> {country.region}</span>}
-                                                            {country.default_currency_code && <span className="flex items-center gap-0.5"><DollarSign size={7} /> {country.default_currency_code}</span>}
-                                                        </div>
-                                                    </div>
-
-                                                    {isEnabled ? (
-                                                        isDefault ? (
-                                                            <span className="px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase text-white shrink-0" style={grad('--app-primary')}>Default</span>
-                                                        ) : (
-                                                            <Check size={14} className="shrink-0" style={{ color: 'var(--app-success)' }} />
-                                                        )
-                                                    ) : (
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                                                            <span className="flex items-center gap-1 px-2.5 py-1 rounded-md text-white text-[9px] font-bold shadow-md" style={grad('--app-primary')}>
-                                                                <Plus size={10} /> Add
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {filteredCurrencies.length === 0 ? (
-                                            <div className="col-span-full py-14 text-center bg-app-background/50 rounded-xl border border-dashed border-app-border">
-                                                <Coins size={28} className="mx-auto text-app-muted-foreground opacity-20" />
-                                                <p className="text-[11px] font-bold text-app-muted-foreground mt-2">No currencies match your search</p>
-                                            </div>
-                                        ) : filteredCurrencies.map(currency => {
-                                            const isEnabled = enabledCurrencyIds.has(currency.id);
-                                            const isDefault = defaultCurrencyId === currency.id;
-                                            return (
-                                                <div key={currency.id}
-                                                    className={`group relative flex items-center gap-2.5 p-2.5 rounded-lg border transition-all duration-200 ${isEnabled
-                                                        ? isDefault
-                                                            ? 'border-amber-500/30'
-                                                            : 'border-app-border/30'
-                                                        : 'border-app-border/20 hover:border-amber-400/30 hover:shadow-md cursor-pointer'
-                                                        }`}
-                                                    style={isEnabled ? (isDefault ? soft('--app-warning', 6) : soft('--app-success', 4)) : {}}
-                                                    onClick={() => !isEnabled && !isPending && handleEnableCurrency(currency)}>
-
-                                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black shrink-0"
-                                                        style={isEnabled ? soft('--app-warning', 15) : soft('--app-muted-foreground', 8)}>
-                                                        <span style={{ color: isEnabled ? 'var(--app-warning)' : 'var(--app-muted-foreground)' }}>
-                                                            {currency.symbol || currency.code.charAt(0)}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="font-bold text-[12px] text-app-foreground">{currency.code}</span>
-                                                            {currency.minor_unit !== undefined && <span className="text-[8px] text-app-muted-foreground">{currency.minor_unit} dec</span>}
-                                                        </div>
-                                                        <p className="text-[9px] text-app-muted-foreground truncate mt-0.5">{currency.name}</p>
-                                                    </div>
-
-                                                    {isEnabled ? (
-                                                        isDefault ? (
-                                                            <span className="px-1.5 py-0.5 rounded-md bg-amber-500 text-white text-[7px] font-black uppercase shrink-0">Base</span>
-                                                        ) : (
-                                                            <Check size={14} className="shrink-0" style={{ color: 'var(--app-success)' }} />
-                                                        )
-                                                    ) : (
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                                                            <span className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500 text-white text-[9px] font-bold shadow-md">
-                                                                <Plus size={10} /> Add
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
                     )}
                 </div>
+            </section>
+        </div>
+    );
+}
+
+/* ─── Active row in left pane ──────────────────────────────────── */
+function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisable }: any) {
+    const isDefault = oc.is_default;
+    const isCountry = kind === 'country';
+    const ref = isCountry
+        ? allItems.find((x: any) => x.id === oc.country)
+        : allItems.find((x: any) => x.id === oc.currency);
+    const code = isCountry ? (ref?.iso2 || oc.country_iso2 || '') : (ref?.code || oc.currency_code);
+    const name = isCountry ? (ref?.name || oc.country_name) : (ref?.name || oc.currency_name);
+
+    return (
+        <div className={`group/item flex items-center gap-2.5 p-2.5 rounded-xl transition-all border ${isDefault ? '' : 'border-transparent hover:bg-app-background hover:border-app-border/30'}`}
+            style={isDefault ? { ...soft(accent, 8), border: `1px solid color-mix(in srgb, var(${accent}) 30%, transparent)` } : {}}>
+            {isCountry ? (
+                <span className="text-2xl shrink-0">{flag(code)}</span>
+            ) : (
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ ...soft(accent, 15), color: `var(${accent})` }}>
+                    <span className="text-sm font-black">{ref?.symbol || oc.currency_symbol || code?.charAt(0) || '$'}</span>
+                </div>
+            )}
+            <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-bold text-app-foreground truncate">{name}</div>
+                <div className="text-[9px] font-mono uppercase text-app-muted-foreground">{code}</div>
             </div>
-        </>
+            {isDefault ? (
+                <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest text-white shrink-0" style={grad(accent)}>
+                    <Crown size={8} className="inline mr-0.5 -mt-px" /> {isCountry ? 'Default' : 'Base'}
+                </span>
+            ) : (
+                <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                    <button onClick={() => onSetDefault(isCountry ? oc.country : oc.currency)} disabled={isPending}
+                        className="p-1.5 rounded-lg hover:bg-app-border/50 transition-colors" title={`Set as ${isCountry ? 'default' : 'base'}`}>
+                        <Star size={12} style={{ color: `var(${accent})` }} />
+                    </button>
+                    <button onClick={() => onDisable(oc)} disabled={isPending}
+                        className="p-1.5 rounded-lg hover:bg-app-error/10 transition-colors" title="Remove">
+                        <Trash2 size={12} style={{ color: 'var(--app-error)' }} />
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ─── Catalogue card in right pane ─────────────────────────────── */
+function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, onAdd }: any) {
+    const isCountry = kind === 'country';
+    return (
+        <button onClick={() => !isEnabled && !isPending && onAdd()}
+            disabled={isEnabled || isPending}
+            className="group/c relative flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-200 text-left disabled:cursor-default"
+            style={isEnabled
+                ? { ...(isDefault ? soft(accent, 8) : soft('--app-success', 4)), border: `1px solid color-mix(in srgb, var(${isDefault ? accent : '--app-success'}) 30%, transparent)` }
+                : { background: 'var(--app-surface)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+            {!isEnabled && (
+                <span className="absolute inset-0 rounded-xl pointer-events-none transition-opacity opacity-0 group-hover/c:opacity-100"
+                    style={{ background: `color-mix(in srgb, var(${accent}) 4%, transparent)`, border: `1px solid color-mix(in srgb, var(${accent}) 30%, transparent)` }} />
+            )}
+            {isCountry ? (
+                <span className="text-2xl shrink-0">{flag(item.iso2)}</span>
+            ) : (
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                    style={isEnabled ? { ...soft(accent, 15), color: `var(${accent})` } : { ...soft('--app-muted-foreground', 8), color: 'var(--app-muted-foreground)' }}>
+                    <span className="text-sm font-black">{item.symbol || item.code?.charAt(0) || '$'}</span>
+                </div>
+            )}
+            <div className="flex-1 min-w-0 relative z-10">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] font-bold text-app-foreground truncate">{isCountry ? item.name : item.code}</span>
+                    {isCountry && <span className="text-[8px] font-mono px-1 py-0.5 rounded shrink-0 bg-app-background text-app-muted-foreground">{item.iso2}</span>}
+                </div>
+                {isCountry ? (
+                    <div className="flex items-center gap-2 mt-0.5 text-[9px] font-medium text-app-muted-foreground truncate">
+                        {item.phone_code && <span className="flex items-center gap-0.5"><Phone size={8} /> {item.phone_code}</span>}
+                        {item.region && <span className="flex items-center gap-0.5"><MapPin size={8} /> {item.region}</span>}
+                        {item.default_currency_code && <span className="flex items-center gap-0.5"><DollarSign size={8} /> {item.default_currency_code}</span>}
+                    </div>
+                ) : (
+                    <p className="text-[9px] font-medium text-app-muted-foreground truncate mt-0.5">{item.name}</p>
+                )}
+            </div>
+            <div className="shrink-0 relative z-10">
+                {isEnabled ? (
+                    isDefault ? (
+                        <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest text-white" style={grad(accent)}>
+                            <Crown size={8} className="inline mr-0.5 -mt-px" />{isCountry ? 'Default' : 'Base'}
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-1 text-[10px] font-bold" style={{ color: 'var(--app-success)' }}>
+                            <Check size={11} /> Active
+                        </span>
+                    )
+                ) : (
+                    <span className="opacity-0 group-hover/c:opacity-100 transition-opacity flex items-center gap-1 px-2 py-1 rounded-lg text-white text-[10px] font-bold shadow-md"
+                        style={grad(accent)}>
+                        <Plus size={10} /> Add
+                    </span>
+                )}
+            </div>
+        </button>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ *  LanguagesPanel — single-card multi-select
+ * ═══════════════════════════════════════════════════════════════════ */
+function LanguagesPanel({ langCodes, langCustom, setLangCustom, langLoading, toggleLang, addCustomLang }: {
+    langCodes: string[]; langCustom: string; setLangCustom: (s: string) => void;
+    langLoading: boolean; toggleLang: (c: string) => void; addCustomLang: () => void;
+}) {
+    const customCodes = langCodes.filter(c => !COMMON_LOCALES.some(l => l.code === c));
+    return (
+        <div className="h-full max-w-[900px] mx-auto bg-app-surface/30 rounded-2xl border border-app-border/50 flex flex-col overflow-hidden">
+            <PaneHeader
+                icon={<Languages size={13} style={{ color: 'var(--app-info)' }} />}
+                title="Catalogue Languages"
+                subtitle={`${langCodes.length} enabled · used across category + product translation inputs`}
+            />
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
+                {langLoading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 size={24} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-[11px] font-medium text-app-muted-foreground leading-relaxed">
+                            Pick the languages your catalogue needs. Category / product forms render one translation input
+                            per enabled locale. The default language is the main <code className="font-mono px-1 py-0.5 rounded bg-app-background text-app-foreground">name</code> field — never duplicated.
+                        </p>
+
+                        {/* Common locale grid — adaptive */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                            {COMMON_LOCALES.map(l => {
+                                const active = langCodes.includes(l.code);
+                                return (
+                                    <button key={l.code} type="button" onClick={() => toggleLang(l.code)}
+                                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                                        style={{
+                                            background: active ? 'color-mix(in srgb, var(--app-info) 10%, transparent)' : 'var(--app-surface)',
+                                            border: `1px solid ${active ? 'color-mix(in srgb, var(--app-info) 40%, transparent)' : 'color-mix(in srgb, var(--app-border) 50%, transparent)'}`,
+                                        }}>
+                                        <span className="flex-1 min-w-0">
+                                            <span className={`text-[12px] font-bold truncate block ${active ? '' : 'text-app-foreground'}`}
+                                                style={active ? { color: 'var(--app-info)' } : {}}
+                                                dir={isRTL(l.code) ? 'rtl' : undefined}>
+                                                {l.native}
+                                            </span>
+                                            <span className="text-[9px] font-mono uppercase text-app-muted-foreground">{l.code}</span>
+                                        </span>
+                                        {active && <Check size={14} style={{ color: 'var(--app-info)' }} />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Custom codes */}
+                        {customCodes.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-app-border/50">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mr-2">Custom</span>
+                                {customCodes.map(c => (
+                                    <span key={c} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold"
+                                        style={{ ...soft('--app-info', 12), color: 'var(--app-info)' }}>
+                                        {labelFor(c)}
+                                        <button type="button" onClick={() => toggleLang(c)} className="hover:opacity-70" aria-label={`Remove ${c}`}>
+                                            <X size={11} />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Add custom — design.md §12 inline form */}
+                        <div className="rounded-2xl p-3 border-l-2 flex items-center gap-2"
+                            style={{ background: 'color-mix(in srgb, var(--app-info) 4%, var(--app-surface))', borderColor: 'var(--app-info)' }}>
+                            <input value={langCustom}
+                                onChange={e => setLangCustom(e.target.value.replace(/[^a-z-]/gi, ''))}
+                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomLang(); } }}
+                                placeholder="Custom locale code (e.g. ber, ku)"
+                                className="flex-1 px-3 py-2 rounded-lg text-[12px] font-mono outline-none"
+                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                            <button type="button" onClick={addCustomLang}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white"
+                                style={{ ...grad('--app-info'), ...glow('--app-info', 25) }}>
+                                <Plus size={12} /> Add
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ *  Shared sub-components — design.md §6/§9
+ * ═══════════════════════════════════════════════════════════════════ */
+function PaneHeader({ icon, title, subtitle, action }: {
+    icon: React.ReactNode; title: string; subtitle?: string; action?: React.ReactNode;
+}) {
+    // Inline font-size so no global h2 / prose CSS can override (was rendering
+    // huge in production due to a default user-agent h2 size beating the
+    // `text-[11px]` arbitrary class through specificity). Same for subtitle.
+    return (
+        <div className="px-4 py-3 border-b border-app-border/50 flex items-center justify-between gap-3 shrink-0"
+            style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 font-black uppercase tracking-widest text-app-foreground"
+                     style={{ fontSize: 11, lineHeight: 1.3 }}>
+                    {icon}<span className="truncate">{title}</span>
+                </div>
+                {subtitle && (
+                    <p className="font-bold text-app-muted-foreground mt-0.5 truncate"
+                       style={{ fontSize: 10, lineHeight: 1.3 }}>{subtitle}</p>
+                )}
+            </div>
+            {action}
+        </div>
+    );
+}
+
+function EmptyState({ icon, title, hint }: { icon: React.ReactNode; title: string; hint?: string }) {
+    // Inline font-size on the body text — protects against any global
+    // p / .prose CSS that would otherwise inflate it in production builds.
+    return (
+        <div className="flex flex-col items-center justify-center py-14 px-4 text-center">
+            <div className="mb-3">{icon}</div>
+            <p className="font-bold text-app-muted-foreground" style={{ fontSize: 13, lineHeight: 1.4 }}>{title}</p>
+            {hint && <p className="text-app-muted-foreground mt-1 max-w-md" style={{ fontSize: 11, lineHeight: 1.5 }}>{hint}</p>}
+        </div>
     );
 }

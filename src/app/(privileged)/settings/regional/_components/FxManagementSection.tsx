@@ -41,10 +41,20 @@ const SUB_TABS = [
     { key: 'revaluations' as const, label: 'Revaluations', icon: Coins, color: '--app-warning' },
 ]
 
-export function FxManagementSection() {
-    // Currencies are managed in the parent /settings/regional Currencies tab
-    // — this section is purely operational. Default landing tab = Rates.
-    const [tab, setTab] = useState<'rates' | 'policies' | 'revaluations'>('rates')
+type FxView = 'rates' | 'policies' | 'revaluations';
+
+export function FxManagementSection({ view, hideHeader }: {
+    /** When set, renders only that sub-view (no internal tab strip).
+     *  Used when this component is mounted inside the Currencies tab as
+     *  an embedded sub-tab — the parent tab strip already provides nav. */
+    view?: FxView;
+    /** When true, suppress the internal "FX & Rates" header card too —
+     *  use when the parent already shows context. */
+    hideHeader?: boolean;
+} = {}) {
+    const isEmbedded = !!view;
+    const [tabState, setTab] = useState<FxView>('rates');
+    const tab = view ?? tabState;
     const [currencies, setCurrencies] = useState<Currency[]>([])
     const [rates, setRates] = useState<ExchangeRate[]>([])
     const [revals, setRevals] = useState<CurrencyRevaluation[]>([])

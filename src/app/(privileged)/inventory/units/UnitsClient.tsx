@@ -108,6 +108,98 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 tourId: 'inventory-units',
                 searchPlaceholder: 'Search by name, code, or type...',
                 primaryAction: { label: 'New Unit', icon: <Plus size={14} />, onClick: () => openForm() },
+                dataTools: {
+                    title: 'Unit Data',
+                    exportFilename: 'units',
+                    exportColumns: [
+                        { key: 'name', label: 'Name' },
+                        { key: 'code', label: 'Code' },
+                        { key: 'short_name', label: 'Short Name', format: (u: any) => u.short_name || '' },
+                        { key: 'type', label: 'Type' },
+                        { key: 'conversion_factor', label: 'Conversion', format: (u: any) => u.conversion_factor ?? 1 },
+                        { key: 'base_unit_code', label: 'Base Unit', format: (u: any) => {
+                            const base = u.base_unit ? data.find((x: any) => x.id === u.base_unit) : null
+                            return base ? (base.code || base.name || '') : ''
+                        }},
+                        { key: 'allow_fraction', label: 'Allow Fraction', format: (u: any) => u.allow_fraction ? 'true' : 'false' },
+                        { key: 'needs_balance', label: 'Needs Balance', format: (u: any) => u.needs_balance ? 'true' : 'false' },
+                        { key: 'product_count', label: 'Products', format: (u: any) => u.product_count || 0 },
+                    ],
+                    print: {
+                        title: 'Units of Measure',
+                        subtitle: 'Conversion Tree',
+                        prefKey: 'print.units',
+                        sortBy: 'code',
+                        columns: [
+                            { key: 'name', label: 'Name', defaultOn: true },
+                            { key: 'code', label: 'Code', mono: true, defaultOn: true, width: '90px' },
+                            { key: 'short', label: 'Short', mono: true, defaultOn: true, width: '80px' },
+                            { key: 'type', label: 'Type', defaultOn: true, width: '80px' },
+                            { key: 'conv', label: 'Conv.', mono: true, align: 'right', defaultOn: true, width: '80px' },
+                            { key: 'base', label: 'Base Unit', mono: true, defaultOn: true, width: '90px' },
+                            { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
+                        ],
+                        rowMapper: (u: any) => ({
+                            name: u.name,
+                            code: u.code || '',
+                            short: u.short_name || '',
+                            type: u.type || '',
+                            conv: u.conversion_factor ?? 1,
+                            base: (() => {
+                                const base = u.base_unit ? data.find((x: any) => x.id === u.base_unit) : null
+                                return base ? (base.code || base.name || '') : ''
+                            })(),
+                            products: u.product_count || 0,
+                        }),
+                    },
+                    import: {
+                        entity: 'unit',
+                        endpoint: 'units/',
+                        columns: [
+                            { name: 'name',              required: true,  desc: 'Display name',                                            example: 'Kilogram' },
+                            { name: 'code',              required: true,  desc: 'Unique unit code',                                        example: 'KG' },
+                            { name: 'short_name',        required: false, desc: 'Short label (e.g. on labels)',                            example: 'kg' },
+                            { name: 'type',              required: false, desc: 'COUNT / WEIGHT / VOLUME / LENGTH / AREA / TIME / OTHER',  example: 'WEIGHT' },
+                            { name: 'conversion_factor', required: false, desc: 'How many base units this is worth (default 1)',           example: '1' },
+                            { name: 'base_unit_code',    required: false, desc: 'Code of the base unit this derives from (leave blank for base)', example: 'G' },
+                            { name: 'allow_fraction',    required: false, desc: 'true / false — allow decimal qtys (default true)',        example: 'true' },
+                            { name: 'needs_balance',     required: false, desc: 'true / false — uses scale at POS (default false)',         example: 'false' },
+                        ],
+                        sampleCsv:
+                            'name,code,short_name,type,conversion_factor,base_unit_code,allow_fraction,needs_balance\n' +
+                            'Gram,G,g,WEIGHT,1,,true,false\n' +
+                            'Kilogram,KG,kg,WEIGHT,1000,G,true,true\n' +
+                            'Piece,PC,pc,COUNT,1,,false,false',
+                        previewColumns: [
+                            { key: 'name',        label: 'Name' },
+                            { key: 'code',        label: 'Code', mono: true },
+                            { key: 'type',        label: 'Type', mono: true },
+                            { key: 'conversion_factor', label: 'Conv.', mono: true },
+                            { key: 'base_unit_code',    label: 'Base', mono: true },
+                        ],
+                        buildPayload: (row: Record<string, string>) => {
+                            const baseCode = (row.base_unit_code || '').trim()
+                            const baseUnit = baseCode
+                                ? (data.find((u: any) => (u.code || '').toLowerCase() === baseCode.toLowerCase())?.id ?? null)
+                                : null
+                            const truthy = (v: string | undefined, def: boolean) => {
+                                if (v == null || v === '') return def
+                                return /^(true|1|yes|y)$/i.test(v.trim())
+                            }
+                            return {
+                                name: row.name,
+                                code: row.code,
+                                short_name: row.short_name || null,
+                                type: (row.type || 'COUNT').toUpperCase(),
+                                conversion_factor: row.conversion_factor ? Number(row.conversion_factor) : 1,
+                                base_unit: baseUnit,
+                                allow_fraction: truthy(row.allow_fraction, true),
+                                needs_balance: truthy(row.needs_balance, false),
+                            }
+                        },
+                        tip: <><strong>Tip:</strong> Import base units first (leave <code>base_unit_code</code> blank), then derived units referencing them by code.</>,
+                    },
+                },
                 secondaryActions: [
                     { label: 'Calculator', icon: <ArrowRightLeft size={13} />, onClick: () => setShowCalc(p => !p), active: showCalc, activeColor: 'var(--app-info)' },
                     { label: 'Variable Barcode', icon: <Scale size={13} />, onClick: () => setShowBarcodeConfig(true) },

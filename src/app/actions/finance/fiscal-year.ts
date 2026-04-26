@@ -629,13 +629,23 @@ export async function previewCloseFiscalYear(id: number, closeDate?: string): Pr
     }
 }
 
-export async function hardLockFiscalYear(id: number, closeDate?: string) {
+export async function hardLockFiscalYear(
+    id: number,
+    closeDate?: string,
+    opts?: { overrideChecklist?: boolean; overrideReason?: string },
+) {
     try {
         // Uses /finalize/ — explicit alias for year-end close.
+        const body: Record<string, unknown> = {}
+        if (closeDate) body.close_date = closeDate
+        if (opts?.overrideChecklist) {
+            body.override_checklist = true
+            body.override_reason = opts.overrideReason || ''
+        }
         await erpFetch(`fiscal-years/${id}/finalize/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(closeDate ? { close_date: closeDate } : {}),
+            body: JSON.stringify(body),
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }

@@ -205,7 +205,8 @@ class ClosingService:
     @staticmethod
     def close_fiscal_year(organization, fiscal_year, user=None,
                           retained_earnings_account_id=None, close_date=None,
-                          dry_run=False):
+                          dry_run=False, override_checklist=False,
+                          override_reason=None):
         """
         Full year-end close sequence.
 
@@ -214,6 +215,11 @@ class ClosingService:
         dict describing what WOULD have happened — every JE, every
         invariant, every snapshot — without any DB persistence. Real
         callers get the FiscalYear row as before.
+
+        `override_checklist=True` lets a superuser proceed past unmet
+        pre-close checklist items. The override is logged forensically
+        and stamped on the run's notes; it is NOT silent. Requires
+        ``user`` (the actor) and ``override_reason`` (audit text).
 
         Implementation: the public method is a thin wrapper that
         catches the sentinel. All work is delegated to
@@ -226,6 +232,8 @@ class ClosingService:
                 organization, fiscal_year, user=user,
                 retained_earnings_account_id=retained_earnings_account_id,
                 close_date=close_date, dry_run=dry_run,
+                override_checklist=override_checklist,
+                override_reason=override_reason,
             )
         except _DryRunComplete as done:
             return done.payload
@@ -233,7 +241,8 @@ class ClosingService:
     @staticmethod
     def _close_fiscal_year_impl(organization, fiscal_year, user=None,
                                 retained_earnings_account_id=None,
-                                close_date=None, dry_run=False):
+                                close_date=None, dry_run=False,
+                                override_checklist=False, override_reason=None):
         """Steps:
           1. Verify all periods are closed (or partial close at close_date)
           2. Close P&L accounts into retained earnings
@@ -480,55 +489,57 @@ class ClosingService:
                     )
 
                 # ── Step C: Relocate post-close JEs into remainder periods ──
-                blocking_period_ids = list(
+                # Source by transaction_date, NOT by period.start_date.
+                # A spanning period (start ≤ close_date < end) holds JEs on
+                # both sides of the close: the ones dated after close_date
+                # belong in the remainder year. Filtering by period.start_date
+                # alone would leave them as orphans whose date no longer
+                # fits their truncated period (causing 75¢-style drifts in
+                # subsequent opening-balance generation).
+                remainder_periods = list(
                     FiscalPeriod.objects
-                    .filter(fiscal_year=fiscal_year, start_date__gt=close_date)
-                    .values_list('id', flat=True)
+                    .filter(fiscal_year=remainder_fy)
+                    .order_by('start_date')
                 )
-                if blocking_period_ids:
-                    remainder_periods = list(
-                        FiscalPeriod.objects
-                        .filter(fiscal_year=remainder_fy)
-                        .order_by('start_date')
-                    )
 
-                    def _period_for(d):
-                        for p in remainder_periods:
-                            if p.start_date <= d <= p.end_date:
-                                return p
-                        return None
+                def _period_for(d):
+                    for p in remainder_periods:
+                        if p.start_date <= d <= p.end_date:
+                            return p
+                    return None
 
-                    relocated = 0
-                    blocking_jes = JournalEntry.objects.filter(
-                        organization=organization,
-                        fiscal_period_id__in=blocking_period_ids,
-                    )
-                    for je in blocking_jes:
-                        if je.transaction_date is None:
-                            raise ValidationError(
-                                f"Cannot relocate journal entry {je.reference} during partial "
-                                f"close: it has no transaction_date."
-                            )
-                        je_date = je.transaction_date.date() if hasattr(je.transaction_date, 'date') else je.transaction_date
-                        target = _period_for(je_date)
-                        if target is None:
-                            raise ValidationError(
-                                f"Cannot relocate journal entry {je.reference} dated {je_date}: "
-                                f"no period in remainder year '{remainder_fy.name}' covers that date. "
-                                f"Adjust the remainder year's date range or fix the JE date."
-                            )
-                        je.fiscal_period = target
-                        je.fiscal_year = remainder_fy
-                        # force_audit_bypass: lets us update POSTED entries.
-                        # We're not modifying lines/amounts/hash, only re-pointing
-                        # to the correct period after a structural year split.
-                        je.save(force_audit_bypass=True)
-                        relocated += 1
-                    if relocated:
-                        logger.info(
-                            f"ClosingService: Relocated {relocated} journal entries from "
-                            f"{fiscal_year.name} to {remainder_fy.name}"
+                relocated = 0
+                post_close_jes = JournalEntry.objects.filter(
+                    organization=organization,
+                    fiscal_year=fiscal_year,
+                    transaction_date__date__gt=close_date,
+                )
+                for je in post_close_jes:
+                    if je.transaction_date is None:
+                        raise ValidationError(
+                            f"Cannot relocate journal entry {je.reference} during partial "
+                            f"close: it has no transaction_date."
                         )
+                    je_date = je.transaction_date.date() if hasattr(je.transaction_date, 'date') else je.transaction_date
+                    target = _period_for(je_date)
+                    if target is None:
+                        raise ValidationError(
+                            f"Cannot relocate journal entry {je.reference} dated {je_date}: "
+                            f"no period in remainder year '{remainder_fy.name}' covers that date. "
+                            f"Adjust the remainder year's date range or fix the JE date."
+                        )
+                    je.fiscal_period = target
+                    je.fiscal_year = remainder_fy
+                    # force_audit_bypass: lets us update POSTED entries.
+                    # We're not modifying lines/amounts/hash, only re-pointing
+                    # to the correct period after a structural year split.
+                    je.save(force_audit_bypass=True)
+                    relocated += 1
+                if relocated:
+                    logger.info(
+                        f"ClosingService: Relocated {relocated} journal entries from "
+                        f"{fiscal_year.name} to {remainder_fy.name}"
+                    )
 
                 # ── Step D: Delete now-empty post-close periods ──────────
                 FiscalPeriod.objects.filter(
@@ -818,12 +829,19 @@ class ClosingService:
             # refuse finalize until every required task is marked
             # complete. Deployments that never configure a template
             # are unaffected (validator returns None and we proceed).
+            #
+            # Superusers can pass override_checklist=True with a reason
+            # to skip the gate — the override is logged forensically
+            # and stamped on the run's notes for auditor traceability.
             try:
                 from apps.finance.services.close_checklist_service import (
                     CloseChecklistService,
                 )
                 CloseChecklistService.validate_ready_for_year(
                     organization, fiscal_year,
+                    override=override_checklist,
+                    override_user=user if override_checklist else None,
+                    override_reason=override_reason if override_checklist else None,
                 )
             except ImportError:
                 pass  # module not loaded — skip silently

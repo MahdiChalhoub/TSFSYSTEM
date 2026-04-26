@@ -127,6 +127,21 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         close_date = request.data.get('close_date') if hasattr(request, 'data') else None
         dry_run = bool(request.data.get('dry_run', False)) if hasattr(request, 'data') else False
 
+        # Optional checklist override (superuser-only, audited)
+        override_checklist = bool(request.data.get('override_checklist', False)) if hasattr(request, 'data') else False
+        override_reason = (request.data.get('override_reason') or '').strip() if hasattr(request, 'data') else ''
+        if override_checklist:
+            if not (request.user and request.user.is_authenticated and request.user.is_superuser):
+                return Response(
+                    {"error": "Checklist override is restricted to superusers."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            if not override_reason:
+                return Response(
+                    {"error": "override_reason is required when overriding the checklist."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         try:
             from apps.finance.services.closing_service import ClosingService
             result = ClosingService.close_fiscal_year(
@@ -134,6 +149,8 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 user=request.user if request.user.is_authenticated else None,
                 close_date=close_date,
                 dry_run=dry_run,
+                override_checklist=override_checklist,
+                override_reason=override_reason or None,
             )
             if dry_run:
                 # Service returns the preview dict on dry-run
