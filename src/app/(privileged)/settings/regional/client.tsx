@@ -714,7 +714,7 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                     <div className="font-mono uppercase text-app-muted-foreground" style={{ fontSize: 9 }}>{code}</div>
                 </div>
                 {isDefault ? (
-                    <span className="px-1.5 py-0.5 rounded font-black uppercase tracking-widest text-white shrink-0" style={{ ...grad(accent), fontSize: 8 }}>
+                    <span className="rounded font-black uppercase tracking-widest text-white shrink-0 inline-flex items-center" style={{ ...grad(accent), fontSize: 8, padding: '2px 6px', lineHeight: 1.2 }}>
                         <Crown size={8} className="inline mr-0.5 -mt-px" /> {isCountry ? 'Default' : 'Base'}
                     </span>
                 ) : (
@@ -788,18 +788,22 @@ function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, on
                 </div>
                 {isCountry ? (
                     <div className="flex items-center gap-2 mt-0.5 truncate" style={{ fontSize: 9, lineHeight: 1.3 }}>
-                        {item.phone_code && <span className="flex items-center gap-0.5 font-medium text-app-muted-foreground"><Phone size={8} /> {item.phone_code}</span>}
-                        {item.region && <span className="flex items-center gap-0.5 font-medium text-app-muted-foreground"><MapPin size={8} /> {item.region}</span>}
+                        {item.phone_code && <span className="flex items-center gap-0.5 font-medium text-app-muted-foreground" style={{ fontSize: 9 }}><Phone size={8} /> {item.phone_code}</span>}
+                        {item.region && <span className="flex items-center gap-0.5 font-medium text-app-muted-foreground" style={{ fontSize: 9 }}><MapPin size={8} /> {item.region}</span>}
                         {item.default_currency_code && (
-                            <span className="flex items-center gap-0.5 font-bold px-1 py-0.5 rounded"
+                            <span className="inline-flex items-center gap-0.5 font-mono font-bold"
                                 title={!isEnabled && willAutoEnableCurrency
                                     ? `Will auto-activate ${item.default_currency_code} when this country is enabled`
                                     : `Default currency: ${item.default_currency_code}`}
                                 style={!isEnabled && willAutoEnableCurrency
-                                    ? { ...soft('--app-warning', 14), color: 'var(--app-warning)', border: '1px dashed color-mix(in srgb, var(--app-warning) 35%, transparent)' }
-                                    : { color: 'var(--app-muted-foreground)' }}>
+                                    ? { fontSize: 9, color: 'var(--app-warning)' }
+                                    : { fontSize: 9, color: 'var(--app-muted-foreground)' }}>
                                 <DollarSign size={8} /> {item.default_currency_code}
-                                {!isEnabled && willAutoEnableCurrency && <span className="ml-0.5">+</span>}
+                                {!isEnabled && willAutoEnableCurrency && (
+                                    <span className="ml-0.5 px-1 rounded font-black"
+                                        title="Will auto-activate"
+                                        style={{ ...soft('--app-warning', 16), fontSize: 8, lineHeight: 1.2 }}>+</span>
+                                )}
                             </span>
                         )}
                     </div>
@@ -988,22 +992,22 @@ function CurrenciesForCountry({ countryOc, orgCurrencies, allCurrencies, onToggl
                         <div className="flex-1 min-w-0 flex items-center gap-1.5">
                             <span className="font-mono font-bold uppercase truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{code}</span>
                             {isBase && (
-                                <span className="font-black uppercase tracking-widest px-1 py-0.5 rounded text-white" style={{ ...grad('--app-warning'), fontSize: 7 }}>
+                                <span className="font-black uppercase tracking-widest rounded text-white inline-flex items-center" style={{ ...grad('--app-warning'), fontSize: 8, padding: '1px 5px', lineHeight: 1.2 }}>
                                     Base
                                 </span>
                             )}
                         </div>
                         {isBase ? (
-                            <span className="font-bold uppercase tracking-widest px-1.5 py-0.5 rounded shrink-0"
-                                style={{ ...soft('--app-success', 10), color: 'var(--app-success)', fontSize: 8 }}
+                            <span className="font-black uppercase tracking-widest rounded shrink-0 inline-flex items-center"
+                                style={{ ...soft('--app-success', 12), color: 'var(--app-success)', fontSize: 8, padding: '2px 6px', lineHeight: 1.2, border: '1px solid color-mix(in srgb, var(--app-success) 25%, transparent)' }}
                                 title="Base currency is always available in every enabled country">
                                 Always
                             </span>
                         ) : (
                             <button onClick={() => onToggleCurrencyCountry?.(ccyOc, countryOc.country)}
                                 disabled={isPending}
-                                className="w-9 h-4 rounded-full relative transition-all shrink-0"
-                                style={{ background: isActiveHere ? 'var(--app-warning)' : 'var(--app-border)' }}
+                                className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
+                                style={{ background: isActiveHere ? 'color-mix(in srgb, var(--app-warning) 85%, transparent)' : 'var(--app-border)' }}
                                 title={`${isActiveHere ? 'Disable' : 'Enable'} ${code} for ${countryOc.country_name || 'this country'}`}>
                                 <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`} />
                             </button>
@@ -1052,15 +1056,15 @@ function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggle
                             <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{cName}</span>
                             <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{iso}</span>
                             {country_oc.is_default && (
-                                <span className="font-black uppercase tracking-widest px-1 py-0.5 rounded text-white" style={{ ...grad('--app-primary'), fontSize: 7 }}>
-                                    <Crown size={6} className="inline mr-0.5 -mt-px" /> Home
+                                <span className="font-black uppercase tracking-widest rounded text-white inline-flex items-center" style={{ ...grad('--app-primary'), fontSize: 8, padding: '1px 5px', lineHeight: 1.2 }}>
+                                    <Crown size={7} className="inline mr-0.5 -mt-px" /> Home
                                 </span>
                             )}
                         </div>
                         <button onClick={() => onToggleCurrencyCountry?.(currencyOc, country_oc.country)}
                             disabled={isPending}
-                            className="w-9 h-4 rounded-full relative transition-all shrink-0"
-                            style={{ background: isActiveHere ? `var(${accent})` : 'var(--app-border)' }}
+                            className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
+                            style={{ background: isActiveHere ? `color-mix(in srgb, var(${accent}) 85%, transparent)` : 'var(--app-border)' }}
                             title={`${isActiveHere ? 'Disable' : 'Enable'} ${currencyCode} for ${cName}`}>
                             <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`} />
                         </button>

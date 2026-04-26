@@ -38,6 +38,42 @@ RULES = [
         'template_title': 'Review period reopen request',
         'task_minutes': 20,
     },
+    {
+        'code': 'FIN-FY-CLOSE',
+        'name': 'Fiscal year closing soon',
+        'trigger_event': 'YEAR_CLOSING_SOON',
+        'rule_type': 'EVENT',
+        'priority': 'HIGH',
+        'template_title': 'Prepare year-end close',
+        'task_minutes': 120,
+    },
+    {
+        'code': 'FIN-FY-START',
+        'name': 'New fiscal year starting soon',
+        'trigger_event': 'YEAR_STARTING_SOON',
+        'rule_type': 'EVENT',
+        'priority': 'MEDIUM',
+        'template_title': 'Open next fiscal year',
+        'task_minutes': 30,
+    },
+    {
+        'code': 'FIN-CHK-READY',
+        'name': 'Close checklist ready — gate cleared',
+        'trigger_event': 'CHECKLIST_READY_TO_CLOSE',
+        'rule_type': 'EVENT',
+        'priority': 'HIGH',
+        'template_title': 'Run final close — checklist is ready',
+        'task_minutes': 30,
+    },
+    {
+        'code': 'FIN-CHK-OVERDUE',
+        'name': 'Close checklist item overdue',
+        'trigger_event': 'CHECKLIST_ITEM_OVERDUE',
+        'rule_type': 'EVENT',
+        'priority': 'URGENT',
+        'template_title': 'Resolve overdue close-checklist item',
+        'task_minutes': 30,
+    },
 ]
 
 

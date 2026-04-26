@@ -448,18 +448,27 @@ class ClosingService:
                     import calendar as _cal
                     from datetime import date as _date
 
-                    # Infer frequency: average period length in original FY.
-                    # ≥ 80 days → quarterly; otherwise monthly (default).
+                    # Original FY periods we'll mirror in the remainder year.
+                    # Two things we infer:
+                    #   1. Frequency (monthly vs quarterly) from average length.
+                    #   2. Whether to create a 13th audit/adjustment period —
+                    #      if the original year had one (set by the wizard),
+                    #      the remainder year carries it forward so year-end
+                    #      adjustments still have a home.
                     orig_periods = list(
                         FiscalPeriod.objects
                         .filter(fiscal_year=fiscal_year)
                         .order_by('start_date')
                     )
+                    # Period stats for inference (filter out audit period
+                    # since its 0-day length skews the average).
+                    non_audit = [p for p in orig_periods if not getattr(p, 'is_adjustment_period', False)]
                     avg_len = (
-                        sum((p.end_date - p.start_date).days + 1 for p in orig_periods) /
-                        max(len(orig_periods), 1)
-                    ) if orig_periods else 30
+                        sum((p.end_date - p.start_date).days + 1 for p in non_audit) /
+                        max(len(non_audit), 1)
+                    ) if non_audit else 30
                     quarterly = avg_len >= 80
+                    had_audit_period = any(getattr(p, 'is_adjustment_period', False) for p in orig_periods)
 
                     cur = remainder_start
                     while cur <= remainder_end:
@@ -484,8 +493,26 @@ class ClosingService:
                             is_closed=False,
                         )
                         cur = p_end + timedelta(days=1)
+
+                    # 13th audit/adjustment period — mirrors the wizard's
+                    # behaviour. Single-day window at remainder_end so it
+                    # never overlaps the regular monthly/quarterly grid but
+                    # still has a unique date for posting adjustments.
+                    if had_audit_period:
+                        FiscalPeriod.objects.create(
+                            organization=organization,
+                            fiscal_year=remainder_fy,
+                            name=f"Audit {remainder_end.year}",
+                            start_date=remainder_end,
+                            end_date=remainder_end,
+                            status='OPEN',
+                            is_closed=False,
+                            is_adjustment_period=True,
+                        )
+
                     logger.info(
                         f"ClosingService: Generated periods for remainder FY '{remainder_fy.name}'"
+                        f"{' (incl. audit period)' if had_audit_period else ''}"
                     )
 
                 # ── Step C: Relocate post-close JEs into remainder periods ──

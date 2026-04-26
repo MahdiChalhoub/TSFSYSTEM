@@ -272,6 +272,16 @@ class AutoTaskRule(TenantModel):
         ('PERIOD_CLOSING_SOON', 'Fiscal Period Closing Soon'),
         ('PERIOD_STARTING_SOON', 'Next Fiscal Period Starting Soon'),
         ('PERIOD_REOPEN_REQUEST', 'Fiscal Period Reopen Requested'),
+        # ── Fiscal year-level reminders (sibling to the period set above) ──
+        ('YEAR_CLOSING_SOON', 'Fiscal Year Closing Soon'),
+        ('YEAR_STARTING_SOON', 'Next Fiscal Year Starting Soon'),
+        # ── Pre-close checklist signals ────────────────────────────────────
+        # Fired when an org's close-checklist run flips OPEN → READY (every
+        # required item ticked) — a clean trigger for "year is ready to close".
+        ('CHECKLIST_READY_TO_CLOSE', 'Close Checklist Ready'),
+        # Fired daily for any required item still un-checked past its due
+        # date. Lets ops route a follow-up to the assignee or a supervisor.
+        ('CHECKLIST_ITEM_OVERDUE', 'Close Checklist Item Overdue'),
         ('LATE_PAYMENT', 'Late Payment Detected'),
         ('CLIENT_FOLLOWUP_DUE', 'Client Follow-Up Due'),
         ('SUPPLIER_FOLLOWUP_DUE', 'Supplier Follow-Up Due'),
