@@ -418,10 +418,33 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         expense_bal = _net_by_types(['EXPENSE'])
         net_income = revenue - expense_bal
 
-        # Balance Sheet (also excludes closing/opening mechanics)
-        asset_bal = _net_by_types(['ASSET'])
-        raw_liability = _net_by_types(['LIABILITY'])
-        raw_equity = _net_by_types(['EQUITY'])
+        # Balance Sheet — CUMULATIVE position as-of fiscal_year.end_date.
+        # P&L is period activity (right thing). BS is a *position*: assets
+        # liabilities and equity carry forward across years, so we sum every
+        # POSTED JE line on those accounts up to and including the year-end —
+        # opening JEs INCLUDED (they're the prior-year carry-in), closing JEs
+        # INCLUDED (they're the equity sweep that gets us to true closing).
+        # If we excluded opening like the P&L formula does, FY 2026 would show
+        # only in-year movements and look like Assets = 23,925 / Liab = 0 /
+        # Equity = 0, which violates A = L + E.
+        def _bs_position(types):
+            qs = (
+                JournalEntryLine.objects
+                .filter(
+                    organization=org,
+                    journal_entry__status='POSTED',
+                    journal_entry__is_superseded=False,
+                    account__type__in=types,
+                    journal_entry__transaction_date__date__lte=fiscal_year.end_date,
+                )
+            )
+            qs = _scope_filter(qs, 'journal_entry__')
+            agg = qs.aggregate(d=Sum('debit'), c=Sum('credit'))
+            return (agg['d'] or Decimal(0)) - (agg['c'] or Decimal(0))
+
+        asset_bal = _bs_position(['ASSET'])
+        raw_liability = _bs_position(['LIABILITY'])
+        raw_equity = _bs_position(['EQUITY'])
 
         # Post-close P&L — includes closing JE (shows zeros after close).
         # This gives full transparency: user sees BOTH views.
