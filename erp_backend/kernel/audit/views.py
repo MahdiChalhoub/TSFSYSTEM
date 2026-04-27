@@ -89,6 +89,19 @@ class AuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
 
         return qs.order_by('-timestamp')[:200]
 
+    def list(self, request, *args, **kwargs):
+        """Gracefully handle missing audit table (migration faked but table not created)."""
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            err_str = str(e)
+            if 'erp_auditlog' in err_str or 'erp_audittrail' in err_str:
+                logger.warning('[AuditTrail] Audit table missing — returning empty list. Run migrations to fix.')
+                return Response([])
+            raise
+
     def get_object(self):
         """Override to avoid filtering on sliced queryset for detail actions."""
         org = get_current_tenant()

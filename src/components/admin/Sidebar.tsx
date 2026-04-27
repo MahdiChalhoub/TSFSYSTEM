@@ -69,34 +69,28 @@ export function Sidebar({
         : processedItems;
 
     // Split items by stage: production (finished) vs in-progress vs development (not started).
-    // Supports CHILD-LEVEL stage filtering: a parent group can have children in different stages.
-    // When a parent has children with mixed stages, it appears in each section with only matching children.
-    function splitByStage(items: any[], targetStage: 'production' | 'in-progress' | 'development'): any[] {
-        const result: any[] = [];
-        for (const item of items) {
-            const itemStage = item.stage || undefined; // undefined = no explicit stage
-            const isTarget = targetStage === 'production' ? itemStage === 'production'
-                           : targetStage === 'in-progress' ? itemStage === 'in-progress'
-                           : itemStage !== 'production' && itemStage !== 'in-progress';
-
-            if (!item.children || item.children.length === 0) {
-                // Leaf item — straightforward stage check
-                if (isTarget) result.push(item);
-            } else {
-                // Parent with children — check for mixed stages
-                const matchingChildren = item.children.filter((c: any) => {
-                    // Recursively handle nested groups
-                    const childStage = c.stage || itemStage || undefined;
-                    return targetStage === 'production' ? childStage === 'production'
-                         : targetStage === 'in-progress' ? childStage === 'in-progress'
-                         : childStage !== 'production' && childStage !== 'in-progress';
-                });
-                if (matchingChildren.length > 0) {
-                    result.push({ ...item, children: matchingChildren });
-                }
-            }
+    // Recurses into nested groups: stage on a leaf wins, otherwise it inherits from the nearest
+    // ancestor with an explicit stage. A group survives if at least one descendant matches the target.
+    function matchesStage(stage: string | undefined, targetStage: 'production' | 'in-progress' | 'development'): boolean {
+        if (targetStage === 'production') return stage === 'production';
+        if (targetStage === 'in-progress') return stage === 'in-progress';
+        return stage !== 'production' && stage !== 'in-progress';
+    }
+    function pruneByStage(node: any, parentStage: string | undefined, targetStage: 'production' | 'in-progress' | 'development'): any | null {
+        const effectiveStage = node.stage || parentStage || undefined;
+        if (!node.children || node.children.length === 0) {
+            return matchesStage(effectiveStage, targetStage) ? node : null;
         }
-        return result;
+        const prunedChildren = node.children
+            .map((c: any) => pruneByStage(c, effectiveStage, targetStage))
+            .filter((c: any) => c !== null);
+        if (prunedChildren.length === 0) return null;
+        return { ...node, children: prunedChildren };
+    }
+    function splitByStage(items: any[], targetStage: 'production' | 'in-progress' | 'development'): any[] {
+        return items
+            .map((item: any) => pruneByStage(item, undefined, targetStage))
+            .filter((item: any) => item !== null);
     }
     const productionItems = splitByStage(filteredItems, 'production');
     const inProgressItems = splitByStage(filteredItems, 'in-progress');

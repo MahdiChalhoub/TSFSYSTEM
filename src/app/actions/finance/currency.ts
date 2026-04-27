@@ -227,6 +227,43 @@ export async function updateRatePolicy(
     }
 }
 
+export async function deleteRatePolicy(id: number): Promise<{ success: boolean; error?: string }> {
+    try {
+        await erpFetch(`currency-rate-policies/${id}/`, { method: 'DELETE' })
+        revalidatePath('/finance/currencies')
+        return { success: true }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+export async function bulkCreateRatePolicies(payload: {
+    provider?: 'ECB' | 'MANUAL'
+    rate_type?: CurrencyRatePolicy['rate_type']
+    auto_sync?: boolean
+    multiplier?: string
+    markup_pct?: string
+    from_currency_ids?: number[]
+} = {}): Promise<{
+    success: boolean
+    created?: CurrencyRatePolicy[]
+    skipped?: Array<{ from_code: string; reason: string }>
+    count?: number
+    error?: string
+}> {
+    try {
+        const r = await erpFetch('currency-rate-policies/bulk-create/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        }) as { created: CurrencyRatePolicy[]; skipped: Array<{ from_code: string; reason: string }>; count: number }
+        revalidatePath('/finance/currencies')
+        return { success: true, created: r.created, skipped: r.skipped, count: r.count }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
 export async function syncRatePolicy(id: number): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
         const r = await erpFetch(`currency-rate-policies/${id}/sync-now/`, {

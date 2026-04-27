@@ -180,6 +180,19 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     const enabledCurrencyIds = useMemo(() => new Set(orgCurrencies.map(oc => oc.currency)), [orgCurrencies]);
     const defaultCurrencyId = useMemo(() => orgCurrencies.find(oc => oc.is_default)?.currency ?? null, [orgCurrencies]);
     const baseCurrencyCode = useMemo(() => orgCurrencies.find(o => o.is_default)?.currency_code ?? null, [orgCurrencies]);
+
+    /* ─── Sorted active lists ────────────────────────────────────────
+     * The default / base item is always pinned to the top of its pane,
+     * mirroring the "pinned item" pattern. Below the pin the order is
+     * preserved as the backend sent it (which is its own enabled-at order). */
+    const orgCountriesSorted = useMemo(
+        () => [...orgCountries].sort((a, b) => Number(b.is_default) - Number(a.is_default)),
+        [orgCountries],
+    );
+    const orgCurrenciesSorted = useMemo(
+        () => [...orgCurrencies].sort((a, b) => Number(b.is_default) - Number(a.is_default)),
+        [orgCurrencies],
+    );
     const regions = useMemo(
         () => [...new Set(allCountries.map(c => c.region).filter((r): r is string => Boolean(r)))].sort(),
         [allCountries],
@@ -382,45 +395,79 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
      * ═══════════════════════════════════════════════════════════════ */
     return (
         <>
-            {/* ── Modal — design.md §11 ── */}
-            {confirmAction && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
-                    style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
-                    onClick={e => { if (e.target === e.currentTarget) setConfirmAction(null); }}>
-                    <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
-                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px color-mix(in srgb, var(--app-foreground) 30%, transparent)' }}>
-                        <div className="px-5 py-3 flex items-center gap-2.5"
-                            style={{ background: `color-mix(in srgb, var(${isDestructive ? '--app-error' : '--app-warning'}) 6%, var(--app-surface))`, borderBottom: '1px solid var(--app-border)' }}>
-                            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                                style={{ background: `var(${isDestructive ? '--app-error' : '--app-warning'})`, ...glow(isDestructive ? '--app-error' : '--app-warning') }}>
-                                <AlertTriangle size={15} className="text-white" />
+            {/* Google's Noto Color Emoji ships flag glyphs that the OS UI font
+                doesn't have on Windows / many Linux distros — without this,
+                country flags render as the regional-indicator letter pair
+                (CI, AL, …) instead of an actual flag. React 19 hoists this
+                <link> into <head>; browsers cache it across the whole app. */}
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" />
+
+            {/* ── Confirm modal — single accent token throughout the dialog so
+                 the chrome reads as one cohesive theme element. Destructive
+                 uses --app-error (semantic danger); non-destructive uses
+                 --app-primary (page accent). No mixed amber/red. */}
+            {confirmAction && (() => {
+                const tone = isDestructive ? '--app-error' : '--app-primary';
+                return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                        style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
+                        onClick={e => { if (e.target === e.currentTarget) setConfirmAction(null); }}>
+                        <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
+                            style={{
+                                background: 'var(--app-surface)',
+                                border: `1px solid color-mix(in srgb, var(${tone}) 30%, var(--app-border))`,
+                                boxShadow: `0 20px 60px color-mix(in srgb, var(${tone}) 18%, transparent)`,
+                            }}>
+                            {/* Accent bar at the very top — single visual cue for the dialog tone */}
+                            <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `var(${tone})` }} />
+
+                            <div className="px-5 pt-5 pb-3 flex items-start gap-3">
+                                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                                    style={{ ...soft(tone, 14), color: `var(${tone})`, border: `1px solid color-mix(in srgb, var(${tone}) 30%, transparent)` }}>
+                                    <AlertTriangle size={16} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-black text-app-foreground" style={{ fontSize: 14, lineHeight: 1.3 }}>{confirmTitle}</div>
+                                    <p className="font-bold uppercase tracking-widest text-app-muted-foreground mt-0.5"
+                                        style={{ fontSize: 9 }}>
+                                        {isDestructive ? 'Destructive · cannot be undone' : 'Affects future transactions'}
+                                    </p>
+                                </div>
+                                <button onClick={() => setConfirmAction(null)}
+                                    className="p-1.5 rounded-lg hover:bg-app-border/40 text-app-muted-foreground hover:text-app-foreground transition-colors shrink-0 -m-1"
+                                    title="Close">
+                                    <X size={14} />
+                                </button>
                             </div>
-                            <div>
-                                <div className="font-black text-app-foreground" style={{ fontSize: 14, lineHeight: 1.3 }}>{confirmTitle}</div>
-                                <p className="text-[10px] font-bold text-app-muted-foreground">{isDestructive ? 'Destructive action' : 'Affects future transactions'}</p>
+
+                            <div className="px-5 pb-4 pl-[68px]">
+                                <p className="font-medium text-app-foreground leading-relaxed" style={{ fontSize: 12 }}>{confirmMessage}</p>
                             </div>
-                        </div>
-                        <div className="px-5 py-4">
-                            <p className="text-[12px] font-medium text-app-foreground leading-relaxed">{confirmMessage}</p>
-                        </div>
-                        <div className="px-5 py-3 flex items-center justify-end gap-2 border-t border-app-border/50"
-                            style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-                            <button onClick={() => setConfirmAction(null)}
-                                className="px-3 py-1.5 rounded-xl text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border hover:bg-app-surface transition-all">
-                                Cancel
-                            </button>
-                            <button onClick={confirmAction.onConfirm} disabled={isPending}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white transition-all disabled:opacity-50"
-                                style={isDestructive
-                                    ? { ...grad('--app-error'), ...glow('--app-error', 25) }
-                                    : { ...grad('--app-warning'), ...glow('--app-warning', 25) }}>
-                                {isPending && <Loader2 size={11} className="animate-spin" />}
-                                {isDestructive ? 'Yes, Disable' : 'Confirm'}
-                            </button>
+
+                            <div className="px-4 py-3 flex items-center justify-end gap-2 border-t border-app-border/50"
+                                style={{ background: 'color-mix(in srgb, var(--app-background) 50%, transparent)' }}>
+                                <button onClick={() => setConfirmAction(null)}
+                                    className="px-3.5 py-1.5 rounded-xl font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border hover:bg-app-surface transition-all"
+                                    style={{ fontSize: 11 }}>
+                                    Cancel
+                                </button>
+                                <button onClick={confirmAction.onConfirm} disabled={isPending}
+                                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold transition-all disabled:opacity-50"
+                                    style={{
+                                        ...grad(tone),
+                                        ...glow(tone, 25),
+                                        color: 'var(--app-primary-foreground, white)',
+                                        fontSize: 11,
+                                    }}>
+                                    {isPending && <Loader2 size={11} className="animate-spin" />}
+                                    {isDestructive ? 'Yes, Disable' : 'Confirm'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
 
             {/* ── COA-style page shell ── */}
             <div className="flex flex-col overflow-hidden animate-in fade-in duration-300" style={{ height: 'calc(100dvh - 6rem)' }}>
@@ -502,7 +549,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                             kind="country"
                             allItems={allCountries}
                             filteredItems={filteredCountries}
-                            orgItems={orgCountries}
+                            orgItems={orgCountriesSorted}
                             search={search}
                             setSearch={setSearch}
                             regions={regions}
@@ -570,7 +617,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                 kind="currency"
                                 allItems={allCurrencies}
                                 filteredItems={filteredCurrencies}
-                                orgItems={orgCurrencies}
+                                orgItems={orgCurrenciesSorted}
                                 search={search}
                                 setSearch={setSearch}
                                 regions={[]}
@@ -662,6 +709,18 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
 
             {/* Local toolbar-button styles — same recipe as Chart of Accounts */}
             <style jsx>{`
+                /* Force a flag-capable emoji font on every span tagged .flag.
+                   Some platforms (older Windows, many Linux distros) don't ship
+                   a flag emoji glyph in the default UI font, so the regional
+                   indicator pair renders as a placeholder. Naming an emoji
+                   font in the family stack picks it up where available. */
+                :global(.flag) {
+                    font-family: "Noto Color Emoji", "Apple Color Emoji",
+                        "Segoe UI Emoji", "Twemoji Mozilla", "EmojiOne Color",
+                        "Android Emoji", emoji;
+                    font-feature-settings: normal;
+                    line-height: 1;
+                }
                 :global(.regional-tbtn) {
                     display: inline-flex;
                     align-items: center;
@@ -840,24 +899,38 @@ function TwoPanePicker({
                             title={`No ${noun} match your search`}
                             hint="Try a different search term or clear the filter."
                         />
-                    ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px' }}>
-                            {filteredItems.map(item => {
-                                const ccyCode = kind === 'country' ? (item.default_currency_code as string | undefined) : undefined;
-                                const willAutoEnableCurrency = !!ccyCode && !!enabledCurrencyCodes && !enabledCurrencyCodes.has(ccyCode);
-                                return (
-                                    <CatalogueCard
-                                        key={item.id} kind={kind} item={item} accent={accent}
-                                        isEnabled={enabledIds.has(item.id)}
-                                        isDefault={defaultId === item.id}
-                                        isPending={isPending}
-                                        onAdd={() => onEnable(item)}
-                                        willAutoEnableCurrency={willAutoEnableCurrency}
-                                    />
-                                );
-                            })}
-                        </div>
-                    )}
+                    ) : (() => {
+                        // Float already-enabled items to the top of the catalogue,
+                        // and within that the default/base item. Same pinned-row
+                        // philosophy as the left "Your …" pane — the user always
+                        // sees their current selection first when scanning.
+                        const sortedFiltered = [...filteredItems].sort((a, b) => {
+                            const aOn = enabledIds.has(a.id) ? 1 : 0;
+                            const bOn = enabledIds.has(b.id) ? 1 : 0;
+                            if (aOn !== bOn) return bOn - aOn;
+                            const aDef = defaultId === a.id ? 1 : 0;
+                            const bDef = defaultId === b.id ? 1 : 0;
+                            return bDef - aDef;
+                        });
+                        return (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px' }}>
+                                {sortedFiltered.map(item => {
+                                    const ccyCode = kind === 'country' ? (item.default_currency_code as string | undefined) : undefined;
+                                    const willAutoEnableCurrency = !!ccyCode && !!enabledCurrencyCodes && !enabledCurrencyCodes.has(ccyCode);
+                                    return (
+                                        <CatalogueCard
+                                            key={item.id} kind={kind} item={item} accent={accent}
+                                            isEnabled={enabledIds.has(item.id)}
+                                            isDefault={defaultId === item.id}
+                                            isPending={isPending}
+                                            onAdd={() => onEnable(item)}
+                                            willAutoEnableCurrency={willAutoEnableCurrency}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        );
+                    })()}
                 </div>
                 {rightPaneFooter}
             </section>
@@ -915,7 +988,7 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                 ) : <div className="w-5 shrink-0" />}
 
                 {isCountry ? (
-                    <span className="text-2xl shrink-0">{flag(code)}</span>
+                    <span className="flag text-2xl shrink-0">{flag(code)}</span>
                 ) : (
                     /* Tile: only the DEFAULT row carries the accent tint; every
                        other row uses a neutral border-tone tile so the panel
@@ -1051,7 +1124,7 @@ function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, on
                     style={{ background: `color-mix(in srgb, var(${accent}) 4%, transparent)`, border: `1px solid color-mix(in srgb, var(${accent}) 30%, transparent)` }} />
             )}
             {isCountry ? (
-                <span className="text-2xl shrink-0">{flag(item.iso2)}</span>
+                <span className="flag text-2xl shrink-0">{flag(item.iso2)}</span>
             ) : (
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                     style={isEnabled ? { ...soft(accent, 15), color: `var(${accent})` } : { ...soft('--app-muted-foreground', 8), color: 'var(--app-muted-foreground)' }}>
@@ -1066,28 +1139,20 @@ function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, on
                         dir={isLanguage && isRTL(item.code) ? 'rtl' : undefined}>{primaryLabel}</span>
                     {codeChip && <span className="text-[8px] font-mono uppercase px-1 py-0.5 rounded shrink-0 bg-app-background text-app-muted-foreground">{codeChip}</span>}
                 </div>
-                {isCountry ? (
-                    <div className="flex items-center gap-2 mt-0.5 truncate" style={{ fontSize: 9, lineHeight: 1.3 }}>
-                        {item.phone_code && <span className="flex items-center gap-0.5 font-medium text-app-muted-foreground" style={{ fontSize: 9 }}><Phone size={8} /> {item.phone_code}</span>}
-                        {item.region && <span className="flex items-center gap-0.5 font-medium text-app-muted-foreground" style={{ fontSize: 9 }}><MapPin size={8} /> {item.region}</span>}
-                        {item.default_currency_code && (
-                            <span className="inline-flex items-center gap-0.5 font-mono font-bold"
-                                title={!isEnabled && willAutoEnableCurrency
-                                    ? `Will auto-activate ${item.default_currency_code} when this country is enabled`
-                                    : `Default currency: ${item.default_currency_code}`}
-                                style={!isEnabled && willAutoEnableCurrency
-                                    ? { fontSize: 9, color: 'var(--app-warning)' }
-                                    : { fontSize: 9, color: 'var(--app-muted-foreground)' }}>
-                                <DollarSign size={8} /> {item.default_currency_code}
-                                {!isEnabled && willAutoEnableCurrency && (
-                                    <span className="ml-0.5 px-1 rounded font-black"
-                                        title="Will auto-activate"
-                                        style={{ ...soft('--app-warning', 16), fontSize: 8, lineHeight: 1.2 }}>+</span>
-                                )}
-                            </span>
-                        )}
-                    </div>
-                ) : isLanguage ? null : (
+                {/* Single-line catalogue card — same philosophy as Languages.
+                    Country gets a tiny "+CCY" hint inline only when adding the
+                    country will auto-activate a new currency, since that's a
+                    side-effect the user needs to know about. Phone code, region,
+                    and the default-currency line are intentionally dropped —
+                    selection only needs the name + ISO. */}
+                {isCountry && !isEnabled && willAutoEnableCurrency && item.default_currency_code && (
+                    <span className="inline-flex items-center gap-0.5 font-mono font-bold mt-0.5"
+                        title={`Will auto-activate ${item.default_currency_code} when this country is enabled`}
+                        style={{ fontSize: 9, color: 'var(--app-warning)' }}>
+                        <Plus size={8} /> {item.default_currency_code}
+                    </span>
+                )}
+                {!isCountry && !isLanguage && (
                     <p className="font-medium text-app-muted-foreground truncate mt-0.5" style={{ fontSize: 9, lineHeight: 1.3 }}>{item.name}</p>
                 )}
             </div>
@@ -1330,7 +1395,7 @@ function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggle
                 return (
                     <div key={country_oc.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
                         <div className="w-5 shrink-0" />
-                        <span className="text-lg shrink-0">{flag(iso)}</span>
+                        <span className="flag text-lg shrink-0">{flag(iso)}</span>
                         <div className="flex-1 min-w-0 flex items-center gap-1.5">
                             <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{cName}</span>
                             <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{iso}</span>
@@ -1394,7 +1459,7 @@ function CountriesForLanguage({ langCode, country_ids, orgCountries, allCountrie
                 return (
                     <div key={country_oc.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
                         <div className="w-5 shrink-0" />
-                        <span className="text-lg shrink-0">{flag(iso)}</span>
+                        <span className="flag text-lg shrink-0">{flag(iso)}</span>
                         <div className="flex-1 min-w-0 flex items-center gap-1.5">
                             <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{cName}</span>
                             <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{iso}</span>

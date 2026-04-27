@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
     Coins, RefreshCcw, Plus, ShieldCheck, ShieldAlert,
-    TrendingUp, TrendingDown, Play,
+    TrendingUp, TrendingDown, Play, Trash2, Wand2, AlertTriangle, Check,
 } from 'lucide-react'
 import {
     getCurrencies, getExchangeRates, getRevaluations,
     createExchangeRate, runRevaluation,
     getRatePolicies, createRatePolicy, updateRatePolicy, syncRatePolicy, syncAllRatePolicies,
+    deleteRatePolicy, bulkCreateRatePolicies,
     type Currency, type ExchangeRate, type CurrencyRevaluation, type CurrencyRatePolicy,
 } from '@/app/actions/finance/currency'
 import { erpFetch } from '@/lib/erp-api'
@@ -64,6 +65,13 @@ export function FxManagementSection({ view, hideHeader }: {
     const [running, setRunning] = useState<number | null>(null)
     const [syncingId, setSyncingId] = useState<number | null>(null)
     const [syncingAll, setSyncingAll] = useState(false)
+    // Sync-All progress for the per-row spinner.
+    const [syncAllProgress, setSyncAllProgress] = useState<{ done: number; total: number } | null>(null)
+    const [bulkBusy, setBulkBusy] = useState(false)
+    const [deletingId, setDeletingId] = useState<number | null>(null)
+    // Inline-edit state: which row's multiplier/markup is being edited.
+    const [editingPolicy, setEditingPolicy] = useState<{ id: number; multiplier: string; markup_pct: string } | null>(null)
+    const [savingEdit, setSavingEdit] = useState(false)
 
     // Quick-add forms
     const [newRateOpen, setNewRateOpen] = useState(false)
@@ -149,6 +157,11 @@ export function FxManagementSection({ view, hideHeader }: {
 
     async function handleSyncAll() {
         setSyncingAll(true)
+        // The backend processes serially; we don't yet stream progress. To avoid
+        // a misleading "0/N" placeholder, show the total only and flip to a final
+        // count when the response lands.
+        const eligible = policies.filter(p => p.provider !== 'MANUAL').length
+        setSyncAllProgress({ done: 0, total: eligible })
         try {
             const res = await syncAllRatePolicies()
             if (!res.success) { toast.error(res.error || 'Sync-all failed'); return }
@@ -158,7 +171,73 @@ export function FxManagementSection({ view, hideHeader }: {
             await loadAll()
         } finally {
             setSyncingAll(false)
+            setSyncAllProgress(null)
         }
+    }
+
+    async function handleDeletePolicy(p: CurrencyRatePolicy) {
+        if (!confirm(`Delete the auto-sync policy for ${p.from_code} → ${p.to_code}? Existing rate history is kept; only the policy goes away.`)) return
+        setDeletingId(p.id)
+        try {
+            const res = await deleteRatePolicy(p.id)
+            if (!res.success) { toast.error(res.error || 'Delete failed'); return }
+            toast.success(`Removed ${p.from_code} → ${p.to_code} policy`)
+            await loadAll()
+        } finally {
+            setDeletingId(null)
+        }
+    }
+
+    async function handleBulkCreate() {
+        setBulkBusy(true)
+        try {
+            const res = await bulkCreateRatePolicies({
+                provider: 'ECB', rate_type: 'SPOT', auto_sync: true,
+            })
+            if (!res.success) { toast.error(res.error || 'Bulk create failed'); return }
+            const made = res.created?.length ?? 0
+            const skipped = res.skipped?.length ?? 0
+            if (made === 0 && skipped > 0) {
+                toast.info('Every active currency already has a policy.')
+            } else {
+                toast.success(`Created ${made} polic${made === 1 ? 'y' : 'ies'}${skipped ? ` · skipped ${skipped} existing` : ''}`)
+            }
+            await loadAll()
+        } finally {
+            setBulkBusy(false)
+        }
+    }
+
+    async function commitInlineEdit() {
+        if (!editingPolicy) return
+        const mul = Number(editingPolicy.multiplier)
+        const mk = Number(editingPolicy.markup_pct)
+        if (!isFinite(mul) || mul <= 0) { toast.error('Multiplier must be a positive number'); return }
+        if (!isFinite(mk) || mk < -50 || mk > 50) { toast.error('Markup % must be between -50 and 50'); return }
+        setSavingEdit(true)
+        try {
+            const r = await updateRatePolicy(editingPolicy.id, {
+                multiplier: editingPolicy.multiplier,
+                markup_pct: editingPolicy.markup_pct,
+            })
+            if (!r.success) { toast.error(r.error || 'Update failed'); return }
+            setEditingPolicy(null)
+            await loadAll()
+        } finally {
+            setSavingEdit(false)
+        }
+    }
+
+    /** Classify a policy's freshness based on its last successful sync.
+     *  This is the freshness rule the UI surfaces — *not* the backend's own
+     *  truth. Backend-side, OK + stale rates remain valid; we just warn. */
+    function policyHealth(p: CurrencyRatePolicy): 'manual' | 'never' | 'fail' | 'stale' | 'fresh' {
+        if (p.provider === 'MANUAL') return 'manual'
+        if (!p.last_synced_at) return 'never'
+        if (p.last_sync_status === 'FAIL') return 'fail'
+        const ageH = (Date.now() - new Date(p.last_synced_at).getTime()) / 36e5
+        if (ageH > 36) return 'stale'
+        return 'fresh'
     }
 
     if (loading) {
@@ -314,139 +393,250 @@ export function FxManagementSection({ view, hideHeader }: {
                 </div>
             )}
 
-            {/* ── Auto-Sync (policies) tab ──────────────────────────── */}
-            {tab === 'policies' && (
-                <div className="bg-app-surface rounded-2xl border border-app-border/50 flex flex-col overflow-hidden">
-                    <SectionHeader
-                        icon={<RefreshCcw size={13} style={{ color: 'var(--app-info)' }} />}
-                        title="Auto-Sync Policies"
-                        subtitle="One policy per pair · provider + multiplier + markup. Daily cron refreshes auto-sync rows."
-                        action={
-                            <div className="flex items-center gap-2">
-                                <button onClick={handleSyncAll} disabled={syncingAll || policies.length === 0}
-                                    title="Sync every active non-MANUAL policy now"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-app-border/50 hover:bg-app-background transition-all disabled:opacity-50"
-                                    style={{ color: 'var(--app-info)' }}>
-                                    <RefreshCcw size={11} className={syncingAll ? 'animate-spin' : ''} />
-                                    {syncingAll ? 'Syncing…' : 'Sync All'}
-                                </button>
-                                <PrimaryButton
-                                    colorVar="--app-info"
-                                    disabled={currencies.length < 2 || !baseCurrency}
-                                    title={!baseCurrency
-                                        ? 'Set a base in the Currencies tab first'
-                                        : currencies.length < 2
-                                            ? 'Enable a non-base currency in the Currencies tab first'
-                                            : 'Configure a new auto-sync pair'}
-                                    onClick={() => {
-                                        if (!baseCurrency) { toast.error('Set a base currency first — Currencies tab → ⭐'); return }
-                                        if (currencies.length < 2) { toast.error('Enable at least one non-base currency in the Currencies tab.'); return }
-                                        setNewPolicyOpen(true)
-                                    }}
-                                >
-                                    <Plus size={11} /> New Policy
-                                </PrimaryButton>
-                            </div>
-                        }
-                    />
-                    {newPolicyOpen && baseCurrency && (
-                        <div className="px-4 py-3 border-b border-app-border/50" style={soft('--app-info', 4)}>
-                            <NewPolicyForm
-                                currencies={currencies}
-                                base={baseCurrency}
-                                onCancel={() => setNewPolicyOpen(false)}
-                                onSubmit={async (payload) => {
-                                    const r = await createRatePolicy(payload)
-                                    if (!r.success) { toast.error(r.error || 'Create failed'); return }
-                                    toast.success('Policy created')
-                                    setNewPolicyOpen(false)
-                                    await loadAll()
-                                }}
-                            />
-                        </div>
-                    )}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-                        {policies.length === 0 ? (
-                            <EmptyState
-                                icon={<RefreshCcw size={24} className="text-app-muted-foreground opacity-20" />}
-                                title="No policies yet"
-                                hint="Click New Policy to wire ECB (free, no API key) into a currency pair, with an optional spread multiplier."
-                            />
-                        ) : (
-                            <div className="rounded-lg border border-app-border/50 overflow-hidden">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-                                            <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Pair</th>
-                                            <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Type</th>
-                                            <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Provider</th>
-                                            <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">×</th>
-                                            <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">+ %</th>
-                                            <th className="px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Auto</th>
-                                            <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Last sync</th>
-                                            <th className="px-3 py-2"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {policies.map(p => (
-                                            <tr key={p.id} className="border-t border-app-border/30 hover:bg-app-background/40 transition-colors">
-                                                <td className="px-3 py-2 text-[12px] font-black font-mono text-app-foreground">{p.from_code}→{p.to_code}</td>
-                                                <td className="px-3 py-2">
-                                                    <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
-                                                        style={{ ...soft('--app-info', 12), color: 'var(--app-info)' }}>
-                                                        {p.rate_type}
-                                                    </span>
-                                                </td>
-                                                <td className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-app-foreground">{p.provider}</td>
-                                                <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums text-app-foreground">{Number(p.multiplier).toFixed(4)}</td>
-                                                <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums text-app-foreground">{Number(p.markup_pct).toFixed(2)}</td>
-                                                <td className="px-3 py-2 text-center">
-                                                    <button onClick={async () => {
-                                                        const r = await updateRatePolicy(p.id, { auto_sync: !p.auto_sync })
-                                                        if (!r.success) toast.error(r.error || 'Update failed')
-                                                        await loadAll()
-                                                    }}
-                                                        title={p.auto_sync ? 'Disable daily auto-sync' : 'Enable daily auto-sync'}
-                                                        className="w-9 h-4 rounded-full relative transition-all mx-auto block"
-                                                        style={{ background: p.auto_sync ? 'var(--app-info)' : 'var(--app-border)' }}>
-                                                        <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${p.auto_sync ? 'left-[22px]' : 'left-0.5'}`} />
-                                                    </button>
-                                                </td>
-                                                <td className="px-3 py-2 text-[10px]">
-                                                    {p.last_synced_at
-                                                        ? <SyncStatusBadge status={p.last_sync_status} when={p.last_synced_at} error={p.last_sync_error} />
-                                                        : <span className="text-app-muted-foreground">never</span>}
-                                                </td>
-                                                <td className="px-3 py-2 text-right">
-                                                    <button onClick={() => handleSyncPolicy(p.id)}
-                                                        disabled={syncingId === p.id || p.provider === 'MANUAL'}
-                                                        title={p.provider === 'MANUAL' ? 'MANUAL provider cannot be synced' : 'Fetch fresh rate from provider'}
-                                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md border border-app-border/50 hover:bg-app-background ml-auto transition-colors disabled:opacity-50"
-                                                        style={{ color: 'var(--app-info)' }}>
-                                                        <RefreshCcw size={11} className={syncingId === p.id ? 'animate-spin' : ''} />
-                                                        {syncingId === p.id ? 'Syncing…' : 'Sync Now'}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+            {/* ── Auto-Sync (policies) tab — redesigned ───────────────── */}
+            {tab === 'policies' && (() => {
+                // Health roll-up of all policies → drives the overview pills.
+                const healthCounts = policies.reduce<Record<ReturnType<typeof policyHealth>, number>>((acc, p) => {
+                    const h = policyHealth(p); acc[h] = (acc[h] ?? 0) + 1; return acc
+                }, { manual: 0, never: 0, fail: 0, stale: 0, fresh: 0 })
+                const nonBaseCount = currencies.filter(c => !c.is_base && c.is_active).length
+                const policiedFromIds = new Set(policies.map(p => p.from_currency))
+                const missingCoverage = currencies.filter(c => !c.is_base && c.is_active && !policiedFromIds.has(c.id)).length
+
+                return (
+                    <div className="space-y-3">
+                        {/* Health roll-up — at-a-glance status of every policy. */}
                         {policies.length > 0 && (
-                            <div className="rounded-lg p-3 flex items-start gap-2"
-                                style={{ ...soft('--app-info', 6), border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
-                                <RefreshCcw size={11} className="mt-0.5 shrink-0" style={{ color: 'var(--app-info)' }} />
-                                <div className="text-[10px] leading-relaxed text-app-foreground">
-                                    <strong className="font-black uppercase tracking-widest text-[9px]" style={{ color: 'var(--app-info)' }}>Daily cron</strong> —
-                                    add <code className="font-mono px-1 py-0.5 rounded" style={soft('--app-info', 12)}>python manage.py sync_currency_rates</code>
-                                    {' '}to a <code className="font-mono">0 9 * * *</code> schedule to refresh policies with <em>auto-sync on</em> automatically.
-                                </div>
+                            <div className="bg-app-surface rounded-2xl border border-app-border/50 p-3 grid gap-2"
+                                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
+                                <HealthPill label="Healthy"   value={healthCounts.fresh}  color="--app-success" icon={<Check size={12} />} />
+                                <HealthPill label="Stale >36h" value={healthCounts.stale}  color="--app-warning" icon={<AlertTriangle size={12} />} />
+                                <HealthPill label="Failing"   value={healthCounts.fail}   color="--app-error"   icon={<AlertTriangle size={12} />} />
+                                <HealthPill label="Never run" value={healthCounts.never}  color="--app-muted-foreground" icon={<RefreshCcw size={12} />} />
+                                <HealthPill label="Manual"    value={healthCounts.manual} color="--app-info"    icon={<ShieldCheck size={12} />} />
                             </div>
                         )}
+
+                        <div className="bg-app-surface rounded-2xl border border-app-border/50 flex flex-col overflow-hidden">
+                            <SectionHeader
+                                icon={<RefreshCcw size={13} style={{ color: 'var(--app-info)' }} />}
+                                title="Auto-Sync Policies"
+                                subtitle={
+                                    policies.length === 0
+                                        ? 'One policy per pair · pulls a fresh rate from the provider on a daily cron'
+                                        : `${policies.length} polic${policies.length === 1 ? 'y' : 'ies'}` +
+                                          (missingCoverage ? ` · ${missingCoverage} active currenc${missingCoverage === 1 ? 'y' : 'ies'} not covered` : ' · all active currencies covered')
+                                }
+                                action={
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        {missingCoverage > 0 && nonBaseCount > 0 && baseCurrency && (
+                                            <button onClick={handleBulkCreate} disabled={bulkBusy}
+                                                title={`Create an ECB / SPOT / auto-sync policy for the ${missingCoverage} uncovered currenc${missingCoverage === 1 ? 'y' : 'ies'}`}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all disabled:opacity-50"
+                                                style={{ ...soft('--app-success', 12), color: 'var(--app-success)', border: '1px solid color-mix(in srgb, var(--app-success) 30%, transparent)' }}>
+                                                <Wand2 size={11} className={bulkBusy ? 'animate-spin' : ''} />
+                                                {bulkBusy ? 'Configuring…' : `Auto-configure ${missingCoverage}`}
+                                            </button>
+                                        )}
+                                        <button onClick={handleSyncAll} disabled={syncingAll || policies.filter(p => p.provider !== 'MANUAL').length === 0}
+                                            title="Sync every active non-MANUAL policy now"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-app-border/50 hover:bg-app-background transition-all disabled:opacity-50"
+                                            style={{ color: 'var(--app-info)' }}>
+                                            <RefreshCcw size={11} className={syncingAll ? 'animate-spin' : ''} />
+                                            {syncingAll
+                                                ? `Syncing ${syncAllProgress?.total ?? 0}…`
+                                                : `Sync All${policies.filter(p => p.provider !== 'MANUAL').length ? ` (${policies.filter(p => p.provider !== 'MANUAL').length})` : ''}`}
+                                        </button>
+                                        <PrimaryButton
+                                            colorVar="--app-info"
+                                            disabled={currencies.length < 2 || !baseCurrency}
+                                            title={!baseCurrency
+                                                ? 'Set a base in the Currencies tab first'
+                                                : currencies.length < 2
+                                                    ? 'Enable a non-base currency in the Currencies tab first'
+                                                    : 'Configure a new auto-sync pair'}
+                                            onClick={() => {
+                                                if (!baseCurrency) { toast.error('Set a base currency first — Currencies tab → ⭐'); return }
+                                                if (currencies.length < 2) { toast.error('Enable at least one non-base currency in the Currencies tab.'); return }
+                                                setNewPolicyOpen(true)
+                                            }}
+                                        >
+                                            <Plus size={11} /> New Policy
+                                        </PrimaryButton>
+                                    </div>
+                                }
+                            />
+                            {newPolicyOpen && baseCurrency && (
+                                <div className="px-4 py-3 border-b border-app-border/50" style={soft('--app-info', 4)}>
+                                    <NewPolicyForm
+                                        currencies={currencies}
+                                        base={baseCurrency}
+                                        existingPairs={new Set(policies.map(p => `${p.from_currency}-${p.to_currency}-${p.rate_type}`))}
+                                        onCancel={() => setNewPolicyOpen(false)}
+                                        onSubmit={async (payload) => {
+                                            const r = await createRatePolicy(payload)
+                                            if (!r.success) { toast.error(r.error || 'Create failed'); return }
+                                            toast.success('Policy created')
+                                            setNewPolicyOpen(false)
+                                            await loadAll()
+                                        }}
+                                    />
+                                </div>
+                            )}
+                            <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                                {policies.length === 0 ? (
+                                    <div className="py-8 px-4 text-center">
+                                        <div className="flex justify-center"><RefreshCcw size={28} className="text-app-muted-foreground opacity-20" /></div>
+                                        <p className="text-[11px] font-bold text-app-foreground mt-2">No auto-sync policies yet</p>
+                                        <p className="text-[10px] text-app-muted-foreground mt-1 max-w-md mx-auto leading-relaxed">
+                                            Wire ECB (free, no API key) into your active currencies in one click — or build them one at a time with <em>New Policy</em>.
+                                        </p>
+                                        {nonBaseCount > 0 && baseCurrency && (
+                                            <button onClick={handleBulkCreate} disabled={bulkBusy}
+                                                className="mt-3 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
+                                                style={{ ...grad('--app-success'), color: 'white', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }}>
+                                                <Wand2 size={12} className={bulkBusy ? 'animate-spin' : ''} />
+                                                {bulkBusy ? 'Configuring…' : `Auto-configure ${nonBaseCount} currenc${nonBaseCount === 1 ? 'y' : 'ies'}`}
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-lg border border-app-border/50 overflow-hidden">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
+                                                    <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Pair</th>
+                                                    <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Type</th>
+                                                    <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Provider</th>
+                                                    <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-app-muted-foreground" title="Multiplier — click to edit">×</th>
+                                                    <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-app-muted-foreground" title="Markup % — click to edit">+ %</th>
+                                                    <th className="px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Auto</th>
+                                                    <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Last sync</th>
+                                                    <th className="px-3 py-2"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {policies.map(p => {
+                                                    const health = policyHealth(p)
+                                                    const isEditingThisRow = editingPolicy?.id === p.id
+                                                    return (
+                                                        <tr key={p.id} className="border-t border-app-border/30 hover:bg-app-background/40 transition-colors">
+                                                            <td className="px-3 py-2 text-[12px] font-black font-mono text-app-foreground">
+                                                                <span className="inline-flex items-center gap-1.5">
+                                                                    <span className="w-1.5 h-1.5 rounded-full"
+                                                                        style={{ background: `var(${HEALTH_COLOR[health]})` }}
+                                                                        title={HEALTH_LABEL[health]} />
+                                                                    {p.from_code}→{p.to_code}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
+                                                                    style={{ ...soft('--app-info', 12), color: 'var(--app-info)' }}>
+                                                                    {p.rate_type}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-app-foreground">{p.provider}</td>
+
+                                                            {/* Multiplier — inline editable */}
+                                                            <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums">
+                                                                {isEditingThisRow ? (
+                                                                    <input value={editingPolicy.multiplier}
+                                                                        onChange={e => setEditingPolicy(s => s ? { ...s, multiplier: e.target.value } : s)}
+                                                                        onBlur={commitInlineEdit}
+                                                                        onKeyDown={e => { if (e.key === 'Enter') commitInlineEdit(); if (e.key === 'Escape') setEditingPolicy(null) }}
+                                                                        autoFocus disabled={savingEdit}
+                                                                        className="w-20 px-2 py-1 rounded-md text-right outline-none focus:ring-2 focus:ring-app-info/30"
+                                                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                                                ) : (
+                                                                    <button onClick={() => setEditingPolicy({ id: p.id, multiplier: p.multiplier, markup_pct: p.markup_pct })}
+                                                                        title="Click to edit multiplier"
+                                                                        className="text-app-foreground hover:underline decoration-dotted">
+                                                                        {Number(p.multiplier).toFixed(4)}
+                                                                    </button>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Markup — inline editable */}
+                                                            <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums">
+                                                                {isEditingThisRow ? (
+                                                                    <input value={editingPolicy.markup_pct}
+                                                                        onChange={e => setEditingPolicy(s => s ? { ...s, markup_pct: e.target.value } : s)}
+                                                                        onBlur={commitInlineEdit}
+                                                                        onKeyDown={e => { if (e.key === 'Enter') commitInlineEdit(); if (e.key === 'Escape') setEditingPolicy(null) }}
+                                                                        disabled={savingEdit}
+                                                                        className="w-20 px-2 py-1 rounded-md text-right outline-none focus:ring-2 focus:ring-app-info/30"
+                                                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                                                ) : (
+                                                                    <button onClick={() => setEditingPolicy({ id: p.id, multiplier: p.multiplier, markup_pct: p.markup_pct })}
+                                                                        title="Click to edit markup %"
+                                                                        className="text-app-foreground hover:underline decoration-dotted">
+                                                                        {Number(p.markup_pct).toFixed(2)}
+                                                                    </button>
+                                                                )}
+                                                            </td>
+
+                                                            <td className="px-3 py-2 text-center">
+                                                                <button onClick={async () => {
+                                                                    const r = await updateRatePolicy(p.id, { auto_sync: !p.auto_sync })
+                                                                    if (!r.success) toast.error(r.error || 'Update failed')
+                                                                    await loadAll()
+                                                                }}
+                                                                    disabled={p.provider === 'MANUAL'}
+                                                                    title={p.provider === 'MANUAL'
+                                                                        ? 'MANUAL policies do not auto-sync (provider has no fetch step)'
+                                                                        : p.auto_sync ? 'Disable daily auto-sync' : 'Enable daily auto-sync'}
+                                                                    className="w-9 h-4 rounded-full relative transition-all mx-auto block disabled:opacity-30"
+                                                                    style={{ background: p.auto_sync ? 'var(--app-info)' : 'var(--app-border)' }}>
+                                                                    <span className={`w-3 h-3 rounded-full absolute top-0.5 transition-all shadow ${p.auto_sync ? 'left-[22px]' : 'left-0.5'}`}
+                                                                        style={{ background: 'var(--app-primary-foreground, white)' }} />
+                                                                </button>
+                                                            </td>
+                                                            <td className="px-3 py-2 text-[10px]">
+                                                                {p.last_synced_at
+                                                                    ? <FreshSyncBadge health={health} status={p.last_sync_status} when={p.last_synced_at} error={p.last_sync_error} />
+                                                                    : <span className="text-app-muted-foreground">never</span>}
+                                                            </td>
+                                                            <td className="px-3 py-2 text-right">
+                                                                <div className="flex items-center justify-end gap-1">
+                                                                    <button onClick={() => handleSyncPolicy(p.id)}
+                                                                        disabled={syncingId === p.id || p.provider === 'MANUAL'}
+                                                                        title={p.provider === 'MANUAL' ? 'MANUAL provider cannot be synced' : 'Fetch fresh rate from provider'}
+                                                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md border border-app-border/50 hover:bg-app-background transition-colors disabled:opacity-50"
+                                                                        style={{ color: 'var(--app-info)' }}>
+                                                                        <RefreshCcw size={11} className={syncingId === p.id ? 'animate-spin' : ''} />
+                                                                        {syncingId === p.id ? 'Syncing…' : 'Sync'}
+                                                                    </button>
+                                                                    <button onClick={() => handleDeletePolicy(p)}
+                                                                        disabled={deletingId === p.id}
+                                                                        title="Delete this policy (rate history is preserved)"
+                                                                        className="p-1.5 rounded-md hover:bg-app-error/10 transition-colors disabled:opacity-50">
+                                                                        <Trash2 size={12} style={{ color: 'var(--app-error)' }} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                                {policies.length > 0 && (
+                                    <div className="rounded-lg p-3 flex items-start gap-2"
+                                        style={{ ...soft('--app-info', 6), border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+                                        <RefreshCcw size={11} className="mt-0.5 shrink-0" style={{ color: 'var(--app-info)' }} />
+                                        <div className="text-[10px] leading-relaxed text-app-foreground">
+                                            <strong className="font-black uppercase tracking-widest text-[9px]" style={{ color: 'var(--app-info)' }}>Daily cron</strong> —
+                                            add <code className="font-mono px-1 py-0.5 rounded" style={soft('--app-info', 12)}>python manage.py sync_currency_rates</code>
+                                            {' '}to a <code className="font-mono">0 9 * * *</code> schedule to refresh policies with <em>auto-sync on</em> automatically.
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            })()}
 
             {/* ── Revaluations tab ──────────────────────────────────── */}
             {tab === 'revaluations' && (
@@ -647,6 +837,67 @@ function SyncStatusBadge({ status, when, error }: { status: string | null; when:
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: `var(${colorVar})` }} />
             <span className="font-mono text-[10px]" style={{ color: `var(${colorVar})` }}>
                 {status} · {new Date(when).toLocaleString()}
+            </span>
+        </span>
+    )
+}
+
+/* Health classification — keyed by the policyHealth() return value above. */
+const HEALTH_COLOR = {
+    fresh:  '--app-success',
+    stale:  '--app-warning',
+    fail:   '--app-error',
+    never:  '--app-muted-foreground',
+    manual: '--app-info',
+} as const
+const HEALTH_LABEL = {
+    fresh:  'Healthy — synced in the last 36h',
+    stale:  'Stale — last sync was over 36h ago, cron may not be running',
+    fail:   'Failing — last attempt errored',
+    never:  'Never synced — auto-sync hasn\'t run yet',
+    manual: 'Manual provider — does not auto-sync',
+} as const
+
+function HealthPill({ label, value, color, icon }: {
+    label: string; value: number; color: string; icon: React.ReactNode
+}) {
+    const dim = value === 0
+    return (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all"
+            style={dim
+                ? { background: 'transparent', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', opacity: 0.55 }
+                : { ...soft(color, 8), border: `1px solid color-mix(in srgb, var(${color}) 25%, transparent)` }}>
+            <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                style={{ ...soft(color, 14), color: `var(${color})` }}>
+                {icon}
+            </div>
+            <div className="min-w-0">
+                <div className="text-[8px] font-black uppercase tracking-widest text-app-muted-foreground truncate">{label}</div>
+                <div className="text-[14px] font-black tabular-nums leading-none mt-0.5"
+                    style={{ color: dim ? 'var(--app-muted-foreground)' : `var(${color})` }}>{value}</div>
+            </div>
+        </div>
+    )
+}
+
+/** Sync-time badge that uses the *health-derived* color (not just the raw
+ *  status) — a 5-day-old "OK" reads as warning, not green. */
+function FreshSyncBadge({ health, status, when, error }: {
+    health: 'fresh' | 'stale' | 'fail' | 'never' | 'manual'
+    status: string | null
+    when: string
+    error?: string | null
+}) {
+    const colorVar = HEALTH_COLOR[health]
+    const ageH = (Date.now() - new Date(when).getTime()) / 36e5
+    const ageLabel = ageH < 1 ? `${Math.max(1, Math.round(ageH * 60))}m ago`
+        : ageH < 48 ? `${Math.round(ageH)}h ago`
+        : `${Math.round(ageH / 24)}d ago`
+    return (
+        <span title={error ?? HEALTH_LABEL[health]} className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: `var(${colorVar})` }} />
+            <span className="font-mono text-[10px]" style={{ color: `var(${colorVar})` }}>
+                {status ?? '—'} · {ageLabel}
             </span>
         </span>
     )

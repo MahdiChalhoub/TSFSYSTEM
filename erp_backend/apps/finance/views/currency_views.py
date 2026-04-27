@@ -326,3 +326,74 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
         # active non-MANUAL policy, regardless of the auto_sync flag.
         results = CurrencyRateSyncService.sync_org(org, only_auto=False)
         return Response({'results': results, 'count': len(results)}, status=200)
+
+    @action(detail=False, methods=['post'], url_path='bulk-create')
+    def bulk_create(self, request):
+        """
+        One-shot setup: create an ECB / SPOT / auto-sync policy for every
+        active non-base currency that doesn't already have one. Existing
+        policies are left untouched (idempotent).
+
+        Optional payload:
+          {
+              "provider":   "ECB",        # default
+              "rate_type":  "SPOT",       # default
+              "auto_sync":  true,         # default
+              "multiplier": "1.000000",   # default
+              "markup_pct": "0.0000",     # default
+              "from_currency_ids": [3, 4] # optional explicit subset; otherwise
+                                          # uses every active non-base currency
+          }
+
+        Returns: { "created": [policy, …], "skipped": [{from_code, reason}, …] }
+        """
+        from apps.finance.models.currency_models import Currency
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({'error': 'tenant context missing'}, status=400)
+
+        provider = request.data.get('provider', 'ECB')
+        if provider not in ('ECB', 'MANUAL'):
+            return Response({'error': f'Provider {provider} not supported for bulk create yet'}, status=400)
+        rate_type = request.data.get('rate_type', 'SPOT')
+        auto_sync = bool(request.data.get('auto_sync', True))
+        multiplier = str(request.data.get('multiplier', '1.000000'))
+        markup_pct = str(request.data.get('markup_pct', '0.0000'))
+
+        base = Currency.objects.filter(organization_id=org_id, is_base=True, is_active=True).first()
+        if not base:
+            return Response({'error': 'No base currency configured for this organization.'}, status=400)
+
+        explicit_ids = request.data.get('from_currency_ids')
+        if explicit_ids:
+            from_qs = Currency.objects.filter(
+                organization_id=org_id, id__in=explicit_ids, is_active=True,
+            ).exclude(id=base.id)
+        else:
+            from_qs = Currency.objects.filter(
+                organization_id=org_id, is_active=True,
+            ).exclude(id=base.id)
+
+        created, skipped = [], []
+        for ccy in from_qs:
+            existing = CurrencyRatePolicy.objects.filter(
+                organization_id=org_id,
+                from_currency=ccy, to_currency=base, rate_type=rate_type,
+            ).first()
+            if existing:
+                skipped.append({'from_code': ccy.code, 'reason': 'policy already exists'})
+                continue
+            policy = CurrencyRatePolicy.objects.create(
+                organization_id=org_id,
+                from_currency=ccy, to_currency=base,
+                rate_type=rate_type, provider=provider,
+                auto_sync=auto_sync, multiplier=multiplier, markup_pct=markup_pct,
+                is_active=True,
+            )
+            created.append(self.get_serializer(policy).data)
+
+        return Response({
+            'created': created,
+            'skipped': skipped,
+            'count': len(created),
+        }, status=201 if created else 200)
