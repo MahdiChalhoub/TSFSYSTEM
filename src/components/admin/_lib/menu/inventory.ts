@@ -106,7 +106,7 @@ export const inventory: MenuItem = {
                 { title: 'Internal Consumption', path: '/inventory/internal-consumption' },
                 { title: 'Gift & Sample', path: '/inventory/gift-sample' },
                 { title: 'Counting Lines', path: '/inventory/counting-lines' },
-                { title: 'Procurement Requests', path: '/inventory/requests' },
+                { title: 'Procurement Requests', path: '/inventory/requests', stage: 'in-progress' },
                 { title: 'Import Declarations', path: '/procurement/import-declarations' },
             ],
         },

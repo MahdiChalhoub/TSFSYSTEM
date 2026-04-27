@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { erpFetch } from '@/lib/erp-api';
 
 export interface SuggestedQuantity {
@@ -58,6 +59,8 @@ export async function createProcurementRequest(data: {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
+        revalidatePath('/inventory/requests');
+        revalidatePath('/inventory/products');
         return result;
     } catch (error) {
         console.error('Failed to create procurement request:', error);

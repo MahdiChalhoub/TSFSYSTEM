@@ -407,7 +407,13 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
         if not isinstance(provider_config_patch, dict):
             return Response({'error': 'provider_config must be an object'}, status=400)
 
-        updated, skipped = [], []
+        # Optional: create-if-missing for codes that were picked but don't yet
+        # have a policy. Only meaningful for scope='include' (otherwise we
+        # don't have a clean list of intended codes to create).
+        create_if_missing = bool(request.data.get('create_if_missing', False))
+        rate_type_default = request.data.get('rate_type', 'SPOT')
+
+        updated, skipped, created = [], [], []
         for policy in qs:
             # MANUAL → any other transition: clear stale sync_status so an old
             # FAIL doesn't keep showing in the UI for a freshly-rewired policy.
@@ -424,10 +430,44 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
             ])
             updated.append(self.get_serializer(policy).data)
 
+        # Optionally create policies for picked codes that had no policy.
+        if create_if_missing and scope == 'include':
+            from apps.finance.models.currency_models import Currency
+            existing_from_codes = {row['from_code'] for row in updated}
+            base = Currency.objects.filter(
+                organization_id=org_id, is_base=True, is_active=True,
+            ).first()
+            if base:
+                missing_codes = codes_upper - existing_from_codes
+                # Currencies in finance.Currency that match the missing codes,
+                # excluding base. Skip codes that don't exist yet (mirror lag).
+                from_qs = Currency.objects.filter(
+                    organization_id=org_id, code__in=missing_codes, is_active=True,
+                ).exclude(id=base.id)
+                for ccy in from_qs:
+                    new_policy = CurrencyRatePolicy.objects.create(
+                        organization_id=org_id,
+                        from_currency=ccy, to_currency=base,
+                        rate_type=rate_type_default, provider=provider,
+                        provider_config=dict(provider_config_patch),
+                        # Sensible defaults for new policies — operator can edit.
+                        auto_sync=(provider != 'MANUAL'),
+                        is_active=True,
+                    )
+                    created.append(self.get_serializer(new_policy).data)
+                # Codes the user picked but that don't have a finance.Currency row
+                still_missing = missing_codes - {p['from_code'] for p in created}
+                for code in sorted(still_missing):
+                    skipped.append({
+                        'from_code': code,
+                        'reason': 'not enabled in /settings/regional Currencies tab',
+                    })
+
         return Response({
             'updated': updated,
+            'created': created,
             'skipped': skipped,
-            'count': len(updated),
+            'count': len(updated) + len(created),
         }, status=200)
 
     @action(detail=False, methods=['post'], url_path='bulk-create')

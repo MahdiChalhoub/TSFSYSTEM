@@ -20,6 +20,45 @@ class ProcurementRequestViewSet(TenantModelViewSet):
     queryset = ProcurementRequest.objects.all()
     serializer_class = ProcurementRequestSerializer
 
+    # PO statuses that count as "the goods are still en route" — duplicate request blocked
+    _PO_OPEN_STATUSES = (
+        'DRAFT', 'SUBMITTED', 'APPROVED', 'SENT', 'CONFIRMED',
+        'IN_TRANSIT', 'PARTIALLY_RECEIVED',
+    )
+
+    def create(self, request, *args, **kwargs):
+        """Block duplicate requests for products that already have one in flight.
+        Active = PENDING/APPROVED, OR EXECUTED with the linked PO still open
+        (DRAFT/SUBMITTED/APPROVED/SENT/CONFIRMED/IN_TRANSIT/PARTIALLY_RECEIVED).
+        EXECUTED with a terminal/received PO is fine — product is back in catalogue."""
+        product_id = request.data.get('product')
+        if product_id:
+            org = request.user.organization
+            existing = ProcurementRequest.objects.filter(
+                product_id=product_id, organization=org,
+                status__in=('PENDING', 'APPROVED'),
+            ).order_by('-requested_at').first()
+            if not existing:
+                # Also block if the latest EXECUTED request still has an open PO.
+                executed = ProcurementRequest.objects.filter(
+                    product_id=product_id, organization=org,
+                    status='EXECUTED',
+                ).order_by('-requested_at').first()
+                if executed and (executed.source_po is None or executed.source_po.status in self._PO_OPEN_STATUSES):
+                    existing = executed
+            if existing:
+                product_label = getattr(existing.product, 'name', None) or f'#{product_id}'
+                return Response({
+                    'detail': (
+                        f"{product_label} already has an active request "
+                        f"(#{existing.id}, {existing.get_status_display()}). "
+                        f"Cancel it first or wait until the goods arrive."
+                    ),
+                    'existing_request_id': existing.id,
+                    'existing_status': existing.status,
+                }, status=drf_status.HTTP_409_CONFLICT)
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         serializer.save(
             organization=self.request.user.organization,
@@ -136,6 +175,67 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         req.status = 'CANCELLED'
         req.save(update_fields=['status'])
         return Response(self.get_serializer(req).data)
+
+    @action(detail=False, methods=['post'], url_path='bump')
+    def bump(self, request):
+        """
+        POST /procurement-requests/bump/?product_id=N
+          OR /procurement-requests/bump/  with body {"request_id": N}
+
+        Reminder/escalation for an existing request — does NOT create a duplicate.
+        Bumps priority one level (LOW → NORMAL → HIGH → URGENT), appends a
+        timestamped reminder note. Returns the updated request.
+        """
+        request_id = request.data.get('request_id')
+        product_id = request.query_params.get('product_id') or request.data.get('product_id')
+        org = request.user.organization
+
+        if request_id:
+            try:
+                req = ProcurementRequest.objects.get(id=request_id, organization=org)
+            except ProcurementRequest.DoesNotExist:
+                return Response({'detail': 'Request not found'}, status=drf_status.HTTP_404_NOT_FOUND)
+        elif product_id:
+            req = ProcurementRequest.objects.filter(
+                product_id=product_id, organization=org,
+                status__in=('PENDING', 'APPROVED'),
+            ).order_by('-requested_at').first()
+            if req is None:
+                executed = ProcurementRequest.objects.filter(
+                    product_id=product_id, organization=org, status='EXECUTED',
+                ).order_by('-requested_at').first()
+                if executed and (executed.source_po is None or executed.source_po.status in self._PO_OPEN_STATUSES):
+                    req = executed
+            if req is None:
+                return Response({'detail': 'No active request found for this product'},
+                                status=drf_status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'detail': 'request_id or product_id required'},
+                            status=drf_status.HTTP_400_BAD_REQUEST)
+
+        # Bump priority one level (no-op if already URGENT)
+        ladder = ['LOW', 'NORMAL', 'HIGH', 'URGENT']
+        try:
+            idx = ladder.index(req.priority)
+        except ValueError:
+            idx = 1  # treat unknown as NORMAL
+        prev_priority = req.priority
+        new_priority = ladder[min(idx + 1, len(ladder) - 1)]
+        req.priority = new_priority
+
+        # Append reminder note
+        username = request.user.username if request.user else 'system'
+        stamp = timezone.now().isoformat(timespec='seconds')
+        line = f"[Reminder by {username} at {stamp}] priority {prev_priority} → {new_priority}"
+        req.notes = (req.notes + '\n' + line) if req.notes else line
+
+        req.save(update_fields=['priority', 'notes'])
+        return Response({
+            'detail': f'Reminded — priority {prev_priority} → {new_priority}',
+            'previous_priority': prev_priority,
+            'new_priority': new_priority,
+            **self.get_serializer(req).data,
+        })
 
     @action(detail=False, methods=['get'], url_path='suggest-quantity')
     def suggest_quantity(self, request):

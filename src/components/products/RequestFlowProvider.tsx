@@ -9,6 +9,7 @@ import { ShoppingCart, ArrowRightLeft, X, Trash2, Loader2 } from 'lucide-react'
 import {
     createProcurementRequest, getSuggestedQuantity,
 } from '@/app/actions/commercial/procurement-requests'
+import { bumpProcurementRequest } from '@/app/actions/inventory/procurement-requests'
 import { getPurchaseAnalyticsConfig } from '@/app/actions/settings/purchase-analytics-config'
 import { RequestProductDialog, type RequestableProduct } from './RequestProductDialog'
 
@@ -145,10 +146,39 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
     }, [cart])
 
     const trigger = useCallback((type: RequestType, products: RequestableProduct[]) => {
+        // Block duplicates: if a product already has an active procurement state
+        // (REQUESTED / PO_SENT / IN_TRANSIT), don't queue a new request.
+        const ACTIVE = new Set(['REQUESTED', 'PO_SENT', 'PO_ACCEPTED', 'IN_TRANSIT'])
+        const blocked: RequestableProduct[] = []
+        const allowed: RequestableProduct[] = []
+        for (const p of products) {
+            if (p.procurement_status && ACTIVE.has(p.procurement_status)) blocked.push(p)
+            else allowed.push(p)
+        }
+        if (blocked.length > 0) {
+            const names = blocked.slice(0, 3).map(p => p.name).join(', ')
+            const more = blocked.length > 3 ? ` +${blocked.length - 3} more` : ''
+            toast.warning(`${blocked.length} already in flight`, {
+                description: `${names}${more}. Bump priority to remind procurement, or wait for delivery.`,
+                action: {
+                    label: 'Bump priority',
+                    onClick: async () => {
+                        const results = await Promise.all(
+                            blocked.map(p => bumpProcurementRequest({ productId: p.id })),
+                        )
+                        const ok = results.filter(r => r.success).length
+                        const fail = results.length - ok
+                        if (ok > 0) toast.success(`Bumped ${ok} request${ok === 1 ? '' : 's'}`)
+                        if (fail > 0) toast.error(`${fail} bump${fail === 1 ? '' : 's'} failed`)
+                    },
+                },
+            })
+        }
+        if (allowed.length === 0) return
         const m = modeRef.current
-        if (m === 'INSTANT') instantCreate(type, products)
-        else if (m === 'CART') addToCart(type, products)
-        else setDialog({ type, products })
+        if (m === 'INSTANT') instantCreate(type, allowed)
+        else if (m === 'CART') addToCart(type, allowed)
+        else setDialog({ type, products: allowed })
     }, [instantCreate, addToCart])
 
     const ctxValue = useMemo<Ctx>(() => ({

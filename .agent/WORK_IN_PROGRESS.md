@@ -15,6 +15,24 @@
 
 ## Session Log
 
+### Session: 2026-04-27 (Settings 404 fix — `views_system.SettingsViewSet` was dead code)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE
+- **User report**: switching Request Flow to CART on `/settings/purchase-analytics` returned `{"error":"Server error (404). Please try again later."}`.
+- **Root cause**: two `SettingsViewSet` classes existed — the live one in `erp/views.py:424` (registered in `urls.py:33` as `r'settings'`) and a duplicate in `erp/views_system.py:180` that was **never imported anywhere**. Both `purchase-analytics-config` and `analytics-profiles` actions lived only in the dead one. The page's global Save button has been silently 404-ing the entire time. Direct python `requests.post` from inside the backend container confirmed: `404 Page not found at /api/settings/purchase-analytics-config/`. Phase 1 of the procurement work added `request_flow_mode` to that dead viewset's DEFAULTS — it never reached the wire.
+- **Fix**: ported `purchase_analytics_config` and `analytics_profiles` actions into the live `erp/views.py:SettingsViewSet`. Improved the partial-save merge while at it: was `merged = {**DEFAULTS}` (wiped all unsent keys to defaults), now `merged = {**DEFAULTS, **old_config}` then overlay the payload — so sending `{request_flow_mode: 'CART'}` only changes that key, others stay at their last saved values.
+- **Files Modified**:
+  - `erp_backend/erp/views.py` — added the two actions to the live `SettingsViewSet` (~190 lines).
+- **Discoveries**:
+  - The duplicate `views_system.SettingsViewSet` is dead code that's been shadowing the real one for a while. The `purchase-analytics-config` and `analytics-profiles` actions were *only* in the dead one. Same is likely true for `RecordHistoryViewSet`, `EntityGraphViewSet` etc. that also exist in both files (live one in `views.py`, second copy in `views_system.py`). Next agent: audit the rest of `views_system.py` for similar dead-code duplicates.
+  - The page's audit/version-history feature has been writing to localStorage only because the backend save was 404-ing. Users have been losing changes silently across page reloads.
+  - Verified the fix: `POST /api/settings/purchase-analytics-config/` from inside the container went from `404 (HTML page not found)` → `401 (Authentication credentials were not provided)`. 401 is correct — when called from the browser via the proxy, auth is injected.
+- **Warnings for Next Agent**:
+  - ⚠️ The duplicate `SettingsViewSet` (and possibly `RecordHistoryViewSet`, `EntityGraphViewSet`) in `views_system.py` is now confirmed dead code. Per cleanup rule, archive `views_system.py` *only after* extracting any unique implementations. A safe approach: a follow-up plan that diff-verifies each duplicate class before deletion. Don't archive blindly — `views_system.py` may still have other live exports that I didn't audit.
+  - ⚠️ Existing user data may have been silently lost. Anything saved on `/settings/purchase-analytics` before today never persisted. The first save after this fix will look like "you're starting over" — that's the existing localStorage draft, now actually persisting.
+
+---
+
 ### Session: 2026-04-27 (Procurement Request flow — Phase 2 + 2.5 + 3 + Convert-to-PO)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE (code + typecheck clean) / ⏳ browser smoke-test pending

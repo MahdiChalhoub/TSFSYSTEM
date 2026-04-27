@@ -588,6 +588,211 @@ class SettingsViewSet(viewsets.ViewSet):
 
         return Response(default)
 
+    # ── Purchase Analytics Config (PO Intelligence Grid settings) ─────────
+    @action(detail=False, methods=['get', 'post'], url_path='purchase-analytics-config')
+    def purchase_analytics_config(self, request):
+        """
+        GET  → current PO Intelligence Grid configuration (DEFAULTS overlaid with stored).
+        POST → partial save (merges into existing — sending {request_flow_mode: 'CART'}
+               only updates that key, others stay).
+               ?action=history → version history list
+               ?action=rollback + version_index → restore a saved version
+        Stored in Organization.settings['purchase_analytics_config'].
+        """
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+
+        DEFAULTS = {
+            'sales_avg_period_days': 180,
+            'sales_avg_exclude_types': [],
+            'sales_window_size_days': 15,
+            'best_price_period_days': 180,
+            'proposed_qty_formula': 'AVG_DAILY_x_LEAD_DAYS',
+            'proposed_qty_lead_days': 14,
+            'proposed_qty_safety_multiplier': 1.5,
+            'purchase_context': 'RETAIL',
+            'po_count_source': 'PURCHASE_INVOICE',
+            'financial_score_weights': {'margin': 40, 'velocity': 30, 'stock_health': 30},
+            'request_flow_mode': 'DIALOG',
+        }
+
+        if request.method == 'POST':
+            payload = request.data
+            sub_action = request.query_params.get('action')
+
+            if sub_action == 'history':
+                history = ConfigurationService.get_setting(organization, 'purchase_analytics_history', [])
+                if not isinstance(history, list):
+                    history = []
+                return Response({'history': history, 'total': len(history)})
+
+            if sub_action == 'rollback':
+                version_idx = payload.get('version_index')
+                history = ConfigurationService.get_setting(organization, 'purchase_analytics_history', [])
+                if not isinstance(history, list) or not history:
+                    return Response({"error": "No history available"}, status=status.HTTP_400_BAD_REQUEST)
+                if version_idx is None or version_idx < 0 or version_idx >= len(history):
+                    return Response({"error": "Invalid version index"}, status=status.HTTP_400_BAD_REQUEST)
+                snapshot = history[version_idx].get('config', {})
+                merged = {**DEFAULTS, **snapshot}
+                history.append({
+                    'config': merged,
+                    'changed_by': request.user.username if request.user else 'system',
+                    'changed_at': timezone.now().isoformat(),
+                    'action': f'rollback_to_v{version_idx}',
+                    'changes': [],
+                })
+                if len(history) > 50:
+                    history = history[-50:]
+                ConfigurationService.save_setting(organization, 'purchase_analytics_config', merged)
+                ConfigurationService.save_setting(organization, 'purchase_analytics_history', history)
+                return Response({"message": f"Rolled back to version {version_idx}", **merged})
+
+            old_config = ConfigurationService.get_setting(organization, 'purchase_analytics_config', {})
+            if not isinstance(old_config, dict):
+                old_config = {}
+            old_full = {**DEFAULTS, **old_config}
+
+            # Partial save: start from existing values, overlay only keys present in payload.
+            merged = {**old_full}
+            for k, v in payload.items():
+                if k in DEFAULTS:
+                    merged[k] = v
+
+            changes = []
+            for k in DEFAULTS:
+                if str(old_full.get(k)) != str(merged.get(k)):
+                    changes.append({'field': k, 'old': old_full.get(k), 'new': merged.get(k)})
+
+            ConfigurationService.save_setting(organization, 'purchase_analytics_config', merged)
+
+            history = ConfigurationService.get_setting(organization, 'purchase_analytics_history', [])
+            if not isinstance(history, list):
+                history = []
+            history.append({
+                'config': merged,
+                'changed_by': request.user.username if request.user else 'system',
+                'changed_at': timezone.now().isoformat(),
+                'action': 'save',
+                'changes': changes,
+            })
+            if len(history) > 50:
+                history = history[-50:]
+            ConfigurationService.save_setting(organization, 'purchase_analytics_history', history)
+
+            return Response({
+                "message": "Purchase analytics config saved",
+                "changed_by": request.user.username if request.user else 'system',
+                "changed_at": timezone.now().isoformat(),
+                "changes_count": len(changes),
+                **merged,
+            })
+
+        # GET
+        stored = ConfigurationService.get_setting(organization, 'purchase_analytics_config', {})
+        if not isinstance(stored, dict):
+            stored = {}
+        result = {**DEFAULTS, **stored}
+
+        user = request.user
+        role = 'viewer'
+        if user and user.is_authenticated:
+            if user.is_superuser or getattr(user, 'is_org_admin', False):
+                role = 'admin'
+            elif user.has_perm('erp.change_organization') or getattr(user, 'role', '') in ('manager', 'admin', 'owner'):
+                role = 'editor'
+        result['_user_role'] = role
+        result['_restricted_fields'] = [] if role in ('admin', 'editor') else list(DEFAULTS.keys())
+
+        history = ConfigurationService.get_setting(organization, 'purchase_analytics_history', [])
+        if isinstance(history, list) and history:
+            last = history[-1]
+            result['_last_modified_by'] = last.get('changed_by', 'unknown')
+            result['_last_modified_at'] = last.get('changed_at')
+            result['_version_count'] = len(history)
+        return Response(result)
+
+    @action(detail=False, methods=['get', 'post', 'delete'], url_path='analytics-profiles')
+    def analytics_profiles(self, request):
+        """
+        Per-page configuration profiles.
+        GET    → list profiles (?page_context=X to filter; ?resolve=true to resolve config)
+        POST   → action ∈ {create, update, activate, delete}
+        DELETE → ?profile_id=X
+        """
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+
+        if request.method == 'GET':
+            page_context = request.query_params.get('page_context')
+            if page_context and request.query_params.get('resolve') == 'true':
+                config = ConfigurationService.resolve_analytics_config(organization, page_context)
+                return Response({'resolved_config': config, 'page_context': page_context})
+            data = ConfigurationService.get_analytics_profiles(organization)
+            if page_context:
+                data['profiles'] = [p for p in data.get('profiles', []) if p.get('page_context') == page_context]
+            return Response(data)
+
+        if request.method == 'DELETE':
+            profile_id = request.query_params.get('profile_id')
+            if not profile_id:
+                return Response({"error": "profile_id required"}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                ConfigurationService.delete_analytics_profile(organization, profile_id)
+                return Response({"message": "Profile deleted"})
+            except ValueError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        action_type = request.data.get('action', 'create')
+        if action_type == 'create':
+            page_context = request.data.get('page_context')
+            if not page_context:
+                return Response({"error": "page_context required"}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                profile = ConfigurationService.create_analytics_profile(
+                    organization, request.data.get('name', 'New Profile'),
+                    page_context, request.data.get('overrides', {}),
+                )
+                profile['visibility'] = request.data.get('visibility', 'organization')
+                if profile['visibility'] == 'personal' and request.user:
+                    profile['created_by'] = request.user.username
+                return Response({"message": "Profile created", "profile": profile})
+            except ValueError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if action_type == 'update':
+            profile_id = request.data.get('profile_id')
+            if not profile_id:
+                return Response({"error": "profile_id required"}, status=status.HTTP_400_BAD_REQUEST)
+            updates = {}
+            if 'name' in request.data: updates['name'] = request.data['name']
+            if 'overrides' in request.data: updates['overrides'] = request.data['overrides']
+            data = ConfigurationService.update_analytics_profile(organization, profile_id, updates)
+            return Response({"message": "Profile updated", **data})
+
+        if action_type == 'activate':
+            page_context = request.data.get('page_context')
+            if not page_context:
+                return Response({"error": "page_context required"}, status=status.HTTP_400_BAD_REQUEST)
+            data = ConfigurationService.set_active_profile(organization, page_context, request.data.get('profile_id'))
+            return Response({"message": f"Active profile set for {page_context}", **data})
+
+        if action_type == 'delete':
+            profile_id = request.data.get('profile_id')
+            if not profile_id:
+                return Response({"error": "profile_id required"}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                ConfigurationService.delete_analytics_profile(organization, profile_id)
+                return Response({"message": "Profile deleted"})
+            except ValueError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"error": f"Unknown action: {action_type}"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])

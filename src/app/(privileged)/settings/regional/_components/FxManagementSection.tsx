@@ -91,6 +91,10 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
     // Quick-add forms
     const [newRateOpen, setNewRateOpen] = useState(false)
     const [newPolicyOpen, setNewPolicyOpen] = useState(false)
+    // Policies table filters — text + health pill + provider pill.
+    const [policyQuery, setPolicyQuery] = useState('')
+    const [policyHealthFilter, setPolicyHealthFilter] = useState<'all' | 'fresh' | 'stale' | 'fail' | 'never' | 'manual'>('all')
+    const [policyProviderFilter, setPolicyProviderFilter] = useState<'all' | CurrencyRatePolicy['provider']>('all')
     // "Open as soon as the mirror materializes" — clicked while finance.Currency
     // hasn't synced yet. The useEffect below flips newPolicyOpen=true once
     // baseCurrency becomes available, so the click feels instant.
@@ -267,9 +271,18 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                 provider_config: Object.keys(provider_config).length ? provider_config : undefined,
                 scope: setBrokerScope,
                 from_currency_codes: setBrokerScope === 'all' ? undefined : setBrokerCodes,
+                // For 'include' scope, create policies for picked codes that
+                // don't have one yet — that's what makes first-time setup work.
+                create_if_missing: setBrokerScope === 'include',
             })
             if (!res.success) { toast.error(res.error || 'Failed to update broker'); return }
-            toast.success(`Switched ${res.count ?? 0} polic${(res.count ?? 0) === 1 ? 'y' : 'ies'} to ${setBrokerProvider}`)
+            const createdN = res.created?.length ?? 0
+            const updatedN = (res.count ?? 0) - createdN
+            toast.success(
+                `Broker = ${setBrokerProvider}` +
+                (updatedN ? ` · ${updatedN} updated` : '') +
+                (createdN ? ` · ${createdN} created` : ''),
+            )
             setSetBrokerOpen(false)
             setSetBrokerCodes([])
             setSetBrokerKey('')
@@ -351,7 +364,7 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                      style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm shrink-0" style={grad('--app-success')}>
-                            <Coins size={14} className="text-white" />
+                            <Coins size={14} style={{ color: 'var(--app-primary-foreground, #fff)' }} />
                         </div>
                         <div>
                             <div className="font-black uppercase tracking-widest text-app-foreground" style={{ fontSize: 11 }}>FX & Rates</div>
@@ -381,10 +394,13 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                         const n = subCounts[t.key]
                         return (
                             <button key={t.key} onClick={() => setTab(t.key)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-200 ${active ? 'text-white shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
-                                style={active ? grad(t.color) : {}}>
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-200 ${active ? 'shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
+                                style={active ? { ...grad(t.color), color: 'var(--app-primary-foreground, #fff)' } : {}}>
                                 <Icon size={12} /> {t.label}
-                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${active ? 'bg-white/20' : 'bg-app-background'} tabular-nums`}>{n}</span>
+                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded tabular-nums"
+                                    style={active
+                                        ? { background: 'color-mix(in srgb, var(--app-primary-foreground, #fff) 22%, transparent)' }
+                                        : { background: 'var(--app-background)' }}>{n}</span>
                             </button>
                         )
                     })}
@@ -665,6 +681,51 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                 </div>
                             )}
                             <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                                {/* Filter row — only when worth filtering. */}
+                                {policies.length >= 4 && (() => {
+                                    const providers = Array.from(new Set(policies.map(p => p.provider))) as CurrencyRatePolicy['provider'][]
+                                    return (
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <input value={policyQuery} onChange={e => setPolicyQuery(e.target.value)}
+                                                placeholder="Filter by pair, provider, status…"
+                                                className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium outline-none focus:ring-2 focus:ring-app-info/20 transition-all flex-1 min-w-[180px]"
+                                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                            <div className="inline-flex items-center gap-0.5 p-0.5 rounded-lg border border-app-border/50 bg-app-surface" title="Filter by health">
+                                                {(['all', 'fresh', 'stale', 'fail', 'never', 'manual'] as const).map(k => (
+                                                    <button key={k} onClick={() => setPolicyHealthFilter(k)}
+                                                        className="px-2 py-1 text-[10px] font-bold rounded-md transition-all"
+                                                        style={policyHealthFilter === k
+                                                            ? (k === 'all'
+                                                                ? { background: 'var(--app-foreground)', color: 'var(--app-background)' }
+                                                                : { ...soft(HEALTH_COLOR[k], 18), color: `var(${HEALTH_COLOR[k]})` })
+                                                            : { color: 'var(--app-muted-foreground)' }}>
+                                                        {k === 'all' ? 'All' : k.charAt(0).toUpperCase() + k.slice(1)}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {providers.length > 1 && (
+                                                <div className="inline-flex items-center gap-0.5 p-0.5 rounded-lg border border-app-border/50 bg-app-surface" title="Filter by provider">
+                                                    <button onClick={() => setPolicyProviderFilter('all')}
+                                                        className="px-2 py-1 text-[10px] font-bold rounded-md transition-all"
+                                                        style={policyProviderFilter === 'all'
+                                                            ? { background: 'var(--app-foreground)', color: 'var(--app-background)' }
+                                                            : { color: 'var(--app-muted-foreground)' }}>
+                                                        All providers
+                                                    </button>
+                                                    {providers.map(prov => (
+                                                        <button key={prov} onClick={() => setPolicyProviderFilter(prov)}
+                                                            className="px-2 py-1 text-[10px] font-bold font-mono rounded-md transition-all"
+                                                            style={policyProviderFilter === prov
+                                                                ? { ...soft(prov === 'MANUAL' ? '--app-muted-foreground' : '--app-success', 18), color: prov === 'MANUAL' ? 'var(--app-muted-foreground)' : 'var(--app-success)' }
+                                                                : { color: 'var(--app-muted-foreground)' }}>
+                                                            {prov}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })()}
                                 {policies.length === 0 ? (
                                     <div className="py-8 px-4 text-center">
                                         <div className="flex justify-center"><RefreshCcw size={28} className="text-app-muted-foreground opacity-20" /></div>
@@ -675,7 +736,7 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                         {nonBaseCount > 0 && hasBase && (
                                             <button onClick={handleBulkCreate} disabled={bulkBusy}
                                                 className="mt-3 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
-                                                style={{ ...grad('--app-success'), color: 'white', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }}>
+                                                style={{ ...grad('--app-success'), color: 'var(--app-primary-foreground, #fff)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }}>
                                                 <Wand2 size={12} className={bulkBusy ? 'animate-spin' : ''} />
                                                 {bulkBusy ? 'Configuring…' : `Auto-configure ${nonBaseCount} currenc${nonBaseCount === 1 ? 'y' : 'ies'}`}
                                             </button>
@@ -708,7 +769,23 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {policies.map(p => {
+                                                {(() => {
+                                                    const q = policyQuery.trim().toLowerCase()
+                                                    const filtered = policies.filter(p => {
+                                                        if (policyHealthFilter !== 'all' && policyHealth(p) !== policyHealthFilter) return false
+                                                        if (policyProviderFilter !== 'all' && p.provider !== policyProviderFilter) return false
+                                                        if (!q) return true
+                                                        return [
+                                                            p.from_code, p.to_code, `${p.from_code}→${p.to_code}`, `${p.from_code}/${p.to_code}`,
+                                                            p.provider, p.rate_type, p.last_sync_status ?? '',
+                                                        ].some(s => s.toLowerCase().includes(q))
+                                                    })
+                                                    if (filtered.length === 0) return (
+                                                        <tr><td colSpan={9} className="px-3 py-6 text-center text-[10px] text-app-muted-foreground italic">
+                                                            No policies match the current filter.
+                                                        </td></tr>
+                                                    )
+                                                    return filtered.map(p => {
                                                     const health = policyHealth(p)
                                                     const isEditingThisRow = editingPolicy?.id === p.id
                                                     const showErr = health === 'fail' && !!p.last_sync_error
@@ -891,7 +968,8 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                         )}
                                                     </Fragment>
                                                     )
-                                                })}
+                                                    })
+                                                })()}
                                             </tbody>
                                         </table>
                                     </div>
@@ -1024,14 +1102,21 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                 </div>
                             </div>
 
-                            {/* Currency multi-select chips — only when scope ≠ all */}
+                            {/* Currency multi-select chips — only when scope ≠ all.
+                                Source = ALL active non-base currencies the org has enabled
+                                (not just policy-bearing ones). For currencies without a
+                                policy yet, the backend will create one with the chosen
+                                broker when create_if_missing is set in the apply payload. */}
                             {setBrokerScope !== 'all' && (() => {
-                                // Source: the from_codes from existing policies. (We don't allow
-                                // setting a broker for a currency that doesn't yet have a policy
-                                // — bulk-create handles that separately.)
-                                const codes = Array.from(new Set(policies.map(p => p.from_code))).sort()
+                                const policyCodes = new Set(policies.map(p => p.from_code))
+                                // Prefer the parent's OrgCurrency snapshot when available so
+                                // the chip list works even if the finance.Currency mirror lags.
+                                const fromMirror = currencies.filter(c => !c.is_base && c.is_active).map(c => c.code)
+                                const codes = Array.from(new Set([...fromMirror, ...policyCodes])).sort()
                                 if (codes.length === 0) return (
-                                    <p className="text-[10px] text-app-muted-foreground italic">No active policies to scope to yet.</p>
+                                    <p className="text-[10px] text-app-muted-foreground italic">
+                                        No active currencies — enable some in the <em>Select Currency</em> tab first.
+                                    </p>
                                 )
                                 const toggleCode = (code: string) => {
                                     setSetBrokerCodes(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code])
@@ -1054,14 +1139,24 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                         <div className="flex flex-wrap gap-1.5">
                                             {codes.map(code => {
                                                 const active = setBrokerCodes.includes(code)
+                                                const hasPolicy = policyCodes.has(code)
                                                 return (
                                                     <button key={code} type="button" onClick={() => toggleCode(code)}
-                                                        className="px-2 py-1 rounded-md text-[11px] font-mono font-bold transition-all"
+                                                        title={hasPolicy
+                                                            ? `Existing policy will be re-pointed to ${setBrokerProvider}`
+                                                            : `No policy yet — a new one will be created with ${setBrokerProvider}`}
+                                                        className="px-2 py-1 rounded-md text-[11px] font-mono font-bold transition-all inline-flex items-center gap-1"
                                                         style={active
                                                             ? { ...soft('--app-warning', 14), color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 35%, transparent)' }
                                                             : { background: 'var(--app-background)', color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
-                                                        {active && <Check size={9} className="inline -mt-px mr-0.5" />}
+                                                        {active && <Check size={9} className="-mt-px" />}
                                                         {code}
+                                                        {!hasPolicy && (
+                                                            <span className="text-[8px] uppercase tracking-widest font-bold ml-0.5"
+                                                                style={{ color: active ? 'var(--app-warning)' : 'var(--app-muted-foreground)' }}>
+                                                                · new
+                                                            </span>
+                                                        )}
                                                     </button>
                                                 )
                                             })}
@@ -1077,15 +1172,28 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                 <div className="text-[10px] leading-relaxed text-app-foreground">
                                     {(() => {
                                         const total = policies.length
-                                        let n = 0
-                                        if (setBrokerScope === 'all') n = total
-                                        else if (setBrokerScope === 'include') n = policies.filter(p => setBrokerCodes.includes(p.from_code)).length
-                                        else n = policies.filter(p => !setBrokerCodes.includes(p.from_code)).length
+                                        const policyCodesNow = new Set(policies.map(p => p.from_code))
+                                        let updatedN = 0
+                                        let createdN = 0
+                                        if (setBrokerScope === 'all') {
+                                            updatedN = total
+                                        } else if (setBrokerScope === 'include') {
+                                            updatedN = policies.filter(p => setBrokerCodes.includes(p.from_code)).length
+                                            createdN = setBrokerCodes.filter(c => !policyCodesNow.has(c)).length
+                                        } else {
+                                            updatedN = policies.filter(p => !setBrokerCodes.includes(p.from_code)).length
+                                        }
                                         return (
                                             <>
                                                 <strong className="font-black uppercase tracking-widest text-[9px]" style={{ color: 'var(--app-info)' }}>Impact</strong> —
-                                                {' '}<strong className="font-black">{n}</strong> of {total} polic{n === 1 ? 'y' : 'ies'} will switch to <strong className="font-black">{setBrokerProvider}</strong>.
-                                                Sync history is preserved; old `OK`/`FAIL` flags reset.
+                                                {updatedN > 0 && (
+                                                    <> <strong className="font-black">{updatedN}</strong> polic{updatedN === 1 ? 'y' : 'ies'} switched to <strong className="font-black">{setBrokerProvider}</strong></>
+                                                )}
+                                                {createdN > 0 && (
+                                                    <>{updatedN > 0 ? ' · ' : ' '}<strong className="font-black" style={{ color: 'var(--app-success)' }}>{createdN} new</strong> polic{createdN === 1 ? 'y' : 'ies'} created with <strong className="font-black">{setBrokerProvider}</strong></>
+                                                )}
+                                                {updatedN === 0 && createdN === 0 && <> Nothing selected — pick currencies or change scope.</>}
+                                                {(updatedN > 0 || createdN > 0) && <>. Sync history is preserved; old <code className="font-mono">OK</code>/<code className="font-mono">FAIL</code> flags reset.</>}
                                             </>
                                         )
                                     })()}
@@ -1287,10 +1395,10 @@ function PrimaryButton({ children, onClick, disabled, title, colorVar }: {
 }) {
     return (
         <button onClick={onClick} disabled={disabled} title={title}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={!disabled
-                ? { ...grad(colorVar), boxShadow: `0 4px 12px color-mix(in srgb, var(${colorVar}) 30%, transparent)` }
-                : { background: 'var(--app-border)' }}>
+                ? { ...grad(colorVar), color: 'var(--app-primary-foreground, #fff)', boxShadow: `0 4px 12px color-mix(in srgb, var(${colorVar}) 30%, transparent)` }
+                : { background: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}>
             {children}
         </button>
     )
@@ -1427,57 +1535,101 @@ function NewRateForm({ currencies, base, onCancel, onSubmit }: {
 }) {
     const non_base = currencies.filter(c => c.id !== base.id && c.is_active)
     const [fromId, setFromId] = useState<number | null>(non_base[0]?.id ?? null)
-    const [rate, setRate] = useState('1.00')
+    const [rate, setRate] = useState('1.000000')
     const [rateType, setRateType] = useState<ExchangeRate['rate_type']>('SPOT')
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
     const [busy, setBusy] = useState(false)
     if (!fromId) return (
         <p className="text-[10px] text-app-muted-foreground">Add a non-base currency in the Currencies tab before entering rates.</p>
     )
+    const fromCode = non_base.find(c => c.id === fromId)?.code ?? '???'
+    const rateNum = Number(rate)
+    const rateValid = isFinite(rateNum) && rateNum > 0
+    const valid = rateValid && !!fromId
     return (
         <div className="space-y-3">
+            {/* Header band — same accent (success) as the rates tab. */}
             <div className="flex items-center gap-2">
                 <TrendingUp size={11} style={{ color: 'var(--app-success)' }} />
                 <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success)' }}>New Exchange Rate</span>
+                <span className="text-[9px] text-app-muted-foreground">— manual entry · stored under <code className="font-mono">source=MANUAL</code></span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 items-center">
-                <FieldLabel label="From">
-                    <select value={fromId} onChange={e => setFromId(Number(e.target.value))} className={INPUT_CLS} style={INPUT_STYLE}>
-                        {non_base.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
-                    </select>
-                </FieldLabel>
-                <div className="self-end pb-2 text-center">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">→</span>
-                    <div className="text-[12px] font-mono font-black text-app-foreground">{base.code}</div>
+
+            {/* Pair + rate type + date — same row, prefix/suffix labels mirror NewPolicyForm. */}
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] gap-2 items-end">
+                <div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-app-foreground mb-1">From</div>
+                    <div className="flex items-stretch rounded-lg overflow-hidden border"
+                        style={{ background: 'var(--app-background)', borderColor: 'var(--app-border)' }}>
+                        <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                            style={{ fontSize: 11, background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', borderRight: '1px solid var(--app-border)' }}>1×</span>
+                        <select value={fromId} onChange={e => setFromId(Number(e.target.value))}
+                            className="flex-1 px-2 py-1.5 text-[12px] font-mono outline-none bg-transparent text-app-foreground">
+                            {non_base.map(c => <option key={c.id} value={c.id}>{c.code} — {c.name}</option>)}
+                        </select>
+                    </div>
                 </div>
-                <FieldLabel label="Rate">
-                    <input value={rate} onChange={e => setRate(e.target.value)} placeholder="1.10"
-                        className={INPUT_CLS + ' font-mono tabular-nums'} style={INPUT_STYLE} />
-                </FieldLabel>
-                <FieldLabel label="Type">
-                    <select value={rateType} onChange={e => setRateType(e.target.value as ExchangeRate['rate_type'])} className={INPUT_CLS} style={INPUT_STYLE}>
-                        {RATE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                </FieldLabel>
-                <FieldLabel label="Date">
-                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className={INPUT_CLS} style={INPUT_STYLE} />
-                </FieldLabel>
+                <div className="self-end pb-1 text-center pr-1 pl-1">
+                    <span className="text-[12px] font-mono font-black text-app-muted-foreground">→</span>
+                </div>
+                <div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-app-foreground mb-1">Rate (in {base.code})</div>
+                    <div className="flex items-stretch rounded-lg overflow-hidden border"
+                        style={rateValid
+                            ? { background: 'var(--app-background)', borderColor: 'var(--app-border)' }
+                            : { background: 'var(--app-background)', borderColor: 'color-mix(in srgb, var(--app-error) 50%, transparent)' }}>
+                        <input value={rate} onChange={e => setRate(e.target.value)} placeholder="1.000000"
+                            inputMode="decimal"
+                            className="flex-1 px-2 py-1.5 text-[12px] font-mono tabular-nums font-black outline-none bg-transparent text-app-foreground" />
+                        <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                            style={{ fontSize: 11, background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', borderLeft: '1px solid var(--app-border)' }}>{base.code}</span>
+                    </div>
+                </div>
+                <div className="self-end pb-2 text-center text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground">·</div>
+                <div className="grid grid-cols-2 gap-2">
+                    <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-app-foreground mb-1">Type</div>
+                        <select value={rateType} onChange={e => setRateType(e.target.value as ExchangeRate['rate_type'])}
+                            className={INPUT_CLS} style={INPUT_STYLE}>
+                            {RATE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-app-foreground mb-1">Date</div>
+                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className={INPUT_CLS} style={INPUT_STYLE} />
+                    </div>
+                </div>
             </div>
-            <div className="flex items-center gap-2 justify-end">
-                <button onClick={onCancel} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border/50 hover:bg-app-background transition-colors"
-                    style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
-                <button disabled={!rate || busy} onClick={async () => {
-                    setBusy(true)
-                    try {
-                        await onSubmit({ from_currency: fromId!, to_currency: base.id, rate, rate_type: rateType, effective_date: date, source: 'MANUAL' })
-                    } finally { setBusy(false) }
-                }}
-                    className="text-[10px] font-bold px-3 py-1.5 rounded-lg text-white disabled:opacity-50 transition-all"
-                    style={!busy && rate
-                        ? { ...grad('--app-success'), boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }
-                        : { background: 'var(--app-border)' }}>
-                    {busy ? 'Adding…' : 'Add Rate'}
-                </button>
+
+            {/* Inline preview / error line. */}
+            <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                {!rateValid ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: 'var(--app-error)' }}>
+                        <AlertTriangle size={10} /> Rate must be a positive number
+                    </span>
+                ) : (
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2 py-1 rounded-md"
+                        style={{ ...soft('--app-success', 8), color: 'var(--app-success)' }}
+                        title={`On ${date}, 1 ${fromCode} will convert to ${rateNum.toFixed(6)} ${base.code}`}>
+                        <TrendingUp size={10} /> Preview: 1 {fromCode} = <strong className="font-black">{rateNum.toFixed(6)}</strong> {base.code} on {date}
+                    </span>
+                )}
+                <div className="flex items-center gap-2">
+                    <button onClick={onCancel} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border/50 hover:bg-app-background transition-colors"
+                        style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
+                    <button disabled={!valid || busy} onClick={async () => {
+                        setBusy(true)
+                        try {
+                            await onSubmit({ from_currency: fromId!, to_currency: base.id, rate, rate_type: rateType, effective_date: date, source: 'MANUAL' })
+                        } finally { setBusy(false) }
+                    }}
+                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-all"
+                        style={!busy && valid
+                            ? { ...grad('--app-success'), color: 'var(--app-primary-foreground, white)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }
+                            : { background: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}>
+                        {busy ? 'Adding…' : 'Add Rate'}
+                    </button>
+                </div>
             </div>
         </div>
     )
@@ -1517,6 +1669,9 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
         sync_frequency: CurrencyRatePolicy['sync_frequency']
         multiplier: string
         markup_pct: string
+        bid_spread_pct?: string
+        ask_spread_pct?: string
+        provider_config?: Record<string, any>
     }) => Promise<void>
 }) {
     const non_base = currencies.filter(c => c.id !== base.id && c.is_active)
@@ -1705,6 +1860,98 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
                     </div>
                 </div>
             </div>
+
+            {/* ── Bid / Ask spreads — when EITHER is non-zero, syncs write a
+                 (MID, BID, ASK) triple per snapshot. Default 0/0 = single
+                 mid-rate row, backwards-compatible. ── */}
+            <div className="rounded-xl p-3 space-y-2.5"
+                style={{ background: 'color-mix(in srgb, var(--app-warning) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning) 18%, transparent)' }}>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>Bid / Ask Spread</span>
+                        <span className="text-[9px] text-app-muted-foreground">— optional. Stays at 0 = mid-only.</span>
+                    </div>
+                    <div className="inline-flex items-center gap-0.5">
+                        {[
+                            { label: 'None',  bid: '0.0000', ask: '0.0000' },
+                            { label: '±0.5%', bid: '0.5000', ask: '0.5000' },
+                            { label: '±1%',   bid: '1.0000', ask: '1.0000' },
+                            { label: '±2%',   bid: '2.0000', ask: '2.0000' },
+                        ].map(p => (
+                            <button key={p.label} type="button"
+                                onClick={() => { setBidSpreadPct(p.bid); setAskSpreadPct(p.ask) }}
+                                className="text-[9px] font-bold px-2 py-0.5 rounded-md hover:bg-app-warning/10 transition-colors"
+                                style={{ color: 'var(--app-warning)' }}>
+                                {p.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-app-foreground">Bid spread</span>
+                            <span className="text-[9px] text-app-muted-foreground">below mid · operator buys</span>
+                        </div>
+                        <div className="flex items-stretch rounded-lg overflow-hidden border"
+                            style={bidValid
+                                ? { background: 'var(--app-background)', borderColor: 'var(--app-border)' }
+                                : { background: 'var(--app-background)', borderColor: 'color-mix(in srgb, var(--app-error) 50%, transparent)' }}>
+                            <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                                style={{ fontSize: 13, background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', borderRight: '1px solid var(--app-border)' }}>−</span>
+                            <input value={bidSpreadPct} onChange={e => setBidSpreadPct(e.target.value)} placeholder="0.0000"
+                                inputMode="decimal"
+                                title="BID = mid × (1 − bid_spread/100). 0–50."
+                                className="flex-1 px-2 py-1.5 text-[12px] font-mono tabular-nums outline-none bg-transparent text-app-foreground" />
+                            <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                                style={{ fontSize: 13, background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', borderLeft: '1px solid var(--app-border)' }}>%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-app-foreground">Ask spread</span>
+                            <span className="text-[9px] text-app-muted-foreground">above mid · operator sells</span>
+                        </div>
+                        <div className="flex items-stretch rounded-lg overflow-hidden border"
+                            style={askValid
+                                ? { background: 'var(--app-background)', borderColor: 'var(--app-border)' }
+                                : { background: 'var(--app-background)', borderColor: 'color-mix(in srgb, var(--app-error) 50%, transparent)' }}>
+                            <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                                style={{ fontSize: 13, background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', borderRight: '1px solid var(--app-border)' }}>+</span>
+                            <input value={askSpreadPct} onChange={e => setAskSpreadPct(e.target.value)} placeholder="0.0000"
+                                inputMode="decimal"
+                                title="ASK = mid × (1 + ask_spread/100). 0–50."
+                                className="flex-1 px-2 py-1.5 text-[12px] font-mono tabular-nums outline-none bg-transparent text-app-foreground" />
+                            <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                                style={{ fontSize: 13, background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', borderLeft: '1px solid var(--app-border)' }}>%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── API key (paid providers only) ── */}
+            {needsKey && (
+                <div className="rounded-xl p-3"
+                    style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error) 18%, transparent)' }}>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-error)' }}>API Key required</span>
+                        <span className="text-[9px] text-app-muted-foreground">stored in <code className="font-mono">provider_config</code></span>
+                    </div>
+                    <input value={apiKey} onChange={e => setApiKey(e.target.value)}
+                        type="password" autoComplete="off"
+                        placeholder={
+                            provider === 'FIXER' ? 'Fixer access_key (data.fixer.io)'
+                            : provider === 'OPENEXCHANGERATES' ? 'OpenExchangeRates app_id'
+                            : 'exchangerate.host access_key'
+                        }
+                        className="w-full px-3 py-1.5 text-[12px] rounded-lg outline-none focus:ring-2"
+                        style={{
+                            background: 'var(--app-background)',
+                            border: keyValid ? '1px solid var(--app-border)' : '1px solid color-mix(in srgb, var(--app-error) 50%, transparent)',
+                            color: 'var(--app-foreground)',
+                        }} />
+                </div>
+            )}
             <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
                 <div className="flex items-center gap-2 flex-wrap">
                     {isDup && (
@@ -1751,12 +1998,23 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
                     <button disabled={busy || !valid} onClick={async () => {
                         setBusy(true)
                         try {
+                            // Each broker reads a different config key. Set all
+                            // three so the policy works regardless.
+                            const provider_config: Record<string, any> = {}
+                            const k = apiKey.trim()
+                            if (k) {
+                                provider_config.access_key = k
+                                provider_config.api_key = k
+                                provider_config.app_id = k
+                            }
                             await onSubmit({
                                 from_currency: fromId!, to_currency: base.id, rate_type: rateType,
                                 provider,
                                 auto_sync: autoSync && provider !== 'MANUAL' && syncFrequency !== 'ON_TRANSACTION',
                                 sync_frequency: rateMode === 'FIXED' ? 'DAILY' : syncFrequency,
                                 multiplier, markup_pct: markupPct,
+                                bid_spread_pct: bidSpreadPct, ask_spread_pct: askSpreadPct,
+                                ...(Object.keys(provider_config).length ? { provider_config } : {}),
                             })
                         } finally { setBusy(false) }
                     }}

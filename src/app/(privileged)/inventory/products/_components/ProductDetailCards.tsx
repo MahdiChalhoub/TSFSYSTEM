@@ -38,7 +38,7 @@ function CardSection({ color, title, children }: { color: string; title: string;
 
 export const ProductDetailCards = React.memo(function ProductDetailCards({ product, marginPct, onView }: ProductDetailCardsProps) {
   const { trigger: triggerRequest } = useRequestFlow()
-  const requestable: RequestableProduct = { id: product.id, name: product.name, sku: product.sku, reorder_quantity: product.reorder_quantity, min_stock_level: product.min_stock_level }
+  const requestable: RequestableProduct = { id: product.id, name: product.name, sku: product.sku, reorder_quantity: product.reorder_quantity, min_stock_level: product.min_stock_level, procurement_status: product.procurement_status }
   return (
     <div className="border-b border-app-border/30 animate-in slide-in-from-top-1 duration-200"
       style={{ background: 'color-mix(in srgb, var(--app-surface) 40%, var(--app-bg))' }}>

@@ -476,7 +476,7 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                 <div className="flex items-start justify-between gap-4 mb-4 flex-shrink-0 px-4 md:px-6 pt-4 md:pt-6">
                     <div className="flex items-center gap-3">
                         <div className="page-header-icon bg-app-primary">
-                            <Globe size={20} className="text-white" />
+                            <Globe size={20} style={{ color: 'var(--app-primary-foreground, #fff)' }} />
                         </div>
                         <div>
                             <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Regional Settings</h1>
@@ -1284,7 +1284,7 @@ function CurrenciesForCountry({ countryOc, orgCurrencies, allCurrencies, onToggl
                                 className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
                                 style={{ background: isActiveHere ? 'color-mix(in srgb, var(--app-primary) 72%, transparent)' : 'var(--app-border)' }}
                                 title={`${isActiveHere ? 'Disable' : 'Enable'} ${code} for ${countryOc.country_name || 'this country'}`}>
-                                <span className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`} />
+                                <span className={`w-3 h-3 rounded-full absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`} style={{ background: 'var(--app-primary-foreground, #fff)' }} />
                             </button>
                         )}
                     </div>

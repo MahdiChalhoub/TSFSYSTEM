@@ -48,7 +48,11 @@ import { type RequestableProduct } from '@/components/products/RequestProductDia
 import { RequestFlowProvider, useRequestFlow } from '@/components/products/RequestFlowProvider'
 
 function toRequestable(p: Product): RequestableProduct {
-  return { id: p.id, name: p.name, sku: p.sku, reorder_quantity: p.reorder_quantity, min_stock_level: p.min_stock_level }
+  return {
+    id: p.id, name: p.name, sku: p.sku,
+    reorder_quantity: p.reorder_quantity, min_stock_level: p.min_stock_level,
+    procurement_status: p.procurement_status,
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

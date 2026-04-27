@@ -14,6 +14,7 @@ export type RequestableProduct = {
     sku?: string | null
     reorder_quantity?: number | string | null
     min_stock_level?: number | string | null
+    procurement_status?: string | null
 }
 
 type Priority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'

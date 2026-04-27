@@ -2,10 +2,11 @@
 
 import { toast } from 'sonner'
 import { useTransition } from 'react'
-import { CheckCircle2, XCircle, PlayCircle, Ban, FileText } from 'lucide-react'
+import { CheckCircle2, XCircle, PlayCircle, Ban, FileText, Bell } from 'lucide-react'
 import {
     approveProcurementRequest, rejectProcurementRequest,
     executeProcurementRequest, cancelProcurementRequest, convertProcurementRequestToPO,
+    bumpProcurementRequest,
     type ProcurementRequestRecord,
 } from '@/app/actions/inventory/procurement-requests'
 import { STATUS_META, TYPE_META, PRIORITY_META } from '../_lib/meta'
@@ -97,6 +98,9 @@ export function RequestRow({ r, pending, runAction }: {
                         <PlayCircle size={11} /> Execute
                     </button>
                 )}
+                {(r.status === 'PENDING' || r.status === 'APPROVED') && r.priority !== 'URGENT' && (
+                    <BumpButton requestId={r.id} currentPriority={r.priority} />
+                )}
                 {(r.status === 'PENDING' || r.status === 'APPROVED') && (
                     <button onClick={() => runAction(r.id, cancelProcurementRequest, 'Cancel')} disabled={pending}
                         className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/30 transition-all disabled:opacity-50">
@@ -105,6 +109,25 @@ export function RequestRow({ r, pending, runAction }: {
                 )}
             </div>
         </div>
+    )
+}
+
+function BumpButton({ requestId, currentPriority }: { requestId: number; currentPriority: string }) {
+    const [pending, startTransition] = useTransition()
+    const handleClick = () => {
+        startTransition(async () => {
+            const r = await bumpProcurementRequest({ requestId })
+            if (r.success) toast.success(r.message || `Priority ${r.previous_priority} → ${r.new_priority}`)
+            else toast.error(r.message || 'Bump failed')
+        })
+    }
+    return (
+        <button onClick={handleClick} disabled={pending}
+            className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all disabled:opacity-50"
+            style={{ borderColor: 'color-mix(in srgb, #8b5cf6 35%, transparent)', color: '#8b5cf6' }}
+            title={`Remind procurement — bumps priority above ${currentPriority}`}>
+            <Bell size={11} /> Bump
+        </button>
     )
 }
 

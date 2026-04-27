@@ -263,9 +263,14 @@ export async function bulkUpdateRatePolicyProvider(payload: {
     provider_config?: Record<string, any>
     scope: 'all' | 'include' | 'exclude'
     from_currency_codes?: string[]
+    /** When true (only meaningful for scope='include'), create a fresh policy
+     *  for any code in `from_currency_codes` that has no policy yet. */
+    create_if_missing?: boolean
+    rate_type?: CurrencyRatePolicy['rate_type']
 }): Promise<{
     success: boolean
     updated?: CurrencyRatePolicy[]
+    created?: CurrencyRatePolicy[]
     count?: number
     error?: string
 }> {
@@ -274,9 +279,9 @@ export async function bulkUpdateRatePolicyProvider(payload: {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
-        }) as { updated: CurrencyRatePolicy[]; count: number }
+        }) as { updated: CurrencyRatePolicy[]; created?: CurrencyRatePolicy[]; count: number }
         revalidatePath('/finance/currencies')
-        return { success: true, updated: r.updated, count: r.count }
+        return { success: true, updated: r.updated, created: r.created, count: r.count }
     } catch (e) {
         return { success: false, error: e instanceof Error ? e.message : String(e) }
     }

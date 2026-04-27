@@ -3,10 +3,7 @@
 import { useActionState, useState, useEffect, useRef } from 'react'
 import type { PurchaseLine } from '@/types/erp'
 import { createPurchaseInvoice } from '@/app/actions/commercial/purchases'
-import {
-    ShoppingCart, SlidersHorizontal, BookOpen, Plus,
-    ArrowRight, Settings2, FileText, LayoutGrid,
-} from 'lucide-react'
+import { ShoppingCart, ArrowRight, LayoutGrid } from 'lucide-react'
 
 import { ProductSearch } from './_components/ProductSearch'
 import { LineColumnHeaders } from './_components/LineColumnHeaders'
@@ -109,14 +106,6 @@ export default function PurchaseForm({
                         </button>
                     ))}
                 </div>
-                <button type="button" className="p-1.5 rounded-lg transition-colors"
-                    style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
-                    <Settings2 size={15} />
-                </button>
-                <button type="button" className="p-1.5 rounded-lg transition-colors"
-                    style={{ background: 'var(--app-primary)', color: 'white' }}>
-                    <FileText size={15} />
-                </button>
             </div>
 
             <MetadataStrip
@@ -139,23 +128,6 @@ export default function PurchaseForm({
                 </div>
                 <div className="flex-1 border-l" style={{ borderColor: 'var(--app-border)' }}>
                     <ProductSearch ref={searchRef} callback={addProductToLines} siteId={Number(selectedSiteId) || 1} />
-                </div>
-                <div className="flex items-center gap-1.5 px-3 flex-shrink-0">
-                    <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
-                        style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
-                        <SlidersHorizontal size={13} />
-                        <span className="hidden md:inline">13 Cols</span>
-                    </button>
-                    <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
-                        style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
-                        <BookOpen size={13} />
-                        <span className="hidden md:inline">Catalogue</span>
-                    </button>
-                    <button type="button" className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
-                        style={{ background: 'var(--app-primary)', color: 'white', boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                        <Plus size={14} />
-                        <span className="hidden sm:inline">New</span>
-                    </button>
                 </div>
             </div>
 

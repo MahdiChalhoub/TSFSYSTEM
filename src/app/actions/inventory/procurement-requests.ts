@@ -35,7 +35,7 @@ export interface ProcurementRequestRecord {
 
 export async function listProcurementRequests(): Promise<ProcurementRequestRecord[]> {
     try {
-        const data = await erpFetch('procurement-requests/')
+        const data = await erpFetch('procurement-requests/', { cache: 'no-store' })
         if (Array.isArray(data)) return data as ProcurementRequestRecord[]
         if (data && Array.isArray(data.results)) return data.results as ProcurementRequestRecord[]
         return []
@@ -75,5 +75,28 @@ export async function convertProcurementRequestToPO(id: number): Promise<{ succe
         return { success: true, po_id: result?.po_id, po_url: result?.po_url }
     } catch (e: any) {
         return { success: false, message: e?.message || 'Failed to convert to PO' }
+    }
+}
+
+export async function bumpProcurementRequest(args: { requestId?: number; productId?: number }): Promise<{ success: boolean; previous_priority?: string; new_priority?: string; message?: string }> {
+    const body: Record<string, unknown> = {}
+    if (args.requestId != null) body.request_id = args.requestId
+    if (args.productId != null) body.product_id = args.productId
+    try {
+        const result = await erpFetch(`procurement-requests/bump/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        })
+        revalidatePath('/inventory/requests')
+        revalidatePath('/inventory/products')
+        return {
+            success: true,
+            previous_priority: result?.previous_priority,
+            new_priority: result?.new_priority,
+            message: result?.detail,
+        }
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to bump request' }
     }
 }
