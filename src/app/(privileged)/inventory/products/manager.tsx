@@ -44,7 +44,8 @@ import { DajingoListView } from '@/components/common/DajingoListView'
 import { DajingoPageShell } from '@/components/common/DajingoPageShell'
 import { ProductDetailCards } from './_components/ProductDetailCards'
 import { renderProductCell } from './_components/ProductColumns'
-import { RequestProductDialog, type RequestableProduct } from '@/components/products/RequestProductDialog'
+import { type RequestableProduct } from '@/components/products/RequestProductDialog'
+import { RequestFlowProvider, useRequestFlow } from '@/components/products/RequestFlowProvider'
 
 function toRequestable(p: Product): RequestableProduct {
   return { id: p.id, name: p.name, sku: p.sku, reorder_quantity: p.reorder_quantity, min_stock_level: p.min_stock_level }
@@ -57,9 +58,9 @@ function toRequestable(p: Product): RequestableProduct {
 export default function ProductMasterManager({ initialProducts = [], lookups = EMPTY_LOOKUPS }: { initialProducts?: Product[]; lookups?: Lookups; initialFilters?: Record<string, string> }) {
   const router = useRouter()
   const { openTab } = useAdmin()
+  const { trigger: triggerRequest } = useRequestFlow()
   const [items, setItems] = useState<Product[]>(initialProducts)
   const [loading, setLoading] = useState(initialProducts.length === 0)
-  const [requestDialog, setRequestDialog] = useState<{ type: 'PURCHASE' | 'TRANSFER'; products: RequestableProduct[] } | null>(null)
   const [search, setSearch] = useState('')
   const [focusMode, setFocusMode] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -313,8 +314,8 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         renderExpanded={product => <ProductDetailCards product={product} marginPct={(() => { const sellHt = parseFloat(product.selling_price_ht) || 0; const costP = parseFloat(product.cost_price) || 0; return sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—' })()} onView={id => router.push(`/inventory/products/${id}`)} />}
         onView={product => router.push(`/inventory/products/${product.id}`)}
         menuActions={product => [
-          { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => setRequestDialog({ type: 'PURCHASE', products: [toRequestable(product)] }) },
-          { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => setRequestDialog({ type: 'TRANSFER', products: [toRequestable(product)] }) },
+          { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => triggerRequest('PURCHASE', [toRequestable(product)]) },
+          { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => triggerRequest('TRANSFER', [toRequestable(product)]) },
           { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
         ]}
         selectedIds={selectedIds}

@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useAdmin } from '@/context/AdminContext'
 import {
-  Plus, ClipboardList, Eye, Edit, Package,
+  Plus, ClipboardList, Eye, Package,
   X, DollarSign, Clock, CheckCircle,
   ChevronDown, Loader2, Truck, Receipt, ArrowRightCircle, Check,
   BarChart3,
@@ -403,10 +403,10 @@ export default function PurchaseOrdersManager({
         renderExpanded={po => <POExpandedRow po={po} onView={onView} onRefresh={fetchData} />}
         onView={po => onView(po.id)}
         menuActions={po => [
-          { label: 'Edit Order', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/purchases/new?edit=${po.id}` } },
+          { label: 'Open Order', icon: <Eye size={12} className="text-app-muted-foreground" />, onClick: () => onView(po.id) },
           { label: '─── Transfer To ───', icon: <ArrowRightCircle size={12} className="text-app-muted-foreground/30" />, onClick: () => {} },
           { label: 'Purchase Receipt', icon: <Truck size={12} style={{ color: 'var(--app-success)' }} />, onClick: () => { window.location.href = `/purchases/receipts/new?from_po=${po.id}` } },
-          { label: 'Purchase Invoice', icon: <Receipt size={12} style={{ color: 'var(--app-warning)' }} />, onClick: () => { window.location.href = `/purchases/invoices?from_po=${po.id}` } },
+          { label: 'Purchase Invoice', icon: <Receipt size={12} style={{ color: 'var(--app-warning)' }} />, onClick: () => { window.location.href = `/purchases/invoices` } },
         ]}
         selectedIds={state.selectedIds}
         onToggleSelect={state.toggleSelect}
@@ -450,10 +450,6 @@ function POExpandedRow({ po, onView, onRefresh }: { po: PO; onView: (id: number)
           className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg bg-app-primary text-white hover:brightness-110 transition-all">
           <Eye size={11} /> View Details
         </button>
-        <button onClick={() => { window.location.href = `/purchases/new?edit=${po.id}` }}
-          className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
-          <Edit size={11} /> Edit
-        </button>
         <div className="h-4 w-px bg-app-border/40 mx-0.5" />
         <InlineStatusCell po={po} onRefresh={onRefresh} />
         <div className="h-4 w-px bg-app-border/40 mx-0.5" />
@@ -461,7 +457,7 @@ function POExpandedRow({ po, onView, onRefresh }: { po: PO; onView: (id: number)
           className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
           <Truck size={11} style={{ color: 'var(--app-success)' }} /> → Receipt
         </button>
-        <button onClick={() => { window.location.href = `/purchases/invoices?from_po=${po.id}` }}
+        <button onClick={() => { window.location.href = `/purchases/invoices` }}
           className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
           <Receipt size={11} style={{ color: 'var(--app-warning)' }} /> → Invoice
         </button>

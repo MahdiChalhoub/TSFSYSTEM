@@ -2,6 +2,30 @@
 
 import { erpFetch } from '@/lib/erp-api';
 
+export interface SuggestedQuantity {
+    product_id: number;
+    suggested_qty: number;
+    source: 'formula' | 'reorder_quantity' | 'min_stock' | 'fallback';
+    reason: string;
+    inputs?: {
+        avg_daily_sales: number;
+        sales_avg_period_days: number;
+        proposed_qty_lead_days: number;
+        proposed_qty_safety_multiplier: number;
+    };
+}
+
+export async function getSuggestedQuantity(productId: number): Promise<SuggestedQuantity | null> {
+    try {
+        const result = await erpFetch(`procurement-requests/suggest-quantity/?product_id=${productId}`);
+        if (result && typeof result === 'object' && 'suggested_qty' in result) return result as SuggestedQuantity;
+        return null;
+    } catch (error) {
+        console.error('Failed to fetch suggested quantity', error);
+        return null;
+    }
+}
+
 /**
  * Create a procurement request (transfer or purchase from another supplier).
  */

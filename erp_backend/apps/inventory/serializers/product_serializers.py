@@ -160,11 +160,15 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_procurement_status(self, obj):
         """
-        Derived from the latest ProcurementRequest for this product:
-          PENDING / APPROVED → 'REQUESTED' (active request, awaiting fulfillment)
-          EXECUTED           → 'PO_SENT'   (operator turned request into PO)
-          REJECTED / CANCELLED / no recent request → 'NONE'
-        Future: PO_ACCEPTED / IN_TRANSIT / FAILED need PurchaseOrder event integration.
+        Derived lifecycle for the latest ProcurementRequest of this product:
+          PENDING / APPROVED          → 'REQUESTED'
+          EXECUTED + source_po:
+              DRAFT/SUBMITTED/APPROVED/SENT/CONFIRMED        → 'PO_SENT'
+              IN_TRANSIT/PARTIALLY_RECEIVED                  → 'IN_TRANSIT'
+              RECEIVED/PARTIALLY_INVOICED/INVOICED/COMPLETED → 'NONE' (back to available)
+              REJECTED/CANCELLED                             → 'FAILED'
+          EXECUTED without source_po                          → 'PO_SENT'
+          REJECTED / CANCELLED / no recent request            → 'NONE'
         """
         try:
             from apps.pos.models.procurement_request_models import ProcurementRequest
@@ -178,6 +182,17 @@ class ProductSerializer(serializers.ModelSerializer):
         if latest.status in ('PENDING', 'APPROVED'):
             return 'REQUESTED'
         if latest.status == 'EXECUTED':
+            po = latest.source_po
+            if po is None:
+                return 'PO_SENT'
+            if po.status in ('DRAFT', 'SUBMITTED', 'APPROVED', 'SENT', 'CONFIRMED'):
+                return 'PO_SENT'
+            if po.status in ('IN_TRANSIT', 'PARTIALLY_RECEIVED'):
+                return 'IN_TRANSIT'
+            if po.status in ('RECEIVED', 'PARTIALLY_INVOICED', 'INVOICED', 'COMPLETED'):
+                return 'NONE'
+            if po.status in ('REJECTED', 'CANCELLED'):
+                return 'FAILED'
             return 'PO_SENT'
         return 'NONE'
 

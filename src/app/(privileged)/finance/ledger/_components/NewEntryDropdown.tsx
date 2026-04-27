@@ -16,8 +16,8 @@ import {
 
 const JOURNAL_ROUTES: { type: string; label: string; desc: string; href: string; icon: any; color: string }[] = [
   { type: 'GENERAL', label: 'General Journal', desc: 'Manual debit/credit voucher', href: '/finance/ledger/new', icon: FileText, color: 'var(--app-primary)' },
-  { type: 'SALES', label: 'Sales Invoice', desc: 'Create invoice → auto-posts JE', href: '/finance/invoices/new', icon: FileText, color: 'var(--app-success)' },
-  { type: 'PURCHASE', label: 'Purchase Invoice', desc: 'Record purchase → auto-posts JE', href: '/finance/invoices/new?type=purchase', icon: FileText, color: 'var(--app-info)' },
+  { type: 'SALES', label: 'Sales Invoice', desc: 'Create invoice → auto-posts JE', href: '/finance/invoices', icon: FileText, color: 'var(--app-success)' },
+  { type: 'PURCHASE', label: 'Purchase Invoice', desc: 'Record purchase → auto-posts JE', href: '/purchases/invoices', icon: FileText, color: 'var(--app-info)' },
   { type: 'CASH', label: 'Payment / Receipt', desc: 'Cash or bank transaction', href: '/finance/payments/new', icon: Activity, color: 'var(--app-warning)' },
   { type: 'EXPENSE', label: 'Expense Entry', desc: 'Record expense → auto-posts JE', href: '/finance/expenses/new', icon: AlertTriangle, color: 'var(--app-error)' },
   { type: 'BANK', label: 'Bank Transaction', desc: 'Bank payment or deposit', href: '/finance/payments/new?method=bank', icon: Globe, color: 'var(--app-info)' },

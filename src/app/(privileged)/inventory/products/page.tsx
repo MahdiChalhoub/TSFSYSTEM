@@ -1,5 +1,6 @@
 import { erpFetch } from '@/lib/erp-api'
 import ProductMasterManager from './manager'
+import { RequestFlowProvider } from '@/components/products/RequestFlowProvider'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,15 +33,17 @@ export default async function ProductMasterPage(props: {
   if (searchParams.brand) initialFilters.brand = searchParams.brand
 
   return (
-    <ProductMasterManager
-      initialProducts={products}
-      initialFilters={Object.keys(initialFilters).length ? initialFilters : undefined}
-      lookups={{
-        categories: categories.map((c: any) => ({ id: c.id, name: c.name })),
-        brands: brands.map((b: any) => ({ id: b.id, name: b.name })),
-        units: units.map((u: any) => ({ id: u.id, name: u.name, short_name: u.short_name })),
-        countries: countries.map((c: any) => ({ id: c.id, name: c.name })),
-      }}
-    />
+    <RequestFlowProvider>
+      <ProductMasterManager
+        initialProducts={products}
+        initialFilters={Object.keys(initialFilters).length ? initialFilters : undefined}
+        lookups={{
+          categories: categories.map((c: any) => ({ id: c.id, name: c.name })),
+          brands: brands.map((b: any) => ({ id: b.id, name: b.name })),
+          units: units.map((u: any) => ({ id: u.id, name: u.name, short_name: u.short_name })),
+          countries: countries.map((c: any) => ({ id: c.id, name: c.name })),
+        }}
+      />
+    </RequestFlowProvider>
   )
 }

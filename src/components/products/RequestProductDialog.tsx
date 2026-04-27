@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { ShoppingCart, ArrowRightLeft, X, Loader2, ExternalLink } from 'lucide-react'
 import { useModalDismiss } from '@/hooks/useModalDismiss'
-import { createProcurementRequest } from '@/app/actions/commercial/procurement-requests'
+import { createProcurementRequest, getSuggestedQuantity } from '@/app/actions/commercial/procurement-requests'
 import { getPurchaseAnalyticsConfig } from '@/app/actions/settings/purchase-analytics-config'
 
 export type RequestableProduct = {
@@ -59,12 +59,26 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
         if (!open) return
         let cancelled = false
         ;(async () => {
+            // Seed with placeholder formula immediately for fast first paint.
             const config = await getPurchaseAnalyticsConfig()
             if (cancelled) return
             const safety = Number(config.proposed_qty_safety_multiplier) || 1
-            const next: Record<number, string> = {}
-            for (const p of products) next[p.id] = String(suggestQty(p, safety))
-            setQuantities(next)
+            const seed: Record<number, string> = {}
+            for (const p of products) seed[p.id] = String(suggestQty(p, safety))
+            setQuantities(seed)
+
+            // Refine each row with the honest formula from the backend.
+            const refined = await Promise.all(
+                products.map(p => getSuggestedQuantity(p.id).then(s => [p.id, s] as const)),
+            )
+            if (cancelled) return
+            setQuantities(prev => {
+                const next = { ...prev }
+                for (const [id, s] of refined) {
+                    if (s && s.suggested_qty > 0) next[id] = String(s.suggested_qty)
+                }
+                return next
+            })
         })()
         return () => { cancelled = true }
     }, [open, products])
