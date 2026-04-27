@@ -44,7 +44,7 @@ import {
     labelFor, isRTL,
     type CatalogueLanguageEntry,
 } from '@/lib/catalogue-languages';
-import { FxManagementSection } from './_components/FxManagementSection';
+import { FxRedesigned as FxManagementSection } from './_components/FxRedesigned';
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 const grad = (v: string) => ({ background: `linear-gradient(135deg, var(${v}), color-mix(in srgb, var(${v}) 60%, black))` });
@@ -694,8 +694,8 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                             placeholder="Locale code (e.g. ber, ku)"
                                             className="flex-1 px-3 py-1.5 rounded-xl text-[12px] font-mono bg-app-surface/50 border border-app-border/50 text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface outline-none" />
                                         <button type="button" onClick={addCustomLang}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-white"
-                                            style={{ ...grad('--app-primary'), fontSize: 11 }}>
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold"
+                                            style={{ ...grad('--app-primary'), color: 'var(--app-primary-foreground, #fff)', fontSize: 11 }}>
                                             <Plus size={12} /> Add
                                         </button>
                                     </div>
@@ -1012,7 +1012,7 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                     <div className="font-mono uppercase text-app-muted-foreground" style={{ fontSize: 9 }}>{code}</div>
                 </div>
                 {isDefault ? (
-                    <span className="rounded font-black uppercase tracking-widest text-white shrink-0 inline-flex items-center" style={{ ...grad(accent), fontSize: 8, padding: '2px 6px', lineHeight: 1.2 }}>
+                    <span className="rounded font-black uppercase tracking-widest shrink-0 inline-flex items-center" style={{ ...grad(accent), color: 'var(--app-primary-foreground, #fff)', fontSize: 8, padding: '2px 6px', lineHeight: 1.2 }}>
                         <Crown size={8} className="inline mr-0.5 -mt-px" /> {isCountry ? 'Default' : isLanguage ? 'Default' : 'Base'}
                     </span>
                 ) : (
@@ -1159,7 +1159,7 @@ function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, on
             <div className="shrink-0 relative z-10">
                 {isEnabled ? (
                     isDefault ? (
-                        <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest text-white" style={grad(accent)}>
+                        <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest" style={{ ...grad(accent), color: 'var(--app-primary-foreground, #fff)' }}>
                             <Crown size={8} className="inline mr-0.5 -mt-px" />{isCountry || isLanguage ? 'Default' : 'Base'}
                         </span>
                     ) : (
@@ -1168,8 +1168,7 @@ function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, on
                         </span>
                     )
                 ) : (
-                    <span className="opacity-0 group-hover/c:opacity-100 transition-opacity flex items-center gap-1 px-2 py-1 rounded-lg text-white text-[10px] font-bold shadow-md"
-                        style={grad(accent)}>
+                    <span className="opacity-0 group-hover/c:opacity-100 transition-opacity flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold shadow-md" style={{ ...grad(accent), color: 'var(--app-primary-foreground, #fff)' }}>
                         <Plus size={10} /> Add
                     </span>
                 )}
