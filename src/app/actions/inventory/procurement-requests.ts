@@ -31,6 +31,8 @@ export interface ProcurementRequestRecord {
     reviewed_by_name: string | null
     requested_at: string
     reviewed_at: string | null
+    last_bumped_at: string | null
+    bump_count: number
 }
 
 export async function listProcurementRequests(): Promise<ProcurementRequestRecord[]> {

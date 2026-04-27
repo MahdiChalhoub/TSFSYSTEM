@@ -30,6 +30,8 @@ export function RequestRow({ r, pending, runAction }: {
     const requestedAt = new Date(r.requested_at)
     const dateStr = requestedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
         requestedAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+    const bumpedAt = r.last_bumped_at ? new Date(r.last_bumped_at) : null
+    const bumpedAgo = bumpedAt ? formatRelative(bumpedAt) : null
 
     return (
         <div className="group grid items-center gap-2 px-3 py-2.5 border-b border-app-border/30 hover:bg-app-surface transition-all"
@@ -71,6 +73,12 @@ export function RequestRow({ r, pending, runAction }: {
                 <div className="text-[9px] font-bold text-app-muted-foreground truncate uppercase tracking-wider">
                     {r.requested_by_name || 'system'}
                 </div>
+                {bumpedAgo && (
+                    <div className="text-[9px] font-bold uppercase tracking-wider truncate" style={{ color: '#8b5cf6' }}
+                        title={bumpedAt!.toISOString()}>
+                        Bumped {bumpedAgo}{r.bump_count > 1 ? ` · ×${r.bump_count}` : ''}
+                    </div>
+                )}
             </div>
             <div className="flex items-center justify-end gap-1">
                 {r.status === 'PENDING' && (
@@ -110,6 +118,18 @@ export function RequestRow({ r, pending, runAction }: {
             </div>
         </div>
     )
+}
+
+function formatRelative(date: Date): string {
+    const diffMs = Date.now() - date.getTime()
+    const sec = Math.round(diffMs / 1000)
+    if (sec < 60) return `${sec}s ago`
+    const min = Math.round(sec / 60)
+    if (min < 60) return `${min}m ago`
+    const hr = Math.round(min / 60)
+    if (hr < 24) return `${hr}h ago`
+    const day = Math.round(hr / 24)
+    return `${day}d ago`
 }
 
 function BumpButton({ requestId, currentPriority }: { requestId: number; currentPriority: string }) {

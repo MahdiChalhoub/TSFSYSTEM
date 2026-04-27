@@ -54,7 +54,7 @@ export default function ProcurementRequestsPage() {
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase()
-        return requests.filter(r => {
+        const matches = requests.filter(r => {
             if (statusFilter !== 'ALL' && r.status !== statusFilter) return false
             if (typeFilter !== 'ALL' && r.request_type !== typeFilter) return false
             if (!q) return true
@@ -65,6 +65,10 @@ export default function ProcurementRequestsPage() {
                 (r.reason || '').toLowerCase().includes(q)
             )
         })
+        // Sort by latest activity: max(last_bumped_at, requested_at) desc.
+        const activity = (r: ProcurementRequestRecord) =>
+            new Date(r.last_bumped_at || r.requested_at).getTime()
+        return matches.sort((a, b) => activity(b) - activity(a))
     }, [requests, search, statusFilter, typeFilter])
 
     const runAction = (id: number, action: (id: number) => Promise<{ success: boolean; message?: string }>, verb: string) => {

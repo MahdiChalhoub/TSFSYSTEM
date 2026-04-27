@@ -6,7 +6,7 @@ Referenced by the PO Intelligence Grid's per-row Transfer ⇄ / Request 📨 act
 import logging
 from datetime import timedelta
 from decimal import Decimal
-from django.db.models import Q, Sum
+from django.db.models import Sum
 from django.utils import timezone
 from rest_framework import status as drf_status
 from rest_framework.decorators import action
@@ -15,114 +15,12 @@ from rest_framework.response import Response
 from erp.views import TenantModelViewSet
 from apps.pos.models.procurement_request_models import ProcurementRequest
 from apps.pos.serializers.procurement_request_serializers import ProcurementRequestSerializer
+from apps.pos.services.procurement_notifications import (
+    create_review_task as _create_review_task,
+    notify_assignees as _notify_assignees,
+)
 
 logger = logging.getLogger(__name__)
-
-
-def _priority_to_int(priority: str) -> int:
-    """Map string priority to TaskQueue's integer priority (lower = higher importance)."""
-    return {'URGENT': 1, 'HIGH': 2, 'NORMAL': 5, 'LOW': 8}.get(priority, 5)
-
-
-def _get_assignees(organization):
-    """Find users who should review procurement requests for this org.
-    Heuristic: superusers + users whose role name matches admin/manager/owner/procurement.
-    Active accounts only. If nothing matches, falls back to any superuser in the org."""
-    from erp.models import User as UserModel
-    qs = UserModel.objects.filter(organization=organization, is_active=True)
-    matched = qs.filter(
-        Q(is_superuser=True) |
-        Q(role__name__iregex=r'(admin|manager|owner|procurement|purchasing)')
-    ).distinct()
-    if matched.exists():
-        return list(matched)
-    fallback = qs.filter(is_superuser=True)
-    return list(fallback) if fallback.exists() else []
-
-
-def _create_review_task(req):
-    """Create a TaskQueue row asking someone to review/action a procurement request.
-    Returns the task or None on failure (failures are non-fatal — request creation
-    must not be rolled back if the audit table is missing)."""
-    try:
-        from erp.models_audit import TaskQueue
-    except ImportError:
-        return None
-    assignees = _get_assignees(req.organization)
-    primary = assignees[0] if assignees else None
-    title = f"Review {req.get_request_type_display().lower()}: {req.product.name} × {req.quantity}"
-    description_parts = [
-        f"Type: {req.get_request_type_display()}",
-        f"Priority: {req.get_priority_display()}",
-        f"Quantity: {req.quantity}",
-        f"Requested by: {req.requested_by.username if req.requested_by else 'system'}",
-    ]
-    if req.reason:
-        description_parts.append(f"Reason: {req.reason}")
-    if req.supplier_id:
-        description_parts.append(f"Supplier: {getattr(req.supplier, 'name', '?')}")
-    try:
-        return TaskQueue.objects.create(
-            title=title,
-            description='\n'.join(description_parts),
-            status='PENDING',
-            priority=_priority_to_int(req.priority),
-            assigned_to_user=primary,
-            organization=req.organization,
-            context={
-                'procurement_request_id': req.id,
-                'product_id': req.product_id,
-                'request_type': req.request_type,
-                'event': 'created',
-            },
-        )
-    except Exception as e:
-        logger.warning(f"Failed to create review task for request {req.id}: {e}")
-        return None
-
-
-def _notify_assignees(req, *, kind: str, prev_priority: str = None, new_priority: str = None):
-    """Send in-app Notification to each assignee. Non-fatal on errors."""
-    try:
-        from erp.models import Notification
-    except ImportError:
-        return 0
-    assignees = _get_assignees(req.organization)
-    if not assignees:
-        return 0
-
-    type_label = req.get_request_type_display().lower()
-    if kind == 'created':
-        title = f"New {type_label} request"
-        message = f"{req.product.name} × {req.quantity} ({req.get_priority_display()})"
-        notif_type = 'WARNING' if req.priority in ('HIGH', 'URGENT') else 'INFO'
-    elif kind == 'bumped':
-        title = f"Reminder: {type_label} request bumped"
-        message = f"{req.product.name} — priority {prev_priority} → {new_priority}"
-        notif_type = 'WARNING'
-    elif kind == 'approved':
-        title = f"{type_label.capitalize()} request approved"
-        message = f"{req.product.name} × {req.quantity}"
-        notif_type = 'SUCCESS'
-    else:
-        title = f"{type_label.capitalize()} request update"
-        message = f"{req.product.name}"
-        notif_type = 'INFO'
-
-    sent = 0
-    for user in assignees:
-        try:
-            Notification.objects.create(
-                user=user,
-                title=title,
-                message=message,
-                type=notif_type,
-                link='/inventory/requests',
-            )
-            sent += 1
-        except Exception as e:
-            logger.warning(f"Failed to notify {user.username}: {e}")
-    return sent
 
 
 class ProcurementRequestViewSet(TenantModelViewSet):
@@ -176,8 +74,8 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         )
         # Best-effort fan-out: create review task + notify assignees.
         # Failures here MUST NOT roll back the request — they're side effects.
-        _create_review_task(instance)
-        _notify_assignees(instance, kind='created')
+        _create_review_task(instance, event='created')
+        _notify_assignees(instance, kind='created', actor=self.request.user)
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
@@ -191,7 +89,7 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         req.reviewed_by = request.user
         req.reviewed_at = timezone.now()
         req.save(update_fields=['status', 'reviewed_by', 'reviewed_at'])
-        _notify_assignees(req, kind='approved')
+        _notify_assignees(req, kind='approved', actor=request.user, also_requester=True)
         return Response(self.get_serializer(req).data)
 
     @action(detail=True, methods=['post'])
@@ -202,11 +100,13 @@ class ProcurementRequestViewSet(TenantModelViewSet):
                 {'detail': f'Cannot reject — current status is {req.status}.'},
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
+        reason = request.data.get('reason', '') or ''
         req.status = 'REJECTED'
         req.reviewed_by = request.user
         req.reviewed_at = timezone.now()
-        req.notes = (req.notes or '') + f"\nRejected: {request.data.get('reason', '')}"
+        req.notes = (req.notes or '') + f"\nRejected: {reason}"
         req.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'notes'])
+        _notify_assignees(req, kind='rejected', actor=request.user, reason=reason or '-', also_requester=True)
         return Response(self.get_serializer(req).data)
 
     @action(detail=True, methods=['post'])
@@ -272,6 +172,7 @@ class ProcurementRequestViewSet(TenantModelViewSet):
             req.reviewed_at = timezone.now()
             req.save(update_fields=['source_po', 'status', 'reviewed_by', 'reviewed_at'])
 
+        _notify_assignees(req, kind='converted', actor=request.user, po_id=po.id, also_requester=True)
         return Response({
             'po_id': po.id,
             'po_url': f'/purchases/purchase-orders/{po.id}',
@@ -343,8 +244,12 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         line = f"[Reminder by {username} at {stamp}] priority {prev_priority} → {new_priority}"
         req.notes = (req.notes + '\n' + line) if req.notes else line
 
-        req.save(update_fields=['priority', 'notes'])
-        _notify_assignees(req, kind='bumped', prev_priority=prev_priority, new_priority=new_priority)
+        req.last_bumped_at = timezone.now()
+        req.bump_count = (req.bump_count or 0) + 1
+        req.save(update_fields=['priority', 'notes', 'last_bumped_at', 'bump_count'])
+        _notify_assignees(req, kind='bumped', actor=request.user,
+                          prev_priority=prev_priority, new_priority=new_priority,
+                          also_requester=True)
         return Response({
             'detail': f'Reminded — priority {prev_priority} → {new_priority}',
             'previous_priority': prev_priority,

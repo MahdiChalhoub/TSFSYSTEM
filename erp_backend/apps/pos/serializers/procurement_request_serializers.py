@@ -26,6 +26,11 @@ class ProcurementRequestSerializer(serializers.ModelSerializer):
             'requested_by', 'requested_by_name',
             'reviewed_by', 'reviewed_by_name',
             'requested_at', 'reviewed_at',
+            'last_bumped_at', 'bump_count',
             'organization',
         ]
-        read_only_fields = ['status', 'requested_by', 'reviewed_by', 'requested_at', 'reviewed_at']
+        read_only_fields = [
+            'status', 'requested_by', 'reviewed_by',
+            'requested_at', 'reviewed_at',
+            'last_bumped_at', 'bump_count',
+        ]

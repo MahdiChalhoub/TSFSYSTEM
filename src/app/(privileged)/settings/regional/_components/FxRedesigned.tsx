@@ -108,6 +108,10 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
     // Drawer / modal state
     const [editPolicyId, setEditPolicyId] = useState<number | null>(null)
     const [createOpen, setCreateOpen] = useState(false)
+    /** "Open as soon as the base currency materializes" — set when the user
+     *  clicks New Policy before the finance.Currency mirror has caught up.
+     *  The useEffect below opens the drawer once baseCurrency is non-null. */
+    const [pendingCreate, setPendingCreate] = useState(false)
     const [setBrokerOpen, setSetBrokerOpen] = useState(false)
     const [manualRateOpen, setManualRateOpen] = useState(false)
     const [selectedPeriodId, setSelectedPeriodId] = useState<number | null>(null)
@@ -153,6 +157,22 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
             const k = `${r.from_code}→${r.to_code}|${r.rate_type}`
             const prev = m.get(k)
             if (!prev || r.effective_date > prev.effective_date) m.set(k, r)
+        }
+        return m
+    }, [rates])
+
+    /** All-sides lookup per (from→to, rate_type) → { MID?, BID?, ASK? }.
+     *  Drives the three-side rate readout on a policy card whenever the
+     *  policy has non-zero bid_spread_pct or ask_spread_pct. */
+    const latestSidesByKey = useMemo(() => {
+        const m = new Map<string, { MID?: ExchangeRate; BID?: ExchangeRate; ASK?: ExchangeRate }>()
+        for (const r of rates) {
+            const side = (r.rate_side ?? 'MID') as 'MID' | 'BID' | 'ASK'
+            const k = `${r.from_code}→${r.to_code}|${r.rate_type}`
+            const slot = m.get(k) ?? {}
+            const prev = slot[side]
+            if (!prev || r.effective_date > prev.effective_date) slot[side] = r
+            m.set(k, slot)
         }
         return m
     }, [rates])
@@ -277,6 +297,17 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
         }).length
     }, [policies])
 
+    /* ─── Pending-open follow-through. When the user clicks "New Policy"
+     *  before the finance.Currency mirror has populated, we record a pending
+     *  flag and open the drawer the moment baseCurrency becomes available.
+     *  Without this the button click would silently appear to do nothing. */
+    useEffect(() => {
+        if (pendingCreate && baseCurrency) {
+            setCreateOpen(true)
+            setPendingCreate(false)
+        }
+    }, [pendingCreate, baseCurrency])
+
     /* ─── Keyboard shortcuts: '/' focuses search · 'n' opens new-policy
      *  drawer · Esc closes any open drawer/modal. ── */
     useEffect(() => {
@@ -290,7 +321,8 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                 input?.focus()
             } else if (e.key === 'n' && !inField && !createOpen && !editPolicyId && !setBrokerOpen) {
                 e.preventDefault()
-                setCreateOpen(true)
+                if (baseCurrency) setCreateOpen(true)
+                else { setPendingCreate(true); void loadAll() }
             } else if (e.key === 'Escape') {
                 if (editPolicyId !== null) setEditPolicyId(null)
                 else if (createOpen) setCreateOpen(false)
@@ -300,7 +332,7 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
         }
         window.addEventListener('keydown', handler)
         return () => window.removeEventListener('keydown', handler)
-    }, [tab, createOpen, editPolicyId, setBrokerOpen, manualRateOpen])
+    }, [tab, createOpen, editPolicyId, setBrokerOpen, manualRateOpen, baseCurrency])
 
     if (loading) return <FxSkeleton />
 
@@ -325,6 +357,7 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                     orgCurrencyCount={orgCurrencyCount}
                     orgBaseCode={orgBaseCode}
                     latestRateByKey={latestRateByKey}
+                    latestSidesByKey={latestSidesByKey}
                     historyByKey={historyByKey}
                     healthCounts={healthCounts}
                     healthByPolicy={healthByPolicy}
@@ -337,7 +370,19 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                     onSyncAll={handleSyncAll}
                     onDelete={handleDelete}
                     onAutoConfigure={handleAutoConfigure}
-                    onCreate={() => setCreateOpen(true)}
+                    onCreate={() => {
+                        // If the finance.Currency mirror has loaded, open
+                        // immediately. Otherwise queue the open + force a
+                        // refresh so the user gets the drawer the moment
+                        // the mirror finishes populating.
+                        if (baseCurrency) {
+                            setCreateOpen(true)
+                        } else {
+                            setPendingCreate(true)
+                            toast.info('Loading currencies…')
+                            void loadAll()
+                        }
+                    }}
                     onSetBroker={() => setSetBrokerOpen(true)}
                     onEdit={(id) => setEditPolicyId(id)}
                     onUpdate={async (id, patch) => {
@@ -415,13 +460,18 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                 <ManualRateModal
                     base={baseCurrency}
                     currencies={currencies}
-                    onClose={() => setManualRateOpen(false)}
-                    onSubmit={async (payload) => {
-                        const r = await createExchangeRate(payload)
-                        if (!r.success) { toast.error(r.error || 'Failed'); return }
-                        toast.success('Rate added')
+                    onClose={async () => {
+                        // Reload on close — fires after either single MID
+                        // or three-side submissions complete. Avoids a
+                        // round-trip per row when entering all three sides.
                         setManualRateOpen(false)
                         await loadAll()
+                    }}
+                    onSubmit={async (payload) => {
+                        const r = await createExchangeRate(payload)
+                        if (!r.success) { throw new Error(r.error || 'Failed'); }
+                        toast.success(`Rate ${payload.rate_side ?? 'MID'} added`)
+                        // Note: NOT calling loadAll() here — happens on modal close.
                     }}
                 />
             )}
@@ -476,6 +526,7 @@ function RateRulesView(props: {
     orgCurrencyCount?: number
     orgBaseCode?: string | null
     latestRateByKey: Map<string, ExchangeRate>
+    latestSidesByKey: Map<string, { MID?: ExchangeRate; BID?: ExchangeRate; ASK?: ExchangeRate }>
     historyByKey: Map<string, ExchangeRate[]>
     healthCounts: Record<HealthKey, number>
     healthByPolicy: Map<number, HealthKey>
@@ -592,6 +643,11 @@ function RateRulesView(props: {
                 </ActionBtn>
                 <ActionBtn icon={<Plus size={11} />} tone="--app-primary" filled
                     disabled={!hasNonBase || !hasBase}
+                    title={!hasBase
+                        ? 'Set a base currency first — Currencies tab → ⭐'
+                        : !hasNonBase
+                            ? 'Enable at least one non-base currency'
+                            : 'Add a new rate-source policy  ( n )'}
                     onClick={props.onCreate}>
                     New Policy
                 </ActionBtn>
@@ -643,6 +699,7 @@ function RateRulesView(props: {
                             p={p}
                             health={props.healthByPolicy.get(p.id) ?? 'never'}
                             latest={props.latestRateByKey.get(`${p.from_code}→${p.to_code}|${p.rate_type}`) ?? null}
+                            sides={props.latestSidesByKey.get(`${p.from_code}→${p.to_code}|${p.rate_type}`) ?? {}}
                             history={props.historyByKey.get(`${p.from_code}→${p.to_code}|${p.rate_type}`) ?? []}
                             syncing={props.syncingId === p.id}
                             onSync={() => props.onSyncOne(p.id)}
@@ -660,10 +717,13 @@ function RateRulesView(props: {
 function Search24() { return <RefreshCcw size={28} className="text-app-muted-foreground opacity-20" /> }
 
 /* ─── Policy card ────────────────────────────────────────────────── */
-function PolicyCard({ p, health, latest, history, syncing, onSync, onEdit, onDelete, onToggleAuto }: {
+function PolicyCard({ p, health, latest, sides, history, syncing, onSync, onEdit, onDelete, onToggleAuto }: {
     p: CurrencyRatePolicy
     health: HealthKey
     latest: ExchangeRate | null
+    /** All-sides snapshot for this pair. Used to render BID/MID/ASK row when
+     *  the policy has spreads configured. Empty object = no rates yet. */
+    sides: { MID?: ExchangeRate; BID?: ExchangeRate; ASK?: ExchangeRate }
     /** Last ~30 MID rates ascending — drives the sparkline. */
     history: ExchangeRate[]
     syncing: boolean
@@ -732,27 +792,79 @@ function PolicyCard({ p, health, latest, history, syncing, onSync, onEdit, onDel
                 </div>
             </div>
 
-            {/* Live rate readout */}
+            {/* Live rate readout — when the policy has bid/ask spreads
+                configured (or BID/ASK rows exist in the DB), render a
+                three-column BID | MID | ASK readout. Otherwise the classic
+                single-MID block. */}
             <div className="px-4 pb-2">
-                {adjusted !== null ? (
-                    <>
-                        <div className="font-mono font-black tabular-nums" style={{ fontSize: 22, color: 'var(--app-foreground)', lineHeight: 1.2 }}>
-                            {adjusted.toFixed(6)}
-                        </div>
-                        <div className="font-mono mt-0.5" style={{ fontSize: 10, color: 'var(--app-muted-foreground)' }}>
-                            1 {p.from_code} = {adjusted.toFixed(6)} {p.to_code}
-                            {raw !== null && (
-                                <span className="ml-1.5 opacity-70" title={`Raw provider rate before ×${mul.toFixed(4)} +${mk.toFixed(4)}%`}>
-                                    · raw {raw.toFixed(6)}
-                                </span>
+                {(() => {
+                    const hasSpread = Number(p.bid_spread_pct) !== 0 || Number(p.ask_spread_pct) !== 0
+                    const hasBidAsk = !!sides.BID || !!sides.ASK
+                    const showThreeSided = hasSpread || hasBidAsk
+
+                    if (!showThreeSided) {
+                        return adjusted !== null ? (
+                            <>
+                                <div className="font-mono font-black tabular-nums" style={{ fontSize: 22, color: 'var(--app-foreground)', lineHeight: 1.2 }}>
+                                    {adjusted.toFixed(6)}
+                                </div>
+                                <div className="font-mono mt-0.5" style={{ fontSize: 10, color: 'var(--app-muted-foreground)' }}>
+                                    1 {p.from_code} = {adjusted.toFixed(6)} {p.to_code}
+                                    {raw !== null && (
+                                        <span className="ml-1.5 opacity-70" title={`Raw provider rate before ×${mul.toFixed(4)} +${mk.toFixed(4)}%`}>
+                                            · raw {raw.toFixed(6)}
+                                        </span>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-[11px] italic" style={{ color: 'var(--app-muted-foreground)' }}>
+                                No rate yet — click Sync below.
+                            </div>
+                        )
+                    }
+
+                    // Three-sided render: derive BID/ASK from spreads if rows
+                    // aren't yet in the DB (so the user sees the *intended*
+                    // values immediately after configuring spreads, even
+                    // before the next sync writes them).
+                    const midRate = sides.MID ? Number(sides.MID.rate) : adjusted
+                    const bidPct = Number(p.bid_spread_pct) || 0
+                    const askPct = Number(p.ask_spread_pct) || 0
+                    const bidRate = sides.BID ? Number(sides.BID.rate)
+                        : midRate !== null ? midRate * (1 - bidPct / 100) : null
+                    const askRate = sides.ASK ? Number(sides.ASK.rate)
+                        : midRate !== null ? midRate * (1 + askPct / 100) : null
+                    const bidIsLive = !!sides.BID
+                    const askIsLive = !!sides.ASK
+
+                    if (midRate === null) {
+                        return (
+                            <div className="text-[11px] italic" style={{ color: 'var(--app-muted-foreground)' }}>
+                                No rate yet — click Sync below to populate BID / MID / ASK.
+                            </div>
+                        )
+                    }
+
+                    return (
+                        <div>
+                            <div className="grid grid-cols-3 gap-2 items-end">
+                                <RateColumn side="BID" tone="--app-success" sub={`-${bidPct.toFixed(2)}%`}
+                                    rate={bidRate} pending={!bidIsLive && bidRate !== null} />
+                                <RateColumn side="MID" tone="--app-info" sub="mid-market"
+                                    rate={midRate} pending={false} primary />
+                                <RateColumn side="ASK" tone="--app-error" sub={`+${askPct.toFixed(2)}%`}
+                                    rate={askRate} pending={!askIsLive && askRate !== null} />
+                            </div>
+                            {(!bidIsLive || !askIsLive) && (
+                                <p className="font-mono mt-1.5 leading-tight" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>
+                                    <AlertTriangle size={9} className="inline -mt-px mr-0.5" style={{ color: 'var(--app-warning)' }} />
+                                    Bid/Ask values shown are <strong>previewed</strong> from spread; sync to write them to history.
+                                </p>
                             )}
                         </div>
-                    </>
-                ) : (
-                    <div className="text-[11px] italic" style={{ color: 'var(--app-muted-foreground)' }}>
-                        No rate yet — click Sync below.
-                    </div>
-                )}
+                    )
+                })()}
 
                 {/* Sparkline of the last ~30 MID rates — drawn left-to-right
                     over time. Trend tone matches the directional change. */}
@@ -1608,22 +1720,44 @@ function SetBrokerModal({ policies, currencies, onClose, onApplied }: {
 /* ═══════════════════════════════════════════════════════════════════
  *  MANUAL RATE MODAL
  * ═══════════════════════════════════════════════════════════════════ */
+/** Manual rate entry. Two modes:
+ *    - "Mid only" (default)        — single rate input, writes one MID row.
+ *    - "Bid + Mid + Ask"           — three rate inputs, writes a triple.
+ *  Backend's unique-together is (org, from, to, date, type, side), so writing
+ *  three rows with distinct sides is safe and idempotent for re-edits. */
 function ManualRateModal({ base, currencies, onClose, onSubmit }: {
     base: Currency
     currencies: Currency[]
     onClose: () => void
-    onSubmit: (p: { from_currency: number; to_currency: number; rate: string; rate_type: ExchangeRate['rate_type']; effective_date: string; source?: string }) => Promise<void>
+    onSubmit: (p: { from_currency: number; to_currency: number; rate: string; rate_type: ExchangeRate['rate_type']; rate_side?: 'MID' | 'BID' | 'ASK'; effective_date: string; source?: string }) => Promise<void>
 }) {
     const non_base = currencies.filter(c => c.id !== base.id && c.is_active)
     const [fromId, setFromId] = useState<number | null>(non_base[0]?.id ?? null)
-    const [rate, setRate] = useState('1.000000')
+    const [mode, setMode] = useState<'mid' | 'three'>('mid')
+    const [midRate, setMidRate] = useState('1.000000')
+    const [bidRate, setBidRate] = useState('')
+    const [askRate, setAskRate] = useState('')
     const [rateType, setRateType] = useState<ExchangeRate['rate_type']>('SPOT')
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
     const [busy, setBusy] = useState(false)
+    const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
 
-    const rateNum = Number(rate)
-    const rateValid = isFinite(rateNum) && rateNum > 0
     const fromCode = non_base.find(c => c.id === fromId)?.code ?? '???'
+    const mid = Number(midRate)
+    const bid = Number(bidRate)
+    const ask = Number(askRate)
+    const midValid = isFinite(mid) && mid > 0
+    const threeValid = midValid
+        && isFinite(bid) && bid > 0 && bid <= mid
+        && isFinite(ask) && ask > 0 && ask >= mid
+    const valid = mode === 'mid' ? midValid : threeValid
+
+    // When user switches to 'three', auto-fill bid/ask with mid as a starting
+    // point so they don't see empty fields screaming "invalid".
+    useEffect(() => {
+        if (mode === 'three' && !bidRate && midValid) setBidRate(midRate)
+        if (mode === 'three' && !askRate && midValid) setAskRate(midRate)
+    }, [mode, midRate, midValid])  // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
@@ -1644,18 +1778,19 @@ function ManualRateModal({ base, currencies, onClose, onSubmit }: {
                     </button>
                 </div>
                 <div className="px-5 pb-4 space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-2 items-end">
+                    {/* Pair + type + date */}
+                    <div className="grid grid-cols-2 gap-2">
                         <Field label="From">
                             <select value={fromId ?? ''} onChange={e => setFromId(Number(e.target.value))}
                                 className={INPUT_CLS} style={INPUT_STYLE}>
                                 {non_base.map(c => <option key={c.id} value={c.id}>{c.code} — {c.name}</option>)}
                             </select>
                         </Field>
-                        <span className="self-end pb-2 text-center font-mono font-black"
-                            style={{ color: 'var(--app-muted-foreground)' }}>→</span>
-                        <Field label={`Rate (in ${base.code})`} error={!rateValid}>
-                            <PrefixInput tone="--app-success" prefix="1×" suffix={base.code}
-                                value={rate} onChange={setRate} valid={rateValid} placeholder="1.000000" />
+                        <Field label={`To (always ${base.code})`}>
+                            <div className={INPUT_CLS + ' font-mono font-black flex items-center'}
+                                style={{ ...INPUT_STYLE, justifyContent: 'center', color: 'var(--app-muted-foreground)' }}>
+                                {base.code}
+                            </div>
                         </Field>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -1670,33 +1805,126 @@ function ManualRateModal({ base, currencies, onClose, onSubmit }: {
                                 className={INPUT_CLS} style={INPUT_STYLE} />
                         </Field>
                     </div>
-                    {rateValid && (
+
+                    {/* Mode toggle: mid-only vs three-sided */}
+                    <Field label="Sides">
+                        <div className="inline-flex items-stretch rounded-xl overflow-hidden border h-9 w-full"
+                            style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                            {([
+                                { key: 'mid' as const,   label: 'Mid only',          hint: 'Single quote (most common)' },
+                                { key: 'three' as const, label: 'Bid + Mid + Ask',   hint: 'Two-sided quote (transactional)' },
+                            ]).map((opt, idx) => {
+                                const active = mode === opt.key
+                                return (
+                                    <button key={opt.key} type="button" onClick={() => setMode(opt.key)}
+                                        title={opt.hint}
+                                        className="flex-1 inline-flex items-center justify-center font-bold transition-all"
+                                        style={{
+                                            fontSize: 11,
+                                            color: active ? 'var(--app-success)' : 'var(--app-muted-foreground)',
+                                            background: active ? 'color-mix(in srgb, var(--app-success) 12%, transparent)' : 'transparent',
+                                            borderLeft: idx === 0 ? 'none' : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                        }}>
+                                        {opt.label}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </Field>
+
+                    {/* Rate inputs */}
+                    {mode === 'mid' ? (
+                        <Field label={`Rate (1 ${fromCode} = ? ${base.code})`} error={!midValid}
+                            hint={!midValid ? 'Must be a positive number' : undefined}>
+                            <PrefixInput tone="--app-success" prefix={`1 ${fromCode} =`} suffix={base.code}
+                                value={midRate} onChange={setMidRate} valid={midValid} placeholder="1.000000" />
+                        </Field>
+                    ) : (
+                        <div className="space-y-2">
+                            <Field label={`Bid · operator buys (≤ Mid)`} error={!isFinite(bid) || bid <= 0 || bid > mid}>
+                                <PrefixInput tone="--app-success" prefix="−" suffix={base.code}
+                                    value={bidRate} onChange={setBidRate}
+                                    valid={isFinite(bid) && bid > 0 && bid <= mid}
+                                    placeholder="0.999000" />
+                            </Field>
+                            <Field label={`Mid · mid-market`} error={!midValid}>
+                                <PrefixInput tone="--app-info" prefix="·" suffix={base.code}
+                                    value={midRate} onChange={setMidRate} valid={midValid}
+                                    placeholder="1.000000" />
+                            </Field>
+                            <Field label={`Ask · operator sells (≥ Mid)`} error={!isFinite(ask) || ask <= 0 || ask < mid}>
+                                <PrefixInput tone="--app-error" prefix="+" suffix={base.code}
+                                    value={askRate} onChange={setAskRate}
+                                    valid={isFinite(ask) && ask > 0 && ask >= mid}
+                                    placeholder="1.001000" />
+                            </Field>
+                            {threeValid && mid > 0 && (
+                                <p className="font-mono px-2 py-1.5 rounded-md inline-block"
+                                    style={{ ...soft('--app-info', 8), color: 'var(--app-info)', fontSize: 10 }}>
+                                    Spread: bid −{((mid - bid) / mid * 100).toFixed(2)}% / ask +{((ask - mid) / mid * 100).toFixed(2)}%
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {mode === 'mid' && midValid && (
                         <p className="font-mono px-2 py-1.5 rounded-md inline-block"
                             style={{ ...soft('--app-success', 8), color: 'var(--app-success)', fontSize: 10 }}>
                             <TrendingUp size={10} className="inline -mt-0.5 mr-1" />
-                            Preview: 1 {fromCode} = <strong>{rateNum.toFixed(6)}</strong> {base.code} on {date}
+                            Preview: 1 {fromCode} = <strong>{mid.toFixed(6)}</strong> {base.code} on {date}
                         </p>
                     )}
                 </div>
-                <div className="px-4 py-3 flex items-center justify-end gap-2"
+                <div className="px-4 py-3 flex items-center justify-between gap-2"
                     style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)' }}>
-                    <button onClick={onClose}
-                        className="px-3.5 py-1.5 rounded-xl font-bold border"
-                        style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
-                        Cancel
-                    </button>
-                    <button disabled={!rateValid || busy} onClick={async () => {
-                        setBusy(true)
-                        try {
-                            await onSubmit({ from_currency: fromId!, to_currency: base.id, rate, rate_type: rateType, effective_date: date, source: 'MANUAL' })
-                        } finally { setBusy(false) }
-                    }}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold disabled:opacity-50"
-                        style={!busy && rateValid
-                            ? { ...grad('--app-success'), color: FG_PRIMARY, fontSize: 11, boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }
-                            : { background: 'var(--app-border)', color: 'var(--app-muted-foreground)', fontSize: 11 }}>
-                        {busy ? 'Adding…' : 'Add rate'}
-                    </button>
+                    <div className="text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                        {progress ? `Saving ${progress.done}/${progress.total}…`
+                            : !valid ? (mode === 'mid' ? 'Enter a positive rate' : 'Bid ≤ Mid ≤ Ask, all positive')
+                            : mode === 'three' ? 'Will write 3 rows (BID + MID + ASK)'
+                            : null}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={onClose}
+                            className="px-3.5 py-1.5 rounded-xl font-bold border"
+                            style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                            Cancel
+                        </button>
+                        <button disabled={!valid || busy} onClick={async () => {
+                            setBusy(true)
+                            try {
+                                if (mode === 'mid') {
+                                    setProgress({ done: 0, total: 1 })
+                                    await onSubmit({ from_currency: fromId!, to_currency: base.id, rate: midRate, rate_type: rateType, rate_side: 'MID', effective_date: date, source: 'MANUAL' })
+                                    setProgress({ done: 1, total: 1 })
+                                } else {
+                                    // Three sequential calls — backend's unique-together accepts the trio.
+                                    const ops: Array<{ side: 'BID' | 'MID' | 'ASK'; rate: string }> = [
+                                        { side: 'BID', rate: bidRate },
+                                        { side: 'MID', rate: midRate },
+                                        { side: 'ASK', rate: askRate },
+                                    ]
+                                    setProgress({ done: 0, total: ops.length })
+                                    for (let i = 0; i < ops.length; i++) {
+                                        await onSubmit({
+                                            from_currency: fromId!, to_currency: base.id,
+                                            rate: ops[i].rate, rate_type: rateType,
+                                            rate_side: ops[i].side, effective_date: date, source: 'MANUAL',
+                                        })
+                                        setProgress({ done: i + 1, total: ops.length })
+                                    }
+                                }
+                                onClose()  // triggers parent's reload
+                            } catch (e) {
+                                toast.error(e instanceof Error ? e.message : 'Failed')
+                            } finally { setBusy(false); setProgress(null) }
+                        }}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold disabled:opacity-50"
+                            style={!busy && valid
+                                ? { ...grad('--app-success'), color: FG_PRIMARY, fontSize: 11, boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }
+                                : { background: 'var(--app-border)', color: 'var(--app-muted-foreground)', fontSize: 11 }}>
+                            {busy ? 'Adding…' : mode === 'three' ? 'Add 3 rows' : 'Add rate'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1816,6 +2044,38 @@ function PairChart({ list }: { list: ExchangeRate[] }) {
                     <span className="text-app-muted-foreground">Latest</span>
                     <span className="font-mono font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>{values[values.length - 1].toFixed(6)}</span>
                 </span>
+            </div>
+        </div>
+    )
+}
+
+/** Single column in the BID / MID / ASK trio shown on a policy card. The
+ *  `pending` flag styles previewed (not-yet-written-to-DB) values with a
+ *  dashed underline so the operator knows to sync. */
+function RateColumn({ side, tone, sub, rate, pending, primary }: {
+    side: 'BID' | 'MID' | 'ASK'
+    tone: string
+    sub: string
+    rate: number | null
+    pending: boolean
+    primary?: boolean
+}) {
+    return (
+        <div className="text-center">
+            <div className="font-black uppercase tracking-widest mb-0.5"
+                style={{ fontSize: 8, color: `var(${tone})` }}>
+                {side} <span className="text-app-muted-foreground font-mono">· {sub}</span>
+            </div>
+            <div className="font-mono font-black tabular-nums leading-none"
+                style={{
+                    fontSize: primary ? 18 : 14,
+                    color: rate === null ? 'var(--app-muted-foreground)' : 'var(--app-foreground)',
+                    textDecoration: pending ? 'underline dashed' : 'none',
+                    textDecorationColor: pending ? `var(--app-warning)` : undefined,
+                    textUnderlineOffset: 3,
+                }}
+                title={pending ? 'Previewed from spread — sync to commit' : undefined}>
+                {rate === null ? '—' : rate.toFixed(primary ? 6 : 4)}
             </div>
         </div>
     )

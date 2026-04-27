@@ -90,6 +90,9 @@ class ProcurementRequest(TenantModel):
     )
     requested_at = models.DateTimeField(auto_now_add=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
+    # Updated on every bump so freshly-reminded requests bubble up in lists.
+    last_bumped_at = models.DateTimeField(null=True, blank=True)
+    bump_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = 'procurement_request'

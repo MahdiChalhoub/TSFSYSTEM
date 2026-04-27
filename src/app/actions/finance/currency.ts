@@ -129,6 +129,11 @@ export async function createExchangeRate(payload: {
     to_currency: number
     rate: string
     rate_type: ExchangeRate['rate_type']
+    /** MID = mid-market (default), BID/ASK = the buy/sell sides of a quote.
+     *  Operators can enter all three sides for a single (date, pair, type) by
+     *  calling this action three times — backend's unique-together includes
+     *  rate_side. */
+    rate_side?: 'MID' | 'BID' | 'ASK'
     effective_date: string
     source?: string
 }): Promise<{ success: boolean; data?: ExchangeRate; error?: string }> {
