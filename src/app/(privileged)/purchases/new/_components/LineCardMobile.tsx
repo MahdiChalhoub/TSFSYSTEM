@@ -47,6 +47,7 @@ export function LineCardMobile({ line, idx, onUpdate, onRemove }: Props) {
                     <label className="block text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Cost</label>
                     <div className="text-[12px] font-bold font-mono tabular-nums text-center py-1.5" style={{ color: 'var(--app-foreground)' }}>{Number(line.unitCostHT).toFixed(2)}</div>
                     <input type="hidden" name={`lines[${idx}][unitCostHT]`} value={line.unitCostHT} />
+                    <input type="hidden" name={`lines[${idx}][unitCostTTC]`} value={line.unitCostTTC ?? Number(line.unitCostHT) * (1 + Number(line.taxRate || 0))} />
                 </div>
                 <div>
                     <label className="block text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--app-muted-foreground)' }}>Stock</label>

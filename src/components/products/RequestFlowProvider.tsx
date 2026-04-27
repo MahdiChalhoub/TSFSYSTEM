@@ -35,10 +35,20 @@ export function useRequestFlow() {
     return ctx
 }
 
+const CART_STORAGE_KEY = 'tsf_request_cart_v1'
+
 export function RequestFlowProvider({ children }: { children: React.ReactNode }) {
     const [mode, setMode] = useState<FlowMode>('DIALOG')
     const [dialog, setDialog] = useState<{ type: RequestType; products: RequestableProduct[] } | null>(null)
-    const [cart, setCart] = useState<CartLine[]>([])
+    const [cart, setCart] = useState<CartLine[]>(() => {
+        if (typeof window === 'undefined') return []
+        try {
+            const raw = window.localStorage.getItem(CART_STORAGE_KEY)
+            if (!raw) return []
+            const parsed = JSON.parse(raw)
+            return Array.isArray(parsed) ? parsed : []
+        } catch { return [] }
+    })
     const [pending, startTransition] = useTransition()
     const modeRef = useRef<FlowMode>('DIALOG')
     modeRef.current = mode
@@ -49,6 +59,11 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
             setMode(m === 'INSTANT' || m === 'CART' ? m : 'DIALOG')
         })
     }, [])
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        try { window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart)) } catch {}
+    }, [cart])
 
     const addToCart = useCallback((type: RequestType, products: RequestableProduct[]) => {
         setCart(prev => {
@@ -170,12 +185,13 @@ function CartTray({
     const transferCount = cart.filter(l => l.type === 'TRANSFER').length
     return (
         <div
-            className="fixed bottom-4 right-4 z-40 rounded-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-200"
+            className="fixed z-40 rounded-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-200 bottom-3 right-3 left-3 sm:left-auto sm:bottom-4 sm:right-4"
             style={{
                 background: 'var(--app-surface)',
                 border: '1px solid var(--app-border)',
                 boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
-                width: expanded ? 'min(360px, calc(100vw - 32px))' : 'auto',
+                maxWidth: expanded ? 'min(360px, calc(100vw - 24px))' : 'calc(100vw - 24px)',
+                marginLeft: 'auto',
                 maxHeight: expanded ? 'min(440px, calc(100vh - 5rem))' : 'auto',
             }}
         >

@@ -54,19 +54,41 @@ The product list shows `procurement_status` as a separate badge from the existin
 - Honest avg_daily_sales-based suggested qty (Phase 2 — needs a backend endpoint)
 - Supplier/warehouse selection in the dialog (deferred — request review screen handles them)
 
-## Phase 2 — Lifecycle status field (later)
+## Phase 2 — Lifecycle status (DONE 2026-04-27)
 
-- New field `Product.procurement_status` (CharField, choices: AVAILABLE / REQUESTED / PO_SENT / PO_ACCEPTED / IN_TRANSIT / FAILED, default AVAILABLE).
-- Migration in `apps/inventory/migrations/`.
-- Django signals on `ProcurementRequest` create → set REQUESTED; approve → PO_SENT; PO accepted → PO_ACCEPTED; receipt → AVAILABLE; cancel/reject → previous state restored or FAILED.
-- Frontend badge in `ProductColumns.tsx` next to (not replacing) the lifecycle status badge.
-- Combined display: "Out of Stock | Low Stock | Available — Requested" derived from `available_qty` thresholds + `procurement_status`.
-- Backend `procurement-requests/suggest-quantity/` endpoint that computes `avg_daily × lead × safety` per product so the dialog uses the honest formula.
+**Implemented as a derived SerializerMethodField, not a stored field.** No migration needed; always accurate.
 
-## Phase 3 — Three flows + per-user mode (later)
+- `procurement_status` on `ProductSerializer` reads the latest `ProcurementRequest` for the product (gated import, isolation rule).
+- Lifecycle map:
+  - PENDING / APPROVED → `REQUESTED`
+  - EXECUTED + linked `source_po` → follows the PO state (DRAFT/SUBMITTED/APPROVED/SENT/CONFIRMED → `PO_SENT`; IN_TRANSIT/PARTIALLY_RECEIVED → `IN_TRANSIT`; RECEIVED+/INVOICED+/COMPLETED → `NONE`; REJECTED/CANCELLED → `FAILED`)
+  - EXECUTED without PO → `PO_SENT`
+  - REJECTED → `FAILED`
+  - No recent request → fall back to direct-PO check (any open `PurchaseOrderLine` for this product)
+- Frontend `procurement` column added to `ProductColumns.tsx` (defaultVisible: true). Combines stock tier (Out of Stock / Low Stock / Available from `on_hand_qty` vs `min_stock_level`) with the lifecycle label, e.g. `Low Stock · Requested`.
+- "Procurement" cell added to the Stock card in `ProductDetailCards.tsx`.
 
-- Build INSTANT (one-click create with formula qty) and CART (sticky panel accumulator) alongside the existing DIALOG.
-- Read `request_flow_mode` from active `AnalyticsProfile` (already supports `personal` vs `organization` scope) — so users get per-user customization for free.
+## Phase 2.5 — Honest qty + Convert-to-PO (DONE 2026-04-27)
+
+- Backend `procurement-requests/suggest-quantity/?product_id=N` action. Reads `purchase_analytics_config`, computes `avg_daily_sales` from `InventoryMovement` over `sales_avg_period_days`, returns `avg × lead × safety`. Falls back through `reorder_quantity` → `min_stock × safety` → `1` when no sales history. Returns reason + raw inputs for transparency.
+- Backend `procurement-requests/{id}/convert-to-po/` action. Builds a draft `PurchaseOrder` + line (uses `req.suggested_unit_price` falling back to `product.cost_price_ht`, applies `product.tva_rate`), links `req.source_po`, flips request to EXECUTED, returns `{po_id, po_url}`.
+- Frontend `getSuggestedQuantity` server action. Dialog refines its placeholder qty by calling the endpoint per product after the modal opens.
+- Frontend `convertProcurementRequestToPO` server action. New "Create PO" button on RequestRow (APPROVED + PURCHASE only) — sends, navigates to the PO detail page on success.
+
+## Phase 3 — Three flows + per-user mode (DONE 2026-04-27)
+
+- `RequestFlowProvider` (`src/components/products/RequestFlowProvider.tsx`) mounted around the products manager via `page.tsx`. Reads `request_flow_mode` from `getPurchaseAnalyticsConfig()` on mount; exposes `trigger(type, products)`, `cart`, `addToCart`, `removeFromCart`, `clearCart`, `submitCart`.
+- INSTANT — calls `getSuggestedQuantity` → `createProcurementRequest` immediately. Toast with "View →" link.
+- DIALOG — opens the existing `RequestProductDialog`.
+- CART — adds to a sticky tray (bottom-right desktop, full-width on mobile <640px). Persists to localStorage (`tsf_request_cart_v1`). Submit creates one request per line.
+- Settings page Request Flow card now enables all 3 modes; toggle saves inline (bypasses the global Save button) via `savePurchaseAnalyticsConfig({ request_flow_mode: mode })`. Profile-edit mode keeps the override pattern.
+
+## Deferred (not done this session)
+
+- **Notifications** when a request is created/approved/converted. `NotificationService` exists but needs a `NotificationTemplate` registered.
+- **Permission gating** with `@require_permission`. The decorator isn't used in `apps/pos` or `apps/inventory` views — adding it to one endpoint would be inconsistent. Wants a broader RBAC audit first.
+- **Backend tests** for `procurement_status` derivation, `suggest_quantity`, `convert_to_po`.
+- ~~Mobile product list~~ — audited 2026-04-27, no separate `Mobile*Client.tsx` exists for products. The desktop manager handles all viewports via responsive Tailwind classes. The cart tray is mobile-safe. No follow-up needed.
 
 ## Risks
 

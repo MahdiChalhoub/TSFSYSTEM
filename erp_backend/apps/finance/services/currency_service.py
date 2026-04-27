@@ -90,27 +90,67 @@ class CurrencyService:
         Fallback chain:
           1. Requested rate_type on/before date
           2. SPOT on/before date
-          3. (None, None)  → caller decides whether to error or skip
+          3. JIT broker sync if a CurrencyRatePolicy with sync_frequency
+             == 'ON_TRANSACTION' exists for the pair → re-query
+          4. (None, None)  → caller decides whether to error or skip
 
         If from_code == base, returns (Decimal('1'), None).
         """
-        from apps.finance.models.currency_models import ExchangeRate
+        import logging
+        from apps.finance.models.currency_models import ExchangeRate, CurrencyRatePolicy
 
+        _logger = logging.getLogger(__name__)
         base = CurrencyService.get_base_currency(organization)
         if base is None:
             return None, None
         if from_code == base.code:
             return Decimal('1'), None
 
-        qs = ExchangeRate.objects.filter(
-            organization=organization,
-            from_currency__code=from_code,
-            to_currency=base,
-            effective_date__lte=on_date,
-        )
-        rate_obj = qs.filter(rate_type=rate_type).order_by('-effective_date').first()
-        if not rate_obj and rate_type != 'SPOT':
-            rate_obj = qs.filter(rate_type='SPOT').order_by('-effective_date').first()
+        def _query():
+            qs = ExchangeRate.objects.filter(
+                organization=organization,
+                from_currency__code=from_code,
+                to_currency=base,
+                effective_date__lte=on_date,
+            )
+            r = qs.filter(rate_type=rate_type).order_by('-effective_date').first()
+            if not r and rate_type != 'SPOT':
+                r = qs.filter(rate_type='SPOT').order_by('-effective_date').first()
+            return r
+
+        rate_obj = _query()
+
+        # Just-in-time sync: if no rate is on file (or it's stale and the
+        # policy is ON_TRANSACTION), fire sync_for_transaction() which goes
+        # to the broker and writes a fresh ExchangeRate row. Then re-query.
+        # ON_TRANSACTION policies skip cron entirely, so this is the ONLY
+        # path that materializes their rates — without it they'd never sync.
+        try:
+            jit_policy = CurrencyRatePolicy.objects.filter(
+                organization=organization,
+                from_currency__code=from_code,
+                to_currency=base,
+                rate_type=rate_type,
+                is_active=True,
+                sync_frequency='ON_TRANSACTION',
+            ).select_related('from_currency', 'to_currency').first()
+            if jit_policy and jit_policy.provider != 'MANUAL':
+                from apps.finance.services.currency_rate_sync_service import CurrencyRateSyncService
+                ok, msg = CurrencyRateSyncService.sync_pair(jit_policy, on_date=on_date)
+                if ok:
+                    _logger.info(
+                        f"[JIT FX] {from_code}→{base.code} synced just-in-time before posting: {msg}"
+                    )
+                    rate_obj = _query()
+                else:
+                    _logger.warning(
+                        f"[JIT FX] {from_code}→{base.code} just-in-time sync failed: {msg}"
+                    )
+        except Exception as e:
+            # Never fail the posting path because the JIT sync errored — fall
+            # back to whatever's on file (or None, which the caller handles).
+            _logger.warning(f"[JIT FX] resolve_rate JIT hook error: {e}")
+
         if not rate_obj:
             return None, None
         return rate_obj.rate, rate_obj

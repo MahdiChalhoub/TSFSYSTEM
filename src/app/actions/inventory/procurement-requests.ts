@@ -63,3 +63,17 @@ export async function approveProcurementRequest(id: number) { return lifecycleAc
 export async function rejectProcurementRequest(id: number, reason?: string) { return lifecycleAction(id, 'reject', reason ? { reason } : undefined) }
 export async function executeProcurementRequest(id: number) { return lifecycleAction(id, 'execute') }
 export async function cancelProcurementRequest(id: number) { return lifecycleAction(id, 'cancel') }
+
+export async function convertProcurementRequestToPO(id: number): Promise<{ success: boolean; po_id?: number; po_url?: string; message?: string }> {
+    try {
+        const result = await erpFetch(`procurement-requests/${id}/convert-to-po/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+        })
+        revalidatePath('/inventory/requests')
+        return { success: true, po_id: result?.po_id, po_url: result?.po_url }
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Failed to convert to PO' }
+    }
+}

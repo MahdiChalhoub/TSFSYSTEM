@@ -183,11 +183,27 @@ export default function ProcurementRequestsPage() {
                         <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
                             <Inbox size={36} className="text-app-muted-foreground mb-3 opacity-40" />
                             <p className="text-sm font-bold text-app-muted-foreground">No procurement requests</p>
-                            <p className="text-[11px] text-app-muted-foreground mt-1">
-                                {search || statusFilter !== 'ALL' || typeFilter !== 'ALL'
-                                    ? 'No matches for the current filters'
-                                    : 'Open the products list and click "Request Purchase" or "Request Transfer" to create one.'}
-                            </p>
+                            {(search || statusFilter !== 'ALL' || typeFilter !== 'ALL') ? (
+                                <>
+                                    <p className="text-[11px] text-app-muted-foreground mt-1">
+                                        No matches for{' '}
+                                        {[
+                                            search && `search "${search}"`,
+                                            statusFilter !== 'ALL' && `status ${statusFilter}`,
+                                            typeFilter !== 'ALL' && `type ${typeFilter}`,
+                                        ].filter(Boolean).join(' · ')}
+                                    </p>
+                                    <button
+                                        onClick={() => { setSearch(''); setStatusFilter('ALL'); setTypeFilter('ALL') }}
+                                        className="mt-3 text-[10px] font-bold uppercase tracking-wider text-app-primary hover:brightness-110 transition-all">
+                                        Clear filters
+                                    </button>
+                                </>
+                            ) : (
+                                <p className="text-[11px] text-app-muted-foreground mt-1">
+                                    Open the products list and click "Request Purchase" or "Request Transfer" to create one.
+                                </p>
+                            )}
                         </div>
                     ) : filtered.map(r => <RequestRow key={r.id} r={r} pending={pending} runAction={runAction} />)}
                 </div>

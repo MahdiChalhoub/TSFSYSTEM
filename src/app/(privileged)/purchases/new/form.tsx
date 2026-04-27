@@ -3,8 +3,6 @@
 import { useActionState, useState, useEffect, useRef } from 'react'
 import type { PurchaseLine } from '@/types/erp'
 import { createPurchaseInvoice } from '@/app/actions/commercial/purchases'
-import { useDev } from '@/context/DevContext'
-import { useRouter } from 'next/navigation'
 import {
     ShoppingCart, SlidersHorizontal, BookOpen, Plus,
     ArrowRight, Settings2, FileText, LayoutGrid,
@@ -14,6 +12,7 @@ import { ProductSearch } from './_components/ProductSearch'
 import { LineColumnHeaders } from './_components/LineColumnHeaders'
 import { LineRowDesktop } from './_components/LineRowDesktop'
 import { LineCardMobile } from './_components/LineCardMobile'
+import { MetadataStrip } from './_components/MetadataStrip'
 
 export default function PurchaseForm({
     suppliers,
@@ -26,15 +25,17 @@ export default function PurchaseForm({
 }) {
     const initialState = { message: '', errors: {} }
     const [state, formAction, isPending] = useActionState(createPurchaseInvoice, initialState)
-    const { logOperation } = useDev()
-    const router = useRouter()
     const searchRef = useRef<HTMLInputElement>(null)
 
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL')
+    const [supplierId, setSupplierId] = useState<number | ''>('')
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('')
+    const [warehouseId, setWarehouseId] = useState<number | ''>('')
     const [invoicePriceType] = useState<'HT' | 'TTC'>('HT')
     const [vatRecoverable, setVatRecoverable] = useState<boolean>(true)
     const [lines, setLines] = useState<PurchaseLine[]>([])
+
+    const canSubmit = !isPending && lines.length > 0 && supplierId !== '' && selectedSiteId !== '' && warehouseId !== ''
 
     useEffect(() => { setVatRecoverable(scope === 'OFFICIAL') }, [scope])
 
@@ -90,7 +91,9 @@ export default function PurchaseForm({
             <input type="hidden" name="scope" value={scope} />
             <input type="hidden" name="invoicePriceType" value={invoicePriceType} />
             <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
+            <input type="hidden" name="supplierId" value={supplierId} />
             <input type="hidden" name="siteId" value={selectedSiteId} />
+            <input type="hidden" name="warehouseId" value={warehouseId} />
 
             {/* Floating Scope Toggle */}
             <div className="absolute top-0 right-0 z-40 flex items-center gap-2 px-5 py-3" style={{ top: '-52px' }}>
@@ -115,6 +118,17 @@ export default function PurchaseForm({
                     <FileText size={15} />
                 </button>
             </div>
+
+            <MetadataStrip
+                suppliers={suppliers}
+                sites={sites}
+                supplierId={supplierId}
+                onSupplierChange={setSupplierId}
+                siteId={selectedSiteId}
+                onSiteChange={setSelectedSiteId}
+                warehouseId={warehouseId}
+                onWarehouseChange={setWarehouseId}
+            />
 
             {/* Toolbar */}
             <div className="flex-shrink-0 flex items-center gap-0"
@@ -197,7 +211,8 @@ export default function PurchaseForm({
                     </div>
                     <button
                         type="submit"
-                        disabled={isPending || lines.length === 0}
+                        disabled={!canSubmit}
+                        title={canSubmit ? '' : 'Select supplier, site, warehouse, and add at least one line.'}
                         className="flex items-center justify-center gap-2 px-8 py-2.5 rounded-full font-black uppercase tracking-widest text-[11px] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         style={{
                             background: 'var(--app-primary)', color: 'white',

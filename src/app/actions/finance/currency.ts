@@ -23,6 +23,10 @@ export type ExchangeRate = {
     to_code: string
     rate: string
     rate_type: 'SPOT' | 'AVERAGE' | 'CLOSING' | 'BUDGET'
+    /** MID = mid-market (default; what most accounting books posts against)
+     *  BID = price the operator pays (operator buys foreign ccy from customer)
+     *  ASK = price the operator charges (operator sells foreign ccy to customer) */
+    rate_side: 'MID' | 'BID' | 'ASK'
     effective_date: string
     source: string | null
 }
@@ -175,6 +179,10 @@ export type CurrencyRatePolicy = {
     sync_frequency: 'ON_TRANSACTION' | 'DAILY' | 'WEEKLY' | 'MONTHLY'
     multiplier: string
     markup_pct: string
+    /** When non-zero, sync writes a triple (MID, BID, ASK) per (date, pair,
+     *  rate_type). 0/0 keeps the prior single-MID-row behaviour. */
+    bid_spread_pct: string
+    ask_spread_pct: string
     last_synced_at: string | null
     last_sync_status: 'OK' | 'FAIL' | 'SKIPPED' | null
     last_sync_error: string | null
@@ -202,6 +210,8 @@ export async function createRatePolicy(payload: {
     sync_frequency?: CurrencyRatePolicy['sync_frequency']
     multiplier?: string
     markup_pct?: string
+    bid_spread_pct?: string
+    ask_spread_pct?: string
     provider_config?: Record<string, any>
 }): Promise<{ success: boolean; data?: CurrencyRatePolicy; error?: string }> {
     try {

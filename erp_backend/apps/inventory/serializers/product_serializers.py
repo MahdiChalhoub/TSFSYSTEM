@@ -160,40 +160,62 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_procurement_status(self, obj):
         """
-        Derived lifecycle for the latest ProcurementRequest of this product:
-          PENDING / APPROVED          → 'REQUESTED'
-          EXECUTED + source_po:
-              DRAFT/SUBMITTED/APPROVED/SENT/CONFIRMED        → 'PO_SENT'
-              IN_TRANSIT/PARTIALLY_RECEIVED                  → 'IN_TRANSIT'
-              RECEIVED/PARTIALLY_INVOICED/INVOICED/COMPLETED → 'NONE' (back to available)
-              REJECTED/CANCELLED                             → 'FAILED'
-          EXECUTED without source_po                          → 'PO_SENT'
-          REJECTED / CANCELLED / no recent request            → 'NONE'
+        Derived lifecycle.
+        Step 1: latest ProcurementRequest:
+            PENDING / APPROVED  → 'REQUESTED'
+            EXECUTED + source_po → see PO mapping below
+            EXECUTED without PO  → 'PO_SENT'
+            REJECTED             → 'FAILED'
+            CANCELLED            → fall through to direct-PO check
+        Step 2: if no active request signal, check for any open PO line:
+            DRAFT / SUBMITTED / APPROVED / SENT / CONFIRMED → 'PO_SENT'
+            IN_TRANSIT / PARTIALLY_RECEIVED                 → 'IN_TRANSIT'
+            (RECEIVED / INVOICED / COMPLETED / CANCELLED / REJECTED → ignored, fall through)
+        Step 3: 'NONE'
         """
+        po_status_to_label = {
+            'DRAFT': 'PO_SENT', 'SUBMITTED': 'PO_SENT', 'APPROVED': 'PO_SENT',
+            'SENT': 'PO_SENT', 'CONFIRMED': 'PO_SENT',
+            'IN_TRANSIT': 'IN_TRANSIT', 'PARTIALLY_RECEIVED': 'IN_TRANSIT',
+        }
         try:
             from apps.pos.models.procurement_request_models import ProcurementRequest
         except ImportError:
+            ProcurementRequest = None
+
+        if ProcurementRequest is not None:
+            latest = ProcurementRequest.objects.filter(
+                product=obj, organization=obj.organization
+            ).order_by('-requested_at').first()
+            if latest:
+                if latest.status in ('PENDING', 'APPROVED'):
+                    return 'REQUESTED'
+                if latest.status == 'EXECUTED':
+                    po = latest.source_po
+                    if po is None:
+                        return 'PO_SENT'
+                    if po.status in po_status_to_label:
+                        return po_status_to_label[po.status]
+                    if po.status in ('REJECTED', 'CANCELLED'):
+                        return 'FAILED'
+                    if po.status in ('RECEIVED', 'PARTIALLY_INVOICED', 'INVOICED', 'COMPLETED'):
+                        return 'NONE'
+                    return 'PO_SENT'
+                if latest.status == 'REJECTED':
+                    return 'FAILED'
+
+        # Direct-PO fallback: open PO line not driven by a ProcurementRequest.
+        try:
+            from apps.pos.models.purchase_order_models import PurchaseOrderLine
+        except ImportError:
             return 'NONE'
-        latest = ProcurementRequest.objects.filter(
-            product=obj, organization=obj.organization
-        ).order_by('-requested_at').first()
-        if not latest:
-            return 'NONE'
-        if latest.status in ('PENDING', 'APPROVED'):
-            return 'REQUESTED'
-        if latest.status == 'EXECUTED':
-            po = latest.source_po
-            if po is None:
-                return 'PO_SENT'
-            if po.status in ('DRAFT', 'SUBMITTED', 'APPROVED', 'SENT', 'CONFIRMED'):
-                return 'PO_SENT'
-            if po.status in ('IN_TRANSIT', 'PARTIALLY_RECEIVED'):
-                return 'IN_TRANSIT'
-            if po.status in ('RECEIVED', 'PARTIALLY_INVOICED', 'INVOICED', 'COMPLETED'):
-                return 'NONE'
-            if po.status in ('REJECTED', 'CANCELLED'):
-                return 'FAILED'
-            return 'PO_SENT'
+        open_line = (PurchaseOrderLine.objects
+                     .filter(product=obj, organization=obj.organization,
+                             order__status__in=list(po_status_to_label.keys()))
+                     .order_by('-id')
+                     .first())
+        if open_line:
+            return po_status_to_label.get(open_line.order.status, 'PO_SENT')
         return 'NONE'
 
     def _resolve_warehouse(self, obj):

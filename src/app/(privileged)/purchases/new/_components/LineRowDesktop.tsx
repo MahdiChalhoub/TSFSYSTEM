@@ -79,6 +79,7 @@ export function LineRowDesktop({ line, idx, onUpdate, onRemove }: Props) {
                 <div className="font-bold font-mono text-[11px] tabular-nums" style={{ color: 'var(--app-foreground)' }}>{Number(line.unitCostHT).toFixed(2)}</div>
                 <div className="text-[10px] font-bold line-through tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>{Number(line.sellingPriceHT).toFixed(2)}</div>
                 <input type="hidden" name={`lines[${idx}][unitCostHT]`} value={line.unitCostHT} />
+                <input type="hidden" name={`lines[${idx}][unitCostTTC]`} value={line.unitCostTTC ?? Number(line.unitCostHT) * (1 + Number(line.taxRate || 0))} />
             </div>
             {/* Supplier Price */}
             <div className="px-2 py-2.5 w-[80px] flex-shrink-0 text-center hidden lg:block">

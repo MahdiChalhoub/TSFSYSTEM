@@ -15,6 +15,62 @@
 
 ## Session Log
 
+### Session: 2026-04-27 (Procurement Request flow — Phase 2 + 2.5 + 3 + Convert-to-PO)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE (code + typecheck clean) / ⏳ browser smoke-test pending
+- **Worked On**: Built out the rest of the procurement request feature on top of Phase 1 (earlier in this session): derived `procurement_status` on Product, lifecycle that follows the linked PurchaseOrder, three click flows (Instant / Dialog / Cart) with persistent storage, Convert-to-PO action, redesigned `/inventory/requests` page on Dajingo Pro lines.
+- **Files Modified (Phase 2 — derived procurement_status)**:
+  - `erp_backend/apps/inventory/serializers/product_serializers.py` — added `procurement_status` SerializerMethodField. Reads the latest `ProcurementRequest` for this product (gated import for module isolation), maps to lifecycle label. When request is EXECUTED with linked `source_po`, follows the PO state through `PO_SENT → IN_TRANSIT → NONE | FAILED`. When no recent request, falls back to checking any open `PurchaseOrderLine` (direct-PO support — handles POs created without going through the request flow). REJECTED requests resolve to `FAILED` (not NONE).
+  - `src/app/(privileged)/inventory/products/_lib/constants.ts` — added `procurement` column entry (defaultVisible: true), width, and `PROCUREMENT_STATUS_CONFIG` map (NONE/REQUESTED/PO_SENT/PO_ACCEPTED/IN_TRANSIT/FAILED).
+  - `src/app/(privileged)/inventory/products/_components/ProductColumns.tsx` — `case 'procurement'` renderer. Combines stock tier (Out of Stock / Low Stock / Available from `on_hand_qty` vs `min_stock_level`) with the lifecycle label, e.g. `Low Stock · Requested`.
+  - `src/app/(privileged)/inventory/products/_components/ProductDetailCards.tsx` — added "Procurement" cell in the Stock card.
+- **Files Modified (Phase 2.5 — honest qty + Convert-to-PO)**:
+  - `erp_backend/apps/pos/views/procurement_request_views.py` — new `@action 'suggest-quantity'` endpoint. Reads `purchase_analytics_config` from the org settings (sales_avg_period_days, proposed_qty_lead_days, proposed_qty_safety_multiplier), computes `avg_daily_sales` from `InventoryMovement` (type='OUT') over the period, returns `proposed_qty = avg × lead × safety`. Falls back to `reorder_quantity` → `min_stock × safety` → `1` when no sales history. Also new `@action 'convert-to-po'` endpoint that builds a draft `PurchaseOrder` + line from the request (uses `req.suggested_unit_price` or `product.cost_price_ht`, applies `product.tva_rate`), links `req.source_po`, flips request to EXECUTED. Returns `{po_id, po_url}` for the frontend.
+  - `src/app/actions/commercial/procurement-requests.ts` — new server action `getSuggestedQuantity(productId)` calling the new endpoint.
+  - `src/app/actions/inventory/procurement-requests.ts` — new server action `convertProcurementRequestToPO(id)`.
+  - `src/components/products/RequestProductDialog.tsx` — refines suggested qty by calling `getSuggestedQuantity` for each product after seeding with the placeholder formula. Two-phase paint: instant client-side estimate, then honest backend value when it returns.
+- **Files Modified (Phase 3 — three click flows + cart persistence)**:
+  - NEW `src/components/products/RequestFlowProvider.tsx` (266 lines) — context provider that reads `request_flow_mode` from the active `PurchaseAnalyticsConfig` profile and routes button clicks to the right flow: INSTANT (one-click create with formula qty), DIALOG (existing modal), CART (sticky tray accumulator). Cart persists to `localStorage` (key `tsf_request_cart_v1`) so it survives page refresh. Tray is mobile-safe (full-width on <640px, fixed bottom-right on ≥640px).
+  - `src/app/(privileged)/inventory/products/page.tsx` — wraps `<ProductMasterManager>` in `<RequestFlowProvider>`.
+  - `src/app/(privileged)/inventory/products/manager.tsx` — drops local dialog state, calls `useRequestFlow().trigger()` for the menu and bulk action handlers.
+  - `src/app/(privileged)/inventory/products/_components/ProductRow.tsx` — same — uses the hook instead of local state.
+  - `src/app/(privileged)/inventory/products/_components/ProductDetailCards.tsx` — same.
+  - `src/app/(privileged)/settings/purchase-analytics/page.tsx` — Request Flow chooser now enables INSTANT and CART (was disabled with "(soon)" stubs in Phase 1). Toggle is **inline-saved** — clicking persists immediately via `savePurchaseAnalyticsConfig({ request_flow_mode: mode })` rather than waiting for the page's global Save button. Profile-edit mode still goes through profile overrides.
+- **Files Modified (Procurement Requests page redesign)**:
+  - ARCHIVED `src/app/(privileged)/inventory/requests/{page.tsx,[id]/page.tsx,new/page.tsx}` → `ARCHIVE/...` per cleanup rule. Old page was 560 lines, ts-nocheck'd, used `OperationalRequest` model (different from what the dialog writes).
+  - NEW `src/app/(privileged)/inventory/requests/page.tsx` (213 lines) — fresh Dajingo Pro layout: page-header-icon with glow, auto-fit KPI strip in filter mode, search bar with Ctrl+K, focus mode with Ctrl+Q, table container, status pills using `var(--app-*)` tokens. Empty state shows active filter context with a Clear button.
+  - NEW `src/app/(privileged)/inventory/requests/_components/RequestRow.tsx` (133 lines) — single-row component. Lifecycle action buttons per status (PENDING → Approve / Reject / Cancel; APPROVED → **Create PO** [PURCHASE only] / Execute / Cancel; terminal states → no actions). The "Create PO" button calls `convert-to-po` and navigates to the new PO detail page.
+  - NEW `src/app/(privileged)/inventory/requests/_lib/meta.ts` (24 lines) — `STATUS_META`, `TYPE_META`, `PRIORITY_META` color/icon maps.
+  - NEW `src/app/actions/inventory/procurement-requests.ts` — `listProcurementRequests`, `approve/reject/execute/cancel/convertToPo` lifecycle actions.
+  - `src/components/admin/_lib/menu/inventory.ts` — sidebar label updated from "Operational Requests" → "Procurement Requests".
+  - `src/app/actions/commercial/procurement-requests.ts` — fixed pre-existing camelCase → snake_case payload bug. The action had been broken since creation: it sent `productId`/`requestType` while the Django serializer expected `product`/`request_type`. Surfaced when the user got "Coca-Cola Classic 330ml: This field is required" trying to create a request.
+- **Files Modified (Phase 1 — earlier this session, listed for completeness)**:
+  - NEW `src/components/products/RequestProductDialog.tsx`
+  - NEW `task and plan/inventory_procurement_request_001.md`
+  - `src/app/actions/settings/purchase-analytics-config.ts` — added `request_flow_mode` field to `PurchaseAnalyticsConfig` interface and `DEFAULTS`.
+  - `erp_backend/erp/views_system.py` — added `'request_flow_mode': 'DIALOG'` to the config DEFAULTS so the new key persists in `Organization.settings['purchase_analytics_config']`.
+  - 4 product-list buttons rewired (manager.tsx menu + bulk action, ProductDetailCards, ProductRow) — first to redirect targets, then to trigger the dialog.
+- **Discoveries**:
+  - Two parallel request systems existed: `ProcurementRequest` (apps/pos, single-product, used by `createProcurementRequest`) and `OperationalRequest` (used by the old `/inventory/requests` page, multi-line). Phase 1+ uses `ProcurementRequest`. The old page was archived; `OperationalRequest` actions remain alive because `/inventory/analytics/page.tsx:201` uses `createOperationalRequest`.
+  - `PurchaseOrder` has a 13-state lifecycle (`DRAFT/SUBMITTED/APPROVED/SENT/CONFIRMED/IN_TRANSIT/PARTIALLY_RECEIVED/RECEIVED/PARTIALLY_INVOICED/INVOICED/COMPLETED/REJECTED/CANCELLED`). The Convert-to-PO action creates one in `DRAFT`.
+  - `Product.status` (ACTIVE/INACTIVE/DRAFT/ARCHIVED) is a **lifecycle** field used by ~12 backend queries to filter sellable products. Could not be overloaded with REQUESTED/PO_SENT — that's why `procurement_status` is a separate **derived** field in the serializer (no migration needed).
+  - `PurchaseAnalyticsConfig` already had personal/organization profile scoping via `AnalyticsProfile` — Phase 3 mode-per-user came for free.
+  - The settings page (`purchase-analytics/page.tsx`) is 1907 lines and uses an explicit Save button + diff preview + version history. Auto-save was wrong UX for a one-click toggle, so the Request Flow chooser bypasses the page-wide save flow and persists inline.
+  - `createProcurementRequest` was buggy at the wire level: pre-existing camelCase keys never reached the Django serializer's expected snake_case. The archived `PurchaseRequestDialog` / `TransferRequestDialog` would have failed for the same reason.
+- **Warnings for Next Agent**:
+  - ⚠️ **Browser smoke-test required**. End-to-end: go to `/settings/purchase-analytics`, switch Request Flow to each mode (INSTANT/DIALOG/CART), refresh, confirm persistence. Then on `/inventory/products`: (a) Instant mode → click "Request Purchase" on a row → request created in one click; (b) Dialog mode → click → dialog opens with formula-suggested qty; (c) Cart mode → click on multiple products → tray accumulates, Submit creates batch. Refresh in cart mode → cart should restore from localStorage. (d) On `/inventory/requests`, click Approve on a PENDING row, then "Create PO" on the APPROVED row → draft PO created, page navigates to its detail. (e) On the products list, Coca-Cola Classic 330ml's Procurement column should show "Low Stock · Requested" → after Convert-to-PO → "Low Stock · PO Sent" → progresses through the PO lifecycle.
+  - ⚠️ **Not implemented (deferred)**:
+    - **Notifications** when a request is created/approved/converted. `NotificationService` exists but needs a `NotificationTemplate` registered (template code lookup). Untouched in this session.
+    - **Permission gating** with `@require_permission`. The procurement-request endpoints have no RBAC decorator. Would need a deeper RBAC audit — `@require_permission` isn't used in any apps/pos or apps/inventory views, so adding it to one endpoint would be inconsistent.
+    - **Backend tests** for `procurement_status` derivation, `suggest_quantity` endpoint, `convert_to_po` action. Manual smoke only this session.
+    - **Mobile-specific product list** — if a `MobileProductsClient.tsx` exists alongside the desktop view (similar to `MobileCOAClient.tsx`), it doesn't get the new flow. Not audited this session.
+  - ⚠️ `purchase-analytics/page.tsx` is 1907 lines (pre-existing limit violation). Not worsened materially by the additive ~50-line Request Flow card + inline-save handler.
+  - ⚠️ Pre-existing typecheck errors in `src/app/(privileged)/purchases/restored/form.tsx` are unrelated to this work.
+  - ⚠️ The `convert-to-po` action uses `req.suggested_unit_price` falling back to `product.cost_price_ht`. If neither is set, the PO line will have unit_price=0 — operator must edit before sending to supplier.
+  - ⚠️ Direct-PO fallback in `get_procurement_status` does an extra DB query per product when no recent request exists. For large product lists this could be a perf concern. Future optimisation: prefetch in the viewset's `get_queryset()` or annotate.
+
+---
+
 ### Session: 2026-04-27 (Procurement Request flow — Phase 1: dialog + settings chooser)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE (code + typecheck clean) / ⏳ browser smoke-test pending

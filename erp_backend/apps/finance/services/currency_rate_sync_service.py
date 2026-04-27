@@ -37,6 +37,76 @@ logger = logging.getLogger(__name__)
 ECB_DAILY_URL = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
 FRANKFURTER_URL = 'https://api.frankfurter.app/latest'  # JSON wrapper over ECB
 EXCHANGERATE_HOST_URL = 'https://api.exchangerate.host/live'  # free, ~170 ccys
+FIXER_URL = 'https://data.fixer.io/api/latest'           # paid, EUR-base
+OPENEXCHANGERATES_URL = 'https://openexchangerates.org/api/latest.json'  # USD-base
+
+
+def _fetch_fixer(from_code: str, to_code: str, api_key: str | None) -> Decimal:
+    """Fixer.io — paid, EUR-base. Free tier currently rejects symbols param so
+    we pull the full table and cross-rate via EUR locally. Needs api_key in
+    provider_config.api_key (preferred) or .access_key (legacy)."""
+    import json
+    if not api_key:
+        raise RateProviderError(
+            'Fixer.io requires an api_key in provider_config '
+            '(set the policy\'s provider_config.api_key).'
+        )
+    url = f'{FIXER_URL}?access_key={api_key}'
+    try:
+        with urlopen(url, timeout=10) as resp:
+            payload = json.loads(resp.read())
+    except Exception as e:
+        raise RateProviderError(f'Fixer fetch failed: {e}') from e
+    if not payload.get('success', False):
+        info = (payload.get('error') or {}).get('info') or 'unknown error'
+        raise RateProviderError(f'Fixer: {info}')
+    rates = payload.get('rates') or {}
+    base = (payload.get('base') or 'EUR').upper()
+    # Build EUR-base table including the implicit 1.0 for the base.
+    table = {base: Decimal('1')}
+    for k, v in rates.items():
+        try:
+            table[k.upper()] = Decimal(str(v))
+        except Exception:
+            continue
+    if from_code not in table:
+        raise RateProviderError(f'Fixer has no rate for {from_code} (base={base})')
+    if to_code not in table:
+        raise RateProviderError(f'Fixer has no rate for {to_code} (base={base})')
+    return (table[to_code] / table[from_code]).quantize(Decimal('0.0000000001'))
+
+
+def _fetch_openexchangerates(from_code: str, to_code: str, app_id: str | None) -> Decimal:
+    """OpenExchangeRates — USD-base on free plan. Cross-rate via USD locally.
+    Needs app_id in provider_config.app_id (preferred) or .api_key."""
+    import json
+    if not app_id:
+        raise RateProviderError(
+            'OpenExchangeRates requires app_id in provider_config '
+            '(set the policy\'s provider_config.app_id).'
+        )
+    url = f'{OPENEXCHANGERATES_URL}?app_id={app_id}'
+    try:
+        with urlopen(url, timeout=10) as resp:
+            payload = json.loads(resp.read())
+    except Exception as e:
+        raise RateProviderError(f'OpenExchangeRates fetch failed: {e}') from e
+    if 'error' in payload:
+        msg = payload.get('description') or payload.get('message') or 'unknown error'
+        raise RateProviderError(f'OpenExchangeRates: {msg}')
+    rates = payload.get('rates') or {}
+    base = (payload.get('base') or 'USD').upper()
+    table = {base: Decimal('1')}
+    for k, v in rates.items():
+        try:
+            table[k.upper()] = Decimal(str(v))
+        except Exception:
+            continue
+    if from_code not in table:
+        raise RateProviderError(f'OpenExchangeRates has no rate for {from_code} (base={base})')
+    if to_code not in table:
+        raise RateProviderError(f'OpenExchangeRates has no rate for {to_code} (base={base})')
+    return (table[to_code] / table[from_code]).quantize(Decimal('0.0000000001'))
 
 
 def _fetch_frankfurter(from_code: str, to_code: str) -> Decimal:
@@ -248,14 +318,10 @@ class CurrencyRateSyncService:
                 raw_rate = _fetch_frankfurter(from_code, to_code)
             elif policy.provider == 'EXCHANGERATE_HOST':
                 raw_rate = _fetch_exchangerate_host(from_code, to_code, cfg.get('access_key'))
-            elif policy.provider in ('FIXER', 'OPENEXCHANGERATES'):
-                # Stub for now — needs api_key in provider_config and an HTTP
-                # client. Fail loudly so the caller knows it's not wired yet
-                # rather than silently writing zero.
-                raise RateProviderError(
-                    f"{policy.provider} provider is not yet implemented. "
-                    f"Use ECB / FRANKFURTER / EXCHANGERATE_HOST or MANUAL for now."
-                )
+            elif policy.provider == 'FIXER':
+                raw_rate = _fetch_fixer(from_code, to_code, cfg.get('api_key') or cfg.get('access_key'))
+            elif policy.provider == 'OPENEXCHANGERATES':
+                raw_rate = _fetch_openexchangerates(from_code, to_code, cfg.get('app_id') or cfg.get('api_key'))
             else:
                 raise RateProviderError(f'Unknown provider: {policy.provider}')
         except Exception as e:
@@ -265,30 +331,53 @@ class CurrencyRateSyncService:
             policy.save(update_fields=['last_synced_at', 'last_sync_status', 'last_sync_error'])
             return False, str(e)
 
-        adjusted = policy.adjusted_rate(raw_rate)
+        mid = policy.adjusted_rate(raw_rate)
 
-        # Idempotent upsert: one row per (org, from, to, date, rate_type).
-        rate_row, created = ExchangeRate.objects.update_or_create(
-            organization=policy.organization,
-            from_currency=policy.from_currency,
-            to_currency=policy.to_currency,
-            effective_date=on_date,
-            rate_type=policy.rate_type,
-            defaults={
-                'rate': adjusted,
-                'source': f'AUTO:{policy.provider}',
-            },
-        )
+        # When either bid_spread_pct or ask_spread_pct is non-zero, this
+        # policy is operating in "two-sided" mode — write a triple
+        # (MID, BID, ASK) per (date, pair, rate_type). Otherwise just MID
+        # (preserves the prior single-row behaviour for default policies).
+        bid_spread = policy.bid_spread_pct or Decimal('0')
+        ask_spread = policy.ask_spread_pct or Decimal('0')
+        two_sided = bid_spread != Decimal('0') or ask_spread != Decimal('0')
+
+        sides = [('MID', mid)]
+        if two_sided:
+            sides.append((
+                'BID',
+                (mid * (Decimal('1') - bid_spread / Decimal('100'))).quantize(Decimal('0.000001')),
+            ))
+            sides.append((
+                'ASK',
+                (mid * (Decimal('1') + ask_spread / Decimal('100'))).quantize(Decimal('0.000001')),
+            ))
+
+        for side, side_rate in sides:
+            ExchangeRate.objects.update_or_create(
+                organization=policy.organization,
+                from_currency=policy.from_currency,
+                to_currency=policy.to_currency,
+                effective_date=on_date,
+                rate_type=policy.rate_type,
+                rate_side=side,
+                defaults={
+                    'rate': side_rate,
+                    'source': f'AUTO:{policy.provider}',
+                },
+            )
 
         policy.last_synced_at = timezone.now()
         policy.last_sync_status = 'OK'
         policy.last_sync_error = None
         policy.save(update_fields=['last_synced_at', 'last_sync_status', 'last_sync_error'])
 
-        action = 'created' if created else 'updated'
-        msg = (f'{policy.from_currency.code}→{policy.to_currency.code} '
-               f'{action}: raw={raw_rate} × {policy.multiplier} '
-               f'(+{policy.markup_pct}%) = {adjusted}')
+        if two_sided:
+            msg = (f'{policy.from_currency.code}→{policy.to_currency.code} '
+                   f'mid={mid} (-{bid_spread}% bid / +{ask_spread}% ask)')
+        else:
+            msg = (f'{policy.from_currency.code}→{policy.to_currency.code}: '
+                   f'raw={raw_rate} × {policy.multiplier} '
+                   f'(+{policy.markup_pct}%) = {mid}')
         logger.info(msg)
         return True, msg
 

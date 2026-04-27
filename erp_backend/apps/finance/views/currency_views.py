@@ -39,7 +39,7 @@ class ExchangeRateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExchangeRate
         fields = ['id', 'from_currency', 'from_code', 'to_currency', 'to_code',
-                  'rate', 'rate_type', 'effective_date', 'source']
+                  'rate', 'rate_type', 'rate_side', 'effective_date', 'source']
         read_only_fields = ['id', 'from_code', 'to_code']
 
 
@@ -67,6 +67,7 @@ class CurrencyRatePolicySerializer(serializers.ModelSerializer):
             'rate_type', 'provider', 'provider_config',
             'auto_sync', 'sync_frequency',
             'multiplier', 'markup_pct',
+            'bid_spread_pct', 'ask_spread_pct',
             'last_synced_at', 'last_sync_status', 'last_sync_error',
             'is_active', 'created_at', 'updated_at',
         ]
@@ -372,7 +373,7 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
         if not provider:
             return Response({'error': 'provider is required'}, status=400)
         # Reject unimplemented providers up front instead of failing on first sync.
-        IMPLEMENTED = {'MANUAL', 'ECB', 'FRANKFURTER', 'EXCHANGERATE_HOST'}
+        IMPLEMENTED = {'MANUAL', 'ECB', 'FRANKFURTER', 'EXCHANGERATE_HOST', 'FIXER', 'OPENEXCHANGERATES'}
         if provider not in IMPLEMENTED:
             return Response({
                 'error': f'Provider "{provider}" not yet implemented. '

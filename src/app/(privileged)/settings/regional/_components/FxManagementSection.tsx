@@ -253,11 +253,14 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
         setSetBrokerBusy(true)
         try {
             const provider_config: Record<string, any> = {}
-            // Only one provider currently consumes a key — exchangerate.host.
-            // Treat the key field as optional metadata for any future broker.
-            if (setBrokerKey.trim()) {
-                provider_config.access_key = setBrokerKey.trim()
-                provider_config.api_key = setBrokerKey.trim()
+            const key = setBrokerKey.trim()
+            // Each broker reads a slightly different config key. We set them
+            // all to the same value so the policy works regardless of which
+            // provider it ends up assigned to.
+            if (key) {
+                provider_config.access_key = key   // exchangerate.host
+                provider_config.api_key = key      // FIXER
+                provider_config.app_id = key       // OpenExchangeRates
             }
             const res = await bulkUpdateRatePolicyProvider({
                 provider: setBrokerProvider,
@@ -955,6 +958,8 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                         { code: 'ECB' as const,                label: 'ECB',                  hint: 'Free · ECB daily XML, 32 majors + pegs' },
                                         { code: 'FRANKFURTER' as const,        label: 'Frankfurter',          hint: 'Free · ECB-derived JSON · no auth' },
                                         { code: 'EXCHANGERATE_HOST' as const,  label: 'exchangerate.host',    hint: '~170 ccys · API access_key' },
+                                        { code: 'FIXER' as const,              label: 'Fixer.io',             hint: 'Paid · 170+ ccys · api_key' },
+                                        { code: 'OPENEXCHANGERATES' as const,  label: 'OpenExchangeRates',    hint: 'Paid · 170+ ccys · app_id' },
                                         { code: 'MANUAL' as const,             label: 'Manual',               hint: 'You enter rates by hand · no fetch' },
                                     ].map(opt => {
                                         const active = setBrokerProvider === opt.code
@@ -1516,17 +1521,21 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
 }) {
     const non_base = currencies.filter(c => c.id !== base.id && c.is_active)
     const [fromId, setFromId] = useState<number | null>(non_base[0]?.id ?? null)
-    // FIXER / OXR are stubs in currency_rate_sync_service.py — listing them
-    // here would let users save a policy that crashes on first sync.
     // ── Rate "mode" is a UI-level abstraction over `provider`. FIXED rates are
     //    `MANUAL` (operator types the rate, never auto-fetched). FLOATING are
-    //    provider-fed (ECB today). The field is two-way bound to provider. ──
+    //    provider-fed — ECB / Frankfurter / exchangerate.host / Fixer / OXR. ──
     const [rateMode, setRateMode] = useState<'FIXED' | 'FLOATING'>('FLOATING')
-    const provider: CurrencyRatePolicy['provider'] = rateMode === 'FIXED' ? 'MANUAL' : 'ECB'
+    const [floatingProvider, setFloatingProvider] = useState<Exclude<CurrencyRatePolicy['provider'], 'MANUAL'>>('ECB')
+    const provider: CurrencyRatePolicy['provider'] = rateMode === 'FIXED' ? 'MANUAL' : floatingProvider
     const [rateType, setRateType] = useState<CurrencyRatePolicy['rate_type']>('SPOT')
     const [syncFrequency, setSyncFrequency] = useState<CurrencyRatePolicy['sync_frequency']>('DAILY')
     const [multiplier, setMultiplier] = useState('1.000000')
     const [markupPct, setMarkupPct] = useState('0.0000')
+    // Optional Bid/Ask spreads — both 0 means single-MID-row mode (default).
+    const [bidSpreadPct, setBidSpreadPct] = useState('0.0000')
+    const [askSpreadPct, setAskSpreadPct] = useState('0.0000')
+    // Optional API key for paid providers — written to provider_config.
+    const [apiKey, setApiKey] = useState('')
     const [autoSync, setAutoSync] = useState(true)
     const [busy, setBusy] = useState(false)
     if (!fromId) return <p className="text-[10px] text-app-muted-foreground">Add a non-base currency in the Currencies tab before creating a policy.</p>
@@ -1534,11 +1543,18 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
     // Validation
     const mul = Number(multiplier)
     const mk = Number(markupPct)
+    const bid = Number(bidSpreadPct)
+    const ask = Number(askSpreadPct)
     const mulValid = isFinite(mul) && mul > 0
     const mkValid = isFinite(mk) && mk >= -50 && mk <= 50
+    const bidValid = isFinite(bid) && bid >= 0 && bid <= 50
+    const askValid = isFinite(ask) && ask >= 0 && ask <= 50
     const dupKey = `${fromId}-${base.id}-${rateType}`
     const isDup = existingPairs.has(dupKey)
-    const valid = mulValid && mkValid && !isDup
+    // Paid providers need a key; if rateMode=FLOATING && provider needs key, require apiKey
+    const needsKey = provider === 'EXCHANGERATE_HOST' || provider === 'FIXER' || provider === 'OPENEXCHANGERATES'
+    const keyValid = !needsKey || apiKey.trim().length > 0
+    const valid = mulValid && mkValid && bidValid && askValid && !isDup && keyValid
 
     // Live preview: example raw rate × multiplier × (1+markup/100). Uses 1.0
     // as the synthetic raw rate so users see the adjustment math directly
@@ -1576,11 +1592,25 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
                 <FieldLabel label="Mode">
                     <select value={rateMode} onChange={e => setRateMode(e.target.value as 'FIXED' | 'FLOATING')}
                         className={INPUT_CLS} style={INPUT_STYLE}
-                        title="FIXED = manual entry only, never auto-fetched (e.g. CFA ↔ EUR peg). FLOATING = pulled from a provider (ECB).">
-                        <option value="FLOATING">Floating · ECB</option>
+                        title="FIXED = manual entry only, never auto-fetched (e.g. CFA ↔ EUR peg). FLOATING = pulled from a provider.">
+                        <option value="FLOATING">Floating</option>
                         <option value="FIXED">Fixed · manual</option>
                     </select>
                 </FieldLabel>
+                {rateMode === 'FLOATING' && (
+                    <FieldLabel label="Provider">
+                        <select value={floatingProvider}
+                            onChange={e => setFloatingProvider(e.target.value as Exclude<CurrencyRatePolicy['provider'], 'MANUAL'>)}
+                            className={INPUT_CLS} style={INPUT_STYLE}
+                            title="Which broker fetches the rate. ECB & Frankfurter are free; the rest need an API key.">
+                            <option value="ECB">ECB · free</option>
+                            <option value="FRANKFURTER">Frankfurter · free</option>
+                            <option value="EXCHANGERATE_HOST">exchangerate.host</option>
+                            <option value="FIXER">Fixer.io</option>
+                            <option value="OPENEXCHANGERATES">OpenExchangeRates</option>
+                        </select>
+                    </FieldLabel>
+                )}
                 <FieldLabel label="Refresh">
                     <select value={rateMode === 'FIXED' ? 'NEVER' : syncFrequency}
                         onChange={e => setSyncFrequency(e.target.value as CurrencyRatePolicy['sync_frequency'])}

@@ -64,6 +64,22 @@ class ExchangeRate(TenantModel):
     rate_type = models.CharField(
         max_length=20, choices=RATE_TYPES, default='SPOT'
     )
+    # Bid / Ask / Mid distinguishes the "side" of an FX quote — banks always
+    # quote two sides, and a transactional system needs both:
+    #   MID = official mid-market quote (what most accounting posts against)
+    #   BID = price the operator pays YOU (you sell to operator) — lower
+    #   ASK = price the operator charges YOU (you buy from operator) — higher
+    # A policy with non-zero bid_spread_pct / ask_spread_pct writes a triple
+    # (MID + BID + ASK) per sync; a flat-spread policy writes only MID.
+    RATE_SIDES = [
+        ('MID', 'Mid-market'),
+        ('BID', 'Bid (operator buys)'),
+        ('ASK', 'Ask (operator sells)'),
+    ]
+    rate_side = models.CharField(
+        max_length=4, choices=RATE_SIDES, default='MID',
+        help_text='MID = mid-market; BID/ASK = the buy/sell sides of a quote.',
+    )
     effective_date = models.DateField(db_index=True)
     source = models.CharField(
         max_length=50, null=True, blank=True,
@@ -72,7 +88,7 @@ class ExchangeRate(TenantModel):
 
     class Meta:
         db_table = 'finance_exchange_rate'
-        unique_together = ('organization', 'from_currency', 'to_currency', 'effective_date', 'rate_type')
+        unique_together = ('organization', 'from_currency', 'to_currency', 'effective_date', 'rate_type', 'rate_side')
         ordering = ['-effective_date']
         indexes = [
             models.Index(fields=['organization', 'from_currency', 'to_currency', 'effective_date']),
@@ -211,6 +227,19 @@ class CurrencyRatePolicy(TenantModel):
         max_digits=6, decimal_places=4, default=Decimal('0.0000'),
         help_text='Additional percentage adjustment applied after multiplier '
                   '(0.5 = +0.5%). Useful when bank charges a fixed % spread.',
+    )
+    # Bid / Ask spreads — when EITHER is non-zero, the sync writes a triple
+    # (MID, BID, ASK) per (date, pair, rate_type) instead of one MID row.
+    # BID = mid × (1 - bid_spread_pct/100)  → what operator pays customers
+    # ASK = mid × (1 + ask_spread_pct/100)  → what operator charges customers
+    # Both default to 0 → backwards-compatible single-MID behavior.
+    bid_spread_pct = models.DecimalField(
+        max_digits=6, decimal_places=4, default=Decimal('0.0000'),
+        help_text='BID-side spread % below mid. 0 = no separate BID row.',
+    )
+    ask_spread_pct = models.DecimalField(
+        max_digits=6, decimal_places=4, default=Decimal('0.0000'),
+        help_text='ASK-side spread % above mid. 0 = no separate ASK row.',
     )
 
     last_synced_at = models.DateTimeField(null=True, blank=True)

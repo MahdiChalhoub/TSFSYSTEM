@@ -70,6 +70,61 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         req.save(update_fields=['status'])
         return Response(self.get_serializer(req).data)
 
+    @action(detail=True, methods=['post'], url_path='convert-to-po')
+    def convert_to_po(self, request, pk=None):
+        """
+        Build a DRAFT PurchaseOrder from this request, link it via source_po,
+        flip request to EXECUTED. Only valid for PURCHASE-type, APPROVED requests.
+        Returns {po_id, po_url} for the frontend to navigate to.
+        """
+        from decimal import Decimal as D
+        from django.db import transaction
+        from apps.pos.models.purchase_order_models import PurchaseOrder, PurchaseOrderLine
+
+        req = self.get_object()
+        if req.request_type != 'PURCHASE':
+            return Response({'detail': 'Only PURCHASE requests convert to a PO.'},
+                            status=drf_status.HTTP_400_BAD_REQUEST)
+        if req.status != 'APPROVED':
+            return Response({'detail': f'Cannot convert — current status is {req.status}.'},
+                            status=drf_status.HTTP_400_BAD_REQUEST)
+        if req.source_po_id:
+            return Response({'detail': 'Already linked to PO.', 'po_id': req.source_po_id})
+
+        with transaction.atomic():
+            unit_price = req.suggested_unit_price or getattr(req.product, 'cost_price_ht', None) or D('0')
+            tax_rate = getattr(req.product, 'tva_rate', None) or D('0')
+            po = PurchaseOrder.objects.create(
+                organization=req.organization,
+                supplier=req.supplier,
+                supplier_name=getattr(req.supplier, 'name', '') or '',
+                status='DRAFT',
+                priority=req.priority,
+                notes=f"Auto-generated from procurement request #{req.id}.\n{req.reason or ''}".strip(),
+            )
+            PurchaseOrderLine.objects.create(
+                organization=req.organization,
+                order=po,
+                product=req.product,
+                product_name=req.product.name,
+                product_sku=req.product.sku,
+                quantity=req.quantity,
+                unit_price=unit_price,
+                discount_percent=D('0'),
+                tax_rate=tax_rate,
+            )
+            req.source_po = po
+            req.status = 'EXECUTED'
+            req.reviewed_by = request.user
+            req.reviewed_at = timezone.now()
+            req.save(update_fields=['source_po', 'status', 'reviewed_by', 'reviewed_at'])
+
+        return Response({
+            'po_id': po.id,
+            'po_url': f'/purchases/purchase-orders/{po.id}',
+            **self.get_serializer(req).data,
+        })
+
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         req = self.get_object()

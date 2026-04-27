@@ -1,9 +1,11 @@
 'use client'
 
-import { CheckCircle2, XCircle, PlayCircle, Ban } from 'lucide-react'
+import { toast } from 'sonner'
+import { useTransition } from 'react'
+import { CheckCircle2, XCircle, PlayCircle, Ban, FileText } from 'lucide-react'
 import {
     approveProcurementRequest, rejectProcurementRequest,
-    executeProcurementRequest, cancelProcurementRequest,
+    executeProcurementRequest, cancelProcurementRequest, convertProcurementRequestToPO,
     type ProcurementRequestRecord,
 } from '@/app/actions/inventory/procurement-requests'
 import { STATUS_META, TYPE_META, PRIORITY_META } from '../_lib/meta'
@@ -84,10 +86,14 @@ export function RequestRow({ r, pending, runAction }: {
                         </button>
                     </>
                 )}
+                {r.status === 'APPROVED' && r.request_type === 'PURCHASE' && (
+                    <ConvertToPOButton requestId={r.id} />
+                )}
                 {r.status === 'APPROVED' && (
                     <button onClick={() => runAction(r.id, executeProcurementRequest, 'Execute')} disabled={pending}
                         className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all disabled:opacity-50"
-                        style={{ borderColor: 'color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)', color: 'var(--app-success, #22c55e)' }}>
+                        style={{ borderColor: 'color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)', color: 'var(--app-success, #22c55e)' }}
+                        title="Mark executed without creating a PO">
                         <PlayCircle size={11} /> Execute
                     </button>
                 )}
@@ -99,5 +105,29 @@ export function RequestRow({ r, pending, runAction }: {
                 )}
             </div>
         </div>
+    )
+}
+
+function ConvertToPOButton({ requestId }: { requestId: number }) {
+    const [pending, startTransition] = useTransition()
+    const handleClick = () => {
+        startTransition(async () => {
+            const r = await convertProcurementRequestToPO(requestId)
+            if (r.success) {
+                toast.success('Draft PO created', {
+                    description: 'Edit & send to supplier',
+                    action: r.po_url ? { label: 'Open PO →', onClick: () => { window.location.href = r.po_url! } } : undefined,
+                })
+                if (r.po_url) window.location.href = r.po_url
+            } else toast.error(r.message || 'Convert to PO failed')
+        })
+    }
+    return (
+        <button onClick={handleClick} disabled={pending}
+            className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all disabled:opacity-50"
+            style={{ borderColor: 'color-mix(in srgb, var(--app-primary) 35%, transparent)', color: 'var(--app-primary)' }}
+            title="Create a draft PurchaseOrder linked to this request">
+            <FileText size={11} /> {pending ? 'Converting…' : 'Create PO'}
+        </button>
     )
 }
