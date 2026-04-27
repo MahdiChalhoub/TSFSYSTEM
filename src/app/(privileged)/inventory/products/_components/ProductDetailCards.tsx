@@ -6,12 +6,13 @@
  * Expandable section showing 6 grouped info cards (Identity, Pricing, Stock, Governance, Tracking, Group & Dates).
  */
 
-import React, { useState } from 'react'
+import React from 'react'
 import { Eye, Edit, ShoppingCart, ArrowRightLeft } from 'lucide-react'
 import type { Product } from '../_lib/types'
 import { TYPE_CONFIG, STATUS_CONFIG, PROCUREMENT_STATUS_CONFIG, fmt } from '../_lib/constants'
 import { DCell } from './DCell'
-import { RequestProductDialog, type RequestableProduct } from '@/components/products/RequestProductDialog'
+import { type RequestableProduct } from '@/components/products/RequestProductDialog'
+import { useRequestFlow } from '@/components/products/RequestFlowProvider'
 
 interface ProductDetailCardsProps {
   product: Product
@@ -36,7 +37,7 @@ function CardSection({ color, title, children }: { color: string; title: string;
 }
 
 export const ProductDetailCards = React.memo(function ProductDetailCards({ product, marginPct, onView }: ProductDetailCardsProps) {
-  const [requestType, setRequestType] = useState<'PURCHASE' | 'TRANSFER' | null>(null)
+  const { trigger: triggerRequest } = useRequestFlow()
   const requestable: RequestableProduct = { id: product.id, name: product.name, sku: product.sku, reorder_quantity: product.reorder_quantity, min_stock_level: product.min_stock_level }
   return (
     <div className="border-b border-app-border/30 animate-in slide-in-from-top-1 duration-200"
@@ -52,11 +53,11 @@ export const ProductDetailCards = React.memo(function ProductDetailCards({ produ
             className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
             <Edit size={11} /> Edit
           </button>
-          <button onClick={() => setRequestType('PURCHASE')}
+          <button onClick={() => triggerRequest('PURCHASE', [requestable])}
             className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-info/30 text-app-info hover:bg-app-info/5 transition-all">
             <ShoppingCart size={11} /> Purchase
           </button>
-          <button onClick={() => setRequestType('TRANSFER')}
+          <button onClick={() => triggerRequest('TRANSFER', [requestable])}
             className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-warning/30 text-app-warning hover:bg-app-warning/5 transition-all">
             <ArrowRightLeft size={11} /> Transfer
           </button>
@@ -139,14 +140,6 @@ export const ProductDetailCards = React.memo(function ProductDetailCards({ produ
         )}
       </div>
 
-      {requestType && (
-        <RequestProductDialog
-          open
-          onClose={() => setRequestType(null)}
-          requestType={requestType}
-          products={[requestable]}
-        />
-      )}
     </div>
   )
 })

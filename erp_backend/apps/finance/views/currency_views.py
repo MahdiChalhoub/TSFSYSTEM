@@ -343,6 +343,92 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
         )
         return Response({'results': results, 'count': len(results)}, status=200)
 
+    @action(detail=False, methods=['post'], url_path='bulk-update-provider')
+    def bulk_update_provider(self, request):
+        """
+        Re-assign the broker for many policies in one shot.
+
+        Body:
+            {
+                "provider": "FRANKFURTER",         # required — broker code
+                "provider_config": {"access_key":"…"},  # optional, merged into existing
+                "scope": "all" | "include" | "exclude",
+                "from_currency_codes": ["AED","SAR"]  # codes (case-insensitive)
+                                                       # required when scope ∈ {include, exclude}
+            }
+
+        Scopes:
+          - "all"      — every active policy in the org switches to `provider`.
+          - "include"  — only policies whose from_code is in the list.
+          - "exclude"  — every active policy EXCEPT those in the list.
+
+        Returns: { "updated": [policy, …], "count": N, "skipped": [{from_code, reason}] }
+        """
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({'error': 'tenant context missing'}, status=400)
+
+        provider = request.data.get('provider')
+        if not provider:
+            return Response({'error': 'provider is required'}, status=400)
+        # Reject unimplemented providers up front instead of failing on first sync.
+        IMPLEMENTED = {'MANUAL', 'ECB', 'FRANKFURTER', 'EXCHANGERATE_HOST'}
+        if provider not in IMPLEMENTED:
+            return Response({
+                'error': f'Provider "{provider}" not yet implemented. '
+                         f'Pick one of: {", ".join(sorted(IMPLEMENTED))}',
+            }, status=400)
+
+        scope = (request.data.get('scope') or 'all').lower()
+        if scope not in ('all', 'include', 'exclude'):
+            return Response({'error': 'scope must be "all" | "include" | "exclude"'}, status=400)
+
+        codes = request.data.get('from_currency_codes') or []
+        if not isinstance(codes, list):
+            return Response({'error': 'from_currency_codes must be a list'}, status=400)
+        codes_upper = {str(c).strip().upper() for c in codes if c}
+        if scope in ('include', 'exclude') and not codes_upper:
+            return Response({
+                'error': f'scope="{scope}" requires a non-empty from_currency_codes list',
+            }, status=400)
+
+        # Build the queryset by scope. Always limit to active policies — the
+        # operator can re-enable a deactivated policy explicitly elsewhere.
+        qs = CurrencyRatePolicy.objects.filter(
+            organization_id=org_id, is_active=True,
+        ).select_related('from_currency', 'to_currency')
+        if scope == 'include':
+            qs = qs.filter(from_currency__code__in=codes_upper)
+        elif scope == 'exclude':
+            qs = qs.exclude(from_currency__code__in=codes_upper)
+
+        provider_config_patch = request.data.get('provider_config') or {}
+        if not isinstance(provider_config_patch, dict):
+            return Response({'error': 'provider_config must be an object'}, status=400)
+
+        updated, skipped = [], []
+        for policy in qs:
+            # MANUAL → any other transition: clear stale sync_status so an old
+            # FAIL doesn't keep showing in the UI for a freshly-rewired policy.
+            policy.provider = provider
+            # Merge new config keys into existing dict — don't blow it away.
+            merged = dict(policy.provider_config or {})
+            merged.update(provider_config_patch)
+            policy.provider_config = merged
+            # Reset sync metadata — a new broker means the prior result is moot.
+            policy.last_sync_status = None
+            policy.last_sync_error = None
+            policy.save(update_fields=[
+                'provider', 'provider_config', 'last_sync_status', 'last_sync_error', 'updated_at',
+            ])
+            updated.append(self.get_serializer(policy).data)
+
+        return Response({
+            'updated': updated,
+            'skipped': skipped,
+            'count': len(updated),
+        }, status=200)
+
     @action(detail=False, methods=['post'], url_path='bulk-create')
     def bulk_create(self, request):
         """

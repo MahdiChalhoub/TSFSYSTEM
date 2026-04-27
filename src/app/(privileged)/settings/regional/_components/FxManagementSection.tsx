@@ -10,7 +10,7 @@ import {
     getCurrencies, getExchangeRates, getRevaluations,
     createExchangeRate, runRevaluation,
     getRatePolicies, createRatePolicy, updateRatePolicy, syncRatePolicy, syncAllRatePolicies,
-    deleteRatePolicy, bulkCreateRatePolicies,
+    deleteRatePolicy, bulkCreateRatePolicies, bulkUpdateRatePolicyProvider,
     type Currency, type ExchangeRate, type CurrencyRevaluation, type CurrencyRatePolicy,
 } from '@/app/actions/finance/currency'
 import { erpFetch } from '@/lib/erp-api'
@@ -75,6 +75,15 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
     const [syncAllProgress, setSyncAllProgress] = useState<{ done: number; total: number } | null>(null)
     const [bulkBusy, setBulkBusy] = useState(false)
     const [deletingId, setDeletingId] = useState<number | null>(null)
+    // Set-broker dialog state. Closed by default; opened from a button next
+    // to "Auto-configure". Scope drives whether the codes list applies as
+    // include / exclude or is ignored ("all").
+    const [setBrokerOpen, setSetBrokerOpen] = useState(false)
+    const [setBrokerProvider, setSetBrokerProvider] = useState<CurrencyRatePolicy['provider']>('FRANKFURTER')
+    const [setBrokerScope, setSetBrokerScope] = useState<'all' | 'include' | 'exclude'>('all')
+    const [setBrokerCodes, setSetBrokerCodes] = useState<string[]>([])
+    const [setBrokerKey, setSetBrokerKey] = useState('')   // optional API key for paid providers
+    const [setBrokerBusy, setSetBrokerBusy] = useState(false)
     // Inline-edit state: which row's multiplier/markup is being edited.
     const [editingPolicy, setEditingPolicy] = useState<{ id: number; multiplier: string; markup_pct: string } | null>(null)
     const [savingEdit, setSavingEdit] = useState(false)
@@ -231,6 +240,39 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
             await loadAll()
         } finally {
             setDeletingId(null)
+        }
+    }
+
+    async function handleSetBroker() {
+        if ((setBrokerScope === 'include' || setBrokerScope === 'exclude') && setBrokerCodes.length === 0) {
+            toast.error(setBrokerScope === 'include'
+                ? 'Pick at least one currency to include.'
+                : 'Pick at least one currency to exclude.')
+            return
+        }
+        setSetBrokerBusy(true)
+        try {
+            const provider_config: Record<string, any> = {}
+            // Only one provider currently consumes a key — exchangerate.host.
+            // Treat the key field as optional metadata for any future broker.
+            if (setBrokerKey.trim()) {
+                provider_config.access_key = setBrokerKey.trim()
+                provider_config.api_key = setBrokerKey.trim()
+            }
+            const res = await bulkUpdateRatePolicyProvider({
+                provider: setBrokerProvider,
+                provider_config: Object.keys(provider_config).length ? provider_config : undefined,
+                scope: setBrokerScope,
+                from_currency_codes: setBrokerScope === 'all' ? undefined : setBrokerCodes,
+            })
+            if (!res.success) { toast.error(res.error || 'Failed to update broker'); return }
+            toast.success(`Switched ${res.count ?? 0} polic${(res.count ?? 0) === 1 ? 'y' : 'ies'} to ${setBrokerProvider}`)
+            setSetBrokerOpen(false)
+            setSetBrokerCodes([])
+            setSetBrokerKey('')
+            await loadAll()
+        } finally {
+            setSetBrokerBusy(false)
         }
     }
 
@@ -559,6 +601,14 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                 {bulkBusy ? 'Configuring…' : `Auto-configure ${missingCoverage}`}
                                             </button>
                                         )}
+                                        {policies.length > 0 && (
+                                            <button onClick={() => setSetBrokerOpen(true)}
+                                                title="Switch the broker (ECB / Frankfurter / exchangerate.host / MANUAL) for one currency, all currencies, or a custom group"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
+                                                style={{ ...soft('--app-warning', 12), color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 30%, transparent)' }}>
+                                                <ShieldCheck size={11} /> Set Broker
+                                            </button>
+                                        )}
                                         <button onClick={handleSyncAll} disabled={syncingAll || policies.filter(p => p.provider !== 'MANUAL').length === 0}
                                             title="Sync every active non-MANUAL policy now"
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-app-border/50 hover:bg-app-background transition-all disabled:opacity-50"
@@ -859,6 +909,208 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                     </div>
                 )
             })()}
+
+            {/* ── Set-Broker dialog — handles all four scopes:
+                 1) one currency  → Scope=Specific, pick 1 chip
+                 2) all           → Scope=All
+                 3) all except    → Scope=Exclude, pick chips to exclude
+                 4) group of N    → Scope=Specific, pick N chips                ── */}
+            {setBrokerOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
+                    onClick={e => { if (e.target === e.currentTarget) setSetBrokerOpen(false) }}>
+                    <div className="w-full max-w-lg rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
+                        style={{
+                            background: 'var(--app-surface)',
+                            border: '1px solid color-mix(in srgb, var(--app-warning) 30%, var(--app-border))',
+                            boxShadow: '0 20px 60px color-mix(in srgb, var(--app-warning) 18%, transparent)',
+                        }}>
+                        <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'var(--app-warning)' }} />
+
+                        {/* Header */}
+                        <div className="px-5 pt-5 pb-3 flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                                style={{ ...soft('--app-warning', 14), color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 30%, transparent)' }}>
+                                <ShieldCheck size={16} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="font-black text-app-foreground" style={{ fontSize: 14, lineHeight: 1.3 }}>Set Broker</div>
+                                <p className="font-bold uppercase tracking-widest text-app-muted-foreground mt-0.5" style={{ fontSize: 9 }}>
+                                    Re-assign the rate provider for one, all, or a custom group of currencies
+                                </p>
+                            </div>
+                            <button onClick={() => setSetBrokerOpen(false)}
+                                className="p-1.5 rounded-lg hover:bg-app-border/40 text-app-muted-foreground hover:text-app-foreground transition-colors shrink-0 -m-1">
+                                <Plus size={14} className="rotate-45" />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="px-5 pb-4 space-y-4">
+                            {/* Provider picker — visual cards instead of plain select */}
+                            <div>
+                                <div className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">1. Pick provider</div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        { code: 'ECB' as const,                label: 'ECB',                  hint: 'Free · ECB daily XML, 32 majors + pegs' },
+                                        { code: 'FRANKFURTER' as const,        label: 'Frankfurter',          hint: 'Free · ECB-derived JSON · no auth' },
+                                        { code: 'EXCHANGERATE_HOST' as const,  label: 'exchangerate.host',    hint: '~170 ccys · API access_key' },
+                                        { code: 'MANUAL' as const,             label: 'Manual',               hint: 'You enter rates by hand · no fetch' },
+                                    ].map(opt => {
+                                        const active = setBrokerProvider === opt.code
+                                        return (
+                                            <button key={opt.code} type="button"
+                                                onClick={() => setSetBrokerProvider(opt.code)}
+                                                className="text-left px-3 py-2 rounded-lg transition-all"
+                                                style={active
+                                                    ? { ...soft('--app-warning', 12), border: '1px solid color-mix(in srgb, var(--app-warning) 35%, transparent)' }
+                                                    : { background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                                                <div className="flex items-center justify-between gap-1">
+                                                    <span className="font-black text-[11px]"
+                                                        style={{ color: active ? 'var(--app-warning)' : 'var(--app-foreground)' }}>{opt.label}</span>
+                                                    {active && <Check size={11} style={{ color: 'var(--app-warning)' }} />}
+                                                </div>
+                                                <div className="text-[9px] text-app-muted-foreground mt-0.5 leading-tight">{opt.hint}</div>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Optional API key (paid providers) */}
+                            {(setBrokerProvider === 'EXCHANGERATE_HOST' || setBrokerProvider === 'FIXER' || setBrokerProvider === 'OPENEXCHANGERATES') && (
+                                <div>
+                                    <div className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">API key</div>
+                                    <input value={setBrokerKey} onChange={e => setSetBrokerKey(e.target.value)}
+                                        type="password" autoComplete="off" placeholder="Provider access_key / api_key"
+                                        className="w-full px-3 py-1.5 text-[12px] rounded-lg outline-none focus:ring-2 focus:ring-app-warning/20"
+                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
+                                    <p className="text-[9px] text-app-muted-foreground mt-1 leading-tight">
+                                        Stored in each policy&apos;s <code className="font-mono">provider_config</code>. Leave blank to keep the existing key.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Scope picker */}
+                            <div>
+                                <div className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">2. Apply to</div>
+                                <div className="inline-flex items-stretch rounded-xl overflow-hidden border h-9 w-full"
+                                    style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                                    {([
+                                        { key: 'all',     label: 'All currencies',    hint: 'Every active policy switches.' },
+                                        { key: 'include', label: 'Specific',          hint: 'Only the picked currencies.' },
+                                        { key: 'exclude', label: 'All except',        hint: 'Everything except the picked.' },
+                                    ] as const).map((opt, idx) => {
+                                        const active = setBrokerScope === opt.key
+                                        return (
+                                            <button key={opt.key} type="button"
+                                                onClick={() => setSetBrokerScope(opt.key)}
+                                                title={opt.hint}
+                                                className="flex-1 inline-flex items-center justify-center text-[11px] font-bold transition-all"
+                                                style={{
+                                                    color: active ? 'var(--app-warning)' : 'var(--app-muted-foreground)',
+                                                    background: active ? `color-mix(in srgb, var(--app-warning) 12%, transparent)` : 'transparent',
+                                                    borderLeft: idx === 0 ? 'none' : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                                }}>
+                                                {opt.label}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Currency multi-select chips — only when scope ≠ all */}
+                            {setBrokerScope !== 'all' && (() => {
+                                // Source: the from_codes from existing policies. (We don't allow
+                                // setting a broker for a currency that doesn't yet have a policy
+                                // — bulk-create handles that separately.)
+                                const codes = Array.from(new Set(policies.map(p => p.from_code))).sort()
+                                if (codes.length === 0) return (
+                                    <p className="text-[10px] text-app-muted-foreground italic">No active policies to scope to yet.</p>
+                                )
+                                const toggleCode = (code: string) => {
+                                    setSetBrokerCodes(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code])
+                                }
+                                return (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">
+                                                {setBrokerScope === 'include' ? '3. Pick currencies to switch' : '3. Pick currencies to KEEP unchanged'}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <button type="button" onClick={() => setSetBrokerCodes(codes)}
+                                                    className="text-[9px] font-bold px-1.5 py-0.5 rounded hover:bg-app-warning/10"
+                                                    style={{ color: 'var(--app-warning)' }}>Select all</button>
+                                                <button type="button" onClick={() => setSetBrokerCodes([])}
+                                                    className="text-[9px] font-bold px-1.5 py-0.5 rounded hover:bg-app-warning/10"
+                                                    style={{ color: 'var(--app-warning)' }}>Clear</button>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {codes.map(code => {
+                                                const active = setBrokerCodes.includes(code)
+                                                return (
+                                                    <button key={code} type="button" onClick={() => toggleCode(code)}
+                                                        className="px-2 py-1 rounded-md text-[11px] font-mono font-bold transition-all"
+                                                        style={active
+                                                            ? { ...soft('--app-warning', 14), color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 35%, transparent)' }
+                                                            : { background: 'var(--app-background)', color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
+                                                        {active && <Check size={9} className="inline -mt-px mr-0.5" />}
+                                                        {code}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )
+                            })()}
+
+                            {/* Impact preview */}
+                            <div className="rounded-md p-2.5 flex items-start gap-2"
+                                style={{ ...soft('--app-info', 6), border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+                                <RefreshCcw size={11} className="mt-0.5 shrink-0" style={{ color: 'var(--app-info)' }} />
+                                <div className="text-[10px] leading-relaxed text-app-foreground">
+                                    {(() => {
+                                        const total = policies.length
+                                        let n = 0
+                                        if (setBrokerScope === 'all') n = total
+                                        else if (setBrokerScope === 'include') n = policies.filter(p => setBrokerCodes.includes(p.from_code)).length
+                                        else n = policies.filter(p => !setBrokerCodes.includes(p.from_code)).length
+                                        return (
+                                            <>
+                                                <strong className="font-black uppercase tracking-widest text-[9px]" style={{ color: 'var(--app-info)' }}>Impact</strong> —
+                                                {' '}<strong className="font-black">{n}</strong> of {total} polic{n === 1 ? 'y' : 'ies'} will switch to <strong className="font-black">{setBrokerProvider}</strong>.
+                                                Sync history is preserved; old `OK`/`FAIL` flags reset.
+                                            </>
+                                        )
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-4 py-3 flex items-center justify-end gap-2 border-t border-app-border/50"
+                            style={{ background: 'color-mix(in srgb, var(--app-background) 50%, transparent)' }}>
+                            <button onClick={() => setSetBrokerOpen(false)}
+                                className="px-3.5 py-1.5 rounded-xl font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border hover:bg-app-surface transition-all"
+                                style={{ fontSize: 11 }}>
+                                Cancel
+                            </button>
+                            <button onClick={handleSetBroker} disabled={setBrokerBusy}
+                                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold transition-all disabled:opacity-50"
+                                style={{
+                                    ...grad('--app-warning'),
+                                    color: 'var(--app-primary-foreground, white)',
+                                    fontSize: 11,
+                                    boxShadow: '0 4px 12px color-mix(in srgb, var(--app-warning) 30%, transparent)',
+                                }}>
+                                {setBrokerBusy && <RefreshCcw size={11} className="animate-spin" />}
+                                {setBrokerBusy ? 'Applying…' : 'Apply broker'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── Revaluations tab ──────────────────────────────────── */}
             {tab === 'revaluations' && (

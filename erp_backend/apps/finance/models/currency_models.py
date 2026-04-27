@@ -159,6 +159,8 @@ class CurrencyRatePolicy(TenantModel):
     PROVIDER_CHOICES = [
         ('MANUAL', 'Manual entry only'),
         ('ECB', 'European Central Bank (free, daily, EUR-base)'),
+        ('FRANKFURTER', 'Frankfurter (free, JSON wrapper over ECB)'),
+        ('EXCHANGERATE_HOST', 'exchangerate.host (free tier, 170+ currencies, API key)'),
         ('FIXER', 'Fixer.io (API key required)'),
         ('OPENEXCHANGERATES', 'OpenExchangeRates.org (API key required)'),
     ]

@@ -165,7 +165,7 @@ export type CurrencyRatePolicy = {
     to_currency: number
     to_code: string
     rate_type: 'SPOT' | 'AVERAGE' | 'CLOSING'
-    provider: 'MANUAL' | 'ECB' | 'FIXER' | 'OPENEXCHANGERATES'
+    provider: 'MANUAL' | 'ECB' | 'FRANKFURTER' | 'EXCHANGERATE_HOST' | 'FIXER' | 'OPENEXCHANGERATES'
     provider_config: Record<string, any>
     auto_sync: boolean
     /** How often the cron / on-demand engine refreshes this policy.
@@ -238,6 +238,35 @@ export async function deleteRatePolicy(id: number): Promise<{ success: boolean; 
         await erpFetch(`currency-rate-policies/${id}/`, { method: 'DELETE' })
         revalidatePath('/finance/currencies')
         return { success: true }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+/** Re-assign the broker for many policies in one shot.
+ *  Scopes:
+ *    - 'all'     → every active policy switches to `provider`.
+ *    - 'include' → only policies whose from_code is in the list.
+ *    - 'exclude' → every active policy except those in the list. */
+export async function bulkUpdateRatePolicyProvider(payload: {
+    provider: CurrencyRatePolicy['provider']
+    provider_config?: Record<string, any>
+    scope: 'all' | 'include' | 'exclude'
+    from_currency_codes?: string[]
+}): Promise<{
+    success: boolean
+    updated?: CurrencyRatePolicy[]
+    count?: number
+    error?: string
+}> {
+    try {
+        const r = await erpFetch('currency-rate-policies/bulk-update-provider/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        }) as { updated: CurrencyRatePolicy[]; count: number }
+        revalidatePath('/finance/currencies')
+        return { success: true, updated: r.updated, count: r.count }
     } catch (e) {
         return { success: false, error: e instanceof Error ? e.message : String(e) }
     }

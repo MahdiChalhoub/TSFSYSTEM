@@ -6,6 +6,13 @@ Drives a freshly-fetched provider rate through the policy's `multiplier` and
 
 Providers:
   - ECB                — free public daily feed, EUR-based; cross-rate via EUR.
+                         Plus EUR-pegged (XAF/XOF/KMF) and USD-pegged (AED/SAR/
+                         QAR/BHD/OMR/JOD/HKD) extensions.
+  - FRANKFURTER        — free JSON wrapper over ECB at api.frankfurter.app.
+                         Same coverage as ECB but easier to consume + better
+                         uptime than the ECB XML endpoint.
+  - EXCHANGERATE_HOST  — free, broad coverage (170+ currencies including AED,
+                         SAR, etc. without needing the peg fall-back).
   - FIXER              — placeholder; needs api_key in policy.provider_config.
   - OPENEXCHANGERATES  — placeholder; needs api_key in policy.provider_config.
   - MANUAL             — never auto-syncs (bail at the top of sync_pair).
@@ -28,6 +35,67 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 ECB_DAILY_URL = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
+FRANKFURTER_URL = 'https://api.frankfurter.app/latest'  # JSON wrapper over ECB
+EXCHANGERATE_HOST_URL = 'https://api.exchangerate.host/live'  # free, ~170 ccys
+
+
+def _fetch_frankfurter(from_code: str, to_code: str) -> Decimal:
+    """Frankfurter provides direct pair quoting: ?from=USD&to=AED → {rates:{AED:3.67}}."""
+    import json
+    url = f'{FRANKFURTER_URL}?from={from_code}&to={to_code}'
+    try:
+        with urlopen(url, timeout=10) as resp:
+            payload = json.loads(resp.read())
+    except Exception as e:
+        raise RateProviderError(f'Frankfurter fetch failed: {e}') from e
+    rate = (payload.get('rates') or {}).get(to_code)
+    if rate is None:
+        raise RateProviderError(
+            f'Frankfurter returned no rate for {from_code}→{to_code}. '
+            f'Coverage matches ECB; switch provider for exotic currencies.'
+        )
+    return Decimal(str(rate)).quantize(Decimal('0.0000000001'))
+
+
+def _fetch_exchangerate_host(from_code: str, to_code: str, access_key: str | None = None) -> Decimal:
+    """exchangerate.host live endpoint: needs an API access_key on free tier
+    since 2024. Returns USD-base; we cross-rate."""
+    import json
+    if not access_key:
+        raise RateProviderError(
+            'exchangerate.host requires an API access_key in provider_config '
+            '(set the policy\'s provider_config.access_key).'
+        )
+    url = f'{EXCHANGERATE_HOST_URL}?access_key={access_key}'
+    try:
+        with urlopen(url, timeout=10) as resp:
+            payload = json.loads(resp.read())
+    except Exception as e:
+        raise RateProviderError(f'exchangerate.host fetch failed: {e}') from e
+    if not payload.get('success', True):
+        info = (payload.get('error') or {}).get('info') or 'unknown error'
+        raise RateProviderError(f'exchangerate.host: {info}')
+    quotes = payload.get('quotes') or {}
+    src = (payload.get('source') or 'USD').upper()
+    # Quotes are like {"USDEUR": 0.92, "USDAED": 3.6725}.
+    if from_code == src:
+        target = quotes.get(f'{src}{to_code}')
+        if target is None:
+            raise RateProviderError(f'exchangerate.host has no rate for {to_code}')
+        return Decimal(str(target)).quantize(Decimal('0.0000000001'))
+    if to_code == src:
+        target = quotes.get(f'{src}{from_code}')
+        if target is None:
+            raise RateProviderError(f'exchangerate.host has no rate for {from_code}')
+        return (Decimal('1') / Decimal(str(target))).quantize(Decimal('0.0000000001'))
+    # Cross via source.
+    a = quotes.get(f'{src}{from_code}')
+    b = quotes.get(f'{src}{to_code}')
+    if a is None or b is None:
+        raise RateProviderError(
+            f'exchangerate.host missing one of {from_code}/{to_code} in {src}-base feed.'
+        )
+    return (Decimal(str(b)) / Decimal(str(a))).quantize(Decimal('0.0000000001'))
 
 
 class RateProviderError(Exception):
@@ -171,15 +239,22 @@ class CurrencyRateSyncService:
             return False, 'Provider is MANUAL'
 
         try:
+            from_code = policy.from_currency.code
+            to_code = policy.to_currency.code
+            cfg = policy.provider_config or {}
             if policy.provider == 'ECB':
-                raw_rate = _ecb_pair_rate(policy.from_currency.code, policy.to_currency.code)
+                raw_rate = _ecb_pair_rate(from_code, to_code)
+            elif policy.provider == 'FRANKFURTER':
+                raw_rate = _fetch_frankfurter(from_code, to_code)
+            elif policy.provider == 'EXCHANGERATE_HOST':
+                raw_rate = _fetch_exchangerate_host(from_code, to_code, cfg.get('access_key'))
             elif policy.provider in ('FIXER', 'OPENEXCHANGERATES'):
                 # Stub for now — needs api_key in provider_config and an HTTP
                 # client. Fail loudly so the caller knows it's not wired yet
                 # rather than silently writing zero.
                 raise RateProviderError(
                     f"{policy.provider} provider is not yet implemented. "
-                    f"Use ECB (free) or MANUAL for now."
+                    f"Use ECB / FRANKFURTER / EXCHANGERATE_HOST or MANUAL for now."
                 )
             else:
                 raise RateProviderError(f'Unknown provider: {policy.provider}')

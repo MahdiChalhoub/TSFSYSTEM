@@ -1737,23 +1737,29 @@ export default function PurchaseAnalyticsSettingsPage() {
                         <div>
                             <label className={fieldLabel}>Click behaviour</label>
                             <div className="flex gap-2 flex-wrap">
-                                <button type="button" disabled
-                                    className={toggleBtn(val('request_flow_mode') === 'INSTANT') + ' opacity-50 cursor-not-allowed'}
-                                    title="Coming in Phase 3">
-                                    Instant create <span className="ml-1 text-[8px] opacity-60">(soon)</span>
-                                </button>
-                                <button type="button"
-                                    className={toggleBtn(val('request_flow_mode') === 'DIALOG' || !val('request_flow_mode'))}
-                                    onClick={() => update('request_flow_mode', 'DIALOG')}>
-                                    Mini dialog
-                                </button>
-                                <button type="button" disabled
-                                    className={toggleBtn(val('request_flow_mode') === 'CART') + ' opacity-50 cursor-not-allowed'}
-                                    title="Coming in Phase 3">
-                                    Cart accumulator <span className="ml-1 text-[8px] opacity-60">(soon)</span>
-                                </button>
+                                {(['INSTANT', 'DIALOG', 'CART'] as const).map(mode => {
+                                    const label = mode === 'INSTANT' ? 'Instant create' : mode === 'DIALOG' ? 'Mini dialog' : 'Cart accumulator';
+                                    const active = val('request_flow_mode') === mode || (mode === 'DIALOG' && !val('request_flow_mode'));
+                                    return (
+                                        <button key={mode} type="button"
+                                            className={toggleBtn(active)}
+                                            onClick={async () => {
+                                                if (editingProfile) { update('request_flow_mode', mode); return; }
+                                                update('request_flow_mode', mode);
+                                                const r = await savePurchaseAnalyticsConfig({ request_flow_mode: mode });
+                                                if (r.success) toast.success(`Request flow set to ${label}`);
+                                                else toast.error(r.message || 'Failed to save');
+                                            }}>
+                                            {label}
+                                        </button>
+                                    );
+                                })}
                             </div>
-                            <p className={fieldHint}>Dialog opens a small popup pre-filled with your suggested quantity. The other modes ship in a follow-up.</p>
+                            <p className={fieldHint}>
+                                <strong>Instant:</strong> click → request created immediately with formula-derived qty.&nbsp;
+                                <strong>Dialog:</strong> popup to review qty, priority, reason before submitting.&nbsp;
+                                <strong>Cart:</strong> add multiple products to a draft, submit as a batch.
+                            </p>
                         </div>
                     </div>}
                 </div>}

@@ -324,11 +324,11 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         onToggleSelectAll={toggleSelectAll}
         bulkActions={
           <>
-            <button onClick={() => setRequestDialog({ type: 'PURCHASE', products: items.filter(p => selectedIds.has(p.id)).map(toRequestable) })}
+            <button onClick={() => triggerRequest('PURCHASE', items.filter(p => selectedIds.has(p.id)).map(toRequestable))}
               className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-info/30 text-app-info hover:bg-app-info/10 transition-all">
               <ShoppingCart size={11} /> Request Purchase
             </button>
-            <button onClick={() => setRequestDialog({ type: 'TRANSFER', products: items.filter(p => selectedIds.has(p.id)).map(toRequestable) })}
+            <button onClick={() => triggerRequest('TRANSFER', items.filter(p => selectedIds.has(p.id)).map(toRequestable))}
               className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-warning/30 text-app-warning hover:bg-app-warning/10 transition-all">
               <ArrowRightLeft size={11} /> Request Transfer
             </button>
@@ -356,15 +356,6 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         profiles={profiles} setProfiles={setProfiles}
         activeProfileId={activeProfileId} setActiveProfileId={setActiveProfileId}
         policyHiddenColumns={policyHiddenColumns} policyHiddenFilters={policyHiddenFilters} />
-
-      {requestDialog && (
-        <RequestProductDialog
-          open
-          onClose={() => setRequestDialog(null)}
-          requestType={requestDialog.type}
-          products={requestDialog.products}
-        />
-      )}
     </DajingoPageShell>
   )
 }
