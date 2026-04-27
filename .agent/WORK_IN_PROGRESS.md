@@ -15,6 +15,36 @@
 
 ## Session Log
 
+### Session: 2026-04-27 (Procurement Request flow — Phase 1: dialog + settings chooser)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE (code + typecheck clean) / ⏳ browser smoke-test pending
+- **Worked On**: Replaced 8 dead "Request Purchase / Transfer" buttons in the inventory products UI with a real flow that creates a `ProcurementRequest` via the existing endpoint. Added `request_flow_mode` setting to `PurchaseAnalyticsConfig` with a chooser on `/settings/purchase-analytics` (DIALOG live; INSTANT and CART placeholders for Phase 3). Plan saved to `task and plan/inventory_procurement_request_001.md`.
+- **Files Modified**:
+  - NEW `task and plan/inventory_procurement_request_001.md` — phased plan (Phase 1 complete; Phase 2 = procurement_status field + lifecycle; Phase 3 = INSTANT/CART flows + per-user mode).
+  - NEW `src/components/products/RequestProductDialog.tsx` (254 lines) — shared dialog. Reads `proposed_qty_safety_multiplier` from active `PurchaseAnalyticsConfig` and pre-fills suggested qty as `reorder_quantity ?? (min_stock_level × safety) ?? 1`. Per-product qty rows + shared priority/reason. Submit creates one `ProcurementRequest` per product via the existing `createProcurementRequest` action; toasts with link to `/inventory/requests`. Uses `useModalDismiss` for Esc/backdrop close.
+  - `src/app/(privileged)/inventory/products/manager.tsx` — added `requestDialog` state (PURCHASE/TRANSFER + products array). Wired 4 buttons (single-row menu Purchase + Transfer; bulk-action Purchase + Transfer). 358 → 369 lines.
+  - `src/app/(privileged)/inventory/products/_components/ProductRow.tsx` — local `requestType` state. Wired the 2 row-menu buttons (Request Purchase + Request Transfer).
+  - `src/app/(privileged)/inventory/products/_components/ProductDetailCards.tsx` — local `requestType` state. Wired the 2 detail-card buttons (Purchase + Transfer).
+  - `src/app/(privileged)/settings/purchase-analytics/page.tsx` — added "Request Flow" card (cyan accent) with 3 toggle buttons. DIALOG is the only enabled option for Phase 1; INSTANT and CART are disabled with "(soon)" labels.
+  - `src/app/actions/settings/purchase-analytics-config.ts` — added `request_flow_mode: 'INSTANT' | 'DIALOG' | 'CART'` to `PurchaseAnalyticsConfig` interface and `DEFAULTS` (default 'DIALOG').
+  - `erp_backend/erp/views_system.py` — added `'request_flow_mode': 'DIALOG'` to the config DEFAULTS so the new key persists in `Organization.settings['purchase_analytics_config']`. No DB migration (JSON blob).
+- **Discoveries**:
+  - `Product.status` (ACTIVE/INACTIVE/DRAFT/ARCHIVED) is a **lifecycle** field used by ~12 backend queries (`services.py:78,161,536`, `valuation_service.py:167`, etc). Cannot be overloaded with REQUESTED/PO_SENT/IN_TRANSIT — Phase 2 will add a separate `procurement_status` field.
+  - Two parallel request systems exist: `ProcurementRequest` (apps/pos, single-product, used by `createProcurementRequest`) and `OperationalRequest` (used by `/inventory/requests` page, multi-line). Phase 1 uses ProcurementRequest. Phase 2 will reconcile so `/inventory/requests` shows both.
+  - `PurchaseAnalyticsConfig` already has full personal/organization profile scoping via `AnalyticsProfile` — Phase 3 mode-per-user comes for free.
+  - The 4 product-list "Request" buttons previously linked to `/procurement/purchase-orders/new` (catch-all dead page) — fixed to `/purchases/new` earlier this session, then fully replaced with the dialog flow.
+  - `.agent/workflows/docker-dev.md` confirms a dev stack is reachable here (Next.js on :3000 via nginx). Earlier sessions claimed "no dev server" — that's stale.
+- **Warnings for Next Agent**:
+  - ⚠️ **Browser smoke-test required.** Verify on `/inventory/products`: (a) row-menu Request Purchase / Transfer opens dialog with sane qty default; (b) bulk-select multiple products → bulk-action Request Purchase opens dialog with all selected products; (c) detail-card Purchase / Transfer opens dialog; (d) submit creates request and toast shows "View →" link to `/inventory/requests`; (e) Escape and backdrop-click close the dialog; (f) `/settings/purchase-analytics` shows new "Request Flow" card with 3 buttons (Mini dialog active, the other two disabled with "(soon)").
+  - ⚠️ **Phase 2 not done.** `Product.procurement_status` field doesn't exist yet, no signals on `ProcurementRequest` lifecycle, no badge on the product list. The user wants the `Available → Requested → PO Sent → PO Accepted → In Transit → Available | Failed` lifecycle visible on each product. Plan documented in `task and plan/inventory_procurement_request_001.md`.
+  - ⚠️ **Phase 3 not done.** `request_flow_mode` only honors DIALOG. INSTANT (one-click create) and CART (sticky accumulator) are disabled in the chooser with "(soon)" labels. When Phase 3 lands, the dialog mounting points (manager.tsx + ProductRow + ProductDetailCards) need to branch on the mode: read mode from settings → pick handler.
+  - ⚠️ **Suggested qty is a placeholder.** Current formula: `reorder_quantity ?? (min_stock_level × safety_multiplier) ?? 1`. The honest formula `avg_daily_sales × proposed_qty_lead_days × proposed_qty_safety_multiplier` requires a backend endpoint (compute avg sales over `sales_avg_period_days`). Tracked in Phase 2 of the plan.
+  - ⚠️ `manager.tsx` is 369 lines — over the 300-line code-quality limit. Pre-existing (358 before this session). Candidate for a future refactor — extract row/bulk action handlers + dialog mount into a `_hooks/useRequestDialog.ts`.
+  - ⚠️ `purchase-analytics/page.tsx` is 1907 lines — already far over the 300-line limit before this work. Pre-existing; not worsened materially by the additive ~36-line "Request Flow" card.
+  - ⚠️ Pre-existing typecheck errors in `src/app/(privileged)/purchases/restored/form.tsx` are unrelated to this work.
+
+---
+
 ### Session: 2026-04-20 (Fiscal Years viewer.tsx full refactor — 867 → 121 lines)
 - **Agent**: Antigravity (Claude Opus 4.6 Thinking)
 - **Status**: ✅ DONE (code + typecheck clean)

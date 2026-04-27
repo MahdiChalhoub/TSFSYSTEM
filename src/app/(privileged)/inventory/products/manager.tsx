@@ -44,6 +44,11 @@ import { DajingoListView } from '@/components/common/DajingoListView'
 import { DajingoPageShell } from '@/components/common/DajingoPageShell'
 import { ProductDetailCards } from './_components/ProductDetailCards'
 import { renderProductCell } from './_components/ProductColumns'
+import { RequestProductDialog, type RequestableProduct } from '@/components/products/RequestProductDialog'
+
+function toRequestable(p: Product): RequestableProduct {
+  return { id: p.id, name: p.name, sku: p.sku, reorder_quantity: p.reorder_quantity, min_stock_level: p.min_stock_level }
+}
 
 /* ═══════════════════════════════════════════════════════════
  *  MAIN PAGE
@@ -54,6 +59,7 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
   const { openTab } = useAdmin()
   const [items, setItems] = useState<Product[]>(initialProducts)
   const [loading, setLoading] = useState(initialProducts.length === 0)
+  const [requestDialog, setRequestDialog] = useState<{ type: 'PURCHASE' | 'TRANSFER'; products: RequestableProduct[] } | null>(null)
   const [search, setSearch] = useState('')
   const [focusMode, setFocusMode] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -307,8 +313,8 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         renderExpanded={product => <ProductDetailCards product={product} marginPct={(() => { const sellHt = parseFloat(product.selling_price_ht) || 0; const costP = parseFloat(product.cost_price) || 0; return sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—' })()} onView={id => router.push(`/inventory/products/${id}`)} />}
         onView={product => router.push(`/inventory/products/${product.id}`)}
         menuActions={product => [
-          { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => { window.location.href = `/purchases/new?product=${product.id}` } },
-          { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => { window.location.href = `/inventory/transfers/new?product=${product.id}` } },
+          { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => setRequestDialog({ type: 'PURCHASE', products: [toRequestable(product)] }) },
+          { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => setRequestDialog({ type: 'TRANSFER', products: [toRequestable(product)] }) },
           { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
         ]}
         selectedIds={selectedIds}
@@ -317,11 +323,11 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         onToggleSelectAll={toggleSelectAll}
         bulkActions={
           <>
-            <button onClick={() => { window.location.href = `/purchases/new?products=${Array.from(selectedIds).join(',')}` }}
+            <button onClick={() => setRequestDialog({ type: 'PURCHASE', products: items.filter(p => selectedIds.has(p.id)).map(toRequestable) })}
               className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-info/30 text-app-info hover:bg-app-info/10 transition-all">
               <ShoppingCart size={11} /> Request Purchase
             </button>
-            <button onClick={() => { window.location.href = `/inventory/transfers/new?products=${Array.from(selectedIds).join(',')}` }}
+            <button onClick={() => setRequestDialog({ type: 'TRANSFER', products: items.filter(p => selectedIds.has(p.id)).map(toRequestable) })}
               className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-warning/30 text-app-warning hover:bg-app-warning/10 transition-all">
               <ArrowRightLeft size={11} /> Request Transfer
             </button>
@@ -349,6 +355,15 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         profiles={profiles} setProfiles={setProfiles}
         activeProfileId={activeProfileId} setActiveProfileId={setActiveProfileId}
         policyHiddenColumns={policyHiddenColumns} policyHiddenFilters={policyHiddenFilters} />
+
+      {requestDialog && (
+        <RequestProductDialog
+          open
+          onClose={() => setRequestDialog(null)}
+          requestType={requestDialog.type}
+          products={requestDialog.products}
+        />
+      )}
     </DajingoPageShell>
   )
 }

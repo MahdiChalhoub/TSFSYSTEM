@@ -37,6 +37,14 @@
 
 ## 🟡 MEDIUM
 
+### [PHASE 1 DONE 2026-04-27] Procurement Request flow on product list
+- **Discovered**: 2026-04-27 (user reported dead `/procurement/purchase-orders/new` route)
+- **Impact**: Eight "Request Purchase / Transfer" buttons on the inventory products UI either hit a catch-all "Module Page Under Construction" placeholder or jumped to a blank PO form. Users couldn't actually request stock from the product list.
+- **Plan**: `task and plan/inventory_procurement_request_001.md`
+- **Phase 1 fix (this session)**: New shared `RequestProductDialog` component creates `ProcurementRequest` records via the existing `createProcurementRequest` action. Eight buttons rewired (single-row menu × 2, bulk-action × 2, detail-card × 2, ProductRow menu × 2). Suggested qty pre-filled from active `PurchaseAnalyticsConfig` (placeholder formula: `reorder_quantity ?? min_stock_level × safety`). New `request_flow_mode` setting added to `PurchaseAnalyticsConfig` with a chooser on `/settings/purchase-analytics` (DIALOG live; INSTANT and CART placeholders).
+- **Phase 2 OPEN**: Add `Product.procurement_status` field with lifecycle `AVAILABLE → REQUESTED → PO_SENT → PO_ACCEPTED → IN_TRANSIT → AVAILABLE | FAILED`. Django signals on `ProcurementRequest` + `PurchaseOrder` events to drive transitions. Badge on product list. Backend endpoint that computes honest suggested qty (`avg_daily × lead × safety`).
+- **Phase 3 OPEN**: Build INSTANT (one-click create) and CART (sticky accumulator) flows alongside DIALOG. Read `request_flow_mode` from active analytics profile so users get per-user customization for free.
+
 ### [DONE 2026-04-19] Fiscal Years — silent-bug audit + modal escape + rollback
 - **Discovered**: 2026-04-19 (user reported being unable to escape a modal and suspecting silent bugs)
 - **Impact**: Four bespoke modals on `/finance/fiscal-years` (Wizard, Draft Audit, Year-End Close, Period Editor) had no Escape-key / backdrop-click dismissal — users could only close via the X icon. `applyPeriodStatus` always toast-success'd regardless of whether the server accepted the change (swallowed errors in a generic `catch {}` with the excuse "PATCH may return 500 due to audit log conflict"). `refreshData` silently swallowed all errors. Generic "Failed" toast on close-preview. `closingYearId` leaked if close-preview fetch rejected.

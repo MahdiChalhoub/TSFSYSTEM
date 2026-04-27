@@ -1720,6 +1720,43 @@ export default function PurchaseAnalyticsSettingsPage() {
                         </div>
                     </div>}
                 </div>}
+
+                {/* ── Request Flow ── */}
+                {cardVisible('request flow mode dialog instant cart purchase transfer button') && <div className={card}>
+                    <div className={cardHead('border-cyan-500')} onClick={() => toggleCard('request_flow')}>
+                        <div className="w-6 h-6 rounded-md bg-cyan-500/10 flex items-center justify-center">
+                            <ShoppingCart className="w-4 h-4 text-cyan-500" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className={cardTitle}>Request Flow</h3>
+                            <p className="text-[10px] text-app-muted-foreground">How "Request Purchase / Transfer" buttons behave on the product list</p>
+                        </div>
+                        {collapsed.request_flow ? <ChevronRight size={14} className="text-app-muted-foreground" /> : <ChevronDown size={14} className="text-app-muted-foreground" />}
+                    </div>
+                    {!collapsed.request_flow && <div className={cardBody}>
+                        <div>
+                            <label className={fieldLabel}>Click behaviour</label>
+                            <div className="flex gap-2 flex-wrap">
+                                <button type="button" disabled
+                                    className={toggleBtn(val('request_flow_mode') === 'INSTANT') + ' opacity-50 cursor-not-allowed'}
+                                    title="Coming in Phase 3">
+                                    Instant create <span className="ml-1 text-[8px] opacity-60">(soon)</span>
+                                </button>
+                                <button type="button"
+                                    className={toggleBtn(val('request_flow_mode') === 'DIALOG' || !val('request_flow_mode'))}
+                                    onClick={() => update('request_flow_mode', 'DIALOG')}>
+                                    Mini dialog
+                                </button>
+                                <button type="button" disabled
+                                    className={toggleBtn(val('request_flow_mode') === 'CART') + ' opacity-50 cursor-not-allowed'}
+                                    title="Coming in Phase 3">
+                                    Cart accumulator <span className="ml-1 text-[8px] opacity-60">(soon)</span>
+                                </button>
+                            </div>
+                            <p className={fieldHint}>Dialog opens a small popup pre-filled with your suggested quantity. The other modes ship in a follow-up.</p>
+                        </div>
+                    </div>}
+                </div>}
             </div>
 
             {/* No results state for search */}

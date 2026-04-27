@@ -587,6 +587,7 @@ class SettingsViewSet(viewsets.ViewSet):
                 'velocity': 30,
                 'stock_health': 30,
             },
+            'request_flow_mode': 'DIALOG',
         }
 
         if request.method == 'POST':

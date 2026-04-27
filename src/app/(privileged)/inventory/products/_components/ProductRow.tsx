@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import type { Product } from '../_lib/types'
 import { TYPE_CONFIG, STATUS_CONFIG, fmt } from '../_lib/constants'
+import { RequestProductDialog, type RequestableProduct } from '@/components/products/RequestProductDialog'
 import { ProductColumns } from './ProductColumns'
 import { ProductDetailCards } from './ProductDetailCards'
 
@@ -36,7 +37,9 @@ export const ProductRow = React.memo(function ProductRow({
 }: ProductRowProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [requestType, setRequestType] = useState<'PURCHASE' | 'TRANSFER' | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const requestable: RequestableProduct = { id: product.id, name: product.name, sku: product.sku, reorder_quantity: product.reorder_quantity, min_stock_level: product.min_stock_level }
   const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
   const sc = STATUS_CONFIG[product.status] || STATUS_CONFIG.ACTIVE
   const qty = product.on_hand_qty ?? 0
@@ -120,11 +123,11 @@ export const ProductRow = React.memo(function ProductRow({
                       className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
                       <Eye size={12} className="text-app-primary" /> View Details
                     </button>
-                    <button onClick={() => { window.location.href = `/purchases/new?product=${product.id}`; setShowMenu(false) }}
+                    <button onClick={() => { setRequestType('PURCHASE'); setShowMenu(false) }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
                       <ShoppingCart size={12} className="text-app-info" /> Request Purchase
                     </button>
-                    <button onClick={() => { window.location.href = `/inventory/transfers/new?product=${product.id}`; setShowMenu(false) }}
+                    <button onClick={() => { setRequestType('TRANSFER'); setShowMenu(false) }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
                       <ArrowRightLeft size={12} className="text-app-warning" /> Request Transfer
                     </button>
@@ -168,6 +171,15 @@ export const ProductRow = React.memo(function ProductRow({
 
       {/* ── EXPANDABLE DETAIL CARDS (delegated) ── */}
       {isOpen && <ProductDetailCards product={product} marginPct={marginPct} onView={onView} />}
+
+      {requestType && (
+        <RequestProductDialog
+          open
+          onClose={() => setRequestType(null)}
+          requestType={requestType}
+          products={[requestable]}
+        />
+      )}
     </div>
   )
 })

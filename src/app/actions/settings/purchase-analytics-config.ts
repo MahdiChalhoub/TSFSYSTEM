@@ -17,6 +17,7 @@ export interface PurchaseAnalyticsConfig {
         velocity: number;
         stock_health: number;
     };
+    request_flow_mode: 'INSTANT' | 'DIALOG' | 'CART';
     // Audit metadata (from backend)
     _last_modified_by?: string;
     _last_modified_at?: string;
@@ -47,6 +48,7 @@ const DEFAULTS: PurchaseAnalyticsConfig = {
     purchase_context: 'RETAIL',
     po_count_source: 'PURCHASE_INVOICE',
     financial_score_weights: { margin: 40, velocity: 30, stock_health: 30 },
+    request_flow_mode: 'DIALOG',
 };
 
 export async function getPurchaseAnalyticsConfig(): Promise<PurchaseAnalyticsConfig> {

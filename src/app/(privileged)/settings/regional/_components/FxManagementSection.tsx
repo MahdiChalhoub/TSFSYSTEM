@@ -133,6 +133,19 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
         }))
     }, [rates])
 
+    /** Latest rate per (from_code, to_code, rate_type) — used to surface the
+     *  actual stored rate on the policies row, so the operator doesn't have
+     *  to cross-reference the Rate History tab to see what got synced. */
+    const latestRateByKey = useMemo(() => {
+        const m = new Map<string, ExchangeRate>()
+        for (const r of rates) {
+            const k = `${r.from_code}→${r.to_code}|${r.rate_type}`
+            const prev = m.get(k)
+            if (!prev || r.effective_date > prev.effective_date) m.set(k, r)
+        }
+        return m
+    }, [rates])
+
     async function handleRunRevaluation(periodId: number) {
         setRunning(periodId)
         try {
@@ -568,30 +581,63 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                     return (
                                                     <Fragment key={p.id}>
                                                         <tr className="border-t border-app-border/30 hover:bg-app-background/40 transition-colors">
-                                                            <td className="px-3 py-2 text-[12px] font-black font-mono text-app-foreground">
-                                                                <span className="inline-flex items-center gap-1.5">
-                                                                    <span className="w-1.5 h-1.5 rounded-full"
-                                                                        style={{ background: `var(${HEALTH_COLOR[health]})` }}
+                                                            {/* Pair + rate readout — kept on a single visual block with no wrap */}
+                                                            <td className="px-3 py-2 whitespace-nowrap">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="w-2 h-2 rounded-full shrink-0"
+                                                                        style={{ background: `var(${HEALTH_COLOR[health]})`, boxShadow: `0 0 0 3px color-mix(in srgb, var(${HEALTH_COLOR[health]}) 18%, transparent)` }}
                                                                         title={HEALTH_LABEL[health]} />
-                                                                    {p.from_code}→{p.to_code}
-                                                                </span>
+                                                                    <span className="font-black font-mono text-app-foreground" style={{ fontSize: 12 }}>
+                                                                        {p.from_code}<span className="text-app-muted-foreground mx-0.5">→</span>{p.to_code}
+                                                                    </span>
+                                                                </div>
+                                                                {(() => {
+                                                                    const r = latestRateByKey.get(`${p.from_code}→${p.to_code}|${p.rate_type}`)
+                                                                    if (!r) return (
+                                                                        <div className="font-mono text-app-muted-foreground italic mt-0.5 ml-4" style={{ fontSize: 10, lineHeight: 1.2 }}>
+                                                                            no rate yet · click Sync
+                                                                        </div>
+                                                                    )
+                                                                    const adjusted = Number(r.rate)
+                                                                    const mul = Number(p.multiplier) || 1
+                                                                    const mk = Number(p.markup_pct) || 0
+                                                                    const factor = mul * (1 + mk / 100)
+                                                                    const hasSpread = Math.abs(factor - 1) > 1e-9 && isFinite(factor) && factor !== 0
+                                                                    const raw = hasSpread ? adjusted / factor : null
+                                                                    return (
+                                                                        <div className="font-mono mt-0.5 ml-4 flex items-baseline gap-1.5"
+                                                                            style={{ fontSize: 10, lineHeight: 1.2 }}
+                                                                            title={`Latest stored rate · ${r.effective_date} · source: ${r.source ?? 'MANUAL'}`}>
+                                                                            <span className="text-app-muted-foreground">1 {p.from_code} =</span>
+                                                                            <span className="text-app-foreground font-black tabular-nums">{adjusted.toFixed(6)}</span>
+                                                                            <span className="text-app-muted-foreground">{p.to_code}</span>
+                                                                            {raw !== null && (
+                                                                                <span className="text-app-muted-foreground/70 ml-1"
+                                                                                    title={`Raw provider rate before ×${mul.toFixed(4)} and +${mk.toFixed(4)}%`}>
+                                                                                    raw {raw.toFixed(6)}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )
+                                                                })()}
                                                             </td>
-                                                            <td className="px-3 py-2">
-                                                                <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
-                                                                    style={{ ...soft('--app-info', 12), color: 'var(--app-info)' }}>
+                                                            <td className="px-3 py-2 whitespace-nowrap">
+                                                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md"
+                                                                    style={{ ...soft('--app-info', 12), color: 'var(--app-info)', border: '1px solid color-mix(in srgb, var(--app-info) 25%, transparent)' }}>
                                                                     {p.rate_type}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-3 py-2">
-                                                                <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                                                            <td className="px-3 py-2 whitespace-nowrap">
+                                                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap"
                                                                     style={p.provider === 'MANUAL'
-                                                                        ? { ...soft('--app-muted-foreground', 14), color: 'var(--app-muted-foreground)' }
-                                                                        : { ...soft('--app-success', 12), color: 'var(--app-success)' }}
+                                                                        ? { ...soft('--app-muted-foreground', 14), color: 'var(--app-muted-foreground)', border: '1px solid color-mix(in srgb, var(--app-muted-foreground) 25%, transparent)' }
+                                                                        : { ...soft('--app-success', 12), color: 'var(--app-success)', border: '1px solid color-mix(in srgb, var(--app-success) 25%, transparent)' }}
                                                                     title={p.provider === 'MANUAL'
                                                                         ? 'Fixed rate — operator-entered, never auto-fetched'
                                                                         : `Floating rate — pulled from ${p.provider}`}>
                                                                     {p.provider === 'MANUAL' ? 'Fixed' : 'Floating'}
-                                                                    <span className="font-mono opacity-60">· {p.provider}</span>
+                                                                    <span className="opacity-50">·</span>
+                                                                    <span className="font-mono">{p.provider}</span>
                                                                 </span>
                                                             </td>
                                                             <td className="px-3 py-2">
@@ -615,7 +661,7 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                             </td>
 
                                                             {/* Multiplier — inline editable */}
-                                                            <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums">
+                                                            <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums whitespace-nowrap">
                                                                 {isEditingThisRow ? (
                                                                     <input value={editingPolicy.multiplier}
                                                                         onChange={e => setEditingPolicy(s => s ? { ...s, multiplier: e.target.value } : s)}
@@ -634,7 +680,7 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                             </td>
 
                                                             {/* Markup — inline editable */}
-                                                            <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums">
+                                                            <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums whitespace-nowrap">
                                                                 {isEditingThisRow ? (
                                                                     <input value={editingPolicy.markup_pct}
                                                                         onChange={e => setEditingPolicy(s => s ? { ...s, markup_pct: e.target.value } : s)}
@@ -668,18 +714,22 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                                         style={{ background: 'var(--app-primary-foreground, white)' }} />
                                                                 </button>
                                                             </td>
-                                                            <td className="px-3 py-2 text-[10px]">
+                                                            <td className="px-3 py-2 text-[10px] whitespace-nowrap">
                                                                 {p.last_synced_at
                                                                     ? <FreshSyncBadge health={health} status={p.last_sync_status} when={p.last_synced_at} error={p.last_sync_error} />
-                                                                    : <span className="text-app-muted-foreground">never</span>}
+                                                                    : <span className="text-app-muted-foreground italic">never</span>}
                                                             </td>
-                                                            <td className="px-3 py-2 text-right">
+                                                            <td className="px-3 py-2 text-right whitespace-nowrap">
                                                                 <div className="flex items-center justify-end gap-1">
                                                                     <button onClick={() => handleSyncPolicy(p.id)}
                                                                         disabled={syncingId === p.id || p.provider === 'MANUAL'}
                                                                         title={p.provider === 'MANUAL' ? 'MANUAL provider cannot be synced' : 'Fetch fresh rate from provider'}
-                                                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md border border-app-border/50 hover:bg-app-background transition-colors disabled:opacity-50"
-                                                                        style={{ color: 'var(--app-info)' }}>
+                                                                        className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md border transition-colors disabled:opacity-50 whitespace-nowrap"
+                                                                        style={{
+                                                                            color: 'var(--app-info)',
+                                                                            borderColor: 'color-mix(in srgb, var(--app-info) 30%, transparent)',
+                                                                            background: syncingId === p.id ? `color-mix(in srgb, var(--app-info) 10%, transparent)` : 'transparent',
+                                                                        }}>
                                                                         <RefreshCcw size={11} className={syncingId === p.id ? 'animate-spin' : ''} />
                                                                         {syncingId === p.id ? 'Syncing…' : 'Sync'}
                                                                     </button>
@@ -981,14 +1031,24 @@ function FreshSyncBadge({ health, status, when, error }: {
 }) {
     const colorVar = HEALTH_COLOR[health]
     const ageH = (Date.now() - new Date(when).getTime()) / 36e5
-    const ageLabel = ageH < 1 ? `${Math.max(1, Math.round(ageH * 60))}m ago`
+    const ageLabel = ageH < 1 / 60 ? 'just now'
+        : ageH < 1 ? `${Math.max(1, Math.round(ageH * 60))}m ago`
         : ageH < 48 ? `${Math.round(ageH)}h ago`
         : `${Math.round(ageH / 24)}d ago`
     return (
-        <span title={error ?? HEALTH_LABEL[health]} className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: `var(${colorVar})` }} />
-            <span className="font-mono text-[10px]" style={{ color: `var(${colorVar})` }}>
-                {status ?? '—'} · {ageLabel}
+        <span title={error ?? HEALTH_LABEL[health]}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md whitespace-nowrap"
+            style={{
+                ...soft(colorVar, 10),
+                border: `1px solid color-mix(in srgb, var(${colorVar}) 25%, transparent)`,
+            }}>
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: `var(${colorVar})` }} />
+            <span className="font-black uppercase tracking-wider" style={{ color: `var(${colorVar})`, fontSize: 9 }}>
+                {status ?? '—'}
+            </span>
+            <span className="opacity-50" style={{ color: `var(${colorVar})`, fontSize: 9 }}>·</span>
+            <span className="font-mono" style={{ color: `var(${colorVar})`, fontSize: 9 }}>
+                {ageLabel}
             </span>
         </span>
     )
