@@ -11,7 +11,7 @@
 
 import React from 'react'
 import type { Product } from '../_lib/types'
-import { ALL_COLUMNS, COLUMN_WIDTHS, RIGHT_ALIGNED_COLS, CENTER_ALIGNED_COLS, GROW_COLS, TYPE_CONFIG, STATUS_CONFIG, fmt } from '../_lib/constants'
+import { ALL_COLUMNS, COLUMN_WIDTHS, RIGHT_ALIGNED_COLS, CENTER_ALIGNED_COLS, GROW_COLS, TYPE_CONFIG, STATUS_CONFIG, PROCUREMENT_STATUS_CONFIG, fmt } from '../_lib/constants'
 import { useMemo } from 'react'
 
 interface ProductColumnsProps {
@@ -73,6 +73,26 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
           {sc.label}
         </span>
       )
+    case 'procurement': {
+      const ps = PROCUREMENT_STATUS_CONFIG[product.procurement_status as string] || PROCUREMENT_STATUS_CONFIG.NONE
+      const tier = qty <= 0 ? 'OUT' : isLow ? 'LOW' : null
+      const tierLabel = tier === 'OUT' ? 'Out of Stock' : tier === 'LOW' ? 'Low Stock' : null
+      const tierColor = tier === 'OUT' ? 'var(--app-error, #ef4444)' : tier === 'LOW' ? 'var(--app-warning, #f59e0b)' : ps.color
+      const showLifecycle = product.procurement_status && product.procurement_status !== 'NONE'
+      return (
+        <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded truncate"
+          style={{
+            color: tierColor,
+            background: `color-mix(in srgb, ${tierColor} 10%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${tierColor} 25%, transparent)`,
+          }}>
+          {tierLabel ?? ps.label}
+          {showLifecycle && tierLabel && (
+            <span style={{ color: ps.color, opacity: 0.85 }}>· {ps.label}</span>
+          )}
+        </span>
+      )
+    }
     case 'isActive': return <span className="text-[10px]">{product.is_active ? '✅' : '❌'}</span>
     case 'completeness': return <span className="text-[10px] font-bold text-app-muted-foreground truncate">{product.completeness_label || '—'}</span>
     case 'completenessLvl': return <span className="text-[10px] font-bold text-app-muted-foreground">{product.data_completeness_level ?? '—'}/7</span>

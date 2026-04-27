@@ -9,7 +9,7 @@
 import React, { useState } from 'react'
 import { Eye, Edit, ShoppingCart, ArrowRightLeft } from 'lucide-react'
 import type { Product } from '../_lib/types'
-import { TYPE_CONFIG, STATUS_CONFIG, fmt } from '../_lib/constants'
+import { TYPE_CONFIG, STATUS_CONFIG, PROCUREMENT_STATUS_CONFIG, fmt } from '../_lib/constants'
 import { DCell } from './DCell'
 import { RequestProductDialog, type RequestableProduct } from '@/components/products/RequestProductDialog'
 
@@ -96,6 +96,11 @@ export const ProductDetailCards = React.memo(function ProductDetailCards({ produ
             <DCell label="Max Stock" value={product.max_stock_level} />
             <DCell label="Reorder Pt" value={product.reorder_point} />
             <DCell label="Reorder Qty" value={product.reorder_quantity} />
+            <DCell
+              label="Procurement"
+              value={(PROCUREMENT_STATUS_CONFIG[product.procurement_status as string] || PROCUREMENT_STATUS_CONFIG.NONE).label}
+              color={(PROCUREMENT_STATUS_CONFIG[product.procurement_status as string] || PROCUREMENT_STATUS_CONFIG.NONE).color}
+            />
           </CardSection>
 
           <CardSection color="var(--app-warning)" title="Governance">

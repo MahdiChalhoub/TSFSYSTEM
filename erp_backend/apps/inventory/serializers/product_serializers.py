@@ -110,6 +110,8 @@ class ProductSerializer(serializers.ModelSerializer):
     is_complete = serializers.SerializerMethodField()
     # ── Product Grouping — governance fields ──
     product_group_name = serializers.CharField(source='product_group.name', read_only=True, default=None)
+    # ── Procurement lifecycle (derived from latest ProcurementRequest) ──
+    procurement_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -141,6 +143,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'group_sync_status', 'group_broken_since', 'group_expected_price',
             # COA Link Fields (Gap 2A.7)
             'revenue_account', 'cogs_account', 'inventory_account',
+            # Procurement lifecycle
+            'procurement_status',
         ]
         read_only_fields = ['organization', 'data_completeness_level',
                             'completeness_label', 'is_sellable', 'is_complete']
@@ -153,6 +157,29 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_is_complete(self, obj):
         return obj.is_complete
+
+    def get_procurement_status(self, obj):
+        """
+        Derived from the latest ProcurementRequest for this product:
+          PENDING / APPROVED → 'REQUESTED' (active request, awaiting fulfillment)
+          EXECUTED           → 'PO_SENT'   (operator turned request into PO)
+          REJECTED / CANCELLED / no recent request → 'NONE'
+        Future: PO_ACCEPTED / IN_TRANSIT / FAILED need PurchaseOrder event integration.
+        """
+        try:
+            from apps.pos.models.procurement_request_models import ProcurementRequest
+        except ImportError:
+            return 'NONE'
+        latest = ProcurementRequest.objects.filter(
+            product=obj, organization=obj.organization
+        ).order_by('-requested_at').first()
+        if not latest:
+            return 'NONE'
+        if latest.status in ('PENDING', 'APPROVED'):
+            return 'REQUESTED'
+        if latest.status == 'EXECUTED':
+            return 'PO_SENT'
+        return 'NONE'
 
     def _resolve_warehouse(self, obj):
         """Resolve warehouse from request query param ?warehouse=<id>."""

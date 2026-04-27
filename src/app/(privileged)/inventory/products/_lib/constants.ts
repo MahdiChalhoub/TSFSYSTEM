@@ -21,6 +21,15 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   ARCHIVED: { label: 'Archived', color: 'var(--app-error, #ef4444)' },
 }
 
+export const PROCUREMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  NONE:        { label: 'Available',  color: 'var(--app-success, #22c55e)' },
+  REQUESTED:   { label: 'Requested',  color: 'var(--app-warning, #f59e0b)' },
+  PO_SENT:     { label: 'PO Sent',    color: 'var(--app-info, #3b82f6)' },
+  PO_ACCEPTED: { label: 'PO Accepted', color: 'var(--app-info, #3b82f6)' },
+  IN_TRANSIT:  { label: 'In Transit', color: '#8b5cf6' },
+  FAILED:      { label: 'Failed',     color: 'var(--app-error, #ef4444)' },
+}
+
 /* ─── Formatters ─── */
 
 export const fmt = (n: number | string | null | undefined) => {
@@ -78,6 +87,7 @@ export const ALL_COLUMNS: ColumnDef[] = [
   { key: 'reorderQty', label: 'Reorder Qty', defaultVisible: false },
   // ── Status & Governance ──
   { key: 'status', label: 'Status', defaultVisible: true },
+  { key: 'procurement', label: 'Procurement', defaultVisible: true },
   { key: 'isActive', label: 'Active', defaultVisible: false },
   { key: 'completeness', label: 'Completeness', defaultVisible: false },
   { key: 'completenessLvl', label: 'Completeness Level', defaultVisible: false },
@@ -151,7 +161,7 @@ export const COLUMN_WIDTHS: Record<string, string> = {
   price: 'w-24', sellingHt: 'w-20', tva: 'w-14', margin: 'w-16',
   stock: 'w-16', available: 'w-16', reserved: 'w-16', incoming: 'w-16',
   outgoing: 'w-16', minStock: 'w-14', maxStock: 'w-14',
-  reorderPoint: 'w-16', reorderQty: 'w-16', status: 'w-16',
+  reorderPoint: 'w-16', reorderQty: 'w-16', status: 'w-16', procurement: 'w-24',
   isActive: 'w-14', completeness: 'w-20', completenessLvl: 'w-10',
   verified: 'w-14', verifiedAt: 'w-20', catalogReady: 'w-14',
   expiry: 'w-14', shelfLife: 'w-16', tracksLots: 'w-14', tracksSerials: 'w-14',

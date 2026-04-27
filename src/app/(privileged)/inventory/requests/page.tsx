@@ -1,560 +1,197 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useEffect, useTransition, useMemo } from "react"
-import type { OperationalRequest, Warehouse, Product } from '@/types/erp'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { toast } from 'sonner'
 import {
-    getOperationalRequests, createOperationalRequest, addRequestLine,
-    approveRequest, rejectRequest, convertRequest, OperationalRequestInput
-} from "@/app/actions/inventory/operational-requests"
-import { erpFetch } from "@/lib/erp-api"
-import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "sonner"
+    Inbox, Search, ShoppingCart, ArrowRightLeft,
+    Clock, CheckCircle2, XCircle, PlayCircle,
+    Maximize2, Minimize2, Loader2, RefreshCw,
+} from 'lucide-react'
 import {
-    Inbox, Plus, Search, CheckCircle2, XCircle, ArrowRightCircle,
-    ChevronDown, ChevronUp, Package, Clock, AlertTriangle,
-    FileQuestion, ArrowDownUp, ArrowLeftRight, ShoppingCart
-} from "lucide-react"
+    listProcurementRequests,
+    type ProcurementRequestRecord,
+    type ProcurementRequestStatus,
+    type ProcurementRequestType,
+} from '@/app/actions/inventory/procurement-requests'
+import { TYPE_META } from './_lib/meta'
+import { RequestRow } from './_components/RequestRow'
 
-const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
-    STOCK_ADJUSTMENT: { label: 'Stock Adjustment', icon: ArrowDownUp, color: 'bg-blue-100 text-blue-700' },
-    STOCK_TRANSFER: { label: 'Stock Transfer', icon: ArrowLeftRight, color: 'bg-indigo-100 text-indigo-700' },
-    PURCHASE_ORDER: { label: 'Purchase Order', icon: ShoppingCart, color: 'bg-amber-100 text-amber-700' },
-}
+type StatusFilter = 'ALL' | ProcurementRequestStatus
+type TypeFilter = 'ALL' | ProcurementRequestType
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
-    PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-700', icon: Clock },
-    APPROVED: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
-    REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle },
-    CONVERTED: { label: 'Converted', color: 'bg-purple-100 text-purple-700', icon: ArrowRightCircle },
-}
-
-const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-    LOW: { label: 'Low', color: 'text-app-muted-foreground' },
-    NORMAL: { label: 'Normal', color: 'text-blue-600' },
-    HIGH: { label: 'High', color: 'text-orange-600' },
-    URGENT: { label: 'Urgent', color: 'text-red-600' },
-}
-
-export default function OperationalRequestsPage() {
-    const [requests, setRequests] = useState<OperationalRequest[]>([])
-    const [warehouses, setWarehouses] = useState<Warehouse[]>([])
-    const [products, setProducts] = useState<Product[]>([])
+export default function ProcurementRequestsPage() {
+    const [requests, setRequests] = useState<ProcurementRequestRecord[]>([])
     const [loading, setLoading] = useState(true)
-    const [dialogOpen, setDialogOpen] = useState(false)
-    const [lineDialogOpen, setLineDialogOpen] = useState(false)
-    const [activeRequest, setActiveRequest] = useState<number | null>(null)
-    const [expandedRequest, setExpandedRequest] = useState<number | null>(null)
-    const [activeTab, setActiveTab] = useState("ALL")
-    const [searchQuery, setSearchQuery] = useState("")
-    const [isPending, startTransition] = useTransition()
-    const [rejectDialog, setRejectDialog] = useState<number | null>(null)
-    const [convertDialog, setConvertDialog] = useState<OperationalRequest | null>(null)
+    const [search, setSearch] = useState('')
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
+    const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL')
+    const [focusMode, setFocusMode] = useState(false)
+    const [pending, startTransition] = useTransition()
+    const searchRef = useRef<HTMLInputElement>(null)
 
-    useEffect(() => { loadData() }, [])
+    const refresh = () => {
+        setLoading(true)
+        listProcurementRequests().then(data => { setRequests(data); setLoading(false) })
+    }
+    useEffect(() => { refresh() }, [])
 
-    async function loadData() {
-        try {
-            const [reqRes, whRes, prodRes] = await Promise.all([
-                getOperationalRequests(),
-                erpFetch('inventory/warehouses/'),
-                erpFetch('inventory/products/')
-            ])
-            setRequests(Array.isArray(reqRes) ? reqRes : reqRes?.results || [])
-            setWarehouses(Array.isArray(whRes) ? whRes : whRes?.results || [])
-            setProducts(Array.isArray(prodRes) ? prodRes : prodRes?.results || [])
-        } catch {
-            toast.error("Failed to load data")
-        } finally {
-            setLoading(false)
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(v => !v) }
         }
-    }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, [])
 
-    async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault()
-        const fd = new FormData(e.currentTarget)
-        startTransition(async () => {
-            try {
-                const data: OperationalRequestInput = {
-                    request_type: fd.get("request_type") as string,
-                    date: fd.get("date") as string,
-                    priority: fd.get("priority") as string || 'NORMAL',
-                    description: fd.get("description") as string || undefined,
-                    notes: fd.get("notes") as string || undefined,
-                }
-                await createOperationalRequest(data)
-                toast.success("Request submitted")
-                setDialogOpen(false)
-                loadData()
-            } catch (err: unknown) {
-                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to create request")
-            }
-        })
-    }
-
-    async function handleAddLine(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault()
-        if (!activeRequest) return
-        const fd = new FormData(e.currentTarget)
-        startTransition(async () => {
-            try {
-                await addRequestLine(activeRequest, {
-                    product: Number(fd.get("product")),
-                    quantity: Number(fd.get("quantity")),
-                    warehouse: fd.get("warehouse") ? Number(fd.get("warehouse")) : undefined,
-                    reason: fd.get("reason") as string || undefined,
-                })
-                toast.success("Line added")
-                setLineDialogOpen(false)
-                loadData()
-            } catch (err: unknown) {
-                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to add line")
-            }
-        })
-    }
-
-    async function handleApprove(id: number) {
-        startTransition(async () => {
-            try { await approveRequest(id); toast.success("Request approved"); loadData() }
-            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to approve") }
-        })
-    }
-
-    async function handleReject(id: number, reason: string) {
-        startTransition(async () => {
-            try { await rejectRequest(id, reason); toast.success("Request rejected"); loadData(); setRejectDialog(null) }
-            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to reject") }
-        })
-    }
-
-    async function handleConvert(id: number, e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault()
-        const fd = new FormData(e.currentTarget)
-        startTransition(async () => {
-            try {
-                const data: Record<string, any> = {}
-                const wh = fd.get("warehouse")
-                const fwh = fd.get("from_warehouse")
-                const twh = fd.get("to_warehouse")
-                if (wh) data.warehouse = Number(wh)
-                if (fwh) data.from_warehouse = Number(fwh)
-                if (twh) data.to_warehouse = Number(twh)
-                await convertRequest(id, data)
-                toast.success("Request converted to order")
-                setConvertDialog(null)
-                loadData()
-            } catch (err: unknown) {
-                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to convert")
-            }
-        })
-    }
+    const counts = useMemo(() => {
+        const c: Record<ProcurementRequestStatus, number> & { ALL: number } = {
+            ALL: requests.length, PENDING: 0, APPROVED: 0, EXECUTED: 0, REJECTED: 0, CANCELLED: 0,
+        }
+        for (const r of requests) c[r.status]++
+        return c
+    }, [requests])
 
     const filtered = useMemo(() => {
-        let list = requests
-        if (activeTab !== "ALL") list = list.filter(r => r.status === activeTab)
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase()
-            list = list.filter(r =>
-                r.reference?.toLowerCase().includes(q) ||
-                r.description?.toLowerCase().includes(q) ||
-                r.request_type?.toLowerCase().includes(q)
+        const q = search.trim().toLowerCase()
+        return requests.filter(r => {
+            if (statusFilter !== 'ALL' && r.status !== statusFilter) return false
+            if (typeFilter !== 'ALL' && r.request_type !== typeFilter) return false
+            if (!q) return true
+            return (
+                (r.product_name || '').toLowerCase().includes(q) ||
+                (r.product_sku || '').toLowerCase().includes(q) ||
+                (r.supplier_name || '').toLowerCase().includes(q) ||
+                (r.reason || '').toLowerCase().includes(q)
             )
-        }
-        return list
-    }, [requests, activeTab, searchQuery])
+        })
+    }, [requests, search, statusFilter, typeFilter])
 
-    const totalRequests = requests.length
-    const pendingCount = requests.filter(r => r.status === 'PENDING').length
-    const approvedCount = requests.filter(r => r.status === 'APPROVED').length
-    const convertedCount = requests.filter(r => r.status === 'CONVERTED').length
+    const runAction = (id: number, action: (id: number) => Promise<{ success: boolean; message?: string }>, verb: string) => {
+        startTransition(async () => {
+            const r = await action(id)
+            if (r.success) { toast.success(`${verb} successful`); refresh() }
+            else toast.error(r.message || `${verb} failed`)
+        })
+    }
 
-    const tabs = [
-        { key: "ALL", label: "All", count: requests.length },
-        { key: "PENDING", label: "Pending", count: pendingCount },
-        { key: "APPROVED", label: "Approved", count: approvedCount },
-        { key: "CONVERTED", label: "Converted", count: convertedCount },
-        { key: "REJECTED", label: "Rejected", count: requests.filter(r => r.status === 'REJECTED').length },
+    const kpis: { key: StatusFilter; label: string; value: number; color: string; icon: typeof Inbox }[] = [
+        { key: 'ALL',      label: 'All Requests', value: counts.ALL,      color: 'var(--app-primary)',          icon: Inbox },
+        { key: 'PENDING',  label: 'Pending',      value: counts.PENDING,  color: 'var(--app-warning, #f59e0b)', icon: Clock },
+        { key: 'APPROVED', label: 'Approved',     value: counts.APPROVED, color: 'var(--app-info, #3b82f6)',    icon: CheckCircle2 },
+        { key: 'EXECUTED', label: 'Executed',     value: counts.EXECUTED, color: 'var(--app-success, #22c55e)', icon: PlayCircle },
+        { key: 'REJECTED', label: 'Rejected',     value: counts.REJECTED, color: 'var(--app-error, #ef4444)',   icon: XCircle },
     ]
 
-    if (loading) return (
-        <div className="p-6 space-y-6 animate-in fade-in duration-500">
-            <div className="flex items-center justify-between">
-                <div><Skeleton className="h-8 w-56" /><Skeleton className="h-4 w-72 mt-2" /></div>
-                <Skeleton className="h-10 w-40" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
-            </div>
-            <Skeleton className="h-96 rounded-xl" />
-        </div>
-    )
-
     return (
-        <div className="p-6 space-y-6 animate-in fade-in duration-500">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-serif font-bold tracking-tight flex items-center gap-2">
-                        <Inbox className="h-6 w-6 text-amber-600" /> Operational Requests
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-1">Submit, approve, reject, and convert stock requests into orders</p>
+        <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className="page-header-icon bg-app-primary"
+                        style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                        <Inbox size={20} className="text-white" />
+                    </div>
+                    <div className="min-w-0">
+                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Procurement Requests</h1>
+                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                            {filtered.length} of {counts.ALL} · purchase &amp; transfer queue
+                        </p>
+                    </div>
                 </div>
-                <Button className="gap-2" onClick={() => setDialogOpen(true)}>
-                    <Plus className="h-4 w-4" /> New Request
-                </Button>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button onClick={refresh} disabled={loading}
+                        className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all disabled:opacity-50">
+                        <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+                        <span className="hidden md:inline">Refresh</span>
+                    </button>
+                    <button onClick={() => setFocusMode(v => !v)}
+                        className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
+                        title={focusMode ? 'Exit focus (Ctrl+Q)' : 'Focus mode (Ctrl+Q)'}>
+                        {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                    </button>
+                </div>
             </div>
 
-            {/* ─── Summary Cards ──────────────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-slate-50 to-slate-100/50 border-app-border/60">
-                    <CardContent className="pt-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-app-muted-foreground/80 uppercase tracking-wider">Total Requests</p>
-                                <p className="text-2xl font-bold text-app-foreground mt-1">{totalRequests}</p>
+            {/* ── KPI strip (filter mode) ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }} className="mb-3 flex-shrink-0">
+                {kpis.map(k => {
+                    const Icon = k.icon
+                    const active = statusFilter === k.key
+                    return (
+                        <button key={k.key} onClick={() => setStatusFilter(active ? 'ALL' : k.key)}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left ${active ? 'ring-2 shadow-md scale-[1.02]' : ''}`}
+                            style={{
+                                background: active
+                                    ? `color-mix(in srgb, ${k.color} 15%, transparent)`
+                                    : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                border: `1px solid color-mix(in srgb, ${k.color} ${active ? '50' : '20'}%, transparent)`,
+                            }}>
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                style={{ background: `color-mix(in srgb, ${k.color} 10%, transparent)`, color: k.color }}>
+                                <Icon size={14} />
                             </div>
-                            <div className="bg-slate-200/60 rounded-lg p-2.5"><Inbox className="h-5 w-5 text-app-foreground" /></div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-amber-50 to-amber-100/50 border-amber-200/60">
-                    <CardContent className="pt-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-amber-600/80 uppercase tracking-wider">Pending Review</p>
-                                <p className="text-2xl font-bold text-amber-900 mt-1">{pendingCount}</p>
+                            <div className="min-w-0">
+                                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
+                                <div className="text-sm font-black text-app-foreground tabular-nums">{k.value}</div>
                             </div>
-                            <div className="bg-amber-200/60 rounded-lg p-2.5"><Clock className="h-5 w-5 text-amber-700" /></div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-200/60">
-                    <CardContent className="pt-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-emerald-600/80 uppercase tracking-wider">Approved</p>
-                                <p className="text-2xl font-bold text-emerald-900 mt-1">{approvedCount}</p>
-                            </div>
-                            <div className="bg-emerald-200/60 rounded-lg p-2.5"><CheckCircle2 className="h-5 w-5 text-emerald-700" /></div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200/60">
-                    <CardContent className="pt-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-purple-600/80 uppercase tracking-wider">Converted</p>
-                                <p className="text-2xl font-bold text-purple-900 mt-1">{convertedCount}</p>
-                            </div>
-                            <div className="bg-purple-200/60 rounded-lg p-2.5"><ArrowRightCircle className="h-5 w-5 text-purple-700" /></div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </button>
+                    )
+                })}
             </div>
 
-            {/* ─── Tabs + Search ──────────────────────────────────── */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex gap-1 bg-muted rounded-lg p-1">
-                    {tabs.map(t => (
-                        <button key={t.key} onClick={() => setActiveTab(t.key)}
-                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === t.key ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                            {t.label} <span className="ml-1 text-xs opacity-60">({t.count})</span>
+            {/* ── Toolbar ── */}
+            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                <div className="flex-1 relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                    <input ref={searchRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
+                        placeholder="Search by product, SKU, supplier, reason... (Ctrl+K)"
+                        className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
+                </div>
+                <div className="flex gap-1 p-1 rounded-xl border border-app-border/50" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
+                    {(['ALL', 'PURCHASE', 'TRANSFER'] as TypeFilter[]).map(t => (
+                        <button key={t} onClick={() => setTypeFilter(t)}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
+                            style={{
+                                background: typeFilter === t ? 'var(--app-primary)' : 'transparent',
+                                color: typeFilter === t ? 'white' : 'var(--app-muted-foreground)',
+                            }}>
+                            {t === 'ALL' ? 'All' : TYPE_META[t].label}
                         </button>
                     ))}
                 </div>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search requests..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 w-64" />
-                </div>
             </div>
 
-            {/* ─── Table ──────────────────────────────────────────── */}
-            <Card>
-                <CardContent className="p-0">
-                    {filtered.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="bg-muted rounded-full p-4 mb-4"><FileQuestion className="h-8 w-8 text-muted-foreground" /></div>
-                            <h3 className="font-semibold text-lg">No requests found</h3>
-                            <p className="text-sm text-muted-foreground mt-1">Submit your first operational request</p>
-                            <Button className="mt-4 gap-2" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" /> New Request</Button>
+            {/* ── List body ── */}
+            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
+                <div className="flex-shrink-0 grid items-center gap-2 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
+                    style={{ gridTemplateColumns: '120px 1fr 90px 110px 110px 130px 200px' }}>
+                    <div>Type</div>
+                    <div>Product</div>
+                    <div className="text-right">Quantity</div>
+                    <div>Priority</div>
+                    <div>Status</div>
+                    <div>Requested</div>
+                    <div className="text-right">Actions</div>
+                </div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
+                    {loading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <Loader2 size={24} className="animate-spin text-app-primary" />
                         </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-8"></TableHead>
-                                    <TableHead>Reference</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Priority</TableHead>
-                                    <TableHead>Lines</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filtered.map(req => {
-                                    const isExpanded = expandedRequest === req.id
-                                    const typeCfg = TYPE_CONFIG[req.request_type] || { label: req.request_type, icon: FileQuestion, color: 'bg-app-surface-2 text-app-foreground' }
-                                    const statusCfg = STATUS_CONFIG[req.status] || STATUS_CONFIG.PENDING
-                                    const StatusIcon = statusCfg.icon
-                                    const TypeIcon = typeCfg.icon
-                                    const priCfg = PRIORITY_CONFIG[req.priority ?? 'NORMAL'] || PRIORITY_CONFIG.NORMAL
-                                    return (
-                                        <>
-                                            <TableRow key={req.id} className="cursor-pointer hover:bg-muted/30" onClick={() => setExpandedRequest(isExpanded ? null : req.id)}>
-                                                <TableCell>{isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</TableCell>
-                                                <TableCell className="font-mono text-sm font-medium">{req.reference || `REQ-${req.id}`}</TableCell>
-                                                <TableCell className="text-sm">{req.date}</TableCell>
-                                                <TableCell>
-                                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${typeCfg.color}`}>
-                                                        <TypeIcon className="h-3 w-3" /> {typeCfg.label}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className={`text-xs font-semibold ${priCfg.color}`}>{priCfg.label}</span>
-                                                </TableCell>
-                                                <TableCell><Badge variant="secondary" className="text-xs">{req.lines?.length || 0} items</Badge></TableCell>
-                                                <TableCell>
-                                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${statusCfg.color}`}>
-                                                        <StatusIcon className="h-3 w-3" /> {statusCfg.label}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-right" onClick={e => e.stopPropagation()}>
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        {req.status === 'PENDING' && (
-                                                            <>
-                                                                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => { setActiveRequest(req.id); setLineDialogOpen(true) }}>
-                                                                    <Plus className="h-3 w-3" /> Line
-                                                                </Button>
-                                                                <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => handleApprove(req.id)} disabled={isPending}>
-                                                                    <CheckCircle2 className="h-3 w-3" /> Approve
-                                                                </Button>
-                                                                <Button size="sm" variant="destructive" className="h-7 gap-1 text-xs" onClick={() => setRejectDialog(req.id)} disabled={isPending}>
-                                                                    <XCircle className="h-3 w-3" /> Reject
-                                                                </Button>
-                                                            </>
-                                                        )}
-                                                        {req.status === 'APPROVED' && (
-                                                            <Button size="sm" className="h-7 gap-1 text-xs bg-purple-600 hover:bg-purple-700" onClick={() => setConvertDialog(req)} disabled={isPending}>
-                                                                <ArrowRightCircle className="h-3 w-3" /> Convert
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                            {isExpanded && (
-                                                <TableRow key={`${req.id}-lines`}>
-                                                    <TableCell colSpan={8} className="bg-muted/20 p-4">
-                                                        <div className="space-y-3">
-                                                            {req.description && (
-                                                                <div className="bg-muted/40 rounded-lg p-3">
-                                                                    <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
-                                                                    <p className="text-sm">{req.description}</p>
-                                                                </div>
-                                                            )}
-                                                            {(req.lines?.length ?? 0) > 0 ? (
-                                                                <div className="rounded-lg border overflow-hidden">
-                                                                    <Table>
-                                                                        <TableHeader>
-                                                                            <TableRow className="bg-muted/50">
-                                                                                <TableHead className="text-xs">Product</TableHead>
-                                                                                <TableHead className="text-xs text-right">Quantity</TableHead>
-                                                                                <TableHead className="text-xs">Warehouse</TableHead>
-                                                                                <TableHead className="text-xs">Reason</TableHead>
-                                                                            </TableRow>
-                                                                        </TableHeader>
-                                                                        <TableBody>
-                                                                            {(req.lines ?? []).map((line: Record<string, any>) => (
-                                                                                <TableRow key={line.id}>
-                                                                                    <TableCell className="text-sm font-medium">
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <Package className="h-4 w-4 text-muted-foreground" />
-                                                                                            {line.product_name || `Product #${line.product}`}
-                                                                                        </div>
-                                                                                    </TableCell>
-                                                                                    <TableCell className="text-sm text-right font-semibold">{line.quantity}</TableCell>
-                                                                                    <TableCell className="text-sm text-muted-foreground">{line.warehouse_name || '—'}</TableCell>
-                                                                                    <TableCell className="text-sm text-muted-foreground">{line.reason || '—'}</TableCell>
-                                                                                </TableRow>
-                                                                            ))}
-                                                                        </TableBody>
-                                                                    </Table>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="text-center py-6 text-sm text-muted-foreground">
-                                                                    <AlertTriangle className="h-5 w-5 mx-auto mb-2 text-amber-500" /> No items in this request
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                        </>
-                                    )
-                                })}
-                            </TableBody>
-                        </Table>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* ─── Create Request Dialog ──────────────────────────── */}
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>New Operational Request</DialogTitle>
-                        <DialogDescription>Submit a request for stock adjustment, transfer, or purchase.</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleCreate} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="text-sm font-medium">Type *</label>
-                                <select name="request_type" required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    {Object.entries(TYPE_CONFIG).map(([k, v]) => (
-                                        <option key={k} value={k}>{v.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Date *</label>
-                                <Input name="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]} />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Priority</label>
-                                <select name="priority" defaultValue="NORMAL" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    {Object.entries(PRIORITY_CONFIG).map(([k, v]) => (
-                                        <option key={k} value={k}>{v.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="col-span-2">
-                                <label className="text-sm font-medium">Description</label>
-                                <Input name="description" placeholder="Describe the request..." />
-                            </div>
-                            <div className="col-span-2">
-                                <label className="text-sm font-medium">Notes</label>
-                                <Input name="notes" placeholder="Additional notes..." />
-                            </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <Inbox size={36} className="text-app-muted-foreground mb-3 opacity-40" />
+                            <p className="text-sm font-bold text-app-muted-foreground">No procurement requests</p>
+                            <p className="text-[11px] text-app-muted-foreground mt-1">
+                                {search || statusFilter !== 'ALL' || typeFilter !== 'ALL'
+                                    ? 'No matches for the current filters'
+                                    : 'Open the products list and click "Request Purchase" or "Request Transfer" to create one.'}
+                            </p>
                         </div>
-                        <div className="flex justify-end gap-2 pt-2">
-                            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                            <Button type="submit" disabled={isPending}>{isPending ? "Submitting..." : "Submit Request"}</Button>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* ─── Add Line Dialog ────────────────────────────────── */}
-            <Dialog open={lineDialogOpen} onOpenChange={setLineDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Add Request Item</DialogTitle>
-                        <DialogDescription>Add a product to this request.</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleAddLine} className="space-y-4">
-                        <div>
-                            <label className="text-sm font-medium">Product *</label>
-                            <select name="product" required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">Select product</option>
-                                {products.map((p: Record<string, any>) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="text-sm font-medium">Quantity *</label>
-                                <Input name="quantity" type="number" step="0.01" min="0.01" required />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Warehouse</label>
-                                <select name="warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="">Any</option>
-                                    {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium">Reason</label>
-                            <Input name="reason" placeholder="Why is this needed?" />
-                        </div>
-                        <div className="flex justify-end gap-2 pt-2">
-                            <Button type="button" variant="outline" onClick={() => setLineDialogOpen(false)}>Cancel</Button>
-                            <Button type="submit" disabled={isPending}>{isPending ? "Adding..." : "Add Item"}</Button>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* ─── Reject Dialog ──────────────────────────────────── */}
-            <Dialog open={!!rejectDialog} onOpenChange={() => setRejectDialog(null)}>
-                <DialogContent className="sm:max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle>Reject Request</DialogTitle>
-                        <DialogDescription>Please provide a reason for rejection.</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={(e) => {
-                        e.preventDefault()
-                        const reason = new FormData(e.currentTarget).get("reason") as string
-                        if (rejectDialog) handleReject(rejectDialog, reason)
-                    }} className="space-y-4">
-                        <Input name="reason" required placeholder="Rejection reason..." />
-                        <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => setRejectDialog(null)}>Cancel</Button>
-                            <Button type="submit" variant="destructive" disabled={isPending}>{isPending ? "Rejecting..." : "Reject"}</Button>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* ─── Convert Dialog ─────────────────────────────────── */}
-            <Dialog open={!!convertDialog} onOpenChange={() => setConvertDialog(null)}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Convert to Order</DialogTitle>
-                        <DialogDescription>This will create a stock order from the approved request.</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={(e) => {
-                        if (convertDialog) handleConvert(convertDialog.id, e)
-                        else e.preventDefault()
-                    }} className="space-y-4">
-                        {convertDialog?.request_type === 'STOCK_TRANSFER' ? (
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-sm font-medium">From Warehouse</label>
-                                    <select name="from_warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                        <option value="">Select</option>
-                                        {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium">To Warehouse</label>
-                                    <select name="to_warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                        <option value="">Select</option>
-                                        {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                        ) : (
-                            <div>
-                                <label className="text-sm font-medium">Target Warehouse</label>
-                                <select name="warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="">Select warehouse</option>
-                                    {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                                </select>
-                            </div>
-                        )}
-                        <div className="flex justify-end gap-2 pt-2">
-                            <Button type="button" variant="outline" onClick={() => setConvertDialog(null)}>Cancel</Button>
-                            <Button type="submit" disabled={isPending}>{isPending ? "Converting..." : "Convert to Order"}</Button>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                    ) : filtered.map(r => <RequestRow key={r.id} r={r} pending={pending} runAction={runAction} />)}
+                </div>
+            </div>
         </div>
     )
 }
