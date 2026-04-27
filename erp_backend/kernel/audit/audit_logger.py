@@ -102,8 +102,26 @@ def audit_log(
             severity='WARNING'
         )
     """
+    import sys
+    print(f"[AUDIT-DEBUG] audit_log called: action={action} resource_type={resource_type} resource_id={resource_id}", file=sys.stderr, flush=True)
     organization = get_current_tenant()
+    print(f"[AUDIT-DEBUG] kernel get_current_tenant() = {organization}", file=sys.stderr, flush=True)
     if not organization:
+        # Fallback: The active TenantMiddleware (erp.middleware) uses a ContextVar
+        # that stores the tenant_id as a string, while kernel.tenancy stores an
+        # Organization object in thread-locals.  Bridge the gap here.
+        try:
+            from erp.middleware import get_current_tenant_id
+            from erp.models import Organization
+            tid = get_current_tenant_id()
+            print(f"[AUDIT-DEBUG] erp get_current_tenant_id() = {tid}", file=sys.stderr, flush=True)
+            if tid:
+                organization = Organization.objects.filter(id=tid).first()
+                print(f"[AUDIT-DEBUG] Organization resolved from ERP context: {organization}", file=sys.stderr, flush=True)
+        except Exception as bridge_err:
+            print(f"[AUDIT-DEBUG] Bridge failed: {bridge_err}", file=sys.stderr, flush=True)
+    if not organization:
+        print("[AUDIT-DEBUG] SKIPPED — no organization context", file=sys.stderr, flush=True)
         logger.warning("audit_log skipped — no organization context (table may not exist yet)")
         return None
 
@@ -122,7 +140,8 @@ def audit_log(
 
     # Create audit log
     try:
-        log = AuditLog.objects.create(
+        print(f"[AUDIT-DEBUG] Creating AuditLog: org={organization.id} action={action}", file=sys.stderr, flush=True)
+        log = AuditLog.all_objects.create(
             organization=organization,
             user=user,
             username=user.username if user else '',
@@ -139,8 +158,10 @@ def audit_log(
             error_message=error_message,
             severity=severity
         )
+        print(f"[AUDIT-DEBUG] SUCCESS — AuditLog.id={log.id}", file=sys.stderr, flush=True)
         return log
     except Exception as e:
+        print(f"[AUDIT-DEBUG] FAILED — {e}", file=sys.stderr, flush=True)
         logger.warning(f"Audit tracking failed (likely missing table): {e}")
         return None
 
@@ -171,6 +192,15 @@ def audit_field_change(
     """
     organization = get_current_tenant()
     if not organization:
+        try:
+            from erp.middleware import get_current_tenant_id
+            from erp.models import Organization
+            tid = get_current_tenant_id()
+            if tid:
+                organization = Organization.objects.filter(id=tid).first()
+        except Exception:
+            pass
+    if not organization:
         logger.warning("audit_field_change skipped — no organization context")
         return None
 
@@ -179,7 +209,7 @@ def audit_field_change(
     new_str = str(new_value) if new_value is not None else None
 
     try:
-        trail = AuditTrail.objects.create(
+        trail = AuditTrail.all_objects.create(
             organization=organization,
             audit_log=audit_log,
             model_name=model_name,

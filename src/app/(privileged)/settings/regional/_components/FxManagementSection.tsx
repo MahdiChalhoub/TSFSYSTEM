@@ -44,7 +44,7 @@ const SUB_TABS = [
 
 type FxView = 'rates' | 'policies' | 'revaluations';
 
-export function FxManagementSection({ view, hideHeader }: {
+export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBaseCode }: {
     /** When set, renders only that sub-view (no internal tab strip).
      *  Used when this component is mounted inside the Currencies tab as
      *  an embedded sub-tab — the parent tab strip already provides nav. */
@@ -52,6 +52,12 @@ export function FxManagementSection({ view, hideHeader }: {
     /** When true, suppress the internal "FX & Rates" header card too —
      *  use when the parent already shows context. */
     hideHeader?: boolean;
+    /** Source-of-truth gating handed down from /settings/regional so this
+     *  section doesn't disable itself when the finance.Currency mirror is
+     *  lagged/empty. The parent already loaded OrgCurrencies; using them
+     *  here decouples the UI gating from the mirror's freshness. */
+    orgCurrencyCount?: number;
+    orgBaseCode?: string | null;
 } = {}) {
     const isEmbedded = !!view;
     const [tabState, setTab] = useState<FxView>('rates');
@@ -102,6 +108,14 @@ export function FxManagementSection({ view, hideHeader }: {
     }
 
     const baseCurrency = useMemo(() => currencies.find(c => c.is_base), [currencies])
+    /** Effective gating: if the parent passed OrgCurrency state, use it as the
+     *  source of truth so the UI works even when the finance.Currency mirror
+     *  is empty (cron lagged, mirror raised silently, etc.). The backend's
+     *  bulk_create now self-heals, so we just need to *let the user click*. */
+    const effectiveBaseCode = baseCurrency?.code ?? orgBaseCode ?? null
+    const effectiveTotalCcy = Math.max(currencies.length, orgCurrencyCount ?? 0)
+    const hasBase = !!effectiveBaseCode
+    const hasNonBase = effectiveTotalCcy >= 2
     const periods = useMemo(() => years.flatMap(y => (y.periods ?? []).map(p => ({ ...p, fiscal_year_name: y.name }))), [years])
 
     // Group rates by from→to for tidier display
@@ -313,15 +327,22 @@ export function FxManagementSection({ view, hideHeader }: {
                         action={
                             <PrimaryButton
                                 colorVar="--app-success"
-                                disabled={currencies.length < 2 || !baseCurrency}
-                                title={!baseCurrency
+                                disabled={!hasNonBase || !hasBase}
+                                title={!hasBase
                                     ? 'Set a base in the Currencies tab first'
-                                    : currencies.length < 2
+                                    : !hasNonBase
                                         ? 'Enable a non-base currency in the Currencies tab first'
-                                        : 'Add a new rate row'}
+                                        : !baseCurrency
+                                            ? 'Currency mirror still syncing — refresh in a moment'
+                                            : 'Add a new rate row'}
                                 onClick={() => {
-                                    if (!baseCurrency) { toast.error('Set a base currency first — Currencies tab → ⭐'); return }
-                                    if (currencies.length < 2) { toast.error('Enable at least one non-base currency in the Currencies tab.'); return }
+                                    if (!hasBase) { toast.error('Set a base currency first — Currencies tab → ⭐'); return }
+                                    if (!hasNonBase) { toast.error('Enable at least one non-base currency in the Currencies tab.'); return }
+                                    if (!baseCurrency) {
+                                        toast.info('Resolving currencies… one moment.')
+                                        void loadAll()
+                                        return
+                                    }
                                     setNewRateOpen(true)
                                 }}
                             >
@@ -399,9 +420,15 @@ export function FxManagementSection({ view, hideHeader }: {
                 const healthCounts = policies.reduce<Record<ReturnType<typeof policyHealth>, number>>((acc, p) => {
                     const h = policyHealth(p); acc[h] = (acc[h] ?? 0) + 1; return acc
                 }, { manual: 0, never: 0, fail: 0, stale: 0, fresh: 0 })
-                const nonBaseCount = currencies.filter(c => !c.is_base && c.is_active).length
+                // Use OrgCurrency-derived counts when available — the finance.Currency
+                // mirror can be empty/lagged after first reaching this page, in which
+                // case `currencies.length` would falsely gate everything off.
+                const nonBaseFromMirror = currencies.filter(c => !c.is_base && c.is_active).length
+                const nonBaseCount = Math.max(nonBaseFromMirror, Math.max(0, (orgCurrencyCount ?? 0) - (orgBaseCode ? 1 : 0)))
                 const policiedFromIds = new Set(policies.map(p => p.from_currency))
-                const missingCoverage = currencies.filter(c => !c.is_base && c.is_active && !policiedFromIds.has(c.id)).length
+                const missingCoverage = nonBaseFromMirror > 0
+                    ? currencies.filter(c => !c.is_base && c.is_active && !policiedFromIds.has(c.id)).length
+                    : nonBaseCount  // mirror empty → assume nothing covered yet
 
                 return (
                     <div className="space-y-3">
@@ -429,7 +456,7 @@ export function FxManagementSection({ view, hideHeader }: {
                                 }
                                 action={
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        {missingCoverage > 0 && nonBaseCount > 0 && baseCurrency && (
+                                        {missingCoverage > 0 && nonBaseCount > 0 && hasBase && (
                                             <button onClick={handleBulkCreate} disabled={bulkBusy}
                                                 title={`Create an ECB / SPOT / auto-sync policy for the ${missingCoverage} uncovered currenc${missingCoverage === 1 ? 'y' : 'ies'}`}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all disabled:opacity-50"
@@ -449,15 +476,22 @@ export function FxManagementSection({ view, hideHeader }: {
                                         </button>
                                         <PrimaryButton
                                             colorVar="--app-info"
-                                            disabled={currencies.length < 2 || !baseCurrency}
-                                            title={!baseCurrency
+                                            disabled={!hasNonBase || !hasBase}
+                                            title={!hasBase
                                                 ? 'Set a base in the Currencies tab first'
-                                                : currencies.length < 2
+                                                : !hasNonBase
                                                     ? 'Enable a non-base currency in the Currencies tab first'
-                                                    : 'Configure a new auto-sync pair'}
+                                                    : !baseCurrency
+                                                        ? 'Currency mirror still syncing — click Sync All or refresh in a moment'
+                                                        : 'Configure a new auto-sync pair'}
                                             onClick={() => {
-                                                if (!baseCurrency) { toast.error('Set a base currency first — Currencies tab → ⭐'); return }
-                                                if (currencies.length < 2) { toast.error('Enable at least one non-base currency in the Currencies tab.'); return }
+                                                if (!hasBase) { toast.error('Set a base currency first — Currencies tab → ⭐'); return }
+                                                if (!hasNonBase) { toast.error('Enable at least one non-base currency in the Currencies tab.'); return }
+                                                if (!baseCurrency) {
+                                                    toast.info('Resolving currencies… one moment.')
+                                                    void loadAll()
+                                                    return
+                                                }
                                                 setNewPolicyOpen(true)
                                             }}
                                         >
@@ -491,13 +525,23 @@ export function FxManagementSection({ view, hideHeader }: {
                                         <p className="text-[10px] text-app-muted-foreground mt-1 max-w-md mx-auto leading-relaxed">
                                             Wire ECB (free, no API key) into your active currencies in one click — or build them one at a time with <em>New Policy</em>.
                                         </p>
-                                        {nonBaseCount > 0 && baseCurrency && (
+                                        {nonBaseCount > 0 && hasBase && (
                                             <button onClick={handleBulkCreate} disabled={bulkBusy}
                                                 className="mt-3 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
                                                 style={{ ...grad('--app-success'), color: 'white', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }}>
                                                 <Wand2 size={12} className={bulkBusy ? 'animate-spin' : ''} />
                                                 {bulkBusy ? 'Configuring…' : `Auto-configure ${nonBaseCount} currenc${nonBaseCount === 1 ? 'y' : 'ies'}`}
                                             </button>
+                                        )}
+                                        {!hasBase && orgCurrencyCount === 0 && (
+                                            <p className="text-[10px] text-app-muted-foreground mt-3">
+                                                Add at least one currency in the <em>Select Currency</em> tab first, then come back here.
+                                            </p>
+                                        )}
+                                        {!hasBase && orgCurrencyCount && orgCurrencyCount > 0 && (
+                                            <p className="text-[10px] text-app-muted-foreground mt-3">
+                                                Mark one of your currencies as <strong>base</strong> (⭐) in the <em>Select Currency</em> tab first.
+                                            </p>
                                         )}
                                     </div>
                                 ) : (
@@ -1012,9 +1056,12 @@ function FieldLabel({ label, children }: { label: string; children: React.ReactN
     )
 }
 
-function NewPolicyForm({ currencies, base, onCancel, onSubmit }: {
+function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: {
     currencies: Currency[]
     base: Currency
+    /** `${from_id}-${to_id}-${rate_type}` keys already configured; blocks the
+     *  unique-together violation client-side instead of failing on submit. */
+    existingPairs: Set<string>
     onCancel: () => void
     onSubmit: (p: {
         from_currency: number
@@ -1028,6 +1075,8 @@ function NewPolicyForm({ currencies, base, onCancel, onSubmit }: {
 }) {
     const non_base = currencies.filter(c => c.id !== base.id && c.is_active)
     const [fromId, setFromId] = useState<number | null>(non_base[0]?.id ?? null)
+    // FIXER / OXR are stubs in currency_rate_sync_service.py — listing them
+    // here would let users save a policy that crashes on first sync.
     const [provider, setProvider] = useState<CurrencyRatePolicy['provider']>('ECB')
     const [rateType, setRateType] = useState<CurrencyRatePolicy['rate_type']>('SPOT')
     const [multiplier, setMultiplier] = useState('1.000000')
@@ -1035,6 +1084,23 @@ function NewPolicyForm({ currencies, base, onCancel, onSubmit }: {
     const [autoSync, setAutoSync] = useState(true)
     const [busy, setBusy] = useState(false)
     if (!fromId) return <p className="text-[10px] text-app-muted-foreground">Add a non-base currency in the Currencies tab before creating a policy.</p>
+
+    // Validation
+    const mul = Number(multiplier)
+    const mk = Number(markupPct)
+    const mulValid = isFinite(mul) && mul > 0
+    const mkValid = isFinite(mk) && mk >= -50 && mk <= 50
+    const dupKey = `${fromId}-${base.id}-${rateType}`
+    const isDup = existingPairs.has(dupKey)
+    const valid = mulValid && mkValid && !isDup
+
+    // Live preview: example raw rate × multiplier × (1+markup/100). Uses 1.0
+    // as the synthetic raw rate so users see the adjustment math directly
+    // without an extra API roundtrip.
+    const previewAdjusted = mulValid
+        ? (1 * mul * (mkValid ? (1 + mk / 100) : 1)).toFixed(6)
+        : null
+
     return (
         <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -1065,40 +1131,73 @@ function NewPolicyForm({ currencies, base, onCancel, onSubmit }: {
                     <select value={provider} onChange={e => setProvider(e.target.value as CurrencyRatePolicy['provider'])} className={INPUT_CLS} style={INPUT_STYLE}>
                         <option value="ECB">ECB (free)</option>
                         <option value="MANUAL">MANUAL</option>
-                        <option value="FIXER">FIXER (todo)</option>
-                        <option value="OPENEXCHANGERATES">OXR (todo)</option>
                     </select>
                 </FieldLabel>
                 <FieldLabel label="× Multiplier">
                     <input value={multiplier} onChange={e => setMultiplier(e.target.value)} placeholder="1.000000"
                         title="Multiplier — e.g. 1.035 for a 3.5% spread above the official rate"
-                        className={INPUT_CLS + ' font-mono tabular-nums'} style={INPUT_STYLE} />
+                        className={INPUT_CLS + ' font-mono tabular-nums'}
+                        style={mulValid ? INPUT_STYLE : { ...INPUT_STYLE, border: '1px solid color-mix(in srgb, var(--app-error) 50%, transparent)' }} />
                 </FieldLabel>
                 <FieldLabel label="+ Markup %">
                     <input value={markupPct} onChange={e => setMarkupPct(e.target.value)} placeholder="0.0000"
-                        title="Markup percent — applied AFTER multiplier"
-                        className={INPUT_CLS + ' font-mono tabular-nums'} style={INPUT_STYLE} />
+                        title="Markup percent — applied AFTER multiplier (range: -50 to +50)"
+                        className={INPUT_CLS + ' font-mono tabular-nums'}
+                        style={mkValid ? INPUT_STYLE : { ...INPUT_STYLE, border: '1px solid color-mix(in srgb, var(--app-error) 50%, transparent)' }} />
                 </FieldLabel>
             </div>
+            <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                    {isDup && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: 'var(--app-error)' }}>
+                            <AlertTriangle size={10} /> A {rateType} policy already exists for this pair
+                        </span>
+                    )}
+                    {!mulValid && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: 'var(--app-error)' }}>
+                            <AlertTriangle size={10} /> Multiplier must be a positive number
+                        </span>
+                    )}
+                    {mulValid && !mkValid && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: 'var(--app-error)' }}>
+                            <AlertTriangle size={10} /> Markup must be between -50 and +50
+                        </span>
+                    )}
+                </div>
+                {previewAdjusted && valid && (
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2 py-1 rounded-md"
+                        style={{ ...soft('--app-info', 8), color: 'var(--app-info)' }}
+                        title={`If today's raw rate were 1.000000, this policy would store ${previewAdjusted}`}>
+                        <TrendingUp size={10} /> Preview: 1.000000 × {Number(multiplier).toFixed(6)} × (1 + {Number(markupPct).toFixed(4)}%) = <strong className="font-black">{previewAdjusted}</strong>
+                    </span>
+                )}
+            </div>
             <div className="flex items-center justify-between gap-3 pt-2 border-t border-app-border/30">
-                <label className="flex items-center gap-2 text-[10px] font-bold cursor-pointer text-app-foreground">
-                    <input type="checkbox" checked={autoSync} onChange={e => setAutoSync(e.target.checked)}
+                <label className="flex items-center gap-2 text-[10px] font-bold cursor-pointer text-app-foreground"
+                    title={provider === 'MANUAL' ? 'MANUAL policies don\'t auto-sync — toggle has no effect' : 'Daily cron will refresh this rate automatically'}>
+                    <input type="checkbox" checked={autoSync && provider !== 'MANUAL'}
+                        disabled={provider === 'MANUAL'}
+                        onChange={e => setAutoSync(e.target.checked)}
                         className="w-3.5 h-3.5 rounded accent-app-info" />
                     Run on daily cron (auto-sync)
                 </label>
                 <div className="flex items-center gap-2">
                     <button onClick={onCancel} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border/50 hover:bg-app-background transition-colors"
                         style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
-                    <button disabled={busy} onClick={async () => {
+                    <button disabled={busy || !valid} onClick={async () => {
                         setBusy(true)
                         try {
-                            await onSubmit({ from_currency: fromId!, to_currency: base.id, rate_type: rateType, provider, auto_sync: autoSync, multiplier, markup_pct: markupPct })
+                            await onSubmit({
+                                from_currency: fromId!, to_currency: base.id, rate_type: rateType,
+                                provider, auto_sync: autoSync && provider !== 'MANUAL',
+                                multiplier, markup_pct: markupPct,
+                            })
                         } finally { setBusy(false) }
                     }}
-                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg text-white disabled:opacity-50 transition-all"
-                        style={!busy
-                            ? { ...grad('--app-info'), boxShadow: '0 4px 12px color-mix(in srgb, var(--app-info) 30%, transparent)' }
-                            : { background: 'var(--app-border)' }}>
+                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-all"
+                        style={!busy && valid
+                            ? { ...grad('--app-info'), color: 'var(--app-primary-foreground, white)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-info) 30%, transparent)' }
+                            : { background: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}>
                         {busy ? 'Creating…' : 'Create Policy'}
                     </button>
                 </div>

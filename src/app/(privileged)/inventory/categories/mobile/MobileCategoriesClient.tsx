@@ -295,7 +295,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                     />
                     <PageTour tourId="inventory-categories-mobile" renderButton={false} />
                     <AuditTrailPanel
-                        config={{ endpoint: 'inventory/audit-trail', resourceType: 'category', title: 'Category Audit Trail' }}
+                        config={{ endpoint: 'audit-trail', resourceType: 'category', title: 'Category Audit Trail' }}
                         isOpen={showAuditTrail}
                         onClose={() => setShowAuditTrail(false)}
                     />

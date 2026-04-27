@@ -212,7 +212,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 },
                 selectable: true,
                 auditTrail: {
-                    endpoint: 'inventory/audit-trail',
+                    endpoint: 'audit-trail',
                     resourceType: 'category',
                     title: 'Category Audit Trail',
                 },

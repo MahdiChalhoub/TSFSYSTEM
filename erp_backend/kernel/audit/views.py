@@ -76,11 +76,25 @@ class AuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = None  # No pagination — we limit in queryset
 
-    def get_queryset(self):
+    def _resolve_org(self):
+        """Resolve tenant from kernel context, falling back to ERP middleware ContextVar."""
         org = get_current_tenant()
         if not org:
+            try:
+                from erp.middleware import get_current_tenant_id
+                from erp.models import Organization
+                tid = get_current_tenant_id()
+                if tid:
+                    org = Organization.objects.filter(id=tid).first()
+            except Exception:
+                pass
+        return org
+
+    def get_queryset(self):
+        org = self._resolve_org()
+        if not org:
             return AuditLog.objects.none()
-        qs = AuditLog.objects.filter(organization=org).select_related('user')
+        qs = AuditLog.all_objects.filter(organization=org).select_related('user')
         qs = qs.prefetch_related('field_changes')
 
         resource_type = self.request.query_params.get('resource_type')
@@ -104,13 +118,13 @@ class AuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_object(self):
         """Override to avoid filtering on sliced queryset for detail actions."""
-        org = get_current_tenant()
+        org = self._resolve_org()
         if not org:
             from rest_framework.exceptions import NotFound
             raise NotFound('No organization context')
         pk = self.kwargs.get('pk')
         try:
-            obj = AuditLog.objects.filter(organization=org).select_related('user').prefetch_related('field_changes').get(pk=pk)
+            obj = AuditLog.all_objects.filter(organization=org).select_related('user').prefetch_related('field_changes').get(pk=pk)
         except AuditLog.DoesNotExist:
             from rest_framework.exceptions import NotFound
             raise NotFound('Audit entry not found')

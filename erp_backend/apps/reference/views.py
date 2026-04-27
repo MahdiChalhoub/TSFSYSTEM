@@ -235,6 +235,19 @@ class OrgCountryViewSet(viewsets.ModelViewSet):
         organization_id = get_current_tenant_id()
         serializer.save(organization_id=organization_id)
 
+    def create(self, request, *args, **kwargs):
+        # Default DRF returns the WriteSerializer payload, which omits `id`
+        # (it's a read-only field). The frontend needs the real DB id so the
+        # next disable / set-default click queries the right row instead of
+        # a fake `Date.now()` placeholder. Return the *read* serializer.
+        write_serializer = self.get_serializer(data=request.data)
+        write_serializer.is_valid(raise_exception=True)
+        self.perform_create(write_serializer)
+        instance = write_serializer.instance
+        out = OrgCountrySerializer(instance, context=self.get_serializer_context())
+        headers = self.get_success_headers(out.data)
+        return Response(out.data, status=status.HTTP_201_CREATED, headers=headers)
+
     @action(detail=False, methods=['post'], url_path='set-default')
     def set_default(self, request):
         """Set a country as the org's default. Unsets all others."""
@@ -314,6 +327,19 @@ class OrgCurrencyViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         organization_id = get_current_tenant_id()
         serializer.save(organization_id=organization_id)
+
+    def create(self, request, *args, **kwargs):
+        # Same fix as OrgCountryViewSet.create() — return the read serializer
+        # so the response carries the real DB `id`. Without this the frontend
+        # falls back to Date.now() and the next disable hits a fake row,
+        # raising "No OrgCurrency matches the given query."
+        write_serializer = self.get_serializer(data=request.data)
+        write_serializer.is_valid(raise_exception=True)
+        self.perform_create(write_serializer)
+        instance = write_serializer.instance
+        out = OrgCurrencySerializer(instance, context=self.get_serializer_context())
+        headers = self.get_success_headers(out.data)
+        return Response(out.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         """Prevent deleting the default currency."""

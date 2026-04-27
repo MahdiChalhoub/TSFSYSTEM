@@ -607,9 +607,9 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                         // only the right-pane body swaps between the catalogue grid and
                         // the FX management sections.
                         const rightBody =
-                            currencySubTab === 'rules' ? <FxManagementSection view="policies" />
-                            : currencySubTab === 'history' ? <FxManagementSection view="rates" />
-                            : currencySubTab === 'revaluations' ? <FxManagementSection view="revaluations" />
+                            currencySubTab === 'rules' ? <FxManagementSection view="policies" orgCurrencyCount={orgCurrencies.length} orgBaseCode={baseCurrencyCode} />
+                            : currencySubTab === 'history' ? <FxManagementSection view="rates" orgCurrencyCount={orgCurrencies.length} orgBaseCode={baseCurrencyCode} />
+                            : currencySubTab === 'revaluations' ? <FxManagementSection view="revaluations" orgCurrencyCount={orgCurrencies.length} orgBaseCode={baseCurrencyCode} />
                             : undefined;
 
                         return (

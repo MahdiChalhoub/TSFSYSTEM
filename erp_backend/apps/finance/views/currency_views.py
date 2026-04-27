@@ -121,13 +121,23 @@ class CurrencyViewSet(TenantModelViewSet):
 
                 # Pass 1: mirror every OrgCurrency row (handles legacy data
                 # that pre-dates the signal — same code path as on_save).
+                # IMPORTANT: errors used to be swallowed silently here, which
+                # produced empty FX dropdowns with zero diagnostic. Now we log
+                # at warning level so the issue surfaces in the backend logs
+                # while still allowing other rows to mirror successfully.
+                import logging
+                _logger = logging.getLogger(__name__)
                 for oc in OrgCurrency.objects.filter(
                     organization=org,
                 ).select_related('currency'):
                     try:
                         _mirror_org_currency_to_finance(oc)
-                    except Exception:
-                        # Don't fail the whole list call on one bad row.
+                    except Exception as e:
+                        _logger.warning(
+                            "[CurrencyViewSet.list] mirror failed for OrgCurrency#%s "
+                            "(code=%s, org=%s): %s",
+                            oc.id, getattr(oc.currency, 'code', '?'), org_id, e,
+                        )
                         continue
 
                 # Pass 2: deactivate orphans not in the regional list.
@@ -348,6 +358,10 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
         Returns: { "created": [policy, …], "skipped": [{from_code, reason}, …] }
         """
         from apps.finance.models.currency_models import Currency
+        from apps.reference.models import OrgCurrency
+        from apps.finance.signals import _mirror_org_currency_to_finance
+        import logging
+        _logger = logging.getLogger(__name__)
         org_id = get_current_tenant_id()
         if not org_id:
             return Response({'error': 'tenant context missing'}, status=400)
@@ -360,9 +374,42 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
         multiplier = str(request.data.get('multiplier', '1.000000'))
         markup_pct = str(request.data.get('markup_pct', '0.0000'))
 
+        # Self-heal: if the operator's finance.Currency table is empty (mirror
+        # signal lagged / failed silently in the past), force-mirror from the
+        # OrgCurrency source-of-truth before checking for a base. This makes
+        # the bulk-create button work on first click instead of failing with
+        # "No base currency configured" while the user's Currencies tab
+        # clearly shows a base.
+        if not Currency.objects.filter(organization_id=org_id, is_active=True).exists():
+            for oc in OrgCurrency.objects.filter(
+                organization_id=org_id,
+            ).select_related('currency'):
+                try:
+                    _mirror_org_currency_to_finance(oc)
+                except Exception as e:
+                    _logger.warning(
+                        "[bulk_create.self-heal] mirror failed for OrgCurrency#%s: %s",
+                        oc.id, e,
+                    )
+
         base = Currency.objects.filter(organization_id=org_id, is_base=True, is_active=True).first()
         if not base:
-            return Response({'error': 'No base currency configured for this organization.'}, status=400)
+            # Surface a precise error mentioning the OrgCurrency state so the
+            # operator knows whether they need to set a base in the Currencies
+            # tab or whether the mirror is broken.
+            org_ccys = list(OrgCurrency.objects.filter(
+                organization_id=org_id,
+            ).select_related('currency').values_list('currency__code', 'is_default'))
+            if not org_ccys:
+                return Response({'error': 'No currencies enabled in /settings/regional yet.'}, status=400)
+            has_default = any(d for _, d in org_ccys)
+            if not has_default:
+                return Response({
+                    'error': 'No base currency set. Mark one as the default in the Currencies tab (⭐).',
+                }, status=400)
+            return Response({
+                'error': 'Currency mirror is out of sync. Reload /settings/regional, then retry.',
+            }, status=409)
 
         explicit_ids = request.data.get('from_currency_ids')
         if explicit_ids:

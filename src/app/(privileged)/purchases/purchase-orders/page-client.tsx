@@ -16,6 +16,7 @@ import {
   Plus, ClipboardList, Eye, Edit, Package,
   X, DollarSign, Clock, CheckCircle,
   ChevronDown, Loader2, Truck, Receipt, ArrowRightCircle, Check,
+  BarChart3,
 } from 'lucide-react'
 
 /* ── Shared UI ── */
@@ -204,11 +205,17 @@ function renderPOCell(key: string, po: PO, _extra?: any): React.ReactNode {
 /* ═══════════════════════════════════════════════════════════
  *  MAIN PAGE
  * ═══════════════════════════════════════════════════════════ */
-export default function PurchaseOrdersManager() {
+export default function PurchaseOrdersManager({
+  initialOrders = [],
+  currency = 'USD',
+}: {
+  initialOrders?: PO[]
+  currency?: string
+} = {}) {
   const router = useRouter()
   const { openTab } = useAdmin()
-  const [orders, setOrders] = useState<PO[]>([])
-  const [loading, setLoading] = useState(true)
+  const [orders, setOrders] = useState<PO[]>(initialOrders)
+  const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
 
   // ── Universal state engine (search, columns, ordering, policy, selection, pagination, shortcuts) ──
@@ -227,7 +234,8 @@ export default function PurchaseOrdersManager() {
     } catch { /* empty */ }
     setLoading(false)
   }, [])
-  useEffect(() => { fetchData() }, [fetchData])
+  // Initial data is hydrated SSR via props; only fetch client-side if SSR returned empty.
+  useEffect(() => { if (initialOrders.length === 0) fetchData() }, [fetchData, initialOrders.length])
 
   // Generic numeric range check
   const matchesNumericRange = (val: number, range: NumericRange): boolean => {
@@ -288,9 +296,10 @@ export default function PurchaseOrdersManager() {
   const stats = useMemo(() => {
     const total = orders.length
     const totalValue = orders.reduce((s, o) => s + Number(o.total_amount || 0), 0)
-    const pending = orders.filter(o => ['DRAFT', 'SUBMITTED', 'APPROVED', 'SENT', 'PARTIALLY_RECEIVED'].includes(o.status)).length
+    const pending = orders.filter(o => ['DRAFT', 'SUBMITTED', 'APPROVED'].includes(o.status)).length
+    const incoming = orders.filter(o => ['SENT', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'].includes(o.status)).length
     const completed = orders.filter(o => ['RECEIVED', 'COMPLETED', 'INVOICED'].includes(o.status)).length
-    return { total, totalValue, pending, completed }
+    return { total, totalValue, pending, incoming, completed }
   }, [orders])
 
   // Pagination — delegated to state engine
@@ -303,14 +312,27 @@ export default function PurchaseOrdersManager() {
     <DajingoPageShell
       title="Purchase Orders"
       icon={<ClipboardList size={20} className="text-white" />}
-      subtitle={`${stats.total} Orders · ${stats.pending} Pending · ${stats.completed} Completed`}
+      subtitle={`${stats.total} Orders · ${stats.pending} Pending · ${stats.incoming} Incoming · ${stats.completed} Completed`}
       kpiStats={[
         { label: 'Total Orders', value: stats.total, icon: <ClipboardList size={11} />, color: 'var(--app-primary)' },
-        { label: 'Total Value', value: fmt(stats.totalValue), icon: <DollarSign size={11} />, color: 'var(--app-success, #22c55e)' },
+        { label: 'Total Value', value: `${fmt(stats.totalValue)} ${currency}`, icon: <DollarSign size={11} />, color: 'var(--app-success, #22c55e)' },
         { label: 'Pending', value: stats.pending, icon: <Clock size={11} />, color: 'var(--app-warning, #f59e0b)' },
+        { label: 'Incoming', value: stats.incoming, icon: <Truck size={11} />, color: 'var(--app-info, #3b82f6)' },
         { label: 'Completed', value: stats.completed, icon: <CheckCircle size={11} />, color: 'var(--app-success, #22c55e)' },
       ]}
       primaryAction={{ label: 'New Order', icon: <Plus size={14} />, onClick: () => openTab('New Purchase Order', '/purchases/new-order') }}
+      secondaryActions={
+        <>
+          <button onClick={() => router.push('/purchases/sourcing')}
+            className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+            <BarChart3 size={13} /> <span className="hidden md:inline">Sourcing</span>
+          </button>
+          <button onClick={() => router.push('/purchases/dashboard')}
+            className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+            <DollarSign size={13} /> <span className="hidden md:inline">Dashboard</span>
+          </button>
+        </>
+      }
       search={state.search}
       onSearchChange={state.setSearch}
       searchRef={state.searchRef}
