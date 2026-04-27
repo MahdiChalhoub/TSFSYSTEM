@@ -168,6 +168,11 @@ export type CurrencyRatePolicy = {
     provider: 'MANUAL' | 'ECB' | 'FIXER' | 'OPENEXCHANGERATES'
     provider_config: Record<string, any>
     auto_sync: boolean
+    /** How often the cron / on-demand engine refreshes this policy.
+     *  ON_TRANSACTION = pulled the moment an FX-using transaction is about to
+     *  post (real-time). DAILY/WEEKLY/MONTHLY = cron honours the cadence and
+     *  skips runs that are still fresh. */
+    sync_frequency: 'ON_TRANSACTION' | 'DAILY' | 'WEEKLY' | 'MONTHLY'
     multiplier: string
     markup_pct: string
     last_synced_at: string | null
@@ -194,6 +199,7 @@ export async function createRatePolicy(payload: {
     rate_type: CurrencyRatePolicy['rate_type']
     provider: CurrencyRatePolicy['provider']
     auto_sync?: boolean
+    sync_frequency?: CurrencyRatePolicy['sync_frequency']
     multiplier?: string
     markup_pct?: string
     provider_config?: Record<string, any>

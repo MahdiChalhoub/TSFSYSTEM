@@ -49,7 +49,7 @@ export const ProductDetailCards = React.memo(function ProductDetailCards({ produ
             className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
             <Edit size={11} /> Edit
           </button>
-          <button onClick={() => { window.location.href = `/procurement/purchase-orders/new?product=${product.id}` }}
+          <button onClick={() => { window.location.href = `/purchases/new?product=${product.id}` }}
             className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-info/30 text-app-info hover:bg-app-info/5 transition-all">
             <ShoppingCart size={11} /> Purchase
           </button>

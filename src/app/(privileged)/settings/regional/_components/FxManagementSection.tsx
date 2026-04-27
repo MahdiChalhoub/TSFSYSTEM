@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, Fragment } from 'react'
 import { toast } from 'sonner'
 import {
     Coins, RefreshCcw, Plus, ShieldCheck, ShieldAlert,
@@ -551,7 +551,8 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                 <tr style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
                                                     <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Pair</th>
                                                     <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Type</th>
-                                                    <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Provider</th>
+                                                    <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Mode</th>
+                                                    <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground" title="How often the rate is refreshed">Refresh</th>
                                                     <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-app-muted-foreground" title="Multiplier — click to edit">×</th>
                                                     <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-app-muted-foreground" title="Markup % — click to edit">+ %</th>
                                                     <th className="px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Auto</th>
@@ -563,8 +564,10 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                 {policies.map(p => {
                                                     const health = policyHealth(p)
                                                     const isEditingThisRow = editingPolicy?.id === p.id
+                                                    const showErr = health === 'fail' && !!p.last_sync_error
                                                     return (
-                                                        <tr key={p.id} className="border-t border-app-border/30 hover:bg-app-background/40 transition-colors">
+                                                    <Fragment key={p.id}>
+                                                        <tr className="border-t border-app-border/30 hover:bg-app-background/40 transition-colors">
                                                             <td className="px-3 py-2 text-[12px] font-black font-mono text-app-foreground">
                                                                 <span className="inline-flex items-center gap-1.5">
                                                                     <span className="w-1.5 h-1.5 rounded-full"
@@ -579,7 +582,37 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                                     {p.rate_type}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-app-foreground">{p.provider}</td>
+                                                            <td className="px-3 py-2">
+                                                                <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                                                                    style={p.provider === 'MANUAL'
+                                                                        ? { ...soft('--app-muted-foreground', 14), color: 'var(--app-muted-foreground)' }
+                                                                        : { ...soft('--app-success', 12), color: 'var(--app-success)' }}
+                                                                    title={p.provider === 'MANUAL'
+                                                                        ? 'Fixed rate — operator-entered, never auto-fetched'
+                                                                        : `Floating rate — pulled from ${p.provider}`}>
+                                                                    {p.provider === 'MANUAL' ? 'Fixed' : 'Floating'}
+                                                                    <span className="font-mono opacity-60">· {p.provider}</span>
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <select value={p.sync_frequency}
+                                                                    onChange={async e => {
+                                                                        const r = await updateRatePolicy(p.id, { sync_frequency: e.target.value as CurrencyRatePolicy['sync_frequency'] })
+                                                                        if (!r.success) toast.error(r.error || 'Update failed')
+                                                                        await loadAll()
+                                                                    }}
+                                                                    disabled={p.provider === 'MANUAL'}
+                                                                    title={p.provider === 'MANUAL'
+                                                                        ? 'Fixed rates have no refresh cadence'
+                                                                        : 'Change how often this rate is refreshed'}
+                                                                    className="text-[10px] font-bold rounded-md px-2 py-0.5 outline-none focus:ring-2 focus:ring-app-info/30 disabled:opacity-40"
+                                                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                                                    <option value="ON_TRANSACTION">Per txn</option>
+                                                                    <option value="DAILY">Daily</option>
+                                                                    <option value="WEEKLY">Weekly</option>
+                                                                    <option value="MONTHLY">Monthly</option>
+                                                                </select>
+                                                            </td>
 
                                                             {/* Multiplier — inline editable */}
                                                             <td className="px-3 py-2 text-right text-[11px] font-mono tabular-nums">
@@ -659,6 +692,20 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                                 </div>
                                                             </td>
                                                         </tr>
+                                                        {showErr && (
+                                                            <tr className="border-t-0">
+                                                                <td colSpan={9} className="px-3 pb-2 pt-0">
+                                                                    <div className="flex items-start gap-2 px-2.5 py-1.5 rounded-md"
+                                                                        style={{ ...soft('--app-error', 8), border: '1px solid color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
+                                                                        <AlertTriangle size={11} className="mt-0.5 shrink-0" style={{ color: 'var(--app-error)' }} />
+                                                                        <span className="text-[10px] leading-relaxed font-mono break-words" style={{ color: 'var(--app-error)' }}>
+                                                                            {p.last_sync_error}
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </Fragment>
                                                     )
                                                 })}
                                             </tbody>
@@ -1069,6 +1116,7 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
         rate_type: CurrencyRatePolicy['rate_type']
         provider: CurrencyRatePolicy['provider']
         auto_sync: boolean
+        sync_frequency: CurrencyRatePolicy['sync_frequency']
         multiplier: string
         markup_pct: string
     }) => Promise<void>
@@ -1077,8 +1125,13 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
     const [fromId, setFromId] = useState<number | null>(non_base[0]?.id ?? null)
     // FIXER / OXR are stubs in currency_rate_sync_service.py — listing them
     // here would let users save a policy that crashes on first sync.
-    const [provider, setProvider] = useState<CurrencyRatePolicy['provider']>('ECB')
+    // ── Rate "mode" is a UI-level abstraction over `provider`. FIXED rates are
+    //    `MANUAL` (operator types the rate, never auto-fetched). FLOATING are
+    //    provider-fed (ECB today). The field is two-way bound to provider. ──
+    const [rateMode, setRateMode] = useState<'FIXED' | 'FLOATING'>('FLOATING')
+    const provider: CurrencyRatePolicy['provider'] = rateMode === 'FIXED' ? 'MANUAL' : 'ECB'
     const [rateType, setRateType] = useState<CurrencyRatePolicy['rate_type']>('SPOT')
+    const [syncFrequency, setSyncFrequency] = useState<CurrencyRatePolicy['sync_frequency']>('DAILY')
     const [multiplier, setMultiplier] = useState('1.000000')
     const [markupPct, setMarkupPct] = useState('0.0000')
     const [autoSync, setAutoSync] = useState(true)
@@ -1127,10 +1180,28 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
                         <option value="CLOSING">CLOSING</option>
                     </select>
                 </FieldLabel>
-                <FieldLabel label="Provider">
-                    <select value={provider} onChange={e => setProvider(e.target.value as CurrencyRatePolicy['provider'])} className={INPUT_CLS} style={INPUT_STYLE}>
-                        <option value="ECB">ECB (free)</option>
-                        <option value="MANUAL">MANUAL</option>
+                <FieldLabel label="Mode">
+                    <select value={rateMode} onChange={e => setRateMode(e.target.value as 'FIXED' | 'FLOATING')}
+                        className={INPUT_CLS} style={INPUT_STYLE}
+                        title="FIXED = manual entry only, never auto-fetched (e.g. CFA ↔ EUR peg). FLOATING = pulled from a provider (ECB).">
+                        <option value="FLOATING">Floating · ECB</option>
+                        <option value="FIXED">Fixed · manual</option>
+                    </select>
+                </FieldLabel>
+                <FieldLabel label="Refresh">
+                    <select value={rateMode === 'FIXED' ? 'NEVER' : syncFrequency}
+                        onChange={e => setSyncFrequency(e.target.value as CurrencyRatePolicy['sync_frequency'])}
+                        disabled={rateMode === 'FIXED'}
+                        className={INPUT_CLS} style={INPUT_STYLE}
+                        title="How often the engine refreshes a FLOATING rate. Per-transaction = pulled at posting time. Daily/Weekly/Monthly = honoured by cron.">
+                        {rateMode === 'FIXED'
+                            ? <option value="NEVER">Never (fixed)</option>
+                            : <>
+                                <option value="ON_TRANSACTION">Per transaction</option>
+                                <option value="DAILY">Every day</option>
+                                <option value="WEEKLY">Every week</option>
+                                <option value="MONTHLY">Every month</option>
+                            </>}
                     </select>
                 </FieldLabel>
                 <FieldLabel label="× Multiplier">
@@ -1174,12 +1245,17 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
             </div>
             <div className="flex items-center justify-between gap-3 pt-2 border-t border-app-border/30">
                 <label className="flex items-center gap-2 text-[10px] font-bold cursor-pointer text-app-foreground"
-                    title={provider === 'MANUAL' ? 'MANUAL policies don\'t auto-sync — toggle has no effect' : 'Daily cron will refresh this rate automatically'}>
-                    <input type="checkbox" checked={autoSync && provider !== 'MANUAL'}
-                        disabled={provider === 'MANUAL'}
+                    title={rateMode === 'FIXED'
+                        ? 'FIXED rates never auto-sync — toggle has no effect'
+                        : syncFrequency === 'ON_TRANSACTION'
+                            ? 'Per-transaction policies sync just-in-time, not via cron — toggle has no effect'
+                            : `Cron will refresh this rate ${syncFrequency.toLowerCase()}`}>
+                    <input type="checkbox"
+                        checked={autoSync && rateMode === 'FLOATING' && syncFrequency !== 'ON_TRANSACTION'}
+                        disabled={rateMode === 'FIXED' || syncFrequency === 'ON_TRANSACTION'}
                         onChange={e => setAutoSync(e.target.checked)}
                         className="w-3.5 h-3.5 rounded accent-app-info" />
-                    Run on daily cron (auto-sync)
+                    Run on cron (auto-sync)
                 </label>
                 <div className="flex items-center gap-2">
                     <button onClick={onCancel} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border/50 hover:bg-app-background transition-colors"
@@ -1189,7 +1265,9 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
                         try {
                             await onSubmit({
                                 from_currency: fromId!, to_currency: base.id, rate_type: rateType,
-                                provider, auto_sync: autoSync && provider !== 'MANUAL',
+                                provider,
+                                auto_sync: autoSync && provider !== 'MANUAL' && syncFrequency !== 'ON_TRANSACTION',
+                                sync_frequency: rateMode === 'FIXED' ? 'DAILY' : syncFrequency,
                                 multiplier, markup_pct: markupPct,
                             })
                         } finally { setBusy(false) }

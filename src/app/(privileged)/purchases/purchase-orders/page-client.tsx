@@ -320,7 +320,7 @@ export default function PurchaseOrdersManager({
         { label: 'Incoming', value: stats.incoming, icon: <Truck size={11} />, color: 'var(--app-info, #3b82f6)' },
         { label: 'Completed', value: stats.completed, icon: <CheckCircle size={11} />, color: 'var(--app-success, #22c55e)' },
       ]}
-      primaryAction={{ label: 'New Order', icon: <Plus size={14} />, onClick: () => openTab('New Purchase Order', '/purchases/new-order') }}
+      primaryAction={{ label: 'New Order', icon: <Plus size={14} />, onClick: () => openTab('New Purchase Order', '/purchases/new') }}
       secondaryActions={
         <>
           <button onClick={() => router.push('/purchases/sourcing')}
@@ -403,10 +403,10 @@ export default function PurchaseOrdersManager({
         renderExpanded={po => <POExpandedRow po={po} onView={onView} onRefresh={fetchData} />}
         onView={po => onView(po.id)}
         menuActions={po => [
-          { label: 'Edit Order', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/purchases/new-order?edit=${po.id}` } },
+          { label: 'Edit Order', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/purchases/new?edit=${po.id}` } },
           { label: '─── Transfer To ───', icon: <ArrowRightCircle size={12} className="text-app-muted-foreground/30" />, onClick: () => {} },
           { label: 'Purchase Receipt', icon: <Truck size={12} style={{ color: 'var(--app-success)' }} />, onClick: () => { window.location.href = `/purchases/receipts/new?from_po=${po.id}` } },
-          { label: 'Purchase Invoice', icon: <Receipt size={12} style={{ color: 'var(--app-warning)' }} />, onClick: () => { window.location.href = `/finance/invoices/new?from_po=${po.id}&type=purchase` } },
+          { label: 'Purchase Invoice', icon: <Receipt size={12} style={{ color: 'var(--app-warning)' }} />, onClick: () => { window.location.href = `/purchases/invoices?from_po=${po.id}` } },
         ]}
         selectedIds={state.selectedIds}
         onToggleSelect={state.toggleSelect}
@@ -450,7 +450,7 @@ function POExpandedRow({ po, onView, onRefresh }: { po: PO; onView: (id: number)
           className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg bg-app-primary text-white hover:brightness-110 transition-all">
           <Eye size={11} /> View Details
         </button>
-        <button onClick={() => { window.location.href = `/purchases/new-order?edit=${po.id}` }}
+        <button onClick={() => { window.location.href = `/purchases/new?edit=${po.id}` }}
           className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
           <Edit size={11} /> Edit
         </button>
@@ -461,7 +461,7 @@ function POExpandedRow({ po, onView, onRefresh }: { po: PO; onView: (id: number)
           className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
           <Truck size={11} style={{ color: 'var(--app-success)' }} /> → Receipt
         </button>
-        <button onClick={() => { window.location.href = `/finance/invoices/new?from_po=${po.id}&type=purchase` }}
+        <button onClick={() => { window.location.href = `/purchases/invoices?from_po=${po.id}` }}
           className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
           <Receipt size={11} style={{ color: 'var(--app-warning)' }} /> → Invoice
         </button>

@@ -12,6 +12,7 @@ import {
     Truck,
     Wrench,
     GitBranch,
+    ClipboardList,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -57,6 +58,7 @@ export const systemSettings: MenuItem = {
         { title: 'Storage Packages', path: '/storage/packages' },
         { title: 'Roles & Permissions', path: '/settings/roles' },
         { title: 'Security Settings', path: '/settings/security', icon: Shield },
+        { title: 'Audit Trail', path: '/settings/audit-trail', icon: ClipboardList, stage: 'in-progress' },
         { title: 'Notifications', path: '/settings/notifications', icon: Bell },
         { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
         { title: 'Appearance', path: '/settings/appearance' },

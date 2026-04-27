@@ -186,6 +186,20 @@ class CurrencyRatePolicy(TenantModel):
         help_text='If True, the daily cron sync command writes a fresh rate '
                   'each run. False = manual / on-demand only.',
     )
+    SYNC_FREQUENCY_CHOICES = [
+        ('ON_TRANSACTION', 'Per transaction (sync just-in-time before posting)'),
+        ('DAILY', 'Daily (refresh once per day)'),
+        ('WEEKLY', 'Weekly (refresh every 7 days)'),
+        ('MONTHLY', 'Monthly (refresh every 30 days)'),
+    ]
+    sync_frequency = models.CharField(
+        max_length=20, choices=SYNC_FREQUENCY_CHOICES, default='DAILY',
+        help_text='How often the cron / on-demand sync engine refreshes this '
+                  'policy. ON_TRANSACTION means rates are pulled the moment '
+                  'an FX-using transaction is about to post. DAILY / WEEKLY / '
+                  'MONTHLY skip the cron run if the last sync is fresher than '
+                  'the configured interval.',
+    )
     multiplier = models.DecimalField(
         max_digits=10, decimal_places=6, default=Decimal('1.000000'),
         help_text='Multiply the fetched provider rate by this factor before '

@@ -65,7 +65,8 @@ class CurrencyRatePolicySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'from_currency', 'from_code', 'to_currency', 'to_code',
             'rate_type', 'provider', 'provider_config',
-            'auto_sync', 'multiplier', 'markup_pct',
+            'auto_sync', 'sync_frequency',
+            'multiplier', 'markup_pct',
             'last_synced_at', 'last_sync_status', 'last_sync_error',
             'is_active', 'created_at', 'updated_at',
         ]
@@ -334,7 +335,12 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
         org = Organization.objects.get(id=org_id)
         # only_auto=False so the operator's "Sync All" button hits every
         # active non-MANUAL policy, regardless of the auto_sync flag.
-        results = CurrencyRateSyncService.sync_org(org, only_auto=False)
+        # respect_frequency=False so the operator can force-refresh even if
+        # a WEEKLY/MONTHLY policy was synced recently — the cron job is
+        # what honours the cadence, manual buttons override it.
+        results = CurrencyRateSyncService.sync_org(
+            org, only_auto=False, respect_frequency=False,
+        )
         return Response({'results': results, 'count': len(results)}, status=200)
 
     @action(detail=False, methods=['post'], url_path='bulk-create')

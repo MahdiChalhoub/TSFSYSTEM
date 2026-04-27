@@ -11,6 +11,7 @@ from .views import (
     UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet,
     NotificationViewSet, PermissionViewSet, import_sales_csv_view
 )
+from kernel.audit.views import AuditTrailViewSet
 from .list_preferences_views import user_list_preference, org_list_default
 from .views_auth import (
     login_view, logout_view, me_view, PublicConfigView, register_business_view,
@@ -41,6 +42,7 @@ router.register(r'currencies', CurrencyViewSet, basename='currencies')
 router.register(r'notifications', NotificationViewSet, basename='notifications')
 router.register(r'permissions', PermissionViewSet, basename='permissions')
 router.register(r'udle-views', UDLESavedViewViewSet, basename='udle-views')
+router.register(r'audit-trail', AuditTrailViewSet, basename='audit-trail')
 
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')

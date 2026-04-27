@@ -6,14 +6,12 @@ import { ArrowLeft, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 import PurchaseForm from '../purchases/new/form';
-import FormalOrderForm from '../purchases/new-order/form';
 import FormalOrderFormV2 from '../purchases/new-order-v2/form';
 
-type View = 'new' | 'new-order' | 'new-order-v2';
+type View = 'new' | 'new-order-v2';
 
 const TABS: { id: View; label: string; sub: string }[] = [
     { id: 'new', label: 'New', sub: 'purchases/new' },
-    { id: 'new-order', label: 'New Order (RFQ)', sub: 'purchases/new-order' },
     { id: 'new-order-v2', label: 'New Order V2', sub: 'purchases/new-order-v2' },
 ];
 
@@ -90,11 +88,6 @@ export default function PvSwitcher({
                         sites={sites}
                         financialSettings={financialSettings}
                     />
-                )}
-                {view === 'new-order' && (
-                    <div className="px-4 md:px-6 py-4">
-                        <FormalOrderForm suppliers={suppliers} sites={sites} />
-                    </div>
                 )}
                 {view === 'new-order-v2' && (
                     <div className="flex-1 min-h-0 flex flex-col px-4 md:px-6 py-4">

@@ -307,7 +307,7 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         renderExpanded={product => <ProductDetailCards product={product} marginPct={(() => { const sellHt = parseFloat(product.selling_price_ht) || 0; const costP = parseFloat(product.cost_price) || 0; return sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—' })()} onView={id => router.push(`/inventory/products/${id}`)} />}
         onView={product => router.push(`/inventory/products/${product.id}`)}
         menuActions={product => [
-          { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => { window.location.href = `/procurement/purchase-orders/new?product=${product.id}` } },
+          { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => { window.location.href = `/purchases/new?product=${product.id}` } },
           { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => { window.location.href = `/inventory/transfers/new?product=${product.id}` } },
           { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
         ]}
@@ -317,7 +317,7 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         onToggleSelectAll={toggleSelectAll}
         bulkActions={
           <>
-            <button onClick={() => { window.location.href = `/procurement/purchase-orders/new?products=${Array.from(selectedIds).join(',')}` }}
+            <button onClick={() => { window.location.href = `/purchases/new?products=${Array.from(selectedIds).join(',')}` }}
               className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-info/30 text-app-info hover:bg-app-info/10 transition-all">
               <ShoppingCart size={11} /> Request Purchase
             </button>

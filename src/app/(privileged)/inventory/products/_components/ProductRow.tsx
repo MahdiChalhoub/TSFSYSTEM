@@ -120,7 +120,7 @@ export const ProductRow = React.memo(function ProductRow({
                       className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
                       <Eye size={12} className="text-app-primary" /> View Details
                     </button>
-                    <button onClick={() => { window.location.href = `/procurement/purchase-orders/new?product=${product.id}`; setShowMenu(false) }}
+                    <button onClick={() => { window.location.href = `/purchases/new?product=${product.id}`; setShowMenu(false) }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-app-foreground hover:bg-app-surface-hover transition-colors">
                       <ShoppingCart size={12} className="text-app-info" /> Request Purchase
                     </button>
