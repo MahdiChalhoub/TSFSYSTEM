@@ -82,6 +82,11 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
     // Quick-add forms
     const [newRateOpen, setNewRateOpen] = useState(false)
     const [newPolicyOpen, setNewPolicyOpen] = useState(false)
+    // "Open as soon as the mirror materializes" — clicked while finance.Currency
+    // hasn't synced yet. The useEffect below flips newPolicyOpen=true once
+    // baseCurrency becomes available, so the click feels instant.
+    const [pendingNewPolicy, setPendingNewPolicy] = useState(false)
+    const [pendingNewRate, setPendingNewRate] = useState(false)
 
     useEffect(() => { void loadAll() }, [])
 
@@ -108,6 +113,20 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
     }
 
     const baseCurrency = useMemo(() => currencies.find(c => c.is_base), [currencies])
+
+    // Open the New Policy / New Rate form as soon as the mirror has produced
+    // a baseCurrency. Without this the button felt broken: click → silent
+    // toast → nothing happens because the form requires `base: Currency`.
+    useEffect(() => {
+        if (pendingNewPolicy && baseCurrency) {
+            setNewPolicyOpen(true)
+            setPendingNewPolicy(false)
+        }
+        if (pendingNewRate && baseCurrency) {
+            setNewRateOpen(true)
+            setPendingNewRate(false)
+        }
+    }, [pendingNewPolicy, pendingNewRate, baseCurrency])
     /** Effective gating: if the parent passed OrgCurrency state, use it as the
      *  source of truth so the UI works even when the finance.Currency mirror
      *  is empty (cron lagged, mirror raised silently, etc.). The backend's
@@ -345,14 +364,14 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                     ? 'Set a base in the Currencies tab first'
                                     : !hasNonBase
                                         ? 'Enable a non-base currency in the Currencies tab first'
-                                        : !baseCurrency
-                                            ? 'Currency mirror still syncing — refresh in a moment'
-                                            : 'Add a new rate row'}
+                                        : 'Add a new rate row'}
                                 onClick={() => {
                                     if (!hasBase) { toast.error('Set a base currency first — Currencies tab → ⭐'); return }
                                     if (!hasNonBase) { toast.error('Enable at least one non-base currency in the Currencies tab.'); return }
                                     if (!baseCurrency) {
-                                        toast.info('Resolving currencies… one moment.')
+                                        // Form needs a finance.Currency object — wait for the mirror.
+                                        setPendingNewRate(true)
+                                        toast.info('Resolving currencies…')
                                         void loadAll()
                                         return
                                     }
@@ -494,14 +513,14 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
                                                 ? 'Set a base in the Currencies tab first'
                                                 : !hasNonBase
                                                     ? 'Enable a non-base currency in the Currencies tab first'
-                                                    : !baseCurrency
-                                                        ? 'Currency mirror still syncing — click Sync All or refresh in a moment'
-                                                        : 'Configure a new auto-sync pair'}
+                                                    : 'Configure a new auto-sync pair'}
                                             onClick={() => {
                                                 if (!hasBase) { toast.error('Set a base currency first — Currencies tab → ⭐'); return }
                                                 if (!hasNonBase) { toast.error('Enable at least one non-base currency in the Currencies tab.'); return }
                                                 if (!baseCurrency) {
-                                                    toast.info('Resolving currencies… one moment.')
+                                                    // Form needs the mirror — open as soon as it lands.
+                                                    setPendingNewPolicy(true)
+                                                    toast.info('Resolving currencies…')
                                                     void loadAll()
                                                     return
                                                 }
@@ -1264,18 +1283,83 @@ function NewPolicyForm({ currencies, base, existingPairs, onCancel, onSubmit }: 
                             </>}
                     </select>
                 </FieldLabel>
-                <FieldLabel label="× Multiplier">
-                    <input value={multiplier} onChange={e => setMultiplier(e.target.value)} placeholder="1.000000"
-                        title="Multiplier — e.g. 1.035 for a 3.5% spread above the official rate"
-                        className={INPUT_CLS + ' font-mono tabular-nums'}
-                        style={mulValid ? INPUT_STYLE : { ...INPUT_STYLE, border: '1px solid color-mix(in srgb, var(--app-error) 50%, transparent)' }} />
-                </FieldLabel>
-                <FieldLabel label="+ Markup %">
-                    <input value={markupPct} onChange={e => setMarkupPct(e.target.value)} placeholder="0.0000"
-                        title="Markup percent — applied AFTER multiplier (range: -50 to +50)"
-                        className={INPUT_CLS + ' font-mono tabular-nums'}
-                        style={mkValid ? INPUT_STYLE : { ...INPUT_STYLE, border: '1px solid color-mix(in srgb, var(--app-error) 50%, transparent)' }} />
-                </FieldLabel>
+            </div>
+
+            {/* ── Spread adjustment panel — both knobs grouped, with affixed
+                 unit labels, presets, and a live preview line. Multiplier is
+                 a structural scaling factor; Markup is an operational fee. ── */}
+            <div className="rounded-xl p-3 space-y-2.5"
+                style={{ background: 'color-mix(in srgb, var(--app-info) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 18%, transparent)' }}>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-info)' }}>Spread Adjustment</span>
+                        <span className="text-[9px] text-app-muted-foreground">— optional. Default = no spread.</span>
+                    </div>
+                    {/* Quick presets — common bank/operator spreads */}
+                    <div className="inline-flex items-center gap-0.5">
+                        {[
+                            { label: 'None',   mul: '1.000000', mk: '0.0000' },
+                            { label: '+ 1%',  mul: '1.000000', mk: '1.0000' },
+                            { label: '+ 2.5%', mul: '1.000000', mk: '2.5000' },
+                            { label: '+ 5%',  mul: '1.000000', mk: '5.0000' },
+                        ].map(preset => (
+                            <button key={preset.label} type="button"
+                                onClick={() => { setMultiplier(preset.mul); setMarkupPct(preset.mk) }}
+                                title={`Multiplier ${preset.mul} · Markup ${preset.mk}%`}
+                                className="text-[9px] font-bold px-2 py-0.5 rounded-md hover:bg-app-info/10 transition-colors"
+                                style={{ color: 'var(--app-info)' }}>
+                                {preset.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Multiplier — structural factor */}
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-app-foreground">Multiplier</span>
+                            <span className="text-[9px] text-app-muted-foreground">scaling factor</span>
+                        </div>
+                        <div className="flex items-stretch rounded-lg overflow-hidden border"
+                            style={mulValid
+                                ? { background: 'var(--app-background)', borderColor: 'var(--app-border)' }
+                                : { background: 'var(--app-background)', borderColor: 'color-mix(in srgb, var(--app-error) 50%, transparent)' }}>
+                            <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                                style={{ fontSize: 13, background: 'color-mix(in srgb, var(--app-info) 8%, transparent)', borderRight: '1px solid var(--app-border)' }}>×</span>
+                            <input value={multiplier} onChange={e => setMultiplier(e.target.value)} placeholder="1.000000"
+                                inputMode="decimal"
+                                title="e.g. 1.035 for a 3.5% spread above the official rate"
+                                className="flex-1 px-2 py-1.5 text-[12px] font-mono tabular-nums outline-none bg-transparent text-app-foreground" />
+                        </div>
+                        <p className="text-[9px] text-app-muted-foreground mt-1 leading-tight">
+                            Bare ratio. <code className="font-mono">1.0000</code> = no change.
+                        </p>
+                    </div>
+
+                    {/* Markup — percent fee */}
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-app-foreground">Markup</span>
+                            <span className="text-[9px] text-app-muted-foreground">percent fee</span>
+                        </div>
+                        <div className="flex items-stretch rounded-lg overflow-hidden border"
+                            style={mkValid
+                                ? { background: 'var(--app-background)', borderColor: 'var(--app-border)' }
+                                : { background: 'var(--app-background)', borderColor: 'color-mix(in srgb, var(--app-error) 50%, transparent)' }}>
+                            <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                                style={{ fontSize: 13, background: 'color-mix(in srgb, var(--app-info) 8%, transparent)', borderRight: '1px solid var(--app-border)' }}>+</span>
+                            <input value={markupPct} onChange={e => setMarkupPct(e.target.value)} placeholder="0.0000"
+                                inputMode="decimal"
+                                title="Applied AFTER multiplier. Range -50 to +50."
+                                className="flex-1 px-2 py-1.5 text-[12px] font-mono tabular-nums outline-none bg-transparent text-app-foreground" />
+                            <span className="px-3 flex items-center font-mono font-black text-app-muted-foreground"
+                                style={{ fontSize: 13, background: 'color-mix(in srgb, var(--app-info) 8%, transparent)', borderLeft: '1px solid var(--app-border)' }}>%</span>
+                        </div>
+                        <p className="text-[9px] text-app-muted-foreground mt-1 leading-tight">
+                            Operational fee on top. <code className="font-mono">0.00</code> = none.
+                        </p>
+                    </div>
+                </div>
             </div>
             <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
                 <div className="flex items-center gap-2 flex-wrap">
