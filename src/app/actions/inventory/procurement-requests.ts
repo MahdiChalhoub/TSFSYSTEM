@@ -33,6 +33,7 @@ export interface ProcurementRequestRecord {
     reviewed_at: string | null
     last_bumped_at: string | null
     bump_count: number
+    source_po: number | null
 }
 
 export async function listProcurementRequests(): Promise<ProcurementRequestRecord[]> {

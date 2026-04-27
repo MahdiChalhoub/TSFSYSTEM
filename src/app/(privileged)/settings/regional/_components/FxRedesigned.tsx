@@ -108,10 +108,6 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
     // Drawer / modal state
     const [editPolicyId, setEditPolicyId] = useState<number | null>(null)
     const [createOpen, setCreateOpen] = useState(false)
-    /** "Open as soon as the base currency materializes" — set when the user
-     *  clicks New Policy before the finance.Currency mirror has caught up.
-     *  The useEffect below opens the drawer once baseCurrency is non-null. */
-    const [pendingCreate, setPendingCreate] = useState(false)
     const [setBrokerOpen, setSetBrokerOpen] = useState(false)
     const [manualRateOpen, setManualRateOpen] = useState(false)
     const [selectedPeriodId, setSelectedPeriodId] = useState<number | null>(null)
@@ -127,12 +123,21 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
     async function loadAll() {
         setLoading(true)
         try {
+            // fiscal-years is only mounted under the namespaced path, not the
+            // flat one — calling 'fiscal-years/' returns a 404 (HTML) that
+            // tanks the whole Promise.all. Wrap in its own try so the rest
+            // of the data still loads if this single endpoint changes.
             const [cs, rs, vs, ps, ys] = await Promise.all([
                 getCurrencies(),
                 getExchangeRates(),
                 getRevaluations(),
                 getRatePolicies(),
-                erpFetch('fiscal-years/').then((r: any) => Array.isArray(r) ? r : (r?.results ?? [])),
+                erpFetch('finance/fiscal-years/')
+                    .then((r: any) => Array.isArray(r) ? r : (r?.results ?? []))
+                    .catch((e) => {
+                        console.warn('[FxRedesigned] fiscal-years fetch failed:', e)
+                        return []
+                    }),
             ])
             setCurrencies(cs); setRates(rs); setRevals(vs); setPolicies(ps); setYears(ys)
         } catch (e) {
@@ -297,17 +302,6 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
         }).length
     }, [policies])
 
-    /* ─── Pending-open follow-through. When the user clicks "New Policy"
-     *  before the finance.Currency mirror has populated, we record a pending
-     *  flag and open the drawer the moment baseCurrency becomes available.
-     *  Without this the button click would silently appear to do nothing. */
-    useEffect(() => {
-        if (pendingCreate && baseCurrency) {
-            setCreateOpen(true)
-            setPendingCreate(false)
-        }
-    }, [pendingCreate, baseCurrency])
-
     /* ─── Keyboard shortcuts: '/' focuses search · 'n' opens new-policy
      *  drawer · Esc closes any open drawer/modal. ── */
     useEffect(() => {
@@ -321,8 +315,7 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                 input?.focus()
             } else if (e.key === 'n' && !inField && !createOpen && !editPolicyId && !setBrokerOpen) {
                 e.preventDefault()
-                if (baseCurrency) setCreateOpen(true)
-                else { setPendingCreate(true); void loadAll() }
+                setCreateOpen(true)
             } else if (e.key === 'Escape') {
                 if (editPolicyId !== null) setEditPolicyId(null)
                 else if (createOpen) setCreateOpen(false)
@@ -370,19 +363,7 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                     onSyncAll={handleSyncAll}
                     onDelete={handleDelete}
                     onAutoConfigure={handleAutoConfigure}
-                    onCreate={() => {
-                        // If the finance.Currency mirror has loaded, open
-                        // immediately. Otherwise queue the open + force a
-                        // refresh so the user gets the drawer the moment
-                        // the mirror finishes populating.
-                        if (baseCurrency) {
-                            setCreateOpen(true)
-                        } else {
-                            setPendingCreate(true)
-                            toast.info('Loading currencies…')
-                            void loadAll()
-                        }
-                    }}
+                    onCreate={() => setCreateOpen(true)}
                     onSetBroker={() => setSetBrokerOpen(true)}
                     onEdit={(id) => setEditPolicyId(id)}
                     onUpdate={async (id, patch) => {
@@ -399,6 +380,11 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                     rates={rates}
                     policies={policies}
                     baseCurrency={baseCurrency}
+                    /* Pass the OrgCurrency-derived gating so the Add Manual
+                     * Rate button shows even when the finance.Currency mirror
+                     * hasn't finished materializing. */
+                    orgCurrencyCount={orgCurrencyCount}
+                    orgBaseCode={orgBaseCode}
                     onAddManual={() => setManualRateOpen(true)}
                 />
             )}
@@ -428,13 +414,17 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                     }} />
             )}
 
-            {/* ── Drawer: create a policy ── */}
-            {createOpen && baseCurrency && (
+            {/* ── Drawer: create a policy. NOT gated on `baseCurrency` —
+                 the drawer falls back to currencies.find(c => c.is_base)
+                 internally and self-heals via `onRefresh` if the mirror was
+                 briefly empty when the user clicked. */}
+            {createOpen && (
                 <PolicyDrawer
                     policy={null}
                     base={baseCurrency}
                     currencies={currencies}
                     existingPairs={new Set(policies.map(p => `${p.from_currency}-${p.to_currency}-${p.rate_type}`))}
+                    onRefresh={loadAll}
                     onClose={() => setCreateOpen(false)}
                     onSubmit={async (payload) => {
                         const r = await createRatePolicy(payload as any)
@@ -455,11 +445,14 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                 />
             )}
 
-            {/* ── Modal: add a manual rate ── */}
-            {manualRateOpen && baseCurrency && (
+            {/* ── Modal: add a manual rate. Not gated on `baseCurrency` —
+                 the modal renders even when the mirror is briefly empty
+                 and resolves the base from `currencies` internally. */}
+            {manualRateOpen && (
                 <ManualRateModal
                     base={baseCurrency}
                     currencies={currencies}
+                    onRefresh={loadAll}
                     onClose={async () => {
                         // Reload on close — fires after either single MID
                         // or three-side submissions complete. Avoids a
@@ -937,12 +930,19 @@ function PolicyCard({ p, health, latest, sides, history, syncing, onSync, onEdit
 /* ═══════════════════════════════════════════════════════════════════
  *  RATE HISTORY — pair × time-range × side filters + table
  * ═══════════════════════════════════════════════════════════════════ */
-function RateHistoryView({ rates, policies, baseCurrency, onAddManual }: {
+function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgBaseCode, onAddManual }: {
     rates: ExchangeRate[]
     policies: CurrencyRatePolicy[]
     baseCurrency: Currency | undefined
+    orgCurrencyCount?: number
+    orgBaseCode?: string | null
     onAddManual: () => void
 }) {
+    // Show the Add Manual Rate button as soon as the operator has *any* base
+    // configured — either the finance.Currency mirror is up, or the parent
+    // tells us OrgCurrency has a default. Prevents the button from being
+    // invisible while the mirror lags.
+    const canAddManual = !!baseCurrency || !!orgBaseCode
     const [pairFilter, setPairFilter] = useState<'all' | string>('all')
     const [sideFilter, setSideFilter] = useState<'all' | 'MID' | 'BID' | 'ASK'>('all')
     const [rangeFilter, setRangeFilter] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
@@ -1006,11 +1006,14 @@ function RateHistoryView({ rates, policies, baseCurrency, onAddManual }: {
                     ]}
                     value={viewMode} onChange={setViewMode} />
                 <div className="flex-1" />
-                {baseCurrency && (
-                    <ActionBtn icon={<Plus size={11} />} tone="--app-success" onClick={onAddManual}>
-                        Add Manual Rate
-                    </ActionBtn>
-                )}
+                <ActionBtn icon={<Plus size={11} />} tone="--app-success"
+                    disabled={!canAddManual}
+                    title={!canAddManual
+                        ? 'Set a base currency first — Currencies tab → ⭐'
+                        : 'Type a rate by hand for one date · MID only or BID + MID + ASK'}
+                    onClick={onAddManual}>
+                    Add Manual Rate
+                </ActionBtn>
             </div>
 
             {/* ── Per-pair sections ── */}
@@ -1274,17 +1277,28 @@ function RevaluationsView({ periods, revals, selectedPeriod, setSelectedPeriodId
 /* ═══════════════════════════════════════════════════════════════════
  *  POLICY DRAWER — single source of truth for create + edit
  * ═══════════════════════════════════════════════════════════════════ */
-function PolicyDrawer({ policy, base, currencies, existingPairs, onClose, onSubmit }: {
+function PolicyDrawer({ policy, base, currencies, existingPairs, onRefresh, onClose, onSubmit }: {
     policy: CurrencyRatePolicy | null
     base?: Currency
     currencies: Currency[]
     existingPairs?: Set<string>
+    /** Same self-heal as ManualRateModal — refreshes parent state when the
+     *  drawer opens to a missing-base condition. */
+    onRefresh?: () => Promise<void>
     onClose: () => void
     onSubmit: (patch: any) => Promise<void>
 }) {
     const isCreate = policy === null
     const baseCcy = base ?? currencies.find(c => c.is_base)
     const non_base = currencies.filter(c => c.id !== baseCcy?.id && c.is_active)
+    const [refreshing, setRefreshing] = useState(false)
+    const [didRefresh, setDidRefresh] = useState(false)
+    useEffect(() => {
+        if (isCreate && !baseCcy && !didRefresh && onRefresh) {
+            setRefreshing(true)
+            onRefresh().finally(() => { setRefreshing(false); setDidRefresh(true) })
+        }
+    }, [isCreate, baseCcy, didRefresh, onRefresh])
 
     const [fromId, setFromId] = useState<number | null>(policy?.from_currency ?? non_base[0]?.id ?? null)
     const [rateType, setRateType] = useState<CurrencyRatePolicy['rate_type']>(policy?.rate_type ?? 'SPOT')
@@ -1725,13 +1739,87 @@ function SetBrokerModal({ policies, currencies, onClose, onApplied }: {
  *    - "Bid + Mid + Ask"           — three rate inputs, writes a triple.
  *  Backend's unique-together is (org, from, to, date, type, side), so writing
  *  three rows with distinct sides is safe and idempotent for re-edits. */
-function ManualRateModal({ base, currencies, onClose, onSubmit }: {
-    base: Currency
+function ManualRateModal({ base, currencies, onRefresh, onClose, onSubmit }: {
+    /** Optional — modal falls back to `currencies.find(c => c.is_base)` so
+     *  clicking the button works even before the mirror finishes loading. */
+    base?: Currency
     currencies: Currency[]
+    /** Called when the modal opens with no base in `currencies`. Re-fetches
+     *  the parent's loadAll(); modal re-renders when state updates. Without
+     *  this, a click on Add Manual Rate during the initial fetch would
+     *  permanently show the "Set a base currency first" notice. */
+    onRefresh?: () => Promise<void>
     onClose: () => void
     onSubmit: (p: { from_currency: number; to_currency: number; rate: string; rate_type: ExchangeRate['rate_type']; rate_side?: 'MID' | 'BID' | 'ASK'; effective_date: string; source?: string }) => Promise<void>
 }) {
-    const non_base = currencies.filter(c => c.id !== base.id && c.is_active)
+    const baseCcy = base ?? currencies.find(c => c.is_base)
+    const [refreshing, setRefreshing] = useState(false)
+    const [didRefresh, setDidRefresh] = useState(false)
+
+    // Self-heal: when the modal opens with no base, fire one refresh from
+    // the parent's loadAll. This catches the race where the user clicked
+    // Add Manual Rate before the initial currency fetch resolved.
+    useEffect(() => {
+        if (!baseCcy && !didRefresh && onRefresh) {
+            setRefreshing(true)
+            onRefresh()
+                .finally(() => { setRefreshing(false); setDidRefresh(true) })
+        }
+    }, [baseCcy, didRefresh, onRefresh])
+
+    if (!baseCcy) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
+                onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+                <div className="w-full max-w-md rounded-2xl overflow-hidden p-5"
+                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                    {refreshing ? (
+                        <>
+                            <div className="font-black mb-2 inline-flex items-center gap-2" style={{ fontSize: 14, color: 'var(--app-foreground)' }}>
+                                <RefreshCcw size={14} className="animate-spin" /> Loading currencies…
+                            </div>
+                            <p style={{ fontSize: 11, color: 'var(--app-muted-foreground)' }}>
+                                Refreshing the currency list. This usually takes a second.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <div className="font-black mb-2" style={{ fontSize: 14, color: 'var(--app-foreground)' }}>Set a base currency first</div>
+                            <p style={{ fontSize: 11, color: 'var(--app-muted-foreground)' }}>
+                                Manual-rate entries store the value in your base currency. Mark one of your enabled currencies as ⭐ base
+                                in the <em>Select Currency</em> tab, then come back here. Currently loaded:
+                                {' '}<strong>{currencies.length}</strong> currenc{currencies.length === 1 ? 'y' : 'ies'},
+                                {' '}base = <strong>{currencies.find(c => c.is_base)?.code ?? 'none'}</strong>.
+                            </p>
+                            <div className="mt-4 flex items-center gap-2">
+                                {onRefresh && (
+                                    <button onClick={() => {
+                                        setRefreshing(true)
+                                        onRefresh().finally(() => setRefreshing(false))
+                                    }}
+                                        className="px-3.5 py-1.5 rounded-xl font-bold border"
+                                        style={{
+                                            fontSize: 11,
+                                            color: 'var(--app-info)',
+                                            borderColor: 'color-mix(in srgb, var(--app-info) 30%, transparent)',
+                                            background: 'color-mix(in srgb, var(--app-info) 6%, transparent)',
+                                        }}>
+                                        <RefreshCcw size={11} className="inline -mt-0.5 mr-1" /> Refresh
+                                    </button>
+                                )}
+                                <button onClick={onClose} className="px-3.5 py-1.5 rounded-xl font-bold border"
+                                    style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                                    Close
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        )
+    }
+    const non_base = currencies.filter(c => c.id !== baseCcy.id && c.is_active)
     const [fromId, setFromId] = useState<number | null>(non_base[0]?.id ?? null)
     const [mode, setMode] = useState<'mid' | 'three'>('mid')
     const [midRate, setMidRate] = useState('1.000000')
@@ -1786,10 +1874,10 @@ function ManualRateModal({ base, currencies, onClose, onSubmit }: {
                                 {non_base.map(c => <option key={c.id} value={c.id}>{c.code} — {c.name}</option>)}
                             </select>
                         </Field>
-                        <Field label={`To (always ${base.code})`}>
+                        <Field label={`To (always ${baseCcy.code})`}>
                             <div className={INPUT_CLS + ' font-mono font-black flex items-center'}
                                 style={{ ...INPUT_STYLE, justifyContent: 'center', color: 'var(--app-muted-foreground)' }}>
-                                {base.code}
+                                {baseCcy.code}
                             </div>
                         </Field>
                     </div>
@@ -1834,26 +1922,26 @@ function ManualRateModal({ base, currencies, onClose, onSubmit }: {
 
                     {/* Rate inputs */}
                     {mode === 'mid' ? (
-                        <Field label={`Rate (1 ${fromCode} = ? ${base.code})`} error={!midValid}
+                        <Field label={`Rate (1 ${fromCode} = ? ${baseCcy.code})`} error={!midValid}
                             hint={!midValid ? 'Must be a positive number' : undefined}>
-                            <PrefixInput tone="--app-success" prefix={`1 ${fromCode} =`} suffix={base.code}
+                            <PrefixInput tone="--app-success" prefix={`1 ${fromCode} =`} suffix={baseCcy.code}
                                 value={midRate} onChange={setMidRate} valid={midValid} placeholder="1.000000" />
                         </Field>
                     ) : (
                         <div className="space-y-2">
                             <Field label={`Bid · operator buys (≤ Mid)`} error={!isFinite(bid) || bid <= 0 || bid > mid}>
-                                <PrefixInput tone="--app-success" prefix="−" suffix={base.code}
+                                <PrefixInput tone="--app-success" prefix="−" suffix={baseCcy.code}
                                     value={bidRate} onChange={setBidRate}
                                     valid={isFinite(bid) && bid > 0 && bid <= mid}
                                     placeholder="0.999000" />
                             </Field>
                             <Field label={`Mid · mid-market`} error={!midValid}>
-                                <PrefixInput tone="--app-info" prefix="·" suffix={base.code}
+                                <PrefixInput tone="--app-info" prefix="·" suffix={baseCcy.code}
                                     value={midRate} onChange={setMidRate} valid={midValid}
                                     placeholder="1.000000" />
                             </Field>
                             <Field label={`Ask · operator sells (≥ Mid)`} error={!isFinite(ask) || ask <= 0 || ask < mid}>
-                                <PrefixInput tone="--app-error" prefix="+" suffix={base.code}
+                                <PrefixInput tone="--app-error" prefix="+" suffix={baseCcy.code}
                                     value={askRate} onChange={setAskRate}
                                     valid={isFinite(ask) && ask > 0 && ask >= mid}
                                     placeholder="1.001000" />
@@ -1871,7 +1959,7 @@ function ManualRateModal({ base, currencies, onClose, onSubmit }: {
                         <p className="font-mono px-2 py-1.5 rounded-md inline-block"
                             style={{ ...soft('--app-success', 8), color: 'var(--app-success)', fontSize: 10 }}>
                             <TrendingUp size={10} className="inline -mt-0.5 mr-1" />
-                            Preview: 1 {fromCode} = <strong>{mid.toFixed(6)}</strong> {base.code} on {date}
+                            Preview: 1 {fromCode} = <strong>{mid.toFixed(6)}</strong> {baseCcy.code} on {date}
                         </p>
                     )}
                 </div>
@@ -1894,7 +1982,7 @@ function ManualRateModal({ base, currencies, onClose, onSubmit }: {
                             try {
                                 if (mode === 'mid') {
                                     setProgress({ done: 0, total: 1 })
-                                    await onSubmit({ from_currency: fromId!, to_currency: base.id, rate: midRate, rate_type: rateType, rate_side: 'MID', effective_date: date, source: 'MANUAL' })
+                                    await onSubmit({ from_currency: fromId!, to_currency: baseCcy.id, rate: midRate, rate_type: rateType, rate_side: 'MID', effective_date: date, source: 'MANUAL' })
                                     setProgress({ done: 1, total: 1 })
                                 } else {
                                     // Three sequential calls — backend's unique-together accepts the trio.
@@ -1906,7 +1994,7 @@ function ManualRateModal({ base, currencies, onClose, onSubmit }: {
                                     setProgress({ done: 0, total: ops.length })
                                     for (let i = 0; i < ops.length; i++) {
                                         await onSubmit({
-                                            from_currency: fromId!, to_currency: base.id,
+                                            from_currency: fromId!, to_currency: baseCcy.id,
                                             rate: ops[i].rate, rate_type: rateType,
                                             rate_side: ops[i].side, effective_date: date, source: 'MANUAL',
                                         })

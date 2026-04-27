@@ -1,33 +1,80 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
-import { toast } from 'sonner'
 import {
-    Inbox, Search, ShoppingCart, ArrowRightLeft,
-    Clock, CheckCircle2, XCircle, PlayCircle,
-    Maximize2, Minimize2, Loader2, RefreshCw,
+    Inbox, Clock, CheckCircle2, XCircle, PlayCircle, Bell, Ban,
 } from 'lucide-react'
+
+import { DajingoPageShell } from '@/components/common/DajingoPageShell'
+import { DajingoListView, type DajingoColumnDef } from '@/components/common/DajingoListView'
+import type { KPIStat } from '@/components/ui/KPIStrip'
+
 import {
     listProcurementRequests,
     type ProcurementRequestRecord,
     type ProcurementRequestStatus,
-    type ProcurementRequestType,
 } from '@/app/actions/inventory/procurement-requests'
-import { TYPE_META } from './_lib/meta'
-import { RequestRow } from './_components/RequestRow'
+import { makeRunAction, buildMenuActions, bulkBumpAll, bulkCancelAll } from './_lib/actions'
 
-type StatusFilter = 'ALL' | ProcurementRequestStatus
-type TypeFilter = 'ALL' | ProcurementRequestType
+import {
+    ALL_COLUMNS, COLUMN_WIDTHS, RIGHT_ALIGNED_COLS, GROW_COLS,
+    EMPTY_FILTERS, type Filters,
+} from './_lib/constants'
+import { TYPE_META } from './_lib/meta'
+import { renderRequestCell } from './_components/RequestColumns'
+import { FiltersPanel } from './_components/FiltersPanel'
+
+const STORAGE_KEY = 'inventory_requests_view_v1'
+
+function loadView(): { visibleColumns: Record<string, boolean>; columnOrder: string[]; pageSize: number } {
+    if (typeof window === 'undefined') return defaultView()
+    try {
+        const raw = window.localStorage.getItem(STORAGE_KEY)
+        if (!raw) return defaultView()
+        const parsed = JSON.parse(raw)
+        return {
+            visibleColumns: parsed.visibleColumns ?? defaultView().visibleColumns,
+            columnOrder: Array.isArray(parsed.columnOrder) ? parsed.columnOrder : defaultView().columnOrder,
+            pageSize: typeof parsed.pageSize === 'number' ? parsed.pageSize : 50,
+        }
+    } catch { return defaultView() }
+}
+
+function defaultView() {
+    const visibleColumns: Record<string, boolean> = {}
+    for (const c of ALL_COLUMNS) visibleColumns[c.key] = c.defaultVisible
+    return {
+        visibleColumns,
+        columnOrder: ALL_COLUMNS.map(c => c.key),
+        pageSize: 50,
+    }
+}
+
+function saveView(view: { visibleColumns: Record<string, boolean>; columnOrder: string[]; pageSize: number }) {
+    if (typeof window === 'undefined') return
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(view)) } catch {}
+}
 
 export default function ProcurementRequestsPage() {
     const [requests, setRequests] = useState<ProcurementRequestRecord[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
-    const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL')
+    const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
     const [focusMode, setFocusMode] = useState(false)
+    const [showFilters, setShowFilters] = useState(false)
     const [pending, startTransition] = useTransition()
     const searchRef = useRef<HTMLInputElement>(null)
+
+    const initialView = useMemo(loadView, [])
+    const [visibleColumns, setVisibleColumns] = useState(initialView.visibleColumns)
+    const [columnOrder, setColumnOrder] = useState<string[]>(initialView.columnOrder)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [pageSize, setPageSize] = useState(initialView.pageSize)
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+
+    useEffect(() => {
+        saveView({ visibleColumns, columnOrder, pageSize })
+    }, [visibleColumns, columnOrder, pageSize])
 
     const refresh = () => {
         setLoading(true)
@@ -45,173 +92,185 @@ export default function ProcurementRequestsPage() {
     }, [])
 
     const counts = useMemo(() => {
-        const c: Record<ProcurementRequestStatus, number> & { ALL: number } = {
-            ALL: requests.length, PENDING: 0, APPROVED: 0, EXECUTED: 0, REJECTED: 0, CANCELLED: 0,
+        const c: Record<ProcurementRequestStatus, number> & { ALL: number; BUMPED: number } = {
+            ALL: requests.length, PENDING: 0, APPROVED: 0, EXECUTED: 0, REJECTED: 0, CANCELLED: 0, BUMPED: 0,
         }
-        for (const r of requests) c[r.status]++
+        for (const r of requests) {
+            c[r.status]++
+            if (r.bump_count > 0) c.BUMPED++
+        }
         return c
     }, [requests])
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase()
-        const matches = requests.filter(r => {
-            if (statusFilter !== 'ALL' && r.status !== statusFilter) return false
-            if (typeFilter !== 'ALL' && r.request_type !== typeFilter) return false
-            if (!q) return true
-            return (
-                (r.product_name || '').toLowerCase().includes(q) ||
-                (r.product_sku || '').toLowerCase().includes(q) ||
-                (r.supplier_name || '').toLowerCase().includes(q) ||
-                (r.reason || '').toLowerCase().includes(q)
-            )
+        const list = requests.filter(r => {
+            if (filters.status !== 'ALL' && r.status !== filters.status) return false
+            if (filters.type !== 'ALL' && r.request_type !== filters.type) return false
+            if (filters.priority !== 'ALL' && r.priority !== filters.priority) return false
+            if (filters.onlyBumped && r.bump_count === 0) return false
+            if (q) {
+                const hay = `${r.product_name || ''} ${r.product_sku || ''} ${r.supplier_name || ''} ${r.reason || ''}`.toLowerCase()
+                if (!hay.includes(q)) return false
+            }
+            return true
         })
-        // Sort by latest activity: max(last_bumped_at, requested_at) desc.
-        const activity = (r: ProcurementRequestRecord) =>
-            new Date(r.last_bumped_at || r.requested_at).getTime()
-        return matches.sort((a, b) => activity(b) - activity(a))
-    }, [requests, search, statusFilter, typeFilter])
+        const activity = (r: ProcurementRequestRecord) => new Date(r.last_bumped_at || r.requested_at).getTime()
+        return list.sort((a, b) => activity(b) - activity(a))
+    }, [requests, search, filters])
 
-    const runAction = (id: number, action: (id: number) => Promise<{ success: boolean; message?: string }>, verb: string) => {
-        startTransition(async () => {
-            const r = await action(id)
-            if (r.success) { toast.success(`${verb} successful`); refresh() }
-            else toast.error(r.message || `${verb} failed`)
+    const activeFilterCount = useMemo(() => {
+        let n = 0
+        if (filters.status !== 'ALL') n++
+        if (filters.type !== 'ALL') n++
+        if (filters.priority !== 'ALL') n++
+        if (filters.onlyBumped) n++
+        return n
+    }, [filters])
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+    const clampedPage = Math.min(currentPage, totalPages)
+    useEffect(() => { if (currentPage !== clampedPage) setCurrentPage(clampedPage) }, [currentPage, clampedPage])
+    const pageSlice = useMemo(
+        () => filtered.slice((clampedPage - 1) * pageSize, clampedPage * pageSize),
+        [filtered, clampedPage, pageSize],
+    )
+
+    const kpis: KPIStat[] = useMemo(() => [
+        { label: 'All',       value: counts.ALL,       color: 'var(--app-primary)',          icon: <Inbox size={14} />,        filterKey: 'ALL' },
+        { label: 'Pending',   value: counts.PENDING,   color: 'var(--app-warning, #f59e0b)', icon: <Clock size={14} />,        filterKey: 'PENDING' },
+        { label: 'Approved',  value: counts.APPROVED,  color: 'var(--app-info, #3b82f6)',    icon: <CheckCircle2 size={14} />, filterKey: 'APPROVED' },
+        { label: 'Executed',  value: counts.EXECUTED,  color: 'var(--app-success, #22c55e)', icon: <PlayCircle size={14} />,   filterKey: 'EXECUTED' },
+        { label: 'Rejected',  value: counts.REJECTED,  color: 'var(--app-error, #ef4444)',   icon: <XCircle size={14} />,      filterKey: 'REJECTED' },
+        { label: 'Bumped',    value: counts.BUMPED,    color: '#8b5cf6',                     icon: <Bell size={14} />,         filterKey: 'BUMPED' },
+    ], [counts])
+
+    const toggleSelect = (id: number | string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id as number)) next.delete(id as number)
+            else next.add(id as number)
+            return next
         })
     }
+    const toggleSelectAll = () => {
+        const ids = new Set(pageSlice.map(r => r.id))
+        const allSelected = pageSlice.every(r => selectedIds.has(r.id))
+        setSelectedIds(allSelected ? new Set([...selectedIds].filter(id => !ids.has(id))) : new Set([...selectedIds, ...ids]))
+    }
+    const isAllPageSelected = pageSlice.length > 0 && pageSlice.every(r => selectedIds.has(r.id))
 
-    const kpis: { key: StatusFilter; label: string; value: number; color: string; icon: typeof Inbox }[] = [
-        { key: 'ALL',      label: 'All Requests', value: counts.ALL,      color: 'var(--app-primary)',          icon: Inbox },
-        { key: 'PENDING',  label: 'Pending',      value: counts.PENDING,  color: 'var(--app-warning, #f59e0b)', icon: Clock },
-        { key: 'APPROVED', label: 'Approved',     value: counts.APPROVED, color: 'var(--app-info, #3b82f6)',    icon: CheckCircle2 },
-        { key: 'EXECUTED', label: 'Executed',     value: counts.EXECUTED, color: 'var(--app-success, #22c55e)', icon: PlayCircle },
-        { key: 'REJECTED', label: 'Rejected',     value: counts.REJECTED, color: 'var(--app-error, #ef4444)',   icon: XCircle },
-    ]
+    const runAction = makeRunAction(startTransition, refresh)
+    const bulkBump = () => bulkBumpAll(selectedIds, startTransition, setSelectedIds, refresh)
+    const bulkCancel = () => bulkCancelAll(selectedIds, startTransition, setSelectedIds, refresh)
+    const menuActions = (r: ProcurementRequestRecord) => buildMenuActions(r, runAction, startTransition, refresh)
+
+    const columns: DajingoColumnDef[] = ALL_COLUMNS
 
     return (
-        <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
-            {/* ── Header ── */}
-            <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                <div className="flex items-center gap-3 min-w-0">
-                    <div className="page-header-icon bg-app-primary"
-                        style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                        <Inbox size={20} className="text-white" />
-                    </div>
-                    <div className="min-w-0">
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Procurement Requests</h1>
-                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                            {filtered.length} of {counts.ALL} · purchase &amp; transfer queue
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <button onClick={refresh} disabled={loading}
-                        className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all disabled:opacity-50">
-                        <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-                        <span className="hidden md:inline">Refresh</span>
-                    </button>
-                    <button onClick={() => setFocusMode(v => !v)}
-                        className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"
-                        title={focusMode ? 'Exit focus (Ctrl+Q)' : 'Focus mode (Ctrl+Q)'}>
-                        {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-                    </button>
-                </div>
-            </div>
-
-            {/* ── KPI strip (filter mode) ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }} className="mb-3 flex-shrink-0">
-                {kpis.map(k => {
-                    const Icon = k.icon
-                    const active = statusFilter === k.key
+        <DajingoPageShell
+            title="Procurement Requests"
+            icon={<Inbox size={20} className="text-white" />}
+            entityLabel="Request"
+            kpiStats={kpis}
+            search={search}
+            onSearchChange={setSearch}
+            searchRef={searchRef}
+            searchPlaceholder="Search by product, SKU, supplier, reason... (Ctrl+K)"
+            filteredCount={filtered.length}
+            totalCount={counts.ALL}
+            focusMode={focusMode}
+            onFocusModeChange={setFocusMode}
+            showFilters={showFilters}
+            onToggleFilters={() => setShowFilters(v => !v)}
+            activeFilterCount={activeFilterCount}
+            onRefresh={refresh}
+            renderFilters={() => <FiltersPanel filters={filters} setFilters={setFilters} />}
+        >
+            <DajingoListView<ProcurementRequestRecord>
+                data={pageSlice}
+                allData={filtered}
+                loading={loading}
+                getRowId={r => r.id}
+                columns={columns}
+                visibleColumns={visibleColumns}
+                columnWidths={COLUMN_WIDTHS}
+                rightAlignedCols={RIGHT_ALIGNED_COLS}
+                growCols={GROW_COLS}
+                columnOrder={columnOrder}
+                onColumnReorder={setColumnOrder}
+                renderRowIcon={r => {
+                    const tm = TYPE_META[r.request_type]
+                    const Icon = tm.icon
                     return (
-                        <button key={k.key} onClick={() => setStatusFilter(active ? 'ALL' : k.key)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left ${active ? 'ring-2 shadow-md scale-[1.02]' : ''}`}
-                            style={{
-                                background: active
-                                    ? `color-mix(in srgb, ${k.color} 15%, transparent)`
-                                    : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                border: `1px solid color-mix(in srgb, ${k.color} ${active ? '50' : '20'}%, transparent)`,
-                            }}>
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                                style={{ background: `color-mix(in srgb, ${k.color} 10%, transparent)`, color: k.color }}>
-                                <Icon size={14} />
-                            </div>
-                            <div className="min-w-0">
-                                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{k.label}</div>
-                                <div className="text-sm font-black text-app-foreground tabular-nums">{k.value}</div>
-                            </div>
-                        </button>
-                    )
-                })}
-            </div>
-
-            {/* ── Toolbar ── */}
-            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-                <div className="flex-1 relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                    <input ref={searchRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by product, SKU, supplier, reason... (Ctrl+K)"
-                        className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
-                </div>
-                <div className="flex gap-1 p-1 rounded-xl border border-app-border/50" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
-                    {(['ALL', 'PURCHASE', 'TRANSFER'] as TypeFilter[]).map(t => (
-                        <button key={t} onClick={() => setTypeFilter(t)}
-                            className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
-                            style={{
-                                background: typeFilter === t ? 'var(--app-primary)' : 'transparent',
-                                color: typeFilter === t ? 'white' : 'var(--app-muted-foreground)',
-                            }}>
-                            {t === 'ALL' ? 'All' : TYPE_META[t].label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* ── List body ── */}
-            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
-                <div className="flex-shrink-0 grid items-center gap-2 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
-                    style={{ gridTemplateColumns: '120px 1fr 90px 110px 110px 130px 200px' }}>
-                    <div>Type</div>
-                    <div>Product</div>
-                    <div className="text-right">Quantity</div>
-                    <div>Priority</div>
-                    <div>Status</div>
-                    <div>Requested</div>
-                    <div className="text-right">Actions</div>
-                </div>
-                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <Loader2 size={24} className="animate-spin text-app-primary" />
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: `color-mix(in srgb, ${tm.color} 12%, transparent)`, color: tm.color }}>
+                            <Icon size={13} />
                         </div>
-                    ) : filtered.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                            <Inbox size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-                            <p className="text-sm font-bold text-app-muted-foreground">No procurement requests</p>
-                            {(search || statusFilter !== 'ALL' || typeFilter !== 'ALL') ? (
-                                <>
-                                    <p className="text-[11px] text-app-muted-foreground mt-1">
-                                        No matches for{' '}
-                                        {[
-                                            search && `search "${search}"`,
-                                            statusFilter !== 'ALL' && `status ${statusFilter}`,
-                                            typeFilter !== 'ALL' && `type ${typeFilter}`,
-                                        ].filter(Boolean).join(' · ')}
-                                    </p>
-                                    <button
-                                        onClick={() => { setSearch(''); setStatusFilter('ALL'); setTypeFilter('ALL') }}
-                                        className="mt-3 text-[10px] font-bold uppercase tracking-wider text-app-primary hover:brightness-110 transition-all">
-                                        Clear filters
-                                    </button>
-                                </>
-                            ) : (
-                                <p className="text-[11px] text-app-muted-foreground mt-1">
-                                    Open the products list and click "Request Purchase" or "Request Transfer" to create one.
-                                </p>
+                    )
+                }}
+                renderRowTitle={r => (
+                    <div className="flex-1 min-w-0">
+                        <div className="truncate text-[12px] font-bold text-app-foreground">
+                            {r.product_name || `Product #${r.product}`}
+                        </div>
+                        <div className="text-[10px] font-mono text-app-muted-foreground truncate">
+                            {r.product_sku || '—'}
+                            {r.bump_count > 0 && (
+                                <span className="ml-2" style={{ color: '#8b5cf6' }}>
+                                    🔔 ×{r.bump_count}
+                                </span>
                             )}
                         </div>
-                    ) : filtered.map(r => <RequestRow key={r.id} r={r} pending={pending} runAction={runAction} />)}
-                </div>
-            </div>
-        </div>
+                    </div>
+                )}
+                renderColumnCell={(key, r) => renderRequestCell(key, r)}
+                menuActions={menuActions}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                isAllPageSelected={isAllPageSelected}
+                onToggleSelectAll={toggleSelectAll}
+                bulkActions={
+                    <>
+                        <button onClick={bulkBump} disabled={pending}
+                            className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all disabled:opacity-50"
+                            style={{ borderColor: 'color-mix(in srgb, #8b5cf6 35%, transparent)', color: '#8b5cf6' }}>
+                            <Bell size={11} /> Bump {selectedIds.size}
+                        </button>
+                        <button onClick={bulkCancel} disabled={pending}
+                            className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-error/30 text-app-error hover:bg-app-error/10 transition-all disabled:opacity-50">
+                            <Ban size={11} /> Cancel {selectedIds.size}
+                        </button>
+                    </>
+                }
+                pagination={{
+                    totalItems: filtered.length,
+                    activeFilterCount,
+                    currentPage: clampedPage,
+                    totalPages,
+                    pageSize,
+                    onPageChange: setCurrentPage,
+                    onPageSizeChange: n => { setPageSize(n); setCurrentPage(1) },
+                }}
+                emptyIcon={<Inbox size={36} />}
+                emptyMessage={
+                    activeFilterCount > 0 || search
+                        ? 'No requests match the current filters.'
+                        : 'No requests yet — open /inventory/products and click "Request Purchase" or "Request Transfer".'
+                }
+                hasFilters={activeFilterCount > 0 || !!search}
+                onClearFilters={() => { setSearch(''); setFilters(EMPTY_FILTERS) }}
+                entityLabel="Request"
+                search={search}
+                onSearchChange={setSearch}
+                showFilters={showFilters}
+                onToggleFilters={() => setShowFilters(v => !v)}
+                activeFilterCount={activeFilterCount}
+                onSetVisibleColumns={setVisibleColumns}
+                onSetColumnOrder={setColumnOrder}
+                moduleKey="procurement-requests"
+            />
+        </DajingoPageShell>
     )
 }
+
