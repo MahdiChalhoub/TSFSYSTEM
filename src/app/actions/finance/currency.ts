@@ -66,14 +66,12 @@ export type CurrencyRevaluation = {
 
 // ── Currencies ───────────────────────────────────────────────────────────
 
+/** GET /currencies/. Throws on failure so callers can surface a real error
+ *  instead of silently rendering an empty UI. Wrap in a Promise.allSettled
+ *  if you want partial-success behavior. */
 export async function getCurrencies(): Promise<Currency[]> {
-    try {
-        const r = await erpFetch('currencies/', { cache: 'no-store' })
-        return Array.isArray(r) ? r : (r?.results ?? [])
-    } catch (e) {
-        console.error('getCurrencies failed:', e)
-        return []
-    }
+    const r = await erpFetch('currencies/', { cache: 'no-store' })
+    return Array.isArray(r) ? r : (r?.results ?? [])
 }
 
 export async function createCurrency(
@@ -110,18 +108,14 @@ export async function updateCurrency(
 
 // ── Exchange rates ───────────────────────────────────────────────────────
 
+/** GET /exchange-rates/. Throws on failure — see getCurrencies. */
 export async function getExchangeRates(opts: { fromCode?: string; rateType?: string } = {}): Promise<ExchangeRate[]> {
-    try {
-        const q = new URLSearchParams()
-        if (opts.fromCode) q.set('from_code', opts.fromCode)
-        if (opts.rateType) q.set('rate_type', opts.rateType)
-        const path = q.toString() ? `exchange-rates/?${q.toString()}` : 'exchange-rates/'
-        const r = await erpFetch(path, { cache: 'no-store' })
-        return Array.isArray(r) ? r : (r?.results ?? [])
-    } catch (e) {
-        console.error('getExchangeRates failed:', e)
-        return []
-    }
+    const q = new URLSearchParams()
+    if (opts.fromCode) q.set('from_code', opts.fromCode)
+    if (opts.rateType) q.set('rate_type', opts.rateType)
+    const path = q.toString() ? `exchange-rates/?${q.toString()}` : 'exchange-rates/'
+    const r = await erpFetch(path, { cache: 'no-store' })
+    return Array.isArray(r) ? r : (r?.results ?? [])
 }
 
 export async function createExchangeRate(payload: {
@@ -152,17 +146,13 @@ export async function createExchangeRate(payload: {
 
 // ── Revaluations ─────────────────────────────────────────────────────────
 
+/** GET /currency-revaluations/. Throws on failure — see getCurrencies. */
 export async function getRevaluations(periodId?: number): Promise<CurrencyRevaluation[]> {
-    try {
-        const path = periodId
-            ? `currency-revaluations/?fiscal_period=${periodId}`
-            : 'currency-revaluations/'
-        const r = await erpFetch(path, { cache: 'no-store' })
-        return Array.isArray(r) ? r : (r?.results ?? [])
-    } catch (e) {
-        console.error('getRevaluations failed:', e)
-        return []
-    }
+    const path = periodId
+        ? `currency-revaluations/?fiscal_period=${periodId}`
+        : 'currency-revaluations/'
+    const r = await erpFetch(path, { cache: 'no-store' })
+    return Array.isArray(r) ? r : (r?.results ?? [])
 }
 
 // ── Rate policies (auto-sync + adjustment factor) ────────────────────────
@@ -196,14 +186,10 @@ export type CurrencyRatePolicy = {
     updated_at: string
 }
 
+/** GET /currency-rate-policies/. Throws on failure — see getCurrencies. */
 export async function getRatePolicies(): Promise<CurrencyRatePolicy[]> {
-    try {
-        const r = await erpFetch('currency-rate-policies/', { cache: 'no-store' })
-        return Array.isArray(r) ? r : (r?.results ?? [])
-    } catch (e) {
-        console.error('getRatePolicies failed:', e)
-        return []
-    }
+    const r = await erpFetch('currency-rate-policies/', { cache: 'no-store' })
+    return Array.isArray(r) ? r : (r?.results ?? [])
 }
 
 export async function createRatePolicy(payload: {

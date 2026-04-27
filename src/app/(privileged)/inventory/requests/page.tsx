@@ -185,7 +185,7 @@ export default function ProcurementRequestsPage() {
             onToggleFilters={() => setShowFilters(v => !v)}
             activeFilterCount={activeFilterCount}
             onRefresh={refresh}
-            renderFilters={() => <FiltersPanel filters={filters} setFilters={setFilters} />}
+            renderFilters={() => <FiltersPanel isOpen={showFilters} filters={filters} setFilters={setFilters} />}
         >
             <DajingoListView<ProcurementRequestRecord>
                 data={pageSlice}

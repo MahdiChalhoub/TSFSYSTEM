@@ -54,6 +54,12 @@ import { erpFetch } from '@/lib/erp-api'
 const grad = (v: string) => ({ background: `linear-gradient(135deg, var(${v}), color-mix(in srgb, var(${v}) 60%, black))` })
 const soft = (v: string, p = 12) => ({ backgroundColor: `color-mix(in srgb, var(${v}) ${p}%, transparent)` })
 const FG_PRIMARY = 'var(--app-primary-foreground, #fff)' // Theme token w/ literal fallback for legacy themes
+/** Normalize any thrown value into a short string for diagnostic display. */
+const msg = (e: unknown): string => {
+    if (e instanceof Error) return e.message
+    if (typeof e === 'string') return e
+    try { return JSON.stringify(e) } catch { return String(e) }
+}
 
 type FxView = 'rates' | 'policies' | 'revaluations'
 type Period = { id: number; name: string; start_date: string; end_date: string; status: string; fiscal_year: number; fiscal_year_name?: string }
@@ -119,30 +125,41 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
     const [bulkBusy, setBulkBusy] = useState(false)
     const [running, setRunning] = useState<number | null>(null)
 
+    /** Per-endpoint error map shown in the diagnostic strip when something
+     *  failed. Empty when everything succeeded. Surfaced inline (no more
+     *  silent toast that vanishes after 5 seconds). */
+    const [loadErrors, setLoadErrors] = useState<Record<string, string>>({})
+
     useEffect(() => { void loadAll() }, [])
     async function loadAll() {
         setLoading(true)
-        try {
-            // fiscal-years is only mounted under the namespaced path, not the
-            // flat one — calling 'fiscal-years/' returns a 404 (HTML) that
-            // tanks the whole Promise.all. Wrap in its own try so the rest
-            // of the data still loads if this single endpoint changes.
-            const [cs, rs, vs, ps, ys] = await Promise.all([
-                getCurrencies(),
-                getExchangeRates(),
-                getRevaluations(),
-                getRatePolicies(),
-                erpFetch('finance/fiscal-years/')
-                    .then((r: any) => Array.isArray(r) ? r : (r?.results ?? []))
-                    .catch((e) => {
-                        console.warn('[FxRedesigned] fiscal-years fetch failed:', e)
-                        return []
-                    }),
-            ])
-            setCurrencies(cs); setRates(rs); setRevals(vs); setPolicies(ps); setYears(ys)
-        } catch (e) {
-            toast.error(`Failed to load: ${e instanceof Error ? e.message : String(e)}`)
-        } finally { setLoading(false) }
+        // Use allSettled so one failed endpoint doesn't tank the whole page.
+        // Each endpoint reports its own success/failure into loadErrors so the
+        // user sees exactly what's broken instead of an empty UI.
+        const [cs, rs, vs, ps, ys] = await Promise.allSettled([
+            getCurrencies(),
+            getExchangeRates(),
+            getRevaluations(),
+            getRatePolicies(),
+            erpFetch('finance/fiscal-years/')
+                .then((r: any) => Array.isArray(r) ? r : (r?.results ?? [])),
+        ])
+        const next: Record<string, string> = {}
+        if (cs.status === 'fulfilled') setCurrencies(cs.value); else next.currencies = msg(cs.reason)
+        if (rs.status === 'fulfilled') setRates(rs.value); else next.rates = msg(rs.reason)
+        if (vs.status === 'fulfilled') setRevals(vs.value); else next.revaluations = msg(vs.reason)
+        if (ps.status === 'fulfilled') setPolicies(ps.value); else next.policies = msg(ps.reason)
+        if (ys.status === 'fulfilled') setYears(ys.value); else next.fiscal_years = msg(ys.reason)
+        setLoadErrors(next)
+        if (Object.keys(next).length) {
+            // Log full errors to the browser console so the user can copy them
+            // even if the banner is below the fold.
+            console.group('%c[FX] loadAll failures', 'color:#e11; font-weight:bold')
+            for (const [k, v] of Object.entries(next)) console.error(`  ${k}: ${v}`)
+            console.groupEnd()
+            toast.error(`Failed to load: ${Object.keys(next).join(', ')} — see banner for details`)
+        }
+        setLoading(false)
     }
 
     /* ─── Derived state ─────────────────────────────────────────── */
@@ -325,9 +342,15 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
         }
         window.addEventListener('keydown', handler)
         return () => window.removeEventListener('keydown', handler)
-    }, [tab, createOpen, editPolicyId, setBrokerOpen, manualRateOpen, baseCurrency])
+    }, [tab, createOpen, editPolicyId, setBrokerOpen, manualRateOpen])
 
     if (loading) return <FxSkeleton />
+
+    // Visible diagnostic banner — appears whenever any endpoint failed in
+    // loadAll. Replaces the silent "return [] on error" pattern so users see
+    // exactly which slice of data is missing and why. Click Retry to refire
+    // loadAll; a real error message lives in each row's tooltip.
+    const hasLoadErrors = Object.keys(loadErrors).length > 0
 
 
     /* ═══════════════════════════════════════════════════════════════
@@ -339,6 +362,63 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
             {!isEmbedded && (
                 <SubTabBar tab={tab} setTab={setTab}
                     counts={{ rates: policies.length, history: rates.length, reval: revals.length }} />
+            )}
+
+            {/* ── Failure banner. Prominent, full-width, with the actual error
+                 text per endpoint so the user knows what's broken. The
+                 Dismiss button hides the banner without retrying — useful to
+                 break the loop when the user just wants to see the rest of
+                 the page. ── */}
+            {hasLoadErrors && (
+                <div className="rounded-2xl overflow-hidden"
+                    style={{ background: 'var(--app-surface)', border: '1.5px solid color-mix(in srgb, var(--app-error) 40%, transparent)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-error) 12%, transparent)' }}>
+                    {/* Header strip */}
+                    <div className="px-4 py-2.5 flex items-center justify-between gap-2 flex-wrap"
+                        style={{ background: 'color-mix(in srgb, var(--app-error) 14%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
+                        <div className="inline-flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-md flex items-center justify-center"
+                                style={{ background: 'var(--app-error)', color: FG_PRIMARY }}>
+                                <AlertTriangle size={14} />
+                            </div>
+                            <div>
+                                <div className="font-black uppercase tracking-widest" style={{ fontSize: 11, color: 'var(--app-error)' }}>
+                                    {Object.keys(loadErrors).length} data fetch{Object.keys(loadErrors).length === 1 ? '' : 'es'} failed
+                                </div>
+                                <div style={{ fontSize: 10, color: 'var(--app-muted-foreground)' }}>
+                                    Open the browser console (F12) to copy the full traces.
+                                </div>
+                            </div>
+                        </div>
+                        <div className="inline-flex items-center gap-1">
+                            <button onClick={() => { setLoadErrors({}); void loadAll() }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all"
+                                style={{ fontSize: 11, color: FG_PRIMARY, ...grad('--app-error'), boxShadow: '0 4px 12px color-mix(in srgb, var(--app-error) 30%, transparent)' }}>
+                                <RefreshCcw size={11} /> Retry
+                            </button>
+                            <button onClick={() => setLoadErrors({})}
+                                title="Hide this banner without retrying"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold transition-all border"
+                                style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                                Dismiss
+                            </button>
+                        </div>
+                    </div>
+                    {/* Per-endpoint error list */}
+                    <ul className="p-3 space-y-1.5">
+                        {Object.entries(loadErrors).map(([endpoint, message]) => (
+                            <li key={endpoint}
+                                className="rounded-md px-2.5 py-1.5"
+                                style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
+                                <div className="font-mono font-black uppercase tracking-widest" style={{ fontSize: 9, color: 'var(--app-error)' }}>
+                                    {endpoint}
+                                </div>
+                                <div className="font-mono mt-0.5 break-words" style={{ fontSize: 10, color: 'var(--app-foreground)' }}>
+                                    {message}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             )}
 
             {/* ───────────────── Rate Rules ───────────────── */}
@@ -1354,7 +1434,59 @@ function PolicyDrawer({ policy, base, currencies, existingPairs, onRefresh, onCl
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                    {!baseCcy && <p className="text-[11px]" style={{ color: 'var(--app-error)' }}>Set a base currency first in the Currencies tab.</p>}
+                    {/* Cant-create state — replaces a half-broken form when the
+                        currency list isn't available. Surfaces refresh status
+                        and a retry button so the user has a path forward. */}
+                    {isCreate && !baseCcy && (
+                        <div className="rounded-xl p-4"
+                            style={{ ...soft('--app-error', 8), border: '1px solid color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
+                            <div className="font-black mb-1.5 inline-flex items-center gap-1.5"
+                                style={{ fontSize: 13, color: 'var(--app-error)' }}>
+                                {refreshing
+                                    ? <><RefreshCcw size={13} className="animate-spin" /> Loading currencies…</>
+                                    : <><AlertTriangle size={13} /> Can&apos;t create a policy yet</>}
+                            </div>
+                            {!refreshing && (
+                                <>
+                                    <p className="leading-relaxed mb-3" style={{ fontSize: 11, color: 'var(--app-foreground)' }}>
+                                        The currency list couldn&apos;t be loaded — typically because:
+                                    </p>
+                                    <ul className="space-y-1 mb-3 ml-4 list-disc" style={{ fontSize: 10, color: 'var(--app-foreground)' }}>
+                                        <li>You&apos;re on the SaaS root domain instead of a tenant subdomain.</li>
+                                        <li>Your session expired and you need to re-login.</li>
+                                        <li>The backend missed a migration (run <code className="font-mono">manage.py migrate finance</code>).</li>
+                                        <li>No base currency is set — go to the <em>Select Currency</em> tab and mark one with ⭐.</li>
+                                    </ul>
+                                    <p style={{ fontSize: 10, color: 'var(--app-muted-foreground)' }}>
+                                        Currently loaded: <strong>{currencies.length}</strong> currenc{currencies.length === 1 ? 'y' : 'ies'},
+                                        base = <strong>{currencies.find(c => c.is_base)?.code ?? 'none'}</strong>.
+                                    </p>
+                                    <div className="mt-3 flex items-center gap-2">
+                                        {onRefresh && (
+                                            <button onClick={() => {
+                                                setRefreshing(true)
+                                                onRefresh().finally(() => setRefreshing(false))
+                                            }}
+                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold border"
+                                                style={{
+                                                    fontSize: 11,
+                                                    color: 'var(--app-error)',
+                                                    borderColor: 'color-mix(in srgb, var(--app-error) 30%, transparent)',
+                                                    background: 'color-mix(in srgb, var(--app-error) 6%, transparent)',
+                                                }}>
+                                                <RefreshCcw size={11} /> Retry load
+                                            </button>
+                                        )}
+                                        <button onClick={onClose}
+                                            className="px-3 py-1.5 rounded-lg font-bold border"
+                                            style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                                            Close
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
 
                     {/* Pair (create only) */}
                     {isCreate && baseCcy && (

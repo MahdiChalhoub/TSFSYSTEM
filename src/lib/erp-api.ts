@@ -59,10 +59,16 @@ export class ErpApiError extends Error {
     }
 }
 
-// React.cache() deduplicates calls within a single server render — all erpFetch
-// calls in the same request reuse the same resolved tenant, eliminating N redundant
-// backend fetches (one per erpFetch call in layout + page data loaders).
-export const getTenantContext = cache(async function getTenantContext() {
+// Client-side singleton cache for the resolved tenant context. React.cache()
+// below only dedupes within a single server render — the browser would
+// otherwise call /tenant/resolve on EVERY erpFetch (one per component mount),
+// instantly hitting the rate-limiter on a busy page. Cache for 5 min.
+type TenantContext = (Record<string, any> & { id: string; slug: string }) | null
+let _tenantPromise: Promise<TenantContext> | null = null
+let _tenantCachedAt = 0
+const TENANT_CACHE_TTL_MS = 5 * 60 * 1000
+
+async function resolveTenantContextImpl(): Promise<TenantContext> {
     let host = '';
 
     if (typeof window !== 'undefined') {
@@ -115,7 +121,15 @@ export const getTenantContext = cache(async function getTenantContext() {
         });
 
         if (!res.ok) {
-            console.error(`[DEBUG] Tenant Resolution Failed: ${res.status}`);
+            // 429 from rate-limiter is the most common outcome on a heavy
+            // initial load — log once at warn level instead of error so the
+            // console doesn't flood (the singleton cache above also prevents
+            // it from happening on subsequent calls in this session).
+            if (res.status === 429) {
+                console.warn(`[DEBUG] Tenant Resolution rate-limited (429) — falling back to no-tenant context`);
+            } else {
+                console.error(`[DEBUG] Tenant Resolution Failed: ${res.status}`);
+            }
             return null;
         }
         return await res.json();
@@ -128,7 +142,31 @@ export const getTenantContext = cache(async function getTenantContext() {
         }
         return null;
     }
-});
+}
+
+// Wraps the resolver with both server-side React.cache (per-render dedup) AND
+// a client-side module-level Promise cache (session-long dedup with TTL refresh).
+async function resolveTenantContext(): Promise<TenantContext> {
+    if (typeof window === 'undefined') return resolveTenantContextImpl()
+    const now = Date.now()
+    if (_tenantPromise && (now - _tenantCachedAt) < TENANT_CACHE_TTL_MS) {
+        return _tenantPromise
+    }
+    _tenantCachedAt = now
+    _tenantPromise = resolveTenantContextImpl().catch(err => {
+        // On failure, drop the cache so the next call retries instead of
+        // pinning a rejected promise for 5 min.
+        _tenantPromise = null
+        _tenantCachedAt = 0
+        throw err
+    })
+    return _tenantPromise
+}
+
+// React.cache() deduplicates calls within a single server render — all erpFetch
+// calls in the same request reuse the same resolved tenant, eliminating N redundant
+// backend fetches (one per erpFetch call in layout + page data loaders).
+export const getTenantContext = cache(resolveTenantContext);
 
 export async function erpFetch(path: string, options: RequestInit = {}) {
     const context = await getTenantContext();

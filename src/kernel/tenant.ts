@@ -15,11 +15,14 @@ import type { TenantContext } from './types';
 /** Get full tenant context for the current request */
 export async function getContext(): Promise<TenantContext> {
     const ctx = await getTenantContext();
+    if (!ctx) {
+        return { tenant: '', slug: '', orgId: null, orgName: null };
+    }
     return {
-        tenant: ctx.tenant,
-        slug: ctx.slug,
-        orgId: ctx.orgId ?? null,
-        orgName: ctx.orgName ?? null,
+        tenant: (ctx as any).tenant ?? '',
+        slug: ctx.slug ?? '',
+        orgId: (ctx as any).orgId ?? null,
+        orgName: (ctx as any).orgName ?? null,
     };
 }
 

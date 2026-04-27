@@ -15,6 +15,39 @@
 
 ## Session Log
 
+### Session: 2026-04-27 (Purchases sweep + purchase-analytics redesign)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: ✅ DONE (code + tsc clean, 0 errors) / ⏳ browser smoke-test pending / ⏳ not committed
+- **User asks (chronological)**: read `.agent`/`.agents` → compare two purchases registries → keep newer + merge features → fix all errors in PO + new flow → audit and fix all (multiple iterations) → "redesign" `/settings/purchase-analytics` (chose Option B "Settings OS" two-pane layout, all defaults).
+- **Worked On**:
+  1. **Purchases registry consolidation**. Bare `/purchases` (junior `PurchasesRegistryClient.tsx`) archived → 5-line redirect to `/purchases/purchase-orders`. Ported missing features into the keeper: SSR fetch, currency from org settings → "Total Value" KPI, Sourcing + Dashboard secondary actions, new "Incoming" KPI (5 KPIs).
+  2. **Archived `/purchases/new-order/`** + collateral `/purchases/restored/`. Repointed sidebar + primary action to `/purchases/new`. Pruned `/pv` PvSwitcher.
+  3. **Detail page `[id]/page.tsx` dual endpoint**. Backend has both `purchase/{id}/` (legacy `Order`) and `purchase-orders/{id}/` (new `PurchaseOrder`) at `apps/pos/urls.py:32+:45`. Page now tries new first → falls back to legacy → normalizes fields. Hides legacy action forms when source is new.
+  4. **Broken invoice route fixes**. Repointed dead `/finance/invoices/new` to `/purchases/invoices` in 3 files. Removed dishonest `?edit=`/`?from_po=` queries (no consumers).
+  5. **Form submission was broken**. `/purchases/new/form.tsx` rendered no `supplierId`/`warehouseId`/`unitCostTTC` despite Zod requiring all three. Built `_components/MetadataStrip.tsx` with Supplier/Site/Warehouse pickers. Form 512→199 lines.
+  6. **`purchase-orders/page-client.tsx` 523→282** (mandatory refactor at 401+). Extracted `InlineStatusCell` (102), `POExpandedRow` (96), `_lib/render-cell.tsx` (55).
+  7. **Dead-code archive**: `invoice-verification/page-old-mock.tsx` (431), `receiving/ReceivingWorkspaceClient.tsx` (823), `purchase-orders/_components/PORow.tsx`.
+  8. **Purchase-analytics page redesign — Option B "Settings OS" (1913 → 294 lines)**. Two-pane shell: left `SectionNav` (200px sticky w/ per-section warning + override badges) → right active-section pane → bottom `InspectorStrip` (collapsible Live Preview + Health). New `HeaderBar` w/ always-visible Health/Completeness/Warning chips. New `MidStrip` consolidates mode banner + warnings + suggestions + presets + action row + create-mode form. State extracted into 2 helper hooks (`usePAFields`, `usePAHandlers`); shared via `PASettingsContext`. 25 active files, all ≤294 lines. All behaviour preserved.
+- **Files Archived** (preserving structure under `ARCHIVE/`):
+  - `purchases/page.tsx` (old) + `PurchasesRegistryClient.tsx`
+  - `purchases/new-order/` (entire dir)
+  - `purchases/restored/`
+  - `purchases/purchase-orders/_components/PORow.tsx`
+  - `purchases/invoice-verification/page-old-mock.tsx`
+  - `purchases/receiving/ReceivingWorkspaceClient.tsx`
+- **Discoveries**:
+  - Backend dual viewsets — `purchase` (legacy) and `purchase-orders` (new) — both registered. Many app consumers pass either kind of ID to `/purchases/${id}`. Dual-endpoint fallback essential.
+  - `usePAFields` and `usePAHandlers` don't internally use any React hooks — calling them after the loading early-return is fine and avoids Rules-of-Hooks issues from conditional `null` config.
+- **Warnings for Next Agent**:
+  - ⚠️ **Browser smoke-test required** (no dev server). Key paths: `/purchases` → 308 to `/purchases/purchase-orders`; sidebar "New Purchase Order" opens `/purchases/new`; MetadataStrip → fill all → submit creates PO; `/purchases/${id}` renders for both new + legacy IDs; status dropdown transitions; `/settings/purchase-analytics` — section nav, score chip, all kbd shortcuts, profile CRUD, drag-reorder, undo, all 6 modals, mobile single-column collapse.
+  - ⚠️ **Not committed**. Recommended split: (1) archive + redirect; (2) bug fixes; (3) purchase-analytics redesign.
+  - ⚠️ **`/purchases/new` does NOT honor `?edit=`**. New WORKMAP MEDIUM if edit-existing-PO is needed.
+  - ⚠️ **`/purchases/invoices` does NOT honor `?from_po=`**. Same gap.
+  - ⚠️ **Pre-existing oversize PO files NOT refactored** (intentional, out of scope): `receiving/ReceivingScreen.tsx` (1035), `new-order-v2/form.tsx` (777), `verification/page.tsx` (493), `invoice-verification/page.tsx` (441), `invoice-verification/panels/ComparisonPanel.tsx` (398), `invoicing/InvoicingScreen.tsx` (388), `invoice-verification/panels/ActionsPanel.tsx` (319). Refactor each as part of the next functional change to that flow.
+  - ⚠️ Parallel session by another agent on procurement notifications + tasks committed below — both touched purchases-area code; review for any conflict before merging.
+
+---
+
 ### Session: 2026-04-27 (Procurement notifications + tasks — service extraction + workspace.Task hookup)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE (code + python syntax clean, backend reloaded)

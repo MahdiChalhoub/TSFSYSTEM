@@ -37,6 +37,45 @@
 
 ## 🟡 MEDIUM
 
+### [DONE 2026-04-27] Purchases sweep + purchase-analytics redesign
+- **Discovered**: 2026-04-27 (user requested registry consolidation, audit, redesign)
+- **Impact**: Bare `/purchases` registry duplicated `/purchases/purchase-orders`; `/purchases/new-order` was redundant with `/purchases/new`; PO detail page only knew the legacy `Order` endpoint not the new `PurchaseOrder` one (404s for new POs); `/finance/invoices/new` was a dead 404 link in 3 files; `/purchases/new` form physically couldn't submit (missing `supplierId`/`warehouseId`/`unitCostTTC` despite Zod requiring them); `/settings/purchase-analytics` was a 1913-line single-page form with poor IA.
+- **Files**: `src/app/(privileged)/purchases/{page,purchase-orders/page-client,purchase-orders/_components,purchase-orders/_lib,[id]/page,new/form,new/_components,new/_lib}.tsx` + `settings/purchase-analytics/{page,_components,_components/sections,_hooks,_lib}.tsx` + sidebar `commercial.ts` + `pv/PvSwitcher.tsx` + `finance/ledger/_components/NewEntryDropdown.tsx`.
+- **Fix**:
+  - `/purchases` → 5-line redirect; old `PurchasesRegistryClient` archived. Keeper got SSR + currency + Sourcing/Dashboard actions + Incoming KPI.
+  - `/purchases/new-order/` + `/purchases/restored/` archived; sidebar + actions repointed to `/purchases/new`.
+  - PO detail page now tries `purchase-orders/{id}/` first → falls back to `purchase/{id}/` → normalizes new-shape fields → hides legacy action forms when source is new.
+  - 4 `/finance/invoices/new` references repointed to live invoice list pages.
+  - `/purchases/new` form: built `MetadataStrip` (Supplier/Site/Warehouse pickers using already-passed-but-unused props), added missing hidden inputs, gated submit on full metadata. Form 512→199 lines.
+  - `purchase-orders/page-client.tsx` 523→282 (extracted InlineStatusCell, POExpandedRow, render-cell helpers).
+  - 3 dead-code archives: `page-old-mock.tsx` (431), `ReceivingWorkspaceClient.tsx` (823), `PORow.tsx`.
+  - `/settings/purchase-analytics` redesigned to two-pane "Settings OS" layout (1913→294 lines): left section nav, right active section, bottom InspectorStrip, top HeaderBar with always-visible Health/Completeness/Warning chips, MidStrip consolidating banners + presets + actions. State extracted to 2 helper hooks; sections share via Context. 25 active files, all ≤294 lines.
+- **Follow-up MEDIUM** (added below): `/purchases/new` `?edit=` support, `/purchases/invoices` `?from_po=` support, pre-existing oversize PO sub-flow files (7 files 319-1035 lines).
+
+### [OPEN] `/purchases/new` doesn't honor `?edit=` query
+- **Discovered**: 2026-04-27
+- **Impact**: "Open Order" / Edit links navigate to `/purchases/new?edit=${po.id}` but the page ignores the param and shows a blank create form. (Current keeper navigates to detail page instead, so this isn't critical, but the form route can't currently edit.)
+- **Files**: `src/app/(privileged)/purchases/new/page.tsx` + `form.tsx`.
+- **Notes**: Needs (a) `searchParams.edit` reader, (b) SSR fetch of `purchase-orders/${edit}/`, (c) prefill props through `PurchaseForm`. Form would also need a "save changes" branch on `createPurchaseInvoice` action (today only creates).
+
+### [OPEN] `/purchases/invoices` doesn't honor `?from_po=` query
+- **Discovered**: 2026-04-27
+- **Impact**: PO list "Purchase Invoice" menu/expanded action navigates to `/purchases/invoices?from_po=${po.id}` (or just bare). The list page doesn't pre-populate or scroll to the source PO. Honest URL but missing a "create invoice from PO" flow.
+- **Files**: `src/app/(privileged)/purchases/invoices/page-client.tsx`.
+
+### [OPEN] Pre-existing oversize files in PO sub-flows (code-quality.md violations)
+- **Discovered**: 2026-04-27
+- **Impact**: 7 files exceed the 300-line hard limit; 5 are over the 401+ "mandatory refactor" threshold. The `code-quality.md` rule kicks in when any of them is *modified*; until then it's tech debt.
+- **Files**:
+  - `receiving/ReceivingScreen.tsx` (1035) — Receiving flow
+  - `new-order-v2/form.tsx` (777) — alternate New Order form (still on sidebar)
+  - `verification/page.tsx` (493) — verification root
+  - `invoice-verification/page.tsx` (441) — invoice verification root
+  - `invoice-verification/panels/ComparisonPanel.tsx` (398)
+  - `invoicing/InvoicingScreen.tsx` (388)
+  - `invoice-verification/panels/ActionsPanel.tsx` (319)
+- **Notes**: Each lives in a flow not directly touched in the 2026-04-27 sweep. Refactor as part of the next functional change to that flow rather than as a drive-by.
+
 ### [PHASE 1+2+3 DONE 2026-04-27] Procurement Request flow on product list
 - **Discovered**: 2026-04-27 (user reported dead `/procurement/purchase-orders/new` route)
 - **Impact**: Eight "Request Purchase / Transfer" buttons on the inventory products UI either hit a catch-all "Module Page Under Construction" placeholder or jumped to a blank PO form. Users couldn't actually request stock from the product list.
