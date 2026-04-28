@@ -35,7 +35,11 @@ export const COLUMN_WIDTHS: Record<string, string> = {
 }
 
 export const RIGHT_ALIGNED_COLS = new Set(['quantity'])
-export const GROW_COLS = new Set(['product', 'reason'])
+export const GROW_COLS = new Set([
+    'type', 'product', 'supplier', 'warehouses', 'reason',
+    'priority', 'status', 'requestedAt', 'bumpedAt',
+    'quantity', 'requester', 'reviewer', 'reviewedAt', 'po',
+])
 
 export const STATUS_OPTIONS = ['PENDING', 'APPROVED', 'EXECUTED', 'REJECTED', 'CANCELLED'] as const
 export const TYPE_OPTIONS = ['PURCHASE', 'TRANSFER'] as const

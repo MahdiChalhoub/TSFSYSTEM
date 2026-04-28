@@ -370,14 +370,21 @@
  * DajingoListView — column stretching
  * ----------------------------------------------------------------------------
  * Columns marked in GROW_COLS get this class so they absorb the leftover
- * horizontal space inside the dynamic-column track. Without this rule, every
- * column stays at its fixed Tailwind width (w-20, w-24, ...) and a wide
- * viewport leaves a gap on the right side of the table.
+ * horizontal space inside the dynamic-column track. The Tailwind `w-XX` on
+ * the column is preserved as the *minimum* (so cells never collapse smaller
+ * than their declared width), but `flex-grow: 1` and `flex-basis: 0` make
+ * the leftover space distribute equally across all grow columns. That
+ * eliminates the right-side gap without a single column hogging the slack.
+ *
+ * Layout note: `flex-shrink-0` is added on each column in the JSX (Tailwind
+ * default for fixed-width cells). We override that here with shrink: 1 so
+ * the row collapses gracefully on narrow viewports instead of overflowing
+ * and forcing a horizontal scrollbar.
  * ============================================================================ */
 .col-grow {
     flex-grow: 1;
     flex-shrink: 1;
-    flex-basis: auto;
+    flex-basis: 0;
     min-width: 0;
 }
 
@@ -386,4 +393,8 @@
     flex-wrap: nowrap;
     align-items: center;
     width: 100%;
+    /* When everything fits, prevent the inner track from forcing horizontal
+     * scroll on the parent. The parent (`overflow-auto`) handles the case
+     * when content genuinely exceeds the viewport. */
+    min-width: 0;
 }

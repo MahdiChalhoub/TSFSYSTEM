@@ -454,7 +454,17 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                     onSyncAll={handleSyncAll}
                     onDelete={handleDelete}
                     onAutoConfigure={handleAutoConfigure}
-                    onCreate={() => setCreateOpen(true)}
+                    onCreate={() => {
+                        console.log('[FX] New Policy clicked', {
+                            hasBaseCurrency: !!baseCurrency,
+                            baseCode: baseCurrency?.code,
+                            currenciesLoaded: currencies.length,
+                            orgBaseCode,
+                            orgCurrencyCount,
+                            currentLoadErrors: loadErrors,
+                        })
+                        setCreateOpen(true)
+                    }}
                     onSetBroker={() => setSetBrokerOpen(true)}
                     onEdit={(id) => setEditPolicyId(id)}
                     onUpdate={async (id, patch) => {
@@ -758,12 +768,19 @@ function RateRulesView(props: {
                     title="No rate sources yet"
                     hint="Wire ECB into all your active currencies in one click — or add them one at a time."
                     cta={hasBase && totalCcy > 1 ? (
-                        <button onClick={props.onAutoConfigure} disabled={props.bulkBusy}
-                            className="mt-3 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold disabled:opacity-50"
-                            style={{ ...grad('--app-success'), color: FG_PRIMARY, boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }}>
-                            <Wand2 size={12} className={props.bulkBusy ? 'animate-spin' : ''} />
-                            {props.bulkBusy ? 'Configuring…' : `Auto-configure ${Math.max(1, totalCcy - 1)}`}
-                        </button>
+                        <div className="mt-3 inline-flex items-center gap-2">
+                            <button onClick={props.onAutoConfigure} disabled={props.bulkBusy}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold disabled:opacity-50"
+                                style={{ ...grad('--app-success'), color: FG_PRIMARY, boxShadow: '0 4px 12px color-mix(in srgb, var(--app-success) 30%, transparent)' }}>
+                                <Wand2 size={12} className={props.bulkBusy ? 'animate-spin' : ''} />
+                                {props.bulkBusy ? 'Configuring…' : `Auto-configure ${Math.max(1, totalCcy - 1)}`}
+                            </button>
+                            <button onClick={props.onCreate}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold border"
+                                style={{ color: 'var(--app-primary)', borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)', background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)' }}>
+                                <Plus size={12} /> New Policy
+                            </button>
+                        </div>
                     ) : (
                         <p className="text-[10px] text-app-muted-foreground mt-3">
                             {!hasBase ? 'Mark a base currency first.' : 'Add at least one non-base currency.'}

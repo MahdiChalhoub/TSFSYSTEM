@@ -180,12 +180,25 @@ export const CENTER_ALIGNED_COLS = new Set([
   'completenessLvl', 'expiry',
 ])
 
-/** Columns that absorb extra horizontal space (numeric/price columns) */
+/** Columns that absorb extra horizontal space.
+ *  Every column eligible to participate in the redistribution belongs here.
+ *  Each column's Tailwind w-XX serves as flex-basis (its minimum); col-grow
+ *  divides the leftover proportionally to that basis. */
 export const GROW_COLS = new Set([
+  // Identity / text-heavy
+  'type', 'category', 'brand', 'description', 'parfum', 'unit', 'country',
+  'barcode', 'size',
+  // Pricing
   'cost', 'costHt', 'costTtc', 'price', 'sellingHt', 'tva', 'margin',
+  // Stock
   'stock', 'available', 'reserved', 'incoming', 'outgoing',
   'minStock', 'maxStock', 'reorderPoint', 'reorderQty', 'shelfLife',
-  'status', 'description', 'productGroup', 'completeness',
+  // Governance / lifecycle
+  'status', 'procurement', 'completeness', 'completenessLvl',
+  // Group
+  'productGroup', 'pricingSource', 'syncStatus',
+  // Dates
+  'createdAt', 'updatedAt', 'verifiedAt',
 ])
 
 /* ─── Completeness Levels ─── */
