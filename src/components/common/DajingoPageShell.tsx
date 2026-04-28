@@ -139,7 +139,7 @@ export function DajingoPageShell({
   })
 
   return (
-    <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${className || 'h-[calc(100vh-8rem)]'}`}>
+    <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${className || 'h-full min-h-0'}`}>
       <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
 
         {focusMode ? (

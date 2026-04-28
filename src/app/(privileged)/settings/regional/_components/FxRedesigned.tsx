@@ -34,7 +34,7 @@
  *   --app-success · --app-warning · --app-error · --app-info
  */
 
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
     Coins, RefreshCcw, Plus, ShieldCheck, ShieldAlert,
@@ -130,8 +130,24 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
      *  silent toast that vanishes after 5 seconds). */
     const [loadErrors, setLoadErrors] = useState<Record<string, string>>({})
 
+
+    /** Concurrency guard — prevents duplicate loadAll calls from
+     *  React Strict Mode double-fires, fast hot-reload remounts, or rapid
+     *  back-to-back retry clicks. If a load is in-flight, subsequent
+     *  callers await the same promise instead of starting a new one. */
+    const loadInFlight = useRef<Promise<void> | null>(null)
+
     useEffect(() => { void loadAll() }, [])
     async function loadAll() {
+        if (loadInFlight.current) return loadInFlight.current
+        const p = (async () => {
+            await _doLoadAll()
+        })()
+        loadInFlight.current = p
+        try { await p } finally { loadInFlight.current = null }
+    }
+
+    async function _doLoadAll() {
         setLoading(true)
         // Use allSettled so one failed endpoint doesn't tank the whole page.
         // Each endpoint reports its own success/failure into loadErrors so the
@@ -364,11 +380,6 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                     counts={{ rates: policies.length, history: rates.length, reval: revals.length }} />
             )}
 
-            {/* ── Failure banner. Prominent, full-width, with the actual error
-                 text per endpoint so the user knows what's broken. The
-                 Dismiss button hides the banner without retrying — useful to
-                 break the loop when the user just wants to see the rest of
-                 the page. ── */}
             {hasLoadErrors && (
                 <div className="rounded-2xl overflow-hidden"
                     style={{ background: 'var(--app-surface)', border: '1.5px solid color-mix(in srgb, var(--app-error) 40%, transparent)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-error) 12%, transparent)' }}>
@@ -1372,13 +1383,19 @@ function PolicyDrawer({ policy, base, currencies, existingPairs, onRefresh, onCl
     const baseCcy = base ?? currencies.find(c => c.is_base)
     const non_base = currencies.filter(c => c.id !== baseCcy?.id && c.is_active)
     const [refreshing, setRefreshing] = useState(false)
-    const [didRefresh, setDidRefresh] = useState(false)
+    // useRef instead of useState — flipping this guard MUST NOT itself trigger
+    // a re-render, otherwise the effect re-runs with a fresh `onRefresh` ref
+    // and (depending on render timing) fires another refresh. With a ref,
+    // the value is mutated synchronously and the effect simply doesn't see
+    // the not-yet-rendered state from the parent.
+    const didRefresh = useRef(false)
     useEffect(() => {
-        if (isCreate && !baseCcy && !didRefresh && onRefresh) {
+        if (isCreate && !baseCcy && !didRefresh.current && onRefresh) {
+            didRefresh.current = true
             setRefreshing(true)
-            onRefresh().finally(() => { setRefreshing(false); setDidRefresh(true) })
+            onRefresh().finally(() => { setRefreshing(false) })
         }
-    }, [isCreate, baseCcy, didRefresh, onRefresh])
+    }, [isCreate, baseCcy, onRefresh])
 
     const [fromId, setFromId] = useState<number | null>(policy?.from_currency ?? non_base[0]?.id ?? null)
     const [rateType, setRateType] = useState<CurrencyRatePolicy['rate_type']>(policy?.rate_type ?? 'SPOT')
@@ -1505,6 +1522,11 @@ function PolicyDrawer({ policy, base, currencies, existingPairs, onRefresh, onCl
                         </Field>
                     )}
 
+                    {/* Suppress the rest of the form in the no-base error state — the
+                        user has nothing to configure until currencies load. */}
+                    {(!isCreate || baseCcy) && (
+                    <>
+
                     {/* Provider + rate type + frequency */}
                     <div className="grid grid-cols-2 gap-3">
                         <Field label="Provider">
@@ -1588,6 +1610,8 @@ function PolicyDrawer({ policy, base, currencies, existingPairs, onRefresh, onCl
                             Run on cron (auto-sync)
                         </label>
                     )}
+                    </>
+                    )}{/* end suppression when isCreate && !baseCcy */}
                 </div>
 
                 {/* Footer */}
@@ -1607,7 +1631,7 @@ function PolicyDrawer({ policy, base, currencies, existingPairs, onRefresh, onCl
                             style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
                             Cancel
                         </button>
-                        <button disabled={busy || !valid || needsKey}
+                        <button disabled={busy || !valid || needsKey || (isCreate && !baseCcy)}
                             onClick={async () => {
                                 setBusy(true)
                                 try {
@@ -1886,18 +1910,19 @@ function ManualRateModal({ base, currencies, onRefresh, onClose, onSubmit }: {
 }) {
     const baseCcy = base ?? currencies.find(c => c.is_base)
     const [refreshing, setRefreshing] = useState(false)
-    const [didRefresh, setDidRefresh] = useState(false)
+    // useRef guard — see PolicyDrawer for why this can't be useState. Flipping
+    // it doesn't trigger a re-render, so subsequent effect re-evaluations
+    // (caused by onRefresh ref changes from parent re-renders) safely skip
+    // the body and don't fire another refresh.
+    const didRefresh = useRef(false)
 
-    // Self-heal: when the modal opens with no base, fire one refresh from
-    // the parent's loadAll. This catches the race where the user clicked
-    // Add Manual Rate before the initial currency fetch resolved.
     useEffect(() => {
-        if (!baseCcy && !didRefresh && onRefresh) {
+        if (!baseCcy && !didRefresh.current && onRefresh) {
+            didRefresh.current = true
             setRefreshing(true)
-            onRefresh()
-                .finally(() => { setRefreshing(false); setDidRefresh(true) })
+            onRefresh().finally(() => { setRefreshing(false) })
         }
-    }, [baseCcy, didRefresh, onRefresh])
+    }, [baseCcy, onRefresh])
 
     if (!baseCcy) {
         return (

@@ -106,7 +106,12 @@ REST_FRAMEWORK = {
         'user': '2000/minute',     # Authenticated users (SSR makes many parallel calls)
         'login': '10/minute',       # Login attempts (custom)
         'register': '3/minute',    # Registration attempts
-        'tenant_resolve': '60/minute',  # Tenant resolution
+        # Tenant resolution: bumped to 600/min because every authenticated
+        # erpFetch from the browser hits this once before the in-memory client
+        # cache populates. With 5+ concurrent loadAll calls plus hot-reload
+        # remounts, 60/min was tripping in normal use. The endpoint just maps
+        # slug → org-id so it's not a sensitive surface.
+        'tenant_resolve': '600/minute',
     }
 }
 

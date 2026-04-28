@@ -146,6 +146,16 @@ async function resolveTenantContextImpl(): Promise<TenantContext> {
 
 // Wraps the resolver with both server-side React.cache (per-render dedup) AND
 // a client-side module-level Promise cache (session-long dedup with TTL refresh).
+//
+// Caching policy:
+//   - Successful resolve (real tenant)         → cache for TTL
+//   - Resolved to null because no subdomain    → cache for TTL (won't change)
+//   - Resolved to null due to 429/timeout/etc  → DO NOT CACHE; next call retries
+//   - Thrown error                             → drop cache so next call retries
+//
+// Without the third bullet, a transient rate-limit on the very first call
+// would pin a null tenant context for the full TTL — every subsequent
+// erpFetch would send no X-Tenant-Id and the data endpoints would all 4xx.
 async function resolveTenantContext(): Promise<TenantContext> {
     if (typeof window === 'undefined') return resolveTenantContextImpl()
     const now = Date.now()
@@ -153,13 +163,29 @@ async function resolveTenantContext(): Promise<TenantContext> {
         return _tenantPromise
     }
     _tenantCachedAt = now
-    _tenantPromise = resolveTenantContextImpl().catch(err => {
-        // On failure, drop the cache so the next call retries instead of
-        // pinning a rejected promise for 5 min.
-        _tenantPromise = null
-        _tenantCachedAt = 0
-        throw err
-    })
+    const fresh = (async () => {
+        try {
+            const v = await resolveTenantContextImpl()
+            // If we got null but the URL DOES have a subdomain, that's a
+            // transient failure (rate-limit, network glitch, etc) — don't
+            // pin null in the cache.
+            if (v === null) {
+                const host = (typeof window !== 'undefined' ? window.location.host : '').split(':')[0].toLowerCase()
+                const parts = host.split('.')
+                const looksLikeTenantSub = parts.length >= 2 && parts[0] !== 'www'
+                if (looksLikeTenantSub) {
+                    _tenantPromise = null
+                    _tenantCachedAt = 0
+                }
+            }
+            return v
+        } catch (err) {
+            _tenantPromise = null
+            _tenantCachedAt = 0
+            throw err
+        }
+    })()
+    _tenantPromise = fresh
     return _tenantPromise
 }
 

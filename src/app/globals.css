@@ -365,3 +365,25 @@
 }
 
 .report-only-print { display: none; }
+
+/* ============================================================================
+ * DajingoListView — column stretching
+ * ----------------------------------------------------------------------------
+ * Columns marked in GROW_COLS get this class so they absorb the leftover
+ * horizontal space inside the dynamic-column track. Without this rule, every
+ * column stays at its fixed Tailwind width (w-20, w-24, ...) and a wide
+ * viewport leaves a gap on the right side of the table.
+ * ============================================================================ */
+.col-grow {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    min-width: 0;
+}
+
+.fill-cols {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: 100%;
+}
