@@ -59,6 +59,17 @@ export type DajingoMenuItem = {
   separator?: boolean
 }
 
+/** Parse a Tailwind `w-XX` (or `w-[Npx]`) class into a numeric weight.
+ *  Default 16. Used as flex-grow value so leftover space is shared
+ *  PROPORTIONAL to each grow column's declared width — wider columns get a
+ *  bigger share of the slack instead of every grower getting an equal slice. */
+function parseWidthWeight(cls: string): number {
+  const arb = cls.match(/w-\[(\d+)(?:px|rem)?\]/)
+  if (arb) return Math.max(1, Math.round(Number(arb[1])))
+  const fixed = cls.match(/(?:^|\s)w-(\d+)(?:\s|$)/)
+  return fixed ? Math.max(1, Number(fixed[1])) : 16
+}
+
 export type DajingoPagination = {
   totalItems: number
   currentPage: number
@@ -283,9 +294,12 @@ export function DajingoListView<T>({
                 if (!isOn) return null
                 const w = columnWidths[col.key] || 'w-16'
                 const align = rac.has(col.key) ? ' text-right' : cac.has(col.key) ? ' text-center' : ''
+                const isGrow = gc.has(col.key)
+                const growStyle = isGrow ? { flexGrow: parseWidthWeight(w), flexShrink: 1, flexBasis: 'auto' as const, minWidth: 0 } : undefined
                 return (
                   <div key={col.key}
-                    className={`${w} flex-shrink-0${align}${gc.has(col.key) ? ' col-grow' : ''}${onColumnReorder ? ' cursor-grab active:cursor-grabbing select-none hover:text-app-primary transition-colors' : ''}`}
+                    className={`${w} flex-shrink-0${align}${isGrow ? ' col-grow' : ''}${onColumnReorder ? ' cursor-grab active:cursor-grabbing select-none hover:text-app-primary transition-colors' : ''}`}
+                    style={growStyle}
                     draggable={!!onColumnReorder}
                     onDragStart={onColumnReorder ? () => { dragColRef.current = col.key } : undefined}
                     onDragOver={onColumnReorder ? e => { e.preventDefault(); e.currentTarget.style.borderBottom = '2px solid var(--app-primary)' } : undefined}
@@ -554,8 +568,10 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
             if (!isOn) return null
             const w = columnWidths[col.key] || 'w-16'
             const align = rightAlignedCols.has(col.key) ? ' text-right' : centerAlignedCols.has(col.key) ? ' text-center' : ''
+            const isGrow = growCols.has(col.key)
+            const growStyle = isGrow ? { flexGrow: parseWidthWeight(w), flexShrink: 1, flexBasis: 'auto' as const, minWidth: 0 } : undefined
             return (
-              <div key={col.key} className={`${w} flex-shrink-0${align}${growCols.has(col.key) ? ' col-grow' : ''}`}>
+              <div key={col.key} className={`${w} flex-shrink-0${align}${isGrow ? ' col-grow' : ''}`} style={growStyle}>
                 {renderColumnCell(col.key, row)}
               </div>
             )

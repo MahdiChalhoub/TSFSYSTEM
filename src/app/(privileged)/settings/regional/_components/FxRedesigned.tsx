@@ -1400,19 +1400,21 @@ function PolicyDrawer({ policy, base, currencies, existingPairs, onRefresh, onCl
     const baseCcy = base ?? currencies.find(c => c.is_base)
     const non_base = currencies.filter(c => c.id !== baseCcy?.id && c.is_active)
     const [refreshing, setRefreshing] = useState(false)
-    // useRef instead of useState — flipping this guard MUST NOT itself trigger
-    // a re-render, otherwise the effect re-runs with a fresh `onRefresh` ref
-    // and (depending on render timing) fires another refresh. With a ref,
-    // the value is mutated synchronously and the effect simply doesn't see
-    // the not-yet-rendered state from the parent.
+    // Stable ref to onRefresh so it doesn't churn the effect deps. Parent's
+    // loadAll is recreated on every render (not memoized) — keeping it in deps
+    // re-runs this effect on every parent re-render, and even though
+    // didRefresh guards the body, the dep churn was visibly thrashing on
+    // first open. Ref-based deref is the clean fix.
+    const onRefreshRef = useRef(onRefresh)
+    onRefreshRef.current = onRefresh
     const didRefresh = useRef(false)
     useEffect(() => {
-        if (isCreate && !baseCcy && !didRefresh.current && onRefresh) {
+        if (isCreate && !baseCcy && !didRefresh.current && onRefreshRef.current) {
             didRefresh.current = true
             setRefreshing(true)
-            onRefresh().finally(() => { setRefreshing(false) })
+            onRefreshRef.current().finally(() => { setRefreshing(false) })
         }
-    }, [isCreate, baseCcy, onRefresh])
+    }, [isCreate, baseCcy])
 
     const [fromId, setFromId] = useState<number | null>(policy?.from_currency ?? non_base[0]?.id ?? null)
     const [rateType, setRateType] = useState<CurrencyRatePolicy['rate_type']>(policy?.rate_type ?? 'SPOT')
@@ -1927,20 +1929,24 @@ function ManualRateModal({ base, currencies, onRefresh, onClose, onSubmit }: {
 }) {
     const baseCcy = base ?? currencies.find(c => c.is_base)
     const [refreshing, setRefreshing] = useState(false)
-    // useRef guard — see PolicyDrawer for why this can't be useState. Flipping
-    // it doesn't trigger a re-render, so subsequent effect re-evaluations
-    // (caused by onRefresh ref changes from parent re-renders) safely skip
-    // the body and don't fire another refresh.
+    // Stable ref so onRefresh churn from parent re-renders doesn't keep
+    // re-running this effect (didRefresh prevents the body firing twice, but
+    // the dep churn was visibly thrashing).
+    const onRefreshRef = useRef(onRefresh)
+    onRefreshRef.current = onRefresh
     const didRefresh = useRef(false)
 
     useEffect(() => {
-        if (!baseCcy && !didRefresh.current && onRefresh) {
+        if (!baseCcy && !didRefresh.current && onRefreshRef.current) {
             didRefresh.current = true
             setRefreshing(true)
-            onRefresh().finally(() => { setRefreshing(false) })
+            onRefreshRef.current().finally(() => { setRefreshing(false) })
         }
-    }, [baseCcy, onRefresh])
+    }, [baseCcy])
 
+    // CRITICAL: don't put hooks after this early-return. ManualRateForm holds
+    // all the form-specific hooks so React's hook-order invariant is preserved
+    // when baseCcy transitions from undefined → defined.
     if (!baseCcy) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
@@ -1993,6 +1999,15 @@ function ManualRateModal({ base, currencies, onRefresh, onClose, onSubmit }: {
             </div>
         )
     }
+    return <ManualRateForm baseCcy={baseCcy} currencies={currencies} onClose={onClose} onSubmit={onSubmit} />
+}
+
+function ManualRateForm({ baseCcy, currencies, onClose, onSubmit }: {
+    baseCcy: Currency
+    currencies: Currency[]
+    onClose: () => void
+    onSubmit: (p: { from_currency: number; to_currency: number; rate: string; rate_type: ExchangeRate['rate_type']; rate_side?: 'MID' | 'BID' | 'ASK'; effective_date: string; source?: string }) => Promise<void>
+}) {
     const non_base = currencies.filter(c => c.id !== baseCcy.id && c.is_active)
     const [fromId, setFromId] = useState<number | null>(non_base[0]?.id ?? null)
     const [mode, setMode] = useState<'mid' | 'three'>('mid')

@@ -35,10 +35,12 @@ export const COLUMN_WIDTHS: Record<string, string> = {
 }
 
 export const RIGHT_ALIGNED_COLS = new Set(['quantity'])
+/** Mix of text-heavy + medium-content columns share the slack so no single
+ *  column ends up cartoonishly wide. Tight numeric columns (quantity) stay
+ *  at their Tailwind width. */
 export const GROW_COLS = new Set([
-    'type', 'product', 'supplier', 'warehouses', 'reason',
-    'priority', 'status', 'requestedAt', 'bumpedAt',
-    'quantity', 'requester', 'reviewer', 'reviewedAt', 'po',
+    'product', 'supplier', 'warehouses', 'reason',
+    'type', 'status', 'priority', 'requestedAt', 'reviewer',
 ])
 
 export const STATUS_OPTIONS = ['PENDING', 'APPROVED', 'EXECUTED', 'REJECTED', 'CANCELLED'] as const

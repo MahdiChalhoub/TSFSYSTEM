@@ -66,11 +66,12 @@ export type CurrencyRevaluation = {
 
 // ── Currencies ───────────────────────────────────────────────────────────
 
-/** GET /currencies/. Throws on failure so callers can surface a real error
- *  instead of silently rendering an empty UI. Wrap in a Promise.allSettled
- *  if you want partial-success behavior. */
+/** GET /finance/currencies/ — tenant-filtered finance.Currency rows (NOT the
+ *  global /currencies/ catalog, which is the 150+ ISO list). Throws on
+ *  failure so callers can surface a real error instead of silently
+ *  rendering an empty UI. */
 export async function getCurrencies(): Promise<Currency[]> {
-    const r = await erpFetch('currencies/', { cache: 'no-store' })
+    const r = await erpFetch('finance/currencies/', { cache: 'no-store' })
     return Array.isArray(r) ? r : (r?.results ?? [])
 }
 
@@ -78,7 +79,7 @@ export async function createCurrency(
     payload: Pick<Currency, 'code' | 'name' | 'symbol' | 'decimal_places' | 'is_base' | 'is_active'>
 ): Promise<{ success: boolean; data?: Currency; error?: string }> {
     try {
-        const data = await erpFetch('currencies/', {
+        const data = await erpFetch('finance/currencies/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -94,7 +95,7 @@ export async function updateCurrency(
     id: number, payload: Partial<Currency>
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        await erpFetch(`currencies/${id}/`, {
+        await erpFetch(`finance/currencies/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),

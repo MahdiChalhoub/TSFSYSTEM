@@ -78,18 +78,24 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
       const tier = qty <= 0 ? 'OUT' : isLow ? 'LOW' : null
       const tierLabel = tier === 'OUT' ? 'Out of Stock' : tier === 'LOW' ? 'Low Stock' : null
       const tierColor = tier === 'OUT' ? 'var(--app-error, #ef4444)' : tier === 'LOW' ? 'var(--app-warning, #f59e0b)' : ps.color
-      const showLifecycle = product.procurement_status && product.procurement_status !== 'NONE'
-      return (
-        <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded truncate"
+      const hasLifecycle = product.procurement_status && product.procurement_status !== 'NONE'
+      // Stack: stock tier on the first line (only when not "Available"), lifecycle on the second (only when active).
+      // When neither tier nor lifecycle is set, fall back to a single "Available" badge.
+      const pill = (label: string, color: string) => (
+        <span className="inline-flex items-center text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded whitespace-nowrap"
           style={{
-            color: tierColor,
-            background: `color-mix(in srgb, ${tierColor} 10%, transparent)`,
-            border: `1px solid color-mix(in srgb, ${tierColor} 25%, transparent)`,
+            color,
+            background: `color-mix(in srgb, ${color} 10%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
           }}>
-          {tierLabel ?? ps.label}
-          {showLifecycle && tierLabel && (
-            <span style={{ color: ps.color, opacity: 0.85 }}>· {ps.label}</span>
-          )}
+          {label}
+        </span>
+      )
+      if (!tierLabel && !hasLifecycle) return pill('Available', ps.color)
+      return (
+        <span className="inline-flex flex-col items-start gap-0.5">
+          {tierLabel && pill(tierLabel, tierColor)}
+          {hasLifecycle && pill(ps.label, ps.color)}
         </span>
       )
     }

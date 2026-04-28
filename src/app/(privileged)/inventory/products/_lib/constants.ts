@@ -181,24 +181,18 @@ export const CENTER_ALIGNED_COLS = new Set([
 ])
 
 /** Columns that absorb extra horizontal space.
- *  Every column eligible to participate in the redistribution belongs here.
- *  Each column's Tailwind w-XX serves as flex-basis (its minimum); col-grow
- *  divides the leftover proportionally to that basis. */
+ *  Mix of text-heavy (wide content) + medium (badge/label) so the slack
+ *  divides into small, even shares — no single column hogs the leftover.
+ *  Tight numeric columns (cost, price, stock, qty) stay at their Tailwind
+ *  width because their content is 1-3 chars; growing them produces awkward
+ *  whitespace next to the tiny number. */
 export const GROW_COLS = new Set([
-  // Identity / text-heavy
-  'type', 'category', 'brand', 'description', 'parfum', 'unit', 'country',
-  'barcode', 'size',
-  // Pricing
-  'cost', 'costHt', 'costTtc', 'price', 'sellingHt', 'tva', 'margin',
-  // Stock
-  'stock', 'available', 'reserved', 'incoming', 'outgoing',
-  'minStock', 'maxStock', 'reorderPoint', 'reorderQty', 'shelfLife',
-  // Governance / lifecycle
-  'status', 'procurement', 'completeness', 'completenessLvl',
-  // Group
-  'productGroup', 'pricingSource', 'syncStatus',
-  // Dates
-  'createdAt', 'updatedAt', 'verifiedAt',
+  // Text-heavy
+  'category', 'brand', 'description', 'parfum', 'productGroup', 'unit', 'country',
+  // Medium badges/labels (still benefit from a few extra px)
+  'type', 'status', 'procurement', 'completeness', 'pricingSource', 'syncStatus',
+  // Identifiers
+  'barcode',
 ])
 
 /* ─── Completeness Levels ─── */
