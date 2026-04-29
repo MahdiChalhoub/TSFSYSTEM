@@ -30,8 +30,23 @@ export async function approvePO(id: number | string) {
     return erpFetch(`purchase-orders/${id}/approve/`, { method: 'POST' })
 }
 
-export async function rejectPO(id: number | string, reason?: string) {
-    return erpFetch(`purchase-orders/${id}/reject/`, { method: 'POST', body: JSON.stringify({ reason }) })
+export type PORejectCategory =
+    | 'PRICE_HIGH'
+    | 'NO_STOCK'
+    | 'EXPIRY_TOO_SOON'
+    | 'DAMAGED'
+    | 'NEEDS_REVISION'
+    | 'OTHER'
+
+export async function rejectPO(
+    id: number | string,
+    reason?: string,
+    category: PORejectCategory = 'OTHER',
+) {
+    return erpFetch(`purchase-orders/${id}/reject/`, {
+        method: 'POST',
+        body: JSON.stringify({ reason, category }),
+    })
 }
 
 export async function sendToSupplier(id: number | string) {

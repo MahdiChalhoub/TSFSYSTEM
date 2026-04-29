@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, RefreshCcw } from 'lucide-react'
 import type { ProcurementRequestRecord } from '@/app/actions/inventory/procurement-requests'
 import { TYPE_META, STATUS_META, PRIORITY_META } from '../_lib/meta'
 import { formatRelative, formatDateTime, fmtQty } from '../_lib/format'
@@ -26,17 +26,37 @@ export function renderRequestCell(key: string, r: ProcurementRequestRecord): Rea
             )
         }
 
-        case 'product':
+        case 'product': {
+            // Auto-reissue signal stamps `[Reissue of #N]` into notes when this
+            // row was born from a failed PO; surface a chip so operators can
+            // jump back to the original request.
+            const reissueMatch = (r.notes || '').match(/\[Reissue of #(\d+)\]/)
+            const reissueOf = reissueMatch ? Number(reissueMatch[1]) : null
             return (
                 <div className="min-w-0">
-                    <div className="text-[12px] font-bold text-app-foreground truncate">
-                        {r.product_name || `Product #${r.product}`}
+                    <div className="text-[12px] font-bold text-app-foreground truncate flex items-center gap-1.5">
+                        <span className="truncate">{r.product_name || `Product #${r.product}`}</span>
+                        {reissueOf && (
+                            <a
+                                href={`/inventory/requests?focus=${reissueOf}`}
+                                onClick={e => e.stopPropagation()}
+                                title={`Auto-reissued from request #${reissueOf} after the resulting PO was rejected or cancelled`}
+                                className="inline-flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hover:underline"
+                                style={{
+                                    background: 'color-mix(in srgb, #f59e0b 12%, transparent)',
+                                    color: '#f59e0b',
+                                    border: '1px solid color-mix(in srgb, #f59e0b 25%, transparent)',
+                                }}>
+                                <RefreshCcw size={8} /> Reissue of #{reissueOf}
+                            </a>
+                        )}
                     </div>
                     {r.product_sku && (
                         <div className="text-[10px] font-mono text-app-muted-foreground truncate">{r.product_sku}</div>
                     )}
                 </div>
             )
+        }
 
         case 'quantity':
             return (

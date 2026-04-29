@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { ChevronDown, Loader2, X, Check, ArrowRightCircle } from 'lucide-react'
-import { submitPO, approvePO, cancelPO, sendToSupplier, completePO, revertToDraft } from '@/app/actions/pos/purchases'
+import { submitPO, approvePO, cancelPO, sendToSupplier, completePO, revertToDraft, rejectPO, type PORejectCategory } from '@/app/actions/pos/purchases'
 import type { PO } from '../_lib/types'
 import { STATUS_CONFIG } from '../_lib/constants'
+import { RejectPODialog } from './RejectPODialog'
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
     DRAFT: ['SUBMITTED', 'CANCELLED'],
@@ -34,6 +35,7 @@ const STATUS_ACTIONS: Record<string, (id: number | string) => Promise<any>> = {
 export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => void }) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [rejectOpen, setRejectOpen] = useState(false)
     const ref = useRef<HTMLDivElement>(null)
     const sc = STATUS_CONFIG[po.status] || { label: po.status, color: 'var(--app-muted-foreground)' }
     const transitions = VALID_TRANSITIONS[po.status] || []
@@ -46,6 +48,13 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
     }, [open])
 
     async function handleTransition(t: string) {
+        // REJECTED needs the structured category dialog so the auto-reissue
+        // signal gets the right hint downstream.
+        if (t === 'REJECTED') {
+            setOpen(false)
+            setRejectOpen(true)
+            return
+        }
         setLoading(true); setOpen(false)
         try {
             const action = STATUS_ACTIONS[t]
@@ -58,6 +67,24 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
             onRefresh?.()
         } catch (e: any) { toast.error(e?.message || 'Transition failed') }
         finally { setLoading(false) }
+    }
+
+    async function handleReject(category: PORejectCategory, reason: string) {
+        setLoading(true)
+        try {
+            const res: any = await rejectPO(po.id, reason, category)
+            if (res?._reverted_to_draft) {
+                toast.success(`${po.po_number || `PO-${po.id}`} sent back to draft for revision`)
+            } else {
+                toast.success(`${po.po_number || `PO-${po.id}`} rejected (${category})`)
+            }
+            setRejectOpen(false)
+            onRefresh?.()
+        } catch (e: any) {
+            toast.error(e?.message || 'Reject failed')
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -97,6 +124,12 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
                     })}
                 </div>
             )}
+            <RejectPODialog
+                open={rejectOpen}
+                poNumber={po.po_number || `PO-${po.id}`}
+                onClose={() => setRejectOpen(false)}
+                onConfirm={handleReject}
+            />
         </div>
     )
 }
