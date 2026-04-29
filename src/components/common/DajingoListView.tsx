@@ -275,14 +275,16 @@ export function DajingoListView<T>({
           <div className="hidden sm:flex sticky top-0 z-10 items-center py-2 bg-app-surface/90 backdrop-blur-sm border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
             style={{ paddingLeft: '12px', paddingRight: '12px' }}>
 
-            {/* LEFT: fixed-width header */}
-            <div className="flex items-center gap-2" style={{ width: '280px', minWidth: '280px', flexShrink: 0 }}>
+            {/* LEFT: split into two header columns — Actions, then Product */}
+            <div className="flex items-center" style={{ width: '110px', minWidth: '110px', flexShrink: 0 }}>
               <div className="w-5 flex-shrink-0 flex items-center justify-center">
                 {onToggleSelectAll && (
                   <input type="checkbox" checked={isAllPageSelected || false} onChange={onToggleSelectAll}
                     className="w-3.5 h-3.5 accent-[var(--app-primary)] cursor-pointer rounded" />
                 )}
               </div>
+            </div>
+            <div className="flex items-center pr-3" style={{ width: '240px', minWidth: '240px', flexShrink: 0 }}>
               <div className="flex-1 min-w-0">{entityLabel}</div>
             </div>
 
@@ -294,11 +296,22 @@ export function DajingoListView<T>({
                 if (!isOn) return null
                 const w = columnWidths[col.key] || 'w-16'
                 const align = rac.has(col.key) ? ' text-right' : cac.has(col.key) ? ' text-center' : ''
+                // PROPORTIONAL DISTRIBUTION:
+                //   Right-aligned columns (numeric) lock at content size (`flex: 0 0 auto`)
+                //   so their right-edge content sits next to the right-edge content of the
+                //   previous numeric column — no big void caused by alignment mismatch.
+                //   Left/center-aligned columns absorb all slack via the user's formula:
+                //   total_space = weight + weight × (extra / sum_of_weights)
+                const _w = parseWidthWeight(w)
                 const isGrow = gc.has(col.key)
-                const growStyle = isGrow ? { flexGrow: parseWidthWeight(w), flexShrink: 1, flexBasis: 'auto' as const, minWidth: 0 } : undefined
+                const widthCls = ''
+                const isRightAligned = rac.has(col.key)
+                const growStyle = isRightAligned
+                  ? { flex: '0 0 auto' as const, minWidth: 0, width: 'auto' as const }
+                  : { flex: `${_w} 1 ${_w * 0.25}rem`, minWidth: 0, width: 'auto' as const }
                 return (
                   <div key={col.key}
-                    className={`${w} flex-shrink-0${align}${isGrow ? ' col-grow' : ''}${onColumnReorder ? ' cursor-grab active:cursor-grabbing select-none hover:text-app-primary transition-colors' : ''}`}
+                    className={`${widthCls}${align}${isGrow ? ' col-grow' : ''}${onColumnReorder ? ' cursor-grab active:cursor-grabbing select-none hover:text-app-primary transition-colors' : ''}`}
                     style={growStyle}
                     draggable={!!onColumnReorder}
                     onDragStart={onColumnReorder ? () => { dragColRef.current = col.key } : undefined}
@@ -501,8 +514,8 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
         style={{ paddingLeft: '12px', paddingRight: '12px' }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {/* ── LEFT SECTION: fixed-width ── */}
-        <div className="flex items-center gap-2" style={{ width: '280px', minWidth: '280px', flexShrink: 0 }}>
+        {/* ── ACTIONS COLUMN: checkbox + view + menu + chevron ── */}
+        <div className="flex items-center gap-1" style={{ width: '110px', minWidth: '110px', flexShrink: 0 }}>
           {/* Checkbox */}
           {onToggleSelect && (
             <div className="w-5 flex-shrink-0 flex items-center justify-center" onClick={e => e.stopPropagation()}>
@@ -552,7 +565,10 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
               {isOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
             </div>
           )}
+        </div>
 
+        {/* ── PRODUCT COLUMN: icon + title ── */}
+        <div className="flex items-center gap-2 pr-3" style={{ width: '240px', minWidth: '240px', flexShrink: 0 }}>
           {/* Row icon */}
           {renderRowIcon && <div className="flex-shrink-0">{renderRowIcon(row)}</div>}
 
@@ -568,10 +584,16 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
             if (!isOn) return null
             const w = columnWidths[col.key] || 'w-16'
             const align = rightAlignedCols.has(col.key) ? ' text-right' : centerAlignedCols.has(col.key) ? ' text-center' : ''
+            // Right-aligned columns lock at content size; others use proportional formula.
+            const _w = parseWidthWeight(w)
             const isGrow = growCols.has(col.key)
-            const growStyle = isGrow ? { flexGrow: parseWidthWeight(w), flexShrink: 1, flexBasis: 'auto' as const, minWidth: 0 } : undefined
+            const isRightAligned = rightAlignedCols.has(col.key)
+            const widthCls = ''
+            const growStyle = isRightAligned
+              ? { flex: '0 0 auto' as const, minWidth: 0, width: 'auto' as const }
+              : { flex: `${_w} 1 ${_w * 0.25}rem`, minWidth: 0, width: 'auto' as const }
             return (
-              <div key={col.key} className={`${w} flex-shrink-0${align}${isGrow ? ' col-grow' : ''}`} style={growStyle}>
+              <div key={col.key} className={`${widthCls}${align}${isGrow ? ' col-grow' : ''}`} style={growStyle}>
                 {renderColumnCell(col.key, row)}
               </div>
             )
