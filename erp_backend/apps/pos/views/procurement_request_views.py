@@ -18,6 +18,7 @@ from apps.pos.serializers.procurement_request_serializers import ProcurementRequ
 from apps.pos.services.procurement_notifications import (
     create_review_task as _create_review_task,
     notify_assignees as _notify_assignees,
+    update_review_task as _update_review_task,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,36 +35,101 @@ class ProcurementRequestViewSet(TenantModelViewSet):
     )
 
     def create(self, request, *args, **kwargs):
-        """Block duplicate requests for products that already have one in flight.
-        Active = PENDING/APPROVED, OR EXECUTED with the linked PO still open
-        (DRAFT/SUBMITTED/APPROVED/SENT/CONFIRMED/IN_TRANSIT/PARTIALLY_RECEIVED).
-        EXECUTED with a terminal/received PO is fine — product is back in catalogue."""
+        """Type-aware duplicate guard.
+
+        TRANSFER:
+            Always allowed — the same product can have multiple concurrent
+            transfer requests (different from/to warehouses). The (product,
+            from_wh, to_wh) tuple is the natural uniqueness; if the operator
+            wants to bump an existing identical route they should use the
+            bump action instead. We block only the *exact same route* PENDING
+            duplicate as a guardrail.
+
+        PURCHASE:
+            By default, only one PURCHASE in flight per product (single-source).
+            Operators can flip the org setting `purchase_multi_source` to
+            allow multiple concurrent PURCHASE requests for the same product
+            (e.g. quoting from several suppliers at once).
+        """
         product_id = request.data.get('product')
-        if product_id:
-            org = request.user.organization
-            existing = ProcurementRequest.objects.filter(
-                product_id=product_id, organization=org,
+        request_type = (request.data.get('request_type') or '').upper()
+        if not product_id:
+            return super().create(request, *args, **kwargs)
+        org = request.user.organization
+
+        if request_type == 'TRANSFER':
+            from_wh = request.data.get('from_warehouse') or None
+            to_wh = request.data.get('to_warehouse') or None
+            # Only block the exact same route still PENDING/APPROVED.
+            same_route = ProcurementRequest.objects.filter(
+                product_id=product_id, organization=org, request_type='TRANSFER',
                 status__in=('PENDING', 'APPROVED'),
+                from_warehouse_id=from_wh, to_warehouse_id=to_wh,
             ).order_by('-requested_at').first()
-            if not existing:
-                # Also block if the latest EXECUTED request still has an open PO.
-                executed = ProcurementRequest.objects.filter(
-                    product_id=product_id, organization=org,
-                    status='EXECUTED',
-                ).order_by('-requested_at').first()
-                if executed and (executed.source_po is None or executed.source_po.status in self._PO_OPEN_STATUSES):
-                    existing = executed
-            if existing:
-                product_label = getattr(existing.product, 'name', None) or f'#{product_id}'
+            if same_route:
                 return Response({
                     'detail': (
-                        f"{product_label} already has an active request "
-                        f"(#{existing.id}, {existing.get_status_display()}). "
-                        f"Cancel it first or wait until the goods arrive."
+                        f"This exact transfer route already has an active request "
+                        f"(#{same_route.id}, {same_route.get_status_display()}). "
+                        f"Use Bump to escalate it, or pick a different destination."
                     ),
-                    'existing_request_id': existing.id,
-                    'existing_status': existing.status,
+                    'existing_request_id': same_route.id,
+                    'existing_status': same_route.status,
                 }, status=drf_status.HTTP_409_CONFLICT)
+            return super().create(request, *args, **kwargs)
+
+        if request_type == 'PURCHASE':
+            # Read multi-source setting from the org config (lazy import).
+            multi = False
+            try:
+                from erp.services import ConfigurationService
+                cfg = ConfigurationService.get_setting(org, 'purchase_analytics_config', {}) or {}
+                multi = bool(cfg.get('purchase_multi_source', False))
+            except Exception:
+                multi = False
+            if not multi:
+                # Single-source: block any active PURCHASE for this product
+                existing = ProcurementRequest.objects.filter(
+                    product_id=product_id, organization=org, request_type='PURCHASE',
+                    status__in=('PENDING', 'APPROVED'),
+                ).order_by('-requested_at').first()
+                if not existing:
+                    executed = ProcurementRequest.objects.filter(
+                        product_id=product_id, organization=org,
+                        request_type='PURCHASE', status='EXECUTED',
+                    ).order_by('-requested_at').first()
+                    if executed and (executed.source_po is None or executed.source_po.status in self._PO_OPEN_STATUSES):
+                        existing = executed
+                if existing:
+                    return Response({
+                        'detail': (
+                            f"This product already has an active purchase request "
+                            f"(#{existing.id}, {existing.get_status_display()}). "
+                            f"Enable Multi-Source Purchasing in settings to allow concurrent purchase requests."
+                        ),
+                        'existing_request_id': existing.id,
+                        'existing_status': existing.status,
+                    }, status=drf_status.HTTP_409_CONFLICT)
+            # Multi-source enabled: but still block exact-supplier duplicates
+            supplier_id = request.data.get('supplier')
+            if supplier_id:
+                same_supplier = ProcurementRequest.objects.filter(
+                    product_id=product_id, organization=org, request_type='PURCHASE',
+                    status__in=('PENDING', 'APPROVED'),
+                    supplier_id=supplier_id,
+                ).order_by('-requested_at').first()
+                if same_supplier:
+                    return Response({
+                        'detail': (
+                            f"You already have a pending purchase request for this product "
+                            f"with the same supplier (#{same_supplier.id}). "
+                            f"Pick a different supplier or bump the existing request."
+                        ),
+                        'existing_request_id': same_supplier.id,
+                        'existing_status': same_supplier.status,
+                    }, status=drf_status.HTTP_409_CONFLICT)
+            return super().create(request, *args, **kwargs)
+
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
@@ -90,6 +156,8 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         req.reviewed_at = timezone.now()
         req.save(update_fields=['status', 'reviewed_by', 'reviewed_at'])
         _notify_assignees(req, kind='approved', actor=request.user, also_requester=True)
+        _update_review_task(req, event='approved', actor=request.user,
+                            note=f"Approved by {request.user.username}")
         return Response(self.get_serializer(req).data)
 
     @action(detail=True, methods=['post'])
@@ -107,6 +175,8 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         req.notes = (req.notes or '') + f"\nRejected: {reason}"
         req.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'notes'])
         _notify_assignees(req, kind='rejected', actor=request.user, reason=reason or '-', also_requester=True)
+        _update_review_task(req, event='rejected', actor=request.user,
+                            note=f"Rejected by {request.user.username}: {reason or '-'}")
         return Response(self.get_serializer(req).data)
 
     @action(detail=True, methods=['post'])
@@ -173,6 +243,8 @@ class ProcurementRequestViewSet(TenantModelViewSet):
             req.save(update_fields=['source_po', 'status', 'reviewed_by', 'reviewed_at'])
 
         _notify_assignees(req, kind='converted', actor=request.user, po_id=po.id, also_requester=True)
+        _update_review_task(req, event='converted', actor=request.user,
+                            note=f"Converted to PO #{po.id} by {request.user.username}")
         return Response({
             'po_id': po.id,
             'po_url': f'/purchases/purchase-orders/{po.id}',
@@ -189,6 +261,8 @@ class ProcurementRequestViewSet(TenantModelViewSet):
             )
         req.status = 'CANCELLED'
         req.save(update_fields=['status'])
+        _update_review_task(req, event='cancelled', actor=request.user,
+                            note=f"Cancelled by {request.user.username}")
         return Response(self.get_serializer(req).data)
 
     @action(detail=False, methods=['post'], url_path='bump')
@@ -250,6 +324,8 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         _notify_assignees(req, kind='bumped', actor=request.user,
                           prev_priority=prev_priority, new_priority=new_priority,
                           also_requester=True)
+        _update_review_task(req, event='bumped', actor=request.user,
+                            note=f"Bumped by {username}: priority {prev_priority} → {new_priority}")
         return Response({
             'detail': f'Reminded — priority {prev_priority} → {new_priority}',
             'previous_priority': prev_priority,

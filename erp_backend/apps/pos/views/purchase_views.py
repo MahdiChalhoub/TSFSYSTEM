@@ -8,6 +8,7 @@ from apps.pos.serializers import (
     OrderSerializer, PurchaseOrderSerializer, PurchaseOrderLineSerializer
 )
 from decimal import Decimal
+from django.utils import timezone
 from erp.connector_registry import connector
 
 class PurchaseViewSet(viewsets.ViewSet):
@@ -256,14 +257,61 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
             pass
         return Response(PurchaseOrderSerializer(po).data)
 
+    # Categorised rejection reasons. Drives the auto-reissue downstream.
+    REJECT_CATEGORIES = (
+        'PRICE_HIGH',       # supplier quoted too high
+        'NO_STOCK',         # supplier doesn't have stock
+        'EXPIRY_TOO_SOON',  # batch expiry too close
+        'DAMAGED',          # goods or packaging damaged
+        'NEEDS_REVISION',   # PO needs editing — keep it pending, no reissue
+        'OTHER',
+    )
+
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
-        """Reject a submitted PO."""
+        """Reject (or send back) a PO with a structured category.
+
+        Body:
+            { reason: str, category?: 'PRICE_HIGH'|'NO_STOCK'|'EXPIRY_TOO_SOON'|'DAMAGED'|'NEEDS_REVISION'|'OTHER' }
+
+        category=NEEDS_REVISION → PO is reverted to DRAFT (not REJECTED).
+        Reviewer keeps editing the same PO; no auto-reissue fires.
+
+        Any other category → status set to REJECTED. The downstream
+        post_save signal will auto-create a new ProcurementRequest carrying
+        the category + reason forward.
+        """
         po = self.get_object()
+        free_text = (request.data.get('reason') or '').strip()
+        category = (request.data.get('category') or '').strip().upper()
+        if category not in self.REJECT_CATEGORIES:
+            category = 'OTHER'
+
+        # Store as `[CATEGORY] free text` for downstream parsing.
+        composed_reason = f"[{category}] {free_text}".strip()
+        po.rejection_reason = composed_reason
+        po.rejected_by = request.user if request.user and request.user.is_authenticated else None
+        po.rejected_at = timezone.now()
+
+        if category == 'NEEDS_REVISION':
+            # Send back for editing — stays a draft PO, the same row.
+            po.status = 'DRAFT'
+            po.notes = f"{po.notes or ''}\nSent back for revision: {free_text}".strip()
+            po.save(update_fields=['status', 'notes', 'rejection_reason', 'rejected_by', 'rejected_at'])
+            return Response({
+                **PurchaseOrderSerializer(po).data,
+                '_reverted_to_draft': True,
+                '_category': category,
+            })
+
+        # Real rejection — flip to REJECTED, signal handler will auto-reissue.
         po.status = 'REJECTED'
-        po.notes = f"{po.notes}\nRejected: {request.data.get('reason', '')}"
-        po.save(update_fields=['status', 'notes'])
-        return Response(PurchaseOrderSerializer(po).data)
+        po.notes = f"{po.notes or ''}\nRejected ({category}): {free_text}".strip()
+        po.save(update_fields=['status', 'notes', 'rejection_reason', 'rejected_by', 'rejected_at'])
+        return Response({
+            **PurchaseOrderSerializer(po).data,
+            '_category': category,
+        })
 
     @action(detail=True, methods=['post'], url_path='send-to-supplier')
     def send_to_supplier(self, request, pk=None):

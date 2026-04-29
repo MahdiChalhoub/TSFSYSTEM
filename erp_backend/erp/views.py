@@ -616,6 +616,7 @@ class SettingsViewSet(viewsets.ViewSet):
             'po_count_source': 'PURCHASE_INVOICE',
             'financial_score_weights': {'margin': 40, 'velocity': 30, 'stock_health': 30},
             'request_flow_mode': 'DIALOG',
+            'purchase_multi_source': False,
         }
 
         if request.method == 'POST':

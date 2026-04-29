@@ -166,6 +166,78 @@ def create_review_task(req, *, event='created'):
         return None
 
 
+def update_review_task(req, *, event: str, actor=None, note: str = None):
+    """Reflect a procurement-request lifecycle event onto its workspace.Task.
+    The task is matched by (related_object_type, related_object_id).
+
+    Event mapping:
+      - 'bumped'    → push priority up; append reminder comment
+      - 'approved'  → mark IN_PROGRESS (work to do: execute / convert)
+      - 'rejected'  → mark CANCELLED  (no further action expected)
+      - 'cancelled' → mark CANCELLED
+      - 'converted' → mark COMPLETED  (request fulfilled into a PO)
+
+    Non-fatal: any failure is logged and swallowed.
+    """
+    try:
+        from apps.workspace.models import Task as WorkspaceTask
+    except ImportError:
+        return None
+
+    try:
+        task = WorkspaceTask.objects.filter(
+            organization=req.organization,
+            related_object_type='ProcurementRequest',
+            related_object_id=req.id,
+        ).order_by('-id').first()
+        if task is None:
+            # Auto-heal: if the create-time task is missing, make one now so the
+            # event still surfaces on the board.
+            task = create_review_task(req, event=event)
+            if task is None:
+                return None
+
+        update_fields = []
+        if event == 'bumped':
+            new_pri = _priority_to_workspace(req.priority)
+            if task.priority != new_pri:
+                task.priority = new_pri
+                update_fields.append('priority')
+        elif event == 'approved':
+            if task.status not in ('IN_PROGRESS', 'COMPLETED', 'CANCELLED'):
+                task.status = 'IN_PROGRESS'
+                update_fields.append('status')
+        elif event in ('rejected', 'cancelled'):
+            if task.status not in ('COMPLETED', 'CANCELLED'):
+                task.status = 'CANCELLED'
+                update_fields.append('status')
+        elif event == 'converted':
+            if task.status != 'COMPLETED':
+                task.status = 'COMPLETED'
+                update_fields.append('status')
+
+        if update_fields:
+            task.save(update_fields=update_fields + ['updated_at'])
+
+        # Drop a comment so the audit trail is visible on the task.
+        if note:
+            try:
+                from apps.workspace.models import TaskComment
+                TaskComment.objects.create(
+                    organization=req.organization,
+                    task=task,
+                    author=actor,
+                    content=note,
+                )
+            except Exception as e:
+                logger.debug(f"TaskComment write failed for task {task.id}: {e}")
+
+        return task
+    except Exception as e:
+        logger.warning(f"update_review_task({event}) failed for request {req.id}: {e}")
+        return None
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Notification fan-out
 # ─────────────────────────────────────────────────────────────────────────────

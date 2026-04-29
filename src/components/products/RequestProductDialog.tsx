@@ -8,6 +8,7 @@ import { useModalDismiss } from '@/hooks/useModalDismiss'
 import { createProcurementRequest, getSuggestedQuantity } from '@/app/actions/commercial/procurement-requests'
 import { getPurchaseAnalyticsConfig } from '@/app/actions/settings/purchase-analytics-config'
 import { getAllWarehouseContextItems } from '@/app/actions/inventory/warehouses'
+import { getContactsByType } from '@/app/actions/crm/contacts'
 
 export type RequestableProduct = {
     id: number
@@ -49,6 +50,7 @@ function suggestQty(p: RequestableProduct, safetyMultiplier: number): number {
 }
 
 type Warehouse = { id: number; name: string }
+type Supplier = { id: number; name: string }
 
 export function RequestProductDialog({ open, onClose, requestType, products, onCreated }: Props) {
     const meta = TYPE_META[requestType]
@@ -60,6 +62,10 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
     const [warehouses, setWarehouses] = useState<Warehouse[]>([])
     const [fromWarehouseId, setFromWarehouseId] = useState<string>('')
     const [toWarehouseId, setToWarehouseId] = useState<string>('')
+    // Purchase-specific
+    const [suppliers, setSuppliers] = useState<Supplier[]>([])
+    const [supplierId, setSupplierId] = useState<string>('')
+    const [suggestedUnitPrice, setSuggestedUnitPrice] = useState<string>('')
     const [pending, startTransition] = useTransition()
 
     useEffect(() => {
@@ -90,23 +96,34 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
         return () => { cancelled = true }
     }, [open, products])
 
-    // Load warehouses lazily — only when the dialog opens for a TRANSFER request.
+    // Lazy-load both warehouses and suppliers when the dialog opens.
+    // Warehouses are used for TRANSFER (From/To) AND for PURCHASE (destination).
+    // Suppliers are used for PURCHASE only.
     useEffect(() => {
-        if (!open || requestType !== 'TRANSFER') return
+        if (!open) return
         let cancelled = false
         ;(async () => {
             const list = await getAllWarehouseContextItems()
             if (cancelled) return
             setWarehouses(list.map((w: any) => ({ id: w.id, name: w.name })) as Warehouse[])
         })()
+        if (requestType === 'PURCHASE') {
+            ;(async () => {
+                const list = await getContactsByType('SUPPLIER')
+                if (cancelled) return
+                setSuppliers((Array.isArray(list) ? list : []).map((c: any) => ({ id: c.id, name: c.name })) as Supplier[])
+            })()
+        }
         return () => { cancelled = true }
     }, [open, requestType])
 
-    // Reset warehouse selection on each open
+    // Reset selection on each open
     useEffect(() => {
         if (!open) return
         setFromWarehouseId('')
         setToWarehouseId('')
+        setSupplierId('')
+        setSuggestedUnitPrice('')
         setPriority('NORMAL')
         setReason('')
     }, [open])
@@ -129,8 +146,16 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
                 return
             }
         }
+        if (requestType === 'PURCHASE') {
+            if (!supplierId) {
+                toast.error('Pick a supplier')
+                return
+            }
+        }
         const fromId = fromWarehouseId ? Number(fromWarehouseId) : undefined
         const toId = toWarehouseId ? Number(toWarehouseId) : undefined
+        const suppId = supplierId ? Number(supplierId) : undefined
+        const unitPrice = suggestedUnitPrice ? Number(suggestedUnitPrice) : undefined
         startTransition(async () => {
             let created = 0
             const failures: string[] = []
@@ -143,6 +168,11 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
                         priority,
                         reason: reason.trim() || undefined,
                         ...(requestType === 'TRANSFER' ? { fromWarehouseId: fromId, toWarehouseId: toId } : {}),
+                        ...(requestType === 'PURCHASE' ? {
+                            supplierId: suppId,
+                            ...(toId ? { toWarehouseId: toId } : {}),
+                            ...(unitPrice && unitPrice > 0 ? { suggestedUnitPrice: unitPrice } : {}),
+                        } : {}),
                     })
                     created++
                 } catch (e: any) {
@@ -255,6 +285,92 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
                                 {PRIORITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                             </select>
                         </div>
+                        {requestType === 'TRANSFER' && (
+                            <>
+                                <div>
+                                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">
+                                        From warehouse <span className="text-app-muted-foreground/60 font-normal normal-case">(optional)</span>
+                                    </label>
+                                    <select
+                                        value={fromWarehouseId}
+                                        onChange={e => setFromWarehouseId(e.target.value)}
+                                        className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/60 rounded-lg text-app-foreground outline-none focus:border-app-primary/40"
+                                    >
+                                        <option value="">— Any source —</option>
+                                        {warehouses.map(w => (
+                                            <option key={w.id} value={w.id} disabled={String(w.id) === toWarehouseId}>{w.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-black uppercase tracking-widest mb-1 block"
+                                        style={{ color: !toWarehouseId ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                                        To warehouse <span className="font-normal normal-case opacity-70">(required)</span>
+                                    </label>
+                                    <select
+                                        value={toWarehouseId}
+                                        onChange={e => setToWarehouseId(e.target.value)}
+                                        className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border rounded-lg text-app-foreground outline-none focus:border-app-primary/40"
+                                        style={{ borderColor: !toWarehouseId ? 'color-mix(in srgb, var(--app-error, #ef4444) 35%, transparent)' : 'var(--app-border)' }}
+                                    >
+                                        <option value="">— Pick destination —</option>
+                                        {warehouses.map(w => (
+                                            <option key={w.id} value={w.id} disabled={String(w.id) === fromWarehouseId}>{w.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </>
+                        )}
+                        {requestType === 'PURCHASE' && (
+                            <>
+                                <div>
+                                    <label className="text-[9px] font-black uppercase tracking-widest mb-1 block"
+                                        style={{ color: !supplierId ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                                        Supplier <span className="font-normal normal-case opacity-70">(required)</span>
+                                    </label>
+                                    <select
+                                        value={supplierId}
+                                        onChange={e => setSupplierId(e.target.value)}
+                                        className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border rounded-lg text-app-foreground outline-none focus:border-app-primary/40"
+                                        style={{ borderColor: !supplierId ? 'color-mix(in srgb, var(--app-error, #ef4444) 35%, transparent)' : 'var(--app-border)' }}
+                                    >
+                                        <option value="">— Pick supplier —</option>
+                                        {suppliers.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">
+                                        Deliver to <span className="text-app-muted-foreground/60 font-normal normal-case">(optional)</span>
+                                    </label>
+                                    <select
+                                        value={toWarehouseId}
+                                        onChange={e => setToWarehouseId(e.target.value)}
+                                        className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/60 rounded-lg text-app-foreground outline-none focus:border-app-primary/40"
+                                    >
+                                        <option value="">— Decide later —</option>
+                                        {warehouses.map(w => (
+                                            <option key={w.id} value={w.id}>{w.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">
+                                        Unit price <span className="text-app-muted-foreground/60 font-normal normal-case">(optional)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        step="any"
+                                        value={suggestedUnitPrice}
+                                        onChange={e => setSuggestedUnitPrice(e.target.value)}
+                                        placeholder="Suggested price/unit"
+                                        className="w-full text-[12px] font-mono font-bold px-2.5 py-2 bg-app-bg border border-app-border/60 rounded-lg text-app-foreground outline-none focus:border-app-primary/40 tabular-nums"
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div>

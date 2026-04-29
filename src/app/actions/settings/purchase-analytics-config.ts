@@ -18,6 +18,10 @@ export interface PurchaseAnalyticsConfig {
         stock_health: number;
     };
     request_flow_mode: 'INSTANT' | 'DIALOG' | 'CART';
+    /** When true, the same product can have multiple concurrent PURCHASE
+     *  requests open (e.g. quoting from multiple suppliers in parallel).
+     *  When false (default), only one purchase-in-flight is allowed per product. */
+    purchase_multi_source: boolean;
     // Audit metadata (from backend)
     _last_modified_by?: string;
     _last_modified_at?: string;
@@ -49,6 +53,7 @@ const DEFAULTS: PurchaseAnalyticsConfig = {
     po_count_source: 'PURCHASE_INVOICE',
     financial_score_weights: { margin: 40, velocity: 30, stock_health: 30 },
     request_flow_mode: 'DIALOG',
+    purchase_multi_source: false,
 };
 
 export async function getPurchaseAnalyticsConfig(): Promise<PurchaseAnalyticsConfig> {

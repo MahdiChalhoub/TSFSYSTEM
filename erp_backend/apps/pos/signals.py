@@ -203,3 +203,156 @@ def handle_po_receipt(sender, instance, **kwargs):
 
         except Exception as e:
             logger.error(f"[SIGNAL] Failed to update supplier metrics: {e}")
+
+
+# =============================================================================
+# PURCHASE ORDER REJECTED / CANCELLED → AUTO-REISSUE PROCUREMENT REQUEST
+# =============================================================================
+
+@receiver(post_save, sender='pos.PurchaseOrder')
+def auto_reissue_request_on_po_failure(sender, instance, created, **kwargs):
+    """When a PurchaseOrder transitions to REJECTED or CANCELLED, find the
+    source ProcurementRequest (linked via `source_po`) and auto-create a NEW
+    request that carries forward the original product/quantity/priority +
+    a note explaining the failure. This lets the requester see what failed
+    and decide what to change without losing the request thread.
+
+    Guards against re-issuing for the same PO twice (the new request stores
+    `source_po_id=NULL` so we don't recursively trigger).
+    """
+    if created:
+        return
+    if instance.status not in ('REJECTED', 'CANCELLED'):
+        return
+
+    try:
+        from apps.pos.models.procurement_request_models import ProcurementRequest
+        from apps.pos.services.procurement_notifications import (
+            notify_assignees, create_review_task, update_review_task,
+        )
+
+        # Find the originating request (one where source_po points to THIS PO).
+        original = ProcurementRequest.objects.filter(source_po=instance).first()
+        if original is None:
+            return
+
+        # Close the original request's task on the board — the PO it spawned has
+        # failed, the operator's attention is moving to the reissue (or to the
+        # already-received goods if guard 1 trips below).
+        try:
+            update_review_task(
+                original, event='cancelled', actor=None,
+                note=(
+                    f"Source PO #{instance.id} {instance.status.lower()} — "
+                    f"closing original task; reissue task will follow."
+                ),
+            )
+        except Exception as e:
+            logger.warning(f"[SIGNAL] update_review_task close failed for #{original.id}: {e}")
+
+        # GUARD 1 — partial receipt suppresses reissue.
+        # If any PO line had goods physically received before the rejection,
+        # the original need was at least partially fulfilled. Don't pile a new
+        # request on top — the operator can submit a fresh one if the residual
+        # quantity matters.
+        any_received = any(
+            (line.qty_received or 0) > 0
+            for line in instance.lines.all()
+        )
+        if any_received:
+            logger.info(
+                f"[SIGNAL] PO #{instance.id} {instance.status} but had partial "
+                f"receipt — skipping auto-reissue of request #{original.id}"
+            )
+            return
+
+        # GUARD 2 — avoid double-reissue: if any later request already references
+        # this original via notes ("[Reissue of #N]"), bail out.
+        marker = f"[Reissue of #{original.id}]"
+        already = ProcurementRequest.objects.filter(
+            organization=instance.organization,
+            product=original.product,
+            notes__contains=marker,
+        ).exists()
+        if already:
+            return
+
+        # Parse the structured category from rejection_reason if present.
+        # Format written by PurchaseViewSet.reject is `[CATEGORY] free text`.
+        rej = (instance.rejection_reason or '').strip()
+        category = 'OTHER'
+        free_text = rej
+        if rej.startswith('['):
+            close = rej.find(']')
+            if close > 1:
+                category = rej[1:close].strip().upper() or 'OTHER'
+                free_text = rej[close + 1:].strip()
+
+        # NEEDS_REVISION should never reach here (the reject endpoint reverts
+        # the PO to DRAFT instead of REJECTED) but guard defensively anyway.
+        if category == 'NEEDS_REVISION':
+            return
+
+        category_hints = {
+            'PRICE_HIGH':       'Negotiate with the supplier or pick a different one — quoted price was too high.',
+            'NO_STOCK':         'Supplier had no stock — try a different supplier or wait for replenishment.',
+            'EXPIRY_TOO_SOON':  'Batch expiry was too close to delivery — request a fresher batch.',
+            'DAMAGED':          'Goods or packaging arrived damaged — request a replacement or change supplier.',
+            'OTHER':            'Adjust supplier / quantity / price and resubmit.',
+        }
+        hint = category_hints.get(category, category_hints['OTHER'])
+
+        why = (
+            "rejected by reviewer" if instance.status == 'REJECTED'
+            else "cancelled before fulfilment"
+        )
+        po_tail = f"\nReviewer note: {free_text}" if free_text else ''
+        new_notes = (
+            f"{marker}\n"
+            f"Previous purchase #{original.id} was promoted to PO #{instance.id} which was {why} ({category}).\n"
+            f"{hint}"
+            f"{po_tail}"
+        )
+
+        new_req = ProcurementRequest.objects.create(
+            organization=instance.organization,
+            request_type=original.request_type,
+            status='PENDING',
+            priority=original.priority,
+            product=original.product,
+            quantity=original.quantity,
+            from_warehouse=original.from_warehouse,
+            to_warehouse=original.to_warehouse,
+            supplier=original.supplier,
+            suggested_unit_price=original.suggested_unit_price,
+            reason=original.reason,
+            notes=new_notes,
+            source_po=None,  # Fresh thread; not yet linked to a PO
+            requested_by=original.requested_by,
+        )
+        logger.info(
+            f"[SIGNAL] Auto-reissued procurement request #{new_req.id} "
+            f"(was #{original.id}) after PO #{instance.id} {instance.status}"
+        )
+
+        # Notify assignees + requester so they see the failure context immediately.
+        try:
+            notify_assignees(
+                new_req, kind='created',
+                actor=None,
+                reason=f"Auto-reissued after PO #{instance.id} {instance.status.lower()}",
+                also_requester=True,
+            )
+        except Exception as e:
+            logger.warning(f"[SIGNAL] notify_assignees failed for reissue #{new_req.id}: {e}")
+
+        # Add to the workspace task board so the reissue is followable like any
+        # other procurement request. Non-fatal — board write must not roll back
+        # the new request.
+        try:
+            create_review_task(new_req, event='reissued')
+        except Exception as e:
+            logger.warning(f"[SIGNAL] create_review_task failed for reissue #{new_req.id}: {e}")
+
+    except Exception as e:
+        logger.error(f"[SIGNAL] auto_reissue_request_on_po_failure failed for PO {instance.id}: {e}")

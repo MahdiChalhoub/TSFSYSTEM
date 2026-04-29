@@ -51,6 +51,35 @@ export function FlowSection() {
                         <strong>Cart:</strong> add multiple products to a draft, submit as a batch.
                     </p>
                 </div>
+
+                <div className="pt-3 mt-2 border-t border-app-border/40">
+                    <label className={fieldLabel}>Multi-Source Purchasing</label>
+                    <div className="flex gap-2 flex-wrap">
+                        {([
+                            { v: false, label: 'Single source' },
+                            { v: true, label: 'Multi source' },
+                        ] as const).map(opt => {
+                            const current = !!s.val('purchase_multi_source')
+                            const active = current === opt.v
+                            return (
+                                <button key={String(opt.v)} type="button" className={toggleBtn(active)}
+                                    onClick={async () => {
+                                        if (s.editingProfile) { s.update('purchase_multi_source', opt.v); return }
+                                        s.update('purchase_multi_source', opt.v)
+                                        const r = await savePurchaseAnalyticsConfig({ purchase_multi_source: opt.v })
+                                        if (r.success) toast.success(opt.v ? 'Multi-source enabled' : 'Single source restored')
+                                        else toast.error(r.message || 'Failed to save')
+                                    }}>
+                                    {opt.label}
+                                </button>
+                            )
+                        })}
+                    </div>
+                    <p className={fieldHint}>
+                        <strong>Single source (default):</strong> only one open purchase request per product. Prevents the same product from being requested multiple times in parallel for the same location.&nbsp;
+                        <strong>Multi source:</strong> allow multiple purchase requests for the same product as long as each picks a different supplier (useful for quoting in parallel).
+                    </p>
+                </div>
             </div>
         </div>
     )
