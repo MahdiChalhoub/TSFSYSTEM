@@ -317,6 +317,108 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
             'new_alerts_created': len(alerts),
         })
 
+    @action(detail=False, methods=['post'], url_path='expiry-alerts/create')
+    def create_expiry_alert(self, request):
+        """Manually create a ProductBatch + ExpiryAlert for a product.
+        Body: { product_id, quantity, expiry_date, batch_number?, notes?, warehouse_id? }
+        Severity is derived from the days-until-expiry (negative = EXPIRED,
+        ≤30 = CRITICAL, otherwise WARNING)."""
+        from datetime import date, datetime
+        from decimal import Decimal as D
+        from apps.inventory.models import Product
+        from apps.inventory.models.advanced_models import ProductBatch, ExpiryAlert
+
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        product_id = request.data.get('product_id')
+        quantity_raw = request.data.get('quantity')
+        expiry_date_raw = request.data.get('expiry_date')
+        if not product_id:
+            return Response({'error': 'product_id required'}, status=400)
+        if not expiry_date_raw:
+            return Response({'error': 'expiry_date required'}, status=400)
+
+        try:
+            product = Product.objects.get(id=product_id, organization=organization)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=404)
+
+        try:
+            expiry_date = date.fromisoformat(str(expiry_date_raw)[:10])
+        except Exception:
+            return Response({'error': 'expiry_date must be ISO YYYY-MM-DD'}, status=400)
+
+        try:
+            quantity = D(str(quantity_raw or '0'))
+        except Exception:
+            return Response({'error': 'quantity must be numeric'}, status=400)
+        if quantity <= 0:
+            return Response({'error': 'quantity must be > 0'}, status=400)
+
+        batch_number = (request.data.get('batch_number') or '').strip()
+        if not batch_number:
+            batch_number = f"MAN-{int(datetime.utcnow().timestamp())}"
+
+        notes = (request.data.get('notes') or '').strip() or None
+        warehouse_id = request.data.get('warehouse_id')
+        warehouse = None
+        if warehouse_id:
+            from apps.inventory.models import Warehouse
+            warehouse = Warehouse.objects.filter(id=warehouse_id, organization=organization).first()
+
+        cost_price = product.cost_price or D('0')
+
+        batch, batch_created = ProductBatch.objects.get_or_create(
+            organization=organization,
+            product=product,
+            batch_number=batch_number,
+            defaults={
+                'quantity': quantity,
+                'cost_price': cost_price,
+                'expiry_date': expiry_date,
+                'status': 'ACTIVE',
+                'warehouse': warehouse,
+                'notes': notes,
+            },
+        )
+        if not batch_created:
+            batch.quantity = quantity
+            batch.expiry_date = expiry_date
+            if warehouse: batch.warehouse = warehouse
+            if notes: batch.notes = notes
+            batch.save(update_fields=['quantity', 'expiry_date', 'warehouse', 'notes'])
+
+        days = (expiry_date - date.today()).days
+        if days <= 0:
+            severity = 'EXPIRED'
+        elif days <= 30:
+            severity = 'CRITICAL'
+        else:
+            severity = 'WARNING'
+
+        value_at_risk = quantity * cost_price
+
+        alert = ExpiryAlert.objects.create(
+            organization=organization,
+            batch=batch,
+            product=product,
+            severity=severity,
+            days_until_expiry=days,
+            quantity_at_risk=quantity,
+            value_at_risk=value_at_risk,
+            is_acknowledged=False,
+        )
+
+        return Response({
+            'success': True,
+            'alert_id': alert.id,
+            'batch_id': batch.id,
+            'severity': severity,
+            'days_until_expiry': days,
+            'value_at_risk': float(value_at_risk),
+        })
+
     @action(detail=True, methods=['post'], url_path='acknowledge-expiry/(?P<alert_id>[^/.]+)')
     def acknowledge_expiry(self, request, pk=None, alert_id=None):
         organization, err = _get_org_or_400()

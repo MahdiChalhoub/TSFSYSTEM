@@ -7,6 +7,7 @@ import { ShoppingCart, ArrowRightLeft, X, Loader2, ExternalLink } from 'lucide-r
 import { useModalDismiss } from '@/hooks/useModalDismiss'
 import { createProcurementRequest, getSuggestedQuantity } from '@/app/actions/commercial/procurement-requests'
 import { getPurchaseAnalyticsConfig } from '@/app/actions/settings/purchase-analytics-config'
+import { getAllWarehouseContextItems } from '@/app/actions/inventory/warehouses'
 
 export type RequestableProduct = {
     id: number
@@ -47,6 +48,8 @@ function suggestQty(p: RequestableProduct, safetyMultiplier: number): number {
     return 1
 }
 
+type Warehouse = { id: number; name: string }
+
 export function RequestProductDialog({ open, onClose, requestType, products, onCreated }: Props) {
     const meta = TYPE_META[requestType]
     const Icon = meta.icon
@@ -54,6 +57,9 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
     const [quantities, setQuantities] = useState<Record<number, string>>({})
     const [priority, setPriority] = useState<Priority>('NORMAL')
     const [reason, setReason] = useState('')
+    const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+    const [fromWarehouseId, setFromWarehouseId] = useState<string>('')
+    const [toWarehouseId, setToWarehouseId] = useState<string>('')
     const [pending, startTransition] = useTransition()
 
     useEffect(() => {
@@ -84,6 +90,27 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
         return () => { cancelled = true }
     }, [open, products])
 
+    // Load warehouses lazily — only when the dialog opens for a TRANSFER request.
+    useEffect(() => {
+        if (!open || requestType !== 'TRANSFER') return
+        let cancelled = false
+        ;(async () => {
+            const list = await getAllWarehouseContextItems()
+            if (cancelled) return
+            setWarehouses(list.map((w: any) => ({ id: w.id, name: w.name })) as Warehouse[])
+        })()
+        return () => { cancelled = true }
+    }, [open, requestType])
+
+    // Reset warehouse selection on each open
+    useEffect(() => {
+        if (!open) return
+        setFromWarehouseId('')
+        setToWarehouseId('')
+        setPriority('NORMAL')
+        setReason('')
+    }, [open])
+
     if (!open) return null
 
     const submit = () => {
@@ -92,6 +119,18 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
             toast.error('Set a quantity > 0 for at least one product')
             return
         }
+        if (requestType === 'TRANSFER') {
+            if (!toWarehouseId) {
+                toast.error('Pick a destination warehouse')
+                return
+            }
+            if (fromWarehouseId && fromWarehouseId === toWarehouseId) {
+                toast.error('Source and destination warehouses must differ')
+                return
+            }
+        }
+        const fromId = fromWarehouseId ? Number(fromWarehouseId) : undefined
+        const toId = toWarehouseId ? Number(toWarehouseId) : undefined
         startTransition(async () => {
             let created = 0
             const failures: string[] = []
@@ -103,6 +142,7 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
                         quantity: line.qty,
                         priority,
                         reason: reason.trim() || undefined,
+                        ...(requestType === 'TRANSFER' ? { fromWarehouseId: fromId, toWarehouseId: toId } : {}),
                     })
                     created++
                 } catch (e: any) {

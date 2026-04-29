@@ -93,7 +93,7 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
       )
       if (!tierLabel && !hasLifecycle) return pill('Available', ps.color)
       return (
-        <span className="inline-flex flex-col items-start gap-0.5">
+        <span className="inline-flex flex-col items-center gap-0.5">
           {tierLabel && pill(tierLabel, tierColor)}
           {hasLifecycle && pill(ps.label, ps.color)}
         </span>

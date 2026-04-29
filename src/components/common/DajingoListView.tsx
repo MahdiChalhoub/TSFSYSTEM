@@ -201,6 +201,15 @@ export function DajingoListView<T>({
   const cac = centerAlignedCols || new Set<string>()
   const gc = growCols || new Set<string>()
 
+  // PROPORTIONAL DISTRIBUTION (Option D):
+  // Product column lives at row-level alongside the dynamic-column track. To share
+  // leftover proportionally we give the track a combined weight + basis equal to
+  // the sum of its visible columns. Product's weight is fixed at 60 (matching its
+  // ~240px basis). Then Product and Track are siblings competing for slack with
+  // weights 60 + 160 = 220, basis 240 + 640 = 880.
+  const PRODUCT_WEIGHT = 60
+  const PRODUCT_BASIS_REM = 15  // 60 × 0.25rem = 240px
+
   // ── Ordered columns (respect custom ordering) ──
   const orderedColumns = useMemo(() => {
     const colMap = new Map(columns.map(c => [c.key, c]))
@@ -221,6 +230,13 @@ export function DajingoListView<T>({
   const visibleColCount = orderedColumns.filter(col =>
     !phc.has(col.key) && (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key])
   ).length
+
+  // ── Track weight + basis (for proportional sharing with Product column) ──
+  const visibleCols = orderedColumns.filter(col =>
+    !phc.has(col.key) && (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key])
+  )
+  const trackWeight = visibleCols.reduce((s, c) => s + parseWidthWeight(columnWidths[c.key] || 'w-16'), 0) || 1
+  const trackBasisRem = trackWeight * 0.25
 
   const effectiveMinWidth = tableMinWidth || (visibleColCount > 9 ? `${300 + visibleColCount * 100}px` : undefined)
 
@@ -284,31 +300,28 @@ export function DajingoListView<T>({
                 )}
               </div>
             </div>
-            <div className="flex items-center pr-3" style={{ width: '240px', minWidth: '240px', flexShrink: 0 }}>
+            <div className="flex items-center pr-3" style={{ flex: `${PRODUCT_WEIGHT} 1 ${PRODUCT_BASIS_REM}rem`, minWidth: 0 }}>
               <div className="flex-1 min-w-0">{entityLabel}</div>
             </div>
 
-            {/* RIGHT: dynamic column headers with drag-and-drop */}
-            <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0 fill-cols">
+            {/* RIGHT: dynamic column headers — proportional with Product via shared flex weights */}
+            <div className="flex items-center gap-2 md:gap-3 fill-cols" style={{ flex: `${trackWeight} 1 ${trackBasisRem}rem`, minWidth: 0 }}>
               {orderedColumns.map(col => {
                 if (phc.has(col.key)) return null
                 const isOn = col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key]
                 if (!isOn) return null
                 const w = columnWidths[col.key] || 'w-16'
                 const align = rac.has(col.key) ? ' text-right' : cac.has(col.key) ? ' text-center' : ''
-                // PROPORTIONAL DISTRIBUTION:
-                //   Right-aligned columns (numeric) lock at content size (`flex: 0 0 auto`)
-                //   so their right-edge content sits next to the right-edge content of the
-                //   previous numeric column — no big void caused by alignment mismatch.
-                //   Left/center-aligned columns absorb all slack via the user's formula:
-                //   total_space = weight + weight × (extra / sum_of_weights)
+                // OPTION D — PROPORTIONAL: every column gets
+                //   total = required + required × (extra / sum_required)
+                // Implemented as `flex: <weight> 1 <weight × 0.25rem>` where weight is the
+                // numeric value of the Tailwind w-XX class. Wider declared columns absorb
+                // proportionally more of the leftover space.
+                // CONTENT ALIGNMENT: all column content centered horizontally (`justify-center`).
                 const _w = parseWidthWeight(w)
                 const isGrow = gc.has(col.key)
-                const widthCls = ''
-                const isRightAligned = rac.has(col.key)
-                const growStyle = isRightAligned
-                  ? { flex: '0 0 auto' as const, minWidth: 0, width: 'auto' as const }
-                  : { flex: `${_w} 1 ${_w * 0.25}rem`, minWidth: 0, width: 'auto' as const }
+                const widthCls = 'flex items-center justify-center'
+                const growStyle = { flex: `${_w} 1 ${_w * 0.25}rem`, minWidth: 0, width: 'auto' as const }
                 return (
                   <div key={col.key}
                     className={`${widthCls}${align}${isGrow ? ' col-grow' : ''}${onColumnReorder ? ' cursor-grab active:cursor-grabbing select-none hover:text-app-primary transition-colors' : ''}`}
@@ -476,6 +489,13 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
   const menuRef = useRef<HTMLDivElement>(null)
   const id = getRowId(row)
 
+  // Same track-weight computation as the header (Option D proportional layout).
+  const _visibleCols = orderedColumns.filter(col =>
+    !policyHiddenColumns.has(col.key) && (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key])
+  )
+  const trackWeight = _visibleCols.reduce((s, c) => s + parseWidthWeight(columnWidths[c.key] || 'w-16'), 0) || 1
+  const trackBasisRem = trackWeight * 0.25
+
   // Get menu items if available
   const items = menuActions ? menuActions(row) : []
   // Add default View action if onView is provided
@@ -567,8 +587,8 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
           )}
         </div>
 
-        {/* ── PRODUCT COLUMN: icon + title ── */}
-        <div className="flex items-center gap-2 pr-3" style={{ width: '240px', minWidth: '240px', flexShrink: 0 }}>
+        {/* ── PRODUCT COLUMN: icon + title — proportional weight 60 ── */}
+        <div className="flex items-center gap-2 pr-3" style={{ flex: '60 1 15rem', minWidth: 0 }}>
           {/* Row icon */}
           {renderRowIcon && <div className="flex-shrink-0">{renderRowIcon(row)}</div>}
 
@@ -576,22 +596,20 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
           <div className="flex-1 min-w-0">{renderRowTitle(row)}</div>
         </div>
 
-        {/* ── RIGHT SECTION: dynamic columns ── */}
-        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0 fill-cols">
+        {/* ── RIGHT SECTION: dynamic columns — proportional with Product via shared flex weights ── */}
+        <div className="flex items-center gap-2 md:gap-3 fill-cols" style={{ flex: `${trackWeight} 1 ${trackBasisRem}rem`, minWidth: 0 }}>
           {orderedColumns.map(col => {
             if (policyHiddenColumns.has(col.key)) return null
             const isOn = col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key]
             if (!isOn) return null
             const w = columnWidths[col.key] || 'w-16'
             const align = rightAlignedCols.has(col.key) ? ' text-right' : centerAlignedCols.has(col.key) ? ' text-center' : ''
-            // Right-aligned columns lock at content size; others use proportional formula.
+            // Option D — proportional: flex: <weight> 1 <weight × 0.25rem>
+            // Content centered horizontally (Product column kept left-aligned via its own JSX).
             const _w = parseWidthWeight(w)
             const isGrow = growCols.has(col.key)
-            const isRightAligned = rightAlignedCols.has(col.key)
-            const widthCls = ''
-            const growStyle = isRightAligned
-              ? { flex: '0 0 auto' as const, minWidth: 0, width: 'auto' as const }
-              : { flex: `${_w} 1 ${_w * 0.25}rem`, minWidth: 0, width: 'auto' as const }
+            const widthCls = 'flex items-center justify-center'
+            const growStyle = { flex: `${_w} 1 ${_w * 0.25}rem`, minWidth: 0, width: 'auto' as const }
             return (
               <div key={col.key} className={`${widthCls}${align}${isGrow ? ' col-grow' : ''}`} style={growStyle}>
                 {renderColumnCell(col.key, row)}

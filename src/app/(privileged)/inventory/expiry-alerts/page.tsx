@@ -2,6 +2,8 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
+import Link from "next/link"
 import type { ExpiryAlertResponse } from '@/types/erp'
 import { getExpiryAlerts, scanForExpiry, acknowledgeAlert } from "@/app/actions/inventory/expiry-alerts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,6 +33,8 @@ export default function ExpiryAlertsPage() {
     const [scanning, setScanning] = useState(false)
     const [activeFilter, setActiveFilter] = useState<string | null>(null)
     const [showAcknowledged, setShowAcknowledged] = useState(false)
+    const searchParams = useSearchParams()
+    const productFilter = searchParams.get('product')
 
     useEffect(() => { loadData() }, [])
 
@@ -74,8 +78,29 @@ export default function ExpiryAlertsPage() {
         loadData(severity || undefined)
     }
 
-    const alerts = data?.alerts || []
-    const stats = data?.stats || { expired: 0, critical: 0, warning: 0, total_value: 0, total_quantity: 0 }
+    const allAlerts = data?.alerts || []
+    const alerts = useMemo(() => {
+        if (!productFilter) return allAlerts
+        return allAlerts.filter((a: any) => String(a.product_id ?? a.product) === String(productFilter))
+    }, [allAlerts, productFilter])
+    const productName = useMemo(() => {
+        if (!productFilter) return null
+        const found = allAlerts.find((a: any) => String(a.product_id ?? a.product) === String(productFilter))
+        return found?.product_name ?? `#${productFilter}`
+    }, [allAlerts, productFilter])
+    const stats = useMemo(() => {
+        if (!productFilter) return data?.stats || { expired: 0, critical: 0, warning: 0, total_value: 0, total_quantity: 0 }
+        // Recompute stats for the filtered subset
+        return alerts.reduce((s: any, a: any) => {
+            const sev = (a.severity || '').toUpperCase()
+            if (sev === 'EXPIRED') s.expired++
+            else if (sev === 'CRITICAL') s.critical++
+            else if (sev === 'WARNING') s.warning++
+            s.total_value += Number(a.value_at_risk || 0)
+            s.total_quantity += Number(a.quantity_at_risk || 0)
+            return s
+        }, { expired: 0, critical: 0, warning: 0, total_value: 0, total_quantity: 0 })
+    }, [productFilter, alerts, data])
     const totalAlerts = stats.expired + stats.critical + stats.warning
 
     if (loading && !data) {
@@ -92,6 +117,23 @@ export default function ExpiryAlertsPage() {
 
     return (
         <div className="p-6 space-y-6">
+            {/* Product filter banner */}
+            {productFilter && (
+                <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                    <div className="flex items-center gap-2 text-[12px]">
+                        <Package size={14} className="text-app-primary" />
+                        <span className="text-app-muted-foreground font-bold uppercase tracking-wider text-[10px]">Filtered to product</span>
+                        <span className="font-bold text-app-foreground">{productName}</span>
+                        <span className="text-app-muted-foreground">·</span>
+                        <span className="text-app-muted-foreground">{alerts.length} alert{alerts.length === 1 ? '' : 's'}</span>
+                    </div>
+                    <Link href="/inventory/expiry-alerts" className="text-[11px] font-bold text-app-primary hover:underline">
+                        Show all products
+                    </Link>
+                </div>
+            )}
+
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
