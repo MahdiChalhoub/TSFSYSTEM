@@ -44,6 +44,7 @@ import { DajingoListView } from '@/components/common/DajingoListView'
 import { DajingoPageShell } from '@/components/common/DajingoPageShell'
 import { ProductDetailCards } from './_components/ProductDetailCards'
 import { renderProductCell } from './_components/ProductColumns'
+import { ProductThumbnail } from '@/components/products/ProductThumbnail'
 import { type RequestableProduct } from '@/components/products/RequestProductDialog'
 import { RequestFlowProvider, useRequestFlow } from '@/components/products/RequestFlowProvider'
 
@@ -59,11 +60,14 @@ function toRequestable(p: Product): RequestableProduct {
  *  MAIN PAGE
  * ═══════════════════════════════════════════════════════════ */
 
-export default function ProductMasterManager({ initialProducts = [], lookups = EMPTY_LOOKUPS }: { initialProducts?: Product[]; lookups?: Lookups; initialFilters?: Record<string, string> }) {
+export default function ProductMasterManager({ initialProducts = [], totalProductCount, lookups = EMPTY_LOOKUPS }: { initialProducts?: Product[]; totalProductCount?: number; lookups?: Lookups; initialFilters?: Record<string, string> }) {
   const router = useRouter()
   const { openTab } = useAdmin()
   const { trigger: triggerRequest } = useRequestFlow()
   const [items, setItems] = useState<Product[]>(initialProducts)
+  // True total in the DB — survives even when `items` is a paginated slice.
+  // Falls back to items.length when the page wasn't paginated server-side.
+  const [serverTotal, setServerTotal] = useState<number>(totalProductCount ?? initialProducts.length)
   const [loading, setLoading] = useState(initialProducts.length === 0)
   const [search, setSearch] = useState('')
   const [focusMode, setFocusMode] = useState(false)
@@ -127,8 +131,14 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await erpFetch('products/')
-      setItems(Array.isArray(data) ? data : data?.results || [])
+      const data: any = await erpFetch('products/')
+      if (Array.isArray(data)) {
+        setItems(data); setServerTotal(data.length)
+      } else {
+        const results = Array.isArray(data?.results) ? data.results : []
+        setItems(results)
+        setServerTotal(typeof data?.count === 'number' ? data.count : results.length)
+      }
     } catch { /* empty */ }
     setLoading(false)
   }, [])
@@ -298,11 +308,17 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         /* ── Row rendering ── */
         renderRowIcon={product => {
           const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
+          // Thumbnail when an image is set; falls back to the type icon. The
+          // <img> uses native lazy-loading so off-screen rows don't fetch.
           return (
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: `color-mix(in srgb, ${tc.color} 12%, transparent)`, color: tc.color }}>
-              {product.product_type === 'COMBO' ? <Layers size={13} /> : product.product_type === 'STOCKABLE' ? <Box size={13} /> : <Package size={13} />}
-            </div>
+            <ProductThumbnail
+              image={product.image}
+              productType={product.product_type}
+              name={product.name}
+              size={28}
+              className="rounded-lg"
+              color={tc.color}
+            />
           )
         }}
         renderRowTitle={product => (
@@ -342,7 +358,13 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
         onClearFilters={() => { setSearch(''); setFilters(EMPTY_FILTERS) }}
         emptyIcon={<Package size={36} />}
         pagination={{
+          // `totalItems` is the count the pagination buttons step through —
+          // matches `totalPages`. `totalAvailable` is the truth from the
+          // server (DRF `count`). When the two differ, the footer surfaces
+          // "X of Y in catalog" so the user knows there's more than they
+          // can see in this fetch.
           totalItems: filtered.length,
+          totalAvailable: Math.max(serverTotal, items.length),
           activeFilterCount,
           currentPage: clampedPage,
           totalPages,

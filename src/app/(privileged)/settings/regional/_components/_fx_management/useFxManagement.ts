@@ -3,9 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
-    Coins, RefreshCcw,
-} from 'lucide-react'
-import {
     getCurrencies, getExchangeRates, getRevaluations,
     runRevaluation,
     getRatePolicies, updateRatePolicy, syncRatePolicy, syncAllRatePolicies,
@@ -13,30 +10,13 @@ import {
     type Currency, type ExchangeRate, type CurrencyRevaluation, type CurrencyRatePolicy,
 } from '@/app/actions/finance/currency'
 import { erpFetch } from '@/lib/erp-api'
-import {
-    SUB_TABS, grad, type FxView, type FiscalYear,
-} from './_fx_management/constants'
-import { BasePill } from './_fx_management/atoms'
-import { RatesView } from './_fx_management/views/RatesView'
-import { PoliciesView } from './_fx_management/views/PoliciesView'
-import { RevaluationsView } from './_fx_management/views/RevaluationsView'
-import { SetBrokerDialog } from './_fx_management/views/SetBrokerDialog'
+import type { FxView, FiscalYear } from './constants'
 
-export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBaseCode }: {
-    /** When set, renders only that sub-view (no internal tab strip).
-     *  Used when this component is mounted inside the Currencies tab as
-     *  an embedded sub-tab — the parent tab strip already provides nav. */
-    view?: FxView;
-    /** When true, suppress the internal "FX & Rates" header card too —
-     *  use when the parent already shows context. */
-    hideHeader?: boolean;
-    /** Source-of-truth gating handed down from /settings/regional so this
-     *  section doesn't disable itself when the finance.Currency mirror is
-     *  lagged/empty. The parent already loaded OrgCurrencies; using them
-     *  here decouples the UI gating from the mirror's freshness. */
-    orgCurrencyCount?: number;
-    orgBaseCode?: string | null;
-} = {}) {
+/** All state, memos, and handlers for the FxManagementSection.
+ *  Extracted into a hook so the orchestrator file stays slim and the
+ *  shape of the original (single useFxManagement().X access) is
+ *  byte-equivalent at every consumer call site. */
+export function useFxManagement(view: FxView | undefined) {
     const isEmbedded = !!view;
     const [tabState, setTab] = useState<FxView>('rates');
     const tab = view ?? tabState;
@@ -118,14 +98,7 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
             setPendingNewRate(false)
         }
     }, [pendingNewPolicy, pendingNewRate, baseCurrency])
-    /** Effective gating: if the parent passed OrgCurrency state, use it as the
-     *  source of truth so the UI works even when the finance.Currency mirror
-     *  is empty (cron lagged, mirror raised silently, etc.). The backend's
-     *  bulk_create now self-heals, so we just need to *let the user click*. */
-    const effectiveBaseCode = baseCurrency?.code ?? orgBaseCode ?? null
-    const effectiveTotalCcy = Math.max(currencies.length, orgCurrencyCount ?? 0)
-    const hasBase = !!effectiveBaseCode
-    const hasNonBase = effectiveTotalCcy >= 2
+
     const periods = useMemo(() => years.flatMap(y => (y.periods ?? []).map(p => ({ ...p, fiscal_year_name: y.name }))), [years])
 
     // Group rates by from→to for tidier display
@@ -265,157 +238,25 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
         }
     }
 
-    if (loading) {
-        return (
-            <div className="bg-app-surface rounded-2xl border border-app-border/50 p-10 flex items-center justify-center">
-                <RefreshCcw size={16} className="animate-spin text-app-muted-foreground" />
-            </div>
-        )
+    return {
+        isEmbedded, tab, setTab,
+        currencies, rates, revals, policies, years, loading,
+        running, syncingId, syncingAll, syncAllProgress, bulkBusy, deletingId,
+        setBrokerOpen, setSetBrokerOpen,
+        setBrokerProvider, setSetBrokerProvider,
+        setBrokerScope, setSetBrokerScope,
+        setBrokerCodes, setSetBrokerCodes,
+        setBrokerKey, setSetBrokerKey,
+        setBrokerBusy, setSetBrokerBusy,
+        editingPolicy, setEditingPolicy, savingEdit,
+        newRateOpen, setNewRateOpen,
+        newPolicyOpen, setNewPolicyOpen,
+        policyQuery, setPolicyQuery,
+        policyHealthFilter, setPolicyHealthFilter,
+        policyProviderFilter, setPolicyProviderFilter,
+        setPendingNewPolicy, setPendingNewRate,
+        loadAll, baseCurrency, periods, ratesByPair, latestRateByKey,
+        handleRunRevaluation, handleSyncPolicy, handleSyncAll,
+        handleDeletePolicy, handleBulkCreate, commitInlineEdit,
     }
-
-    const subCounts: Record<typeof tab, number> = {
-        rates: rates.length, policies: policies.length, revaluations: revals.length,
-    }
-
-    return (
-        <div className="space-y-4 animate-in fade-in duration-300">
-            {/* ── Section header (suppress when embedded — parent already shows context) ── */}
-            {!hideHeader && !isEmbedded && (
-                <div className="bg-app-surface rounded-2xl border border-app-border/50 px-4 py-3 flex items-center justify-between flex-wrap gap-3"
-                     style={{ backgroundColor: 'color-mix(in srgb, var(--app-background) 60%, transparent)' }}>
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm shrink-0" style={grad('--app-success')}>
-                            <Coins size={14} style={{ color: 'var(--app-primary-foreground, #fff)' }} />
-                        </div>
-                        <div>
-                            <div className="font-black uppercase tracking-widest text-app-foreground" style={{ fontSize: 11 }}>FX & Rates</div>
-                            <p className="text-app-muted-foreground mt-0.5" style={{ fontSize: 9 }}>
-                                Exchange rate history · Auto-sync policies · Period-end revaluation
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <BasePill base={baseCurrency} />
-                        <button onClick={() => loadAll()}
-                            title="Refresh"
-                            className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border/50 hover:bg-app-background transition-colors"
-                            style={{ color: 'var(--app-muted-foreground)' }}>
-                            <RefreshCcw size={13} />
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* ── Sub-tab pill strip (only when standalone — parent provides nav otherwise) ── */}
-            {!isEmbedded && (
-                <div className="inline-flex items-center gap-0.5 p-0.5 rounded-lg bg-app-surface border border-app-border/50">
-                    {SUB_TABS.map(t => {
-                        const Icon = t.icon
-                        const active = tab === t.key
-                        const n = subCounts[t.key]
-                        return (
-                            <button key={t.key} onClick={() => setTab(t.key)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-200 ${active ? 'shadow-md' : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-background'}`}
-                                style={active ? { ...grad(t.color), color: 'var(--app-primary-foreground, #fff)' } : {}}>
-                                <Icon size={12} /> {t.label}
-                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded tabular-nums"
-                                    style={active
-                                        ? { background: 'color-mix(in srgb, var(--app-primary-foreground, #fff) 22%, transparent)' }
-                                        : { background: 'var(--app-background)' }}>{n}</span>
-                            </button>
-                        )
-                    })}
-                </div>
-            )}
-
-            {/* Currencies are managed in the parent Currencies tab — no
-                duplicate sub-tab here. The FX section just consumes them. */}
-
-            {/* ── Rates tab ─────────────────────────────────────────── */}
-            {tab === 'rates' && (
-                <RatesView
-                    currencies={currencies}
-                    baseCurrency={baseCurrency}
-                    ratesByPair={ratesByPair}
-                    hasBase={hasBase}
-                    hasNonBase={hasNonBase}
-                    newRateOpen={newRateOpen}
-                    setNewRateOpen={setNewRateOpen}
-                    setPendingNewRate={setPendingNewRate}
-                    loadAll={loadAll}
-                />
-            )}
-
-            {/* ── Auto-Sync (policies) tab — redesigned ───────────────── */}
-            {tab === 'policies' && (
-                <PoliciesView
-                    currencies={currencies}
-                    baseCurrency={baseCurrency}
-                    policies={policies}
-                    latestRateByKey={latestRateByKey}
-                    orgCurrencyCount={orgCurrencyCount}
-                    orgBaseCode={orgBaseCode}
-                    hasBase={hasBase}
-                    hasNonBase={hasNonBase}
-                    newPolicyOpen={newPolicyOpen}
-                    setNewPolicyOpen={setNewPolicyOpen}
-                    setPendingNewPolicy={setPendingNewPolicy}
-                    setSetBrokerOpen={setSetBrokerOpen}
-                    bulkBusy={bulkBusy}
-                    handleBulkCreate={handleBulkCreate}
-                    syncingAll={syncingAll}
-                    syncAllProgress={syncAllProgress}
-                    handleSyncAll={handleSyncAll}
-                    syncingId={syncingId}
-                    deletingId={deletingId}
-                    handleSyncPolicy={handleSyncPolicy}
-                    handleDeletePolicy={handleDeletePolicy}
-                    policyQuery={policyQuery}
-                    setPolicyQuery={setPolicyQuery}
-                    policyHealthFilter={policyHealthFilter}
-                    setPolicyHealthFilter={setPolicyHealthFilter}
-                    policyProviderFilter={policyProviderFilter}
-                    setPolicyProviderFilter={setPolicyProviderFilter}
-                    editingPolicy={editingPolicy}
-                    setEditingPolicy={setEditingPolicy}
-                    savingEdit={savingEdit}
-                    commitInlineEdit={commitInlineEdit}
-                    loadAll={loadAll}
-                />
-            )}
-
-            {/* ── Set-Broker dialog — handles all four scopes:
-                 1) one currency  → Scope=Specific, pick 1 chip
-                 2) all           → Scope=All
-                 3) all except    → Scope=Exclude, pick chips to exclude
-                 4) group of N    → Scope=Specific, pick N chips                ── */}
-            <SetBrokerDialog
-                open={setBrokerOpen}
-                onClose={() => setSetBrokerOpen(false)}
-                currencies={currencies}
-                policies={policies}
-                setBrokerProvider={setBrokerProvider}
-                setSetBrokerProvider={setSetBrokerProvider}
-                setBrokerScope={setBrokerScope}
-                setSetBrokerScope={setSetBrokerScope}
-                setBrokerCodes={setBrokerCodes}
-                setSetBrokerCodes={setSetBrokerCodes}
-                setBrokerKey={setBrokerKey}
-                setSetBrokerKey={setSetBrokerKey}
-                setBrokerBusy={setBrokerBusy}
-                setSetBrokerBusy={setSetBrokerBusy}
-                loadAll={loadAll}
-            />
-
-            {/* ── Revaluations tab ──────────────────────────────────── */}
-            {tab === 'revaluations' && (
-                <RevaluationsView
-                    periods={periods}
-                    revals={revals}
-                    running={running}
-                    handleRunRevaluation={handleRunRevaluation}
-                />
-            )}
-        </div>
-    )
 }

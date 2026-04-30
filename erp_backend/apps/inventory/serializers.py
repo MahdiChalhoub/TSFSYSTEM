@@ -177,6 +177,12 @@ class ProductSerializer(serializers.ModelSerializer):
             'selling_price_ht', 'selling_price_ttc', 'tva_rate',
             'min_stock_level', 'max_stock_level', 'reorder_point', 'reorder_quantity',
             'is_expiry_tracked', 'tracks_serials',
+            'image',
+            # Verification + catalog gating — used by /inventory/products
+            # filters. Without these the corresponding filters silently match
+            # everything because the field is `undefined` on every row.
+            'is_verified', 'verified_at',
+            'catalog_ready', 'catalog_description',
             'status', 'is_active', 'created_at', 'updated_at',
             'organization',
         ]

@@ -72,6 +72,10 @@ function parseWidthWeight(cls: string): number {
 
 export type DajingoPagination = {
   totalItems: number
+  /** True total in the data source (e.g. DRF `count`). When > totalItems
+   *  — meaning more rows exist on the server than were fetched — the
+   *  footer surfaces "X of Y in catalog" so users know there's more. */
+  totalAvailable?: number
   currentPage: number
   totalPages: number
   pageSize: number
@@ -417,6 +421,7 @@ export function DajingoListView<T>({
       {pagination && !loading && (allData || data).length > 0 && (
         <PaginationFooter
           totalItems={pagination.totalItems}
+          totalAvailable={pagination.totalAvailable}
           activeFilterCount={pagination.activeFilterCount}
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}

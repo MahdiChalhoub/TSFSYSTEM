@@ -22,13 +22,16 @@
 
 ## 🟠 HIGH
 
-### [OPEN] Maintainability Phase 1 — Split Giant Backend Files
+### [DONE 2026-04-30] Maintainability Phase 1 — Split Giant Backend Files
 - **Discovered**: 2026-04-30
-- **Impact**: 533 files exceed 300-line limit. Top 3 files are 2,903 / 2,002 / 1,849 lines — unmaintainable by any developer or AI agent.
+- **Impact**: Top 3 backend monoliths (2,903 / 2,002 / 1,849 lines) split into 35 focused modules, all ≤300 lines.
 - **Plan**: `task and plan/maintainability/maintainability_phase1_backend_splits_001.md`
-- **Files**: `closing_service.py` → 5 files, `account_views.py` → 4 files, `fiscal_views.py` → 3 files
+- **Result**:
+  - `closing_service.py` (2,903 → 294) + 13 sibling `closing_*` modules (audit / snapshot / opening / integrity / year-impl / partial / pnl-sweep / chain / period / helpers). Standalone-function pattern with `staticmethod` re-attachment in the facade — zero call-site changes; 23 ClosingService methods preserved.
+  - `account_views.py` (2,002 → 122) + 9 sibling files (financial_account_views, coa_account_helpers, 7 mixin modules). Mixin pattern keeps `coa` router registration; 30 @action endpoints preserved.
+  - `fiscal_views.py` (1,849 → 183) + 10 sibling files (period viewset, permissions, summary/close/history/PPA/snapshot/multi-year/yoy/checklist/canary mixins). Mixin pattern keeps `fiscal-years` and `fiscal-periods` registrations; 20 @action endpoints preserved.
+- **Verification**: `manage.py check` passes; `test_close_integrity_invariants` (16/16), `test_bulk_classify` (9/9), `test_revaluation_service` (35/35), `test_scope_invariants` all pass. Other failures in finance test suite (~50) pre-existed and are unrelated (missing `BankAccount`/`DepreciationScheduleEntry` model imports, fixture date issues).
 - **Risk**: LOW (internal refactor, zero URL/API/frontend changes)
-- **Notes**: Uses mixin pattern for ViewSets, standalone functions for services. Verify with `python manage.py check` + `python manage.py test apps.finance` after each split.
 
 ### [OPEN] Maintainability Phase 2 — Split Giant Frontend Files
 - **Discovered**: 2026-04-30

@@ -12,6 +12,10 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-r
 
 interface PaginationFooterProps {
   totalItems: number
+  /** True total in the data source. When > `totalItems`, the footer renders
+   *  "X of Y in catalog" so the user sees real database size, not just the
+   *  loaded slice. Optional — defaults to `totalItems` (no extra hint). */
+  totalAvailable?: number
   activeFilterCount: number
   currentPage: number
   totalPages: number
@@ -23,9 +27,15 @@ interface PaginationFooterProps {
 }
 
 export const PaginationFooter = React.memo(function PaginationFooter({
-  totalItems, activeFilterCount, currentPage, totalPages, pageSize,
+  totalItems, totalAvailable, activeFilterCount, currentPage, totalPages, pageSize,
   onPageChange, onPageSizeChange, pageSizeOptions = [25, 50, 100], showAll = true,
 }: PaginationFooterProps) {
+  const showCatalogSize = typeof totalAvailable === 'number' && totalAvailable > totalItems
+  // Visible window — clearer than just "X results" when the page is paginated.
+  // E.g. pageSize=25, totalItems=52, currentPage=1 → "Showing 1–25 of 52".
+  const startIdx = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const endIdx = Math.min(currentPage * pageSize, totalItems)
+  const isPaginated = totalPages > 1
   const pages: (number | '...')[] = []
   if (totalPages <= 7) {
     for (let i = 1; i <= totalPages; i++) pages.push(i)
@@ -40,9 +50,18 @@ export const PaginationFooter = React.memo(function PaginationFooter({
   return (
     <div className="flex-shrink-0 px-3 py-2 border-t border-app-border/50 text-[10px] font-bold text-app-muted-foreground flex items-center justify-between gap-2 flex-wrap"
       style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}>
-      {/* Left: info */}
+      {/* Left: info — "Showing X–Y of Z" makes the visible-vs-total split obvious. */}
       <span>
-        {totalItems} result{totalItems !== 1 ? 's' : ''}
+        {isPaginated ? (
+          <>Showing <strong className="text-app-foreground">{startIdx}–{endIdx}</strong> of {totalItems}</>
+        ) : (
+          <>{totalItems} result{totalItems !== 1 ? 's' : ''}</>
+        )}
+        {showCatalogSize && (
+          <span className="opacity-70" title={`${totalAvailable} total in catalog — refine filters or load more to see all`}>
+            {' '}of {totalAvailable} in catalog
+          </span>
+        )}
         {activeFilterCount > 0 && <span> · {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''}</span>}
       </span>
 

@@ -1,34 +1,18 @@
 """
 Closing Service — Façade for fiscal period close and year-end close.
 
-Year-End Close Flow:
-  1. Verify all periods are posted
-  2. Verify suspense/control accounts cleared
-  3. Lock fiscal year
-  4. Close P&L into retained earnings
-  5. Generate opening balances for next year
-  6. Open next fiscal year
+Year-End Close Flow: verify periods posted → lock fiscal year → close
+P&L into retained earnings → generate opening balances for next year →
+open next fiscal year.
 
-This module is the public entry point. The heavy implementation lives
-in sibling modules and is re-attached to `ClosingService` as static
-methods so all `ClosingService.method_name(...)` callers (tasks,
-management commands, viewsets, scripts) continue to work unchanged:
+Heavy implementation lives in sibling `closing_*` modules (year impl,
+integrity checks, snapshots, opening-balance generation/validation/
+backfill, audit checks). They're re-attached to `ClosingService` as
+static methods at the bottom of this module so every existing
+`ClosingService.method_name(...)` caller keeps working unchanged.
 
-  closing_year_impl              → _close_fiscal_year_impl
-  closing_integrity_checks       → _assert_close_integrity
-  closing_period_integrity       → _assert_period_integrity
-  closing_snapshot_service       → _capture_period_snapshot, _capture_close_snapshot
-  closing_snapshot_chain         → verify_snapshot_chain
-  closing_opening_generation     → generate_opening_balances, _create_opening_journal_entry
-  closing_opening_validation     → validate_opening_ob_vs_je, rebuild_ob_from_je
-  closing_opening_backfill       → backfill_opening_journal_entries
-  closing_audit_balance          → check_parent_purity, validate_balance_integrity
-  closing_audit_tax_fx           → check_tax_coverage, check_fx_integrity
-  closing_audit_subledger        → check_subledger_integrity, is_safe_to_flip_flag
-
-Methods kept on the facade itself: period-level operations
-(`close_fiscal_period`, `soft_lock_period`, `hard_lock_period`,
-`reopen_period`, `soft_close_fiscal_year`) and the `close_fiscal_year`
+Kept on the facade: period-level ops (close_fiscal_period, soft/hard
+lock, reopen, soft_close_fiscal_year) and the close_fiscal_year
 dry-run boundary that catches the `_DryRunComplete` sentinel.
 """
 import logging

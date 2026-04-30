@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import ProductPackagingTab from '@/components/inventory/ProductPackagingTab'
 import { toast } from 'sonner'
+import { ProductThumbnail } from '@/components/products/ProductThumbnail'
 
 /* ═══════════════════════════════════════════════════════════
  *  SYNC & ROLE BADGE CONFIGS
@@ -155,10 +156,15 @@ export default function ProductsDetailPage() {
               title="Back to Products">
               <ArrowLeft size={16} className="text-app-muted-foreground group-hover:text-app-primary transition-colors" />
             </Link>
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-app-primary shrink-0"
-              style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-              <Package size={22} className="text-white" />
-            </div>
+            <ProductThumbnail
+              image={item.image}
+              productType={item.product_type}
+              name={item.name}
+              size={56}
+              className="rounded-2xl"
+              color="var(--app-primary)"
+              iconSize={26}
+            />
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
                 Product · {item.sku || `#${item.id}`}

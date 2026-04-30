@@ -40,7 +40,20 @@ export interface Filters {
 }
 
 export type Lookup = { id: number; name: string; short_name?: string }
-export type Lookups = { categories: Lookup[]; brands: Lookup[]; units: Lookup[]; countries: Lookup[] }
+export type Lookups = {
+  categories: Lookup[]
+  brands: Lookup[]
+  units: Lookup[]
+  /** Tenant-enabled sourcing countries (the canonical list from
+   *  `reference/sourcing-countries/`). The Country filter pulls from here,
+   *  not from the products themselves — otherwise filtering for a country
+   *  that no product currently uses would be impossible. */
+  countries: Lookup[]
+  /** Catalogue-wide list of parfums (the master). Same reasoning — filter
+   *  options should reflect what's available, not what's already been
+   *  assigned to products. */
+  parfums?: Lookup[]
+}
 
 export type ViewProfile = {
   id: string

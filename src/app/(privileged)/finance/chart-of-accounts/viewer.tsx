@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { runTimed } from '@/lib/perf-timing'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { PageTour } from '@/components/ui/PageTour'
+import { useTranslation } from '@/hooks/use-translation'
 import '@/lib/tours/definitions/finance-chart-of-accounts'
 
 import { KPIStrip } from './_components/KPIStrip'
@@ -22,6 +23,7 @@ export function ChartOfAccountsViewer({ accounts }: {
     accounts: Record<string, any>[]
 }) {
     const router = useRouter()
+    const { t } = useTranslation()
     const [isPending, startTransition] = useTransition()
     const [searchQuery, setSearchQuery] = useState('')
     const [showInactive, setShowInactive] = useState(false)
@@ -47,15 +49,16 @@ export function ChartOfAccountsViewer({ accounts }: {
     // KPI stats
     const stats = useMemo(() => {
         const active = accounts.filter(a => a.isActive)
-        const byType = (t: string) => active.filter(a => a.type === t)
+        const byType = (type: string) => active.filter(a => a.type === type)
         return [
-            { label: 'Total Accounts', value: active.length, color: 'var(--app-primary)', icon: <BookOpen size={14} />, filterKey: null },
-            { label: 'Assets', value: byType('ASSET').length, color: 'var(--app-info)', icon: <BookOpen size={14} />, filterKey: 'ASSET' },
-            { label: 'Liabilities', value: byType('LIABILITY').length, color: 'var(--app-error)', icon: <BookOpen size={14} />, filterKey: 'LIABILITY' },
-            { label: 'Equity', value: byType('EQUITY').length, color: 'var(--app-info)', icon: <BookOpen size={14} />, filterKey: 'EQUITY' },
-            { label: 'Income', value: byType('INCOME').length, color: 'var(--app-success)', icon: <BookOpen size={14} />, filterKey: 'INCOME' },
-            { label: 'Expenses', value: byType('EXPENSE').length, color: 'var(--app-warning)', icon: <BookOpen size={14} />, filterKey: 'EXPENSE' },
+            { label: t('finance.coa.kpi_total'),       value: active.length,                color: 'var(--app-primary)', icon: <BookOpen size={14} />, filterKey: null },
+            { label: t('finance.coa.kpi_assets'),      value: byType('ASSET').length,       color: 'var(--app-info)',    icon: <BookOpen size={14} />, filterKey: 'ASSET' },
+            { label: t('finance.coa.kpi_liabilities'), value: byType('LIABILITY').length,   color: 'var(--app-error)',   icon: <BookOpen size={14} />, filterKey: 'LIABILITY' },
+            { label: t('finance.coa.kpi_equity'),      value: byType('EQUITY').length,      color: 'var(--app-info)',    icon: <BookOpen size={14} />, filterKey: 'EQUITY' },
+            { label: t('finance.coa.kpi_income'),      value: byType('INCOME').length,      color: 'var(--app-success)', icon: <BookOpen size={14} />, filterKey: 'INCOME' },
+            { label: t('finance.coa.kpi_expenses'),    value: byType('EXPENSE').length,     color: 'var(--app-warning)', icon: <BookOpen size={14} />, filterKey: 'EXPENSE' },
         ]
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- locale change forces full reload
     }, [accounts])
 
     // Filter + build tree
@@ -99,8 +102,8 @@ export function ChartOfAccountsViewer({ accounts }: {
             try {
                 await runTimed('finance.coa:create-account', () => createAccount(data))
                 setIsAdding(false); setPreselectedParentId(undefined)
-                router.refresh(); toast.success('Account created.')
-            } catch (e: any) { toast.error(e.message || 'Error') }
+                router.refresh(); toast.success(t('finance.coa.toast_created'))
+            } catch (e: any) { toast.error(e.message || t('finance.coa.error')) }
         })
     }
 
@@ -126,8 +129,8 @@ export function ChartOfAccountsViewer({ accounts }: {
                     'finance.coa:update-account',
                     () => updateChartOfAccount(editingAccount.id, data),
                 )
-                setEditingAccount(null); router.refresh(); toast.success('Account updated.')
-            } catch (e: any) { toast.error(e.message || 'Error') }
+                setEditingAccount(null); router.refresh(); toast.success(t('finance.coa.toast_updated'))
+            } catch (e: any) { toast.error(e.message || t('finance.coa.error')) }
         })
     }
 
@@ -137,10 +140,10 @@ export function ChartOfAccountsViewer({ accounts }: {
             if (pendingAction.type === 'reactivate' && pendingAction.id) {
                 const { reactivateChartOfAccount } = await import('@/app/actions/finance/accounts')
                 try { await reactivateChartOfAccount(pendingAction.id); router.refresh() }
-                catch (e: any) { toast.error(e.message || 'Error') }
+                catch (e: any) { toast.error(e.message || t('finance.coa.error')) }
             } else if (pendingAction.type === 'recalculate') {
                 await recalculateAccountBalances()
-                router.refresh(); toast.success('Balances recalculated.')
+                router.refresh(); toast.success(t('finance.coa.toast_recalculated'))
             }
         })
         setPendingAction(null)
@@ -164,16 +167,16 @@ export function ChartOfAccountsViewer({ accounts }: {
                             <BookOpen size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Chart of Accounts</h1>
-                            <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">{accounts.length} Accounts</p>
+                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">{t('finance.coa.title')}</h1>
+                            <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">{accounts.length} {t('finance.coa.accounts')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
-                        <button data-tour="posting-rules-btn" onClick={() => router.push('/finance/settings/posting-rules?from=coa')} className="toolbar-btn text-app-success border-app-success/30 bg-app-success/10"><Settings2 size={13} /> Posting Rules</button>
-                        <button data-tour="migration-btn" onClick={() => router.push('/finance/chart-of-accounts/migrate?from=coa')} className="toolbar-btn text-app-warning border-app-warning/30 bg-app-warning/10"><Zap size={13} /> Migration</button>
-                        <button data-tour="templates-btn" onClick={() => router.push('/finance/chart-of-accounts/templates?from=coa')} className="toolbar-btn text-app-muted-foreground"><Library size={13} /> Templates</button>
-                        <button data-tour="audit-btn" onClick={() => setRecalcOpen(true)} className="toolbar-btn text-app-muted-foreground"><RefreshCcw size={13} /> Audit</button>
-                        <button data-tour="add-account-btn" onClick={() => setIsAdding(true)} className="toolbar-btn-primary"><Plus size={14} /> New Account</button>
+                        <button data-tour="posting-rules-btn" onClick={() => router.push('/finance/settings/posting-rules?from=coa')} className="toolbar-btn text-app-success border-app-success/30 bg-app-success/10"><Settings2 size={13} /> {t('finance.coa.nav_posting_rules')}</button>
+                        <button data-tour="migration-btn" onClick={() => router.push('/finance/chart-of-accounts/migrate?from=coa')} className="toolbar-btn text-app-warning border-app-warning/30 bg-app-warning/10"><Zap size={13} /> {t('finance.coa.nav_migration')}</button>
+                        <button data-tour="templates-btn" onClick={() => router.push('/finance/chart-of-accounts/templates?from=coa')} className="toolbar-btn text-app-muted-foreground"><Library size={13} /> {t('finance.coa.nav_templates')}</button>
+                        <button data-tour="audit-btn" onClick={() => setRecalcOpen(true)} className="toolbar-btn text-app-muted-foreground"><RefreshCcw size={13} /> {t('finance.coa.nav_audit')}</button>
+                        <button data-tour="add-account-btn" onClick={() => setIsAdding(true)} className="toolbar-btn-primary"><Plus size={14} /> {t('finance.coa.new_account')}</button>
                         <PageTour tourId="finance-chart-of-accounts" />
                         <button onClick={() => setFocusMode(p => !p)} className="p-1.5 rounded-xl border border-app-border text-app-muted-foreground">{focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}</button>
                     </div>
@@ -185,9 +188,9 @@ export function ChartOfAccountsViewer({ accounts }: {
             <div data-tour="search-bar" className="flex items-center gap-2 mb-3 flex-shrink-0 px-4 md:px-6">
                 <div className="flex-1 relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                    <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search... (Ctrl+K)" className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-app-border bg-app-surface/50 outline-none" />
+                    <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={t('finance.coa.search_placeholder')} className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-app-border bg-app-surface/50 outline-none" />
                 </div>
-                <button onClick={() => setShowInactive(p => !p)} className={`toolbar-btn ${showInactive ? 'text-app-warning border-app-warning/30 bg-app-warning/10' : 'text-app-muted-foreground'}`}>{showInactive ? <Eye size={13} /> : <EyeOff size={13} />} <span className="hidden sm:inline">Inactive</span></button>
+                <button onClick={() => setShowInactive(p => !p)} className={`toolbar-btn ${showInactive ? 'text-app-warning border-app-warning/30 bg-app-warning/10' : 'text-app-muted-foreground'}`}>{showInactive ? <Eye size={13} /> : <EyeOff size={13} />} <span className="hidden sm:inline">{t('finance.coa.inactive')}</span></button>
             </div>
 
             {isAdding && (
@@ -198,21 +201,21 @@ export function ChartOfAccountsViewer({ accounts }: {
 
             <div data-tour="account-tree" className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col mx-4 md:mx-6 mb-2 border border-app-border bg-app-surface/30">
                 <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 border-b border-app-border/50 text-tp-xs font-bold uppercase tracking-wider text-app-muted-foreground bg-app-surface/60">
-                    <div className="w-5 flex-shrink-0" /><div className="w-7 flex-shrink-0" /><div className="flex-1">Account</div><div className="w-36 hidden lg:block text-app-success">SYSCOHADA</div><div className="w-24 hidden sm:block">Type</div><div className="w-28 text-right">Balance</div><div className="w-16 flex-shrink-0" />
+                    <div className="w-5 flex-shrink-0" /><div className="w-7 flex-shrink-0" /><div className="flex-1">{t('finance.coa.col_account')}</div><div className="w-36 hidden lg:block text-app-success">{t('finance.coa.col_syscohada')}</div><div className="w-24 hidden sm:block">{t('finance.coa.col_type')}</div><div className="w-28 text-right">{t('finance.coa.col_balance')}</div><div className="w-16 flex-shrink-0" />
                 </div>
                 <div className="flex-1 overflow-y-auto overscroll-contain">
-                    {tree.map(node => <AccountNode key={node.id} node={node} level={0} accounts={accounts} onEdit={setEditingAccount} onAddChild={(id) => { setPreselectedParentId(id); setIsAdding(true) }} onReactivate={(id) => setPendingAction({ type: 'reactivate', title: 'Reactivate?', description: 'Restore account.', variant: 'warning', id })} />)}
+                    {tree.map(node => <AccountNode key={node.id} node={node} level={0} accounts={accounts} onEdit={setEditingAccount} onAddChild={(id) => { setPreselectedParentId(id); setIsAdding(true) }} onReactivate={(id) => setPendingAction({ type: 'reactivate', title: t('finance.coa.confirm_reactivate_title'), description: t('finance.coa.confirm_reactivate_desc'), variant: 'warning', id })} />)}
                 </div>
                 <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold border-t border-app-border/50 bg-app-surface/70 text-app-muted-foreground">
-                    <div>{footerStats.totalActive} active · {footerStats.withBalance} with balance</div>
-                    <div className="font-bold text-app-foreground">Net: {footerStats.totalBalance.toLocaleString('en', { minimumFractionDigits: 2 })}</div>
+                    <div>{footerStats.totalActive} {t('finance.coa.active')} · {footerStats.withBalance} {t('finance.coa.with_balance')}</div>
+                    <div className="font-bold text-app-foreground">{t('finance.coa.net')}: {footerStats.totalBalance.toLocaleString('en', { minimumFractionDigits: 2 })}</div>
                 </div>
             </div>
 
             {editingAccount && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={e => e.target === e.currentTarget && setEditingAccount(null)}>
                     <div className="w-full max-w-xl mx-4 rounded-2xl overflow-hidden bg-app-surface border border-app-border p-5 shadow-2xl animate-in zoom-in-95 duration-200">
-                        <AccountForm accounts={accounts} isPending={isPending} onSubmit={handleUpdate} initialData={editingAccount} onCancel={() => setEditingAccount(null)} title="Edit Account" />
+                        <AccountForm accounts={accounts} isPending={isPending} onSubmit={handleUpdate} initialData={editingAccount} onCancel={() => setEditingAccount(null)} title={t('finance.coa.edit_account')} />
                     </div>
                 </div>
             )}
@@ -225,9 +228,9 @@ export function ChartOfAccountsViewer({ accounts }: {
                         await recalculateAccountBalances()
                         setRecalcOpen(false)
                         router.refresh()
-                        toast.success('Balances recalculated.')
+                        toast.success(t('finance.coa.toast_recalculated'))
                     } catch (e: any) {
-                        toast.error(e?.message || 'Recalculate failed — closed periods protect themselves; nothing changed.')
+                        toast.error(e?.message || t('finance.coa.toast_recalc_failed'))
                     }
                 }}
             />
