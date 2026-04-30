@@ -146,6 +146,10 @@ class RevaluationService:
                 f"must be PENDING_APPROVAL."
             )
         with transaction.atomic():
+            # Supersede any prior posted revaluation for the same period+scope
+            # before posting this approval's JE. See _compute() for the same
+            # call on direct-post path.
+            RevaluationService._supersede_prior_revaluations(revaluation)
             je = RevaluationService._build_journal_entry(revaluation, user=user)
             revaluation.journal_entry = je
             revaluation.status = 'POSTED'
@@ -154,6 +158,8 @@ class RevaluationService:
             revaluation.save(update_fields=[
                 'journal_entry', 'status', 'approved_by', 'approved_at',
             ])
+            if je is not None:
+                RevaluationService._link_superseded_to_new_je(revaluation, je)
         return revaluation
 
     @staticmethod
@@ -231,6 +237,10 @@ class RevaluationService:
                     'description': f"Reversal of FX reval {cur_period.name}: {line.description or ''}".strip(),
                 })
 
+            # Don't reuse (source_module, source_model, source_id, journal_type)
+            # of the original — the ledger's dedup check would reject it.
+            # Audit link to the original is preserved via
+            # `revaluation.reversal_journal_entry_id` (set below).
             reversal_je = LedgerCoreMixin.create_journal_entry(
                 organization=revaluation.organization,
                 transaction_date=next_period.start_date,
@@ -241,7 +251,7 @@ class RevaluationService:
                 user=user,
                 journal_type='ADJUSTMENT',
                 source_module='finance',
-                source_model='CurrencyRevaluation',
+                source_model='CurrencyRevaluationReversal',
                 source_id=revaluation.id,
                 internal_bypass=True,
             )
@@ -726,11 +736,20 @@ class RevaluationService:
                 )
 
             if not requires_approval:
-                # Post the JE immediately.
+                # Supersede any prior POSTED revaluation for the same period+scope
+                # before posting the new JE. Without this, re-running for the
+                # same period would leave TWO posted reval JEs in effect — the
+                # books would double-count the FX gain/loss. The old reval
+                # status flips to REVERSED, its JE is_superseded=True linked to
+                # the new JE.
+                RevaluationService._supersede_prior_revaluations(reval)
                 je = RevaluationService._build_journal_entry(reval, user=user)
                 reval.journal_entry = je
                 reval.status = 'POSTED'
                 reval.save(update_fields=['journal_entry', 'status'])
+                # Backfill superseded_by once the new JE exists.
+                if je is not None:
+                    RevaluationService._link_superseded_to_new_je(reval, je)
 
         logger.info(
             f"RevaluationService: period={fiscal_period.name} processed={processed} "
@@ -741,6 +760,53 @@ class RevaluationService:
     # ────────────────────────────────────────────────────────────────────
     # JOURNAL ENTRY BUILDER (shared by run + approve)
     # ────────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _supersede_prior_revaluations(new_reval):
+        """Mark any prior POSTED revaluation for the same (org, period, scope)
+        as REVERSED with its JE flagged ``is_superseded=True``. Run BEFORE the
+        new JE is built so the dedup-key is freed up; ``superseded_by`` is
+        backfilled by ``_link_superseded_to_new_je`` once the new JE exists.
+
+        Idempotent — does nothing if no prior posted reval is found.
+        """
+        from apps.finance.models import CurrencyRevaluation, JournalEntry
+
+        prior_qs = CurrencyRevaluation.objects.filter(
+            organization=new_reval.organization,
+            fiscal_period=new_reval.fiscal_period,
+            scope=new_reval.scope,
+            status='POSTED',
+        ).exclude(pk=new_reval.pk).select_related('journal_entry')
+
+        for prior in prior_qs:
+            if prior.journal_entry_id:
+                JournalEntry.objects.filter(pk=prior.journal_entry_id).update(
+                    is_superseded=True,
+                )
+            prior.status = 'REVERSED'
+            prior.save(update_fields=['status'])
+
+    @staticmethod
+    def _link_superseded_to_new_je(new_reval, new_je):
+        """Backfill ``superseded_by=new_je`` on any JE we just superseded for
+        this period. Called after the new JE exists so the FK can resolve."""
+        from apps.finance.models import CurrencyRevaluation, JournalEntry
+
+        prior_je_ids = list(
+            CurrencyRevaluation.objects.filter(
+                organization=new_reval.organization,
+                fiscal_period=new_reval.fiscal_period,
+                scope=new_reval.scope,
+                status='REVERSED',
+            ).exclude(pk=new_reval.pk)
+            .exclude(journal_entry__isnull=True)
+            .values_list('journal_entry_id', flat=True)
+        )
+        if prior_je_ids:
+            JournalEntry.objects.filter(
+                pk__in=prior_je_ids, is_superseded=True,
+            ).update(superseded_by=new_je)
 
     @staticmethod
     def _build_journal_entry(revaluation, user=None):

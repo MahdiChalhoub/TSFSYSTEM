@@ -243,10 +243,12 @@ function add(id, label, status, note, manual = false) {
     if (!usesShell && !usesIconClass) issues.push('no `page-header-icon` and no SettingsPageShell wrapper');
     const tinyText = (allContent.match(/text-\[(?:8|9)px\]/g) || []).length;
     if (tinyText > 0) issues.push(`${tinyText} text-[8|9]px (use text-tp-xxs ≥ 10px for a11y)`);
-    // Raw hex colors — heuristic, ignore pure black/white & common safelist
-    const rawHex = (allContent.match(/#[0-9A-Fa-f]{6}\b/g) || [])
+    // Raw hex colors — heuristic. Strip `var(--token, #hex)` fallback patterns first
+    // because those *are* using a token; the hex is a defensive SSR fallback.
+    const stripped = allContent.replace(/var\(\s*--[\w-]+\s*,\s*#[0-9A-Fa-f]{3,6}\s*\)/g, 'var(_)');
+    const rawHex = (stripped.match(/#[0-9A-Fa-f]{6}\b/g) || [])
         .filter(h => !/^#(?:000000|FFFFFF|FFF|000)$/i.test(h)).length;
-    if (rawHex > 4) issues.push(`${rawHex} raw hex colors (prefer var(--app-*) tokens)`);
+    if (rawHex > 4) issues.push(`${rawHex} raw hex colors outside var(--app-*) tokens`);
     if (issues.length === 0) add(7, 'Design (mechanical signals)', 'ok', 'consistent patterns detected', true);
     else                     add(7, 'Design (mechanical signals)', 'fail', issues.join('; '), true);
 }

@@ -5,12 +5,12 @@ import { Layers, TrendingUp, Calculator, ShoppingCart, BarChart3, Activity } fro
 export type SectionId = 'profiles' | 'sales' | 'quantity' | 'pricing' | 'scoring' | 'flow'
 
 const SECTIONS: { id: SectionId; label: string; icon: any; color: string; keywords: string }[] = [
-    { id: 'profiles', label: 'Page Profiles', icon: Layers, color: 'text-indigo-500', keywords: 'profiles pages override' },
-    { id: 'sales', label: 'Sales Analysis', icon: TrendingUp, color: 'text-blue-500', keywords: 'sales analysis average period window exclusion' },
-    { id: 'quantity', label: 'Proposed Quantity', icon: Calculator, color: 'text-emerald-500', keywords: 'proposed quantity formula lead days safety multiplier replenishment' },
-    { id: 'pricing', label: 'Supplier & Pricing', icon: ShoppingCart, color: 'text-amber-500', keywords: 'supplier pricing best price period purchase context retail wholesale' },
-    { id: 'scoring', label: 'Scoring & Sources', icon: BarChart3, color: 'text-purple-500', keywords: 'scoring data po count source financial weights margin velocity stock health' },
-    { id: 'flow', label: 'Request Flow', icon: Activity, color: 'text-cyan-500', keywords: 'request flow mode dialog instant cart purchase transfer button' },
+    { id: 'profiles', label: 'Page Profiles', icon: Layers, color: '#6366f1', keywords: 'profiles pages override' },
+    { id: 'sales', label: 'Sales Analysis', icon: TrendingUp, color: '#3b82f6', keywords: 'sales analysis average period window exclusion' },
+    { id: 'quantity', label: 'Proposed Qty', icon: Calculator, color: '#22c55e', keywords: 'proposed quantity formula lead days safety multiplier replenishment' },
+    { id: 'pricing', label: 'Pricing', icon: ShoppingCart, color: '#f59e0b', keywords: 'supplier pricing best price period purchase context retail wholesale' },
+    { id: 'scoring', label: 'Scoring', icon: BarChart3, color: '#8b5cf6', keywords: 'scoring data po count source financial weights margin velocity stock health' },
+    { id: 'flow', label: 'Request Flow', icon: Activity, color: '#06b6d4', keywords: 'request flow mode dialog instant cart purchase transfer button' },
 ]
 
 type Props = {
@@ -24,8 +24,8 @@ type Props = {
 export function SectionNav({ active, onSelect, overrideCounts = {}, warningCounts = {}, cardVisible }: Props) {
     const visible = SECTIONS.filter(s => cardVisible(s.keywords))
     return (
-        <nav className="flex flex-col gap-0.5">
-            <div className="text-[9px] font-black text-app-muted-foreground/60 uppercase tracking-widest px-2 mb-1">Sections</div>
+        <nav className="flex flex-col gap-1">
+            <div className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest px-3 mb-2">Sections</div>
             {visible.map(s => {
                 const Icon = s.icon
                 const isActive = active === s.id
@@ -33,16 +33,32 @@ export function SectionNav({ active, onSelect, overrideCounts = {}, warningCount
                 const warn = warningCounts[s.id] || 0
                 return (
                     <button key={s.id} type="button" onClick={() => onSelect(s.id)}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left ${
-                            isActive ? 'bg-app-primary/10 ring-1 ring-app-primary/30' : 'hover:bg-app-background/40'
-                        }`}>
-                        <Icon size={13} className={isActive ? 'text-app-primary' : s.color} />
-                        <span className={`flex-1 text-[11px] font-bold ${isActive ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{s.label}</span>
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all text-left group"
+                        style={isActive ? {
+                            background: `color-mix(in srgb, ${s.color} 10%, var(--app-surface))`,
+                            border: `1.5px solid color-mix(in srgb, ${s.color} 35%, transparent)`,
+                            boxShadow: `0 2px 8px color-mix(in srgb, ${s.color} 10%, transparent)`,
+                        } : {
+                            background: 'transparent',
+                            border: '1.5px solid transparent',
+                        }}>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all"
+                            style={{
+                                background: isActive ? `color-mix(in srgb, ${s.color} 15%, transparent)` : 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                                color: isActive ? s.color : 'var(--app-muted-foreground)',
+                            }}>
+                            <Icon size={13} />
+                        </div>
+                        <span className={`flex-1 text-[11px] font-bold transition-colors ${isActive ? 'text-app-foreground font-black' : 'text-app-muted-foreground group-hover:text-app-foreground'}`}>
+                            {s.label}
+                        </span>
                         {warn > 0 && (
-                            <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500/10 text-amber-600 font-black tabular-nums">{warn}</span>
+                            <span className="text-[7px] px-1.5 py-0.5 rounded-full font-black tabular-nums"
+                                style={{ background: 'color-mix(in srgb, #f59e0b 12%, transparent)', color: '#f59e0b' }}>{warn}</span>
                         )}
                         {ovr > 0 && (
-                            <span className="text-[8px] px-1 py-0.5 rounded bg-app-primary/10 text-app-primary font-black tabular-nums">{ovr}</span>
+                            <span className="text-[7px] px-1.5 py-0.5 rounded-full font-black tabular-nums"
+                                style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>{ovr}</span>
                         )}
                     </button>
                 )

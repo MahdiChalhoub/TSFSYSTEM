@@ -446,6 +446,7 @@ export async function activateOrgPaymentGateway(gatewayId: number): Promise<Acti
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ gateway: gatewayId }),
         })
+        revalidatePath('/payment-gateways')
         revalidatePath('/settings/payment-gateways')
         return { success: true, data: result }
     } catch (error: unknown) {
@@ -461,9 +462,98 @@ export async function deactivateOrgPaymentGateway(orgGatewayId: number): Promise
         await erpFetch(`reference/org-payment-gateways/${orgGatewayId}/`, {
             method: 'DELETE',
         })
+        revalidatePath('/payment-gateways')
         revalidatePath('/settings/payment-gateways')
         return { success: true }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to deactivate gateway' }
+    }
+}
+
+// =============================================================================
+// PAYMENT GATEWAY CATALOG — SaaS-admin CRUD
+// =============================================================================
+
+export interface PaymentGatewayPayload {
+    code: string
+    name: string
+    provider_family?: string
+    logo_emoji?: string
+    color?: string
+    description?: string
+    is_global?: boolean
+    country_codes?: string[]
+    config_schema?: Array<{
+        key: string
+        label?: string
+        type: 'text' | 'password' | 'select'
+        required?: boolean
+        options?: Array<{ value: string; label: string }>
+    }>
+    website_url?: string
+    is_active?: boolean
+    sort_order?: number
+}
+
+/** Create a new payment gateway in the global catalog. SaaS-admin only. */
+export async function createRefPaymentGateway(
+    payload: PaymentGatewayPayload,
+): Promise<ActionResult & { data?: any }> {
+    try {
+        const result = await erpFetch('reference/payment-gateways/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+        revalidatePath('/payment-gateways')
+        return { success: true, data: result }
+    } catch (error: unknown) {
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to create gateway' }
+    }
+}
+
+/** Update a payment gateway in the global catalog. SaaS-admin only. */
+export async function updateRefPaymentGateway(
+    id: number,
+    payload: Partial<PaymentGatewayPayload>,
+): Promise<ActionResult & { data?: any }> {
+    try {
+        const result = await erpFetch(`reference/payment-gateways/${id}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+        revalidatePath('/payment-gateways')
+        return { success: true, data: result }
+    } catch (error: unknown) {
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to update gateway' }
+    }
+}
+
+/** Delete a payment gateway from the global catalog. SaaS-admin only. */
+export async function deleteRefPaymentGateway(id: number): Promise<ActionResult> {
+    try {
+        await erpFetch(`reference/payment-gateways/${id}/`, { method: 'DELETE' })
+        revalidatePath('/payment-gateways')
+        return { success: true }
+    } catch (error: unknown) {
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to delete gateway' }
+    }
+}
+
+/** Toggle active flag in one round-trip. */
+export async function toggleRefPaymentGateway(
+    id: number,
+): Promise<ActionResult & { data?: any }> {
+    try {
+        const result = await erpFetch(`reference/payment-gateways/${id}/toggle-active/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+        })
+        revalidatePath('/payment-gateways')
+        return { success: true, data: result }
+    } catch (error: unknown) {
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to toggle gateway' }
     }
 }

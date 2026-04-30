@@ -2,41 +2,45 @@
 
 import { ShoppingCart, X } from 'lucide-react'
 import {
-    card, cardHead, cardBody, cardTitle,
     fieldLabel, fieldHint, fieldSelect, toggleBtn,
     PERIOD_OPTIONS, periodLabel, contextLabel,
 } from '../../_lib/constants'
 import { usePASettings } from '../../_hooks/PASettingsContext'
 import { FieldHelp } from '../FieldHelp'
 
+const C = '#f59e0b'
+
 export function PricingSection() {
     const s = usePASettings()
     if (!s.cardVisible('supplier pricing best price period purchase context retail wholesale')) return null
 
     return (
-        <div className={card}>
-            <div className={cardHead('border-amber-500')}>
-                <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center">
-                    <ShoppingCart className="w-4 h-4 text-amber-500" />
+        <div className="rounded-2xl overflow-hidden"
+            style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: `1.5px solid color-mix(in srgb, ${C} 15%, var(--app-border))` }}>
+            <div className="px-4 py-3 flex items-center gap-3"
+                style={{ background: `color-mix(in srgb, ${C} 4%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${C} 10%, transparent)` }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: `color-mix(in srgb, ${C} 12%, transparent)` }}>
+                    <ShoppingCart size={15} style={{ color: C }} />
                 </div>
                 <div className="flex-1">
-                    <h3 className={cardTitle}>Supplier & Pricing</h3>
-                    <p className="text-[10px] text-app-muted-foreground">Best price lookups and purchase context</p>
+                    <h3 className="text-[13px] font-black text-app-foreground">Supplier & Pricing</h3>
+                    <p className="text-[9px] font-bold text-app-muted-foreground">Best price lookups and purchase context</p>
                 </div>
                 <button type="button" onClick={(e) => { e.stopPropagation(); s.resetSection('pricing') }}
-                    className="text-[8px] px-1.5 py-0.5 rounded bg-app-muted-foreground/5 border border-app-border/30 text-app-muted-foreground hover:text-app-foreground hover:border-app-border transition-all"
-                    title="Reset this section to defaults">Reset</button>
+                    className="text-[8px] font-black px-2 py-1 rounded-lg transition-all"
+                    style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)', color: 'var(--app-muted-foreground)' }}>Reset</button>
             </div>
-            <div className={cardBody}>
+            <div className="px-4 py-4 space-y-5">
                 <div>
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-2">
                         <label className={fieldLabel + ' mb-0'}>Best Price Period</label>
                         <FieldHelp field="best_price_period_days" />
                         {s.isOverridden('best_price_period_days') && (
                             <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                 <button type="button" onClick={() => s.clearOverride('best_price_period_days')}
-                                    className="text-app-muted-foreground hover:text-red-500 transition-colors" title="Reset to global"><X size={9} /></button>
+                                    className="text-app-muted-foreground hover:text-red-500 transition-colors"><X size={9} /></button>
                             </>
                         )}
                     </div>
@@ -48,21 +52,20 @@ export function PricingSection() {
                     <p className={fieldHint}>
                         Best price considers supplier prices within this window.
                         {s.isOverridden('best_price_period_days') && (
-                            <span className="ml-1 text-app-primary/60">Global: {periodLabel(s.globalVal('best_price_period_days'))}</span>
+                            <span className="ml-1" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Global: {periodLabel(s.globalVal('best_price_period_days'))}</span>
                         )}
                     </p>
                 </div>
-
                 <div>
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-2">
                         <label className={fieldLabel + ' mb-0'}>Purchase Context</label>
                         <FieldHelp field="purchase_context" />
                         {s.isOverridden('purchase_context') && (
                             <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                 <button type="button" onClick={() => s.clearOverride('purchase_context')}
-                                    className="text-app-muted-foreground hover:text-red-500 transition-colors" title="Reset to global"><X size={9} /></button>
-                                <span className="text-[8px] text-app-primary/60">Global: {contextLabel(s.globalVal('purchase_context'))}</span>
+                                    className="text-app-muted-foreground hover:text-red-500 transition-colors"><X size={9} /></button>
+                                <span className="text-[8px] font-bold" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Global: {contextLabel(s.globalVal('purchase_context'))}</span>
                             </>
                         )}
                     </div>

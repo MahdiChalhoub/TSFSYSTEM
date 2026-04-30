@@ -593,13 +593,16 @@ export async function getFxSettings(): Promise<{ success: boolean; data?: FxSett
     }
 }
 
-/** PATCH /currency-revaluations/fx-settings/ — body { materiality_threshold_pct }. */
+/** POST /currency-revaluations/fx-settings/ — body { materiality_threshold_pct }.
+ *  POST (not PATCH) because the parent viewset blocks PUT/PATCH/DELETE at
+ *  the http_method_names level. The endpoint distinguishes read vs write by
+ *  request method internally. */
 export async function updateFxSettings(payload: { materialityThresholdPct: string | number }): Promise<{
     success: boolean; data?: FxSettings; error?: string
 }> {
     try {
         const r = await erpFetch('currency-revaluations/fx-settings/', {
-            method: 'PATCH',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ materiality_threshold_pct: String(payload.materialityThresholdPct) }),
         }) as FxSettings

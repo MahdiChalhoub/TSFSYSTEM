@@ -35,10 +35,10 @@ from apps.finance.services.revaluation_service import (
 
 
 def _make_period(org, year, name, start, end):
-    """Create FY + period in one call."""
+    """Create FY (full year, Jan 1 → Dec 31) + period inside it."""
     fy, _ = FiscalYear.objects.get_or_create(
         organization=org, name=str(year),
-        defaults={'start_date': start, 'end_date': end},
+        defaults={'start_date': date(year, 1, 1), 'end_date': date(year, 12, 31)},
     )
     return FiscalPeriod.objects.create(
         organization=org, fiscal_year=fy, name=name,
@@ -47,10 +47,15 @@ def _make_period(org, year, name, start, end):
 
 
 def _post_je(org, txn_date, lines, scope='OFFICIAL'):
-    """Create a POSTED JE with the given lines (each: account, debit, credit, amount_currency)."""
+    """Create JE in DRAFT, add lines, then flip to POSTED.
+
+    The JournalEntry model enforces immutability once status='POSTED' — lines
+    can't be added afterwards. The two-step (create draft, add lines, post)
+    pattern mirrors the real ledger service.
+    """
     je = JournalEntry.objects.create(
         organization=org, transaction_date=txn_date,
-        status='POSTED', scope=scope, journal_type='MANUAL',
+        status='DRAFT', scope=scope, journal_type='MANUAL',
         is_superseded=False,
     )
     for ln in lines:
@@ -60,7 +65,10 @@ def _post_je(org, txn_date, lines, scope='OFFICIAL'):
             debit=ln.get('debit', Decimal('0')),
             credit=ln.get('credit', Decimal('0')),
             amount_currency=ln.get('amount_currency'),
+            exchange_rate=ln.get('exchange_rate'),
         )
+    je.status = 'POSTED'
+    je.save(update_fields=['status'])
     return je
 
 
@@ -138,11 +146,14 @@ class RevaluationServiceCoreTests(TestCase):
             )
 
             # Post an AR invoice on 2026-01-15 at rate 600: 1000 USD = 600,000 XAF.
+            # Both lines require amount_currency + exchange_rate to satisfy the
+            # ledger's FC-line validator (debit/credit must reconcile to
+            # amount_currency × exchange_rate).
             _post_je(self.org, date(2026, 1, 15), [
                 {'account': self.ar, 'debit': Decimal('600000'), 'credit': Decimal('0'),
-                 'amount_currency': Decimal('1000')},
+                 'amount_currency': Decimal('1000'), 'exchange_rate': Decimal('600')},
                 {'account': self.sales, 'debit': Decimal('0'), 'credit': Decimal('600000'),
-                 'amount_currency': Decimal('-1000')},
+                 'amount_currency': Decimal('-1000'), 'exchange_rate': Decimal('600')},
             ])
 
     # ── preview ──────────────────────────────────────────────────────────
@@ -167,9 +178,9 @@ class RevaluationServiceCoreTests(TestCase):
             # Post a non-monetary balance so the engine actually visits it.
             _post_je(self.org, date(2026, 1, 10), [
                 {'account': self.equip, 'debit': Decimal('500000'), 'credit': Decimal('0'),
-                 'amount_currency': Decimal('800')},
+                 'amount_currency': Decimal('800'), 'exchange_rate': Decimal('625')},
                 {'account': self.ar, 'debit': Decimal('0'), 'credit': Decimal('500000'),
-                 'amount_currency': Decimal('-800')},
+                 'amount_currency': Decimal('-800'), 'exchange_rate': Decimal('625')},
             ])
             preview = RevaluationService.preview(self.org, self.p1)
         codes_in_lines = {l['account_code'] for l in preview['lines']}
@@ -268,7 +279,11 @@ class RevaluationServiceCoreTests(TestCase):
             reversal = RevaluationService.reverse_at_period_start(reval, user=self.user)
             reval.refresh_from_db()
         self.assertEqual(reval.reversal_journal_entry_id, reversal.id)
-        self.assertEqual(reversal.transaction_date.date(), self.p2.start_date)
+        # transaction_date is a DateField (or datetime depending on backend);
+        # normalize both sides to a date object for comparison.
+        td = reversal.transaction_date
+        td_as_date = td.date() if hasattr(td, 'date') else td
+        self.assertEqual(td_as_date, self.p2.start_date)
         # Reversal lines should sum to zero net impact (they swap dr/cr of original).
         original_net = sum(l.debit - l.credit for l in reval.journal_entry.lines.all())
         reversal_net = sum(l.debit - l.credit for l in reversal.lines.all())
@@ -344,6 +359,53 @@ class RevaluationServiceCoreTests(TestCase):
         self.assertEqual(summary['errors'], 1)
         self.assertGreaterEqual(summary['run'] + summary['skipped'], 1)
 
+    # ── supersede on re-run ──────────────────────────────────────────────
+
+    def test_rerun_supersedes_prior_revaluation(self):
+        """A second posted revaluation for the same period must mark the
+        prior one REVERSED with its JE flagged is_superseded — otherwise the
+        books would double-count the FX gain/loss."""
+        with tenant_context(self.org):
+            first = RevaluationService.run_revaluation(
+                self.org, self.p1, user=self.user, force_post=True,
+            )
+            self.assertEqual(first.status, 'POSTED')
+            first_je_id = first.journal_entry_id
+            self.assertIsNotNone(first_je_id)
+
+            second = RevaluationService.run_revaluation(
+                self.org, self.p1, user=self.user, force_post=True,
+            )
+            second.refresh_from_db()
+            first.refresh_from_db()
+            from apps.finance.models import JournalEntry
+            first_je = JournalEntry.objects.get(pk=first_je_id)
+
+        self.assertEqual(second.status, 'POSTED')
+        self.assertNotEqual(first.id, second.id)
+        # Prior revaluation flipped to REVERSED.
+        self.assertEqual(first.status, 'REVERSED')
+        # Prior JE marked superseded + linked forward.
+        self.assertTrue(first_je.is_superseded)
+        self.assertEqual(first_je.superseded_by_id, second.journal_entry_id)
+
+    def test_approve_supersedes_prior_pending_or_posted(self):
+        """Approving a PENDING_APPROVAL run must also supersede prior posted
+        revals for the same period (operator may have force-posted earlier
+        then submitted a fresh run for review)."""
+        with tenant_context(self.org):
+            first = RevaluationService.run_revaluation(
+                self.org, self.p1, user=self.user, force_post=True,
+            )
+            second = RevaluationService.run_revaluation(
+                self.org, self.p1, user=self.user,
+            )
+            self.assertEqual(second.status, 'PENDING_APPROVAL')
+            RevaluationService.approve(second, user=self.user)
+            first.refresh_from_db(); second.refresh_from_db()
+        self.assertEqual(first.status, 'REVERSED')
+        self.assertEqual(second.status, 'POSTED')
+
     def test_catchup_stop_on_error_bails_immediately(self):
         with tenant_context(self.org):
             ExchangeRate.objects.create(
@@ -360,6 +422,79 @@ class RevaluationServiceCoreTests(TestCase):
         # Should stop at the first error → only one entry.
         self.assertEqual(len(results), 1)
         self.assertIn('error', results[0])
+
+
+    # ── exposure report ─────────────────────────────────────────────────
+
+    def test_compute_exposure_report_per_currency_aggregation(self):
+        """Exposure report walks foreign-currency accounts and applies sensitivity bands.
+
+        Setup has AR (+1000 USD) and Sales (-1000 USD), so per-account rows
+        appear under USD. Sensitivity must compute regardless of the net.
+        """
+        with tenant_context(self.org):
+            report = RevaluationService.compute_exposure_report(
+                self.org, as_of_date=date(2026, 1, 31), scope='OFFICIAL',
+            )
+        self.assertEqual(report['base_currency'], 'XAF')
+        usd_row = next((c for c in report['currencies'] if c['currency'] == 'USD'), None)
+        self.assertIsNotNone(usd_row, f'USD missing: {report}')
+        # Per-account breakdown — both AR (+1000) and Sales (-1000) appear.
+        codes = {a['code'] for a in usd_row['accounts']}
+        self.assertIn('1200', codes)  # AR
+        self.assertIn('4100', codes)  # Sales
+        ar_acc = next(a for a in usd_row['accounts'] if a['code'] == '1200')
+        self.assertEqual(Decimal(ar_acc['balance_fc']), Decimal('1000.00'))
+        # AR alone in base = 1000 × 620 = 620,000 XAF.
+        self.assertEqual(Decimal(ar_acc['balance_base']), Decimal('620000.00'))
+        # Sensitivity bands present for ±5/±10%.
+        for band in ('-10', '-5', '5', '10'):
+            self.assertIn(band, usd_row['sensitivity'])
+
+    def test_compute_exposure_report_with_no_base_currency(self):
+        """Org without a base currency gets a stub response, not a crash."""
+        with tenant_context(self.org):
+            self.xaf.is_base = False
+            self.xaf.save(update_fields=['is_base'])
+            report = RevaluationService.compute_exposure_report(
+                self.org, as_of_date=date(2026, 1, 31),
+            )
+            # Restore for other tests.
+            self.xaf.is_base = True
+            self.xaf.save(update_fields=['is_base'])
+        self.assertEqual(report['currencies'], [])
+        self.assertIn('note', report)
+
+    # ── error paths ─────────────────────────────────────────────────────
+
+    def test_run_raises_when_no_base_currency(self):
+        with tenant_context(self.org):
+            self.xaf.is_base = False
+            self.xaf.save(update_fields=['is_base'])
+            with self.assertRaises(ValidationError):
+                RevaluationService.run_revaluation(self.org, self.p1, user=self.user)
+            self.xaf.is_base = True
+            self.xaf.save(update_fields=['is_base'])
+
+    def test_run_raises_when_fx_gain_loss_accounts_missing(self):
+        """Building the JE without FX_GAIN/FX_LOSS configured must error
+        cleanly so the operator gets a useful message."""
+        with tenant_context(self.org):
+            # Strip the FX_GAIN/FX_LOSS roles. Posting rules also empty by default.
+            self.fx_gain.system_role = None
+            self.fx_gain.save(update_fields=['system_role'])
+            self.fx_loss.system_role = None
+            self.fx_loss.save(update_fields=['system_role'])
+            with self.assertRaises(ValidationError) as ctx:
+                RevaluationService.run_revaluation(
+                    self.org, self.p1, user=self.user, force_post=True,
+                )
+            self.assertIn('FX_GAIN', str(ctx.exception))
+            # Restore.
+            self.fx_gain.system_role = 'FX_GAIN'
+            self.fx_gain.save(update_fields=['system_role'])
+            self.fx_loss.system_role = 'FX_LOSS'
+            self.fx_loss.save(update_fields=['system_role'])
 
 
 class RevaluationServiceHelpersTests(TestCase):

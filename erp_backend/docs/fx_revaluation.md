@@ -315,11 +315,24 @@ Run: `python3 manage.py test apps.finance.tests.test_revaluation_service`
 | Schema   | `apps/finance/models/currency_models.py` (CurrencyRevaluation, Line) |
 |          | `apps/finance/models/coa_models.py` (monetary_classification)   |
 |          | `apps/finance/migrations/0075_revaluation_overhaul.py`          |
+|          | `apps/finance/migrations/0076_backfill_monetary_classification.py` (data migration) |
 | Service  | `apps/finance/services/revaluation_service.py`                  |
 |          | `apps/finance/services/realized_fx_service.py`                  |
-| API      | `apps/finance/views/currency_views.py` (CurrencyRevaluationViewSet) |
-|          | `apps/finance/views/account_views.py` (bulk_classify)           |
+| API      | `apps/finance/views/currency_views.py` (CurrencyRevaluationViewSet — preview, run, approve, reject, reverse, catchup, exposure, fx-settings, realized-fx-integrity) |
+|          | `apps/finance/views/account_views.py` (bulk_classify + _smart_default_for) |
+|          | `erp/views.py` (GlobalCurrencyViewSet — note rename)            |
+|          | `erp/views_auth.py` (me_view exposes permission_flags.can_approve_revaluation) |
 | Frontend | `src/app/actions/finance/currency.ts` (server actions, types)   |
 |          | `src/app/actions/finance/accounts.ts` (bulk classify)           |
-|          | `src/app/(privileged)/settings/regional/_components/FxRedesigned.tsx` (UI) |
-| Tests    | `apps/finance/tests/test_revaluation_service.py`                |
+|          | `src/app/(privileged)/settings/regional/_components/FxRedesigned.tsx` (orchestrator) |
+|          | `src/app/(privileged)/settings/regional/_components/fx/_shared.tsx` (primitives) |
+|          | `src/app/(privileged)/settings/regional/_components/fx/RevaluationsView.tsx` (Revaluations subsystem: view, preview drawer, exposure card, integrity banner, reject modal, catchup results modal, settings modal) |
+| Tests    | `apps/finance/tests/test_revaluation_service.py` (18 tests: preview, materiality, classification, approval, reversal, catchup transactionality) |
+|          | `apps/finance/tests/test_bulk_classify.py` (smart-default heuristic + migration parity) |
+| Docs     | `erp_backend/docs/fx_revaluation.md` (this file)                |
+|          | `erp_backend/docs/migration_chain_recovery.md` (recovery playbook for the `erp_contract` drift blocking 0075/0076 from applying via `manage.py migrate`) |
+
+> **Migration heads-up.** Migrations `0075` and `0076` are blocked behind a
+> pre-existing chain drift documented in `migration_chain_recovery.md`.
+> Until that's resolved, apply the workaround SQL from §"Workaround for FX
+> revaluation specifically" in that runbook to enable this feature.

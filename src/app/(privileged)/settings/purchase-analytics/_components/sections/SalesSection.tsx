@@ -2,7 +2,6 @@
 
 import { TrendingUp, X, Lock, Unlock, AlertTriangle } from 'lucide-react'
 import {
-    card, cardHead, cardBody, cardTitle,
     fieldLabel, fieldHint, fieldSelect, toggleBtn,
     PERIOD_OPTIONS, periodLabel,
 } from '../../_lib/constants'
@@ -10,28 +9,35 @@ import { getFieldStatus } from '../../_lib/validation'
 import { usePASettings } from '../../_hooks/PASettingsContext'
 import { FieldHelp, statusDot } from '../FieldHelp'
 
+const SECTION_COLOR = '#3b82f6'
+
 export function SalesSection() {
     const s = usePASettings()
     if (!s.cardVisible('sales analysis average period window exclusion')) return null
 
     return (
-        <div className={card}>
-            <div className={cardHead('border-blue-500')}>
-                <div className="w-6 h-6 rounded-md bg-blue-500/10 flex items-center justify-center">
-                    <TrendingUp className="w-3 h-3 text-blue-500" />
+        <div className="rounded-2xl overflow-hidden"
+            style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: `1.5px solid color-mix(in srgb, ${SECTION_COLOR} 15%, var(--app-border))` }}>
+            {/* Header */}
+            <div className="px-4 py-3 flex items-center gap-3"
+                style={{ background: `color-mix(in srgb, ${SECTION_COLOR} 4%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${SECTION_COLOR} 10%, transparent)` }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: `color-mix(in srgb, ${SECTION_COLOR} 12%, transparent)` }}>
+                    <TrendingUp size={15} style={{ color: SECTION_COLOR }} />
                 </div>
                 <div className="flex-1">
-                    <h3 className={cardTitle}>Sales Analysis</h3>
-                    <p className="text-[10px] text-app-muted-foreground">How daily/monthly averages are calculated</p>
+                    <h3 className="text-[13px] font-black text-app-foreground">Sales Analysis</h3>
+                    <p className="text-[9px] font-bold text-app-muted-foreground">How daily/monthly averages are calculated</p>
                 </div>
                 <button type="button" onClick={(e) => { e.stopPropagation(); s.resetSection('sales') }}
-                    className="text-[8px] px-1.5 py-0.5 rounded bg-app-muted-foreground/5 border border-app-border/30 text-app-muted-foreground hover:text-app-foreground hover:border-app-border transition-all"
-                    title="Reset this section to defaults">Reset</button>
+                    className="text-[8px] font-black px-2 py-1 rounded-lg transition-all"
+                    style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)', color: 'var(--app-muted-foreground)' }}>Reset</button>
             </div>
-            <div className={cardBody}>
+
+            <div className="px-4 py-4 space-y-5">
                 {/* Sales Average Period */}
                 <div>
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-2">
                         <label className={fieldLabel + ' mb-0'}>Sales Average Period</label>
                         {statusDot(getFieldStatus('sales_avg_period_days', s.config.sales_avg_period_days))}
                         <FieldHelp field="sales_avg_period_days" />
@@ -53,22 +59,22 @@ export function SalesSection() {
                             {PERIOD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                         </select>
                         <button type="button" onClick={() => s.toggleFieldLock('sales_avg_period_days')}
-                            className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded text-app-muted-foreground/30 hover:text-app-muted-foreground transition-colors"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-app-muted-foreground/30 hover:text-app-muted-foreground transition-colors"
                             title={s.lockedFields.has('sales_avg_period_days') ? 'Unlock field' : 'Lock field'}>
-                            {s.lockedFields.has('sales_avg_period_days') ? <Lock size={8} /> : <Unlock size={8} />}
+                            {s.lockedFields.has('sales_avg_period_days') ? <Lock size={9} /> : <Unlock size={9} />}
                         </button>
                     </div>
                     <p className={fieldHint}>
-                        Average daily sales will be calculated over this window.
+                        Average daily sales calculated over this window.
                         {s.isOverridden('sales_avg_period_days') && (
-                            <span className="ml-1 text-app-primary/60">Global: {periodLabel(s.globalVal('sales_avg_period_days'))}</span>
+                            <span className="ml-1" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Global: {periodLabel(s.globalVal('sales_avg_period_days'))}</span>
                         )}
                     </p>
                 </div>
 
                 {/* Window Size */}
                 <div>
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-2">
                         <label className={fieldLabel + ' mb-0'}>Sales Period Window Size (Days)</label>
                         <FieldHelp field="sales_window_size_days" />
                         {s.isOverridden('sales_window_size_days') && (
@@ -89,14 +95,14 @@ export function SalesSection() {
                     <p className={fieldHint}>
                         Each window covers this many days.
                         {s.isOverridden('sales_window_size_days') && (
-                            <span className="ml-1 text-app-primary/60">Global: {s.globalVal('sales_window_size_days') ?? 15} days</span>
+                            <span className="ml-1" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Global: {s.globalVal('sales_window_size_days') ?? 15} days</span>
                         )}
                     </p>
                 </div>
 
                 {/* Exclude types */}
                 <div>
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-2">
                         <label className={fieldLabel + ' mb-0'}>Exclude Sale Types from Average</label>
                         <FieldHelp field="sales_type_exclusions" />
                         {s.isOverridden('sales_avg_exclude_types') && (
@@ -122,7 +128,7 @@ export function SalesSection() {
                             )
                         })}
                     </div>
-                    <p className={fieldHint}>Selected types will be excluded from sales averages so they don't skew your analysis.</p>
+                    <p className={fieldHint}>Selected types excluded from sales averages.</p>
                 </div>
             </div>
         </div>

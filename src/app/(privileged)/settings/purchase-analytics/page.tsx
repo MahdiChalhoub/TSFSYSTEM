@@ -220,8 +220,8 @@ export default function PurchaseAnalyticsSettingsPage() {
 
 
                 {/* ═══ TWO-PANE LAYOUT ═══ */}
-                <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-4 items-start">
-                    <aside className="lg:sticky lg:top-2">
+                <div className="grid grid-cols-1 lg:grid-cols-[210px_1fr] gap-5 items-start">
+                    <aside className="lg:sticky lg:top-4">
                         <SectionNav
                             active={activeSection} onSelect={setActiveSection}
                             cardVisible={cardVisible}

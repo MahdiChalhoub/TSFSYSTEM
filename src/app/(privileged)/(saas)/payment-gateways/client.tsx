@@ -1,13 +1,20 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-    CreditCard, Search, ArrowLeft, X, Check, Loader2,
-    Globe, Filter, Zap, ExternalLink, Layers, Eye, EyeOff,
-    Building2, MapPin, Lock, Settings2
+    CreditCard, Search, ArrowLeft, X, Check,
+    Globe, Filter, ExternalLink, Layers, Eye, EyeOff,
+    Building2, MapPin, Lock, Settings2, Plus, Pencil, Trash2, Power,
 } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import {
+    deleteRefPaymentGateway, toggleRefPaymentGateway,
+} from '@/app/actions/reference'
+import { runTimed } from '@/lib/perf-timing'
+import { GatewayEditorDialog } from './GatewayEditorDialog'
 
 /* ── Input styles ── */
 const inputCls = "w-full text-[12px] font-bold px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary focus:ring-2 focus:ring-app-primary/10 transition-all"
@@ -16,10 +23,51 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
     allGateways: any[]
     initialOrgGateways: any[]
 }) {
+    const router = useRouter()
+    const [, startTransition] = useTransition()
     const [search, setSearch] = useState('')
     const [familyFilter, setFamilyFilter] = useState('')
     const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'inactive'>('')
     const [expanded, setExpanded] = useState<number | null>(null)
+    const [editorOpen, setEditorOpen] = useState(false)
+    const [editorTarget, setEditorTarget] = useState<any | null>(null)
+    const [pendingDelete, setPendingDelete] = useState<any | null>(null)
+
+    function openCreate() {
+        setEditorTarget(null)
+        setEditorOpen(true)
+    }
+    function openEdit(gw: any) {
+        setEditorTarget(gw)
+        setEditorOpen(true)
+    }
+    async function handleToggle(gw: any) {
+        const res = await runTimed(
+            'saas.payment-gateways:toggle-active',
+            () => toggleRefPaymentGateway(gw.id),
+        )
+        if (res.success) {
+            toast.success(`${gw.name} ${gw.is_active ? 'deactivated' : 'activated'}`)
+            startTransition(() => router.refresh())
+        } else {
+            toast.error(res.error || 'Failed to toggle')
+        }
+    }
+    async function handleConfirmDelete() {
+        if (!pendingDelete) return
+        const target = pendingDelete
+        setPendingDelete(null)
+        const res = await runTimed(
+            'saas.payment-gateways:delete',
+            () => deleteRefPaymentGateway(target.id),
+        )
+        if (res.success) {
+            toast.success(`${target.name} removed`)
+            startTransition(() => router.refresh())
+        } else {
+            toast.error(res.error || 'Failed to delete')
+        }
+    }
 
     /* ── Derived state ── */
     const families = useMemo(() => {
@@ -88,6 +136,11 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                         </p>
                     </div>
                 </div>
+                <button onClick={openCreate}
+                        className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-xl text-white transition-all hover:shadow-md"
+                        style={{ background: 'var(--app-primary)' }}>
+                    <Plus size={12} /> Add Gateway
+                </button>
             </header>
 
             {/* ═══ KPI Strip ═══ */}
@@ -299,6 +352,36 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                                                     </div>
                                                 )
                                             })()}
+
+                                            {/* Admin Actions */}
+                                            <div className="flex items-center justify-end gap-1 pt-2"
+                                                 style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                                                <button onClick={(e) => { e.stopPropagation(); handleToggle(gw) }}
+                                                    title={gw.is_active ? 'Deactivate' : 'Activate'}
+                                                    className="flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg hover:bg-app-surface-hover transition-all"
+                                                    style={{ color: gw.is_active ? 'var(--app-warning, #f59e0b)' : 'var(--app-success, #22c55e)' }}>
+                                                    <Power size={10} /> {gw.is_active ? 'Deactivate' : 'Activate'}
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); openEdit(gw) }}
+                                                    title="Edit"
+                                                    className="flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg hover:bg-app-surface-hover transition-all text-app-muted-foreground hover:text-app-foreground">
+                                                    <Pencil size={10} /> Edit
+                                                </button>
+                                                <button onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    const inUse = initialOrgGateways.some(og => og.gateway === gw.id)
+                                                    if (inUse) {
+                                                        toast.error('In use by one or more orgs — deactivate instead.')
+                                                        return
+                                                    }
+                                                    setPendingDelete(gw)
+                                                }}
+                                                    title="Delete"
+                                                    className="flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg hover:bg-app-error/10 transition-all"
+                                                    style={{ color: 'var(--app-error, #ef4444)' }}>
+                                                    <Trash2 size={10} /> Delete
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -316,10 +399,36 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                         {search || familyFilter || statusFilter ? 'No gateways match your filters' : 'No payment gateways in the catalog'}
                     </p>
                     <p className="text-[11px] text-app-muted-foreground mt-1">
-                        {search || familyFilter || statusFilter ? 'Try adjusting your search or filter.' : 'Run the seed_payment_gateways command to populate.'}
+                        {search || familyFilter || statusFilter
+                            ? 'Try adjusting your search or filter.'
+                            : 'Click "Add Gateway" above, or run the seed_payment_gateways command.'}
                     </p>
+                    {!(search || familyFilter || statusFilter) && (
+                        <button onClick={openCreate}
+                                className="mt-4 inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-xl text-white"
+                                style={{ background: 'var(--app-primary)' }}>
+                            <Plus size={12} /> Add First Gateway
+                        </button>
+                    )}
                 </div>
             )}
+
+            <GatewayEditorDialog
+                open={editorOpen}
+                onClose={() => setEditorOpen(false)}
+                onSaved={() => startTransition(() => router.refresh())}
+                initial={editorTarget}
+            />
+
+            <ConfirmDialog
+                open={!!pendingDelete}
+                onOpenChange={(o) => { if (!o) setPendingDelete(null) }}
+                title={pendingDelete ? `Delete ${pendingDelete.name}?` : 'Delete'}
+                description="This removes the gateway from the global catalog. Tenants who haven't activated it won't be affected."
+                confirmText="Delete"
+                variant="danger"
+                onConfirm={handleConfirmDelete}
+            />
         </div>
     )
 }

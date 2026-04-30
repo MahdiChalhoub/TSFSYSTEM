@@ -199,8 +199,16 @@ class CityListSerializer(serializers.ModelSerializer):
 # =============================================================================
 
 class PaymentGatewaySerializer(serializers.ModelSerializer):
-    """Read-only serializer for the global payment gateway catalog."""
-    country_codes = serializers.SerializerMethodField()
+    """SaaS-admin serializer for the global payment gateway catalog.
+
+    Reads/writes the catalog. `country_codes` is the wire format for the
+    `countries` M2M — a list of ISO2 strings ('CI', 'SN', ...) — so the
+    frontend never needs to know Country PKs.
+    """
+    country_codes = serializers.ListField(
+        child=serializers.CharField(max_length=2),
+        required=False, allow_empty=True,
+    )
 
     class Meta:
         model = PaymentGateway
@@ -210,8 +218,33 @@ class PaymentGatewaySerializer(serializers.ModelSerializer):
             'website_url', 'is_active', 'sort_order',
         ]
 
-    def get_country_codes(self, obj):
-        return list(obj.countries.values_list('iso2', flat=True))
+    def to_representation(self, obj):
+        rep = super().to_representation(obj)
+        rep['country_codes'] = list(obj.countries.values_list('iso2', flat=True))
+        return rep
+
+    def _set_countries(self, instance, codes):
+        if codes is None:
+            return
+        codes_upper = [c.strip().upper() for c in codes if c and c.strip()]
+        if not codes_upper:
+            instance.countries.clear()
+            return
+        countries = list(Country.objects.filter(iso2__in=codes_upper))
+        instance.countries.set(countries)
+
+    def create(self, validated_data):
+        codes = validated_data.pop('country_codes', None)
+        instance = super().create(validated_data)
+        self._set_countries(instance, codes)
+        return instance
+
+    def update(self, instance, validated_data):
+        codes = validated_data.pop('country_codes', None)
+        instance = super().update(instance, validated_data)
+        if codes is not None:
+            self._set_countries(instance, codes)
+        return instance
 
 
 class OrgPaymentGatewaySerializer(serializers.ModelSerializer):

@@ -22,6 +22,46 @@
 
 ## 🟠 HIGH
 
+### [OPEN] Maintainability Phase 1 — Split Giant Backend Files
+- **Discovered**: 2026-04-30
+- **Impact**: 533 files exceed 300-line limit. Top 3 files are 2,903 / 2,002 / 1,849 lines — unmaintainable by any developer or AI agent.
+- **Plan**: `task and plan/maintainability/maintainability_phase1_backend_splits_001.md`
+- **Files**: `closing_service.py` → 5 files, `account_views.py` → 4 files, `fiscal_views.py` → 3 files
+- **Risk**: LOW (internal refactor, zero URL/API/frontend changes)
+- **Notes**: Uses mixin pattern for ViewSets, standalone functions for services. Verify with `python manage.py check` + `python manage.py test apps.finance` after each split.
+
+### [OPEN] Maintainability Phase 2 — Split Giant Frontend Files
+- **Discovered**: 2026-04-30
+- **Impact**: `FxRedesigned.tsx` (3,439 lines), `FxManagementSection.tsx` (2,031 lines), `TemplatesPageClient.tsx` (1,999 lines) — all 10x+ over limit
+- **Depends On**: Phase 1 (backend first — safer)
+- **Notes**: Plan TBD after Phase 1 complete
+
+### [OPEN] Maintainability Phase 3 — Cross-Module Import Violations
+- **Discovered**: 2026-04-30
+- **Impact**: 127 direct cross-module imports (finance=44, pos=43, inventory=25, crm=12, hr=3). Modules can't be disabled independently.
+- **Depends On**: Phase 1
+- **Notes**: Replace with ConnectorEngine, gated imports, or emit_event. Plan TBD.
+
+### [OPEN] Maintainability Phase 4 — Models Without Tenant Isolation
+- **Discovered**: 2026-04-30
+- **Impact**: 10 models use bare `models.Model` instead of TenantModel. Potential cross-org data leaks.
+- **Files**: `PackageUpload`, `GeneratedDocument`, `POSAuditRule`, `POSAuditEvent`, `SalesAuditLog`, `StorageProvider`, `UploadSession`, `MigrationMapping`, `Currency`
+- **Notes**: Some may be intentionally system-level (Currency). Each needs case-by-case review.
+
+### [OPEN] Maintainability Phase 5 — Frontend Type Safety
+- **Discovered**: 2026-04-30
+- **Impact**: 2,527 `any` type usages in frontend. Compiler can't catch bugs, runtime errors likely.
+- **Notes**: Module-by-module cleanup sprint. Start with `src/types/erp.ts` (1,296 lines of shared types).
+
+### [OPEN] Maintainability Phase 6 — Hardcoded Color Sweep
+- **Discovered**: 2026-04-30
+- **Impact**: 3,499 hardcoded color references remain in `src/app/`. Theme switching and dark mode break on those pages.
+- **Notes**: Use mass migration scripts from `implementation/mass_migration_strategies.md` KI.
+
+---
+
+## 🟠 HIGH
+
 ### [DONE 2026-04-15] Finance Module — Subscription Ledger Integration (v2.9.0-b003)
 - **Discovered**: 2026-02-09
 - **Impact**: ConnectorEngine finance hooks silently fail, no ledger entries created for plan changes

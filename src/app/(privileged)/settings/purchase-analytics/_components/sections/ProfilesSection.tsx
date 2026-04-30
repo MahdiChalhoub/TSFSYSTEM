@@ -5,7 +5,8 @@ import { Layers, User, Shield, GripVertical } from 'lucide-react'
 import { PAGE_CONTEXT_LABELS } from '@/lib/analytics-constants'
 import type { AnalyticsProfile, AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
 import AnalyticsProfileSelector from '@/components/analytics/AnalyticsProfileSelector'
-import { card, pageSub } from '../../_lib/constants'
+
+const C = '#6366f1'
 
 type Props = {
     profilesData: AnalyticsProfilesData | null
@@ -32,12 +33,24 @@ export function ProfilesSection({
 
     return (
         <div className="mb-3">
-            <div className="mb-2">
-                <h2 className="text-[14px] font-black text-app-foreground tracking-tight">Page Profiles</h2>
-                <p className={pageSub}>Each page can override the global defaults below with its own profile.</p>
+            {/* Section Header */}
+            <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: `color-mix(in srgb, ${C} 12%, transparent)` }}>
+                    <Layers size={15} style={{ color: C }} />
+                </div>
+                <div>
+                    <h2 className="text-[14px] font-black text-app-foreground tracking-tight">Page Profiles</h2>
+                    <p className="text-[10px] font-bold text-app-muted-foreground">Each page can override global defaults with its own profile.</p>
+                </div>
             </div>
-            <div className={card}>
-                <div className="grid grid-cols-[24px_140px_200px_70px_40px] gap-2 px-3 py-2 border-b border-app-border/40 bg-app-background/30">
+
+            {/* Table */}
+            <div className="rounded-2xl overflow-hidden"
+                style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: `1.5px solid color-mix(in srgb, ${C} 15%, var(--app-border))` }}>
+                {/* Header Row */}
+                <div className="grid grid-cols-[24px_140px_1fr_70px_50px] gap-2 px-4 py-2.5"
+                    style={{ background: `color-mix(in srgb, ${C} 4%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${C} 10%, transparent)` }}>
                     <div></div>
                     <div className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest">Page</div>
                     <div className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest">Active Profile</div>
@@ -52,6 +65,7 @@ export function ProfilesSection({
                     const activeId = profilesData?.active_profile_per_page?.[ctx]
                     const activeProf = ctxProfiles.find(p => p.id === activeId)
                     const overrideCount = Object.keys(activeProf?.overrides || {}).length
+                    const isActive = editingProfile?.page_context === ctx || creatingForContext === ctx
 
                     return (
                         <div key={ctx}
@@ -74,37 +88,36 @@ export function ProfilesSection({
                                 }
                                 setDraggedCtx(null); setDragOverCtx(null)
                             }}
-                            className={`grid grid-cols-[24px_140px_200px_70px_40px] gap-2 items-center px-3 py-2 ${i < pageOrder.length - 1 ? 'border-b border-app-border/20' : ''} transition-all ${
-                                (editingProfile?.page_context === ctx || creatingForContext === ctx)
-                                    ? 'bg-app-primary/[0.06] ring-1 ring-app-primary/20 rounded-lg'
-                                    : dragOverCtx === ctx && draggedCtx !== ctx
-                                    ? 'bg-app-primary/[0.04] border-t-2 border-app-primary/30'
-                                    : 'hover:bg-app-background/20'
-                            } ${draggedCtx === ctx ? 'opacity-40' : ''}`}>
+                            className={`grid grid-cols-[24px_140px_1fr_70px_50px] gap-2 items-center px-4 py-2.5 transition-all ${draggedCtx === ctx ? 'opacity-30' : ''}`}
+                            style={{
+                                borderBottom: i < pageOrder.length - 1 ? '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)' : 'none',
+                                background: isActive ? `color-mix(in srgb, ${C} 6%, transparent)` : dragOverCtx === ctx && draggedCtx !== ctx ? `color-mix(in srgb, ${C} 4%, transparent)` : 'transparent',
+                            }}>
                             <div className="flex flex-col items-center cursor-grab active:cursor-grabbing text-app-muted-foreground/30 hover:text-app-muted-foreground/60 transition-colors">
                                 <GripVertical size={12} />
                             </div>
                             <div className="flex items-center gap-2">
-                                <Layers size={12} className="text-indigo-500 shrink-0" />
-                                <span className="text-[11px] font-bold text-app-foreground">{label}</span>
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: isActive ? C : 'var(--app-muted-foreground)', opacity: isActive ? 1 : 0.3 }} />
+                                <span className={`text-[11px] font-bold ${isActive ? 'text-app-foreground font-black' : 'text-app-foreground'}`}>{label}</span>
                             </div>
                             <div className="flex items-center gap-1.5 relative"
                                 onMouseEnter={() => activeProf && Object.keys(activeProf.overrides || {}).length > 0 ? setHoverProfile(activeProf) : null}
                                 onMouseLeave={() => setHoverProfile(null)}>
                                 {activeProf?.is_system ? <Shield size={10} className="text-app-muted-foreground shrink-0" /> : activeProf ? <User size={10} className="text-app-muted-foreground shrink-0" /> : null}
-                                <span className="text-[11px] text-app-foreground truncate cursor-default">{activeProf?.name || 'System Default'}</span>
+                                <span className="text-[11px] font-bold text-app-foreground truncate cursor-default">{activeProf?.name || 'System Default'}</span>
                                 {hoverProfile?.id === activeProf?.id && hoverProfile && (
-                                    <div className="absolute z-50 top-full left-0 mt-1 w-[220px] p-2 rounded-lg bg-app-surface border border-app-border shadow-xl animate-[fadeIn_0.1s_ease-in-out]">
-                                        <p className="text-[9px] font-bold text-app-foreground mb-1">{hoverProfile.name} — Overrides</p>
-                                        <div className="space-y-0.5">
+                                    <div className="absolute z-50 top-full left-0 mt-1.5 w-[240px] p-3 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+                                        style={{ background: 'var(--app-surface)', border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
+                                        <p className="text-[10px] font-black text-app-foreground mb-2">{hoverProfile.name} — Overrides</p>
+                                        <div className="space-y-1">
                                             {Object.entries(hoverProfile.overrides || {}).slice(0, 6).map(([k, v]) => (
-                                                <div key={k} className="flex justify-between text-[8px]">
+                                                <div key={k} className="flex justify-between text-[9px]">
                                                     <span className="text-app-muted-foreground truncate">{k.replace(/_/g, ' ')}</span>
-                                                    <span className="text-app-foreground font-bold ml-1">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                                                    <span className="text-app-foreground font-black ml-1">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
                                                 </div>
                                             ))}
                                             {Object.keys(hoverProfile.overrides || {}).length > 6 && (
-                                                <span className="text-[8px] text-app-muted-foreground">+{Object.keys(hoverProfile.overrides || {}).length - 6} more...</span>
+                                                <span className="text-[8px] font-bold text-app-muted-foreground">+{Object.keys(hoverProfile.overrides || {}).length - 6} more…</span>
                                             )}
                                         </div>
                                     </div>
@@ -112,7 +125,8 @@ export function ProfilesSection({
                             </div>
                             <div>
                                 {overrideCount > 0 ? (
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-app-primary/10 text-app-primary font-black">{overrideCount}</span>
+                                    <span className="text-[9px] px-2 py-0.5 rounded-lg font-black"
+                                        style={{ background: `color-mix(in srgb, ${C} 10%, transparent)`, color: C }}>{overrideCount}</span>
                                 ) : (
                                     <span className="text-[9px] text-app-muted-foreground/40">—</span>
                                 )}

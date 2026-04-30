@@ -499,12 +499,17 @@ class CurrencyRevaluationViewSet(TenantModelViewSet):
         report = RealizedFXService.check_realized_fx_integrity(org)
         return Response(report, status=200)
 
-    @action(detail=False, methods=['get', 'patch'], url_path='fx-settings')
+    @action(detail=False, methods=['get', 'post'], url_path='fx-settings')
     def fx_settings(self, request):
         """Read or update the FX-revaluation policy settings stored on the org.
 
         GET → returns current values (filling in defaults).
-        PATCH body { materiality_threshold_pct: number } updates that key.
+        POST body { materiality_threshold_pct: number } updates that key.
+
+        Why POST and not PATCH: this viewset blocks PUT/PATCH/DELETE at the
+        ``http_method_names`` level (the model itself is read-only — runs are
+        created via the ``run`` action, not direct PATCH). Settings updates
+        ride POST inside the same constraint.
 
         Persisted in ``organization.settings['fx']`` so the materiality gate
         in ``run_revaluation`` picks it up next call. Value is stored as a

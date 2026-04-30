@@ -11,14 +11,15 @@ import { toast } from 'sonner'
 import {
     Coins, RefreshCcw, TrendingUp, TrendingDown, Play, Wand2, AlertTriangle,
     Check, X, Eye, RotateCcw, Layers, ThumbsUp, ThumbsDown, AlertCircle, Activity,
+    Settings as SettingsIcon,
 } from 'lucide-react'
 import {
     previewRevaluation, runRevaluation,
     approveRevaluation, rejectRevaluation,
     reverseRevaluationAtNextPeriod, catchupRevaluations, getFxExposure,
-    getRealizedFxIntegrity,
+    getRealizedFxIntegrity, getFxSettings, updateFxSettings,
     type CurrencyRevaluation, type RevaluationPreview, type FxExposureReport,
-    type RealizedFxIntegrityReport, type CatchupResult,
+    type RealizedFxIntegrityReport, type CatchupResult, type FxSettings,
 } from '@/app/actions/finance/currency'
 import { erpFetch } from '@/lib/erp-api'
 import {
@@ -51,6 +52,7 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
     const [catchupBusy, setCatchupBusy] = useState(false)
     /** When set, opens a post-flight summary modal with per-period rows. */
     const [catchupResults, setCatchupResults] = useState<CatchupResult[] | null>(null)
+    const [settingsOpen, setSettingsOpen] = useState(false)
     const [smartClassifyBusy, setSmartClassifyBusy] = useState(false)
     const [exposure, setExposure] = useState<FxExposureReport | null>(null)
     const [exposureLoading, setExposureLoading] = useState(false)
@@ -289,6 +291,11 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
                                     subtitle={`${selectedPeriod.start_date} → ${selectedPeriod.end_date} · ${selectedPeriod.status}`}
                                     action={
                                         <div className="flex items-center gap-1.5">
+                                            <ActionBtn icon={<SettingsIcon size={11} />} tone="--app-muted-foreground"
+                                                onClick={() => setSettingsOpen(true)}
+                                                title="FX revaluation settings (materiality threshold, etc.)">
+                                                Settings
+                                            </ActionBtn>
                                             <ActionBtn icon={<Wand2 size={11} />} tone="--app-info"
                                                 disabled={smartClassifyBusy} onClick={handleSmartClassify}
                                                 title="Auto-set monetary classification on every account using IAS 21 / ASC 830 defaults">
@@ -461,6 +468,126 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
                     onClose={() => setCatchupResults(null)}
                 />
             )}
+
+            {settingsOpen && (
+                <FxSettingsModal onClose={() => setSettingsOpen(false)} />
+            )}
+        </div>
+    )
+}
+
+function FxSettingsModal({ onClose }: { onClose: () => void }) {
+    const [data, setData] = useState<FxSettings | null>(null)
+    const [threshold, setThreshold] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        let cancelled = false
+        ;(async () => {
+            const r = await getFxSettings()
+            if (cancelled) return
+            setLoading(false)
+            if (r.success && r.data) {
+                setData(r.data)
+                setThreshold(r.data.materiality_threshold_pct)
+            } else {
+                setError(r.error || 'Failed to load settings')
+            }
+        })()
+        return () => { cancelled = true }
+    }, [])
+
+    const num = Number(threshold)
+    const valid = isFinite(num) && num >= 0 && num <= 100
+    const dirty = data ? threshold !== data.materiality_threshold_pct : false
+
+    async function handleSave() {
+        if (!valid || !dirty) return
+        setSaving(true)
+        const r = await updateFxSettings({ materialityThresholdPct: threshold })
+        setSaving(false)
+        if (!r.success) {
+            toast.error(r.error || 'Save failed')
+            return
+        }
+        toast.success('FX settings saved')
+        onClose()
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget && !saving) onClose() }}>
+            <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+                    <div>
+                        <div className="font-black inline-flex items-center gap-2" style={{ fontSize: 14, color: 'var(--app-foreground)' }}>
+                            <SettingsIcon size={14} /> FX revaluation settings
+                        </div>
+                        <p className="font-bold uppercase tracking-widest mt-0.5"
+                            style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>
+                            Org-wide policy
+                        </p>
+                    </div>
+                    <button onClick={() => !saving && onClose()}
+                        className="p-1.5 rounded-lg hover:bg-app-border/40 -m-1.5"
+                        style={{ color: 'var(--app-muted-foreground)' }}>
+                        <X size={16} />
+                    </button>
+                </div>
+                <div className="px-5 pb-4 space-y-3">
+                    {loading && (
+                        <div className="rounded-xl p-4 inline-flex items-center gap-2"
+                            style={{ ...soft('--app-info', 6), color: 'var(--app-info)', fontSize: 12 }}>
+                            <RefreshCcw size={12} className="animate-spin" /> Loading…
+                        </div>
+                    )}
+                    {error && !loading && (
+                        <div className="rounded-xl p-3" style={{ ...soft('--app-error', 8), border: '1px solid color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
+                            <div className="font-black inline-flex items-center gap-1.5" style={{ fontSize: 12, color: 'var(--app-error)' }}>
+                                <AlertTriangle size={12} /> {error}
+                            </div>
+                        </div>
+                    )}
+                    {data && !loading && (
+                        <>
+                            <Field label="Materiality threshold (%)"
+                                hint={!valid ? 'Enter a number between 0 and 100' : 'Runs whose net impact exceeds this percentage of revalued base will park as PENDING_APPROVAL.'}
+                                error={!valid}>
+                                <input value={threshold} onChange={e => setThreshold(e.target.value)}
+                                    inputMode="decimal" placeholder="0.5"
+                                    className={INPUT_CLS + ' tabular-nums'} style={INPUT_STYLE} />
+                            </Field>
+                            <div className="rounded-lg p-3" style={{ ...soft('--app-info', 4), border: '1px solid var(--app-border)' }}>
+                                <p className="leading-relaxed" style={{ fontSize: 10, color: 'var(--app-foreground)' }}>
+                                    <strong>Default 0.5%.</strong> Conservative — most large orgs raise this to 1–2%.
+                                    A run at 5% materiality is <em>typically</em> material to investors.
+                                    The threshold gates posting; reviewers with the <code className="font-mono">finance.revaluation.approve</code>
+                                    {' '}permission can still approve runs above it.
+                                </p>
+                            </div>
+                        </>
+                    )}
+                </div>
+                <div className="px-4 py-3 flex items-center justify-end gap-2"
+                    style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)' }}>
+                    <button onClick={onClose} disabled={saving}
+                        className="px-3.5 py-1.5 rounded-xl font-bold border disabled:opacity-50"
+                        style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                        Cancel
+                    </button>
+                    <button onClick={handleSave} disabled={!valid || !dirty || saving || loading}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold disabled:opacity-50"
+                        style={!saving && valid && dirty
+                            ? { ...grad('--app-info'), color: FG_PRIMARY, fontSize: 11 }
+                            : { background: 'var(--app-border)', color: 'var(--app-muted-foreground)', fontSize: 11 }}>
+                        {saving ? 'Saving…' : 'Save'}
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }

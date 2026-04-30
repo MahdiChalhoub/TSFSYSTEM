@@ -571,26 +571,42 @@ class RefCityViewSet(viewsets.ModelViewSet):
 # PAYMENT GATEWAY VIEWSETS
 # =============================================================================
 
-class RefPaymentGatewayViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Global payment gateway catalog (read-only for tenants).
-    SaaS admin creates entries via Django admin or seed command.
+class _IsStaffForWrites(permissions.BasePermission):
+    """Read for any authenticated user; write only for staff/superuser.
+    The catalog is global SaaS reference data, so any tenant user can list
+    it (their org will activate from this list), but only platform admins
+    can create/edit/delete entries."""
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(request.user.is_staff or request.user.is_superuser)
 
-    Supports:
+
+class RefPaymentGatewayViewSet(viewsets.ModelViewSet):
+    """
+    Global payment gateway catalog.
+    Read access: any authenticated user. Write access: staff/superuser only.
+
+    Supports list filters:
       - ?search= (name, code, provider_family)
       - ?country= (filter by ISO2 country code)
-      - ?active_only= (default true)
+      - ?active_only= (default true on list; ignored when retrieving by id)
     """
     serializer_class = PaymentGatewaySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [_IsStaffForWrites]
     pagination_class = None
 
     def get_queryset(self):
         qs = PaymentGateway.objects.prefetch_related('countries').all()
 
-        active_only = self.request.query_params.get('active_only', 'true')
-        if active_only.lower() in ('true', '1'):
-            qs = qs.filter(is_active=True)
+        # Only apply `active_only` to list — detail/PATCH must always find
+        # the row regardless of active state so admins can re-activate it.
+        if self.action == 'list':
+            active_only = self.request.query_params.get('active_only', 'true')
+            if active_only.lower() in ('true', '1'):
+                qs = qs.filter(is_active=True)
 
         search = self.request.query_params.get('search')
         if search:
@@ -609,6 +625,14 @@ class RefPaymentGatewayViewSet(viewsets.ReadOnlyModelViewSet):
             ).distinct()
 
         return qs
+
+    @action(detail=True, methods=['post'], url_path='toggle-active')
+    def toggle_active(self, request, pk=None):
+        """Flip is_active in one round-trip — convenience for the admin UI."""
+        gw = self.get_object()
+        gw.is_active = not gw.is_active
+        gw.save(update_fields=['is_active'])
+        return Response(self.get_serializer(gw).data)
 
 
 class OrgPaymentGatewayViewSet(viewsets.ModelViewSet):

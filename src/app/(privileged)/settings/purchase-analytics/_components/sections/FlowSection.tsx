@@ -1,33 +1,35 @@
 'use client'
 
-import { ShoppingCart } from 'lucide-react'
+import { Activity } from 'lucide-react'
 import { toast } from 'sonner'
 import { savePurchaseAnalyticsConfig } from '@/app/actions/settings/purchase-analytics-config'
 import { runTimed } from '@/lib/perf-timing'
-import {
-    card, cardHead, cardBody, cardTitle,
-    fieldLabel, fieldHint, toggleBtn,
-} from '../../_lib/constants'
+import { fieldLabel, fieldHint, toggleBtn } from '../../_lib/constants'
 import { usePASettings } from '../../_hooks/PASettingsContext'
+
+const C = '#06b6d4'
 
 export function FlowSection() {
     const s = usePASettings()
     if (!s.cardVisible('request flow mode dialog instant cart purchase transfer button')) return null
 
     return (
-        <div className={card}>
-            <div className={cardHead('border-cyan-500')}>
-                <div className="w-6 h-6 rounded-md bg-cyan-500/10 flex items-center justify-center">
-                    <ShoppingCart className="w-4 h-4 text-cyan-500" />
+        <div className="rounded-2xl overflow-hidden"
+            style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: `1.5px solid color-mix(in srgb, ${C} 15%, var(--app-border))` }}>
+            <div className="px-4 py-3 flex items-center gap-3"
+                style={{ background: `color-mix(in srgb, ${C} 4%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${C} 10%, transparent)` }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: `color-mix(in srgb, ${C} 12%, transparent)` }}>
+                    <Activity size={15} style={{ color: C }} />
                 </div>
                 <div className="flex-1">
-                    <h3 className={cardTitle}>Request Flow</h3>
-                    <p className="text-[10px] text-app-muted-foreground">How "Request Purchase / Transfer" buttons behave on the product list</p>
+                    <h3 className="text-[13px] font-black text-app-foreground">Request Flow</h3>
+                    <p className="text-[9px] font-bold text-app-muted-foreground">How "Request Purchase / Transfer" buttons behave</p>
                 </div>
             </div>
-            <div className={cardBody}>
+            <div className="px-4 py-4 space-y-5">
                 <div>
-                    <label className={fieldLabel}>Click behaviour</label>
+                    <label className={fieldLabel}>Click Behaviour</label>
                     <div className="flex gap-2 flex-wrap">
                         {(['INSTANT', 'DIALOG', 'CART'] as const).map(mode => {
                             const label = mode === 'INSTANT' ? 'Instant create' : mode === 'DIALOG' ? 'Mini dialog' : 'Cart accumulator'
@@ -51,13 +53,13 @@ export function FlowSection() {
                         })}
                     </div>
                     <p className={fieldHint}>
-                        <strong>Instant:</strong> click → request created immediately with formula-derived qty.&nbsp;
-                        <strong>Dialog:</strong> popup to review qty, priority, reason before submitting.&nbsp;
-                        <strong>Cart:</strong> add multiple products to a draft, submit as a batch.
+                        <strong>Instant:</strong> click → request created immediately.&nbsp;
+                        <strong>Dialog:</strong> review qty, priority, reason.&nbsp;
+                        <strong>Cart:</strong> batch multiple products.
                     </p>
                 </div>
 
-                <div className="pt-3 mt-2 border-t border-app-border/40">
+                <div className="pt-3" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                     <label className={fieldLabel}>Multi-Source Purchasing</label>
                     <div className="flex gap-2 flex-wrap">
                         {([
@@ -85,8 +87,8 @@ export function FlowSection() {
                         })}
                     </div>
                     <p className={fieldHint}>
-                        <strong>Single source (default):</strong> only one open purchase request per product. Prevents the same product from being requested multiple times in parallel for the same location.&nbsp;
-                        <strong>Multi source:</strong> allow multiple purchase requests for the same product as long as each picks a different supplier (useful for quoting in parallel).
+                        <strong>Single:</strong> one request per product.&nbsp;
+                        <strong>Multi:</strong> allow parallel requests with different suppliers.
                     </p>
                 </div>
             </div>
