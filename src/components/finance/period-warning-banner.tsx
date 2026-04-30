@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertTriangle, PlayCircle, Plus, Loader2, Lock, Send, X } from 'lucide-react'
+import { AlertTriangle, PlayCircle, Plus, Loader2, Lock, Send, X, Wand2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
 import { useRouter } from 'next/navigation'
 import { requestReopenPeriod } from '@/app/actions/finance/fiscal-year'
@@ -12,6 +13,9 @@ export function notifyPeriodChange() {
 
 type BannerState =
     | { type: 'period_closed'; id: number; name: string; status: string; dates: string; yearLocked: boolean }
+    // FY exists and covers today, but no period inside the FY does — offer to fill.
+    | { type: 'fy_missing_periods'; fyId: number; fyName: string; fyDates: string }
+    // No FY at all (or none covers today) — must create a fresh FY.
     | { type: 'no_period'; message: string }
     | null
 
@@ -24,39 +28,88 @@ export function PeriodWarningBanner({ isSuperuser = false }: { isSuperuser?: boo
     const [submitStatus, setSubmitStatus] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
 
     useEffect(() => {
+        loadState()
+    }, [])
+
+    function loadState() {
         erpFetch('fiscal-years/', { cache: 'no-store' })
             .then(data => {
                 const years = Array.isArray(data) ? data : (data?.results || [])
-                const now = new Date()
-                let foundPeriod = false
+                // Compare date-only (YYYY-MM-DD) — fiscal periods are date-only
+                // but new Date() includes time, causing end-of-month mismatches
+                const todayStr = new Date().toISOString().slice(0, 10)
 
+                // Pass 1 — period covering today (the happy path).
                 for (const y of years) {
                     for (const p of (y.periods || [])) {
-                        const s = new Date(p.start_date), e = new Date(p.end_date)
-                        if (now >= s && now <= e) {
-                            foundPeriod = true
+                        if (todayStr >= p.start_date && todayStr <= p.end_date) {
                             const st = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
                             if (st !== 'OPEN') {
                                 setState({
                                     type: 'period_closed', id: p.id, name: p.name, status: st,
-                                    dates: `${s.toLocaleDateString()} — ${e.toLocaleDateString()}`,
+                                    dates: `${p.start_date} — ${p.end_date}`,
                                     yearLocked: !!y.is_hard_locked,
                                 })
+                            } else {
+                                setState(null)
                             }
                             return
                         }
                     }
                 }
 
-                if (!foundPeriod && years.length > 0) {
+                // Pass 2 — no period covers today, but is there an OPEN fiscal
+                // YEAR that covers today? That means periods are missing inside
+                // an otherwise-fine FY (common when the FY was created with
+                // partial period generation). Offer to fill them in-place.
+                const fyCoveringToday = years.find((y: any) =>
+                    !y.is_hard_locked
+                    && y.start_date && y.end_date
+                    && todayStr >= y.start_date && todayStr <= y.end_date
+                )
+                if (fyCoveringToday) {
+                    setState({
+                        type: 'fy_missing_periods',
+                        fyId: fyCoveringToday.id,
+                        fyName: fyCoveringToday.name,
+                        fyDates: `${fyCoveringToday.start_date} — ${fyCoveringToday.end_date}`,
+                    })
+                    return
+                }
+
+                if (years.length > 0) {
                     setState({
                         type: 'no_period',
-                        message: 'No fiscal period covers the current date. Create a new fiscal year to continue posting transactions.',
+                        message: 'No fiscal year covers the current date. Create a new fiscal year to continue posting transactions.',
                     })
+                } else {
+                    setState(null)
                 }
             })
             .catch(() => {})
-    }, [])
+    }
+
+    async function handleFillPeriods(fyId: number) {
+        setBusy(true)
+        try {
+            const res = await erpFetch(`fiscal-years/${fyId}/fill-missing-periods/`, {
+                method: 'POST',
+                body: JSON.stringify({}),
+            })
+            const n = res?.created_count ?? 0
+            if (n > 0) {
+                toast.success(`Generated ${n} missing period${n === 1 ? '' : 's'}`)
+            } else {
+                toast.info('No missing periods to generate.')
+            }
+            notifyPeriodChange()
+            loadState()
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to generate periods')
+        } finally {
+            setBusy(false)
+        }
+    }
 
     const handleSubmitRequest = async () => {
         if (!state || state.type !== 'period_closed') return
@@ -94,6 +147,31 @@ export function PeriodWarningBanner({ isSuperuser = false }: { isSuperuser?: boo
                     className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all flex-shrink-0"
                     style={{ background: 'var(--app-primary)', color: 'white' }}>
                     <Plus size={10} /> Create Fiscal Year
+                </button>
+            </div>
+        )
+    }
+
+    // ── FY exists & covers today, but its periods don't — offer to fill them ──
+    if (state.type === 'fy_missing_periods') {
+        return (
+            <div className="flex items-center gap-3 px-4 py-1.5 text-[11px]"
+                style={{ background: 'color-mix(in srgb, var(--app-warning) 8%, var(--app-bg))', borderBottom: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)' }}>
+                <AlertTriangle size={13} style={{ color: 'var(--app-warning)', flexShrink: 0 }} />
+                <span className="font-bold flex-1" style={{ color: 'var(--app-foreground)' }}>
+                    Fiscal year <strong>{state.fyName}</strong> is open but has no period covering today. Generate the missing periods to continue posting.
+                </span>
+                <span className="font-medium hidden sm:inline" style={{ color: 'var(--app-muted-foreground)' }}>{state.fyDates}</span>
+                <button disabled={busy} onClick={() => handleFillPeriods(state.fyId)}
+                    className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all flex-shrink-0 disabled:opacity-50"
+                    style={{ background: 'var(--app-primary)', color: 'white' }}>
+                    {busy ? <Loader2 size={10} className="animate-spin" /> : <Wand2 size={10} />}
+                    Generate Missing Periods
+                </button>
+                <button onClick={() => router.push('/finance/fiscal-years')}
+                    className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all flex-shrink-0"
+                    style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
+                    Open Fiscal Years
                 </button>
             </div>
         )

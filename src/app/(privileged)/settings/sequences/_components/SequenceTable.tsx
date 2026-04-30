@@ -14,7 +14,7 @@ interface SequenceTableProps {
     onChange: (seqKey: string, field: keyof Sequence, value: string | number) => void
 }
 
-function getSequence(sequences: Sequence[], docType: string, tier: string): Sequence {
+function getSeq(sequences: Sequence[], docType: string, tier: string): Sequence {
     const key = resolveSeqKey(docType, tier)
     return sequences.find(s => s.type === key) ?? {
         type: key,
@@ -23,33 +23,50 @@ function getSequence(sequences: Sequence[], docType: string, tier: string): Sequ
     }
 }
 
-function getMasterSequence(sequences: Sequence[], id: string, defaultPrefix: string): Sequence {
+function getMasterSeq(sequences: Sequence[], id: string, dp: string): Sequence {
     return sequences.find(s => s.type === id) ?? {
-        type: id, prefix: defaultPrefix, suffix: '', next_number: 1, padding: 5,
+        type: id, prefix: dp, suffix: '', next_number: 1, padding: 5,
     }
 }
 
-// ── Module section header ────────────────────────────────────
-function ModuleSection({ label, color, count }: { label: string; color: string; count: number }) {
+// ── Column headers ───────────────────────────────────────────
+function ColumnHeader({ hasTier }: { hasTier: boolean }) {
+    return (
+        <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
+            style={{
+                background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+            }}
+        >
+            <div className="w-[130px] flex-shrink-0">Entity</div>
+            {hasTier && <div className="w-[80px] flex-shrink-0">Tier</div>}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <span className="w-[72px]">Prefix</span>
+                <span className="w-[64px]">Next #</span>
+                <span className="w-[48px]">Pad</span>
+                <span className="w-[56px]">Suffix</span>
+            </div>
+            <div className="flex-shrink-0 text-right">Preview</div>
+        </div>
+    )
+}
+
+// ── Module header ────────────────────────────────────────────
+function ModuleHeader({ label, color, count }: { label: string; color: string; count: number }) {
     return (
         <div
-            className="flex items-center gap-3 px-5 py-2.5"
+            className="flex items-center gap-2.5 px-3 py-2"
             style={{
                 background: `color-mix(in srgb, ${color} 5%, var(--app-surface))`,
                 borderBottom: `1px solid color-mix(in srgb, ${color} 15%, transparent)`,
             }}
         >
-            <div className="w-1.5 h-5 rounded-full" style={{ background: color }} />
-            <span className="text-[12px] font-black uppercase tracking-widest" style={{ color }}>
+            <div className="w-1 h-4 rounded-full" style={{ background: color }} />
+            <span className="text-[11px] font-black uppercase tracking-widest" style={{ color }}>
                 {label}
             </span>
-            <span
-                className="text-[9px] font-bold font-mono px-2 py-0.5 rounded-full"
-                style={{
-                    background: `color-mix(in srgb, ${color} 12%, transparent)`,
-                    color,
-                }}
-            >
+            <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-full"
+                style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}>
                 {count}
             </span>
         </div>
@@ -59,66 +76,46 @@ function ModuleSection({ label, color, count }: { label: string; color: string; 
 // ── Tier badge ───────────────────────────────────────────────
 function TierBadge({ tier }: { tier: typeof TIERS[number] }) {
     return (
-        <div
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md"
+        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md"
             style={{
                 background: `color-mix(in srgb, ${tier.color} 10%, transparent)`,
                 color: tier.color,
             }}
             title={tier.desc}
         >
-            <tier.icon size={10} />
-            <span className="text-[10px] font-bold uppercase tracking-wide">{tier.label}</span>
+            <tier.icon size={9} />
+            <span className="text-[9px] font-black uppercase">{tier.label}</span>
         </div>
     )
 }
 
-// ── Row divider ──────────────────────────────────────────────
-function Divider() {
-    return (
-        <div
-            className="h-px mx-4"
-            style={{ background: 'color-mix(in srgb, var(--app-border) 35%, transparent)' }}
-        />
-    )
-}
-
-// ── Main export ──────────────────────────────────────────────
+// ── Main component ───────────────────────────────────────────
 export function SequenceTable({ tab, sequences, dirtyKeys, onChange }: SequenceTableProps) {
     if (tab === 'documents') {
         return (
             <div className="space-y-3">
                 {DOCUMENT_GROUPS.map(group => (
-                    <div
-                        key={group.module}
-                        className="rounded-xl border border-app-border overflow-hidden"
-                        style={{ background: 'var(--app-surface)' }}
-                    >
-                        <ModuleSection
-                            label={group.module}
-                            color={group.color}
-                            count={group.items.length}
-                        />
-                        {group.items.map((docType, di) => (
-                            <div key={docType.id}>
-                                {di > 0 && <Divider />}
-                                {TIERS.map((tier, ti) => {
-                                    const seqKey = resolveSeqKey(docType.id, tier.key)
-                                    const seq = getSequence(sequences, docType.id, tier.key)
-                                    return (
-                                        <SequenceRow
-                                            key={seqKey}
-                                            seqKey={seqKey}
-                                            seq={seq}
-                                            label={ti === 0 ? docType.label : ''}
-                                            labelIcon={ti === 0 ? <docType.icon size={15} /> : undefined}
-                                            labelColor={docType.color}
-                                            tierBadge={<TierBadge tier={tier} />}
-                                            isDirty={dirtyKeys.has(seqKey)}
-                                            onChange={onChange}
-                                        />
-                                    )
-                                })}
+                    <div key={group.module}
+                        className="rounded-2xl border border-app-border/50 overflow-hidden"
+                        style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
+                        <ModuleHeader label={group.module} color={group.color} count={group.items.length} />
+                        <ColumnHeader hasTier />
+                        {group.items.map((dt, di) => (
+                            <div key={dt.id}>
+                                {di > 0 && <div className="h-px mx-3" style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }} />}
+                                {TIERS.map((tier, ti) => (
+                                    <SequenceRow
+                                        key={resolveSeqKey(dt.id, tier.key)}
+                                        seqKey={resolveSeqKey(dt.id, tier.key)}
+                                        seq={getSeq(sequences, dt.id, tier.key)}
+                                        label={ti === 0 ? dt.label : ''}
+                                        labelIcon={ti === 0 ? <dt.icon size={14} /> : undefined}
+                                        labelColor={dt.color}
+                                        tierBadge={<TierBadge tier={tier} />}
+                                        isDirty={dirtyKeys.has(resolveSeqKey(dt.id, tier.key))}
+                                        onChange={onChange}
+                                    />
+                                ))}
                             </div>
                         ))}
                     </div>
@@ -127,37 +124,28 @@ export function SequenceTable({ tab, sequences, dirtyKeys, onChange }: SequenceT
         )
     }
 
-    // ── Master-Data tab ──
     return (
         <div className="space-y-3">
             {MASTER_DATA_GROUPS.map(group => (
-                <div
-                    key={group.module}
-                    className="rounded-xl border border-app-border overflow-hidden"
-                    style={{ background: 'var(--app-surface)' }}
-                >
-                    <ModuleSection
-                        label={group.module}
-                        color={group.color}
-                        count={group.items.length}
-                    />
-                    {group.items.map((ent, i) => {
-                        const seq = getMasterSequence(sequences, ent.id, ent.defaultPrefix)
-                        return (
-                            <div key={ent.id}>
-                                {i > 0 && <Divider />}
-                                <SequenceRow
-                                    seqKey={ent.id}
-                                    seq={seq}
-                                    label={ent.label}
-                                    labelIcon={<ent.icon size={15} />}
-                                    labelColor={ent.color}
-                                    isDirty={dirtyKeys.has(ent.id)}
-                                    onChange={onChange}
-                                />
-                            </div>
-                        )
-                    })}
+                <div key={group.module}
+                    className="rounded-2xl border border-app-border/50 overflow-hidden"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
+                    <ModuleHeader label={group.module} color={group.color} count={group.items.length} />
+                    <ColumnHeader hasTier={false} />
+                    {group.items.map((ent, i) => (
+                        <div key={ent.id}>
+                            {i > 0 && <div className="h-px mx-3" style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }} />}
+                            <SequenceRow
+                                seqKey={ent.id}
+                                seq={getMasterSeq(sequences, ent.id, ent.defaultPrefix)}
+                                label={ent.label}
+                                labelIcon={<ent.icon size={14} />}
+                                labelColor={ent.color}
+                                isDirty={dirtyKeys.has(ent.id)}
+                                onChange={onChange}
+                            />
+                        </div>
+                    ))}
                 </div>
             ))}
         </div>

@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { erpFetch } from '@/lib/erp-api'
 import {
     Hash, Loader2, Save, FileText,
-    AlertTriangle, Info,
+    AlertTriangle, Info, ShoppingBag,
+    CreditCard, Package,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { SettingsPageShell } from '@/lib/settings-framework/components/SettingsPageShell'
@@ -20,7 +21,6 @@ export default function DocumentNumberingPage() {
     const serverSnapshot = useRef<Map<string, Sequence>>(new Map())
     const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set())
 
-    // ── Data ─────────────────────────────────────────────────
     const load = useCallback(async () => {
         setLoading(true)
         try {
@@ -40,7 +40,6 @@ export default function DocumentNumberingPage() {
 
     useEffect(() => { load() }, [load])
 
-    // ── Handlers ─────────────────────────────────────────────
     const handleChange = useCallback((seqKey: string, field: keyof Sequence, value: string | number) => {
         setSequences(prev => {
             const idx = prev.findIndex(s => s.type === seqKey)
@@ -61,7 +60,6 @@ export default function DocumentNumberingPage() {
         if (dirtyKeys.size === 0) return
         setSaving(true)
         let saved = 0, failed = 0
-
         for (const key of dirtyKeys) {
             const seq = sequences.find(s => s.type === key)
             if (!seq) continue
@@ -76,38 +74,35 @@ export default function DocumentNumberingPage() {
                 saved++
             } catch { failed++ }
         }
-
         if (failed > 0) toast.error(`${failed} sequence(s) failed to save`)
-        else toast.success(`${saved} sequence(s) saved successfully`)
+        else toast.success(`${saved} sequence(s) saved`)
         setSaving(false)
         load()
     }, [dirtyKeys, sequences, load])
 
     const iconMemo = useMemo(() => <Hash size={20} className="text-white" />, [])
 
-    // ── Tab data ─────────────────────────────────────────────
-    const tabs = [
-        {
-            key: 'documents' as TabKey,
-            label: 'Documents',
-            sub: '3-tier · Draft · Internal · Official',
-            icon: FileText,
-            count: DOCUMENT_TYPES.length,
-        },
-        {
-            key: 'master' as TabKey,
-            label: 'Master-Data',
-            sub: 'Single-tier · auto-increment codes',
-            icon: Hash,
-            count: MASTER_DATA_TYPES.length,
-        },
+    // ── KPI strip data ───────────────────────────────────────
+    const totalDocs = DOCUMENT_TYPES.length
+    const totalMaster = MASTER_DATA_TYPES.length
+    const totalConfigured = sequences.length
+    const kpis = [
+        { label: 'Document Types', value: totalDocs, color: 'var(--app-primary)', icon: <FileText size={14} /> },
+        { label: 'Master-Data', value: totalMaster, color: 'var(--app-info)', icon: <Package size={14} /> },
+        { label: 'Configured', value: totalConfigured, color: 'var(--app-success)', icon: <Hash size={14} /> },
+        { label: 'Unsaved', value: dirtyKeys.size, color: dirtyKeys.size > 0 ? 'var(--app-warning)' : 'var(--app-muted-foreground)', icon: <Save size={14} /> },
     ]
 
-    // ── Render ───────────────────────────────────────────────
+    // ── Tab config ───────────────────────────────────────────
+    const tabs = [
+        { key: 'documents' as TabKey, label: 'Documents', icon: ShoppingBag, count: totalDocs },
+        { key: 'master' as TabKey, label: 'Master-Data', icon: Hash, count: totalMaster },
+    ]
+
     return (
         <SettingsPageShell
             title="Numbering & Codes"
-            subtitle="Configure document numbering and master-data reference codes"
+            subtitle={`${totalConfigured} Configured · ${totalDocs + totalMaster} Total Sequences`}
             icon={iconMemo}
             configKey="sequences"
             onReload={load}
@@ -116,50 +111,58 @@ export default function DocumentNumberingPage() {
             hasChanges={dirtyKeys.size > 0}
         >
             {loading ? (
-                <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-                    <Loader2 className="w-10 h-10 animate-spin text-app-primary" />
-                    <p className="text-[13px] font-bold text-app-muted-foreground">
-                        Loading sequences…
-                    </p>
+                <div className="flex items-center justify-center py-20">
+                    <Loader2 size={24} className="animate-spin text-app-primary" />
                 </div>
             ) : (
-                <div className="layout-container-padding max-w-[1400px] mx-auto space-y-5">
-                    {/* ── Tab Switcher ── */}
-                    <div
-                        className="flex items-center gap-1 p-1 rounded-xl border border-app-border w-fit"
-                        style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}
-                    >
+                <div className="flex flex-col gap-4 p-4 md:p-6 animate-in fade-in duration-300">
+                    {/* ═══ KPI STRIP ═══ */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                        {kpis.map(s => (
+                            <div key={s.label}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                }}>
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                    style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
+                                    {s.icon}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider"
+                                        style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                    <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* ═══ TAB SWITCHER ═══ */}
+                    <div className="flex items-center gap-1 p-1 rounded-xl w-fit"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                        }}>
                         {tabs.map(t => {
                             const active = activeTab === t.key
                             return (
-                                <button
-                                    key={t.key}
-                                    type="button"
-                                    onClick={() => setActiveTab(t.key)}
-                                    className="flex items-center gap-2.5 px-4 py-2 rounded-lg transition-all"
+                                <button key={t.key} type="button" onClick={() => setActiveTab(t.key)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
                                     style={active ? {
                                         background: 'var(--app-primary)',
                                         color: '#fff',
-                                        boxShadow: '0 2px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                        boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
                                     } : {
-                                        background: 'transparent',
                                         color: 'var(--app-muted-foreground)',
-                                    }}
-                                >
-                                    <t.icon size={14} />
-                                    <div className="text-left">
-                                        <div className="text-[11px] font-black uppercase tracking-wider">{t.label}</div>
-                                        <div className="text-[9px] opacity-70">{t.sub}</div>
-                                    </div>
-                                    <span
-                                        className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full"
+                                    }}>
+                                    <t.icon size={13} />
+                                    {t.label}
+                                    <span className="text-[9px] font-mono tabular-nums px-1.5 py-0.5 rounded-full"
                                         style={{
-                                            background: active
-                                                ? 'color-mix(in srgb, #fff 20%, transparent)'
-                                                : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                            background: active ? 'rgba(255,255,255,0.2)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
                                             color: active ? '#fff' : 'var(--app-muted-foreground)',
-                                        }}
-                                    >
+                                        }}>
                                         {t.count}
                                     </span>
                                 </button>
@@ -167,38 +170,35 @@ export default function DocumentNumberingPage() {
                         })}
                     </div>
 
-                    {/* ── Info Banner ── */}
-                    <div
-                        className="flex items-start gap-3 px-4 py-3 rounded-xl border border-app-border"
+                    {/* ═══ INFO BANNER ═══ */}
+                    <div className="flex items-start gap-2.5 px-3 py-2 rounded-xl"
                         style={{
                             background: activeTab === 'documents'
-                                ? 'color-mix(in srgb, var(--app-warning) 5%, transparent)'
-                                : 'color-mix(in srgb, var(--app-info) 5%, transparent)',
-                        }}
-                    >
+                                ? 'color-mix(in srgb, var(--app-warning) 5%, var(--app-surface))'
+                                : 'color-mix(in srgb, var(--app-info) 5%, var(--app-surface))',
+                            border: `1px solid color-mix(in srgb, ${activeTab === 'documents' ? 'var(--app-warning)' : 'var(--app-info)'} 15%, transparent)`,
+                        }}>
                         {activeTab === 'documents' ? (
                             <>
-                                <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--app-warning)' }} />
-                                <p className="text-[12px] text-app-muted-foreground leading-relaxed">
-                                    Each document type uses <strong>3 independent tiers</strong>:
-                                    <strong> Draft</strong> (temporary, gaps ok) ·
-                                    <strong> Internal</strong> (management scope) ·
-                                    <strong> Official</strong> (fiscal — no gaps).
+                                <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--app-warning)' }} />
+                                <p className="text-[11px] font-bold text-app-muted-foreground">
+                                    3 tiers per document: <strong className="text-app-foreground">Draft</strong> (temporary) ·{' '}
+                                    <strong className="text-app-foreground">Internal</strong> (management) ·{' '}
+                                    <strong className="text-app-foreground">Official</strong> (fiscal, no gaps)
                                 </p>
                             </>
                         ) : (
                             <>
-                                <Info size={15} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--app-info)' }} />
-                                <p className="text-[12px] text-app-muted-foreground leading-relaxed">
-                                    Each entity gets an auto-increment code (e.g.{' '}
-                                    <code className="font-mono font-bold text-app-foreground">CAT-00001</code>).
-                                    Changes apply on the next record created.
+                                <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--app-info)' }} />
+                                <p className="text-[11px] font-bold text-app-muted-foreground">
+                                    Auto-increment codes (e.g. <code className="font-mono text-app-foreground">CAT-00001</code>).
+                                    Changes apply on next record.
                                 </p>
                             </>
                         )}
                     </div>
 
-                    {/* ── Table ── */}
+                    {/* ═══ TABLE ═══ */}
                     <SequenceTable
                         tab={activeTab}
                         sequences={sequences}
@@ -206,38 +206,26 @@ export default function DocumentNumberingPage() {
                         onChange={handleChange}
                     />
 
-                    {/* ── Sticky save footer ── */}
+                    {/* ═══ STICKY SAVE BAR ═══ */}
                     {dirtyKeys.size > 0 && (
-                        <div
-                            className="sticky bottom-4 z-20 flex items-center justify-between px-5 py-3 rounded-xl border"
+                        <div className="sticky bottom-3 z-20 flex items-center justify-between px-4 py-2.5 rounded-xl"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-surface) 95%, transparent)',
                                 backdropFilter: 'blur(12px)',
-                                borderColor: 'color-mix(in srgb, var(--app-warning) 30%, transparent)',
-                                boxShadow: '0 -4px 20px color-mix(in srgb, var(--app-background) 80%, transparent)',
-                            }}
-                        >
+                                border: '1px solid color-mix(in srgb, var(--app-warning) 25%, transparent)',
+                                boxShadow: '0 -2px 20px color-mix(in srgb, var(--app-background) 60%, transparent)',
+                            }}>
                             <div className="flex items-center gap-2">
-                                <div
-                                    className="w-2 h-2 rounded-full animate-pulse"
-                                    style={{ background: 'var(--app-warning)' }}
-                                />
-                                <span className="text-[12px] font-bold text-app-foreground">
+                                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--app-warning)' }} />
+                                <span className="text-[11px] font-bold text-app-foreground">
                                     {dirtyKeys.size} unsaved change{dirtyKeys.size !== 1 ? 's' : ''}
                                 </span>
                             </div>
-                            <button
-                                type="button"
-                                onClick={handleSaveAll}
-                                disabled={saving}
-                                className="flex items-center gap-2 px-5 py-2 rounded-lg text-[12px] font-bold text-white transition-all hover:brightness-110 disabled:opacity-50"
-                                style={{
-                                    background: 'var(--app-primary)',
-                                    boxShadow: '0 2px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)',
-                                }}
-                            >
-                                {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
-                                {saving ? 'Saving…' : 'Save All Changes'}
+                            <button type="button" onClick={handleSaveAll} disabled={saving}
+                                className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[11px] font-bold text-white bg-app-primary hover:brightness-110 transition-all disabled:opacity-50"
+                                style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                                {saving ? 'Saving…' : 'Save All'}
                             </button>
                         </div>
                     )}

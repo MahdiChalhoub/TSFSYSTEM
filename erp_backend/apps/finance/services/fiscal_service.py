@@ -88,6 +88,83 @@ class FiscalYearService:
             return fiscal_year
 
     @staticmethod
+    def fill_missing_periods(organization, fiscal_year, frequency=None):
+        """Generate any monthly (or quarterly) periods missing from this FY.
+
+        Common situation: a fiscal year was created with periods covering only
+        part of its date range, OR was created without periods at all. The
+        period-warning banner detects this and offers a one-click fill.
+
+        We never modify or delete existing periods — we only insert what's
+        missing. The frequency is detected from existing periods (median length
+        ≥ 80 days → QUARTERLY) or falls back to MONTHLY.
+
+        Returns the list of newly-created FiscalPeriod instances.
+        """
+        from apps.finance.models import FiscalPeriod
+
+        with transaction.atomic():
+            existing = list(
+                FiscalPeriod.objects.select_for_update().filter(
+                    organization=organization, fiscal_year=fiscal_year,
+                ).order_by('start_date')
+            )
+
+            # Detect frequency from existing periods if not provided.
+            if frequency is None:
+                if existing:
+                    lengths = [(p.end_date - p.start_date).days for p in existing if p.end_date and p.start_date]
+                    median = sorted(lengths)[len(lengths) // 2] if lengths else 0
+                    frequency = 'QUARTERLY' if median >= 80 else 'MONTHLY'
+                else:
+                    frequency = 'MONTHLY'
+
+            covered = [(p.start_date, p.end_date) for p in existing]
+
+            def is_covered(d):
+                return any(s <= d <= e for s, e in covered)
+
+            fy_start = fiscal_year.start_date
+            fy_end = fiscal_year.end_date
+            if not fy_start or not fy_end:
+                return []
+
+            # Walk the FY in MONTHLY/QUARTERLY chunks; for any chunk whose start
+            # is not already covered by an existing period, create one.
+            created = []
+            curr = fy_start
+            while curr <= fy_end:
+                if frequency == 'QUARTERLY':
+                    quarter_end_month = ((curr.month - 1) // 3 + 1) * 3
+                    last_day = calendar.monthrange(curr.year, quarter_end_month)[1]
+                    period_end = date(curr.year, quarter_end_month, last_day)
+                    period_name = f"Q{(quarter_end_month // 3)}-{curr.year}"
+                else:
+                    last_day_of_month = calendar.monthrange(curr.year, curr.month)[1]
+                    period_end = date(curr.year, curr.month, last_day_of_month)
+                    period_name = curr.strftime('%B %Y')
+
+                if period_end > fy_end:
+                    period_end = fy_end
+
+                if not is_covered(curr):
+                    p = FiscalPeriod.objects.create(
+                        organization=organization,
+                        fiscal_year=fiscal_year,
+                        name=period_name,
+                        start_date=curr,
+                        end_date=period_end,
+                        status='OPEN',
+                        is_closed=False,
+                    )
+                    created.append(p)
+                    covered.append((curr, period_end))
+
+                curr = period_end + timedelta(days=1)
+
+            return created
+
+    @staticmethod
     def close_fiscal_year(organization, fiscal_year, user=None, retained_earnings_account_id=None):
         """
         Close a fiscal year. Delegates to ClosingService for the full

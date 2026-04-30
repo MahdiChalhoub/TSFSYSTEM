@@ -50,6 +50,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
         'year_history': 'finance.view_fiscal_years',
         'draft_audit': 'finance.view_fiscal_years',
         'current': 'finance.view_fiscal_years',
+        'fill_missing_periods': 'finance.manage_fiscal_years',
     }
 
     def perform_destroy(self, instance):
@@ -89,6 +90,28 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             )
             serializer = self.get_serializer(fiscal_year)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'], url_path='fill-missing-periods')
+    def fill_missing_periods(self, request, pk=None):
+        """Generate any periods missing from this fiscal year. Detects
+        MONTHLY/QUARTERLY frequency from existing periods. Pass
+        `frequency=MONTHLY|QUARTERLY` in the body to override. Never modifies
+        existing periods. Returns the list of newly-created periods."""
+        fiscal_year = self.get_object()
+        organization_id = get_current_tenant_id()
+        organization = Organization.objects.get(id=organization_id)
+        try:
+            from apps.finance.services import FiscalYearService
+            frequency = request.data.get('frequency') if hasattr(request, 'data') else None
+            created = FiscalYearService.fill_missing_periods(
+                organization, fiscal_year, frequency=frequency,
+            )
+            return Response({
+                'created_count': len(created),
+                'periods': FiscalPeriodSerializer(created, many=True).data,
+            })
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
