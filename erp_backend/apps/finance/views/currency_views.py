@@ -499,6 +499,56 @@ class CurrencyRevaluationViewSet(TenantModelViewSet):
         report = RealizedFXService.check_realized_fx_integrity(org)
         return Response(report, status=200)
 
+    @action(detail=False, methods=['get', 'patch'], url_path='fx-settings')
+    def fx_settings(self, request):
+        """Read or update the FX-revaluation policy settings stored on the org.
+
+        GET → returns current values (filling in defaults).
+        PATCH body { materiality_threshold_pct: number } updates that key.
+
+        Persisted in ``organization.settings['fx']`` so the materiality gate
+        in ``run_revaluation`` picks it up next call. Value is stored as a
+        string for Decimal precision; UI sends number, we cast to str.
+        """
+        from decimal import Decimal, InvalidOperation
+        from apps.finance.services.revaluation_service import (
+            DEFAULT_MATERIALITY_THRESHOLD_PCT,
+        )
+
+        org, err = self._get_org()
+        if err: return err
+
+        settings = (org.settings or {}) if isinstance(org.settings, dict) else {}
+        fx_cfg = settings.get('fx', {}) if isinstance(settings.get('fx'), dict) else {}
+
+        if request.method == 'GET':
+            return Response({
+                'materiality_threshold_pct': str(
+                    fx_cfg.get('materiality_threshold_pct', DEFAULT_MATERIALITY_THRESHOLD_PCT)
+                ),
+            }, status=200)
+
+        # PATCH
+        new_threshold = request.data.get('materiality_threshold_pct')
+        if new_threshold is None:
+            return Response({'error': 'materiality_threshold_pct is required'}, status=400)
+        try:
+            v = Decimal(str(new_threshold))
+            if v < 0 or v > 100:
+                raise InvalidOperation('out of range')
+        except (InvalidOperation, ValueError):
+            return Response({'error': 'invalid materiality_threshold_pct (0–100)'}, status=400)
+
+        # Settings is a JSONField — copy-and-write so we don't mutate cached
+        # references that other parts of the codebase may still hold.
+        new_settings = dict(settings)
+        new_fx = dict(fx_cfg)
+        new_fx['materiality_threshold_pct'] = str(v)
+        new_settings['fx'] = new_fx
+        org.settings = new_settings
+        org.save(update_fields=['settings'])
+        return Response({'materiality_threshold_pct': str(v)}, status=200)
+
     @action(detail=False, methods=['get'])
     def exposure(self, request):
         """

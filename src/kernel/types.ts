@@ -56,6 +56,12 @@ export interface KernelUser {
         name: string;
         slug: string;
     };
+    /** Coarse permission flags projected by /me — keep this list tight.
+     *  Used by the frontend to render-gate buttons; the backend still
+     *  enforces the actual permission on every action. */
+    permission_flags?: {
+        can_approve_revaluation?: boolean;
+    };
 }
 
 /** Tenant context shape */

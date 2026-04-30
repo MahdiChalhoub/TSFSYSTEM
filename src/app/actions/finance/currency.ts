@@ -579,6 +579,37 @@ export async function getRealizedFxIntegrity(): Promise<{
     }
 }
 
+export type FxSettings = {
+    materiality_threshold_pct: string
+}
+
+/** GET /currency-revaluations/fx-settings/ */
+export async function getFxSettings(): Promise<{ success: boolean; data?: FxSettings; error?: string }> {
+    try {
+        const r = await erpFetch('currency-revaluations/fx-settings/', { cache: 'no-store' }) as FxSettings
+        return { success: true, data: r }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+/** PATCH /currency-revaluations/fx-settings/ — body { materiality_threshold_pct }. */
+export async function updateFxSettings(payload: { materialityThresholdPct: string | number }): Promise<{
+    success: boolean; data?: FxSettings; error?: string
+}> {
+    try {
+        const r = await erpFetch('currency-revaluations/fx-settings/', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ materiality_threshold_pct: String(payload.materialityThresholdPct) }),
+        }) as FxSettings
+        revalidatePath('/finance/currencies')
+        return { success: true, data: r }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
 /** GET /currency-revaluations/exposure/ — read-only FX exposure snapshot. */
 export async function getFxExposure(opts: { asOf?: string; scope?: 'OFFICIAL' | 'INTERNAL' } = {}): Promise<{ success: boolean; data?: FxExposureReport; error?: string }> {
     try {

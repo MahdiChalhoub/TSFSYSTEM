@@ -154,7 +154,24 @@ def logout_view(request):
 @permission_classes([IsAuthenticated])
 def me_view(request):
     serializer = UserSerializer(request.user)
-    return Response(serializer.data)
+    data = dict(serializer.data)
+    # Project a small set of permission flags onto /me so the frontend can
+    # render-gate buttons without round-tripping for permission lookups on
+    # every page mount. Keep this list tight — broad permission dumps leak
+    # information about role structure.
+    user = request.user
+    flags = {}
+    if user and user.is_authenticated:
+        if user.is_superuser:
+            flags['can_approve_revaluation'] = True
+        elif hasattr(user, 'role') and user.role:
+            flags['can_approve_revaluation'] = user.role.permissions.filter(
+                code='finance.revaluation.approve',
+            ).exists()
+        else:
+            flags['can_approve_revaluation'] = False
+    data['permission_flags'] = flags
+    return Response(data)
 
 class PublicConfigView(APIView):
     permission_classes = [AllowAny]

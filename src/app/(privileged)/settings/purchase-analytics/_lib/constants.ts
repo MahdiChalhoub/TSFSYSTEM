@@ -1,27 +1,27 @@
 /**
- * Purchase Analytics Settings — Style Tokens & Constants
- * ========================================================
+ * Purchase Analytics Settings — V2 Dajingo Pro Style Tokens
+ * ===========================================================
  */
 
-export const pageWrap = "min-h-screen bg-app-background p-3"
-export const pageHeader = "mb-3"
-export const pageTitle = "text-[18px] font-black text-app-foreground tracking-tight"
-export const pageSub = "text-[11px] text-app-muted-foreground mt-0.5"
+export const pageWrap = "min-h-screen p-4 md:p-6 animate-in fade-in duration-300"
+export const pageHeader = "mb-4"
+export const pageTitle = "text-2xl md:text-3xl font-black text-app-foreground tracking-tight"
+export const pageSub = "text-[11px] text-app-muted-foreground mt-0.5 leading-relaxed"
 
-export const card = "bg-app-surface rounded-xl border border-app-border/70 shadow-sm"
-export const cardHead = (accent: string, _collapsed?: boolean) =>
-    `px-3 py-2 border-l-[3px] ${accent} flex items-center gap-2 bg-gradient-to-r from-app-surface to-app-background/30 cursor-pointer select-none hover:bg-app-background/20 transition-colors`
-export const cardTitle = "text-[12px] font-bold text-app-foreground tracking-[-0.01em]"
-export const cardBody = "px-3 py-3 space-y-3 animate-[fadeIn_0.15s_ease-in-out]"
-export const fieldLabel = "block text-[9px] font-semibold text-app-muted-foreground mb-1 uppercase tracking-widest"
-export const fieldHint = "text-[9px] text-app-muted-foreground mt-0.5"
-export const fieldSelect = "w-full bg-app-surface border border-app-border rounded-lg px-2.5 py-[7px] text-[12px] focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 focus-visible:ring-2 focus-visible:ring-app-primary/40 focus-visible:ring-offset-1 outline-none transition-all text-app-foreground appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
-export const fieldInput = "w-full bg-app-surface border border-app-border rounded-lg px-2.5 py-[7px] text-[12px] focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 focus-visible:ring-2 focus-visible:ring-app-primary/40 focus-visible:ring-offset-1 outline-none transition-all text-app-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+export const card = "rounded-2xl border shadow-sm transition-all hover:shadow-md"
+export const cardHead = (accent: string, collapsed?: boolean) =>
+    `px-4 py-3 flex items-center gap-3 cursor-pointer select-none transition-all rounded-t-2xl ${collapsed ? 'rounded-b-2xl' : ''}`
+export const cardTitle = "text-[12px] font-black text-app-foreground tracking-tight"
+export const cardBody = "px-4 py-4 space-y-4 animate-in fade-in duration-200"
+export const fieldLabel = "block text-[9px] font-black text-app-muted-foreground mb-1.5 uppercase tracking-widest"
+export const fieldHint = "text-[9px] text-app-muted-foreground mt-1 leading-relaxed"
+export const fieldSelect = "w-full bg-app-bg border border-app-border/50 rounded-xl px-3 py-2 text-[12px] font-bold focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary outline-none transition-all text-app-foreground appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+export const fieldInput = "w-full bg-app-bg border border-app-border/50 rounded-xl px-3 py-2 text-[12px] font-bold focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary outline-none transition-all text-app-foreground disabled:opacity-50 disabled:cursor-not-allowed"
 export const toggleBtn = (active: boolean) =>
-    `px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border cursor-pointer ${
+    `px-3 py-2 rounded-xl text-[10px] font-black transition-all border cursor-pointer ${
         active
             ? 'bg-app-primary text-white border-app-primary shadow-sm'
-            : 'bg-app-surface text-app-muted-foreground border-app-border hover:border-app-primary/30 hover:text-app-foreground'
+            : 'bg-app-bg text-app-muted-foreground border-app-border/50 hover:border-app-primary/30 hover:text-app-foreground'
     }`
 
 export const PERIOD_OPTIONS = [

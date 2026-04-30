@@ -18,8 +18,9 @@ import {
     reverseRevaluationAtNextPeriod, catchupRevaluations, getFxExposure,
     getRealizedFxIntegrity,
     type CurrencyRevaluation, type RevaluationPreview, type FxExposureReport,
-    type RealizedFxIntegrityReport,
+    type RealizedFxIntegrityReport, type CatchupResult,
 } from '@/app/actions/finance/currency'
+import { erpFetch } from '@/lib/erp-api'
 import {
     Period, Field, Th, Td, Pill, Kpi, ActionBtn, SectionHeader, NumericSparkline,
     INPUT_CLS, INPUT_STYLE, grad, soft, FG_PRIMARY,
@@ -48,10 +49,16 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
     const [rejectingId, setRejectingId] = useState<number | null>(null)
     const [rejectReason, setRejectReason] = useState('')
     const [catchupBusy, setCatchupBusy] = useState(false)
+    /** When set, opens a post-flight summary modal with per-period rows. */
+    const [catchupResults, setCatchupResults] = useState<CatchupResult[] | null>(null)
     const [smartClassifyBusy, setSmartClassifyBusy] = useState(false)
     const [exposure, setExposure] = useState<FxExposureReport | null>(null)
     const [exposureLoading, setExposureLoading] = useState(false)
     const [integrity, setIntegrity] = useState<RealizedFxIntegrityReport | null>(null)
+    /** Whether the current user has finance.revaluation.approve. Default false
+     *  until /me responds — back-end still enforces, this just hides UI to
+     *  avoid showing buttons that would 403 on click. */
+    const [canApprove, setCanApprove] = useState(false)
 
     /** All revaluations for a period that aren't rejected — picks the most
      *  recent POSTED, then the most recent PENDING_APPROVAL, then DRAFT. */
@@ -153,19 +160,9 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
         const r = await catchupRevaluations({ throughPeriodId: selectedPeriod.id, scope: 'OFFICIAL' })
         setCatchupBusy(false)
         if (!r.success) { toast.error(r.error || 'Catchup failed'); return }
-        const ran = (r.results ?? []).filter(x => x.revaluation_id).length
-        const skipped = (r.results ?? []).filter(x => x.skipped_reason).length
-        const errors = (r.results ?? []).filter(x => x.error)
-        if (errors.length) {
-            const sample = errors.slice(0, 3).map(e => `${e.period_name}: ${e.error}`).join('\n')
-            const more = errors.length > 3 ? `\n…and ${errors.length - 3} more` : ''
-            toast.error(`Catchup completed with ${errors.length} error${errors.length === 1 ? '' : 's'}\n${sample}${more}`, {
-                duration: 12000,
-            })
-        }
-        if (ran || skipped) {
-            toast.success(`Catchup · ${ran} new · ${skipped} skipped${errors.length ? ` · ${errors.length} errors` : ''}`)
-        }
+        // Surface per-period outcomes in a modal — much richer than a toast,
+        // which evaporates after 5 seconds and can't show 12 periods of detail.
+        setCatchupResults(r.results ?? [])
         await onRefresh()
     }
     async function loadExposure() {
@@ -179,9 +176,19 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
         const r = await getRealizedFxIntegrity()
         if (r.success) setIntegrity(r.data ?? null)
     }
+    async function loadPermFlags() {
+        try {
+            const me: any = await erpFetch('auth/me/', { cache: 'no-store' })
+            setCanApprove(!!me?.permission_flags?.can_approve_revaluation)
+        } catch {
+            // /me failed → leave canApprove=false. The backend will still
+            // enforce on click; UI just won't render-gate.
+        }
+    }
     useEffect(() => {
         void loadExposure()
         void loadIntegrity()
+        void loadPermFlags()
     }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
     const yearTotals = revals.reduce((acc, r) => {
@@ -313,18 +320,25 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
                                             <p style={{ fontSize: 11, color: 'var(--app-foreground)' }}>
                                                 Net impact <strong className="font-mono">{Number(pending.net_impact) >= 0 ? '+' : ''}{pending.net_impact}</strong> across {pending.accounts_processed} account{pending.accounts_processed === 1 ? '' : 's'} crossed the materiality threshold and is waiting for review.
                                             </p>
-                                            <div className="flex items-center gap-1.5">
-                                                <button onClick={() => handleApprove(pending.id)} disabled={approveBusy === pending.id}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold disabled:opacity-50"
-                                                    style={{ ...grad('--app-success'), color: FG_PRIMARY, fontSize: 11 }}>
-                                                    <ThumbsUp size={11} /> {approveBusy === pending.id ? 'Approving…' : 'Approve & post'}
-                                                </button>
-                                                <button onClick={() => { setRejectingId(pending.id); setRejectReason('') }}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold border"
-                                                    style={{ borderColor: 'color-mix(in srgb, var(--app-error) 35%, transparent)', color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 6%, transparent)', fontSize: 11 }}>
-                                                    <ThumbsDown size={11} /> Reject
-                                                </button>
-                                            </div>
+                                            {canApprove ? (
+                                                <div className="flex items-center gap-1.5">
+                                                    <button onClick={() => handleApprove(pending.id)} disabled={approveBusy === pending.id}
+                                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold disabled:opacity-50"
+                                                        style={{ ...grad('--app-success'), color: FG_PRIMARY, fontSize: 11 }}>
+                                                        <ThumbsUp size={11} /> {approveBusy === pending.id ? 'Approving…' : 'Approve & post'}
+                                                    </button>
+                                                    <button onClick={() => { setRejectingId(pending.id); setRejectReason('') }}
+                                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold border"
+                                                        style={{ borderColor: 'color-mix(in srgb, var(--app-error) 35%, transparent)', color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 6%, transparent)', fontSize: 11 }}>
+                                                        <ThumbsDown size={11} /> Reject
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <p className="rounded-md px-2 py-1 inline-block"
+                                                    style={{ ...soft('--app-muted-foreground', 8), fontSize: 10, color: 'var(--app-muted-foreground)' }}>
+                                                    Awaiting reviewer with <code className="font-mono">finance.revaluation.approve</code> permission.
+                                                </p>
+                                            )}
                                         </div>
                                     )}
                                     {r && r.status === 'POSTED' ? (
@@ -440,6 +454,88 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
                     onConfirm={() => handleReject(rejectingId, rejectReason)}
                 />
             )}
+
+            {catchupResults && (
+                <CatchupResultsModal
+                    results={catchupResults}
+                    onClose={() => setCatchupResults(null)}
+                />
+            )}
+        </div>
+    )
+}
+
+function CatchupResultsModal({ results, onClose }: {
+    results: CatchupResult[]
+    onClose: () => void
+}) {
+    const summary = results[results.length - 1]?.summary
+    const errCount = results.filter(r => r.error).length
+    const tone = errCount > 0 ? '--app-warning' : '--app-success'
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+            <div className="w-full max-w-2xl rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col"
+                style={{ background: 'var(--app-surface)', border: `1px solid color-mix(in srgb, var(${tone}) 30%, var(--app-border))`, maxHeight: '80vh' }}>
+                <div className="absolute" style={{ top: 0, left: 0, right: 0, height: 2, background: `var(${tone})` }} />
+                <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+                    <div>
+                        <div className="font-black inline-flex items-center gap-2" style={{ fontSize: 14, color: `var(${tone})` }}>
+                            <Layers size={14} /> Catchup results
+                        </div>
+                        {summary && (
+                            <div className="font-mono mt-1" style={{ fontSize: 11, color: 'var(--app-muted-foreground)' }}>
+                                {summary.run} new · {summary.skipped} skipped · {summary.errors} error{summary.errors === 1 ? '' : 's'} · {summary.total} total
+                            </div>
+                        )}
+                    </div>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-border/40 -m-1.5"
+                        style={{ color: 'var(--app-muted-foreground)' }}>
+                        <X size={16} />
+                    </button>
+                </div>
+                <div className="flex-1 overflow-y-auto px-5 pb-3">
+                    <table className="w-full">
+                        <thead>
+                            <tr style={{ background: 'color-mix(in srgb, var(--app-background) 30%, transparent)' }}>
+                                <Th>Period</Th>
+                                <Th>Outcome</Th>
+                                <Th>Detail</Th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {results.map(r => {
+                                let outcome: { tone: string; label: string; detail: string }
+                                if (r.error) {
+                                    outcome = { tone: '--app-error', label: 'ERROR', detail: r.error }
+                                } else if (r.skipped_reason) {
+                                    outcome = { tone: '--app-muted-foreground', label: 'SKIPPED', detail: r.skipped_reason }
+                                } else if (r.status === 'PENDING_APPROVAL') {
+                                    outcome = { tone: '--app-warning', label: 'PENDING', detail: 'Awaiting approval (above materiality threshold)' }
+                                } else {
+                                    outcome = { tone: '--app-success', label: 'POSTED', detail: r.revaluation_id ? `JE created · reval #${r.revaluation_id}` : 'Done' }
+                                }
+                                return (
+                                    <tr key={r.period_id} className="border-t border-app-border/30">
+                                        <Td><span className="font-mono font-black" style={{ fontSize: 11, color: 'var(--app-foreground)' }}>{r.period_name}</span></Td>
+                                        <Td><Pill tone={outcome.tone}>{outcome.label}</Pill></Td>
+                                        <Td><span style={{ fontSize: 10, color: 'var(--app-muted-foreground)' }}>{outcome.detail}</span></Td>
+                                    </tr>
+                                )
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="px-4 py-3 flex items-center justify-end gap-2"
+                    style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)' }}>
+                    <button onClick={onClose}
+                        className="px-3.5 py-1.5 rounded-xl font-bold border"
+                        style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                        Close
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }

@@ -306,6 +306,60 @@ class RevaluationServiceCoreTests(TestCase):
             )
         period_names = [r['period_name'] for r in results if r.get('period_id') in (self.p1.id, self.p2.id)]
         self.assertEqual(period_names, ['2026-01', '2026-02'])
+        # Last row carries a summary.
+        self.assertIn('summary', results[-1])
+        self.assertEqual(results[-1]['summary']['total'], len(results))
+
+    def test_catchup_records_per_period_failure_without_aborting(self):
+        """When one period explodes, subsequent periods still run."""
+        with tenant_context(self.org):
+            # Patch run_revaluation to fail on p1 only.
+            real_run = RevaluationService.run_revaluation
+            def flaky_run(*args, fiscal_period=None, **kwargs):
+                if fiscal_period is None and len(args) >= 2:
+                    fiscal_period = args[1]
+                if fiscal_period and fiscal_period.id == self.p1.id:
+                    raise ValidationError("Simulated failure on p1")
+                return real_run(*args, fiscal_period=fiscal_period, **kwargs)
+
+            ExchangeRate.objects.create(
+                organization=self.org, from_currency=self.usd, to_currency=self.xaf,
+                rate=Decimal('630'), rate_type='CLOSING',
+                effective_date=date(2026, 2, 28),
+            )
+            with patch.object(RevaluationService, 'run_revaluation',
+                              side_effect=flaky_run):
+                results = RevaluationService.run_multi_period_catchup(
+                    self.org, self.p2, user=self.user, force_post=True,
+                )
+
+        # p1 has an error row, p2 was processed normally.
+        p1_row = next(r for r in results if r['period_id'] == self.p1.id)
+        p2_row = next(r for r in results if r['period_id'] == self.p2.id)
+        self.assertIn('error', p1_row)
+        self.assertNotIn('error', p2_row)
+        self.assertIn('Simulated failure', p1_row['error'])
+        # Summary reflects the mix.
+        summary = results[-1]['summary']
+        self.assertEqual(summary['errors'], 1)
+        self.assertGreaterEqual(summary['run'] + summary['skipped'], 1)
+
+    def test_catchup_stop_on_error_bails_immediately(self):
+        with tenant_context(self.org):
+            ExchangeRate.objects.create(
+                organization=self.org, from_currency=self.usd, to_currency=self.xaf,
+                rate=Decimal('630'), rate_type='CLOSING',
+                effective_date=date(2026, 2, 28),
+            )
+            with patch.object(RevaluationService, 'run_revaluation',
+                              side_effect=ValidationError("first")):
+                results = RevaluationService.run_multi_period_catchup(
+                    self.org, self.p2, user=self.user, force_post=True,
+                    stop_on_error=True,
+                )
+        # Should stop at the first error → only one entry.
+        self.assertEqual(len(results), 1)
+        self.assertIn('error', results[0])
 
 
 class RevaluationServiceHelpersTests(TestCase):

@@ -3,11 +3,12 @@
 import {
     Save, Loader2, CheckCircle2, AlertTriangle, Heart, Copy, ClipboardPaste,
     FileJson, Printer, Zap, History, Download, Search, ChevronDown, ChevronUp,
-    Home, Eye, Undo2,
+    Home, Eye, Undo2, BarChart3, ArrowLeft,
 } from 'lucide-react'
+import Link from 'next/link'
 import type { PurchaseAnalyticsConfig } from '@/app/actions/settings/purchase-analytics-config'
 import type { AnalyticsProfile, AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
-import { pageHeader, pageTitle, pageSub, QUICK_PRESETS } from '../_lib/constants'
+import { QUICK_PRESETS } from '../_lib/constants'
 
 type Suggestion = { field: string; reason: string; current: any; suggested: any }
 type Warning = { field: string; severity: 'warn' | 'danger'; message: string }
@@ -59,197 +60,270 @@ export function HeaderBar(p: Props) {
     const c = p.config
     const isProfileMode = p.isProfileMode
 
+    /* ── Score color helpers ── */
+    const scoreColor = p.configScore >= 80 ? 'var(--app-success, #22c55e)' : p.configScore >= 50 ? '#f59e0b' : 'var(--app-error, #ef4444)'
+
     return (
         <>
-            {/* Breadcrumb */}
-            <nav className="mb-2 flex items-center gap-1.5 text-[10px] text-app-muted-foreground">
-                <Home size={10} />
-                <span>/</span>
-                <span>Settings</span>
-                <span>/</span>
-                <span className={isProfileMode ? 'cursor-pointer hover:text-app-foreground transition-colors' : 'text-app-foreground font-bold'}
-                    onClick={isProfileMode ? p.onBack : undefined}>Purchase Analytics</span>
-                {p.editingProfile && <><span>/</span><span className="text-app-primary font-bold">{p.editingProfile.name}</span></>}
-                {p.creatingForContext && <><span>/</span><span className="text-emerald-600 font-bold">New Profile</span></>}
-            </nav>
-
-            <div className={pageHeader}>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            {/* ═══ V2 Icon-Box Header ═══ */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-5 fade-in-up">
+                <div className="flex items-center gap-4">
+                    <Link href="/settings">
+                        <button className="w-9 h-9 rounded-xl border border-app-border flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all">
+                            <ArrowLeft size={16} />
+                        </button>
+                    </Link>
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                        style={{ background: 'var(--app-primary-bg)', border: '1px solid var(--app-primary-border)' }}>
+                        <BarChart3 size={26} style={{ color: 'var(--app-primary)' }} />
+                    </div>
                     <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <h1 className={pageTitle}>Purchase Analytics</h1>
-                            {c._user_role && (
-                                <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
-                                    c._user_role === 'admin' ? 'bg-emerald-500/10 text-emerald-600' :
-                                    c._user_role === 'editor' ? 'bg-blue-500/10 text-blue-600' :
-                                    'bg-app-surface-2/10 text-app-muted-foreground'
-                                }`}>{c._user_role}</span>
-                            )}
-                            {c._active_editors && c._active_editors.length > 0 && (
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[9px] text-emerald-600 font-bold">{c._active_editors.join(', ')} also viewing</span>
-                                </div>
-                            )}
-                        </div>
-                        <p className={pageSub}>
-                            Customize how the PO Intelligence Grid calculates sales averages, proposed quantities, scoring, and pricing.
+                        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
+                            Settings · Procurement
+                        </p>
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground">
+                            Purchase Analytics
+                        </h1>
+                        <p className="text-[11px] text-app-muted-foreground mt-0.5">
+                            Configure the PO Intelligence Grid — sales averages, quantities, scoring, and pricing.
                             {p.lastSavedAt && (
-                                <span className="ml-2 text-[9px] text-app-muted-foreground/60">
-                                    Last saved {Math.round((Date.now() - p.lastSavedAt.getTime()) / 60000)} min ago
+                                <span className="ml-2 text-[9px] opacity-60">
+                                    · Saved {Math.round((Date.now() - p.lastSavedAt.getTime()) / 60000)}m ago
                                 </span>
                             )}
                         </p>
-                        {c._user_role === 'viewer' && (
-                            <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/5 border border-amber-500/20 text-[9px] text-amber-600 font-bold">
-                                <AlertTriangle size={9} /> Read-only mode — contact an admin to make changes
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Always-visible chips strip */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <Chip label="Profiles" value={String(p.profilesData?.profiles?.length || 0)} />
-                        <button type="button" onClick={() => p.setShowScoreBreakdown(!p.showScoreBreakdown)} className="relative">
-                            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border cursor-pointer ${
-                                p.configScore >= 80 ? 'bg-emerald-500/5 border-emerald-500/20' :
-                                p.configScore >= 50 ? 'bg-amber-500/5 border-amber-500/20' :
-                                'bg-red-500/5 border-red-500/20'
-                            }`}>
-                                <Heart size={9} className={p.configScore >= 80 ? 'text-emerald-500' : p.configScore >= 50 ? 'text-amber-500' : 'text-red-500'} />
-                                <span className={`text-[10px] font-black tabular-nums ${
-                                    p.configScore >= 80 ? 'text-emerald-600' : p.configScore >= 50 ? 'text-amber-600' : 'text-red-600'
-                                }`}>{p.configScore}%</span>
-                            </div>
-                            {p.showScoreBreakdown && (
-                                <div className="absolute z-50 top-full right-0 mt-1 w-[220px] p-2 rounded-lg bg-app-surface border border-app-border shadow-xl text-left">
-                                    <p className="text-[9px] font-bold text-app-foreground mb-1.5">Health Score Breakdown</p>
-                                    <div className="space-y-1">
-                                        {p.scoreBreakdown.map((c, ci) => (
-                                            <div key={ci} className="flex items-center justify-between text-[9px]">
-                                                <div className="flex items-center gap-1">
-                                                    <span className={c.pass ? 'text-emerald-500' : 'text-red-500'}>{c.pass ? '✓' : '✗'}</span>
-                                                    <span className={c.pass ? 'text-app-muted-foreground' : 'text-app-foreground font-bold'}>{c.label}</span>
-                                                </div>
-                                                {!c.pass && <span className="text-red-500 font-bold">{c.impact}</span>}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </button>
-                        <Chip
-                            label="Done"
-                            value={`${p.completenessScore}%`}
-                            tone={p.completenessScore === 100 ? 'success' : p.completenessScore >= 75 ? 'primary' : 'warning'}
-                        />
-                        {p.warnings.length > 0 && (
-                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                                <AlertTriangle size={9} className="text-amber-500" />
-                                <span className="text-[10px] font-black text-amber-600 tabular-nums">{p.warnings.length}</span>
-                            </div>
-                        )}
-                        {p.isProfileMode && p.overrideCount > 0 && (
-                            <Chip label="Overrides" value={String(p.overrideCount)} tone="primary" />
-                        )}
-
-                        {/* Action buttons */}
-                        <ActionBtn icon={<Copy size={9} />} label="Share" onClick={p.onShareUrl} title="Copy shareable config URL" />
-                        <ActionBtn icon={<ClipboardPaste size={9} />} label="Paste" onClick={p.onClipboardImport} title="Import config from clipboard" />
-                        <ActionBtn icon={<FileJson size={9} />} label="Export" onClick={p.onExportConfig} title="Export config as JSON" />
-                        <ActionBtn icon={<Printer size={9} />} label="Print" onClick={p.onPrint} title="Print configuration" />
-                        {p.suggestions.length > 0 && (
-                            <button type="button" onClick={() => p.setShowSuggestions(!p.showSuggestions)}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/5 border border-amber-500/20 text-[9px] font-bold text-amber-600 hover:bg-amber-500/10 transition-all">
-                                <Zap size={9} /> {p.suggestions.length} Tip{p.suggestions.length !== 1 ? 's' : ''}
-                            </button>
-                        )}
-                        {p.hasChanges && (
-                            <>
-                                <ActionBtn icon={<Copy size={9} />} label="Changelog" onClick={p.onCopyChangelog} title="Copy changelog" />
-                                <ActionBtn icon={<Eye size={9} />} label={`Diff (${p.diffEntriesCount})`} onClick={p.onShowDiff} title="View unsaved changes" />
-                            </>
-                        )}
-                        {p.draftSavedAt && (
-                            <span className="text-[8px] text-app-muted-foreground/50 flex items-center gap-1">
-                                <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" /> Draft {p.draftSavedAt}
-                            </span>
-                        )}
-                        <ActionBtn icon={<History size={9} />} label="History" onClick={p.onShowHistory} title="Version history">
-                            {c._version_count && c._version_count > 0 && (
-                                <span className="text-[8px] px-1 rounded bg-app-primary/10 text-app-primary font-black ml-0.5">{c._version_count}</span>
-                            )}
-                        </ActionBtn>
-                        <ActionBtn icon={<Download size={9} />} label="Templates" onClick={p.onShowTemplates} title="Manage config templates" />
-                        <button type="button" onClick={p.onShowShortcuts} className="flex items-center gap-1 px-1.5 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all" title="Keyboard shortcuts (?)">
-                            <span className="text-[9px] font-mono">?</span>
-                        </button>
-                        <button type="button" onClick={() => p.setAllCollapsed(prev => !prev)} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
-                            title={p.allCollapsed ? 'Expand all sections' : 'Collapse all sections'}>
-                            {p.allCollapsed ? <ChevronDown size={9} /> : <ChevronUp size={9} />}
-                            {p.allCollapsed ? 'Expand' : 'Collapse'}
-                        </button>
-                    </div>
-
-                    {/* Second row: presets + search */}
-                    <div className="flex items-center gap-2 flex-wrap mt-1.5 w-full">
-                        <div className="flex items-center gap-1">
-                            <span className="text-[8px] font-bold text-app-muted-foreground/50 uppercase mr-0.5">Presets:</span>
-                            {Object.entries(QUICK_PRESETS).map(([key, preset]) => (
-                                <button key={key} type="button" onClick={() => p.onApplyPreset(key)}
-                                    className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-app-background border border-app-border/30 text-[8px] font-bold text-app-muted-foreground hover:text-app-foreground hover:border-app-primary/30 transition-all"
-                                    title={`Apply ${preset.label} preset`}>
-                                    <span>{preset.icon}</span> {preset.label}
+                        {isProfileMode && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                                {p.editingProfile && (
+                                    <span className="text-[9px] font-black px-2 py-0.5 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                        Editing: {p.editingProfile.name}
+                                    </span>
+                                )}
+                                {p.creatingForContext && (
+                                    <span className="text-[9px] font-black px-2 py-0.5 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                        ✨ New Profile
+                                    </span>
+                                )}
+                                <button onClick={p.onBack} className="text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground underline ml-1">
+                                    ← Back to Global
                                 </button>
-                            ))}
-                        </div>
-                        <div className="flex items-center gap-1 ml-auto">
-                            <div className="relative">
-                                <Search size={9} className="absolute left-1.5 top-1/2 -translate-y-1/2 text-app-muted-foreground/40" />
-                                <input type="text" value={p.fieldSearch} onChange={e => p.setFieldSearch(e.target.value)}
-                                    placeholder="Filter fields..."
-                                    className="pl-5 pr-2 py-0.5 rounded-md bg-app-background border border-app-border/30 text-[9px] text-app-foreground placeholder:text-app-muted-foreground/30 w-28 focus:w-40 transition-all focus:outline-none focus:ring-1 focus:ring-app-primary/30" />
                             </div>
-                            <div className="relative">
-                                <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                                <input type="text" placeholder="Filter sections..."
-                                    value={p.configSearch} onChange={e => p.setConfigSearch(e.target.value)}
-                                    className="pl-6 pr-2 py-1 rounded-lg text-[10px] bg-app-surface border border-app-border focus:border-app-primary/30 focus:ring-1 focus:ring-app-primary/10 outline-none text-app-foreground w-[140px]" />
-                            </div>
-                        </div>
+                        )}
                     </div>
+                </div>
 
-                    {c._last_modified_by && (
-                        <div className="text-[8px] text-app-muted-foreground/60 mt-0.5">
-                            Last modified by <span className="font-bold text-app-muted-foreground">{c._last_modified_by}</span>
-                            {c._last_modified_at && <> · {new Date(c._last_modified_at).toLocaleDateString()} {new Date(c._last_modified_at).toLocaleTimeString()}</>}
+                {/* Save Button */}
+                <div className="flex items-center gap-2 shrink-0">
+                    {p.saved && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold animate-in fade-in duration-300" style={{ color: 'var(--app-success, #22c55e)' }}>
+                            <CheckCircle2 size={13} /> Saved
+                        </span>
+                    )}
+                    {p.hasChanges && (
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg" style={{ background: 'color-mix(in srgb, #f59e0b 10%, transparent)', color: '#f59e0b' }}>
+                            {p.diffEntriesCount} unsaved
+                        </span>
+                    )}
+                    <button type="button" onClick={p.onSave} disabled={p.isPending}
+                        className="flex items-center gap-2 text-[11px] font-black bg-app-primary hover:brightness-110 text-white px-4 py-2.5 rounded-xl transition-all disabled:opacity-50"
+                        style={{ boxShadow: '0 2px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                        {p.isPending ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                        {p.isPending ? 'Saving...' : 'Save'}
+                    </button>
+                </div>
+            </header>
+
+            {/* ═══ KPI Strip ═══ */}
+            <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+                {/* Health Score */}
+                <button type="button" onClick={() => p.setShowScoreBreakdown(!p.showScoreBreakdown)} className="relative">
+                    <KpiTile label="Health" value={`${p.configScore}%`} color={scoreColor}
+                        icon={<Heart size={14} />} />
+                    {p.showScoreBreakdown && (
+                        <div className="absolute z-50 top-full left-0 mt-1.5 w-[240px] p-3 rounded-xl shadow-2xl text-left animate-in fade-in zoom-in-95 duration-150"
+                            style={{ background: 'var(--app-surface)', border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
+                            <p className="text-[10px] font-black text-app-foreground mb-2">Health Score Breakdown</p>
+                            <div className="space-y-1.5">
+                                {p.scoreBreakdown.map((c, ci) => (
+                                    <div key={ci} className="flex items-center justify-between text-[9px]">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className={`w-4 h-4 rounded flex items-center justify-center text-[8px] font-black ${c.pass ? 'text-white' : 'text-white'}`}
+                                                style={{ background: c.pass ? 'var(--app-success, #22c55e)' : 'var(--app-error, #ef4444)' }}>
+                                                {c.pass ? '✓' : '✗'}
+                                            </span>
+                                            <span className="font-bold text-app-foreground">{c.label}</span>
+                                        </div>
+                                        {!c.pass && <span className="font-black" style={{ color: 'var(--app-error, #ef4444)' }}>{c.impact}</span>}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
-                </div>
+                </button>
+
+                <KpiTile label="Completeness" value={`${p.completenessScore}%`}
+                    color={p.completenessScore === 100 ? 'var(--app-success, #22c55e)' : p.completenessScore >= 75 ? 'var(--app-primary)' : '#f59e0b'}
+                    icon={<CheckCircle2 size={14} />} />
+
+                <KpiTile label="Profiles" value={String(p.profilesData?.profiles?.length || 0)}
+                    color="var(--app-info, #3b82f6)" icon={<Download size={14} />} />
+
+                {p.warnings.length > 0 && (
+                    <KpiTile label="Warnings" value={String(p.warnings.length)}
+                        color="#f59e0b" icon={<AlertTriangle size={14} />} />
+                )}
+
+                {isProfileMode && p.overrideCount > 0 && (
+                    <KpiTile label="Overrides" value={String(p.overrideCount)}
+                        color="var(--app-primary)" icon={<Zap size={14} />} />
+                )}
+
+                {c._user_role && (
+                    <KpiTile label="Role" value={c._user_role}
+                        color={c._user_role === 'admin' ? 'var(--app-success, #22c55e)' : c._user_role === 'editor' ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)'}
+                        icon={<Eye size={14} />} />
+                )}
             </div>
+
+            {/* ═══ Action Toolbar ═══ */}
+            <div className="flex items-center gap-2 flex-wrap mb-4 px-1">
+                {/* Quick Presets */}
+                <div className="flex items-center gap-1.5 mr-2">
+                    <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest">Presets</span>
+                    {Object.entries(QUICK_PRESETS).map(([key, preset]) => (
+                        <button key={key} type="button" onClick={() => p.onApplyPreset(key)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:shadow-sm"
+                            style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}
+                            title={`Apply ${preset.label} preset`}>
+                            <span>{preset.icon}</span> {preset.label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="w-px h-5 bg-app-border/40 mx-1" />
+
+                {/* Tools */}
+                <ToolBtn icon={<Copy size={10} />} label="Share" onClick={p.onShareUrl} title="Copy shareable config URL" />
+                <ToolBtn icon={<ClipboardPaste size={10} />} label="Paste" onClick={p.onClipboardImport} title="Import from clipboard" />
+                <ToolBtn icon={<FileJson size={10} />} label="Export" onClick={p.onExportConfig} title="Export JSON" />
+                <ToolBtn icon={<Printer size={10} />} label="Print" onClick={p.onPrint} title="Print configuration" />
+
+                {p.suggestions.length > 0 && (
+                    <button type="button" onClick={() => p.setShowSuggestions(!p.showSuggestions)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black transition-all"
+                        style={{ background: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: '1px solid color-mix(in srgb, #f59e0b 20%, transparent)', color: '#f59e0b' }}>
+                        <Zap size={10} /> {p.suggestions.length} Tip{p.suggestions.length !== 1 ? 's' : ''}
+                    </button>
+                )}
+                {p.hasChanges && (
+                    <>
+                        <ToolBtn icon={<Copy size={10} />} label="Changelog" onClick={p.onCopyChangelog} title="Copy changelog" />
+                        <ToolBtn icon={<Eye size={10} />} label={`Diff (${p.diffEntriesCount})`} onClick={p.onShowDiff} title="View diff" highlight />
+                    </>
+                )}
+                <ToolBtn icon={<History size={10} />} label="History" onClick={p.onShowHistory} title="Version history">
+                    {c._version_count && c._version_count > 0 && (
+                        <span className="text-[7px] px-1 rounded font-black ml-0.5" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>{c._version_count}</span>
+                    )}
+                </ToolBtn>
+                <ToolBtn icon={<Download size={10} />} label="Templates" onClick={p.onShowTemplates} title="Config templates" />
+
+                <div className="w-px h-5 bg-app-border/40 mx-1" />
+
+                <button type="button" onClick={p.onShowShortcuts}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-mono font-black text-app-muted-foreground hover:text-app-foreground transition-all"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}
+                    title="Keyboard shortcuts (?)">?</button>
+
+                <button type="button" onClick={() => p.setAllCollapsed(prev => !prev)}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}
+                    title={p.allCollapsed ? 'Expand all' : 'Collapse all'}>
+                    {p.allCollapsed ? <ChevronDown size={10} /> : <ChevronUp size={10} />}
+                    {p.allCollapsed ? 'Expand' : 'Collapse'}
+                </button>
+
+                {/* Search Inputs — pushed to right */}
+                <div className="flex items-center gap-2 ml-auto">
+                    <div className="relative">
+                        <Search size={10} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground/50 pointer-events-none" />
+                        <input type="text" value={p.fieldSearch} onChange={e => p.setFieldSearch(e.target.value)}
+                            placeholder="Filter fields…"
+                            className="pl-7 pr-2 py-1 rounded-lg bg-app-bg border border-app-border/40 text-[10px] font-bold text-app-foreground placeholder:text-app-muted-foreground/40 w-28 focus:w-36 transition-all focus:outline-none focus:ring-1 focus:ring-app-primary/20 focus:border-app-primary" />
+                    </div>
+                    <div className="relative">
+                        <Search size={10} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground/50 pointer-events-none" />
+                        <input type="text" placeholder="Filter sections…"
+                            value={p.configSearch} onChange={e => p.setConfigSearch(e.target.value)}
+                            className="pl-7 pr-2 py-1 rounded-lg bg-app-bg border border-app-border/40 text-[10px] font-bold text-app-foreground placeholder:text-app-muted-foreground/40 w-32 focus:w-40 transition-all focus:outline-none focus:ring-1 focus:ring-app-primary/20 focus:border-app-primary" />
+                    </div>
+                </div>
+
+                {p.draftSavedAt && (
+                    <span className="text-[8px] text-app-muted-foreground/50 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--app-success, #22c55e)' }} /> Draft {p.draftSavedAt}
+                    </span>
+                )}
+            </div>
+
+            {/* Active Editors */}
+            {c._active_editors && c._active_editors.length > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-4 animate-in fade-in duration-200"
+                    style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 5%, var(--app-surface))', border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)' }}>
+                    <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--app-success, #22c55e)' }} />
+                    <span className="text-[10px] font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>{c._active_editors.join(', ')} also viewing</span>
+                </div>
+            )}
+
+            {c._user_role === 'viewer' && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-4"
+                    style={{ background: 'color-mix(in srgb, #f59e0b 5%, var(--app-surface))', border: '1px solid color-mix(in srgb, #f59e0b 15%, transparent)' }}>
+                    <AlertTriangle size={12} style={{ color: '#f59e0b' }} />
+                    <span className="text-[10px] font-bold" style={{ color: '#f59e0b' }}>Read-only mode — contact an admin to make changes</span>
+                </div>
+            )}
+
+            {c._last_modified_by && (
+                <div className="text-[9px] text-app-muted-foreground/60 mb-3 px-1">
+                    Last modified by <span className="font-bold text-app-muted-foreground">{c._last_modified_by}</span>
+                    {c._last_modified_at && <> · {new Date(c._last_modified_at).toLocaleDateString()} {new Date(c._last_modified_at).toLocaleTimeString()}</>}
+                </div>
+            )}
         </>
     )
 }
 
-function Chip({ label, value, tone = 'neutral' }: { label: string; value: string; tone?: 'neutral' | 'primary' | 'success' | 'warning' }) {
-    const tones = {
-        neutral: 'bg-app-background border-app-border/50 text-app-foreground',
-        primary: 'bg-app-primary/5 border-app-primary/20 text-app-primary',
-        success: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600',
-        warning: 'bg-amber-500/5 border-amber-500/20 text-amber-600',
-    }
+/* ── KPI Tile ── */
+function KpiTile({ label, value, color, icon }: { label: string; value: string; color: string; icon: React.ReactNode }) {
     return (
-        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border ${tones[tone]}`}>
-            <span className="text-[9px] text-app-muted-foreground">{label}</span>
-            <span className="text-[10px] font-black tabular-nums">{value}</span>
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
+            style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>{icon}</div>
+            <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground">{label}</div>
+                <div className="text-base font-black text-app-foreground tabular-nums leading-none">{value}</div>
+            </div>
         </div>
     )
 }
 
-function ActionBtn({ icon, label, onClick, title, children }: { icon: React.ReactNode; label: string; onClick: () => void; title: string; children?: React.ReactNode }) {
+/* ── Toolbar Button ── */
+function ToolBtn({ icon, label, onClick, title, children, highlight }: {
+    icon: React.ReactNode; label: string; onClick: () => void; title: string; children?: React.ReactNode; highlight?: boolean
+}) {
     return (
         <button type="button" onClick={onClick} title={title}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all">
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:shadow-sm"
+            style={highlight ? {
+                background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                color: 'var(--app-primary)',
+            } : {
+                background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                color: 'var(--app-muted-foreground)',
+            }}>
             {icon} {label}{children}
         </button>
     )
