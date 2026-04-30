@@ -120,6 +120,14 @@ class OrganizationMinimalSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     name = serializers.CharField()
     slug = serializers.SlugField()
+    currency_code = serializers.SerializerMethodField()
+    currency_symbol = serializers.SerializerMethodField()
+
+    def get_currency_code(self, obj):
+        return obj.base_currency.code if obj.base_currency else 'USD'
+
+    def get_currency_symbol(self, obj):
+        return obj.base_currency.symbol if obj.base_currency else '$'
 
 class UserSerializer(serializers.ModelSerializer):
     role = RoleSerializer(read_only=True)

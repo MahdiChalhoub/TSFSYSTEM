@@ -9,6 +9,7 @@ import { SequenceRow } from './SequenceRow'
 
 interface SequenceTableProps {
     tab: TabKey
+    moduleKey?: string
     sequences: Sequence[]
     dirtyKeys: Set<string>
     onChange: (seqKey: string, field: keyof Sequence, value: string | number) => void
@@ -87,11 +88,14 @@ function ModuleSection({
     )
 }
 
-export function SequenceTable({ tab, sequences, dirtyKeys, onChange }: SequenceTableProps) {
+export function SequenceTable({ tab, moduleKey, sequences, dirtyKeys, onChange }: SequenceTableProps) {
     if (tab === 'documents') {
+        const groups = moduleKey
+            ? DOCUMENT_GROUPS.filter(g => g.module === moduleKey)
+            : DOCUMENT_GROUPS
         return (
             <div className="flex flex-col gap-4">
-                {DOCUMENT_GROUPS.map(group => (
+                {groups.map(group => (
                     <ModuleSection
                         key={group.module}
                         label={group.module}
@@ -159,9 +163,12 @@ export function SequenceTable({ tab, sequences, dirtyKeys, onChange }: SequenceT
     }
 
     // Master-Data tab — single specimen per entity, grouped
+    const masterGroups = moduleKey
+        ? MASTER_DATA_GROUPS.filter(g => g.module === moduleKey)
+        : MASTER_DATA_GROUPS
     return (
         <div className="flex flex-col gap-4">
-            {MASTER_DATA_GROUPS.map(group => (
+            {masterGroups.map(group => (
                 <ModuleSection
                     key={group.module}
                     label={group.module}

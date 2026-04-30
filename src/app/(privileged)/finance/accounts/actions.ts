@@ -16,7 +16,11 @@ import { erpFetch } from "@/lib/erp-api"
 
 export async function getFinancialAccounts() {
     try {
-        return await erpFetch('accounts/')
+        const data = await erpFetch('accounts/?page_size=500')
+        // TenantModelViewSet uses cursor pagination → {results: [...]}
+        if (Array.isArray(data)) return data
+        if (data?.results && Array.isArray(data.results)) return data.results
+        return []
     } catch (error) {
         console.error("Failed to fetch financial accounts:", error)
         return []
@@ -83,9 +87,19 @@ export async function deleteFinancialAccount(id: number) {
 
 export async function getOrgCurrency(): Promise<string> {
     try {
-        const me = await erpFetch('auth/me/')
-        // Organization base_currency is a FK, returned as object with code
-        return me?.organization?.base_currency_code || me?.organization?.currency || 'USD'
+        // Source of truth: reference/org-currencies/ (same as /settings/regional)
+        const data = await erpFetch('reference/org-currencies/')
+        const list = Array.isArray(data) ? data : data?.results || []
+        // Find the org's default currency
+        const defaultCur = list.find((c: any) => c.is_default)
+        if (defaultCur) {
+            return defaultCur.currency_code || defaultCur.currency_data?.code || 'USD'
+        }
+        // Fallback: first enabled currency
+        if (list.length > 0) {
+            return list[0].currency_code || list[0].currency_data?.code || 'USD'
+        }
+        return 'USD'
     } catch {
         return 'USD'
     }
@@ -121,7 +135,12 @@ export async function getChartOfAccounts() {
     return await erpFetch('finance/coa/');
 }
 export async function getAccountCategories() {
-    return await erpFetch('finance/account-categories/');
+    const data = await erpFetch('finance/account-categories/?page_size=500');
+    // TenantModelViewSet uses cursor pagination → {results: [...]}
+    // Normalize to always return a flat array for the frontend
+    if (Array.isArray(data)) return data;
+    if (data?.results && Array.isArray(data.results)) return data.results;
+    return [];
 }
 export async function createAccountCategory(data: unknown) {
     revalidatePath('/finance/account-categories');

@@ -111,10 +111,16 @@ class CurrencyRevaluation(TenantModel):
     At period-end, unrealized FX gains/losses are computed by
     revaluing foreign-currency denominated balances at closing rates.
     """
+    # PENDING_APPROVAL = the run was computed but the JE hasn't been posted
+    # because the materiality threshold was tripped. A user with permission
+    # must explicitly approve/reject. Reject keeps the audit lines but never
+    # posts; approve flips to POSTED and generates the JE.
     STATUS_CHOICES = [
-        ('DRAFT', 'Draft'),
-        ('POSTED', 'Posted'),
-        ('REVERSED', 'Reversed'),
+        ('DRAFT',             'Draft'),
+        ('PENDING_APPROVAL',  'Pending approval'),
+        ('POSTED',            'Posted'),
+        ('REVERSED',          'Reversed'),
+        ('REJECTED',          'Rejected'),
     ]
 
     fiscal_period = models.ForeignKey(
@@ -131,11 +137,47 @@ class CurrencyRevaluation(TenantModel):
     net_impact = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     accounts_processed = models.PositiveIntegerField(default=0)
 
+    # Materiality — net_impact / abs(total revalued base) at run time. UI uses
+    # this to flag the run for review when it exceeds the org-configured
+    # threshold (default 0.5%). Stored so the dashboard can show historicals.
+    materiality_pct = models.DecimalField(
+        max_digits=8, decimal_places=4, default=Decimal('0.0000'),
+        help_text='Net impact as % of revalued base. Drives approval gate.',
+    )
+
+    # Excluded accounts (per-run opt-out). Stored as a list of COA ids so the
+    # audit row tells the full story even if the COA changes later.
+    excluded_account_ids = models.JSONField(
+        default=list, blank=True,
+        help_text='COA ids that the operator explicitly skipped on this run.',
+    )
+
+    # Auto-reversal — when True, the engine auto-posts a reversing JE on the
+    # first day of the next fiscal period. Standard practice for unrealized
+    # FX so the next period reval works from the original cost basis.
+    auto_reverse_at_period_start = models.BooleanField(
+        default=True,
+        help_text='Auto-post a reversing JE on day 1 of the next fiscal period.',
+    )
+    reversal_journal_entry = models.ForeignKey(
+        'finance.JournalEntry', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='revaluation_reversed_source',
+        help_text='The auto-posted reversing JE on day 1 of next period.',
+    )
+
     # Link to generated JE
     journal_entry = models.ForeignKey(
         'finance.JournalEntry', on_delete=models.SET_NULL,
         null=True, blank=True, related_name='revaluation_source'
     )
+
+    # Approval audit
+    approved_by = models.ForeignKey(
+        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='currency_revaluation_approvals',
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, default='')
 
     # Audit
     created_at = models.DateTimeField(auto_now_add=True)
@@ -305,6 +347,22 @@ class CurrencyRevaluationLine(TenantModel):
     difference = models.DecimalField(
         max_digits=15, decimal_places=2,
         help_text='Unrealized gain (+) or loss (-) in base currency'
+    )
+    # Which rate type was used for this account. Stored so the audit row
+    # explains *why* the rate was 12.345 — e.g., CLOSING for AR, AVERAGE for
+    # P&L, HISTORICAL when classification was non-monetary (no revaluation).
+    RATE_TYPE_USED_CHOICES = [
+        ('CLOSING',     'Closing'),
+        ('AVERAGE',     'Average'),
+        ('SPOT',        'Spot (fallback)'),
+        ('HISTORICAL',  'Historical (skipped)'),
+    ]
+    rate_type_used = models.CharField(
+        max_length=20, choices=RATE_TYPE_USED_CHOICES, default='CLOSING',
+    )
+    classification = models.CharField(
+        max_length=20, default='MONETARY',
+        help_text='Snapshot of account.monetary_classification at run time.',
     )
 
     class Meta:

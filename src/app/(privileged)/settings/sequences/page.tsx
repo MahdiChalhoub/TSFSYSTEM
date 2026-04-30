@@ -5,15 +5,28 @@ import { erpFetch } from '@/lib/erp-api'
 import { Hash, Loader2, Save, ShoppingBag } from 'lucide-react'
 import { toast } from 'sonner'
 import { SettingsPageShell } from '@/lib/settings-framework/components/SettingsPageShell'
-import { DOCUMENT_TYPES, MASTER_DATA_TYPES, TIERS } from './_lib/constants'
+import {
+    DOCUMENT_TYPES, DOCUMENT_GROUPS,
+    MASTER_DATA_TYPES, MASTER_DATA_GROUPS,
+    TIERS, resolveSeqKey,
+} from './_lib/constants'
 import type { Sequence, TabKey } from './_lib/types'
 import { SequenceTable } from './_components/SequenceTable'
+import { ModuleNavigator, type ModuleNavItem } from './_components/ModuleNavigator'
 
 export default function DocumentNumberingPage() {
     const [sequences, setSequences] = useState<Sequence[]>([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState<TabKey>('documents')
+    const [selectedModuleByTab, setSelectedModuleByTab] = useState<Record<TabKey, string>>({
+        documents: DOCUMENT_GROUPS[0]?.module ?? '',
+        master: MASTER_DATA_GROUPS[0]?.module ?? '',
+    })
+    const selectedModule = selectedModuleByTab[activeTab]
+    const setSelectedModule = useCallback((m: string) => {
+        setSelectedModuleByTab(prev => ({ ...prev, [activeTab]: m }))
+    }, [activeTab])
     const serverSnapshot = useRef<Map<string, Sequence>>(new Map())
     const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set())
 
@@ -95,6 +108,34 @@ export default function DocumentNumberingPage() {
         { key: 'documents' as TabKey, label: 'Documents', icon: ShoppingBag, count: totalDocs },
         { key: 'master' as TabKey, label: 'Master-Data', icon: Hash, count: totalMaster },
     ]
+
+    // Per-module nav items with dirty counts (recomputed when dirty/tab changes)
+    const navItems: ModuleNavItem[] = useMemo(() => {
+        if (activeTab === 'documents') {
+            return DOCUMENT_GROUPS.map(g => {
+                const keys = g.items.flatMap(item =>
+                    TIERS.map(t => resolveSeqKey(item.id, t.key))
+                )
+                return {
+                    key: g.module,
+                    label: g.module,
+                    color: g.color,
+                    count: g.items.length * TIERS.length,
+                    dirty: keys.filter(k => dirtyKeys.has(k)).length,
+                }
+            })
+        }
+        return MASTER_DATA_GROUPS.map(g => {
+            const keys = g.items.map(item => item.id)
+            return {
+                key: g.module,
+                label: g.module,
+                color: g.color,
+                count: g.items.length,
+                dirty: keys.filter(k => dirtyKeys.has(k)).length,
+            }
+        })
+    }, [activeTab, dirtyKeys])
 
     return (
         <SettingsPageShell
@@ -203,13 +244,22 @@ export default function DocumentNumberingPage() {
                         )}
                     </div>
 
-                    {/* ═══ Table ═══ */}
-                    <SequenceTable
-                        tab={activeTab}
-                        sequences={sequences}
-                        dirtyKeys={dirtyKeys}
-                        onChange={handleChange}
-                    />
+                    {/* ═══ Module navigator (left) + filtered table (right) ═══ */}
+                    <div className="grid gap-4 grid-cols-1 md:[grid-template-columns:minmax(200px,240px)_1fr]">
+                        <ModuleNavigator
+                            items={navItems}
+                            selected={selectedModule}
+                            onSelect={setSelectedModule}
+                            sectionLabel={activeTab === 'documents' ? 'Document modules' : 'Master-data groups'}
+                        />
+                        <SequenceTable
+                            tab={activeTab}
+                            moduleKey={selectedModule}
+                            sequences={sequences}
+                            dirtyKeys={dirtyKeys}
+                            onChange={handleChange}
+                        />
+                    </div>
 
                     {/* ═══ Floating save pill ═══ */}
                     {dirtyKeys.size > 0 && (

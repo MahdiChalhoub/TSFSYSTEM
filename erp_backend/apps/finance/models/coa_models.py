@@ -193,6 +193,23 @@ class ChartOfAccount(TenantModel):
         default=False,
         help_text='If True, this account needs FX revaluation at period end'
     )
+    # Drives which rate type the revaluation engine uses for this account.
+    # Aligns with IAS 21 / ASC 830:
+    #   MONETARY      → closing rate at period end (cash, AR, AP, FC loans)
+    #   NON_MONETARY  → historical rate (no revaluation; PPE, prepaid expenses)
+    #   INCOME_EXPENSE → average rate for the period (P&L items)
+    # Service ignores revaluation_required for NON_MONETARY (historical cost
+    # is the truth) and uses AVERAGE rate for INCOME_EXPENSE accounts.
+    MONETARY_CLASSIFICATION_CHOICES = [
+        ('MONETARY',       'Monetary (closing rate)'),
+        ('NON_MONETARY',   'Non-monetary (historical, no revaluation)'),
+        ('INCOME_EXPENSE', 'Income/Expense (average rate)'),
+    ]
+    monetary_classification = models.CharField(
+        max_length=20, choices=MONETARY_CLASSIFICATION_CHOICES,
+        default='MONETARY',
+        help_text='IAS 21 / ASC 830 classification — drives rate type used at revaluation.',
+    )
 
     # ── Hierarchy ──────────────────────────────────────────────────
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')

@@ -1,9 +1,9 @@
 'use client';
-import React, { useState, useCallback, useMemo, ReactNode } from 'react';
+import React, { useMemo, ReactNode } from 'react';
 import {
-    Save, Loader2, Download, Upload, Copy, Undo2,
-    ChevronDown, ChevronUp, Search, Printer, FileJson, HelpCircle,
-    X, Settings2
+    Save, Loader2, Download, Upload, Copy,
+    Printer, HelpCircle, MoreHorizontal, RefreshCcw, Undo2,
+    Maximize2, Minimize2, Check,
 } from 'lucide-react';
 import { useKeyboardShortcuts, type ShortcutDef } from '../hooks/useKeyboardShortcuts';
 import { useAutoSaveDraft } from '../hooks/useAutoSaveDraft';
@@ -12,11 +12,13 @@ import { useConfigExport } from '../hooks/useConfigExport';
 import { useCollapsibleSections } from '../hooks/useCollapsibleSections';
 import { useFieldLocking } from '../hooks/useFieldLocking';
 import { useConfigSearch } from '../hooks/useConfigSearch';
-import { DraftIndicator } from './DraftIndicator';
-import { UndoButton } from './UndoButton';
 import { FieldSearchBar } from './FieldSearchBar';
 import { CompletenessMeter } from './CompletenessMeter';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
+import {
+    DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+    DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS PAGE SHELL — Universal Settings Page Wrapper
@@ -161,37 +163,47 @@ export function SettingsPageShell({
         baseShortcuts, [onSave, onReload, undoStack.canUndo]
     );
 
-    // ─── Toolbar State ──────────────────────────────────────────
-    const [showToolbar, setShowToolbar] = useState(true);
+    // ─── Save state ─────────────────────────────────────────────
+    const saveState: 'idle' | 'dirty' | 'saving' = saving ? 'saving' : (hasChanges ? 'dirty' : 'idle');
 
-    // ─── Render ─────────────────────────────────────────────────
+    // ─── Render — single-row chrome, contextual actions ─────────
     return (
-        <div className="space-y-4 animate-in fade-in duration-300">
-            {/* ═══ HEADER ═══ */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 animate-in fade-in duration-300">
+            {/* ═══ HEADER — one row: title block + status + actions ═══ */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+                {/* LEFT: icon + title + meta inline */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
                         className="page-header-icon bg-app-primary"
-                        style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}
+                        style={{
+                            boxShadow:
+                                '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                        }}
                     >
                         {icon}
                     </div>
-                    <div>
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                    <div className="min-w-0">
+                        <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight truncate leading-tight">
                             {title}
                         </h1>
-                        {subtitle && (
-                            <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                                {subtitle}
-                            </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                            <DraftIndicator savedAt={draftSavedAt} />
-                            {lastModifiedBy && (
-                                <span className="text-[8px] text-app-muted-foreground/60">
-                                    Last modified by <span className="font-bold text-app-muted-foreground">{lastModifiedBy}</span>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap text-tp-xxs leading-none">
+                            {subtitle && (
+                                <span className="font-bold uppercase tracking-wide text-app-muted-foreground truncate">
+                                    {subtitle}
+                                </span>
+                            )}
+                            {/* ONE status piece at a time — never stacked */}
+                            <StatusPill state={saveState} draftSavedAt={draftSavedAt} />
+                            {/* Editor — only if no save state to show, OR alongside the saved state */}
+                            {saveState === 'idle' && lastModifiedBy && (
+                                <span className="text-app-muted-foreground/70 truncate">
+                                    by{' '}
+                                    <span className="font-bold text-app-foreground/80">{lastModifiedBy}</span>
                                     {lastModifiedAt && (
-                                        <> · {new Date(lastModifiedAt).toLocaleDateString()} {new Date(lastModifiedAt).toLocaleTimeString()}</>
+                                        <span className="opacity-70">
+                                            {' · '}
+                                            {new Date(lastModifiedAt).toLocaleDateString()}
+                                        </span>
                                     )}
                                 </span>
                             )}
@@ -199,156 +211,193 @@ export function SettingsPageShell({
                     </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                    {onReload && (
+                {/* RIGHT: contextual actions only */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {/* Undo — only when there's something to undo */}
+                    {showUndo && undoStack.canUndo && (
                         <button
                             type="button"
-                            onClick={onReload}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
-                            title="Reload (Ctrl+R)"
+                            onClick={() => undoStack.undo()}
+                            title={`Undo last change (Ctrl+Z) — ${undoStack.depth} in stack`}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-app-border text-tp-xs font-bold text-app-muted-foreground hover:bg-app-surface hover:text-app-foreground transition-all"
                         >
-                            <Settings2 size={9} /> Reload
+                            <Undo2 size={13} /> Undo
+                            {undoStack.depth > 1 && (
+                                <span className="ml-0.5 px-1 rounded text-[9px] font-mono tabular-nums bg-app-primary/15 text-app-primary font-black">
+                                    {undoStack.depth}
+                                </span>
+                            )}
                         </button>
                     )}
-                    {onSave && (
+
+                    {/* Save — only when there are changes or actively saving */}
+                    {onSave && (saveState === 'dirty' || saveState === 'saving') && (
                         <button
                             type="button"
                             onClick={onSave}
-                            disabled={saving || !hasChanges}
-                            className="flex items-center gap-1 px-3 py-1 rounded-lg bg-app-primary text-white text-[9px] font-bold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Save (Ctrl+S)"
-                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                            disabled={saving}
+                            title={saving ? 'Saving…' : 'Save changes (Ctrl+S)'}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-app-primary text-white text-tp-xs font-bold transition-all hover:brightness-110 hover:-translate-y-px disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                            style={{
+                                boxShadow:
+                                    '0 2px 10px color-mix(in srgb, var(--app-primary) 35%, transparent)',
+                            }}
                         >
-                            {saving ? <Loader2 size={9} className="animate-spin" /> : <Save size={9} />}
-                            {saving ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* ═══ TOOLBAR ═══ */}
-            <div className="rounded-xl border border-app-border/40 bg-app-surface/50 backdrop-blur-sm px-3 py-2 space-y-1.5">
-                {/* Row 1: Core tools */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                    {/* Undo */}
-                    {showUndo && (
-                        <UndoButton
-                            canUndo={undoStack.canUndo}
-                            depth={undoStack.depth}
-                            onUndo={() => undoStack.undo()}
-                        />
-                    )}
-
-                    {/* Export */}
-                    {showExport && (
-                        <>
-                            <button
-                                type="button"
-                                onClick={exportJSON}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
-                                title="Export JSON (Ctrl+E)"
-                            >
-                                <Download size={9} /> Export
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => importRef.current?.click()}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
-                                title="Import JSON"
-                            >
-                                <Upload size={9} /> Import
-                            </button>
-                            <input ref={importRef} type="file" accept=".json" className="hidden" />
-                            <button
-                                type="button"
-                                onClick={async () => {
-                                    const ok = await copyToClipboard();
-                                    if (ok) {
-                                        const el = document.activeElement as HTMLElement;
-                                        el?.blur();
-                                    }
-                                }}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
-                                title="Copy config to clipboard"
-                            >
-                                <Copy size={9} /> Copy
-                            </button>
-                        </>
-                    )}
-
-                    {/* Print */}
-                    <button
-                        type="button"
-                        onClick={() => window.print()}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
-                        title="Print page"
-                    >
-                        <Printer size={9} /> Print
-                    </button>
-
-                    {/* Keyboard shortcuts */}
-                    <button
-                        type="button"
-                        onClick={() => setShowOverlay(true)}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
-                        title="Keyboard shortcuts (?)"
-                    >
-                        <span className="text-[9px] font-mono">?</span>
-                    </button>
-
-                    {/* Expand/Collapse toggle */}
-                    {sectionIds.length > 0 && (
-                        <button
-                            type="button"
-                            onClick={toggleAll}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-app-background border border-app-border/50 text-[9px] font-bold text-app-muted-foreground hover:text-app-foreground transition-all"
-                            title={allCollapsed ? 'Expand all sections' : 'Collapse all sections'}
-                        >
-                            {allCollapsed ? <ChevronDown size={9} /> : <ChevronUp size={9} />}
-                            {allCollapsed ? 'Expand' : 'Collapse'}
-                        </button>
-                    )}
-
-                    {/* Extra toolbar items */}
-                    {extraToolbarItems}
-                </div>
-
-                {/* Row 2: Search + Completeness */}
-                {(showSearch && searchableFields.length > 0) || (showCompleteness && completenessScore >= 0) ? (
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {showSearch && searchableFields.length > 0 && (
-                            <div className="flex items-center gap-1 ml-auto">
-                                <FieldSearchBar
-                                    value={search}
-                                    onChange={setSearch}
-                                />
-                                {search.trim() && (
-                                    <span className="text-[8px] text-app-muted-foreground/50">
-                                        {matchCount} match{matchCount !== 1 ? 'es' : ''}
+                            {saving ? (
+                                <>
+                                    <Loader2 size={13} className="animate-spin" /> Saving…
+                                </>
+                            ) : (
+                                <>
+                                    <Save size={13} /> Save Changes
+                                    <span className="hidden md:inline ml-0.5 px-1 py-0.5 rounded text-[9px] font-mono tabular-nums bg-white/20">
+                                        ⌘S
                                     </span>
-                                )}
-                            </div>
-                        )}
-                        {showCompleteness && completenessScore >= 0 && (
-                            <CompletenessMeter score={completenessScore} />
-                        )}
-                    </div>
-                ) : null}
+                                </>
+                            )}
+                        </button>
+                    )}
+
+                    {extraToolbarItems}
+
+                    {/* Overflow — all rare actions tucked away */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                type="button"
+                                title="More actions"
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-app-border text-app-muted-foreground hover:bg-app-surface hover:text-app-foreground transition-all"
+                            >
+                                <MoreHorizontal size={14} />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            {onReload && (
+                                <>
+                                    <MenuItem onClick={onReload} icon={<RefreshCcw size={13} />} label="Reload" shortcut="⌘R" />
+                                    <DropdownMenuSeparator />
+                                </>
+                            )}
+                            {showExport && (
+                                <>
+                                    <MenuItem onClick={exportJSON} icon={<Download size={13} />} label="Export JSON" shortcut="⌘E" />
+                                    <MenuItem
+                                        onClick={() => importRef.current?.click()}
+                                        icon={<Upload size={13} />}
+                                        label="Import JSON"
+                                    />
+                                    <MenuItem
+                                        onClick={async () => {
+                                            const ok = await copyToClipboard();
+                                            if (ok) (document.activeElement as HTMLElement)?.blur();
+                                        }}
+                                        icon={<Copy size={13} />}
+                                        label="Copy to clipboard"
+                                    />
+                                    <input ref={importRef} type="file" accept=".json" className="hidden" />
+                                    <DropdownMenuSeparator />
+                                </>
+                            )}
+                            <MenuItem onClick={() => window.print()} icon={<Printer size={13} />} label="Print" />
+                            {sectionIds.length > 0 && (
+                                <MenuItem
+                                    onClick={toggleAll}
+                                    icon={allCollapsed ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
+                                    label={allCollapsed ? 'Expand all sections' : 'Collapse all sections'}
+                                />
+                            )}
+                            <DropdownMenuSeparator />
+                            <MenuItem
+                                onClick={() => setShowOverlay(true)}
+                                icon={<HelpCircle size={13} />}
+                                label="Keyboard shortcuts"
+                                shortcut="?"
+                            />
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
+
+            {/* ═══ SEARCH + COMPLETENESS — only render when relevant ═══ */}
+            {((showSearch && searchableFields.length > 0) || (showCompleteness && completenessScore >= 0)) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                    {showSearch && searchableFields.length > 0 && (
+                        <div className="flex items-center gap-2 flex-1 min-w-[220px]">
+                            <FieldSearchBar value={search} onChange={setSearch} />
+                            {search.trim() && (
+                                <span className="text-tp-xxs font-mono text-app-muted-foreground tabular-nums whitespace-nowrap">
+                                    {matchCount} match{matchCount !== 1 ? 'es' : ''}
+                                </span>
+                            )}
+                        </div>
+                    )}
+                    {showCompleteness && completenessScore >= 0 && (
+                        <div className="ml-auto">
+                            <CompletenessMeter score={completenessScore} />
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* ═══ CONTENT ═══ */}
-            <div>
-                {children}
-            </div>
+            <div>{children}</div>
 
             {/* ═══ MODALS ═══ */}
             {showOverlay && (
-                <KeyboardShortcutsModal
-                    shortcuts={shortcuts}
-                    onClose={() => setShowOverlay(false)}
-                />
+                <KeyboardShortcutsModal shortcuts={shortcuts} onClose={() => setShowOverlay(false)} />
             )}
         </div>
     );
 }
+
+// ─── Status pill: ONE source of truth for save state ────────────
+
+function StatusPill({
+    state, draftSavedAt,
+}: { state: 'idle' | 'dirty' | 'saving'; draftSavedAt: string | null }) {
+    if (state === 'saving') {
+        return (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-app-primary bg-app-primary/10 border border-app-primary/25 font-bold">
+                <Loader2 size={9} className="animate-spin" /> Saving
+            </span>
+        );
+    }
+    if (state === 'dirty') {
+        return (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-app-warning bg-app-warning/10 border border-app-warning/30 font-bold">
+                <span className="w-1 h-1 rounded-full bg-app-warning animate-pulse" />
+                Unsaved
+            </span>
+        );
+    }
+    if (draftSavedAt) {
+        return (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-app-success bg-app-success/10 border border-app-success/25 font-bold">
+                <Check size={9} strokeWidth={3} /> Saved · {draftSavedAt}
+            </span>
+        );
+    }
+    return null;
+}
+
+// ─── Dropdown menu item: icon + label + optional kbd shortcut ───
+
+function MenuItem({
+    onClick, icon, label, shortcut,
+}: { onClick: () => void; icon: ReactNode; label: string; shortcut?: string }) {
+    return (
+        <DropdownMenuItem
+            onClick={onClick}
+            className="flex items-center gap-2 cursor-pointer"
+        >
+            <span className="text-app-muted-foreground">{icon}</span>
+            <span className="flex-1 text-tp-sm">{label}</span>
+            {shortcut && (
+                <span className="text-[10px] font-mono text-app-muted-foreground tabular-nums opacity-60">
+                    {shortcut}
+                </span>
+            )}
+        </DropdownMenuItem>
+    );
+}
+
