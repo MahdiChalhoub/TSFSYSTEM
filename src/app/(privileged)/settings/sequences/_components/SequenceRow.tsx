@@ -1,98 +1,142 @@
 'use client'
 
 import { Input } from '@/components/ui/input'
-import type { Sequence } from '../_lib/types'
+import { RotateCcw } from 'lucide-react'
+import type { Sequence, TierDef } from '../_lib/types'
 
-interface SequenceRowProps {
+interface TierCardProps {
     seqKey: string
     seq: Sequence
-    label: string
-    labelIcon?: React.ReactNode
-    labelColor?: string
-    tierBadge?: React.ReactNode
+    tier?: TierDef
     isDirty: boolean
     onChange: (seqKey: string, field: keyof Sequence, value: string | number) => void
 }
 
-export function SequenceRow({
-    seqKey, seq, label, labelIcon, labelColor,
-    tierBadge, isDirty, onChange,
-}: SequenceRowProps) {
-    const preview = `${seq.prefix || ''}${String(seq.next_number).padStart(seq.padding || 1, '0')}${seq.suffix || ''}`
-    const c = labelColor || 'var(--app-primary)'
+// One tier specimen card: hero preview + inline editor + rules meta.
+// Used for both Documents tab (with `tier`) and Master-Data tab (no `tier`).
+export function SequenceRow({ seqKey, seq, tier, isDirty, onChange }: TierCardProps) {
+    const tierColor = tier?.color || 'var(--app-primary)'
+    const padding = seq.padding || 1
+    const next = Number.isFinite(seq.next_number) ? seq.next_number : 1
+    const digitsStr = String(next)
+    const padLen = Math.max(0, padding - digitsStr.length)
+    const zeros = '0'.repeat(padLen)
+
+    const ruleHint = (() => {
+        switch (tier?.key) {
+            case 'OFFICIAL':
+                return [{ label: '✓ no gaps', tone: 'var(--app-success)' }, { label: 'fiscal' }]
+            case 'INTERNAL':
+                return [{ label: 'monotonic' }, { label: 'management' }]
+            case 'DRAFT':
+                return [{ label: '⚠ gaps allowed', tone: 'var(--app-warning)' }, { label: 'temporary' }]
+            default:
+                return [{ label: 'auto-increment' }]
+        }
+    })()
 
     return (
         <div
-            className="group flex items-center gap-2 md:gap-3 px-3 py-2 transition-all duration-150"
+            className="relative flex flex-col gap-2 p-3 rounded-xl transition-all"
             style={{
-                borderLeft: isDirty ? `3px solid var(--app-warning)` : '3px solid transparent',
-                background: isDirty
-                    ? 'color-mix(in srgb, var(--app-warning) 4%, transparent)'
-                    : 'transparent',
+                background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                border: `1px solid color-mix(in srgb, ${isDirty ? 'var(--app-warning)' : tierColor} ${isDirty ? '45%' : '18%'}, transparent)`,
+                boxShadow: isDirty
+                    ? `0 0 0 3px color-mix(in srgb, var(--app-warning) 8%, transparent)`
+                    : 'none',
             }}
         >
-            {/* Entity name — only first tier of each doc type shows it */}
-            <div className="flex items-center gap-2 w-[130px] flex-shrink-0 min-w-0">
-                {labelIcon && (
-                    <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{
-                            background: `color-mix(in srgb, ${c} 12%, transparent)`,
-                            color: c,
-                        }}
-                    >
-                        {labelIcon}
+            {/* Header: tier tag + dirty pulse */}
+            {tier && (
+                <div className="flex items-center justify-between">
+                    <div className="inline-flex items-center gap-1.5">
+                        <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: tierColor, boxShadow: `0 0 6px ${tierColor}` }}
+                        />
+                        <span
+                            className="text-[9px] font-black uppercase tracking-[0.18em]"
+                            style={{ color: tierColor }}
+                        >
+                            {tier.label}
+                        </span>
                     </div>
-                )}
-                {!labelIcon && label && <div className="w-7 flex-shrink-0" />}
-                <span className="text-[13px] font-bold text-app-foreground truncate">
-                    {label}
+                    {isDirty && (
+                        <span
+                            className="text-[8px] font-mono uppercase tracking-widest inline-flex items-center gap-1"
+                            style={{ color: 'var(--app-warning)' }}
+                        >
+                            <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: 'var(--app-warning)' }} />
+                            unsaved
+                        </span>
+                    )}
+                </div>
+            )}
+
+            {/* Hero preview render — the centerpiece */}
+            <div className="flex items-baseline gap-0 font-mono font-black text-[22px] leading-none tabular-nums select-none">
+                <span style={{ color: tierColor }}>{seq.prefix || ''}</span>
+                <span style={{ color: 'color-mix(in srgb, var(--app-foreground) 28%, transparent)' }}>
+                    {zeros}
                 </span>
+                <span style={{ color: 'var(--app-foreground)' }}>{digitsStr}</span>
+                <span style={{ color: 'var(--app-muted-foreground)' }}>{seq.suffix || ''}</span>
             </div>
 
-            {/* Tier badge */}
-            {tierBadge && <div className="w-[80px] flex-shrink-0">{tierBadge}</div>}
-
-            {/* Fields — compact inline group */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            {/* Inline editor — borderless, surfaces on hover/focus */}
+            <div className="flex items-center gap-1">
                 <Input
                     value={seq.prefix || ''}
                     onChange={e => onChange(seqKey, 'prefix', e.target.value)}
-                    className="h-7 w-[72px] rounded-lg text-[12px] font-mono font-bold bg-app-background border-app-border/50 px-2 focus:border-app-primary/50 transition-colors"
-                    placeholder="PFX-"
+                    className="h-7 flex-1 min-w-0 rounded-md text-[11px] font-mono font-bold border-0 bg-transparent hover:bg-app-background/50 focus-visible:bg-app-background focus-visible:ring-0 px-2"
+                    placeholder="prefix"
+                    aria-label="Prefix"
                 />
                 <Input
                     type="number"
-                    value={seq.next_number}
+                    value={next}
                     onChange={e => onChange(seqKey, 'next_number', parseInt(e.target.value) || 1)}
-                    className="h-7 w-[64px] rounded-lg text-[12px] font-mono font-bold bg-app-background border-app-border/50 px-2 focus:border-app-primary/50 transition-colors"
+                    className="h-7 w-[52px] rounded-md text-[11px] font-mono font-bold border-0 bg-transparent hover:bg-app-background/50 focus-visible:bg-app-background focus-visible:ring-0 px-2 tabular-nums"
                     min={1}
+                    aria-label="Next number"
+                    title="Next number"
                 />
                 <Input
                     type="number"
-                    value={seq.padding}
+                    value={padding}
                     onChange={e => onChange(seqKey, 'padding', parseInt(e.target.value) || 1)}
-                    className="h-7 w-[48px] rounded-lg text-[12px] font-mono font-bold bg-app-background border-app-border/50 px-2 focus:border-app-primary/50 transition-colors"
+                    className="h-7 w-[40px] rounded-md text-[11px] font-mono font-bold border-0 bg-transparent hover:bg-app-background/50 focus-visible:bg-app-background focus-visible:ring-0 px-2 tabular-nums"
                     min={1} max={20}
+                    aria-label="Padding"
+                    title="Pad width"
                 />
                 <Input
                     value={seq.suffix || ''}
                     onChange={e => onChange(seqKey, 'suffix', e.target.value)}
-                    className="h-7 w-[56px] rounded-lg text-[12px] font-mono font-bold bg-app-background border-app-border/50 px-2 focus:border-app-primary/50 transition-colors"
+                    className="h-7 w-[52px] rounded-md text-[11px] font-mono font-bold border-0 bg-transparent hover:bg-app-background/50 focus-visible:bg-app-background focus-visible:ring-0 px-2"
                     placeholder="sfx"
+                    aria-label="Suffix"
                 />
+                <button
+                    type="button"
+                    onClick={() => onChange(seqKey, 'next_number', 1)}
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-background/50 transition-colors"
+                    title="Reset counter to 1"
+                    aria-label="Reset counter"
+                >
+                    <RotateCcw size={11} />
+                </button>
             </div>
 
-            {/* Preview chip */}
-            <div
-                className="text-[12px] font-black font-mono px-2.5 py-1 rounded-lg flex-shrink-0 tabular-nums"
-                style={{
-                    background: `color-mix(in srgb, ${c} 8%, transparent)`,
-                    color: c,
-                    border: `1px solid color-mix(in srgb, ${c} 15%, transparent)`,
-                }}
-            >
-                {preview}
+            {/* Meta — tier policy hint */}
+            <div className="text-[9px] font-mono uppercase tracking-widest text-app-muted-foreground flex items-center gap-2 pt-1.5"
+                style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                {ruleHint.map((r, i) => (
+                    <span key={i} className="inline-flex items-center gap-2">
+                        {i > 0 && <span style={{ color: 'var(--app-muted-foreground)' }}>·</span>}
+                        <span style={{ color: r.tone || 'var(--app-muted-foreground)' }}>{r.label}</span>
+                    </span>
+                ))}
             </div>
         </div>
     )

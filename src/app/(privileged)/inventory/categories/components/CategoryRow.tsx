@@ -38,6 +38,21 @@ export const CategoryRow = ({
     const rowChecked = isCheckedFn ? isCheckedFn(node.id) : !!isChecked
     const isMobile = useIsMobile()
 
+    // Hooks below MUST be called on every render — we can't early-return
+    // before them. `compact` and `isMobile` flip between renders (split-panel
+    // toggles, viewport resize) and the hook count must stay constant.
+    const isParent = node.children && node.children.length > 0
+    const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
+    const prevForceExpanded = useRef(forceExpanded)
+
+    useEffect(() => { if (searchQuery) setIsOpen(true) }, [searchQuery])
+    useEffect(() => {
+        if (forceExpanded !== undefined && forceExpanded !== prevForceExpanded.current) {
+            setIsOpen(forceExpanded)
+        }
+        prevForceExpanded.current = forceExpanded
+    }, [forceExpanded])
+
     // When the list pane is narrow (compact) OR on mobile screens,
     // reuse the richer mobile card renderer — same component, same feel,
     // already tuned for small widths. Shows all features: product/brand/
@@ -63,18 +78,6 @@ export const CategoryRow = ({
             />
         )
     }
-
-    const isParent = node.children && node.children.length > 0
-    const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
-    const prevForceExpanded = useRef(forceExpanded)
-
-    useEffect(() => { if (searchQuery) setIsOpen(true) }, [searchQuery])
-    useEffect(() => {
-        if (forceExpanded !== undefined && forceExpanded !== prevForceExpanded.current) {
-            setIsOpen(forceExpanded)
-        }
-        prevForceExpanded.current = forceExpanded
-    }, [forceExpanded])
 
     const isRoot = level === 0
     const productCount = node.product_count ?? 0

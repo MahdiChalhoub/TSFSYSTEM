@@ -1049,23 +1049,19 @@ function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgB
     onRefresh?: () => Promise<void>
 }) {
     const [editingRate, setEditingRate] = useState<ExchangeRate | null>(null)
+    const [deletingRate, setDeletingRate] = useState<ExchangeRate | null>(null)
     const [busyId, setBusyId] = useState<number | null>(null)
-    async function handleDelete(r: ExchangeRate) {
-        console.log('[FX] Delete rate clicked', { id: r.id, pair: `${r.from_code}→${r.to_code}`, side: r.rate_side, rate: r.rate })
-        if (!confirm(`Delete this ${r.rate_side ?? 'MID'} rate ${r.from_code}→${r.to_code} = ${Number(r.rate).toFixed(6)} on ${r.effective_date}? This cannot be undone.`)) {
-            console.log('[FX] Delete cancelled by user')
-            return
-        }
+    async function performDelete(r: ExchangeRate) {
         setBusyId(r.id)
         try {
             const res = await deleteExchangeRate(r.id)
-            console.log('[FX] Delete response', res)
             if (!res.success) {
                 console.error('[FX] Delete failed:', res.error)
                 toast.error(res.error || 'Delete failed')
                 return
             }
             toast.success('Rate deleted')
+            setDeletingRate(null)
             await onRefresh?.()
         } catch (e) {
             console.error('[FX] Delete threw:', e)
@@ -1244,7 +1240,7 @@ function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgB
                                                                     <Settings size={11} />
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleDelete(r)}
+                                                                    onClick={() => setDeletingRate(r)}
                                                                     disabled={busyId === r.id}
                                                                     title="Delete this rate"
                                                                     className="p-1 rounded-md hover:bg-app-border/40 disabled:opacity-40"
@@ -1274,6 +1270,67 @@ function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgB
                     onClose={() => setEditingRate(null)}
                     onSaved={async () => { setEditingRate(null); await onRefresh?.() }}
                 />
+            )}
+
+            {deletingRate && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
+                    onClick={(e) => { if (e.target === e.currentTarget && busyId !== deletingRate.id) setDeletingRate(null) }}>
+                    <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
+                        style={{ background: 'var(--app-surface)', border: '1px solid color-mix(in srgb, var(--app-error) 30%, var(--app-border))' }}>
+                        <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'var(--app-error)' }} />
+                        <div className="px-5 pt-5 pb-3">
+                            <div className="font-black inline-flex items-center gap-2" style={{ fontSize: 14, color: 'var(--app-error)' }}>
+                                <AlertTriangle size={14} /> Delete rate?
+                            </div>
+                            <p className="font-bold uppercase tracking-widest mt-0.5"
+                                style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>
+                                This action is permanent
+                            </p>
+                        </div>
+                        <div className="px-5 pb-4 space-y-2.5">
+                            <div className="rounded-xl p-3 font-mono"
+                                style={{ ...soft('--app-error', 6), border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)', fontSize: 11, color: 'var(--app-foreground)' }}>
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="font-black">{deletingRate.from_code} → {deletingRate.to_code}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
+                                        style={{ ...soft(deletingRate.rate_side === 'BID' ? '--app-success' : deletingRate.rate_side === 'ASK' ? '--app-error' : '--app-muted-foreground', 12) }}>
+                                        {deletingRate.rate_type} · {deletingRate.rate_side ?? 'MID'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    <span>1 {deletingRate.from_code} = <strong style={{ color: 'var(--app-foreground)' }}>{Number(deletingRate.rate).toFixed(6)}</strong> {deletingRate.to_code}</span>
+                                    <span>{deletingRate.effective_date}</span>
+                                </div>
+                                {deletingRate.source && (
+                                    <div className="mt-1 text-[9px] uppercase tracking-widest font-black" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        Source · {deletingRate.source}
+                                    </div>
+                                )}
+                            </div>
+                            <p className="leading-relaxed" style={{ fontSize: 11, color: 'var(--app-muted-foreground)' }}>
+                                Rate-history entries posted by past transactions remain in those journal entries even after the rate row is deleted.
+                                If this rate has been used to post a journal, the entries are unaffected — only future revaluations will use the new rate.
+                            </p>
+                        </div>
+                        <div className="px-4 py-3 flex items-center justify-end gap-2"
+                            style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)' }}>
+                            <button onClick={() => setDeletingRate(null)} disabled={busyId === deletingRate.id}
+                                className="px-3.5 py-1.5 rounded-xl font-bold border disabled:opacity-50"
+                                style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                                Cancel
+                            </button>
+                            <button onClick={() => performDelete(deletingRate)} disabled={busyId === deletingRate.id}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold disabled:opacity-50"
+                                style={busyId === deletingRate.id
+                                    ? { background: 'var(--app-border)', color: 'var(--app-muted-foreground)', fontSize: 11 }
+                                    : { ...grad('--app-error'), color: FG_PRIMARY, fontSize: 11 }}>
+                                <Trash2 size={11} />
+                                {busyId === deletingRate.id ? 'Deleting…' : 'Delete rate'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     )
