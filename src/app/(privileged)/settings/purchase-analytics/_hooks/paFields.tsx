@@ -18,7 +18,7 @@ type Args = {
     configSearch: string
 }
 
-export function usePAFields(a: Args) {
+export function paFields(a: Args) {
     const val = (key: string) => {
         if ((a.editingProfile || a.creatingForContext) && key in a.profileOverrides) return a.profileOverrides[key]
         return (a.config as any)?.[key]

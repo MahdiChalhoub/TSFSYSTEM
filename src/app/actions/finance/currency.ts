@@ -145,6 +145,33 @@ export async function createExchangeRate(payload: {
     }
 }
 
+export async function updateExchangeRate(
+    id: number,
+    payload: Partial<Pick<ExchangeRate, 'rate' | 'rate_type' | 'rate_side' | 'effective_date' | 'source'>>,
+): Promise<{ success: boolean; data?: ExchangeRate; error?: string }> {
+    try {
+        const data = await erpFetch(`exchange-rates/${id}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        }) as ExchangeRate
+        revalidatePath('/finance/currencies')
+        return { success: true, data }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+export async function deleteExchangeRate(id: number): Promise<{ success: boolean; error?: string }> {
+    try {
+        await erpFetch(`exchange-rates/${id}/`, { method: 'DELETE' })
+        revalidatePath('/finance/currencies')
+        return { success: true }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
 // ── Revaluations ─────────────────────────────────────────────────────────
 
 /** GET /currency-revaluations/. Throws on failure — see getCurrencies. */

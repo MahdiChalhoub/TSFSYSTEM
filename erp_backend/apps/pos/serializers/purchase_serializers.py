@@ -61,6 +61,12 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     line_count = serializers.SerializerMethodField()
     receipt_progress = serializers.SerializerMethodField()
     discrepancy_summary = serializers.SerializerMethodField()
+    # Category parsed out of `[CATEGORY] free text` rejection_reason format.
+    # Lets the UI render a colored badge without re-implementing the parse client-side.
+    rejection_category = serializers.SerializerMethodField()
+    # If this PO was the source of an auto-reissued procurement request,
+    # `caused_reissue_id` is the id of the new request; otherwise null.
+    caused_reissue_id = serializers.SerializerMethodField()
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
@@ -100,4 +106,40 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         summary = obj.get_discrepancy_summary()
         # Convert Decimals to floats for JSON serialization
         return {k: float(v) if hasattr(v, 'quantize') else v for k, v in summary.items()}
+
+    def get_rejection_category(self, obj):
+        rej = (obj.rejection_reason or '').strip()
+        if not rej.startswith('['):
+            return None
+        close = rej.find(']')
+        if close <= 1:
+            return None
+        cat = rej[1:close].strip().upper()
+        return cat or None
+
+    def get_caused_reissue_id(self, obj):
+        """Return the id of the procurement request that was auto-reissued
+        because this PO failed, or None. Looks for any request whose notes
+        contain the marker `[Reissue of #N]` where N is one of the PO's
+        original derived requests."""
+        # Cheap path: only POs that are REJECTED or CANCELLED can have caused
+        # a reissue. Skip the query for everything else.
+        if obj.status not in ('REJECTED', 'CANCELLED'):
+            return None
+        try:
+            from apps.pos.models.procurement_request_models import ProcurementRequest
+            originals = list(ProcurementRequest.objects.filter(source_po=obj).values_list('id', flat=True))
+            if not originals:
+                return None
+            for orig_id in originals:
+                marker = f"[Reissue of #{orig_id}]"
+                hit = ProcurementRequest.objects.filter(
+                    organization=obj.organization,
+                    notes__contains=marker,
+                ).values_list('id', flat=True).first()
+                if hit:
+                    return hit
+        except Exception:
+            return None
+        return None
 

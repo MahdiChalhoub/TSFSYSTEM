@@ -137,8 +137,12 @@ function BumpButton({ requestId, currentPriority }: { requestId: number; current
     const handleClick = () => {
         startTransition(async () => {
             const r = await bumpProcurementRequest({ requestId })
-            if (r.success) toast.success(r.message || `Priority ${r.previous_priority} → ${r.new_priority}`)
-            else toast.error(r.message || 'Bump failed')
+            if (r.success) {
+                toast.success(r.message || `Priority ${r.previous_priority} → ${r.new_priority}`, {
+                    description: r.po_hint,
+                    duration: r.po_hint ? 6000 : 3000,
+                })
+            } else toast.error(r.message || 'Bump failed')
         })
     }
     return (

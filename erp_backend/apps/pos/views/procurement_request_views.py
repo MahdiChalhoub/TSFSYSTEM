@@ -326,10 +326,51 @@ class ProcurementRequestViewSet(TenantModelViewSet):
                           also_requester=True)
         _update_review_task(req, event='bumped', actor=request.user,
                             note=f"Bumped by {username}: priority {prev_priority} → {new_priority}")
+
+        # ── Bump-while-PO-in-flight policy ─────────────────────────────────
+        # If the request is already linked to a PO, the bump's effect depends
+        # on where the PO is in its lifecycle:
+        #   - Internal stages (DRAFT/SUBMITTED/APPROVED) — propagate the
+        #     priority bump to the PO itself; reviewers see it on their list.
+        #   - With supplier (SENT/CONFIRMED/IN_TRANSIT/PARTIALLY_RECEIVED) —
+        #     priority is set in stone with the supplier, but we still record
+        #     the bump as a comment on the PO so the buyer notices, and we
+        #     return a hint string the UI can surface to the operator.
+        # Anything else (RECEIVED/COMPLETED/REJECTED/CANCELLED) — no-op.
+        po_hint = None
+        po = req.source_po
+        if po is not None:
+            INTERNAL = {'DRAFT', 'SUBMITTED', 'APPROVED'}
+            WITH_SUPPLIER = {'SENT', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'}
+            try:
+                if po.status in INTERNAL:
+                    if po.priority != new_priority:
+                        po.priority = new_priority
+                        po.save(update_fields=['priority'])
+                    po_hint = f"PO #{po.id} ({po.status.lower()}) priority bumped to {new_priority}."
+                elif po.status in WITH_SUPPLIER:
+                    # Goods are already with the supplier — internal priority
+                    # change isn't actionable. Stamp the PO notes so the buyer
+                    # sees the bump on the next refresh.
+                    stamp_line = (
+                        f"[Bump by {username} at {stamp}] linked request priority "
+                        f"{prev_priority} → {new_priority}"
+                    )
+                    po.notes = (po.notes + '\n' + stamp_line) if po.notes else stamp_line
+                    po.save(update_fields=['notes'])
+                    po_hint = (
+                        f"PO #{po.id} is already with the supplier ({po.status.lower()}). "
+                        f"Priority recorded on the PO; contact the supplier to escalate."
+                    )
+            except Exception as e:
+                logger.warning(f"[BUMP] Failed to propagate to PO #{po.id}: {e}")
+                po_hint = f"Bumped, but couldn't update linked PO #{po.id}."
+
         return Response({
             'detail': f'Reminded — priority {prev_priority} → {new_priority}',
             'previous_priority': prev_priority,
             'new_priority': new_priority,
+            'po_hint': po_hint,
             **self.get_serializer(req).data,
         })
 

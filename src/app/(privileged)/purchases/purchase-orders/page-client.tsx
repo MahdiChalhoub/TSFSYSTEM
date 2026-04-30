@@ -238,12 +238,50 @@ export default function PurchaseOrdersManager({
             </div>
           )
         }}
-        renderRowTitle={po => (
-          <div className="flex-1 min-w-0">
-            <div className="truncate text-[12px] font-bold text-app-foreground">{po.po_number || `PO-${po.id}`}</div>
-            <div className="text-[10px] font-mono text-app-muted-foreground">{po.supplier?.name || po.supplier_name || po.supplier_display || '—'}</div>
-          </div>
-        )}
+        renderRowTitle={po => {
+          const rejCat: string | null = po.rejection_category || null
+          const reissueId: number | null = po.caused_reissue_id || null
+          // Tone the rejection-category chip: hard problems red, soft amber.
+          const catColor =
+            rejCat === 'DAMAGED' ? '#ef4444'
+            : rejCat === 'NEEDS_REVISION' ? '#3b82f6'
+            : rejCat ? '#f59e0b'
+            : null
+          return (
+            <div className="flex-1 min-w-0">
+              <div className="truncate text-[12px] font-bold text-app-foreground flex items-center gap-1.5">
+                <span className="truncate">{po.po_number || `PO-${po.id}`}</span>
+                {rejCat && (
+                  <span
+                    title={`Rejected as ${rejCat.replace('_', ' ').toLowerCase()}`}
+                    className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                    style={{
+                      background: `color-mix(in srgb, ${catColor} 12%, transparent)`,
+                      color: catColor!,
+                      border: `1px solid color-mix(in srgb, ${catColor} 25%, transparent)`,
+                    }}>
+                    {rejCat.replace('_', ' ')}
+                  </span>
+                )}
+                {reissueId && (
+                  <a
+                    href={`/inventory/requests?focus=${reissueId}`}
+                    onClick={e => e.stopPropagation()}
+                    title={`Auto-reissued as procurement request #${reissueId}`}
+                    className="inline-flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hover:underline"
+                    style={{
+                      background: 'color-mix(in srgb, #f59e0b 12%, transparent)',
+                      color: '#f59e0b',
+                      border: '1px solid color-mix(in srgb, #f59e0b 25%, transparent)',
+                    }}>
+                    → Reissue #{reissueId}
+                  </a>
+                )}
+              </div>
+              <div className="text-[10px] font-mono text-app-muted-foreground">{po.supplier?.name || po.supplier_name || po.supplier_display || '—'}</div>
+            </div>
+          )
+        }}
         renderColumnCell={(key, po) => {
           if (key === 'status') return <InlineStatusCell po={po} onRefresh={fetchData} />
           return renderPOCell(key, po)

@@ -26,8 +26,8 @@ import { InspectorStrip } from './_components/InspectorStrip'
 import { StickyBottomBar } from './_components/StickyBottomBar'
 import { MidStrip } from './_components/MidStrip'
 import { PASettingsProvider, type PASettingsContextValue } from './_hooks/PASettingsContext'
-import { usePAHandlers } from './_hooks/usePAHandlers'
-import { usePAFields } from './_hooks/usePAFields'
+import { paHandlers } from './_hooks/paHandlers'
+import { paFields } from './_hooks/paFields'
 import { ProfilesSection } from './_components/sections/ProfilesSection'
 import { SalesSection } from './_components/sections/SalesSection'
 import { QuantitySection } from './_components/sections/QuantitySection'
@@ -125,7 +125,7 @@ export default function PurchaseAnalyticsSettingsPage() {
         val, valWeight, globalVal, globalWeight, isOverridden,
         update, updateWeight, clearOverride, clearWeightOverride, resetSection, toggleFieldLock,
         warnings, getWarning, suggestions, cardVisible, defaultHint, weightTotal,
-    } = usePAFields({
+    } = paFields({
         config, setConfig, editingProfile, creatingForContext,
         profileOverrides, setProfileOverrides, setUndoStack,
         lockedFields, setLockedFields, configSearch,
@@ -136,7 +136,7 @@ export default function PurchaseAnalyticsSettingsPage() {
         handleStartCreate, handleDuplicate, handleExport, handleImport, handleCompare,
         applyPreset, handleClipboardImport, handleShareUrl, handleExportConfig,
         handleSaveActive, handleShowHistory, handleCopyChangelog,
-    } = usePAHandlers({
+    } = paHandlers({
         config, setConfig, originalConfig, setOriginalConfig,
         profilesData, setProfilesData,
         editingProfile, setEditingProfile,

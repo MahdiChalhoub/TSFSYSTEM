@@ -43,7 +43,7 @@ import {
 } from 'lucide-react'
 import {
     getCurrencies, getExchangeRates, getRevaluations,
-    createExchangeRate, runRevaluation,
+    createExchangeRate, updateExchangeRate, deleteExchangeRate, runRevaluation,
     getRatePolicies, createRatePolicy, updateRatePolicy, syncRatePolicy, syncAllRatePolicies,
     deleteRatePolicy, bulkCreateRatePolicies, bulkUpdateRatePolicyProvider,
     type Currency, type ExchangeRate, type CurrencyRevaluation, type CurrencyRatePolicy,
@@ -487,6 +487,7 @@ export function FxRedesigned({ view, orgCurrencyCount, orgBaseCode }: {
                     orgCurrencyCount={orgCurrencyCount}
                     orgBaseCode={orgBaseCode}
                     onAddManual={() => setManualRateOpen(true)}
+                    onRefresh={loadAll}
                 />
             )}
 
@@ -1038,14 +1039,41 @@ function PolicyCard({ p, health, latest, sides, history, syncing, onSync, onEdit
 /* ═══════════════════════════════════════════════════════════════════
  *  RATE HISTORY — pair × time-range × side filters + table
  * ═══════════════════════════════════════════════════════════════════ */
-function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgBaseCode, onAddManual }: {
+function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgBaseCode, onAddManual, onRefresh }: {
     rates: ExchangeRate[]
     policies: CurrencyRatePolicy[]
     baseCurrency: Currency | undefined
     orgCurrencyCount?: number
     orgBaseCode?: string | null
     onAddManual: () => void
+    onRefresh?: () => Promise<void>
 }) {
+    const [editingRate, setEditingRate] = useState<ExchangeRate | null>(null)
+    const [busyId, setBusyId] = useState<number | null>(null)
+    async function handleDelete(r: ExchangeRate) {
+        console.log('[FX] Delete rate clicked', { id: r.id, pair: `${r.from_code}→${r.to_code}`, side: r.rate_side, rate: r.rate })
+        if (!confirm(`Delete this ${r.rate_side ?? 'MID'} rate ${r.from_code}→${r.to_code} = ${Number(r.rate).toFixed(6)} on ${r.effective_date}? This cannot be undone.`)) {
+            console.log('[FX] Delete cancelled by user')
+            return
+        }
+        setBusyId(r.id)
+        try {
+            const res = await deleteExchangeRate(r.id)
+            console.log('[FX] Delete response', res)
+            if (!res.success) {
+                console.error('[FX] Delete failed:', res.error)
+                toast.error(res.error || 'Delete failed')
+                return
+            }
+            toast.success('Rate deleted')
+            await onRefresh?.()
+        } catch (e) {
+            console.error('[FX] Delete threw:', e)
+            toast.error(e instanceof Error ? e.message : 'Delete failed')
+        } finally {
+            setBusyId(null)
+        }
+    }
     // Show the Add Manual Rate button as soon as the operator has *any* base
     // configured — either the finance.Currency mirror is up, or the parent
     // tells us OrgCurrency has a default. Prevents the button from being
@@ -1180,6 +1208,7 @@ function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgB
                                                 <Th align="right">Rate</Th>
                                                 <Th align="right">Δ vs prev</Th>
                                                 <Th>Source</Th>
+                                                <Th align="right">&nbsp;</Th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1204,11 +1233,31 @@ function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgB
                                                             </span>
                                                         </Td>
                                                         <Td><span className="font-mono text-app-muted-foreground" style={{ fontSize: 10 }}>{r.source ?? '—'}</span></Td>
+                                                        <Td align="right">
+                                                            <div className="inline-flex items-center gap-1">
+                                                                <button
+                                                                    onClick={() => setEditingRate(r)}
+                                                                    disabled={busyId === r.id}
+                                                                    title="Edit this rate"
+                                                                    className="p-1 rounded-md hover:bg-app-border/40 disabled:opacity-40"
+                                                                    style={{ color: 'var(--app-info)' }}>
+                                                                    <Settings size={11} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDelete(r)}
+                                                                    disabled={busyId === r.id}
+                                                                    title="Delete this rate"
+                                                                    className="p-1 rounded-md hover:bg-app-border/40 disabled:opacity-40"
+                                                                    style={{ color: 'var(--app-error)' }}>
+                                                                    <Trash2 size={11} />
+                                                                </button>
+                                                            </div>
+                                                        </Td>
                                                     </tr>
                                                 )
                                             })}
                                             {list.length > 20 && (
-                                                <tr><td colSpan={6} className="px-3 py-1.5 text-[10px] text-app-muted-foreground text-center italic">… {list.length - 20} older rows hidden</td></tr>
+                                                <tr><td colSpan={7} className="px-3 py-1.5 text-[10px] text-app-muted-foreground text-center italic">… {list.length - 20} older rows hidden</td></tr>
                                             )}
                                         </tbody>
                                     </table>
@@ -1218,6 +1267,107 @@ function RateHistoryView({ rates, policies, baseCurrency, orgCurrencyCount, orgB
                     })}
                 </div>
             )}
+
+            {editingRate && (
+                <EditRateModal
+                    rate={editingRate}
+                    onClose={() => setEditingRate(null)}
+                    onSaved={async () => { setEditingRate(null); await onRefresh?.() }}
+                />
+            )}
+        </div>
+    )
+}
+
+function EditRateModal({ rate, onClose, onSaved }: {
+    rate: ExchangeRate
+    onClose: () => void
+    onSaved: () => Promise<void>
+}) {
+    const [rateValue, setRateValue] = useState(rate.rate)
+    const [rateType, setRateType] = useState<ExchangeRate['rate_type']>(rate.rate_type)
+    const [side, setSide] = useState<'MID' | 'BID' | 'ASK'>(rate.rate_side ?? 'MID')
+    const [date, setDate] = useState(rate.effective_date)
+    const [busy, setBusy] = useState(false)
+    const num = Number(rateValue)
+    const valid = isFinite(num) && num > 0
+    const dirty = rateValue !== rate.rate || rateType !== rate.rate_type
+        || side !== (rate.rate_side ?? 'MID') || date !== rate.effective_date
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            style={{ background: 'color-mix(in srgb, var(--app-foreground) 50%, transparent)', backdropFilter: 'blur(6px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+            <div className="w-full max-w-md rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'var(--app-info)' }} />
+                <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+                    <div>
+                        <div className="font-black" style={{ fontSize: 14, color: 'var(--app-foreground)' }}>
+                            Edit rate · {rate.from_code}→{rate.to_code}
+                        </div>
+                        <p className="font-bold uppercase tracking-widest mt-0.5"
+                            style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>
+                            #{rate.id} · originally {rate.source ?? 'manual'}
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-border/40 -m-1.5"
+                        style={{ color: 'var(--app-muted-foreground)' }}>
+                        <X size={14} />
+                    </button>
+                </div>
+                <div className="px-5 pb-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                        <Field label="Type">
+                            <select value={rateType} onChange={e => setRateType(e.target.value as any)}
+                                className={INPUT_CLS} style={INPUT_STYLE}>
+                                {RATE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                        </Field>
+                        <Field label="Side">
+                            <select value={side} onChange={e => setSide(e.target.value as any)}
+                                className={INPUT_CLS} style={INPUT_STYLE}>
+                                <option value="MID">MID</option>
+                                <option value="BID">BID</option>
+                                <option value="ASK">ASK</option>
+                            </select>
+                        </Field>
+                    </div>
+                    <Field label="Date">
+                        <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                            className={INPUT_CLS} style={INPUT_STYLE} />
+                    </Field>
+                    <Field label={`Rate (1 ${rate.from_code} = ? ${rate.to_code})`} error={!valid}
+                        hint={!valid ? 'Must be a positive number' : undefined}>
+                        <PrefixInput tone="--app-info" prefix={`1 ${rate.from_code} =`} suffix={rate.to_code}
+                            value={rateValue} onChange={setRateValue} valid={valid} placeholder="1.000000" />
+                    </Field>
+                </div>
+                <div className="px-4 py-3 flex items-center justify-end gap-2"
+                    style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)' }}>
+                    <button onClick={onClose}
+                        className="px-3.5 py-1.5 rounded-xl font-bold border"
+                        style={{ fontSize: 11, color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                        Cancel
+                    </button>
+                    <button disabled={!valid || !dirty || busy} onClick={async () => {
+                        setBusy(true)
+                        const r = await updateExchangeRate(rate.id, {
+                            rate: rateValue, rate_type: rateType, rate_side: side, effective_date: date,
+                        })
+                        setBusy(false)
+                        if (!r.success) { toast.error(r.error || 'Update failed'); return }
+                        toast.success('Rate updated')
+                        await onSaved()
+                    }}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold disabled:opacity-50"
+                        style={!busy && valid && dirty
+                            ? { ...grad('--app-info'), color: FG_PRIMARY, fontSize: 11 }
+                            : { background: 'var(--app-border)', color: 'var(--app-muted-foreground)', fontSize: 11 }}>
+                        {busy ? 'Saving…' : 'Save changes'}
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }

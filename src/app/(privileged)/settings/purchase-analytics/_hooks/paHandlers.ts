@@ -40,7 +40,7 @@ type Args = {
     startTransition: React.TransitionStartFunction
 }
 
-export function usePAHandlers(a: Args) {
+export function paHandlers(a: Args) {
     const reloadProfiles = async () => a.setProfilesData(await getAnalyticsProfiles())
 
     const handleSave = () => {

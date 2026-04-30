@@ -76,7 +76,13 @@ export function buildMenuActions(
             label: 'Bump priority', icon: <Bell size={12} style={{ color: '#8b5cf6' }} />,
             onClick: () => startTransition(async () => {
                 const out = await bumpProcurementRequest({ requestId: r.id })
-                if (out.success) { toast.success(out.message || 'Bumped'); refresh() }
+                if (out.success) {
+                    toast.success(out.message || 'Bumped', {
+                        description: out.po_hint,
+                        duration: out.po_hint ? 6000 : 3000,
+                    })
+                    refresh()
+                }
                 else toast.error(out.message || 'Bump failed')
             }),
         })

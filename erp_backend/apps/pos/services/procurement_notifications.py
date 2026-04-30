@@ -10,6 +10,7 @@ assignees see them in the existing dashboard. Notifications flow through
 (IN_APP / EMAIL / SMS / PUSH) apply.
 """
 import logging
+from django.db import transaction
 from django.db.models import Q
 
 logger = logging.getLogger(__name__)
@@ -61,19 +62,20 @@ def _ensure_templates_seeded():
     if _TEMPLATES_SEEDED:
         return
     try:
-        from erp.notification_models import NotificationTemplate
-        for t in _PROCUREMENT_TEMPLATES:
-            for channel in ('IN_APP', 'EMAIL'):
-                NotificationTemplate.objects.update_or_create(
-                    code=t['code'], channel=channel, language='en',
-                    defaults={
-                        'name': t['name'],
-                        'subject_template': t['subject'],
-                        'body_template': t['body'],
-                        'is_active': True,
-                    },
-                )
-        _TEMPLATES_SEEDED = True
+        with transaction.atomic():
+            from erp.notification_models import NotificationTemplate
+            for t in _PROCUREMENT_TEMPLATES:
+                for channel in ('IN_APP', 'EMAIL'):
+                    NotificationTemplate.objects.update_or_create(
+                        code=t['code'], channel=channel, language='en',
+                        defaults={
+                            'name': t['name'],
+                            'subject_template': t['subject'],
+                            'body_template': t['body'],
+                            'is_active': True,
+                        },
+                    )
+            _TEMPLATES_SEEDED = True
     except Exception as e:
         logger.warning(f"Could not seed procurement notification templates: {e}")
 
@@ -147,20 +149,21 @@ def create_review_task(req, *, event='created'):
     parts.append("Open /inventory/requests to action.")
 
     try:
-        return WorkspaceTask.objects.create(
-            organization=org,
-            title=title,
-            description='\n'.join(parts),
-            status='PENDING',
-            priority=_priority_to_workspace(req.priority),
-            source='SYSTEM',
-            assigned_by=req.requested_by,
-            assigned_to=primary_user if not procurement_role else None,
-            assigned_to_group=procurement_role,
-            related_object_type='ProcurementRequest',
-            related_object_id=req.id,
-            related_object_label=f"{req.get_request_type_display()} #{req.id} — {req.product.name}",
-        )
+        with transaction.atomic():
+            return WorkspaceTask.objects.create(
+                organization=org,
+                title=title,
+                description='\n'.join(parts),
+                status='PENDING',
+                priority=_priority_to_workspace(req.priority),
+                source='SYSTEM',
+                assigned_by=req.requested_by,
+                assigned_to=primary_user if not procurement_role else None,
+                assigned_to_group=procurement_role,
+                related_object_type='ProcurementRequest',
+                related_object_id=req.id,
+                related_object_label=f"{req.get_request_type_display()} #{req.id} — {req.product.name}",
+            )
     except Exception as e:
         logger.warning(f"Failed to create workspace task for request {req.id}: {e}")
         return None
@@ -185,6 +188,7 @@ def update_review_task(req, *, event: str, actor=None, note: str = None):
         return None
 
     try:
+      with transaction.atomic():
         task = WorkspaceTask.objects.filter(
             organization=req.organization,
             related_object_type='ProcurementRequest',
@@ -258,21 +262,27 @@ def _build_template_vars(req, **extra):
 def _send_to_user(user, *, template_code, link, variables, fallback_title, fallback_message, fallback_type):
     """Try NotificationService.send (template-driven, multi-channel); on any failure
     fall back to a direct in-app Notification row so the message still reaches the user.
-    Returns True if delivered through any path."""
+    Returns True if delivered through any path.
+
+    Each backend call is wrapped in a savepoint — a missing notification table
+    or other DB error must not poison the caller's outer transaction.
+    """
     try:
-        from erp.notification_service import NotificationService
-        NotificationService.send(user=user, template_code=template_code,
-                                  variables=variables, link=link)
+        with transaction.atomic():
+            from erp.notification_service import NotificationService
+            NotificationService.send(user=user, template_code=template_code,
+                                      variables=variables, link=link)
         return True
     except Exception as e:
         logger.warning(f"NotificationService.send failed for {user}: {e}")
     # Fallback: direct in-app Notification
     try:
-        from erp.models import Notification
-        Notification.objects.create(
-            user=user, title=fallback_title, message=fallback_message,
-            type=fallback_type, link=link,
-        )
+        with transaction.atomic():
+            from erp.models import Notification
+            Notification.objects.create(
+                user=user, title=fallback_title, message=fallback_message,
+                type=fallback_type, link=link,
+            )
         return True
     except Exception as e:
         logger.warning(f"Direct Notification.create failed for {user}: {e}")

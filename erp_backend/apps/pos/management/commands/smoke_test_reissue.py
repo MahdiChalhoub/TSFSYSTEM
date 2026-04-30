@@ -62,9 +62,10 @@ class Command(BaseCommand):
         commit = opts['commit']
 
         # Find any active user + product + supplier in the org.
-        user = User.objects.filter(organization=org, is_active=True).first()
-        if user is None:
-            raise CommandError(f"No active user in {org.slug}")
+        # User is optional — the model allows requested_by=NULL (treated as system).
+        user = (User.objects.filter(organization=org, is_active=True).first()
+                or User.objects.filter(organization=org).first()
+                or User.objects.filter(is_superuser=True).first())
         product = Product.objects.filter(organization=org).first()
         if product is None:
             raise CommandError(f"No product in {org.slug}")
@@ -72,7 +73,7 @@ class Command(BaseCommand):
         if supplier is None:
             raise CommandError(f"No supplier in {org.slug}")
 
-        self.stdout.write(f"{BLUE}Smoke test against{RESET} org={org.slug} user={user.username} product={product.name} supplier={supplier.name}")
+        self.stdout.write(f"{BLUE}Smoke test against{RESET} org={org.slug} user={user.username if user else '(none)'} product={product.name} supplier={supplier.name}")
         self.stdout.write(f"{YELLOW}Mode: {'COMMIT' if commit else 'ROLLBACK'}{RESET}\n")
 
         scenarios = [

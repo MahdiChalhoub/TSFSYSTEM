@@ -81,7 +81,7 @@ export async function convertProcurementRequestToPO(id: number): Promise<{ succe
     }
 }
 
-export async function bumpProcurementRequest(args: { requestId?: number; productId?: number }): Promise<{ success: boolean; previous_priority?: string; new_priority?: string; message?: string }> {
+export async function bumpProcurementRequest(args: { requestId?: number; productId?: number }): Promise<{ success: boolean; previous_priority?: string; new_priority?: string; message?: string; po_hint?: string }> {
     const body: Record<string, unknown> = {}
     if (args.requestId != null) body.request_id = args.requestId
     if (args.productId != null) body.product_id = args.productId
@@ -98,6 +98,7 @@ export async function bumpProcurementRequest(args: { requestId?: number; product
             previous_priority: result?.previous_priority,
             new_priority: result?.new_priority,
             message: result?.detail,
+            po_hint: result?.po_hint || undefined,
         }
     } catch (e: any) {
         return { success: false, message: e?.message || 'Failed to bump request' }
