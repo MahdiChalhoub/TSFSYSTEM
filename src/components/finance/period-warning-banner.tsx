@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
 import { useRouter } from 'next/navigation'
 import { requestReopenPeriod } from '@/app/actions/finance/fiscal-year'
+import { runTimed } from '@/lib/perf-timing'
 
 export function notifyPeriodChange() {
     if (typeof window !== 'undefined') window.dispatchEvent(new Event('tsf:period-change'))
@@ -92,10 +93,13 @@ export function PeriodWarningBanner({ isSuperuser = false }: { isSuperuser?: boo
     async function handleFillPeriods(fyId: number) {
         setBusy(true)
         try {
-            const res = await erpFetch(`fiscal-years/${fyId}/fill-missing-periods/`, {
-                method: 'POST',
-                body: JSON.stringify({}),
-            })
+            const res = await runTimed(
+                'finance.fiscal-years:fill-missing-periods',
+                () => erpFetch(`fiscal-years/${fyId}/fill-missing-periods/`, {
+                    method: 'POST',
+                    body: JSON.stringify({}),
+                }),
+            )
             const n = res?.created_count ?? 0
             if (n > 0) {
                 toast.success(`Generated ${n} missing period${n === 1 ? '' : 's'}`)

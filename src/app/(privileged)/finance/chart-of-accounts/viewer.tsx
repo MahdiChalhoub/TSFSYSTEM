@@ -8,6 +8,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { toast } from 'sonner'
+import { runTimed } from '@/lib/perf-timing'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { PageTour } from '@/components/ui/PageTour'
 import '@/lib/tours/definitions/finance-chart-of-accounts'
@@ -96,7 +97,7 @@ export function ChartOfAccountsViewer({ accounts }: {
         startTransition(async () => {
             const { createAccount } = await import('@/app/actions/finance/accounts')
             try {
-                await createAccount(data)
+                await runTimed('finance.coa:create-account', () => createAccount(data))
                 setIsAdding(false); setPreselectedParentId(undefined)
                 router.refresh(); toast.success('Account created.')
             } catch (e: any) { toast.error(e.message || 'Error') }
@@ -121,7 +122,10 @@ export function ChartOfAccountsViewer({ accounts }: {
         startTransition(async () => {
             const { updateChartOfAccount } = await import('@/app/actions/finance/accounts')
             try {
-                await updateChartOfAccount(editingAccount.id, data)
+                await runTimed(
+                    'finance.coa:update-account',
+                    () => updateChartOfAccount(editingAccount.id, data),
+                )
                 setEditingAccount(null); router.refresh(); toast.success('Account updated.')
             } catch (e: any) { toast.error(e.message || 'Error') }
         })

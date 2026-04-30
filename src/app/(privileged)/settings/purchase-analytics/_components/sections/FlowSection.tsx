@@ -3,6 +3,7 @@
 import { ShoppingCart } from 'lucide-react'
 import { toast } from 'sonner'
 import { savePurchaseAnalyticsConfig } from '@/app/actions/settings/purchase-analytics-config'
+import { runTimed } from '@/lib/perf-timing'
 import {
     card, cardHead, cardBody, cardTitle,
     fieldLabel, fieldHint, toggleBtn,
@@ -36,7 +37,11 @@ export function FlowSection() {
                                     onClick={async () => {
                                         if (s.editingProfile) { s.update('request_flow_mode', mode); return }
                                         s.update('request_flow_mode', mode)
-                                        const r = await savePurchaseAnalyticsConfig({ request_flow_mode: mode })
+                                        const r = await runTimed(
+                                            'settings.purchase-analytics:save-flow-mode',
+                                            () => savePurchaseAnalyticsConfig({ request_flow_mode: mode }),
+                                            { mode },
+                                        )
                                         if (r.success) toast.success(`Request flow set to ${label}`)
                                         else toast.error(r.message || 'Failed to save')
                                     }}>
@@ -66,7 +71,11 @@ export function FlowSection() {
                                     onClick={async () => {
                                         if (s.editingProfile) { s.update('purchase_multi_source', opt.v); return }
                                         s.update('purchase_multi_source', opt.v)
-                                        const r = await savePurchaseAnalyticsConfig({ purchase_multi_source: opt.v })
+                                        const r = await runTimed(
+                                            'settings.purchase-analytics:save-multi-source',
+                                            () => savePurchaseAnalyticsConfig({ purchase_multi_source: opt.v }),
+                                            { value: String(opt.v) },
+                                        )
                                         if (r.success) toast.success(opt.v ? 'Multi-source enabled' : 'Single source restored')
                                         else toast.error(r.message || 'Failed to save')
                                     }}>

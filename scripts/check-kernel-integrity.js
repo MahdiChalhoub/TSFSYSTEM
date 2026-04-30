@@ -25,7 +25,8 @@ const APPROVED_DIRS = [
     'apps', // The Dynamic Mounter
     'country-tax-templates',
     'e-invoice-standards',
-    'listview-policies'
+    'listview-policies',
+    'payment-gateways'  // Global payment gateway catalog (SaaS reference data)
 ];
 
 console.log('🛡️  Checking Kernel Integrity...');

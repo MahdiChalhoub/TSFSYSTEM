@@ -10,6 +10,7 @@ import {
     type ProcurementRequestRecord,
 } from '@/app/actions/inventory/procurement-requests'
 import { STATUS_META, TYPE_META, PRIORITY_META } from '../_lib/meta'
+import { runTimed } from '@/lib/perf-timing'
 
 type RunAction = (
     id: number,
@@ -136,7 +137,10 @@ function BumpButton({ requestId, currentPriority }: { requestId: number; current
     const [pending, startTransition] = useTransition()
     const handleClick = () => {
         startTransition(async () => {
-            const r = await bumpProcurementRequest({ requestId })
+            const r = await runTimed(
+                'inventory.requests:bump',
+                () => bumpProcurementRequest({ requestId }),
+            )
             if (r.success) {
                 toast.success(r.message || `Priority ${r.previous_priority} → ${r.new_priority}`, {
                     description: r.po_hint,
@@ -159,7 +163,10 @@ function ConvertToPOButton({ requestId }: { requestId: number }) {
     const [pending, startTransition] = useTransition()
     const handleClick = () => {
         startTransition(async () => {
-            const r = await convertProcurementRequestToPO(requestId)
+            const r = await runTimed(
+                'inventory.requests:convert-to-po',
+                () => convertProcurementRequestToPO(requestId),
+            )
             if (r.success) {
                 toast.success('Draft PO created', {
                     description: 'Edit & send to supplier',

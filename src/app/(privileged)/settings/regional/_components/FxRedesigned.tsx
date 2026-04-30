@@ -53,21 +53,16 @@ import {
     type RevaluationPreview, type FxExposureReport,
 } from '@/app/actions/finance/currency'
 import { erpFetch } from '@/lib/erp-api'
-
-/* ─── Local design helpers ─────────────────────────────────────────── */
-const grad = (v: string) => ({ background: `linear-gradient(135deg, var(${v}), color-mix(in srgb, var(${v}) 60%, black))` })
-const soft = (v: string, p = 12) => ({ backgroundColor: `color-mix(in srgb, var(${v}) ${p}%, transparent)` })
-const FG_PRIMARY = 'var(--app-primary-foreground, #fff)' // Theme token w/ literal fallback for legacy themes
-/** Normalize any thrown value into a short string for diagnostic display. */
-const msg = (e: unknown): string => {
-    if (e instanceof Error) return e.message
-    if (typeof e === 'string') return e
-    try { return JSON.stringify(e) } catch { return String(e) }
-}
+import {
+    grad, soft, FG_PRIMARY, msg,
+    INPUT_CLS, INPUT_STYLE,
+    Th, Td, Pill, Field, Kpi, AnimatedCounter, ActionBtn, SectionHeader,
+    NumericSparkline,
+    type Period, type FiscalYear,
+} from './fx/_shared'
+import { RevaluationsView } from './fx/RevaluationsView'
 
 type FxView = 'rates' | 'policies' | 'revaluations'
-type Period = { id: number; name: string; start_date: string; end_date: string; status: string; fiscal_year: number; fiscal_year_name?: string }
-type FiscalYear = { id: number; name: string; periods: Period[] }
 
 const RATE_TYPES: ExchangeRate['rate_type'][] = ['SPOT', 'AVERAGE', 'CLOSING', 'BUDGET']
 
@@ -1444,6 +1439,7 @@ function RevaluationsView({ periods, revals, selectedPeriod, setSelectedPeriodId
     const [rejectingId, setRejectingId] = useState<number | null>(null)
     const [rejectReason, setRejectReason] = useState('')
     const [catchupBusy, setCatchupBusy] = useState(false)
+    const [smartClassifyBusy, setSmartClassifyBusy] = useState(false)
     const [exposure, setExposure] = useState<FxExposureReport | null>(null)
     const [exposureLoading, setExposureLoading] = useState(false)
 
@@ -1528,6 +1524,16 @@ function RevaluationsView({ periods, revals, selectedPeriod, setSelectedPeriodId
         setReverseBusy(null)
         if (!r.success) { toast.error(r.error || 'Reversal failed'); return }
         toast.success(r.reversalJeId ? 'Reversing JE posted on day 1 of next period' : 'Reversal recorded')
+        await onRefresh()
+    }
+    async function handleSmartClassify() {
+        if (!confirm('Auto-classify every active account using IAS 21 / ASC 830 defaults? This sets monetary_classification + revaluation_required based on account type and role. You can override individual accounts afterwards.')) return
+        setSmartClassifyBusy(true)
+        const { bulkClassifyAccounts } = await import('@/app/actions/finance/accounts')
+        const r = await bulkClassifyAccounts({ scope: 'smart' })
+        setSmartClassifyBusy(false)
+        if (!r.success) { toast.error(r.error || 'Classify failed'); return }
+        toast.success(`Classified ${r.updated} account${r.updated === 1 ? '' : 's'}${r.skipped ? ` · ${r.skipped} unchanged` : ''}`)
         await onRefresh()
     }
     async function handleCatchup() {
@@ -1643,6 +1649,11 @@ function RevaluationsView({ periods, revals, selectedPeriod, setSelectedPeriodId
                                     subtitle={`${selectedPeriod.start_date} → ${selectedPeriod.end_date} · ${selectedPeriod.status}`}
                                     action={
                                         <div className="flex items-center gap-1.5">
+                                            <ActionBtn icon={<Wand2 size={11} />} tone="--app-info"
+                                                disabled={smartClassifyBusy} onClick={handleSmartClassify}
+                                                title="Auto-set monetary classification on every account using IAS 21 / ASC 830 defaults">
+                                                {smartClassifyBusy ? 'Classifying…' : 'Smart classify'}
+                                            </ActionBtn>
                                             <ActionBtn icon={<Layers size={11} />} tone="--app-info"
                                                 disabled={catchupBusy} onClick={handleCatchup}>
                                                 {catchupBusy ? 'Catching up…' : 'Catchup'}

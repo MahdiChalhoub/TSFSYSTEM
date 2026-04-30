@@ -7,6 +7,7 @@ import {
     ServerCog,
     Bot,
     Wrench,
+    CreditCard,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -33,6 +34,7 @@ export const saasControl: MenuItem = {
             children: [
                 { title: 'Countries & Regions', path: '/countries', stage: 'in-progress' },
                 { title: 'Currencies', path: '/currencies' },
+                { title: 'Payment Gateways', path: '/payment-gateways', icon: CreditCard, stage: 'in-progress' },
                 { title: 'Country Tax Templates', path: '/country-tax-templates', stage: 'in-progress' },
                 { title: 'E-Invoice Standards', path: '/e-invoice-standards', stage: 'in-progress' },
                 { title: 'Listview Policies', path: '/listview-policies', stage: 'in-progress' },

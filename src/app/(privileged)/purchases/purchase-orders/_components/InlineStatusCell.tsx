@@ -7,6 +7,7 @@ import { submitPO, approvePO, cancelPO, sendToSupplier, completePO, revertToDraf
 import type { PO } from '../_lib/types'
 import { STATUS_CONFIG } from '../_lib/constants'
 import { RejectPODialog } from './RejectPODialog'
+import { runTimed } from '@/lib/perf-timing'
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
     DRAFT: ['SUBMITTED', 'CANCELLED'],
@@ -57,12 +58,15 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
         }
         setLoading(true); setOpen(false)
         try {
-            const action = STATUS_ACTIONS[t]
-            if (action) await action(po.id)
-            else {
-                const { erpFetch } = await import('@/lib/erp-api')
-                await erpFetch(`purchase-orders/${po.id}/`, { method: 'PATCH', body: JSON.stringify({ status: t }) })
-            }
+            await runTimed(
+                `purchases.po:transition-${t.toLowerCase()}`,
+                async () => {
+                    const action = STATUS_ACTIONS[t]
+                    if (action) return action(po.id)
+                    const { erpFetch } = await import('@/lib/erp-api')
+                    return erpFetch(`purchase-orders/${po.id}/`, { method: 'PATCH', body: JSON.stringify({ status: t }) })
+                },
+            )
             toast.success(`${po.po_number || `PO-${po.id}`} → ${(STATUS_CONFIG[t]?.label || t)}`)
             onRefresh?.()
         } catch (e: any) { toast.error(e?.message || 'Transition failed') }
@@ -72,7 +76,11 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
     async function handleReject(category: PORejectCategory, reason: string) {
         setLoading(true)
         try {
-            const res: any = await rejectPO(po.id, reason, category)
+            const res: any = await runTimed(
+                'purchases.po:reject',
+                () => rejectPO(po.id, reason, category),
+                { category },
+            )
             if (res?._reverted_to_draft) {
                 toast.success(`${po.po_number || `PO-${po.id}`} sent back to draft for revision`)
             } else {

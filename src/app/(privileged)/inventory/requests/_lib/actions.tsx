@@ -10,6 +10,7 @@ import {
     type ProcurementRequestRecord,
 } from '@/app/actions/inventory/procurement-requests'
 import type { DajingoMenuItem } from '@/components/common/DajingoListView'
+import { runTimed } from '@/lib/perf-timing'
 
 type AsyncAction = (id: number) => Promise<{ success: boolean; message?: string }>
 
@@ -19,7 +20,10 @@ export function makeRunAction(
 ) {
     return (id: number, action: AsyncAction, verb: string) => {
         startTransition(async () => {
-            const r = await action(id)
+            const r = await runTimed(
+                `inventory.requests:${verb.toLowerCase()}`,
+                () => action(id),
+            )
             if (r.success) { toast.success(`${verb} successful`); refresh() }
             else toast.error(r.message || `${verb} failed`)
         })
@@ -36,7 +40,11 @@ export function makeBulkAction(
     return (ids: Iterable<number>) => {
         startTransition(async () => {
             const list = Array.from(ids)
-            const results = await Promise.all(list.map(id => action(id)))
+            const results = await runTimed(
+                `inventory.requests:bulk-${label.toLowerCase()}`,
+                () => Promise.all(list.map(id => action(id))),
+                { count: list.length },
+            )
             const ok = results.filter(r => r.success).length
             const fail = results.length - ok
             if (ok > 0) toast.success(`${label} ${ok}`)
@@ -75,7 +83,10 @@ export function buildMenuActions(
         items.push({
             label: 'Bump priority', icon: <Bell size={12} style={{ color: '#8b5cf6' }} />,
             onClick: () => startTransition(async () => {
-                const out = await bumpProcurementRequest({ requestId: r.id })
+                const out = await runTimed(
+                    'inventory.requests:bump',
+                    () => bumpProcurementRequest({ requestId: r.id }),
+                )
                 if (out.success) {
                     toast.success(out.message || 'Bumped', {
                         description: out.po_hint,

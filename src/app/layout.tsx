@@ -3,6 +3,7 @@ import { Outfit, Roboto, Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import "./globals.css";
 import { ThemeScript, AppThemeProvider } from '@/components/app/AppThemeProvider';
+import { PerfOverlay } from '@/components/dev/PerfOverlay';
 import { cookies, headers } from 'next/headers';
 import { getThemes } from '@/app/actions/theme';
 
@@ -145,6 +146,7 @@ export default async function RootLayout({
                     {children}
                 </AppThemeProvider>
                 <Toaster position="top-center" richColors />
+                <PerfOverlay />
                 <script dangerouslySetInnerHTML={{
                     __html: `
                     if ('serviceWorker' in navigator) {

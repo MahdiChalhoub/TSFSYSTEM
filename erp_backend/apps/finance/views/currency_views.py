@@ -370,10 +370,29 @@ class CurrencyRevaluationViewSet(TenantModelViewSet):
 
         return Response(self.get_serializer(reval).data, status=201)
 
+    def _user_can_approve(self, user):
+        """Approval requires explicit permission OR superuser. Materiality is the
+        gate; the user is the lock. Anyone with FX-page access can submit a run
+        — only authorized reviewers can approve/reject."""
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+        if hasattr(user, 'role') and user.role:
+            return user.role.permissions.filter(code='finance.revaluation.approve').exists()
+        return False
+
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
-        """Post the JE for a PENDING_APPROVAL revaluation."""
+        """Post the JE for a PENDING_APPROVAL revaluation. Requires
+        `finance.revaluation.approve` permission (or superuser)."""
         from apps.finance.services import RevaluationService
+        if not self._user_can_approve(request.user):
+            return Response(
+                {'error': 'You do not have permission to approve revaluations. '
+                          'Required: finance.revaluation.approve'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         reval = self.get_object()
         user = request.user if request.user.is_authenticated else None
         try:
@@ -385,8 +404,15 @@ class CurrencyRevaluationViewSet(TenantModelViewSet):
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
-        """Reject a PENDING_APPROVAL revaluation. Body: { reason?: str }"""
+        """Reject a PENDING_APPROVAL revaluation. Body: { reason?: str }.
+        Same approval permission required as approve()."""
         from apps.finance.services import RevaluationService
+        if not self._user_can_approve(request.user):
+            return Response(
+                {'error': 'You do not have permission to reject revaluations. '
+                          'Required: finance.revaluation.approve'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         reval = self.get_object()
         user = request.user if request.user.is_authenticated else None
         reason = (request.data.get('reason') or '')[:1000]

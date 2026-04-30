@@ -8,6 +8,43 @@ from apps.finance.models import FinancialAccount, FinancialAccountCategory, Char
 from apps.finance.serializers import FinancialAccountSerializer, FinancialAccountCategorySerializer, ChartOfAccountSerializer
 from apps.finance.services import FinancialAccountService, LedgerService
 
+
+def _smart_default_for(acc):
+    """Return (monetary_classification, revaluation_required) per IAS 21/ASC 830.
+
+    Heuristics — operators can override per account afterwards:
+      * INCOME / EXPENSE accounts → INCOME_EXPENSE (revalued at AVERAGE)
+      * EQUITY accounts → NON_MONETARY (Capital, RE; historical cost)
+      * ASSET / LIABILITY → MONETARY by default
+      * ASSET with system_role tagging fixed-asset / inventory / prepaid → NON_MONETARY
+      * Sub-type 'CASH' / 'BANK' / 'RECEIVABLE' / 'PAYABLE' → MONETARY
+      * Accounts in base currency: revaluation_required=False (pointless to reval).
+
+    Returns the *recommended* defaults; never enforces them.
+    """
+    NON_MON_ROLES = {
+        'INVENTORY', 'INVENTORY_ASSET', 'WIP',
+        'ACCUM_DEPRECIATION',
+    }
+    MON_SUB_TYPES = {'CASH', 'BANK', 'RECEIVABLE', 'PAYABLE'}
+
+    t = acc.type
+    role = acc.system_role or ''
+    sub = (acc.sub_type or '').upper()
+    has_currency = bool(acc.currency)
+
+    if t in ('INCOME', 'EXPENSE'):
+        return ('INCOME_EXPENSE', has_currency)
+    if t == 'EQUITY':
+        return ('NON_MONETARY', False)
+    if role in NON_MON_ROLES:
+        return ('NON_MONETARY', False)
+    if sub in MON_SUB_TYPES:
+        return ('MONETARY', has_currency)
+    if t in ('ASSET', 'LIABILITY'):
+        return ('MONETARY', has_currency)
+    return ('MONETARY', False)
+
 class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = FinancialAccount.objects.select_related('ledger_account', 'category').all()
     serializer_class = FinancialAccountSerializer
@@ -340,6 +377,74 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         from erp.coa_templates import TEMPLATES
         data = [{"key": k, "name": k.replace('_', ' ')} for k in TEMPLATES.keys()]
         return Response(data)
+
+    @action(detail=False, methods=['post'], url_path='bulk-classify')
+    def bulk_classify(self, request):
+        """Bulk-set monetary_classification + revaluation_required.
+
+        Body shapes:
+          { "scope": "smart" }
+              → Apply IAS 21 / ASC 830 defaults across the whole COA:
+                  ASSET (cash/bank/AR/inventory*) → MONETARY + revaluation_required=True
+                  LIABILITY (AP/loans)            → MONETARY + revaluation_required=True
+                  ASSET (PPE/prepaid)             → NON_MONETARY + revaluation_required=False
+                  INCOME / EXPENSE                → INCOME_EXPENSE + revaluation_required=True
+                * Inventory is an exception: technically non-monetary, but most
+                  ERPs revalue it. We set NON_MONETARY by default and let the
+                  operator override.
+          { "ids": [1, 2, 3], "classification": "MONETARY",
+            "revaluation_required": true }
+              → Apply explicit values to a list of account ids.
+
+        Returns: { "updated": <count>, "skipped": <count>, "details": [...] }.
+        """
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+
+        scope = request.data.get('scope')
+        ids = request.data.get('ids') or []
+        classification = request.data.get('classification')
+        reval_required = request.data.get('revaluation_required')
+
+        qs = ChartOfAccount.objects.filter(organization_id=org_id, is_active=True)
+        updated = 0
+        details = []
+
+        if scope == 'smart':
+            for acc in qs:
+                new_class, new_reval = _smart_default_for(acc)
+                if (acc.monetary_classification == new_class
+                        and acc.revaluation_required == new_reval):
+                    continue
+                acc.monetary_classification = new_class
+                acc.revaluation_required = new_reval
+                acc.save(update_fields=['monetary_classification', 'revaluation_required'])
+                updated += 1
+                details.append({'id': acc.id, 'code': acc.code,
+                                'classification': new_class, 'revaluation_required': new_reval})
+            return Response({'updated': updated, 'skipped': qs.count() - updated, 'details': details})
+
+        if not ids or classification is None:
+            return Response(
+                {'error': 'Provide either {"scope": "smart"} or {"ids": [...], "classification": "..."}.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if classification not in ('MONETARY', 'NON_MONETARY', 'INCOME_EXPENSE'):
+            return Response({'error': 'invalid classification'}, status=status.HTTP_400_BAD_REQUEST)
+
+        for acc in qs.filter(id__in=ids):
+            update_fields = ['monetary_classification']
+            acc.monetary_classification = classification
+            if reval_required is not None:
+                acc.revaluation_required = bool(reval_required)
+                update_fields.append('revaluation_required')
+            acc.save(update_fields=update_fields)
+            updated += 1
+            details.append({'id': acc.id, 'code': acc.code,
+                            'classification': classification,
+                            'revaluation_required': bool(reval_required) if reval_required is not None else acc.revaluation_required})
+        return Response({'updated': updated, 'skipped': len(ids) - updated, 'details': details})
 
     # ═══════════════════════════════════════════════════════════════
     # Database-Backed COA Template Endpoints

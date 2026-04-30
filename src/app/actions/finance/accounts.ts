@@ -260,6 +260,32 @@ export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 
     }
 }
 
+/** POST /coa/bulk-classify/ — apply IAS 21/ASC 830 defaults to all accounts (smart),
+ *  or apply explicit classification to a list of ids. */
+export async function bulkClassifyAccounts(payload:
+    | { scope: 'smart' }
+    | { ids: number[]; classification: 'MONETARY' | 'NON_MONETARY' | 'INCOME_EXPENSE'; revaluationRequired?: boolean }
+): Promise<{ success: boolean; updated?: number; skipped?: number; details?: any[]; error?: string }> {
+    try {
+        const body = 'scope' in payload
+            ? { scope: 'smart' }
+            : {
+                ids: payload.ids,
+                classification: payload.classification,
+                revaluation_required: payload.revaluationRequired,
+            }
+        const r = await erpFetch('coa/bulk-classify/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        }) as { updated: number; skipped: number; details: any[] }
+        revalidatePath('/finance/chart-of-accounts')
+        return { success: true, ...r }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
 export async function reactivateChartOfAccount(id: number) {
     return updateChartOfAccount(id, { isActive: true })
 }

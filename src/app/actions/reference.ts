@@ -401,3 +401,69 @@ export async function disableSourcingCountry(sourcingCountryId: number): Promise
     }
 }
 
+
+// =============================================================================
+// PAYMENT GATEWAY CATALOG
+// =============================================================================
+
+/**
+ * Fetch the global payment gateway catalog (SaaS-level).
+ * Optionally filter by country ISO2 code.
+ */
+export async function getRefPaymentGateways(country?: string): Promise<any[]> {
+    try {
+        const url = country
+            ? `reference/payment-gateways/?country=${country}`
+            : 'reference/payment-gateways/'
+        const result = await erpFetch(url)
+        return Array.isArray(result) ? result : result?.results || []
+    } catch (error) {
+        console.error("[Reference] Failed to fetch payment gateways:", error)
+        return []
+    }
+}
+
+/**
+ * Fetch org's activated payment gateways (tenant-scoped).
+ */
+export async function getOrgPaymentGateways(): Promise<any[]> {
+    try {
+        const result = await erpFetch('reference/org-payment-gateways/')
+        return Array.isArray(result) ? result : result?.results || []
+    } catch (error) {
+        console.error("[Reference] Failed to fetch org payment gateways:", error)
+        return []
+    }
+}
+
+/**
+ * Activate a payment gateway for the org.
+ */
+export async function activateOrgPaymentGateway(gatewayId: number): Promise<ActionResult & { data?: any }> {
+    try {
+        const result = await erpFetch('reference/org-payment-gateways/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gateway: gatewayId }),
+        })
+        revalidatePath('/settings/payment-gateways')
+        return { success: true, data: result }
+    } catch (error: unknown) {
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to activate gateway' }
+    }
+}
+
+/**
+ * Deactivate a payment gateway for the org.
+ */
+export async function deactivateOrgPaymentGateway(orgGatewayId: number): Promise<ActionResult> {
+    try {
+        await erpFetch(`reference/org-payment-gateways/${orgGatewayId}/`, {
+            method: 'DELETE',
+        })
+        revalidatePath('/settings/payment-gateways')
+        return { success: true }
+    } catch (error: unknown) {
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to deactivate gateway' }
+    }
+}
