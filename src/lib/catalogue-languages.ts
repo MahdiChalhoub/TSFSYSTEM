@@ -38,13 +38,37 @@ export function isRTL(code: LocaleCode): boolean {
     return !!KNOWN_LABELS[code]?.rtl;
 }
 
+// Module-level cache. Once any consumer has fetched the languages, every
+// subsequent reader (modal open, etc.) gets the value synchronously — no
+// network round-trip, no flicker. Reset by `setCatalogueLanguages` when the
+// admin changes the list.
+const DEFAULT_LANGUAGES: LocaleCode[] = ['fr', 'ar'];
+let _cachedLanguages: LocaleCode[] | null = null;
+let _inflight: Promise<LocaleCode[]> | null = null;
+
+/** Sync read of the cache. Returns `null` if no fetch has resolved yet.
+ *  Use this to seed `useState` so a freshly-mounted form renders with the
+ *  right tabs on its first render — avoids the [] → [...] flicker. */
+export function getCachedCatalogueLanguages(): LocaleCode[] | null {
+    return _cachedLanguages;
+}
+
 export async function getCatalogueLanguages(): Promise<LocaleCode[]> {
-    try {
-        const res: any = await erpFetch('inventory/categories/catalogue-languages/');
-        return Array.isArray(res?.languages) ? res.languages : ['fr', 'ar'];
-    } catch {
-        return ['fr', 'ar'];
-    }
+    if (_cachedLanguages) return _cachedLanguages;
+    if (_inflight) return _inflight;
+    _inflight = (async () => {
+        try {
+            const res: any = await erpFetch('inventory/categories/catalogue-languages/');
+            const langs = Array.isArray(res?.languages) ? res.languages : DEFAULT_LANGUAGES;
+            _cachedLanguages = langs;
+            return langs;
+        } catch {
+            return DEFAULT_LANGUAGES;
+        } finally {
+            _inflight = null;
+        }
+    })();
+    return _inflight;
 }
 
 export async function setCatalogueLanguages(codes: LocaleCode[]): Promise<LocaleCode[]> {
@@ -53,7 +77,9 @@ export async function setCatalogueLanguages(codes: LocaleCode[]): Promise<Locale
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ languages: codes }),
     });
-    return Array.isArray(res?.languages) ? res.languages : codes;
+    const langs = Array.isArray(res?.languages) ? res.languages : codes;
+    _cachedLanguages = langs;
+    return langs;
 }
 
 /** Rich shape — locale code plus the list of OrgCountry FK ids the language
@@ -66,8 +92,14 @@ export interface CatalogueLanguageEntry {
 export async function getCatalogueLanguageEntries(): Promise<CatalogueLanguageEntry[]> {
     try {
         const res: any = await erpFetch('inventory/categories/catalogue-languages/');
-        if (Array.isArray(res?.entries)) return res.entries;
+        if (Array.isArray(res?.entries)) {
+            // Side-effect: seed the simple-language cache so future
+            // `getCatalogueLanguages()` calls are instant.
+            _cachedLanguages = res.entries.map((e: CatalogueLanguageEntry) => e.code);
+            return res.entries;
+        }
         if (Array.isArray(res?.languages)) {
+            _cachedLanguages = res.languages;
             return res.languages.map((c: string) => ({ code: c, country_ids: [] as number[] }));
         }
     } catch { /* fall through */ }
@@ -80,5 +112,7 @@ export async function setCatalogueLanguageEntries(entries: CatalogueLanguageEntr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entries }),
     });
-    return Array.isArray(res?.entries) ? res.entries : entries;
+    const final: CatalogueLanguageEntry[] = Array.isArray(res?.entries) ? res.entries : entries;
+    _cachedLanguages = final.map(e => e.code);
+    return final;
 }

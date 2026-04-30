@@ -142,14 +142,14 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
     // sidebar widened, zoom, etc.). Far better than a binary split flag.
     const COMPACT_THRESHOLD_PX = 720
     const listWrapperRef = useRef<HTMLDivElement | null>(null)
-    const [isCompact, setIsCompact] = useState(false)
+    const [narrowByWidth, setNarrowByWidth] = useState(false)
     useEffect(() => {
         const el = listWrapperRef.current
         if (!el) return
         const ro = new ResizeObserver(entries => {
             for (const entry of entries) {
                 const w = entry.contentRect.width
-                setIsCompact(prev => {
+                setNarrowByWidth(prev => {
                     const next = w < COMPACT_THRESHOLD_PX
                     return prev === next ? prev : next
                 })
@@ -159,6 +159,13 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
         return () => ro.disconnect()
     }, [])
     const [pinnedSidebar, setPinnedSidebar] = useState(false)
+    // `isCompact` must flip on the SAME tick the wrapper resizes — otherwise
+    // the row renderer draws desktop layout at narrow width for 300ms (the
+    // wrapper's transition-all duration) before ResizeObserver catches up,
+    // causing a visible flicker on every split-panel toggle. Derive it from
+    // both the explicit split flags and the resize-observed width so window
+    // resizes still demote to compact on narrow windows even without a panel.
+    const isCompact = splitPanel || pinnedSidebar || narrowByWidth
     const [selectedNode, setSelectedNode] = useState<any | null>(null)
     const [panelTab, setPanelTab] = useState('overview')
     const [expandAll, setExpandAll] = useState<boolean | undefined>(undefined)
@@ -509,7 +516,8 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                 {/* Left: Tree */}
                 <div ref={listWrapperRef}
                      data-tour={config.treeTourId || 'tree-container'}
-                     className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col transition-all duration-300`}>
+                     className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col`}
+                     style={{ transition: 'flex-basis 200ms ease-out' }}>
                     {/* Column Headers — hidden when the list pane is compact;
                      *  the card-style row renderer draws its own layout. */}
                     {config.columnHeaders && !isCompact && (

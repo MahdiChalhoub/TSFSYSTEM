@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { CategoryCascader } from './CategoryCascader';
 import { peekNextCode } from '@/lib/sequences-client';
 import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
-import { getCatalogueLanguages, labelFor, placeholderFor, isRTL, type LocaleCode } from '@/lib/catalogue-languages';
+import { getCatalogueLanguages, getCachedCatalogueLanguages, labelFor, placeholderFor, isRTL, type LocaleCode } from '@/lib/catalogue-languages';
 
 type CategoryFormModalProps = {
     isOpen: boolean;
@@ -50,8 +50,13 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
     // category or until the first fetch resolves.
     const [suggestedCode, setSuggestedCode] = useState<string>('');
     // Tenant-configured catalogue locales (e.g. ['fr','ar'] or ['en','es','fr']).
-    // Fetched once on modal open — users change the list under Settings.
-    const [locales, setLocales] = useState<LocaleCode[]>([]);
+    // Seed from the module-level cache so the modal renders the correct
+    // language tabs on its FIRST paint — avoids the "tabs pop in 200ms later"
+    // flicker. Falls back to ['fr','ar'] if no fetch has resolved yet; the
+    // useEffect below still re-fetches to refresh the cache.
+    const [locales, setLocales] = useState<LocaleCode[]>(
+        () => getCachedCatalogueLanguages() ?? ['fr', 'ar']
+    );
     // Translations now carry BOTH `name` and `short_name` per locale. A
     // legacy-string value (from the old flat shape) is coerced into
     // `{ name: string }` so migrated data stays visible.
@@ -85,8 +90,16 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
             } else {
                 setSuggestedCode('');
             }
-            // Load tenant catalogue languages once per open
-            getCatalogueLanguages().then(setLocales).catch(() => setLocales(['fr', 'ar']));
+            // Refresh languages on open — first call hits the network, all
+            // subsequent calls return immediately from the module cache.
+            // Only commit setLocales if the result actually differs to avoid
+            // a needless re-render (and a possible visual flicker if the
+            // cached fallback already matched what the server returns).
+            getCatalogueLanguages().then(next => {
+                setLocales(prev =>
+                    prev.length === next.length && prev.every((c, i) => c === next[i]) ? prev : next
+                );
+            }).catch(() => { /* keep whatever we already have */ });
         }
     }, [isOpen, parentId, category]);
 

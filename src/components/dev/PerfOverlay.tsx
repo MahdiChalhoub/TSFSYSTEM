@@ -83,6 +83,7 @@ export function PerfOverlay() {
                         ) : (
                             samples.map((s, i) => {
                                 const slow = s.durationMs >= SLOW_MS
+                                const isPage = s.kind === 'page'
                                 return (
                                     <div key={i} className="px-2.5 py-1 flex items-center gap-2"
                                          style={{
@@ -93,6 +94,12 @@ export function PerfOverlay() {
                                               style={{ color: slow ? '#f87171' : s.success ? '#4ade80' : '#fbbf24' }}>
                                             {s.durationMs}ms
                                         </span>
+                                        {isPage && (
+                                            <span className="text-[8px] font-black px-1 py-px rounded"
+                                                  style={{ background: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa' }}>
+                                                PAGE
+                                            </span>
+                                        )}
                                         <span className="flex-1 truncate" title={s.label}>{s.label}</span>
                                         {!s.success && <span style={{ color: '#fbbf24' }}>err</span>}
                                     </div>

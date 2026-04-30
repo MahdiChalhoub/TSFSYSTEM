@@ -5,6 +5,7 @@ import { FavoritesProvider } from '@/context/FavoritesContext';
 import { LayoutShellGateway } from '@/components/admin/LayoutShellGateway';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
+import { PageTimingProbe } from '@/components/dev/PageTimingProbe';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { DesignSystemProvider } from '@/contexts/DesignSystemContext'
 import { TourProvider } from '@/lib/tours/context';
@@ -169,6 +170,7 @@ export default async function AdminLayout({
                     {children}
                 </LayoutShellGateway>
                 <DebugOverlay />
+                <PageTimingProbe />
                 <CommandPalette />
             </DevProvider>
           </TourProvider>

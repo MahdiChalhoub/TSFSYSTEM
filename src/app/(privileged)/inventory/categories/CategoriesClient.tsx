@@ -14,6 +14,7 @@ import { deleteCategory } from '@/app/actions/inventory/categories'
 import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
+import { getCatalogueLanguages } from '@/lib/catalogue-languages'
 import { GuidedTour } from '@/components/ui/GuidedTour'
 import '@/lib/tours/definitions/inventory-categories'
 
@@ -45,9 +46,14 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     // We keep a ref so bulk dialogs can read the current selection.
     const selectionRef = useRef<{ selectedIds: Set<number>; clearSelection: () => void }>({ selectedIds: new Set(), clearSelection: () => {} })
 
-    // Warm up the CATEGORY sequence cache on page mount so the first New
-    // dialog opens with a pre-filled code instantly (no network wait).
-    useEffect(() => { prefetchNextCode('CATEGORY') }, [])
+    // Warm up the CATEGORY sequence + catalogue-languages caches on page
+    // mount so the New / Edit dialogs open with a pre-filled code AND the
+    // correct language tabs on the very first render (no network wait, no
+    // "tabs pop in" flicker).
+    useEffect(() => {
+        prefetchNextCode('CATEGORY')
+        getCatalogueLanguages()
+    }, [])
 
     // Build a path lookup for category hierarchy — reused by export/print
     const byId = useMemo(() => {

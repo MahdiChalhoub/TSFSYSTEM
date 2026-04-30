@@ -25,9 +25,13 @@ export interface PerfSample {
     durationMs: number
     success: boolean
     route: string
-    /** Browser timestamp (ms since epoch) when the click happened. */
+    /** What kind of measurement this is — 'action' = click-driven async work,
+     *  'page' = navigation/page-open timing reported from the browser
+     *  Performance API. Defaults to 'action'. */
+    kind?: 'action' | 'page'
+    /** Browser timestamp (ms since epoch) when the click/navigation happened. */
     clickedAt: number
-    /** Optional structured tags (e.g. {category: 'PRICE_HIGH'}). */
+    /** Optional structured tags (e.g. {category: 'PRICE_HIGH', metric: 'TTFB'}). */
     tags?: Record<string, string | number | boolean>
 }
 
@@ -77,6 +81,84 @@ export function useActionTiming() {
             runTimed(label, fn, tags),
         [],
     )
+}
+
+/**
+ * Capture page-load timings from the browser Performance API and emit them
+ * on the same `tsf:perf-sample` channel as click-driven actions.
+ *
+ * Two flavors of "page load":
+ *   1. Hard load — fresh document; reported ONCE per session as
+ *        page<route>::ttfb  — backend response time
+ *        page<route>::fcp   — first contentful paint
+ *   2. Soft nav — Next.js client-side navigation (Link click); no new
+ *      document, no new paint entry. Reported as
+ *        page<route>::soft  — pathname change → next animation frame
+ *      so each client navigation gets its own number.
+ *
+ * If LCP/INP/CLS becomes load-bearing later, install `web-vitals`.
+ */
+
+let _hardLoadReported = false
+
+export function reportPageTimings(route: string) {
+    if (typeof window === 'undefined' || typeof performance === 'undefined') return
+
+    // ── Soft navigation: time pathname-change → next paint frame.
+    // The hard-load metrics below only fire ONCE per real document load;
+    // after that, this branch handles every Link click.
+    if (_hardLoadReported) {
+        const startedAt = performance.now()
+        // requestAnimationFrame fires when the browser is about to paint —
+        // a decent proxy for "the new route is on screen and interactive."
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                emit({
+                    label: `page${route}::soft`,
+                    durationMs: Math.round(performance.now() - startedAt),
+                    success: true, route, kind: 'page',
+                    clickedAt: Date.now(),
+                    tags: { metric: 'SOFT_NAV' },
+                })
+            })
+        })
+        return
+    }
+
+    // ── Hard load (first mount only).
+    _hardLoadReported = true
+
+    try {
+        const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+        if (nav && nav.responseStart > 0) {
+            emit({
+                label: `page${route}::ttfb`,
+                durationMs: Math.round(nav.responseStart - nav.requestStart),
+                success: true, route, kind: 'page',
+                clickedAt: Date.now(),
+                tags: { metric: 'TTFB' },
+            })
+        }
+    } catch { /* never throw from observability */ }
+
+    try {
+        const observer = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+                if (entry.name === 'first-contentful-paint') {
+                    emit({
+                        label: `page${route}::fcp`,
+                        durationMs: Math.round(entry.startTime),
+                        success: true, route, kind: 'page',
+                        clickedAt: Date.now(),
+                        tags: { metric: 'FCP' },
+                    })
+                    observer.disconnect()
+                    return
+                }
+            }
+        })
+        observer.observe({ type: 'paint', buffered: true })
+    } catch { /* fall through */ }
 }
 
 function emit(sample: PerfSample) {
