@@ -89,6 +89,9 @@ export function ChartOfAccountsViewer({ accounts }: {
             parentId: formData.get('parentId') ? parseInt(formData.get('parentId') as string) : undefined,
             syscohadaCode: formData.get('syscohadaCode') as string,
             isInternal: formData.get('isInternal') === 'on',
+            currency: (formData.get('currency') as string) || undefined,
+            revaluationRequired: formData.get('revaluationRequired') === 'on',
+            monetaryClassification: (formData.get('monetaryClassification') as 'MONETARY' | 'NON_MONETARY' | 'INCOME_EXPENSE') || undefined,
         }
         startTransition(async () => {
             const { createAccount } = await import('@/app/actions/finance/accounts')
@@ -111,6 +114,9 @@ export function ChartOfAccountsViewer({ accounts }: {
             syscohadaCode: formData.get('syscohadaCode') as string,
             isActive: true,
             isInternal: formData.get('isInternal') === 'on',
+            currency: (formData.get('currency') as string) || undefined,
+            revaluationRequired: formData.get('revaluationRequired') === 'on',
+            monetaryClassification: (formData.get('monetaryClassification') as 'MONETARY' | 'NON_MONETARY' | 'INCOME_EXPENSE') || undefined,
         }
         startTransition(async () => {
             const { updateChartOfAccount } = await import('@/app/actions/finance/accounts')

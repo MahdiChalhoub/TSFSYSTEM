@@ -22,6 +22,11 @@ const CoaAccountSchema = z.object({
     syscohadaClass: z.string().optional(),
     isActive: z.boolean().optional(),
     isInternal: z.boolean().optional(),
+    // Multi-currency / revaluation controls. The classification drives which
+    // rate the period-end revaluation uses (closing/average/historical).
+    currency: z.string().optional(),
+    revaluationRequired: z.boolean().optional(),
+    monetaryClassification: z.enum(['MONETARY', 'NON_MONETARY', 'INCOME_EXPENSE']).optional(),
 }).passthrough()
 
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE'
@@ -84,7 +89,10 @@ export async function createAccount(data: unknown) {
                 parent: parsed.parentId,
                 syscohada_code: parsed.syscohadaCode,
                 syscohada_class: parsed.syscohadaClass,
-                is_internal: parsed.isInternal ?? false
+                is_internal: parsed.isInternal ?? false,
+                currency: parsed.currency,
+                revaluation_required: parsed.revaluationRequired ?? false,
+                monetary_classification: parsed.monetaryClassification ?? 'MONETARY',
             })
         })
         revalidatePath('/finance/chart-of-accounts')
@@ -109,7 +117,10 @@ export async function updateChartOfAccount(id: number, data: unknown) {
                 syscohada_code: parsed.syscohadaCode,
                 syscohada_class: parsed.syscohadaClass,
                 is_active: parsed.isActive,
-                is_internal: parsed.isInternal
+                is_internal: parsed.isInternal,
+                currency: parsed.currency,
+                revaluation_required: parsed.revaluationRequired,
+                monetary_classification: parsed.monetaryClassification,
             })
         })
         revalidatePath('/finance/chart-of-accounts')

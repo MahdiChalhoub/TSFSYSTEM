@@ -154,3 +154,19 @@ export async function deleteAccountCategory(id: number) {
     revalidatePath('/finance/account-categories');
     return await erpFetch(`finance/account-categories/${id}/`, { method: 'DELETE' });
 }
+
+/* ── Payment Gateway Catalog ── */
+export async function getPaymentGateways(country?: string) {
+    const params = country ? `?country=${country}` : '';
+    const data = await erpFetch(`reference/payment-gateways/${params}`, { cache: 'no-store' });
+    if (Array.isArray(data)) return data;
+    if (data?.results && Array.isArray(data.results)) return data.results;
+    return [];
+}
+
+export async function getOrgPaymentGateways() {
+    const data = await erpFetch('reference/org-payment-gateways/', { cache: 'no-store' });
+    if (Array.isArray(data)) return data;
+    if (data?.results && Array.isArray(data.results)) return data.results;
+    return [];
+}

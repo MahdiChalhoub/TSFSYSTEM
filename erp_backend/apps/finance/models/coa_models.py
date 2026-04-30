@@ -387,6 +387,9 @@ class FinancialAccountCategory(TenantModel):
     Dynamic category for grouping financial accounts.
     Each category maps to a parent COA account so new financial accounts
     auto-create sub-accounts under the right branch.
+
+    Category-level defaults are inherited by new child accounts.
+    Digital categories enable payment gateway integration on child accounts.
     """
     name = models.CharField(max_length=100, help_text='Friendly name (e.g. "Cash Drawers", "Electronic Money")')
     code = models.CharField(max_length=30, help_text='Machine code (e.g. "CASH", "MOBILE")')
@@ -400,6 +403,27 @@ class FinancialAccountCategory(TenantModel):
     )
     sort_order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+
+    # ── Category-Level Defaults (inherited by NEW child accounts) ──
+    default_pos_enabled = models.BooleanField(
+        default=False,
+        help_text='New child accounts inherit this POS visibility setting'
+    )
+    default_has_account_book = models.BooleanField(
+        default=False,
+        help_text='New child accounts inherit this account book setting'
+    )
+
+    # ── Digital Account Classification ──
+    is_digital = models.BooleanField(
+        default=False,
+        help_text='If true, child accounts can define payment gateway integrations'
+    )
+    digital_gateway = models.ForeignKey(
+        'reference.OrgPaymentGateway', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='account_categories',
+        help_text='Default payment gateway for child accounts (from org\'s activated gateways)'
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
@@ -435,9 +459,21 @@ class FinancialAccount(TenantModel):
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     description = models.TextField(null=True, blank=True)
     is_pos_enabled = models.BooleanField(default=False, help_text='Whether this account is available for POS transactions')
+    has_account_book = models.BooleanField(default=False, help_text='Whether this account has a dedicated ledger book')
     site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
     ledger_account = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, db_column='ledger_account_id')
     is_active = models.BooleanField(default=True, help_text='Inactive accounts cannot be used in new transactions')
+
+    # ── Digital Integration (per-account) ──
+    digital_gateway = models.ForeignKey(
+        'reference.OrgPaymentGateway', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='financial_accounts',
+        help_text='Payment gateway (inherited from category or overridden)'
+    )
+    digital_config = models.JSONField(
+        default=dict, blank=True,
+        help_text='Provider-specific config: api_key, webhook_url, merchant_id, etc.'
+    )
 
     class Meta:
         db_table = 'financialaccount'

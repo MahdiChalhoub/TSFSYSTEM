@@ -1,6 +1,7 @@
 import {
     Banknote, Building, Smartphone, Briefcase, PiggyBank,
     Globe2, Lock, TrendingUp, Wallet, Layers, CreditCard,
+    Zap, Cloud
 } from 'lucide-react'
 
 /* ── Icon Map ── */
@@ -8,7 +9,7 @@ export const ICON_MAP: Record<string, any> = {
     banknote: Banknote, building: Building, smartphone: Smartphone,
     briefcase: Briefcase, 'piggy-bank': PiggyBank, 'globe-2': Globe2,
     lock: Lock, 'trending-up': TrendingUp, wallet: Wallet, layers: Layers,
-    'credit-card': CreditCard,
+    'credit-card': CreditCard, zap: Zap, cloud: Cloud,
 }
 export const getIcon = (name: string) => ICON_MAP[name] || Wallet
 export const DEFAULT_COLOR = '#6366f1'
@@ -25,6 +26,8 @@ export const ICON_OPTIONS = [
     { value: 'wallet', label: '👛 Wallet' },
     { value: 'credit-card', label: '💳 Credit Card' },
     { value: 'layers', label: '📚 Layers' },
+    { value: 'zap', label: '⚡ Zap' },
+    { value: 'cloud', label: '☁️ Cloud' },
 ]
 
 export const COLOR_PRESETS = [
@@ -32,3 +35,16 @@ export const COLOR_PRESETS = [
     '#ec4899', '#64748b', '#14b8a6', '#6366f1', '#ef4444',
     '#84cc16', '#f97316',
 ]
+
+/* ══════════════════════════════════════════════════
+ *  PROVIDER CONFIG FIELD TYPE (shared by category + account forms)
+ *  The actual providers come from the DB API, not hardcoded.
+ * ══════════════════════════════════════════════════ */
+export type ProviderFieldDef = {
+    key: string
+    label: string
+    type: 'text' | 'password' | 'select'
+    placeholder?: string
+    options?: { value: string; label: string }[]
+    required?: boolean
+}

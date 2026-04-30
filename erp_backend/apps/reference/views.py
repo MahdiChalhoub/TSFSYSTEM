@@ -15,7 +15,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from erp.middleware import get_current_tenant_id
 
-from .models import Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency, SourcingCountry, City
+from .models import (
+    Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency,
+    SourcingCountry, City, PaymentGateway, OrgPaymentGateway,
+)
 from .serializers import (
     CountrySerializer, CountryListSerializer,
     CurrencySerializer, CurrencyListSerializer,
@@ -24,6 +27,7 @@ from .serializers import (
     OrgCurrencySerializer, OrgCurrencyWriteSerializer,
     SourcingCountrySerializer, SourcingCountryWriteSerializer,
     CitySerializer, CityListSerializer,
+    PaymentGatewaySerializer, OrgPaymentGatewaySerializer,
 )
 
 
@@ -561,4 +565,85 @@ class RefCityViewSet(viewsets.ModelViewSet):
         if not (request.user.is_staff or request.user.is_superuser):
             return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
+
+
+# =============================================================================
+# PAYMENT GATEWAY VIEWSETS
+# =============================================================================
+
+class RefPaymentGatewayViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Global payment gateway catalog (read-only for tenants).
+    SaaS admin creates entries via Django admin or seed command.
+
+    Supports:
+      - ?search= (name, code, provider_family)
+      - ?country= (filter by ISO2 country code)
+      - ?active_only= (default true)
+    """
+    serializer_class = PaymentGatewaySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = PaymentGateway.objects.prefetch_related('countries').all()
+
+        active_only = self.request.query_params.get('active_only', 'true')
+        if active_only.lower() in ('true', '1'):
+            qs = qs.filter(is_active=True)
+
+        search = self.request.query_params.get('search')
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(name__icontains=search) |
+                Q(code__icontains=search) |
+                Q(provider_family__icontains=search)
+            )
+
+        country = self.request.query_params.get('country')
+        if country:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(countries__iso2__iexact=country) | Q(is_global=True)
+            ).distinct()
+
+        return qs
+
+
+class OrgPaymentGatewayViewSet(viewsets.ModelViewSet):
+    """
+    Organization payment gateway activation.
+    Tenant-scoped: shows only the current org's activated gateways.
+
+    CRUD:
+      - GET list → org's activated gateways
+      - POST → activate a gateway for the org (body: {gateway: <id>})
+      - DELETE /{id}/ → deactivate
+    """
+    serializer_class = OrgPaymentGatewaySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return OrgPaymentGateway.objects.none()
+        return OrgPaymentGateway.all_objects.select_related('gateway').filter(
+            organization_id=organization_id
+        )
+
+    def perform_create(self, serializer):
+        organization_id = get_current_tenant_id()
+        serializer.save(organization_id=organization_id)
+
+    def create(self, request, *args, **kwargs):
+        # Return read serializer with nested gateway data
+        write_serializer = self.get_serializer(data=request.data)
+        write_serializer.is_valid(raise_exception=True)
+        self.perform_create(write_serializer)
+        instance = write_serializer.instance
+        out = OrgPaymentGatewaySerializer(instance, context=self.get_serializer_context())
+        headers = self.get_success_headers(out.data)
+        return Response(out.data, status=status.HTTP_201_CREATED, headers=headers)
 

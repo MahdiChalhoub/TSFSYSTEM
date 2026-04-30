@@ -96,11 +96,68 @@ export function AccountForm({
                     </label>
                 </div>
             )}
-            <div className="flex gap-2 items-end">
+            {/* ── Multi-currency / Revaluation ─────────────────────────────
+                  Drives FX revaluation behaviour. Most operators leave these
+                  alone; only set them on accounts that actually transact in
+                  a foreign currency. */}
+            <div>
+                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Currency</label>
+                <input
+                    name="currency"
+                    placeholder="(default)"
+                    defaultValue={initialData?.currency || ''}
+                    className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none uppercase"
+                    maxLength={10}
+                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                />
+            </div>
+            <div>
+                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Monetary class</label>
+                <select
+                    name="monetaryClassification"
+                    defaultValue={initialData?.monetary_classification || initialData?.monetaryClassification || 'MONETARY'}
+                    className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
+                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                    title="IAS 21 / ASC 830 — drives the rate type used at FX revaluation."
+                >
+                    <option value="MONETARY">Monetary (closing rate)</option>
+                    <option value="NON_MONETARY">Non-monetary (no reval)</option>
+                    <option value="INCOME_EXPENSE">Income/Expense (avg rate)</option>
+                </select>
+            </div>
+            <div className="col-span-full">
+                <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
+                    <input
+                        type="checkbox"
+                        name="revaluationRequired"
+                        defaultChecked={!!(initialData?.revaluation_required ?? initialData?.revaluationRequired)}
+                        className="w-4 h-4 rounded accent-app-info"
+                    />
+                    <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Revalue at period end</span>
+                    <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                        — Include this account in FX revaluation runs (foreign-currency monetary balances).
+                    </span>
+                </label>
+            </div>
+
+            <div className="col-span-full flex gap-2 items-end justify-end">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    disabled={isPending}
+                    className="px-4 py-2 rounded-xl text-tp-md font-bold transition-all disabled:opacity-50"
+                    style={{
+                        background: 'transparent',
+                        color: 'var(--app-muted-foreground)',
+                        border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                    }}
+                >
+                    Cancel
+                </button>
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="flex-1 py-2 rounded-xl text-tp-md font-bold text-white transition-all disabled:opacity-50"
+                    className="px-6 py-2 rounded-xl text-tp-md font-bold text-white transition-all disabled:opacity-50"
                     style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}
                 >
                     {isPending ? <Loader2 size={14} className="animate-spin mx-auto" /> : 'Save'}

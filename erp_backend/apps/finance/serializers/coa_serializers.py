@@ -144,13 +144,30 @@ class FinancialAccountSerializer(serializers.ModelSerializer):
 
     def get_categoryData(self, obj):
         if obj.category:
+            cat = obj.category
+            gw_data = None
+            if cat.digital_gateway and cat.digital_gateway.gateway:
+                gw = cat.digital_gateway.gateway
+                gw_data = {
+                    'id': cat.digital_gateway_id,
+                    'gateway_id': gw.id,
+                    'code': gw.code,
+                    'name': gw.name,
+                    'emoji': gw.logo_emoji,
+                    'color': gw.color,
+                }
             return {
-                'id': obj.category.id,
-                'name': obj.category.name,
-                'code': obj.category.code,
-                'icon': obj.category.icon,
-                'color': obj.category.color,
-                'description': obj.category.description,
-                'coaParentId': obj.category.coa_parent_id,
+                'id': cat.id,
+                'name': cat.name,
+                'code': cat.code,
+                'icon': cat.icon,
+                'color': cat.color,
+                'description': cat.description,
+                'coaParentId': cat.coa_parent_id,
+                # Category-level defaults (for inheritance display)
+                'default_pos_enabled': cat.default_pos_enabled,
+                'default_has_account_book': cat.default_has_account_book,
+                'is_digital': cat.is_digital,
+                'digital_gateway': gw_data,
             }
         return None

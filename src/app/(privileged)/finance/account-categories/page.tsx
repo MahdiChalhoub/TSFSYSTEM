@@ -4,21 +4,23 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
     Plus, Trash2, Edit3, Settings2, Loader2,
-    ArrowLeft, GripVertical, FolderTree
+    ArrowLeft, GripVertical, FolderTree, Monitor, Zap, BookOpen
 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     getAccountCategories, createAccountCategory, updateAccountCategory,
-    deleteAccountCategory, getChartOfAccounts
+    deleteAccountCategory, getChartOfAccounts, getOrgPaymentGateways
 } from '../accounts/actions'
 import { getIcon, DEFAULT_COLOR } from './_components/constants'
 import { CategoryFormModal, type CategoryFormData } from './_components/CategoryFormModal'
 
 const INITIAL_FORM: CategoryFormData = {
     name: '', code: '', icon: 'wallet', color: '#6366f1',
-    description: '', coa_parent: '', sort_order: 0
+    description: '', coa_parent: '', sort_order: 0,
+    default_pos_enabled: false, default_has_account_book: false,
+    is_digital: false, digital_gateway: '',
 }
 
 export default function AccountCategoriesPage() {
@@ -30,15 +32,18 @@ export default function AccountCategoriesPage() {
     const [saving, setSaving] = useState(false)
     const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
     const [form, setForm] = useState<CategoryFormData>(INITIAL_FORM)
+    const [orgGateways, setOrgGateways] = useState<any[]>([])
 
     const load = async () => {
         try {
-            const [cats, coa] = await Promise.all([
+            const [cats, coa, gateways] = await Promise.all([
                 getAccountCategories(),
                 getChartOfAccounts(),
+                getOrgPaymentGateways(),
             ])
             setCategories(Array.isArray(cats) ? cats : [])
             setCoaList(Array.isArray(coa) ? coa : [])
+            setOrgGateways(Array.isArray(gateways) ? gateways : [])
         } catch (e: any) { toast.error(e?.message || 'Failed to load data') }
         setLoading(false)
     }
@@ -55,7 +60,11 @@ export default function AccountCategoriesPage() {
         setForm({
             name: cat.name, code: cat.code, icon: cat.icon || 'wallet',
             color: cat.color || '#6366f1', description: cat.description || '',
-            coa_parent: cat.coa_parent?.toString() || '', sort_order: cat.sort_order || 0
+            coa_parent: cat.coa_parent?.toString() || '', sort_order: cat.sort_order || 0,
+            default_pos_enabled: cat.default_pos_enabled || false,
+            default_has_account_book: cat.default_has_account_book || false,
+            is_digital: cat.is_digital || false,
+            digital_gateway: cat.digital_gateway?.toString() || '',
         })
         setEditingId(cat.id)
         setShowForm(true)
@@ -69,6 +78,10 @@ export default function AccountCategoriesPage() {
                 name: form.name, code: form.code.toUpperCase(),
                 icon: form.icon, color: form.color,
                 description: form.description, sort_order: form.sort_order,
+                default_pos_enabled: form.default_pos_enabled,
+                default_has_account_book: form.default_has_account_book,
+                is_digital: form.is_digital,
+                digital_gateway: form.is_digital && form.digital_gateway ? parseInt(form.digital_gateway) : null,
             }
             if (form.coa_parent) payload.coa_parent = parseInt(form.coa_parent)
             else payload.coa_parent = null
@@ -160,6 +173,7 @@ export default function AccountCategoriesPage() {
                     form={form} setForm={setForm} coaList={coaList}
                     editingId={editingId} saving={saving}
                     onSave={handleSave} onClose={resetForm}
+                    orgGateways={orgGateways}
                 />
             )}
 
@@ -204,6 +218,27 @@ export default function AccountCategoriesPage() {
                                         )}
                                         {cat.description && (
                                             <span className="hidden sm:inline truncate max-w-[200px]">· {cat.description}</span>
+                                        )}
+                                    </div>
+                                    {/* Feature Badges */}
+                                    <div className="flex items-center gap-1.5 mt-1.5">
+                                        {cat.default_pos_enabled && (
+                                            <span className="inline-flex items-center gap-1 text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                                                style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
+                                                <Monitor size={8} /> POS
+                                            </span>
+                                        )}
+                                        {cat.default_has_account_book && (
+                                            <span className="inline-flex items-center gap-1 text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                                                style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+                                                <BookOpen size={8} /> BOOK
+                                            </span>
+                                        )}
+                                        {cat.is_digital && (
+                                            <span className="inline-flex items-center gap-1 text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                                                style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                                                <Zap size={8} /> {(() => { const gw = orgGateways.find((g: any) => g.id === cat.digital_gateway); return gw ? gw.gateway_name : 'DIGITAL' })()}
+                                            </span>
                                         )}
                                     </div>
                                 </div>

@@ -346,3 +346,108 @@ class City(models.Model):
         state = f', {self.state_province}' if self.state_province else ''
         return f"{self.name}{state} ({self.country.iso2})"
 
+
+# =============================================================================
+# PAYMENT GATEWAY CATALOG (SaaS-level + Tenant Activation)
+# =============================================================================
+
+class PaymentGateway(models.Model):
+    """
+    Global SaaS-level payment gateway catalog.
+    Managed by platform admin, seeded per-country.
+    Organizations select from this list via OrgPaymentGateway.
+
+    Tenant Isolation: N/A (global reference data)
+    Audit Logging: N/A (platform-managed reference)
+    """
+    code = models.CharField(
+        max_length=30, unique=True, db_index=True,
+        help_text='Machine code (e.g., stripe, wave_ci, orange_money_ci)'
+    )
+    name = models.CharField(
+        max_length=100,
+        help_text='Display name (e.g., "Wave (Côte d\'Ivoire)")'
+    )
+    provider_family = models.CharField(
+        max_length=50, blank=True, default='',
+        help_text='Groups provider variants (e.g., "wave" for wave_ci, wave_sn)'
+    )
+    logo_emoji = models.CharField(
+        max_length=10, blank=True, default='💳',
+        help_text='Emoji for quick visual identification'
+    )
+    color = models.CharField(
+        max_length=20, blank=True, default='#6366f1',
+        help_text='Brand color hex'
+    )
+    description = models.TextField(
+        blank=True, default='',
+        help_text='Short description of the gateway'
+    )
+
+    # Country scoping
+    countries = models.ManyToManyField(
+        Country, blank=True, related_name='payment_gateways',
+        help_text='Countries where this gateway operates. Empty = use is_global.'
+    )
+    is_global = models.BooleanField(
+        default=False,
+        help_text='Available worldwide regardless of country selection'
+    )
+
+    # Field schema — defines what credentials this provider needs
+    # Format: [{"key": "api_key", "label": "API Key", "type": "password", "required": true}, ...]
+    # Supported types: text, password, select
+    # For select: add "options": [{"value": "sandbox", "label": "Sandbox"}, ...]
+    config_schema = models.JSONField(
+        default=list, blank=True,
+        help_text='JSON array defining credential fields this provider requires'
+    )
+
+    # Metadata
+    website_url = models.URLField(blank=True, default='')
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'ref_payment_gateways'
+        ordering = ['sort_order', 'name']
+        verbose_name = 'Payment Gateway'
+        verbose_name_plural = 'Payment Gateways'
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class OrgPaymentGateway(AuditLogMixin, TenantOwnedModel):
+    """
+    Organization's enabled payment gateways — activated from global catalog.
+    Follows the same pattern as OrgCurrency / OrgCountry.
+
+    Tenant Isolation: ✅ Automatic via TenantOwnedModel
+    Audit Logging: ✅ Automatic via AuditLogMixin
+    """
+    gateway = models.ForeignKey(
+        PaymentGateway, on_delete=models.CASCADE,
+        related_name='org_activations',
+        help_text='Reference to global gateway catalog entry'
+    )
+    is_enabled = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    # Org-level default credentials (shared across accounts unless overridden)
+    default_config = models.JSONField(
+        default=dict, blank=True,
+        help_text='Org-wide default credentials. Accounts can override per-instance.'
+    )
+
+    class Meta:
+        db_table = 'ref_org_payment_gateways'
+        unique_together = ('organization', 'gateway')
+        ordering = ['display_order', 'gateway__name']
+        indexes = [
+            models.Index(fields=['organization', 'is_enabled']),
+        ]
+
+    def __str__(self):
+        return f"{self.gateway.code} (Org)"

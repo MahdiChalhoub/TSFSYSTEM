@@ -4,7 +4,10 @@ Reference Module Serializers
 Read/write serializers for global reference data and org activation tables.
 """
 from rest_framework import serializers
-from .models import Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency, SourcingCountry, City
+from .models import (
+    Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency,
+    SourcingCountry, City, PaymentGateway, OrgPaymentGateway,
+)
 
 
 # =============================================================================
@@ -189,4 +192,48 @@ class CityListSerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = ['id', 'name', 'state_province', 'is_capital']
+
+
+# =============================================================================
+# PAYMENT GATEWAY SERIALIZERS
+# =============================================================================
+
+class PaymentGatewaySerializer(serializers.ModelSerializer):
+    """Read-only serializer for the global payment gateway catalog."""
+    country_codes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PaymentGateway
+        fields = [
+            'id', 'code', 'name', 'provider_family', 'logo_emoji', 'color',
+            'description', 'is_global', 'country_codes', 'config_schema',
+            'website_url', 'is_active', 'sort_order',
+        ]
+
+    def get_country_codes(self, obj):
+        return list(obj.countries.values_list('iso2', flat=True))
+
+
+class OrgPaymentGatewaySerializer(serializers.ModelSerializer):
+    """Tenant-scoped serializer for activated payment gateways."""
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    gateway_code = serializers.CharField(source='gateway.code', read_only=True)
+    gateway_name = serializers.CharField(source='gateway.name', read_only=True)
+    gateway_emoji = serializers.CharField(source='gateway.logo_emoji', read_only=True)
+    gateway_color = serializers.CharField(source='gateway.color', read_only=True)
+    gateway_description = serializers.CharField(source='gateway.description', read_only=True)
+    gateway_family = serializers.CharField(source='gateway.provider_family', read_only=True)
+    config_schema = serializers.JSONField(source='gateway.config_schema', read_only=True)
+    website_url = serializers.URLField(source='gateway.website_url', read_only=True)
+
+    class Meta:
+        model = OrgPaymentGateway
+        fields = [
+            'id', 'gateway', 'gateway_code', 'gateway_name', 'gateway_emoji',
+            'gateway_color', 'gateway_description', 'gateway_family',
+            'config_schema', 'website_url',
+            'is_enabled', 'display_order', 'default_config',
+            'organization',
+        ]
+        read_only_fields = ['organization']
 
