@@ -256,7 +256,7 @@ class RevaluationService:
     @staticmethod
     def run_multi_period_catchup(
         organization, through_period, user=None, scope='OFFICIAL',
-        force_post=False, auto_reverse=True,
+        force_post=False, auto_reverse=True, stop_on_error=False,
     ):
         """
         Run revaluation for every fiscal period that:
@@ -265,8 +265,24 @@ class RevaluationService:
 
         Periods are processed in chronological order so that auto-reversals
         from prior periods land before the next period's revaluation runs.
-        Returns a list of CurrencyRevaluation records (or preview dicts if
-        any tripped materiality and force_post was False).
+
+        Failure handling
+        ----------------
+        Each period runs in its own ``transaction.atomic()`` block. A failure
+        in one period is recorded in the result row (status='ERROR') but does
+        NOT roll back successful prior periods — those JEs stay posted. The
+        operator can re-run catchup later to retry the failures after fixing
+        the underlying cause (typically a missing exchange rate).
+
+        If ``stop_on_error=True``, the loop bails on the first failure
+        instead of continuing — useful for dry-run dependency checks.
+
+        Returns a list of result dicts with at minimum ``period_id``,
+        ``period_name``, plus one of:
+          - ``revaluation_id`` + ``status``        — newly posted/parked
+          - ``skipped_reason``                     — already done
+          - ``error``                              — failure detail
+        Plus a ``summary`` key on the last entry counting outcomes.
         """
         from apps.finance.models import FiscalPeriod, CurrencyRevaluation
 
@@ -276,39 +292,68 @@ class RevaluationService:
         ).order_by('start_date')
 
         results = []
-        for period in candidates:
-            # Skip if a non-rejected revaluation already exists for this scope.
-            existing = CurrencyRevaluation.objects.filter(
-                organization=organization,
-                fiscal_period=period,
-                scope=scope,
-            ).exclude(status='REJECTED').first()
-            if existing and existing.status in ('POSTED', 'PENDING_APPROVAL'):
-                # Auto-reverse the prior period's POSTED reval into THIS period
-                # if it hasn't been reversed yet — keeps the chain consistent.
-                if existing.status == 'POSTED' and existing.auto_reverse_at_period_start \
-                        and not existing.reversal_journal_entry_id:
-                    try:
-                        RevaluationService.reverse_at_period_start(existing, user=user)
-                    except ValidationError as e:
-                        logger.warning(f"Catchup: skipped reversal for period {period.name}: {e}")
-                results.append({'period_id': period.id, 'period_name': period.name,
-                                'skipped_reason': f'already {existing.status}'})
-                continue
+        n_run = 0
+        n_skipped = 0
+        n_errors = 0
 
-            r = RevaluationService.run_revaluation(
-                organization=organization,
-                fiscal_period=period,
-                user=user,
-                scope=scope,
-                force_post=force_post,
-                auto_reverse=auto_reverse,
-            )
-            results.append({
-                'period_id': period.id, 'period_name': period.name,
-                'revaluation_id': getattr(r, 'id', None),
-                'status': getattr(r, 'status', None),
-            })
+        for period in candidates:
+            try:
+                with transaction.atomic():
+                    # Skip if a non-rejected revaluation already exists for this scope.
+                    existing = CurrencyRevaluation.objects.filter(
+                        organization=organization,
+                        fiscal_period=period,
+                        scope=scope,
+                    ).exclude(status='REJECTED').first()
+                    if existing and existing.status in ('POSTED', 'PENDING_APPROVAL'):
+                        # Auto-reverse the prior period's POSTED reval into THIS period
+                        # if it hasn't been reversed yet — keeps the chain consistent.
+                        if existing.status == 'POSTED' and existing.auto_reverse_at_period_start \
+                                and not existing.reversal_journal_entry_id:
+                            try:
+                                RevaluationService.reverse_at_period_start(existing, user=user)
+                            except ValidationError as e:
+                                logger.warning(f"Catchup: skipped reversal for period {period.name}: {e}")
+                        results.append({'period_id': period.id, 'period_name': period.name,
+                                        'skipped_reason': f'already {existing.status}'})
+                        n_skipped += 1
+                        continue
+
+                    r = RevaluationService.run_revaluation(
+                        organization=organization,
+                        fiscal_period=period,
+                        user=user,
+                        scope=scope,
+                        force_post=force_post,
+                        auto_reverse=auto_reverse,
+                    )
+                    results.append({
+                        'period_id': period.id, 'period_name': period.name,
+                        'revaluation_id': getattr(r, 'id', None),
+                        'status': getattr(r, 'status', None),
+                    })
+                    n_run += 1
+            except (ValidationError, Exception) as e:  # noqa: BLE001
+                # Per-period rollback already occurred via atomic(). Record the
+                # failure and continue (or stop if stop_on_error=True).
+                err_msg = str(e) if not isinstance(e, ValidationError) else (
+                    e.message if hasattr(e, 'message')
+                    else (e.messages[0] if hasattr(e, 'messages') else str(e))
+                )
+                logger.exception(f"Catchup: period {period.name} failed: {err_msg}")
+                results.append({
+                    'period_id': period.id, 'period_name': period.name,
+                    'error': err_msg,
+                })
+                n_errors += 1
+                if stop_on_error:
+                    break
+
+        if results:
+            results[-1]['summary'] = {
+                'run': n_run, 'skipped': n_skipped, 'errors': n_errors,
+                'total': len(results),
+            }
         return results
 
     # ────────────────────────────────────────────────────────────────────

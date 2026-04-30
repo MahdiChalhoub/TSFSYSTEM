@@ -514,13 +514,28 @@ export async function reverseRevaluationAtNextPeriod(id: number): Promise<{ succ
     }
 }
 
-/** POST /currency-revaluations/catchup/ — run revals for every unrevalued period through a target. */
+/** Per-period result row from a catchup run. Exactly one of `revaluation_id`,
+ *  `skipped_reason`, or `error` is present. The last row may carry a `summary`. */
+export type CatchupResult = {
+    period_id: number
+    period_name: string
+    revaluation_id?: number
+    status?: string
+    skipped_reason?: string
+    error?: string
+    summary?: { run: number; skipped: number; errors: number; total: number }
+}
+
+/** POST /currency-revaluations/catchup/ — run revals for every unrevalued period through a target.
+ *  Each period runs in its own atomic block; failures are recorded but do not
+ *  roll back successful prior periods. Set `stopOnError=true` to bail on first failure. */
 export async function catchupRevaluations(payload: {
     throughPeriodId: number
     scope?: 'OFFICIAL' | 'INTERNAL'
     autoReverse?: boolean
     forcePost?: boolean
-}): Promise<{ success: boolean; results?: Array<{ period_id: number; period_name: string; revaluation_id?: number; status?: string; skipped_reason?: string }>; error?: string }> {
+    stopOnError?: boolean
+}): Promise<{ success: boolean; results?: CatchupResult[]; error?: string }> {
     try {
         const r = await erpFetch('currency-revaluations/catchup/', {
             method: 'POST',
@@ -530,10 +545,35 @@ export async function catchupRevaluations(payload: {
                 scope: payload.scope ?? 'OFFICIAL',
                 auto_reverse: payload.autoReverse ?? true,
                 force_post: payload.forcePost ?? false,
+                stop_on_error: payload.stopOnError ?? false,
             }),
-        }) as { results: Array<any> }
+        }) as { results: CatchupResult[] }
         revalidatePath('/finance/currencies')
         return { success: true, results: r.results }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+/** Realized-FX integrity report — flags PAID foreign-currency invoices
+ *  that are missing a realized-FX adjustment JE. */
+export type RealizedFxIntegrityReport = {
+    clean: boolean
+    missing_realized_fx: Array<{
+        invoice_id: number
+        currency: string
+        amount: string
+        booking_rate: string
+    }>
+}
+
+/** GET /currency-revaluations/realized-fx-integrity/ */
+export async function getRealizedFxIntegrity(): Promise<{
+    success: boolean; data?: RealizedFxIntegrityReport; error?: string
+}> {
+    try {
+        const r = await erpFetch('currency-revaluations/realized-fx-integrity/', { cache: 'no-store' }) as RealizedFxIntegrityReport
+        return { success: true, data: r }
     } catch (e) {
         return { success: false, error: e instanceof Error ? e.message : String(e) }
     }

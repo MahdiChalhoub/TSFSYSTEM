@@ -465,13 +465,39 @@ class CurrencyRevaluationViewSet(TenantModelViewSet):
         scope = request.data.get('scope', 'OFFICIAL')
         auto_reverse = bool(request.data.get('auto_reverse', True))
         force_post = bool(request.data.get('force_post', False))
+        stop_on_error = bool(request.data.get('stop_on_error', False))
         user = request.user if request.user.is_authenticated else None
 
         results = RevaluationService.run_multi_period_catchup(
             organization=org, through_period=period, user=user, scope=scope,
             force_post=force_post, auto_reverse=auto_reverse,
+            stop_on_error=stop_on_error,
         )
         return Response({'results': results}, status=200)
+
+    @action(detail=False, methods=['get'], url_path='realized-fx-integrity')
+    def realized_fx_integrity(self, request):
+        """Realized-FX integrity report — flags fully-paid foreign-currency
+        invoices that don't have a posted realized-FX adjustment JE.
+
+        Returns:
+          {
+            "clean": bool,
+            "missing_realized_fx": [{invoice_id, currency, amount, booking_rate}, …]
+          }
+
+        Used by the FX page to surface a warning badge that draws operator
+        attention to invoices needing a manual realized-FX top-up. The
+        underlying ``RealizedFXService.check_realized_fx_integrity`` walks
+        every PAID FC invoice without an FX_GAIN/FX_LOSS line — relatively
+        cheap on small datasets but should be paginated if invoice volume
+        gets large.
+        """
+        from apps.finance.services.realized_fx_service import RealizedFXService
+        org, err = self._get_org()
+        if err: return err
+        report = RealizedFXService.check_realized_fx_integrity(org)
+        return Response(report, status=200)
 
     @action(detail=False, methods=['get'])
     def exposure(self, request):

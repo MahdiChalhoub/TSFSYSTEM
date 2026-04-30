@@ -8,7 +8,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     OrganizationViewSet, SiteViewSet, SettingsViewSet, health_check,
     TenantResolutionView, DashboardViewSet, CountryViewSet, RoleViewSet,
-    UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet,
+    UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, GlobalCurrencyViewSet,
     NotificationViewSet, PermissionViewSet, import_sales_csv_view
 )
 from kernel.audit.views import AuditTrailViewSet
@@ -38,7 +38,7 @@ router.register(r'users', UserViewSet)
 router.register(r'record-history', RecordHistoryViewSet, basename='record-history')
 router.register(r'entity-graph', EntityGraphViewSet, basename='entity-graph')
 router.register(r'encryption', EncryptionViewSet, basename='encryption')
-router.register(r'currencies', CurrencyViewSet, basename='currencies')
+router.register(r'currencies', GlobalCurrencyViewSet, basename='currencies')
 router.register(r'notifications', NotificationViewSet, basename='notifications')
 router.register(r'permissions', PermissionViewSet, basename='permissions')
 router.register(r'udle-views', UDLESavedViewViewSet, basename='udle-views')

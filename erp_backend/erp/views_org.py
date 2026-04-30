@@ -531,10 +531,13 @@ class CountryViewSet(viewsets.ModelViewSet):
             })
 
         return Response(data)
-class CurrencyViewSet(viewsets.ModelViewSet):
+class GlobalCurrencyViewSet(viewsets.ModelViewSet):
     """
-    SaaS-level CRUD for GlobalCurrency.
-    All authenticated users can read. Staff/Superuser can write.
+    SaaS-level CRUD for GlobalCurrency — the global ISO catalog. See
+    ``erp.views.GlobalCurrencyViewSet`` for the canonical docstring; this
+    file's copy is a sibling kept for legacy import-path reasons.
+    Renamed from ``CurrencyViewSet`` so the namespace doesn't collide with
+    ``apps.finance.views.CurrencyViewSet`` (the tenant-scoped one).
     """
     queryset = GlobalCurrency.objects.all().order_by('code')
     serializer_class = GlobalCurrencySerializer

@@ -16,7 +16,9 @@ import {
     previewRevaluation, runRevaluation,
     approveRevaluation, rejectRevaluation,
     reverseRevaluationAtNextPeriod, catchupRevaluations, getFxExposure,
+    getRealizedFxIntegrity,
     type CurrencyRevaluation, type RevaluationPreview, type FxExposureReport,
+    type RealizedFxIntegrityReport,
 } from '@/app/actions/finance/currency'
 import {
     Period, Field, Th, Td, Pill, Kpi, ActionBtn, SectionHeader, NumericSparkline,
@@ -49,6 +51,7 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
     const [smartClassifyBusy, setSmartClassifyBusy] = useState(false)
     const [exposure, setExposure] = useState<FxExposureReport | null>(null)
     const [exposureLoading, setExposureLoading] = useState(false)
+    const [integrity, setIntegrity] = useState<RealizedFxIntegrityReport | null>(null)
 
     /** All revaluations for a period that aren't rejected — picks the most
      *  recent POSTED, then the most recent PENDING_APPROVAL, then DRAFT. */
@@ -152,7 +155,17 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
         if (!r.success) { toast.error(r.error || 'Catchup failed'); return }
         const ran = (r.results ?? []).filter(x => x.revaluation_id).length
         const skipped = (r.results ?? []).filter(x => x.skipped_reason).length
-        toast.success(`Catchup done · ${ran} new · ${skipped} skipped`)
+        const errors = (r.results ?? []).filter(x => x.error)
+        if (errors.length) {
+            const sample = errors.slice(0, 3).map(e => `${e.period_name}: ${e.error}`).join('\n')
+            const more = errors.length > 3 ? `\n…and ${errors.length - 3} more` : ''
+            toast.error(`Catchup completed with ${errors.length} error${errors.length === 1 ? '' : 's'}\n${sample}${more}`, {
+                duration: 12000,
+            })
+        }
+        if (ran || skipped) {
+            toast.success(`Catchup · ${ran} new · ${skipped} skipped${errors.length ? ` · ${errors.length} errors` : ''}`)
+        }
         await onRefresh()
     }
     async function loadExposure() {
@@ -162,7 +175,14 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
         if (!r.success) { toast.error(r.error || 'Exposure load failed'); return }
         setExposure(r.data ?? null)
     }
-    useEffect(() => { void loadExposure() }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+    async function loadIntegrity() {
+        const r = await getRealizedFxIntegrity()
+        if (r.success) setIntegrity(r.data ?? null)
+    }
+    useEffect(() => {
+        void loadExposure()
+        void loadIntegrity()
+    }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
     const yearTotals = revals.reduce((acc, r) => {
         if (r.status !== 'POSTED') return acc
@@ -185,6 +205,12 @@ export function RevaluationsView({ periods, revals, selectedPeriod, setSelectedP
                 <Kpi label="Total loss"    value={yearTotals.loss.toFixed(2)} tone="--app-error"   icon={<TrendingDown size={12} />} />
                 <Kpi label="Net YTD"       value={(yearTotals.net >= 0 ? '+' : '') + yearTotals.net.toFixed(2)} tone={yearTotals.net >= 0 ? '--app-success' : '--app-error'} icon={<Coins size={12} />} />
             </div>
+
+            {/* Realized-FX integrity banner — surfaces fully-paid FC invoices
+                that don't have a realized-FX adjustment JE. Hidden when clean. */}
+            {integrity && !integrity.clean && integrity.missing_realized_fx.length > 0 && (
+                <RealizedFxIntegrityBanner data={integrity} onRefresh={loadIntegrity} />
+            )}
 
             {/* FX Exposure card */}
             <FxExposureCard data={exposure} loading={exposureLoading} onRefresh={loadExposure} />
@@ -760,6 +786,73 @@ function RejectRevaluationModal({ reason, setReason, onCancel, onConfirm }: {
                     </button>
                 </div>
             </div>
+        </div>
+    )
+}
+
+
+function RealizedFxIntegrityBanner({ data, onRefresh }: {
+    data: RealizedFxIntegrityReport
+    onRefresh: () => void
+}) {
+    const [open, setOpen] = useState(false)
+    const count = data.missing_realized_fx.length
+    return (
+        <div className="rounded-2xl overflow-hidden"
+            style={{ ...soft('--app-warning', 8), border: '1px solid color-mix(in srgb, var(--app-warning) 28%, transparent)' }}>
+            <button onClick={() => setOpen(o => !o)}
+                className="w-full px-4 py-2.5 flex items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-2">
+                    <AlertTriangle size={13} style={{ color: 'var(--app-warning)' }} />
+                    <div>
+                        <div className="font-black" style={{ fontSize: 12, color: 'var(--app-warning)' }}>
+                            Realized FX integrity · {count} invoice{count === 1 ? '' : 's'} missing FX adjustment
+                        </div>
+                        <div className="font-mono" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>
+                            Fully-paid foreign-currency invoices without a realized-FX JE — usually means the payment was recorded without supplying payment_amount_foreign + payment_rate.
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onRefresh() }}
+                        className="text-[10px] font-bold inline-flex items-center gap-1"
+                        style={{ color: 'var(--app-muted-foreground)' }}>
+                        <RefreshCcw size={10} /> Recheck
+                    </button>
+                    <span className="font-bold uppercase tracking-widest" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>
+                        {open ? '▴ collapse' : '▾ expand'}
+                    </span>
+                </div>
+            </button>
+            {open && (
+                <div className="border-t" style={{ borderColor: 'color-mix(in srgb, var(--app-warning) 18%, transparent)' }}>
+                    <table className="w-full">
+                        <thead>
+                            <tr style={{ background: 'color-mix(in srgb, var(--app-warning) 5%, transparent)' }}>
+                                <Th>Invoice</Th>
+                                <Th>Currency</Th>
+                                <Th align="right">Amount</Th>
+                                <Th align="right">Booking rate</Th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.missing_realized_fx.slice(0, 25).map(row => (
+                                <tr key={row.invoice_id} className="border-t border-app-border/30">
+                                    <Td><span className="font-mono font-black" style={{ fontSize: 11 }}>#{row.invoice_id}</span></Td>
+                                    <Td><Pill tone="--app-warning">{row.currency}</Pill></Td>
+                                    <Td align="right"><span className="font-mono tabular-nums" style={{ fontSize: 10 }}>{Number(row.amount).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></Td>
+                                    <Td align="right"><span className="font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--app-muted-foreground)' }}>{Number(row.booking_rate).toFixed(6)}</span></Td>
+                                </tr>
+                            ))}
+                            {count > 25 && (
+                                <tr><td colSpan={4} className="px-3 py-2 text-[10px] italic text-center" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    … {count - 25} more not shown
+                                </td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     )
 }

@@ -1071,9 +1071,19 @@ class RoleViewSet(TenantModelViewSet):
     serializer_class = RoleSerializer
 
 
-class CurrencyViewSet(viewsets.ModelViewSet):
+class GlobalCurrencyViewSet(viewsets.ModelViewSet):
     """
-    SaaS-level CRUD for GlobalCurrency.
+    SaaS-level CRUD for GlobalCurrency — the global ISO catalog (~150
+    rows: code, name, symbol). Distinct from the tenant-scoped
+    ``apps.finance.views.CurrencyViewSet`` which manages an org's selected
+    currencies (3-row table with `is_base`).
+
+    Confusion between the two ate a previous session — `getCurrencies()`
+    in the FX page hit /api/currencies/ (this one) and got back 150+ rows
+    with no `is_base`, breaking the base-currency lookup. Renamed from
+    `CurrencyViewSet` to make the distinction unambiguous at the import
+    site. The legacy URL route /api/currencies/ is preserved.
+
     All authenticated users can read. Staff/Superuser can write.
     """
     queryset = GlobalCurrency.objects.all().order_by('code')
