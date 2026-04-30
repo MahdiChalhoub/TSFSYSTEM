@@ -31,6 +31,9 @@ export type ExchangeRate = {
     source: string | null
 }
 
+export type AccountClassification = 'MONETARY' | 'NON_MONETARY' | 'INCOME_EXPENSE'
+export type RateTypeUsed = 'CLOSING' | 'AVERAGE' | 'SPOT' | 'HISTORICAL'
+
 export type CurrencyRevaluationLine = {
     id: number
     account: number
@@ -44,6 +47,8 @@ export type CurrencyRevaluationLine = {
     old_base_amount: string
     new_base_amount: string
     difference: string
+    rate_type_used: RateTypeUsed
+    classification: AccountClassification
 }
 
 export type CurrencyRevaluation = {
@@ -52,16 +57,76 @@ export type CurrencyRevaluation = {
     period_name: string
     fiscal_year_name: string
     revaluation_date: string
-    status: 'DRAFT' | 'POSTED' | 'REVERSED'
+    status: 'DRAFT' | 'PENDING_APPROVAL' | 'POSTED' | 'REVERSED' | 'REJECTED'
     scope: 'OFFICIAL' | 'INTERNAL'
     total_gain: string
     total_loss: string
     net_impact: string
     accounts_processed: number
+    materiality_pct: string
+    excluded_account_ids: number[]
+    auto_reverse_at_period_start: boolean
+    reversal_journal_entry: number | null
+    reversal_je_reference: string | null
+    approved_by: number | null
+    approver_name: string | null
+    approved_at: string | null
+    rejection_reason: string
     journal_entry: number | null
     je_reference: string | null
     created_at: string
     lines: CurrencyRevaluationLine[]
+}
+
+/** Output of the preview endpoint — same shape as a draft reval but unsaved. */
+export type RevaluationPreview = {
+    lines: Array<{
+        account_id: number
+        account_code: string
+        account_name: string
+        currency_id: number
+        currency_code: string
+        classification: AccountClassification
+        balance_in_currency: string
+        old_rate: string
+        new_rate: string
+        old_base_amount: string
+        new_base_amount: string
+        difference: string
+        rate_type_used: RateTypeUsed
+    }>
+    skipped: Array<{ account_id: number; code: string; currency: string; reason: string }>
+    total_gain: string
+    total_loss: string
+    net_impact: string
+    revalued_base_total: string
+    materiality_pct: string
+    materiality_threshold: string
+    requires_approval: boolean
+    excluded_account_ids: number[]
+    accounts_processed: number
+}
+
+export type FxExposureReport = {
+    as_of: string
+    base_currency: string
+    sensitivity_bands: string[]
+    currencies: Array<{
+        currency: string
+        rate: string
+        total_fc: string
+        total_base: string
+        sensitivity: Record<string, string>
+        accounts: Array<{
+            account_id: number
+            code: string
+            name: string
+            classification: AccountClassification
+            balance_fc: string
+            balance_base: string
+            rate: string
+        }>
+    }>
 }
 
 // ── Currencies ───────────────────────────────────────────────────────────
@@ -357,15 +422,46 @@ export async function syncAllRatePolicies(): Promise<{ success: boolean; results
     }
 }
 
-export async function runRevaluation(
-    fiscalPeriodId: number,
-    scope: 'OFFICIAL' | 'INTERNAL' = 'OFFICIAL',
-): Promise<{ success: boolean; data?: CurrencyRevaluation | null; detail?: string; error?: string }> {
+/** POST /currency-revaluations/preview/ — compute without writing. */
+export async function previewRevaluation(payload: {
+    fiscalPeriodId: number
+    scope?: 'OFFICIAL' | 'INTERNAL'
+    excludedAccountIds?: number[]
+}): Promise<{ success: boolean; data?: RevaluationPreview; error?: string }> {
+    try {
+        const r = await erpFetch('currency-revaluations/preview/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fiscal_period: payload.fiscalPeriodId,
+                scope: payload.scope ?? 'OFFICIAL',
+                excluded_account_ids: payload.excludedAccountIds ?? [],
+            }),
+        }) as RevaluationPreview
+        return { success: true, data: r }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+export async function runRevaluation(payload: {
+    fiscalPeriodId: number
+    scope?: 'OFFICIAL' | 'INTERNAL'
+    excludedAccountIds?: number[]
+    autoReverse?: boolean
+    forcePost?: boolean
+}): Promise<{ success: boolean; data?: CurrencyRevaluation | null; detail?: string; error?: string }> {
     try {
         const r = await erpFetch('currency-revaluations/run/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fiscal_period: fiscalPeriodId, scope }),
+            body: JSON.stringify({
+                fiscal_period: payload.fiscalPeriodId,
+                scope: payload.scope ?? 'OFFICIAL',
+                excluded_account_ids: payload.excludedAccountIds ?? [],
+                auto_reverse: payload.autoReverse ?? true,
+                force_post: payload.forcePost ?? false,
+            }),
         }) as CurrencyRevaluation | { detail: string; revaluation: null }
         revalidatePath('/finance/currencies')
         revalidatePath('/finance/fiscal-years')
@@ -373,6 +469,85 @@ export async function runRevaluation(
             return { success: true, data: null, detail: r.detail }
         }
         return { success: true, data: r as CurrencyRevaluation }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+/** POST /currency-revaluations/{id}/approve/ — flip PENDING_APPROVAL → POSTED. */
+export async function approveRevaluation(id: number): Promise<{ success: boolean; data?: CurrencyRevaluation; error?: string }> {
+    try {
+        const r = await erpFetch(`currency-revaluations/${id}/approve/`, { method: 'POST' }) as CurrencyRevaluation
+        revalidatePath('/finance/currencies')
+        return { success: true, data: r }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+/** POST /currency-revaluations/{id}/reject/ — flip PENDING_APPROVAL → REJECTED. */
+export async function rejectRevaluation(id: number, reason: string): Promise<{ success: boolean; data?: CurrencyRevaluation; error?: string }> {
+    try {
+        const r = await erpFetch(`currency-revaluations/${id}/reject/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason }),
+        }) as CurrencyRevaluation
+        revalidatePath('/finance/currencies')
+        return { success: true, data: r }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+/** POST /currency-revaluations/{id}/reverse-at-next-period/ — auto-reverse on day 1 of next period. */
+export async function reverseRevaluationAtNextPeriod(id: number): Promise<{ success: boolean; reversalJeId?: number | null; data?: CurrencyRevaluation; error?: string }> {
+    try {
+        const r = await erpFetch(`currency-revaluations/${id}/reverse-at-next-period/`, { method: 'POST' }) as {
+            reversal_journal_entry_id: number | null
+            revaluation: CurrencyRevaluation
+        }
+        revalidatePath('/finance/currencies')
+        return { success: true, reversalJeId: r.reversal_journal_entry_id, data: r.revaluation }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+/** POST /currency-revaluations/catchup/ — run revals for every unrevalued period through a target. */
+export async function catchupRevaluations(payload: {
+    throughPeriodId: number
+    scope?: 'OFFICIAL' | 'INTERNAL'
+    autoReverse?: boolean
+    forcePost?: boolean
+}): Promise<{ success: boolean; results?: Array<{ period_id: number; period_name: string; revaluation_id?: number; status?: string; skipped_reason?: string }>; error?: string }> {
+    try {
+        const r = await erpFetch('currency-revaluations/catchup/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                through_period: payload.throughPeriodId,
+                scope: payload.scope ?? 'OFFICIAL',
+                auto_reverse: payload.autoReverse ?? true,
+                force_post: payload.forcePost ?? false,
+            }),
+        }) as { results: Array<any> }
+        revalidatePath('/finance/currencies')
+        return { success: true, results: r.results }
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+}
+
+/** GET /currency-revaluations/exposure/ — read-only FX exposure snapshot. */
+export async function getFxExposure(opts: { asOf?: string; scope?: 'OFFICIAL' | 'INTERNAL' } = {}): Promise<{ success: boolean; data?: FxExposureReport; error?: string }> {
+    try {
+        const q = new URLSearchParams()
+        if (opts.asOf) q.set('as_of', opts.asOf)
+        if (opts.scope) q.set('scope', opts.scope)
+        const path = q.toString() ? `currency-revaluations/exposure/?${q.toString()}` : 'currency-revaluations/exposure/'
+        const r = await erpFetch(path, { cache: 'no-store' }) as FxExposureReport
+        return { success: true, data: r }
     } catch (e) {
         return { success: false, error: e instanceof Error ? e.message : String(e) }
     }

@@ -16,7 +16,7 @@ import { erpFetch } from "@/lib/erp-api"
 
 export async function getFinancialAccounts() {
     try {
-        const data = await erpFetch('accounts/?page_size=500')
+        const data = await erpFetch('accounts/?page_size=500', { cache: 'no-store' })
         // TenantModelViewSet uses cursor pagination → {results: [...]}
         if (Array.isArray(data)) return data
         if (data?.results && Array.isArray(data.results)) return data.results
@@ -135,7 +135,7 @@ export async function getChartOfAccounts() {
     return await erpFetch('finance/coa/');
 }
 export async function getAccountCategories() {
-    const data = await erpFetch('finance/account-categories/?page_size=500');
+    const data = await erpFetch('finance/account-categories/?page_size=500', { cache: 'no-store' });
     // TenantModelViewSet uses cursor pagination → {results: [...]}
     // Normalize to always return a flat array for the frontend
     if (Array.isArray(data)) return data;

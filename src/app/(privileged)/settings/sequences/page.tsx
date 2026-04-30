@@ -152,97 +152,15 @@ export default function DocumentNumberingPage() {
                 <SkeletonView />
             ) : (
                 <div className="flex flex-col gap-4 p-4 md:p-6 animate-in fade-in duration-300">
-                    {/* ═══ KPI strip — single inline row, hairline dividers ═══ */}
-                    <div
-                        className="flex items-stretch rounded-xl overflow-hidden"
-                        style={{
-                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                        }}
-                    >
-                        <KpiCell label="Document types" value={totalDocs} hint={`× ${TIERS.length} tiers each`} />
-                        <KpiCell label="Master-data" value={totalMaster} hint={`${MASTER_DATA_TYPES.length} entities`} />
-                        <KpiCell
-                            label="Configured"
-                            value={`${totalConfigured}/${totalSlots}`}
-                            hint={totalConfigured >= totalSlots ? 'fully configured' : `${totalSlots - totalConfigured} on defaults`}
-                        />
-                        <KpiCell
-                            label="Unsaved"
-                            value={dirtyKeys.size}
-                            hint={dirtyKeys.size > 0 ? 'pending sync' : 'all flushed'}
-                            warn={dirtyKeys.size > 0}
-                        />
-                    </div>
-
-                    {/* ═══ Tabs + tier legend in one row ═══ */}
-                    <div className="flex items-center justify-between gap-4 flex-wrap">
-                        <div
-                            className="flex items-center gap-1 p-1 rounded-xl"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                            }}
-                        >
-                            {tabs.map(t => {
-                                const active = activeTab === t.key
-                                return (
-                                    <button
-                                        key={t.key}
-                                        type="button"
-                                        onClick={() => setActiveTab(t.key)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
-                                        style={
-                                            active
-                                                ? {
-                                                    background: 'var(--app-primary)',
-                                                    color: '#fff',
-                                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
-                                                }
-                                                : { color: 'var(--app-muted-foreground)' }
-                                        }
-                                    >
-                                        <t.icon size={13} />
-                                        {t.label}
-                                        <span
-                                            className="text-[9px] font-mono tabular-nums px-1.5 py-0.5 rounded-full"
-                                            style={{
-                                                background: active
-                                                    ? 'rgba(255,255,255,0.2)'
-                                                    : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
-                                                color: active ? '#fff' : 'var(--app-muted-foreground)',
-                                            }}
-                                        >
-                                            {t.count}
-                                        </span>
-                                    </button>
-                                )
-                            })}
-                        </div>
-
-                        {/* Tier legend — only relevant on Documents tab */}
-                        {activeTab === 'documents' && (
-                            <div className="flex items-center gap-x-4 gap-y-1 flex-wrap">
-                                {TIERS.map(t => (
-                                    <div key={t.key} className="inline-flex items-center gap-1.5 min-w-0">
-                                        <span
-                                            className="w-2 h-2 rounded-full flex-shrink-0"
-                                            style={{ background: t.color, boxShadow: `0 0 6px ${t.color}` }}
-                                        />
-                                        <span
-                                            className="text-[10px] font-black uppercase tracking-[0.16em]"
-                                            style={{ color: t.color }}
-                                        >
-                                            {t.label}
-                                        </span>
-                                        <span className="text-[10px] text-app-muted-foreground truncate">
-                                            {t.desc}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    {/* ═══ Single command band — tabs · progress · legend ═══ */}
+                    <CommandBand
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        configured={totalConfigured}
+                        total={totalSlots}
+                        showLegend={activeTab === 'documents'}
+                    />
 
                     {/* ═══ Module navigator (left) + filtered table (right) ═══ */}
                     <div className="grid gap-4 grid-cols-1 md:[grid-template-columns:minmax(200px,240px)_1fr]">
@@ -311,22 +229,132 @@ export default function DocumentNumberingPage() {
 
 // ── Subcomponents ────────────────────────────────────────────
 
-function KpiCell({
-    label, value, hint, warn = false,
-}: { label: string; value: number | string; hint?: string; warn?: boolean }) {
-    const accent = warn ? 'var(--app-warning)' : 'var(--app-foreground)'
+interface TabSpec {
+    key: TabKey
+    label: string
+    icon: React.ComponentType<{ size?: number }>
+    count: number
+}
+
+function CommandBand({
+    tabs, activeTab, onTabChange,
+    configured, total,
+    showLegend,
+}: {
+    tabs: TabSpec[]
+    activeTab: TabKey
+    onTabChange: (k: TabKey) => void
+    configured: number
+    total: number
+    showLegend: boolean
+}) {
+    const pct = total > 0 ? Math.round((configured / total) * 100) : 0
+    const onDefaults = Math.max(0, total - configured)
+
     return (
-        <div className="flex-1 min-w-0 px-4 py-3 border-r last:border-r-0"
-            style={{ borderColor: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-            <div className="text-[9px] font-black uppercase tracking-[0.18em] text-app-muted-foreground">
-                {label}
+        <div
+            className="flex items-center gap-3 md:gap-5 px-3 py-2 rounded-xl flex-wrap"
+            style={{
+                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+            }}
+        >
+            {/* Tabs */}
+            <div className="inline-flex items-center gap-0.5">
+                {tabs.map(t => {
+                    const active = activeTab === t.key
+                    return (
+                        <button
+                            key={t.key}
+                            type="button"
+                            onClick={() => onTabChange(t.key)}
+                            className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-lg text-[11px] font-bold transition-all"
+                            style={
+                                active
+                                    ? {
+                                        background: 'var(--app-primary)',
+                                        color: '#fff',
+                                        boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                                    }
+                                    : { color: 'var(--app-muted-foreground)' }
+                            }
+                        >
+                            <t.icon size={12} />
+                            {t.label}
+                            <span
+                                className="text-[9px] font-mono tabular-nums px-1.5 rounded-full"
+                                style={{
+                                    background: active
+                                        ? 'rgba(255,255,255,0.22)'
+                                        : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                    color: active ? '#fff' : 'var(--app-muted-foreground)',
+                                }}
+                            >
+                                {t.count}
+                            </span>
+                        </button>
+                    )
+                })}
             </div>
-            <div className="text-[24px] font-black tabular-nums leading-none mt-1.5" style={{ color: accent }}>
-                {value}
+
+            {/* Progress meter — flex-1, the centerpiece */}
+            <div className="flex items-center gap-2.5 flex-1 min-w-[200px]">
+                {/* Numeric label */}
+                <span className="text-[11px] font-mono tabular-nums whitespace-nowrap">
+                    <span className="font-black text-app-foreground">{configured}</span>
+                    <span className="text-app-muted-foreground/70">/{total}</span>
+                    <span className="ml-1.5 text-app-muted-foreground uppercase tracking-wide font-bold text-[9px]">
+                        configured
+                    </span>
+                </span>
+
+                {/* Bar */}
+                <div
+                    className="relative flex-1 h-1.5 rounded-full overflow-hidden"
+                    style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}
+                    title={`${pct}% configured`}
+                >
+                    <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-out"
+                        style={{
+                            width: `${pct}%`,
+                            background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 60%, var(--app-success)))',
+                            boxShadow: '0 0 8px color-mix(in srgb, var(--app-primary) 35%, transparent)',
+                        }}
+                    />
+                </div>
+
+                {/* Percent + defaults hint */}
+                <span className="text-[10px] font-mono tabular-nums text-app-muted-foreground whitespace-nowrap">
+                    {pct}%
+                    {onDefaults > 0 && (
+                        <>
+                            {' · '}
+                            <span className="text-app-warning font-bold">{onDefaults}</span>
+                            <span className="opacity-70"> default</span>
+                        </>
+                    )}
+                </span>
             </div>
-            {hint && (
-                <div className="text-[10px] font-mono text-app-muted-foreground mt-1 truncate">
-                    {hint}
+
+            {/* Legend — only on Documents tab */}
+            {showLegend && (
+                <div className="inline-flex items-center gap-3">
+                    {TIERS.map(t => (
+                        <span key={t.key} className="inline-flex items-center gap-1">
+                            <span
+                                className="w-1.5 h-1.5 rounded-full"
+                                style={{ background: t.color, boxShadow: `0 0 5px ${t.color}` }}
+                            />
+                            <span
+                                className="text-[9.5px] font-black uppercase tracking-[0.14em]"
+                                style={{ color: t.color }}
+                                title={t.desc}
+                            >
+                                {t.label}
+                            </span>
+                        </span>
+                    ))}
                 </div>
             )}
         </div>
@@ -337,11 +365,7 @@ function SkeletonView() {
     return (
         <div className="flex flex-col gap-4 p-4 md:p-6">
             <div
-                className="h-[78px] rounded-xl animate-pulse"
-                style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}
-            />
-            <div
-                className="h-9 w-72 rounded-xl animate-pulse"
+                className="h-11 rounded-xl animate-pulse"
                 style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}
             />
             {[1, 2, 3].map(i => (

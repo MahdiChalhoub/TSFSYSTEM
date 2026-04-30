@@ -181,7 +181,7 @@ export function FxManagementSection({ view, hideHeader, orgCurrencyCount, orgBas
     async function handleRunRevaluation(periodId: number) {
         setRunning(periodId)
         try {
-            const res = await runRevaluation(periodId, 'OFFICIAL')
+            const res = await runRevaluation({ fiscalPeriodId: periodId, scope: 'OFFICIAL' })
             if (!res.success) {
                 toast.error(res.error || 'Revaluation failed')
                 return

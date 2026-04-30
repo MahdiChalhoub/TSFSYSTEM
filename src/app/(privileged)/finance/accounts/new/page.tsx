@@ -87,6 +87,7 @@ export default function NewFinancialAccountPage() {
                 body: JSON.stringify({
                     name: name.trim(), type: selectedCat.code, currency, description,
                     is_pos_enabled: isPosEnabled, ledger_account: selectedCat.coa_parent,
+                    category: selectedCat.id,
                 }),
             })
             toast.success('Account created successfully')

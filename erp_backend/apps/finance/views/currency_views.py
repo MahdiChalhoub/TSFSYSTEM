@@ -8,6 +8,7 @@ Three resources:
                           RevaluationService.run_revaluation for a period
 """
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -53,7 +54,8 @@ class CurrencyRevaluationLineSerializer(serializers.ModelSerializer):
         fields = ['id', 'account', 'account_code', 'account_name',
                   'currency', 'currency_code',
                   'balance_in_currency', 'old_rate', 'new_rate',
-                  'old_base_amount', 'new_base_amount', 'difference']
+                  'old_base_amount', 'new_base_amount', 'difference',
+                  'rate_type_used', 'classification']
 
 
 class CurrencyRatePolicySerializer(serializers.ModelSerializer):
@@ -84,13 +86,28 @@ class CurrencyRevaluationSerializer(serializers.ModelSerializer):
     lines = CurrencyRevaluationLineSerializer(many=True, read_only=True)
     je_reference = serializers.CharField(source='journal_entry.reference', read_only=True)
 
+    approver_name = serializers.SerializerMethodField()
+    reversal_je_reference = serializers.CharField(
+        source='reversal_journal_entry.reference', read_only=True, default=None,
+    )
+
     class Meta:
         model = CurrencyRevaluation
         fields = ['id', 'fiscal_period', 'period_name', 'fiscal_year_name',
                   'revaluation_date', 'status', 'scope',
                   'total_gain', 'total_loss', 'net_impact', 'accounts_processed',
+                  'materiality_pct', 'excluded_account_ids',
+                  'auto_reverse_at_period_start',
+                  'reversal_journal_entry', 'reversal_je_reference',
+                  'approved_by', 'approver_name', 'approved_at',
+                  'rejection_reason',
                   'journal_entry', 'je_reference',
                   'created_at', 'lines']
+
+    def get_approver_name(self, obj):
+        u = obj.approved_by
+        if not u: return None
+        return getattr(u, 'username', None) or getattr(u, 'email', None) or str(u.id)
 
 
 # ── ViewSets ─────────────────────────────────────────────────────────────
@@ -244,36 +261,102 @@ class CurrencyRevaluationViewSet(TenantModelViewSet):
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
         )
 
-    @action(detail=False, methods=['post'])
-    def run(self, request):
-        """
-        Body: { fiscal_period: <id>, scope?: 'OFFICIAL'|'INTERNAL' }
-        Returns the created CurrencyRevaluation row (or null if no foreign
-        balances were found to revalue).
-        """
-        from apps.finance.models.fiscal_models import FiscalPeriod
-        from apps.finance.services import RevaluationService
-
+    # ────────────────────────────────────────────────────────────────────
+    # Helpers shared by run / preview / catchup
+    # ────────────────────────────────────────────────────────────────────
+    def _get_org(self):
         org_id = get_current_tenant_id()
         if not org_id:
-            return Response({'error': 'tenant context missing'}, status=400)
-        organization = Organization.objects.get(id=org_id)
+            return None, Response({'error': 'tenant context missing'}, status=400)
+        return Organization.objects.get(id=org_id), None
 
+    def _get_period(self, org_id, period_id):
+        from apps.finance.models.fiscal_models import FiscalPeriod
+        try:
+            return FiscalPeriod.objects.get(id=period_id, organization_id=org_id), None
+        except FiscalPeriod.DoesNotExist:
+            return None, Response({'error': 'fiscal period not found'}, status=404)
+
+    def _decimalize(self, obj):
+        """Recursively convert Decimals to strings so DRF can serialize."""
+        from decimal import Decimal
+        if isinstance(obj, Decimal):
+            return str(obj)
+        if isinstance(obj, dict):
+            return {k: self._decimalize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self._decimalize(v) for v in obj]
+        return obj
+
+    @action(detail=False, methods=['post'])
+    def preview(self, request):
+        """
+        Compute a revaluation WITHOUT writing anything. Returns the line-by-line
+        breakdown the UI uses to populate the preview drawer.
+
+        Body: {
+            fiscal_period: <id>,
+            scope?: 'OFFICIAL'|'INTERNAL',
+            excluded_account_ids?: [int],
+        }
+        """
+        from apps.finance.services import RevaluationService
+
+        org, err = self._get_org()
+        if err: return err
         period_id = request.data.get('fiscal_period')
         if not period_id:
             return Response({'error': 'fiscal_period is required'}, status=400)
-        try:
-            period = FiscalPeriod.objects.get(id=period_id, organization_id=org_id)
-        except FiscalPeriod.DoesNotExist:
-            return Response({'error': 'fiscal period not found'}, status=404)
+        period, err = self._get_period(org.id, period_id)
+        if err: return err
 
         scope = request.data.get('scope', 'OFFICIAL')
+        excluded = request.data.get('excluded_account_ids') or []
+        try:
+            preview = RevaluationService.preview(
+                organization=org, fiscal_period=period, scope=scope,
+                excluded_account_ids=excluded,
+            )
+        except DjangoValidationError as e:
+            msg = e.message if hasattr(e, 'message') else (e.messages[0] if hasattr(e, 'messages') else str(e))
+            return Response({'error': msg}, status=400)
+        return Response(self._decimalize(preview), status=200)
+
+    @action(detail=False, methods=['post'])
+    def run(self, request):
+        """
+        Body: {
+            fiscal_period: <id>,
+            scope?: 'OFFICIAL'|'INTERNAL',
+            excluded_account_ids?: [int],
+            auto_reverse?: bool,
+            force_post?: bool,   # bypass materiality approval gate
+        }
+        Returns the created CurrencyRevaluation row (or null if no foreign
+        balances were found to revalue). Status will be PENDING_APPROVAL
+        if the materiality threshold was tripped.
+        """
+        from apps.finance.services import RevaluationService
+
+        org, err = self._get_org()
+        if err: return err
+        period_id = request.data.get('fiscal_period')
+        if not period_id:
+            return Response({'error': 'fiscal_period is required'}, status=400)
+        period, err = self._get_period(org.id, period_id)
+        if err: return err
+
+        scope = request.data.get('scope', 'OFFICIAL')
+        excluded = request.data.get('excluded_account_ids') or []
+        auto_reverse = bool(request.data.get('auto_reverse', True))
+        force_post = bool(request.data.get('force_post', False))
         user = request.user if request.user.is_authenticated else None
 
         try:
             reval = RevaluationService.run_revaluation(
-                organization=organization, fiscal_period=period,
-                user=user, scope=scope,
+                organization=org, fiscal_period=period, user=user, scope=scope,
+                excluded_account_ids=excluded, auto_reverse=auto_reverse,
+                force_post=force_post,
             )
         except DjangoValidationError as e:
             msg = e.message if hasattr(e, 'message') else (e.messages[0] if hasattr(e, 'messages') else str(e))
@@ -286,6 +369,107 @@ class CurrencyRevaluationViewSet(TenantModelViewSet):
             }, status=200)
 
         return Response(self.get_serializer(reval).data, status=201)
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """Post the JE for a PENDING_APPROVAL revaluation."""
+        from apps.finance.services import RevaluationService
+        reval = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+        try:
+            RevaluationService.approve(reval, user=user)
+        except DjangoValidationError as e:
+            msg = e.message if hasattr(e, 'message') else (e.messages[0] if hasattr(e, 'messages') else str(e))
+            return Response({'error': msg}, status=400)
+        return Response(self.get_serializer(reval).data, status=200)
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """Reject a PENDING_APPROVAL revaluation. Body: { reason?: str }"""
+        from apps.finance.services import RevaluationService
+        reval = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+        reason = (request.data.get('reason') or '')[:1000]
+        try:
+            RevaluationService.reject(reval, user=user, reason=reason)
+        except DjangoValidationError as e:
+            msg = e.message if hasattr(e, 'message') else (e.messages[0] if hasattr(e, 'messages') else str(e))
+            return Response({'error': msg}, status=400)
+        return Response(self.get_serializer(reval).data, status=200)
+
+    @action(detail=True, methods=['post'], url_path='reverse-at-next-period')
+    def reverse_at_next_period(self, request, pk=None):
+        """
+        Auto-post a reversing JE on day 1 of the next fiscal period.
+        Idempotent — returns the existing reversal if already done.
+        """
+        from apps.finance.services import RevaluationService
+        reval = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+        try:
+            je = RevaluationService.reverse_at_period_start(reval, user=user)
+        except DjangoValidationError as e:
+            msg = e.message if hasattr(e, 'message') else (e.messages[0] if hasattr(e, 'messages') else str(e))
+            return Response({'error': msg}, status=400)
+        return Response({
+            'reversal_journal_entry_id': je.id if je else None,
+            'revaluation': self.get_serializer(reval).data,
+        }, status=200)
+
+    @action(detail=False, methods=['post'])
+    def catchup(self, request):
+        """
+        Run revaluations for every unrevalued fiscal period through a target.
+
+        Body: {
+            through_period: <id>,
+            scope?: 'OFFICIAL'|'INTERNAL',
+            auto_reverse?: bool,
+            force_post?: bool,
+        }
+        """
+        from apps.finance.services import RevaluationService
+        org, err = self._get_org()
+        if err: return err
+        period_id = request.data.get('through_period')
+        if not period_id:
+            return Response({'error': 'through_period is required'}, status=400)
+        period, err = self._get_period(org.id, period_id)
+        if err: return err
+        scope = request.data.get('scope', 'OFFICIAL')
+        auto_reverse = bool(request.data.get('auto_reverse', True))
+        force_post = bool(request.data.get('force_post', False))
+        user = request.user if request.user.is_authenticated else None
+
+        results = RevaluationService.run_multi_period_catchup(
+            organization=org, through_period=period, user=user, scope=scope,
+            force_post=force_post, auto_reverse=auto_reverse,
+        )
+        return Response({'results': results}, status=200)
+
+    @action(detail=False, methods=['get'])
+    def exposure(self, request):
+        """
+        FX exposure snapshot.
+        Query params:
+            as_of: ISO date (default = today)
+            scope: OFFICIAL | INTERNAL (default OFFICIAL)
+        """
+        from datetime import date as date_cls
+        from apps.finance.services import RevaluationService
+
+        org, err = self._get_org()
+        if err: return err
+        as_of_str = request.query_params.get('as_of')
+        try:
+            as_of = date_cls.fromisoformat(as_of_str) if as_of_str else timezone.now().date()
+        except ValueError:
+            return Response({'error': 'invalid as_of date'}, status=400)
+        scope = request.query_params.get('scope', 'OFFICIAL')
+        report = RevaluationService.compute_exposure_report(
+            organization=org, as_of_date=as_of, scope=scope,
+        )
+        return Response(self._decimalize(report), status=200)
 
 
 class CurrencyRatePolicyViewSet(TenantModelViewSet):

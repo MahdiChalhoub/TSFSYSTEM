@@ -32,7 +32,8 @@ class PaymentService:
     def record_supplier_payment(
         organization, contact_id, amount, payment_date,
         payment_account_id, method='CASH', description=None,
-        supplier_invoice_id=None, scope='OFFICIAL', user=None
+        supplier_invoice_id=None, scope='OFFICIAL', user=None,
+        payment_amount_foreign=None, payment_rate=None,
     ):
         """
         Record a payment to a supplier.
@@ -104,6 +105,19 @@ class PaymentService:
                 payment.status = 'POSTED'
                 payment.save()
 
+                # Realized FX variance — only when caller provided the foreign-
+                # amount + payment-rate context AND there is a settled supplier
+                # invoice to pin variance against. Skipped for cash/ad-hoc
+                # payments that aren't settling an FC invoice.
+                PaymentService._maybe_post_realized_fx(
+                    invoice_id=supplier_invoice_id,
+                    invoice_kind='supplier',
+                    payment_amount_foreign=payment_amount_foreign,
+                    payment_rate=payment_rate,
+                    payment_date=payment_date,
+                    user=user,
+                )
+
             # Update running balance
             balance, _ = SupplierBalance.objects.get_or_create(
                 organization=organization,
@@ -122,7 +136,9 @@ class PaymentService:
     def record_customer_receipt(
         organization, contact_id, amount, payment_date,
         payment_account_id, method='CASH', description=None,
-        sales_order_id=None, scope='OFFICIAL', user=None
+        sales_order_id=None, scope='OFFICIAL', user=None,
+        customer_invoice_id=None,
+        payment_amount_foreign=None, payment_rate=None,
     ):
         """
         Record a receipt from a customer.
@@ -194,6 +210,18 @@ class PaymentService:
                 payment.status = 'POSTED'
                 payment.save()
 
+                # Realized FX variance — only fires when caller supplies the
+                # foreign-amount + rate context AND there's a settled customer
+                # invoice. Plain CSAT cash receipts skip silently.
+                PaymentService._maybe_post_realized_fx(
+                    invoice_id=customer_invoice_id,
+                    invoice_kind='customer',
+                    payment_amount_foreign=payment_amount_foreign,
+                    payment_rate=payment_rate,
+                    payment_date=payment_date,
+                    user=user,
+                )
+
             # Update running balance
             balance, _ = CustomerBalance.objects.get_or_create(
                 organization=organization,
@@ -205,6 +233,49 @@ class PaymentService:
             balance.save()
 
             return payment
+
+    # ── Realized FX (called from supplier + customer payment posting) ─
+
+    @staticmethod
+    def _maybe_post_realized_fx(
+        *, invoice_id, invoice_kind,
+        payment_amount_foreign, payment_rate, payment_date, user,
+    ):
+        """Bridge from payment posting → RealizedFXService.
+
+        Resolves the invoice row, sanity-checks the inputs, and posts the
+        realized FX variance JE if there's anything to post. Failures are
+        logged at WARNING and *do not* block the payment from posting —
+        rather, the operator gets a flag in `realized_fx.check_integrity`
+        for follow-up. Wrapping the variance in a hard exception would mean
+        a missing rate could block a customer from paying their bill.
+        """
+        if not invoice_id or not payment_amount_foreign or not payment_rate:
+            return  # caller didn't opt in — pure base-currency payment
+        try:
+            from apps.finance.services.realized_fx_service import RealizedFXService
+            from apps.finance.invoice_models import Invoice  # supplier + customer share table
+            invoice = Invoice.objects.filter(id=invoice_id).first()
+            if not invoice:
+                logger.warning(
+                    f"_maybe_post_realized_fx: {invoice_kind} invoice {invoice_id} not found; "
+                    "skipping realized FX."
+                )
+                return
+            RealizedFXService.post_realized_variance(
+                invoice=invoice,
+                payment_amount_foreign=payment_amount_foreign,
+                payment_rate=payment_rate,
+                payment_date=payment_date,
+                user=user,
+            )
+        except Exception as e:
+            # Surfaced via realized-fx integrity check — see
+            # RealizedFXService.check_realized_fx_integrity. Don't block the
+            # payment.
+            logger.warning(
+                f"_maybe_post_realized_fx ({invoice_kind}, invoice={invoice_id}) failed: {e}"
+            )
 
     # ── VAT Release (Cash-Basis) ─────────────────────────────────────
 
