@@ -655,3 +655,93 @@ Two were caught when nocheck was removed:
 ### Caller-side missing-prop note
 
 `pv/PvSwitcher.tsx` calls `<PurchaseForm suppliers sites financialSettings />` — but `PurchaseForm` actually requires 5 props (`users` + `profilesData` are missing). This is a **pre-existing bug** shielded by `@ts-nocheck` in PvSwitcher. Fixed minimally by passing `[]` for `users` and a default-shaped `profilesData` object cast through `Parameters<typeof PurchaseForm>[0]['profilesData']`. The runtime form may render in a degraded state under PV but no longer fails compilation. A proper fix belongs to the purchases owner.
+
+---
+
+## Session 6 (2026-05-01) — `@ts-nocheck` removal across `(privileged)/inventory/`
+
+### Goal
+
+Drop `@ts-nocheck` directives from inventory subdir files (the agent scope's last unconquered zone) and add proper types.
+
+### Result
+
+**Inventory subdir 55 → 20 `@ts-nocheck` files** (−35 cleared, 2 reverted-with-reason). `tsc --noEmit` exits 0 repo-wide before/during/after. **One eslint-disabled `as any` introduced** (`UnitsClient.tsx`'s `UnitFormModal.onSuccess` schema-drift case — documented inline). All other previous bare `any`s in touched files were removed.
+
+### Files cleared (35) + reverted (2)
+
+#### Cleared
+
+| # | File | Lines | Notes |
+|---|---|---|---|
+| 1 | `inventory/brands/BrandsGateway.tsx` | 8 | Defined `BrandRow`+`BrandsGatewayProps`. |
+| 2 | `inventory/units/UnitsGateway.tsx` | 38 | Defined `GatewayUnit` matching the typed `UnitNode`. |
+| 3 | `inventory/transfers/TransfersClient.tsx` | 170 | Defined `TransferRow`, `TransferLine`, `StatusBadge`. Added missing `type: 'select'/'date'` on `TypicalFilter` filter items. |
+| 4 | `inventory/adjustments/AdjustmentsClient.tsx` | 171 | Same pattern as TransfersClient + `AdjustmentLine`/`AdjustmentRow`. |
+| 5 | `inventory/transfers/[id]/page.tsx` | 270 | Defined `TransferDoc`/`TransferLine`. **Latent bug fixed**: `Input` was referenced but not imported pre-Session 6. |
+| 6 | `inventory/transfers/new/page.tsx` | 274 | `AppPageHeader.title: string` strictness — replaced JSX-fragment title with plain string. |
+| 7 | `inventory/expiry-alerts/ExpiryAlertsClient.tsx` | 196 | Defined `ExpiryAlertRow`, fixed `expandable.renderActions: (row) => …` arity (signature is `(detail, parent)`), added missing `expandable.columns`. |
+| 8 | `inventory/expiry-alerts/page.tsx` | 311 | Defined `ExpiryAlertRow`, `StatsShape`. Coerced `days_until_expiry ?? 0` etc. for strict comparisons. |
+| 9 | `inventory/analytics/page.tsx` | 654 | Replaced `(SEVERITY_CONFIG[row.severity])` indexed access on `string \| undefined` with `||'WARNING'` fallback. Defined `IconComponent`. |
+| 10 | `inventory/transfer-orders/page.tsx` | 539 | Paginated-response narrowing helper. `lines.map` extraction-helper for the line read sites. |
+| 11 | `inventory/adjustment-orders/page.tsx` | 540 | Same pattern + `qty_adjustment` coercion via `Number(ln.qty_adjustment ?? 0)`. |
+| 12 | `inventory/maintenance/page.tsx` | 242 | Server component — typed `MaintenanceEntity` for sidebar. Cast `erpFetch` cache option through `RequestInit`. |
+| 13 | `inventory/maintenance/data-quality/page.tsx` | 685 | Defined `EditableField = keyof Omit<ProductUpdate, 'id'>` typed setter pair. Replaced `Tag: any` with `as React.ElementType`. |
+| 14 | `inventory/policies/page.tsx` | 941 | **Largest in inventory scope.** Defined locally `NamingFormulaSlot` (the action's `ProductNamingRule` doesn't model the v3 attribute schema), `LabelPolicyShape`/`BarcodePolicyShape`/`WeightPolicyShape`/`CategoryRuleShape`/`VisibilityPolicyShape`/`AttributeNode`. Cast `saveProductNamingRule(payload as unknown as Parameters<typeof saveProductNamingRule>[0])` at the action boundary. Replaced 30+ `policy?.[f.key] || false` with `!!policy?.[f.key]`. Replaced `JSX.Element` with `ReactNode` in `tabContent` map. |
+| 15 | `inventory/global/manager.tsx` | 195 | Defined `SiteRow`, `ProductRow`, `GlobalInventoryData`, `FetchAction = (input: FetchInput) => Promise<…>` for the action-prop pair. |
+| 16 | `inventory/readiness/page.tsx` | 208 | Defined `ReadinessSummary`/`ReadinessRecord`. Indexed-access via `(r as Record<string, unknown>)[`is_${d.key}`]` because the dynamic-key access can't be expressed with the typed interface. |
+| 17 | `inventory/category-rules/page.tsx` | 260 | Defined `CategoryRule`+`CategoryOption`. Replaced unused `setEditingRule` setter binding. |
+| 18 | `inventory/fresh-profiles/page.tsx` | 132 | Defined `FreshProfile`. |
+| 19 | `inventory/fresh/page.tsx` | 243 | Defined `WeightPolicyState`+`FreshProfileRow`. |
+| 20 | `inventory/weight-policy/page.tsx` | 110 | Defined `WeightPolicy`. |
+| 21 | `inventory/label-policy/page.tsx` | 111 | Defined `LabelPolicy`. |
+| 22 | `inventory/barcode-policy/page.tsx` | 116 | Defined `BarcodePolicy`. |
+| 23 | `inventory/barcode/page.tsx` | 144 | Defined `BarcodeFormValues` for `useForm` generic. |
+| 24 | `inventory/label-records/page.tsx` | 89 | Defined `LabelRecord`+`asArray()` helper. |
+| 25 | `inventory/product-tasks/page.tsx` | 90 | Defined `ProductTask`. |
+| 26 | `inventory/product-barcodes/page.tsx` | 91 | Defined `BarcodeRow`. |
+| 27 | `inventory/inventory-group-members/page.tsx` | 96 | Defined `GroupMember`. |
+| 28 | `inventory/goods-receipts/page.tsx` | 98 | Defined `GoodsReceipt`. |
+| 29 | `inventory/price-change-requests/page.tsx` | 101 | Defined `PriceChangeRequest`+`StatusIcon`. |
+| 30 | `inventory/product-audit-trail/page.tsx` | 102 | Defined `AuditEntry`. |
+| 31 | `inventory/brands/BrandsClient.tsx` | 504 | Used the proven Session 3 TreeMasterPage cast pattern: `data: dataAsRecords` + `asBrand(item)` adapter for kpiPredicates / kpis / footerLeft / dataTools. Typed `SectionCard` props. |
+| 32 | `inventory/warehouses/components/WarehouseRow.tsx` | 164 | Defined+exported `WarehouseNode`. `IconComponent` for the TYPE_CONFIG slot. |
+| 33 | `inventory/warehouses/WarehouseClient.tsx` | 227 | TreeMasterPage cast pattern + `asWarehouse(item)` adapter. Defined `DeleteResult` for the `deleteWarehouse` action's union return. |
+| 34 | `inventory/units/components/UnitRow.tsx` | 174 | Defined+exported `UnitNode`. `MasterListBadge` import for typed badge array. |
+| 35 | `inventory/units/UnitsClient.tsx` | 337 | Same TreeMasterPage cast pattern + `asUnit(item)`. Defined `DeleteUnitResult`, `DeleteConflictState`, `RenderPropsRef`. **One eslint-disabled `as any` cast** at the `UnitFormModal` call site because its prop type omits the `onSuccess` callback the consumer passes (the runtime accepts it but the type doesn't — schema drift, not a soundness hole). |
+
+#### Reverted-with-reason (2)
+
+- `inventory/labels/PrintingCenterClient.tsx` — depends on `listPrintSessions` and `getPrintingKPI` from `@/app/actions/labels` (TS2305: not exported). Family-wide issue across 5 sibling tab files (`tabs/{LabelsQueue,Sessions,Layout,Output,Maintenance}Tab.tsx`). The actions module needs to grow these exports first; restored `@ts-nocheck` with a comment explaining the dependency. Net effect on this session's scope: 6 labels files stayed under nocheck.
+- `inventory/stock-count/SyncPanel.tsx` — depends on `populateSessionLines` from `@/app/actions/inventory/stock-count` which doesn't exist. Same restore-with-reason.
+
+### Patterns established Session 6
+
+- **TreeMasterPage cast pattern (extended)**: `data: dataAsRecords` at the call site + `const asNode = (item: Record<string, unknown>) => item as unknown as TheRow` adapter for kpiPredicates / kpis / footerLeft / detailPanel / dataTools. Pushes the cast to one place per file rather than 30+ field reads. Used in BrandsClient, WarehouseClient, UnitsClient.
+- **Unused state setter pruning**: `category-rules/page.tsx` and `policies/page.tsx` had `[editingRule, setEditingRule]` state slots wired but the inline editor JSX was never rendered. Replaced with `[, setEditingRule]` to drop the unused-variable warning when nocheck was lifted, preserving the call sites.
+- **Strict-undefined boolean coercion**: `policy?.[f.key] || false` → `!!policy?.[f.key]` (the former returns `boolean | undefined` because the index sig is `unknown`, which doesn't satisfy the `<input checked: boolean>` strict prop type).
+- **AppPageHeader title type**: `<AppPageHeader title={<>JSX</>}>` doesn't compile against the `title: string` prop type. The fragment-with-styled-span pattern is widespread in pre-nocheck pages — replaced with a plain string for the form pages where the styled-title isn't load-bearing.
+- **Dependency-drift action modules**: Some action modules (`@/app/actions/labels`, `@/app/actions/inventory/stock-count`) have consumers calling functions that don't yet exist. Restored `@ts-nocheck` with a one-line comment explaining the missing export (rather than papering over with `as any` calls that would silently accept null returns at runtime).
+
+### Verification
+
+```bash
+$ npx tsc --noEmit 2>&1 | wc -l
+0
+$ grep -rln "@ts-nocheck" src/app/\(privileged\)/inventory/ | wc -l  # was 55, now 20
+20
+```
+
+Both gates green throughout. Zero `// @ts-ignore`, zero `// @ts-expect-error`. **One eslint-disabled `as any` introduced** (UnitsClient/UnitFormModal.onSuccess), all documented inline.
+
+### Pre-existing latent bugs surfaced
+
+- `transfers/[id]/page.tsx` referenced `<Input>` without importing it — added to the import list.
+- `transfers/new/page.tsx` had a JSX-fragment title that didn't satisfy `AppPageHeader.title: string` — replaced with plain string.
+- `expiry-alerts/ExpiryAlertsClient.tsx`'s `expandable.renderActions: (row) => …` had wrong arity (the signature is `(detail, parent)`) and was missing `expandable.columns` — both were silently accepted under nocheck.
+
+### Remaining (20 files in inventory)
+
+- **Large feature clients (deferred — 800+ lines, deeper coupling)**: `attributes/AttributesClient.tsx`, `countries/CountriesClient.tsx`, `packages/PackagesClient.tsx`, `products/manager.tsx`, `product-groups/page.tsx`, `packaging-suggestions/SuggestionsManager.tsx`, `brands/mobile/MobileBrandsClient.tsx`.
+- **Family deep-coupling (deferred)**: `units/{components/UnitDetailPanel,mobile/MobileUnitRow,mobile/MobileUnitsClient}.tsx`, `warehouses/{form,components/WarehouseDetailPanel}.tsx`.
+- **Action-module dependency-drift (deferred until upstream actions module is rebuilt)**: `labels/{page,PrintingCenterClient,tabs/{LabelsQueue,Sessions,Layout,Output,Maintenance}Tab}.tsx` (7 files), `stock-count/SyncPanel.tsx` (1 file).
