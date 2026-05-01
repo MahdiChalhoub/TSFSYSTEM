@@ -1,37 +1,33 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
-import { Package, Truck, CheckCircle, X, AlertTriangle, FileText, HardHat } from 'lucide-react';
+import { Package, Truck, CheckCircle, X, FileText, HardHat } from 'lucide-react';
 import { receivePOLine } from '@/app/actions/inventory/locations';
 import { toast } from 'sonner';
 
-interface ReceiveLineDialogProps {
-    po: any;
-    line: any;
-    onClose: () => void;
-    onSuccess: (updatedPo: any) => void;
+interface POLine {
+    id: number;
+    product_name?: string;
+    product_sku?: string;
+    quantity: number | string;
+    qty_received?: number | string | null;
 }
 
-function DiscrepancyInput({ label, value, onChange, color = 'amber', icon: Icon = AlertTriangle }) {
-    return (
-        <div>
-            <label className="text-[10px] font-black uppercase tracking-widest ml-1 mb-1.5 block flex items-center gap-1.5" style={{ color: `var(--tw-${color}-600, #d97706)` }}>
-                <Icon size={10} /> {label}
-            </label>
-            <div className="relative flex items-center">
-                <input
-                    type="number"
-                    min={0}
-                    step="1"
-                    value={value}
-                    onChange={e => onChange(Number(e.target.value))}
-                    className={`w-full px-4 h-12 bg-app-background rounded-xl border-2 border-transparent focus:border-app-warning/30 outline-none transition-all font-black text-lg text-app-foreground`}
-                    placeholder="0"
-                />
-            </div>
-        </div>
-    );
+interface POForReceive {
+    id: number;
+    [key: string]: unknown;
+}
+
+interface ReceivePOLineResponse {
+    error?: string;
+    [key: string]: unknown;
+}
+
+interface ReceiveLineDialogProps {
+    po: POForReceive;
+    line: POLine;
+    onClose: () => void;
+    onSuccess: (updatedPo: ReceivePOLineResponse) => void;
 }
 
 export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: ReceiveLineDialogProps) {
@@ -61,7 +57,7 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
                 qty_rejected: qtyRejected || undefined,
                 qty_missing: qtyMissing || undefined,
                 receipt_notes: receiptNotes.trim() || undefined,
-            });
+            }) as ReceivePOLineResponse;
             if (res?.error) throw new Error(res.error);
 
             const parts = [`✅ Received ${qty} of ${line.product_name}`];
@@ -72,8 +68,8 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
             toast.success(parts.join(' · '));
             onSuccess(res);
             onClose();
-        } catch (err: any) {
-            toast.error(err.message || 'Reception failed');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Reception failed');
         } finally {
             setLoading(false);
         }

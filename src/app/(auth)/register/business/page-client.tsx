@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client"
 import { useState, useActionState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -23,9 +22,39 @@ const slugify = (text: string) => {
         .replace(/\-\-+/g, '-');
 };
 
+interface BusinessRegisterError {
+    root?: string | string[];
+    [key: string]: string | string[] | undefined;
+}
+
+interface BusinessRegisterState {
+    success?: boolean;
+    login_url?: string;
+    error?: BusinessRegisterError;
+    message?: string;
+}
+
+interface BusinessTypeOption {
+    id: number | string;
+    name: string;
+    [key: string]: unknown;
+}
+
+interface CurrencyOption {
+    id: number | string;
+    code: string;
+    [key: string]: unknown;
+}
+
 function BusinessRegisterContent() {
     const searchParams = useSearchParams();
-    const [state, action, isPending] = useActionState(registerBusinessAction, null);
+    const [state, action, isPending] = useActionState<BusinessRegisterState | null, FormData>(
+        registerBusinessAction as unknown as (
+            prevState: BusinessRegisterState | null,
+            formData: FormData,
+        ) => Promise<BusinessRegisterState | null>,
+        null,
+    );
     const [config, setConfig] = useState<PublicConfig>({ business_types: [], currencies: [] });
 
     const [businessName, setBusinessName] = useState("");
@@ -133,12 +162,14 @@ function BusinessRegisterContent() {
                 <CardContent className="p-10 md:p-16">
                     <form action={action} className="space-y-12">
                         {/* Error Reporting */}
-                        {((state as any)?.error?.root || state?.error) && (
+                        {state?.error && (
                             <div className="p-4 bg-app-error-bg/50 border border-app-error/20 rounded-2xl flex items-center gap-3 text-app-error text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
                                 <div className="flex-1">
-                                    {(state as any).error.root ? (Array.isArray((state as any).error.root) ? (state as any).error.root[0] : (state as any).error.root) : "Registration failed. Please check your details and try again."}
-                                    {Object.keys((state as any).error || {}).map(k => k !== 'root' && (
+                                    {state.error.root
+                                        ? (Array.isArray(state.error.root) ? state.error.root[0] : state.error.root)
+                                        : "Registration failed. Please check your details and try again."}
+                                    {Object.keys(state.error).map(k => k !== 'root' && (
                                         <div key={k} className="mt-1 opacity-80 uppercase tracking-tighter">Field Error: {k}</div>
                                     ))}
                                 </div>
@@ -260,8 +291,8 @@ function BusinessRegisterContent() {
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-app-surface border-app-border text-app-foreground">
-                                                {(config.business_types ?? []).map((t: Record<string, any>) => (
-                                                    <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
+                                                {((config.business_types ?? []) as unknown as BusinessTypeOption[]).map((t) => (
+                                                    <SelectItem key={String(t.id)} value={String(t.id)}>{t.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -274,8 +305,8 @@ function BusinessRegisterContent() {
                                                 <SelectValue placeholder="Select currency" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-app-surface border-app-border text-app-foreground">
-                                                {(config.currencies ?? []).map((c: Record<string, any>) => (
-                                                    <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>
+                                                {((config.currencies ?? []) as unknown as CurrencyOption[]).map((c) => (
+                                                    <SelectItem key={String(c.id)} value={String(c.id)}>{c.code}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>

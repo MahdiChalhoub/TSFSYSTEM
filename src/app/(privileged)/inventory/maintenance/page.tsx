@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { erpFetch } from '@/lib/erp-api'
-import { getMaintenanceEntities } from '@/app/actions/maintenance'
+import { getMaintenanceEntities, type MaintenanceEntity } from '@/app/actions/maintenance'
 import { MaintenanceSidebar } from '@/components/admin/maintenance/MaintenanceSidebar'
 import { UnifiedReassignmentTable } from '@/components/admin/maintenance/UnifiedReassignmentTable'
 import {
@@ -9,6 +8,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+
+type MaintenanceTab = 'category' | 'brand' | 'unit' | 'country' | 'attribute'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,7 @@ const TAB_CONFIG = [
     { key: 'country', icon: Globe, label: 'Countries', color: '#8b5cf6' },
 ] as const
 
-function countAll(list: any[]): number {
+function countAll(list: MaintenanceEntity[]): number {
     let c = 0
     for (const item of list) {
         c++
@@ -37,7 +38,7 @@ function countAll(list: any[]): number {
     return c
 }
 
-function findEntityRecursive(list: any[], id: number): any {
+function findEntityRecursive(list: MaintenanceEntity[], id: number): MaintenanceEntity | null {
     for (const item of list) {
         if (item.id === id) return item
         if (item.children) {
@@ -58,17 +59,24 @@ export default async function MaintenancePage(props: {
     const validTabs = TAB_CONFIG.map(t => t.key) as string[]
     if (!validTabs.includes(tab)) redirect('/inventory/maintenance?tab=category')
 
+    const tabKey = tab as MaintenanceTab
+
     // 1. Entities for the sidebar
-    const entities = await getMaintenanceEntities(tab as any)
+    const entities = await getMaintenanceEntities(tabKey)
 
     // 2. Products when an entity is selected
-    let products: any[] = []
+    let products: Array<Record<string, unknown>> = []
     let currentEntityName = `Select a ${tab}`
     if (activeId) {
-        const filterKey = tab === 'attribute' ? 'parfum' : tab
+        const filterKey = tabKey === 'attribute' ? 'parfum' : tabKey
         try {
-            const res = await erpFetch(`products/?${filterKey}=${activeId}`, { cache: 'no-store' } as any)
-            products = Array.isArray(res) ? res : (res?.results ?? [])
+            const res = await erpFetch(`products/?${filterKey}=${activeId}`, { cache: 'no-store' } as RequestInit) as unknown
+            const list: unknown[] = Array.isArray(res)
+                ? res
+                : (res && typeof res === 'object' && 'results' in res && Array.isArray((res as { results?: unknown[] }).results))
+                    ? (res as { results: unknown[] }).results
+                    : []
+            products = list as Array<Record<string, unknown>>
         } catch (e) {
             console.error('Maintenance: product fetch failed', e)
         }
@@ -212,7 +220,7 @@ export default async function MaintenancePage(props: {
                                 <UnifiedReassignmentTable
                                     products={safeProducts}
                                     targetEntities={safeEntities}
-                                    type={tab as any}
+                                    type={tabKey}
                                     currentEntityId={activeId}
                                 />
                             </div>

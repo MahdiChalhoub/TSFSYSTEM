@@ -1,8 +1,7 @@
-// @ts-nocheck
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { TrendingUp, DollarSign, Percent, BarChart3, ArrowRightLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { TrendingUp, DollarSign, Percent, BarChart3 } from 'lucide-react';
 
 type PricingStrategy = 'fixed' | 'margin' | 'markup';
 

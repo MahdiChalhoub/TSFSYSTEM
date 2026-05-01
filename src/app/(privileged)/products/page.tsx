@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Link from 'next/link';
 import { erpFetch } from "@/lib/erp-api";
 import { Plus, Search, Layers, Globe, ChevronLeft, ChevronRight, Edit2, Copy, Barcode } from 'lucide-react';
@@ -7,12 +6,68 @@ export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 
-async function getProducts(page: number) {
+interface InventoryRow {
+    quantity?: number | string;
+    [key: string]: unknown;
+}
+
+interface CountryRef {
+    code?: string;
+    name?: string;
+    [key: string]: unknown;
+}
+
+interface UnitRef {
+    shortName?: string;
+    [key: string]: unknown;
+}
+
+interface NameRef {
+    name?: string;
+    [key: string]: unknown;
+}
+
+interface ProductRow {
+    id: number | string;
+    name?: string;
+    sku?: string;
+    barcode?: string;
+    productGroupId?: number | string | null;
+    inventory?: InventoryRow[];
+    country?: CountryRef | null;
+    size?: number | string;
+    sizeUnit?: UnitRef | null;
+    unit?: UnitRef | null;
+    brand?: NameRef | null;
+    category?: NameRef | null;
+    [key: string]: unknown;
+}
+
+interface GroupRow {
+    id: number | string;
+    name?: string;
+    brand?: NameRef | null;
+    category?: NameRef | null;
+    products?: ProductRow[];
+    [key: string]: unknown;
+}
+
+interface PaginatedResponse<T> {
+    results?: T[];
+    count?: number;
+    next?: string | null;
+    previous?: string | null;
+}
+
+interface ListResult<T> {
+    data: T[];
+    total: number;
+    totalPages: number;
+}
+
+async function getProducts(page: number): Promise<ListResult<ProductRow>> {
     try {
-        // Backend pagination expected: ?page=X (DRF default)
-        // We assume backend page_size is consistent or we pass it if supported.
-        // Standard DRF PageNumberPagination returns { count, next, previous, results }
-        const data = await erpFetch(`products/?page=${page}&page_size=${PAGE_SIZE}`);
+        const data = await erpFetch(`products/?page=${page}&page_size=${PAGE_SIZE}`) as PaginatedResponse<ProductRow>;
         const results = data.results || [];
         const total = data.count || 0;
 
@@ -27,9 +82,9 @@ async function getProducts(page: number) {
     }
 }
 
-async function getGroups(page: number) {
+async function getGroups(page: number): Promise<ListResult<GroupRow>> {
     try {
-        const data = await erpFetch(`product-groups/?page=${page}&page_size=${PAGE_SIZE}`);
+        const data = await erpFetch(`product-groups/?page=${page}&page_size=${PAGE_SIZE}`) as PaginatedResponse<GroupRow>;
         const results = data.results || [];
         const total = data.count || 0;
 
@@ -125,7 +180,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                                     <td colSpan={5} className="py-12 text-center text-app-muted-foreground">No products found.</td>
                                 </tr>
                             ) : (
-                                data.map((item: Record<string, any>) => isGrouped ? <GroupRow key={item.id} group={item} /> : <ProductRow key={item.id} product={item} />)
+                                data.map((item) =>
+                                    isGrouped
+                                        ? <GroupRow key={item.id} group={item as GroupRow} />
+                                        : <ProductRow key={item.id} product={item as ProductRow} />,
+                                )
                             )}
                         </tbody>
                     </table>
@@ -160,8 +219,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     );
 }
 
-function ProductRow({ product }: { product: Record<string, any> }) {
-    const totalStock = product.inventory?.reduce((acc: number, inv: Record<string, any>) => acc + Number(inv.quantity), 0) || 0;
+function ProductRow({ product }: { product: ProductRow }) {
+    const totalStock = product.inventory?.reduce((acc: number, inv: InventoryRow) => acc + Number(inv.quantity ?? 0), 0) || 0;
 
     return (
         <tr className="hover:bg-app-surface/60 transition-colors">
@@ -218,16 +277,18 @@ function ProductRow({ product }: { product: Record<string, any> }) {
     );
 }
 
-function GroupRow({ group }: { group: Record<string, any> }) {
+function GroupRow({ group }: { group: GroupRow }) {
     // Aggregate Stock
-    const totalVarStock = group.products?.reduce((acc: number, p: Record<string, any>) => {
-        const pStock = p.inventory?.reduce((invAcc: number, inv: Record<string, any>) => invAcc + Number(inv.quantity), 0) || 0;
+    const totalVarStock = group.products?.reduce((acc: number, p) => {
+        const pStock = p.inventory?.reduce((invAcc: number, inv) => invAcc + Number(inv.quantity ?? 0), 0) || 0;
         return acc + pStock;
     }, 0) || 0;
 
     const variantCount = group.products?.length || 0;
     // Extract Unique Countries
-    const uniqueCountries = Array.from(new Set(group.products?.map((p: Record<string, any>) => p.country?.code).filter(Boolean)));
+    const uniqueCountries = Array.from(
+        new Set((group.products ?? []).map((p) => p.country?.code).filter((c): c is string => Boolean(c))),
+    );
 
     return (
         <tr className="hover:bg-app-surface/60 transition-colors bg-app-surface/30">
@@ -244,7 +305,7 @@ function GroupRow({ group }: { group: Record<string, any> }) {
                 <div className="flex flex-col gap-1">
                     <span className="text-sm font-medium text-app-foreground">{variantCount} Variants</span>
                     <div className="flex gap-1 flex-wrap">
-                        {uniqueCountries.map((c: Record<string, any>) => (
+                        {uniqueCountries.map((c) => (
                             <span key={c} className="text-[10px] bg-app-surface border border-app-border px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
                                 <Globe size={8} className="text-app-muted-foreground" /> {c}
                             </span>

@@ -1,8 +1,6 @@
-// @ts-nocheck
 'use client';
 
 import { useActionState, useState, useEffect, useMemo, forwardRef, useImperativeHandle } from "react";
-import type { PurchaseLine } from '@/types/erp';
 import { createFormalPurchaseOrderV2 } from "@/app/actions/commercial/purchases-v2";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
 import { erpFetch } from "@/lib/erp-api";
@@ -19,7 +17,20 @@ import Link from 'next/link';
 /* ═══════════════════════════════════════════════════════════
  *  INTELLIGENCE LINE TYPE
  * ═══════════════════════════════════════════════════════════ */
-type IntelLine = PurchaseLine & {
+// Local IntelLine type (does NOT inherit `PurchaseLine`'s `[key: string]: unknown` index
+// sig, which would otherwise widen narrow fields like `quantity: number` to `unknown`).
+// Mirrors the structural subset of `PurchaseLine` that this form actually reads/writes.
+type IntelLine = {
+    productId: number;
+    productName?: string;
+    sku?: string;
+    quantity: number;
+    unitPrice: number;
+    unitCostHT?: number;
+    unitCostTTC?: number;
+    sellingPriceHT?: number;
+    taxRate?: number;
+    expiryDate?: string;
     stockLevel?: number;
     totalStock?: number;
     stockInLocation?: number;
@@ -536,7 +547,7 @@ const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
                                                         {line.bestSupplier && line.bestSupplier !== '—' && (
                                                             <span className="text-app-muted-foreground">Best Supplier: <span className="font-bold text-app-foreground">{line.bestSupplier}</span></span>
                                                         )}
-                                                        {line.proposedQty > 0 && line.proposedQty !== line.quantity && (
+                                                        {(line.proposedQty ?? 0) > 0 && line.proposedQty !== line.quantity && (
                                                             <span className="font-bold text-app-primary">Proposed Qty: {line.proposedQty}</span>
                                                         )}
                                                         {supplierPriceHints[line.productId] && (

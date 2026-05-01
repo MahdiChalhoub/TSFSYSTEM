@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from "react"
@@ -19,13 +18,56 @@ function fmt(n: number, currency = 'XOF') {
     }
 }
 
+interface SalesSummary {
+    sales?: { total?: number | string; count?: number }
+    net_revenue?: number | string
+    payment_methods?: Record<string, { count: number; total: number }>
+    user_stats?: Record<string, { count: number; total: number }>
+    hourly?: number[]
+    [key: string]: unknown
+}
+
+interface InventoryMovement {
+    type?: 'IN' | 'OUT' | 'UPDATE' | string
+    product_name?: string
+    product?: number | string
+    quantity?: number | string
+    created_at?: string
+    [key: string]: unknown
+}
+
+interface EmployeeRow {
+    salary?: number | string
+    [key: string]: unknown
+}
+
+interface ContactRow {
+    type?: string
+    [key: string]: unknown
+}
+
+interface AccountRow {
+    type?: string
+    balance?: number | string
+    [key: string]: unknown
+}
+
 interface WidgetData {
-    salesSummary: Record<string, any>
-    lowStock: Record<string, any>[]
-    employees: Record<string, any>[]
-    contacts: Record<string, any>[]
-    accounts: Record<string, any>[]
-    movements: Record<string, any>[]
+    salesSummary: SalesSummary | null
+    lowStock: Record<string, unknown>[]
+    employees: EmployeeRow[]
+    contacts: ContactRow[]
+    accounts: AccountRow[]
+    movements: InventoryMovement[]
+}
+
+function asArr<T = Record<string, unknown>>(d: unknown): T[] {
+    if (Array.isArray(d)) return d as T[]
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as { results?: unknown }).results
+        if (Array.isArray(r)) return r as T[]
+    }
+    return []
 }
 
 export default function CustomDashboard() {
@@ -48,14 +90,15 @@ export default function CustomDashboard() {
                 erpFetch('inventory/inventory-movements/').catch(() => []),
                 erpFetch('settings/global_financial/').catch(() => null),
             ])
-            if (orgSettings?.currency_code) setCurrency(orgSettings.currency_code)
+            const orgCurrency = (orgSettings as { currency_code?: string } | null)?.currency_code
+            if (orgCurrency) setCurrency(orgCurrency)
             setData({
-                salesSummary: sales,
-                lowStock: Array.isArray(stock) ? stock : stock?.results || [],
-                employees: Array.isArray(employees) ? employees : employees?.results || [],
-                contacts: Array.isArray(contacts) ? contacts : contacts?.results || [],
-                accounts: Array.isArray(accounts) ? accounts : accounts?.results || [],
-                movements: Array.isArray(movements) ? movements : movements?.results || [],
+                salesSummary: (sales as SalesSummary | null) ?? null,
+                lowStock: asArr(stock),
+                employees: asArr<EmployeeRow>(employees),
+                contacts: asArr<ContactRow>(contacts),
+                accounts: asArr<AccountRow>(accounts),
+                movements: asArr<InventoryMovement>(movements),
             })
         } catch {
             toast.error("Failed to load dashboard data")
@@ -74,26 +117,31 @@ export default function CustomDashboard() {
         )
     }
 
-    const totalRevenue = parseFloat(data.salesSummary?.sales?.total || 0)
-    const totalOrders = data.salesSummary?.sales?.count || 0
-    const netRevenue = parseFloat(data.salesSummary?.net_revenue || 0)
-    const totalPayroll = data.employees.reduce((s, e) => s + parseFloat(e.salary || 0), 0)
+    const num = (v: unknown): number => {
+        if (typeof v === 'number') return v
+        const n = parseFloat(String(v ?? '0'))
+        return isNaN(n) ? 0 : n
+    }
+    const totalRevenue = num(data.salesSummary?.sales?.total)
+    const totalOrders = data.salesSummary?.sales?.count ?? 0
+    const netRevenue = num(data.salesSummary?.net_revenue)
+    const totalPayroll = data.employees.reduce((s, e) => s + num(e.salary), 0)
     const lowStockCount = data.lowStock.length
     const customerCount = data.contacts.filter(c => c.type === 'CLIENT' || c.type === 'CUSTOMER').length
     const supplierCount = data.contacts.filter(c => c.type === 'SUPPLIER').length
 
     const incomeAccounts = data.accounts.filter(a => a.type === 'INCOME')
     const expenseAccounts = data.accounts.filter(a => a.type === 'EXPENSE')
-    const totalIncome = incomeAccounts.reduce((s, a) => s + Math.abs(parseFloat(a.balance || 0)), 0)
-    const totalExpense = expenseAccounts.reduce((s, a) => s + Math.abs(parseFloat(a.balance || 0)), 0)
+    const totalIncome = incomeAccounts.reduce((s, a) => s + Math.abs(num(a.balance)), 0)
+    const totalExpense = expenseAccounts.reduce((s, a) => s + Math.abs(num(a.balance)), 0)
 
-    const recentMovements = data.movements
-        .sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    const recentMovements = [...data.movements]
+        .sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime())
         .slice(0, 5)
 
-    const paymentMethods = data.salesSummary?.payment_methods || {}
+    const paymentMethods: Record<string, { count: number; total: number }> = data.salesSummary?.payment_methods || {}
     const topSellers = Object.entries(data.salesSummary?.user_stats || {})
-        .sort(([, a]: Record<string, any>, [, b]: Record<string, any>) => b.total - a.total)
+        .sort(([, a], [, b]) => b.total - a.total)
         .slice(0, 5)
 
     return (
@@ -220,12 +268,12 @@ export default function CustomDashboard() {
                     <CardContent className="space-y-2">
                         {recentMovements.length === 0 ? (
                             <p className="text-center py-4 text-app-muted-foreground text-sm">No movements</p>
-                        ) : recentMovements.map((m: Record<string, any>, i: number) => (
+                        ) : recentMovements.map((m, i) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
                                 <div className={`w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-app-success' : m.type === 'OUT' ? 'bg-app-error' : 'bg-app-warning'}`} />
                                 <span className="flex-1 truncate font-medium">{m.product_name || `Product #${m.product}`}</span>
                                 <span className={`font-bold ${m.type === 'IN' ? 'text-app-success' : 'text-app-error'}`}>
-                                    {m.type === 'IN' ? '+' : '−'}{parseFloat(m.quantity || 0).toFixed(0)}
+                                    {m.type === 'IN' ? '+' : '−'}{num(m.quantity).toFixed(0)}
                                 </span>
                                 <span className="text-app-muted-foreground w-14 text-right">
                                     {m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : ''}
@@ -245,7 +293,7 @@ export default function CustomDashboard() {
                     <CardContent className="space-y-3">
                         {Object.keys(paymentMethods).length === 0 ? (
                             <p className="text-center py-4 text-app-muted-foreground text-sm">No data</p>
-                        ) : Object.entries(paymentMethods).map(([method, stats]: [string, any]) => (
+                        ) : Object.entries(paymentMethods).map(([method, stats]) => (
                             <div key={method} className="space-y-1">
                                 <div className="flex justify-between text-xs">
                                     <span className="font-medium">{method}</span>
@@ -273,7 +321,7 @@ export default function CustomDashboard() {
                     <CardContent className="space-y-2">
                         {topSellers.length === 0 ? (
                             <p className="text-center py-4 text-app-muted-foreground text-sm">No data</p>
-                        ) : topSellers.map(([name, stats]: [string, any], i) => (
+                        ) : topSellers.map(([name, stats], i) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
                                 <div className="w-6 h-6 rounded-full bg-app-info-bg flex items-center justify-center">
                                     <span className="text-[10px] font-bold text-app-info">{(name || '?').charAt(0)}</span>
@@ -297,8 +345,8 @@ export default function CustomDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-end gap-0.5 h-20">
-                            {(data.salesSummary.hourly as number[]).map((val, h) => {
-                                const max = Math.max(...data.salesSummary.hourly)
+                            {data.salesSummary.hourly.map((val, h) => {
+                                const max = Math.max(...(data.salesSummary?.hourly ?? []))
                                 const pct = max ? (val / max * 100) : 0
                                 return (
                                     <div key={h} className="flex-1 flex flex-col items-center group">

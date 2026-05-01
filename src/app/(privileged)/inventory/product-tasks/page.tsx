@@ -1,12 +1,31 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { ClipboardList, Search, CheckCircle, Clock, AlertCircle, User } from 'lucide-react'
+import { ClipboardList, CheckCircle, Clock, AlertCircle, User } from 'lucide-react'
+
+type ProductTask = {
+    id?: number | string
+    title?: string
+    task_type?: string
+    product?: number | string
+    product_name?: string
+    assigned_to_name?: string
+    due_date?: string
+    status?: string
+}
+
+function asArray(d: unknown): unknown[] {
+    if (Array.isArray(d)) return d
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as { results?: unknown }).results
+        if (Array.isArray(r)) return r
+    }
+    return []
+}
 
 export default function ProductTasksPage() {
-    const [tasks, setTasks] = useState<any[]>([])
+    const [tasks, setTasks] = useState<ProductTask[]>([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all')
 
@@ -16,7 +35,7 @@ export default function ProductTasksPage() {
         setLoading(true)
         try {
             const res = await erpFetch('/inventory/product-tasks/')
-            setTasks(Array.isArray(res) ? res : res?.results || [])
+            setTasks(asArray(res) as ProductTask[])
         } catch { setTasks([]) }
         setLoading(false)
     }

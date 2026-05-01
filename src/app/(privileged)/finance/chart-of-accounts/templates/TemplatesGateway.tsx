@@ -1,9 +1,9 @@
-// @ts-nocheck
 'use client'
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
+import type { Props as TemplatesPageProps } from './_components/types'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobileTemplatesClient').then(m => m.MobileTemplatesClient),
@@ -29,7 +29,7 @@ function Skeleton() {
     )
 }
 
-export function TemplatesGateway(props: any) {
+export function TemplatesGateway(props: TemplatesPageProps) {
     const isMobile = useIsMobile()
     return isMobile
         ? <MobileErrorBoundary><MobileClient {...props} /></MobileErrorBoundary>

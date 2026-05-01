@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from "react";
@@ -45,8 +44,8 @@ export default function ApprovalsPage() {
         setLoading(true);
         try {
             const data = await fetchPendingUsers();
-            setUsers(data);
-        } catch (e) {
+            setUsers((Array.isArray(data) ? data : []) as UserApproval[]);
+        } catch {
             toast.error("Failed to load requests");
         } finally {
             setLoading(false);
@@ -56,13 +55,13 @@ export default function ApprovalsPage() {
     const handleApprove = async (id: number) => {
         setProcessing(id);
         const res = await approveUserAction(id);
-        if (res.success) {
+        if ('success' in res && res.success) {
             toast.success("User approved", {
                 description: "The user can now login to their dashboard."
             });
             await loadData();
         } else {
-            toast.error("Approval failed", { description: res.error });
+            toast.error("Approval failed", { description: 'error' in res ? res.error : undefined });
         }
         setProcessing(null);
     };
@@ -77,11 +76,11 @@ export default function ApprovalsPage() {
         if (rejectTarget === null) return;
         setProcessing(rejectTarget);
         const res = await rejectUserAction(rejectTarget);
-        if (res.success) {
+        if ('success' in res && res.success) {
             toast.success("User rejected");
             await loadData();
         } else {
-            toast.error("Process failed", { description: res.error });
+            toast.error("Process failed", { description: 'error' in res ? res.error : undefined });
         }
         setProcessing(null);
         setRejectTarget(null);
@@ -92,7 +91,7 @@ export default function ApprovalsPage() {
 
         setProcessing(correctionUser.id);
         const res = await requestCorrectionAction(correctionUser.id, correctionNotes);
-        if (res.success) {
+        if ('success' in res && res.success) {
             toast.info("Correction requested", {
                 description: "User will be notified to update their information."
             });
@@ -100,7 +99,7 @@ export default function ApprovalsPage() {
             setCorrectionNotes("");
             await loadData();
         } else {
-            toast.error("Action failed", { description: res.error });
+            toast.error("Action failed", { description: 'error' in res ? res.error : undefined });
         }
         setProcessing(null);
     };
@@ -197,9 +196,9 @@ export default function ApprovalsPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="space-y-1">
-                                                    <div className="text-sm font-semibold text-foreground/80">{u.employee_details?.phone || "No Comms"}</div>
+                                                    <div className="text-sm font-semibold text-foreground/80">{(u.employee_details as { phone?: string } | undefined)?.phone || "No Comms"}</div>
                                                     <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-tighter font-bold text-muted-foreground opacity-70">
-                                                        <AlertCircle className="h-3 w-3" /> {u.employee_details?.nationality || "Global"}
+                                                        <AlertCircle className="h-3 w-3" /> {(u.employee_details as { nationality?: string } | undefined)?.nationality || "Global"}
                                                     </div>
                                                 </div>
                                             </TableCell>

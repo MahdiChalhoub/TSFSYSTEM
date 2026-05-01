@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -89,10 +88,14 @@ export function useProductDraft() {
             // Push values into form inputs
             Object.entries(fields).forEach(([key, value]) => {
                 const el = form.elements.namedItem(key);
-                if (el && 'value' in el) {
+                if (!el) return;
+                // RadioNodeList (multi-element with same name) is a separate type;
+                // we only handle individual elements here.
+                if (el instanceof RadioNodeList) return;
+                if ('value' in el) {
                     (el as HTMLInputElement).value = value;
                 }
-                if (el && 'checked' in el && (value === 'on' || value === 'true')) {
+                if ('checked' in el && (value === 'on' || value === 'true')) {
                     (el as HTMLInputElement).checked = true;
                 }
             });

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
@@ -10,8 +9,8 @@ import { KPIStrip } from '@/components/ui/KPIStrip'
 import { DajingoListView, type DajingoColumnDef } from '@/components/common/DajingoListView'
 import { useCurrency } from '@/lib/utils/currency'
 
-type PO = { id: number; po_number?: string; supplier?: { id: number; name: string }; supplier_name?: string; supplier_display?: string; status: string; order_date?: string; expected_date?: string; total_amount: number; notes?: string; lines?: any[] }
 type POLine = { id: number; product?: { id: number; name: string; sku?: string }; product_name?: string; quantity: number; quantity_ordered?: number; qty_received: number; quantity_received?: number; unit_price: number; line_total?: number; subtotal?: number }
+type PO = { id: number; po_number?: string; supplier?: { id: number; name: string }; supplier_name?: string; supplier_display?: string; status: string; order_date?: string; expected_date?: string; total_amount: number; notes?: string; lines?: POLine[] }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
  ORDERED: { label: 'Ordered', color: 'var(--app-info, #3b82f6)' },
@@ -65,7 +64,15 @@ export default function ReceiptsPage() {
 
  const load = useCallback(async () => {
    setLoading(true)
-   try { const data = await fetchPurchaseOrders(); const raw = Array.isArray(data) ? data : (data?.results ?? []); setOrders(raw.filter((o: PO) => ['ORDERED','CONFIRMED','IN_TRANSIT','PARTIALLY_RECEIVED','RECEIVED'].includes(o.status))) }
+   try {
+     const data = await fetchPurchaseOrders()
+     const raw: PO[] = Array.isArray(data)
+       ? (data as PO[])
+       : ((data && typeof data === 'object' && 'results' in data && Array.isArray((data as { results?: unknown[] }).results))
+         ? ((data as { results: PO[] }).results)
+         : [])
+     setOrders(raw.filter((o: PO) => ['ORDERED','CONFIRMED','IN_TRANSIT','PARTIALLY_RECEIVED','RECEIVED'].includes(o.status)))
+   }
    catch { setOrders([]) }
    setLoading(false)
  }, [])
@@ -90,9 +97,9 @@ export default function ReceiptsPage() {
      toast.success(`Received ${receiveQty} units`)
      setReceiveLine(null); setReceiveQty('')
      const d = await fetchPurchaseOrder(receiveLine.poId)
-     setDetails(prev => ({ ...prev, [receiveLine.poId]: d }))
+     setDetails(prev => ({ ...prev, [receiveLine.poId]: d as PO }))
      load()
-   } catch (e: any) { toast.error(e?.message || 'Failed to receive') }
+   } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed to receive') }
    setActionLoading(false)
  }
 
@@ -169,7 +176,7 @@ export default function ReceiptsPage() {
        renderExpanded={po => {
          const detail = details[po.id]
          if (!detail) {
-           fetchPurchaseOrder(po.id).then(d => setDetails(prev => ({ ...prev, [po.id]: d }))).catch(() => {})
+           fetchPurchaseOrder(po.id).then(d => setDetails(prev => ({ ...prev, [po.id]: d as PO }))).catch(() => {})
            return <div className="flex items-center justify-center py-6"><Loader2 size={16} className="animate-spin text-app-primary" /></div>
          }
          return (
@@ -178,7 +185,7 @@ export default function ReceiptsPage() {
                <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Order Lines ({detail.lines?.length || 0})</h3>
                <Link href={`/purchases/${po.id}`} className="flex items-center gap-1.5 text-[11px] font-bold text-app-primary hover:underline"><Eye size={12} /> Full View</Link>
              </div>
-             {detail.lines?.map((line: any) => {
+             {detail.lines?.map((line: POLine) => {
                const ordered = Number(line.quantity_ordered || line.quantity || 0)
                const recv = Number(line.qty_received || line.quantity_received || 0)
                const pct = ordered > 0 ? Math.min((recv / ordered) * 100, 100) : 0

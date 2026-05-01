@@ -1,12 +1,35 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ComponentType } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { ArrowUpDown, Search, CheckCircle, Clock, XCircle, User, Calendar, DollarSign } from 'lucide-react'
+import { ArrowUpDown, CheckCircle, Clock, XCircle, User, Calendar, DollarSign } from 'lucide-react'
+
+type PriceChangeRequest = {
+    id?: number | string
+    product?: number | string
+    product_name?: string
+    old_price?: number | string
+    new_price?: number | string
+    requested_by?: number | string
+    requested_by_name?: string
+    created_at?: string
+    reason?: string
+    status?: string
+}
+
+type StatusIcon = ComponentType<{ size?: number }>
+
+function asArray(d: unknown): unknown[] {
+    if (Array.isArray(d)) return d
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as { results?: unknown }).results
+        if (Array.isArray(r)) return r
+    }
+    return []
+}
 
 export default function PriceChangeRequestsPage() {
-    const [requests, setRequests] = useState<any[]>([])
+    const [requests, setRequests] = useState<PriceChangeRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all')
 
@@ -16,7 +39,7 @@ export default function PriceChangeRequestsPage() {
         setLoading(true)
         try {
             const res = await erpFetch('/inventory/price-change-requests/')
-            setRequests(Array.isArray(res) ? res : res?.results || [])
+            setRequests(asArray(res) as PriceChangeRequest[])
         } catch { setRequests([]) }
         setLoading(false)
     }
@@ -24,7 +47,7 @@ export default function PriceChangeRequestsPage() {
     const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter)
 
     const statusBadge = (s: string) => {
-        const map: Record<string, { bg: string; color: string; icon: any }> = {
+        const map: Record<string, { bg: string; color: string; icon: StatusIcon }> = {
             PENDING: { bg: 'var(--app-warning)', color: 'var(--app-warning)', icon: Clock },
             APPROVED: { bg: 'var(--app-success)', color: 'var(--app-success)', icon: CheckCircle },
             REJECTED: { bg: 'var(--app-danger)', color: 'var(--app-danger)', icon: XCircle },

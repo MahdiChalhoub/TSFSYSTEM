@@ -1,13 +1,19 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getLabelPolicy, updateLabelPolicy, getLabelRecords } from '@/app/actions/plm-governance'
-import { Tag, Save, RefreshCw, Settings, Printer, FileText } from 'lucide-react'
+import { getLabelPolicy, updateLabelPolicy } from '@/app/actions/plm-governance'
+import { Tag, Save, RefreshCw, Settings, Printer } from 'lucide-react'
 import { toast } from 'sonner'
 
+type LabelPolicy = {
+    id?: number
+    default_output_method?: string
+    default_copies?: number
+    [key: string]: unknown
+}
+
 export default function LabelPolicyPage() {
-    const [policy, setPolicy] = useState<any>(null)
+    const [policy, setPolicy] = useState<LabelPolicy>({})
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
 
@@ -16,15 +22,15 @@ export default function LabelPolicyPage() {
     async function loadData() {
         setLoading(true)
         const res = await getLabelPolicy()
-        if (res.success) setPolicy(res.data)
+        if (res.success) setPolicy((res.data as LabelPolicy) || {})
         else setPolicy({})
         setLoading(false)
     }
 
     async function handleSave() {
-        if (!policy) return
         setSaving(true)
-        const res = await updateLabelPolicy(policy)
+        const payload = { id: policy.id ?? 'current', ...policy }
+        const res = await updateLabelPolicy(payload)
         if (res.success) { toast.success('Label policy updated'); loadData() }
         else toast.error(res.error || 'Failed to update')
         setSaving(false)
@@ -98,7 +104,7 @@ export default function LabelPolicyPage() {
                         ].map(f => (
                             <label key={f.key} className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all"
                                 style={{ background: policy?.[f.key] ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'var(--app-bg)', border: `1px solid ${policy?.[f.key] ? 'var(--app-primary)' : 'var(--app-border)'}` }}>
-                                <input type="checkbox" checked={policy?.[f.key] || false}
+                                <input type="checkbox" checked={!!policy?.[f.key]}
                                     onChange={e => setPolicy({ ...policy, [f.key]: e.target.checked })} className="rounded" />
                                 <span className="text-xs font-bold text-app-foreground">{f.label}</span>
                             </label>

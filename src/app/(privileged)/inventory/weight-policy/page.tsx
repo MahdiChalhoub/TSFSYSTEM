@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -6,8 +5,15 @@ import { getWeightPolicy, updateWeightPolicy } from '@/app/actions/plm-governanc
 import { Scale, Save, RefreshCw, Settings, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 
+type WeightPolicy = {
+    id?: number
+    default_weight_unit?: string
+    weight_tolerance_pct?: number
+    [key: string]: unknown
+}
+
 export default function WeightPolicyPage() {
-    const [policy, setPolicy] = useState<any>(null)
+    const [policy, setPolicy] = useState<WeightPolicy>({})
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
 
@@ -16,14 +22,15 @@ export default function WeightPolicyPage() {
     async function loadData() {
         setLoading(true)
         const res = await getWeightPolicy()
-        if (res.success) setPolicy(res.data)
+        if (res.success) setPolicy((res.data as WeightPolicy) || {})
         else setPolicy({})
         setLoading(false)
     }
 
     async function handleSave() {
         setSaving(true)
-        const res = await updateWeightPolicy(policy)
+        const payload = { id: policy.id ?? 'current', ...policy }
+        const res = await updateWeightPolicy(payload)
         if (res.success) { toast.success('Weight policy updated'); loadData() }
         else toast.error(res.error || 'Failed to update')
         setSaving(false)
@@ -97,7 +104,7 @@ export default function WeightPolicyPage() {
                         ].map(f => (
                             <label key={f.key} className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all"
                                 style={{ background: policy?.[f.key] ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'var(--app-bg)', border: `1px solid ${policy?.[f.key] ? 'var(--app-primary)' : 'var(--app-border)'}` }}>
-                                <input type="checkbox" checked={policy?.[f.key] || false}
+                                <input type="checkbox" checked={!!policy?.[f.key]}
                                     onChange={e => setPolicy({ ...policy, [f.key]: e.target.checked })} className="rounded" />
                                 <span className="text-xs font-bold text-app-foreground">{f.label}</span>
                             </label>

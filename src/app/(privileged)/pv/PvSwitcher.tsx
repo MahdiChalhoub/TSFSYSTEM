@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
@@ -22,11 +21,11 @@ export default function PvSwitcher({
     paymentTerms,
     drivers,
 }: {
-    suppliers: Record<string, any>[];
-    sites: Record<string, any>[];
-    financialSettings: any;
-    paymentTerms: any[];
-    drivers: any[];
+    suppliers: Record<string, unknown>[];
+    sites: Record<string, unknown>[];
+    financialSettings: Record<string, unknown> | null;
+    paymentTerms: Record<string, unknown>[];
+    drivers: Record<string, unknown>[];
 }) {
     const [view, setView] = useState<View>('new');
 
@@ -84,18 +83,24 @@ export default function PvSwitcher({
             <div className="flex-1 flex flex-col">
                 {view === 'new' && (
                     <PurchaseForm
-                        suppliers={suppliers}
-                        sites={sites}
-                        financialSettings={financialSettings}
+                        suppliers={suppliers as React.ComponentProps<typeof PurchaseForm>['suppliers']}
+                        sites={sites as React.ComponentProps<typeof PurchaseForm>['sites']}
+                        financialSettings={(financialSettings ?? {}) as React.ComponentProps<typeof PurchaseForm>['financialSettings']}
+                        users={[] as React.ComponentProps<typeof PurchaseForm>['users']}
+                        profilesData={{
+                            profiles: [],
+                            defaultProfileId: null,
+                            inheritedProfileId: null,
+                        } as unknown as React.ComponentProps<typeof PurchaseForm>['profilesData']}
                     />
                 )}
                 {view === 'new-order-v2' && (
                     <div className="flex-1 min-h-0 flex flex-col px-4 md:px-6 py-4">
                         <FormalOrderFormV2
-                            suppliers={suppliers}
-                            sites={sites}
-                            paymentTerms={paymentTerms}
-                            drivers={drivers}
+                            suppliers={suppliers as React.ComponentProps<typeof FormalOrderFormV2>['suppliers']}
+                            sites={sites as React.ComponentProps<typeof FormalOrderFormV2>['sites']}
+                            paymentTerms={paymentTerms as React.ComponentProps<typeof FormalOrderFormV2>['paymentTerms']}
+                            drivers={drivers as React.ComponentProps<typeof FormalOrderFormV2>['drivers']}
                         />
                     </div>
                 )}

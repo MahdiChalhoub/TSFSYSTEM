@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { erpFetch } from "@/lib/erp-api";
 import { getContactsByType } from "@/app/actions/crm/contacts";
 import FormalOrderFormV2 from "./form";
@@ -6,29 +5,39 @@ import { serializeDecimals } from "@/lib/utils/serialization";
 
 export const dynamic = 'force-dynamic';
 
-async function getSitesAndWarehouses() {
+// Helper: erpFetch returns `unknown` (or a list/paginated wrapper). Normalize to array of records.
+function asArray(d: unknown): Record<string, unknown>[] {
+    if (Array.isArray(d)) return d as Record<string, unknown>[]
+    if (d && typeof d === 'object' && 'results' in d) {
+        const results = (d as { results?: unknown }).results
+        return Array.isArray(results) ? (results as Record<string, unknown>[]) : []
+    }
+    return []
+}
+
+async function getSitesAndWarehouses(): Promise<Record<string, unknown>[]> {
     try {
         const data = await erpFetch('sites/?include_warehouses=true');
-        return Array.isArray(data) ? data : (data?.results ?? []);
-    } catch (e) {
+        return asArray(data);
+    } catch (e: unknown) {
         console.error("Failed to fetch sites", e);
         return [];
     }
 }
 
-async function getPaymentTerms() {
+async function getPaymentTerms(): Promise<Record<string, unknown>[]> {
     try {
         const data = await erpFetch('payment-terms/');
-        return Array.isArray(data) ? data : (data?.results ?? []);
+        return asArray(data);
     } catch {
         return [];
     }
 }
 
-async function getDrivers() {
+async function getDrivers(): Promise<Record<string, unknown>[]> {
     try {
         const data = await erpFetch('users/?is_driver=true');
-        return Array.isArray(data) ? data : (data?.results ?? []);
+        return asArray(data);
     } catch {
         return [];
     }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -124,7 +123,7 @@ function OldPurchaseVerificationPage() {
             { product_name: 'Product A', quantity: 100, unit_price: 10.50, subtotal: 1050.00 },
             { product_name: 'Product B', quantity: 50, unit_price: 5.10, subtotal: 255.00 }
           ],
-          document_url: null // Would be actual PDF URL
+          document_url: undefined // Would be actual PDF URL
         },
         {
           id: 2,
@@ -146,7 +145,7 @@ function OldPurchaseVerificationPage() {
           invoice_items: [
             { product_name: 'Product C', quantity: 200, unit_price: 4.25, subtotal: 850.00 }
           ],
-          document_url: null
+          document_url: undefined
         }
       ]
 
@@ -200,17 +199,17 @@ function OldPurchaseVerificationPage() {
         fields: [
           { key: 'po_number', label: 'PO Number', systemValue: selectedInvoice.po_number, physicalValue: selectedInvoice.po_number },
           { key: 'supplier', label: 'Supplier', systemValue: selectedInvoice.supplier_name, physicalValue: selectedInvoice.supplier_name },
-          { key: 'date', label: 'Order Date', systemValue: selectedInvoice.invoice_date, physicalValue: selectedInvoice.invoice_date, type: 'date' },
-          { key: 'total', label: 'PO Total', systemValue: poTotal, physicalValue: invoiceTotal, type: 'currency', editable: false },
+          { key: 'date', label: 'Order Date', systemValue: selectedInvoice.invoice_date, physicalValue: selectedInvoice.invoice_date, type: 'date' as const },
+          { key: 'total', label: 'PO Total', systemValue: poTotal, physicalValue: invoiceTotal, type: 'currency' as const, editable: false },
         ]
       },
       receiptData: selectedInvoice.receipt_number ? {
         label: 'Goods Receipt',
         fields: [
-          { key: 'grn', systemValue: selectedInvoice.receipt_number },
-          { key: 'received_date', systemValue: selectedInvoice.received_date },
-          { key: 'qty_received', systemValue: selectedInvoice.quantity_received },
-          { key: 'status', systemValue: 'Received' },
+          { key: 'grn', label: 'GRN', systemValue: selectedInvoice.receipt_number },
+          { key: 'received_date', label: 'Received Date', systemValue: selectedInvoice.received_date },
+          { key: 'qty_received', label: 'Qty Received', systemValue: selectedInvoice.quantity_received },
+          { key: 'status', label: 'Status', systemValue: 'Received' },
         ]
       } : undefined,
       physicalData: {

@@ -1,4 +1,6 @@
 // @ts-nocheck
+// REVERTED Phase 5: depends on `populateSessionLines` from `@/app/actions/inventory/stock-count`
+// which is not exported (TS2305). Defer until the action is added.
 'use client'
 
 import { useState } from "react"

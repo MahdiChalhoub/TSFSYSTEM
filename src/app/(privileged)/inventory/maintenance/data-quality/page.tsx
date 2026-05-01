@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
@@ -88,12 +87,25 @@ export default function DataQualityPage() {
                 getProductsForMaintenance(),
                 getMaintenanceFilterOptions(),
             ])
-            setQuality(q)
-            setProducts(Array.isArray(p) ? p : p?.results || [])
+            setQuality(q as DataQuality | null)
+            const productList = Array.isArray(p)
+                ? p
+                : (p && typeof p === 'object' && 'results' in p && Array.isArray((p as { results?: unknown[] }).results))
+                    ? (p as { results: unknown[] }).results
+                    : []
+            setProducts(productList as Product[])
+            const asNamedList = (raw: unknown): { id: number; name: string }[] => {
+                if (Array.isArray(raw)) return raw as { id: number; name: string }[]
+                if (raw && typeof raw === 'object' && 'results' in raw) {
+                    const r = (raw as { results?: unknown }).results
+                    if (Array.isArray(r)) return r as { id: number; name: string }[]
+                }
+                return []
+            }
             setFilterOpts({
-                categories: Array.isArray(f.categories) ? f.categories : f.categories?.results || [],
-                brands: Array.isArray(f.brands) ? f.brands : f.brands?.results || [],
-                units: Array.isArray(f.units) ? f.units : f.units?.results || [],
+                categories: asNamedList(f.categories),
+                brands: asNamedList(f.brands),
+                units: asNamedList(f.units),
             })
             setLoading(false)
         })
@@ -120,7 +132,10 @@ export default function DataQualityPage() {
         return list
     }, [products, search, issueFilter])
 
-    const setEdit = (productId: number, field: string, value: any) => {
+    type EditableField = keyof Omit<ProductUpdate, 'id'>
+    type EditValue = string | number | null | undefined
+
+    const setEdit = (productId: number, field: EditableField, value: EditValue) => {
         setPendingEdits(prev => {
             const next = new Map(prev)
             const existing = next.get(productId) || {}
@@ -128,9 +143,9 @@ export default function DataQualityPage() {
             return next
         })
     }
-    const getEditValue = (productId: number, field: string, original: any) => {
+    const getEditValue = (productId: number, field: EditableField, original: EditValue): EditValue => {
         const edit = pendingEdits.get(productId)
-        if (edit && field in edit) return (edit as any)[field]
+        if (edit && field in edit) return (edit as Record<string, EditValue>)[field]
         return original
     }
     const hasEdits = pendingEdits.size > 0
@@ -559,13 +574,13 @@ export default function DataQualityPage() {
 
 /* ─── KPI tile — clickable when filterKey is set ─── */
 function KpiTile({ label, value, icon, color, filterKey, active, onClick, healthyColor }: {
-    label: string; value: number; icon: any; color: string
+    label: string; value: number; icon: React.ReactNode; color: string
     filterKey?: string; active?: boolean
     onClick?: () => void; healthyColor?: string
 }) {
     const clickable = !!filterKey
     const effective = value === 0 && healthyColor ? healthyColor : color
-    const Tag: any = clickable ? 'button' : 'div'
+    const Tag = (clickable ? 'button' : 'div') as React.ElementType
     return (
         <Tag onClick={onClick}
             className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all text-left ${clickable ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.99]' : ''}`}
@@ -616,7 +631,7 @@ function Checkbox({ on, onClick }: { on: boolean; onClick: () => void }) {
         </button>
     )
 }
-function InlineText({ value, onChange }: { value: any; onChange: (v: string) => void }) {
+function InlineText({ value, onChange }: { value: string | number | null | undefined; onChange: (v: string) => void }) {
     return (
         <input value={value ?? ''} onChange={e => onChange(e.target.value)}
             className="w-full px-2 py-1 rounded-md text-tp-sm font-medium outline-none transition-all"
@@ -635,7 +650,7 @@ function InlineText({ value, onChange }: { value: any; onChange: (v: string) => 
             }} />
     )
 }
-function InlineNumber({ value, onChange, width }: { value: any; onChange: (v: number) => void; width?: number }) {
+function InlineNumber({ value, onChange, width }: { value: string | number | null | undefined; onChange: (v: number) => void; width?: number }) {
     return (
         <input type="number" value={value ?? 0}
             onChange={e => onChange(parseFloat(e.target.value) || 0)}
@@ -657,7 +672,7 @@ function InlineNumber({ value, onChange, width }: { value: any; onChange: (v: nu
     )
 }
 function InlineSelect({ value, options, onChange }: {
-    value: any; options: { id: number; name: string }[]
+    value: string | number | null | undefined; options: { id: number; name: string }[]
     onChange: (v: string) => void
 }) {
     return (

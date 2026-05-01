@@ -1,12 +1,34 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { History, Search, Filter, ArrowUpDown, User, Calendar, Package } from 'lucide-react'
+import { History, Search, User, Calendar } from 'lucide-react'
+
+type AuditEntry = {
+    id?: number | string
+    product?: number | string
+    product_name?: string
+    action?: string
+    change_type?: string
+    field_name?: string
+    old_value?: string | number | boolean | null
+    new_value?: string | number | boolean | null
+    changed_by_name?: string
+    user?: string
+    created_at?: string
+}
+
+function asArray(d: unknown): unknown[] {
+    if (Array.isArray(d)) return d
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as { results?: unknown }).results
+        if (Array.isArray(r)) return r
+    }
+    return []
+}
 
 export default function ProductAuditTrailPage() {
-    const [entries, setEntries] = useState<any[]>([])
+    const [entries, setEntries] = useState<AuditEntry[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
@@ -16,7 +38,7 @@ export default function ProductAuditTrailPage() {
         setLoading(true)
         try {
             const res = await erpFetch('/inventory/product-audit-trail/')
-            setEntries(Array.isArray(res) ? res : res?.results || [])
+            setEntries(asArray(res) as AuditEntry[])
         } catch { setEntries([]) }
         setLoading(false)
     }
@@ -27,7 +49,7 @@ export default function ProductAuditTrailPage() {
         (e.changed_by_name || '').toLowerCase().includes(search.toLowerCase())
     )
 
-    const getChangeColor = (action: string) => {
+    const getChangeColor = (action: string | undefined) => {
         if (action === 'CREATE' || action === 'create') return 'var(--app-success)'
         if (action === 'DELETE' || action === 'delete') return 'var(--app-danger)'
         return 'var(--app-warning)'

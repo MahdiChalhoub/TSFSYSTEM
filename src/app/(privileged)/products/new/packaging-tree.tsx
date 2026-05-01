@@ -1,11 +1,10 @@
-// @ts-nocheck
 'use client';
 
 import { Plus, Trash2, Lock, Package, ChevronRight, Calculator, PenLine } from 'lucide-react';
 
 type PriceMode = 'FORMULA' | 'FIXED';
 
-interface PackagingLevel {
+export interface PackagingLevel {
     id: string;
     unitId: string;
     ratio: number;
@@ -15,10 +14,17 @@ interface PackagingLevel {
     discountPct: number;     // discount % for FORMULA mode
 }
 
+export interface PackagingUnitOption {
+    id: number | string;
+    name?: string;
+    shortName?: string;
+    [key: string]: unknown;
+}
+
 interface PackagingTreeProps {
     levels: PackagingLevel[];
     onChange: (levels: PackagingLevel[]) => void;
-    units: Record<string, any>[];
+    units: PackagingUnitOption[];
     basePrice?: number;      // base unit selling price (TTC)
     currency?: string;
 }
@@ -40,9 +46,9 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
         onChange(levels.filter(l => l.id !== id));
     };
 
-    const updateLevel = (idx: number, field: keyof PackagingLevel, value: any) => {
+    const updateLevel = <K extends keyof PackagingLevel>(idx: number, field: K, value: PackagingLevel[K]) => {
         const arr = [...levels];
-        (arr[idx] as any)[field] = value;
+        arr[idx] = { ...arr[idx], [field]: value };
         onChange(arr);
     };
 

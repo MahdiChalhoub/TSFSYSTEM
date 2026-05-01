@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
@@ -9,7 +8,7 @@ import {
  X, Maximize2, Minimize2, SlidersHorizontal, Settings2
 } from 'lucide-react'
 
-type Quotation = { id: number; quotation_number?: string; ref_code?: string; supplier?: { id: number; name: string }; supplier_name?: string; contact_name?: string; status: string; total_amount?: number; valid_until?: string; created_at?: string; notes?: string; lines?: any[] }
+type Quotation = { id: number; quotation_number?: string; ref_code?: string; supplier?: { id: number; name: string }; supplier_name?: string; contact_name?: string; status: string; total_amount?: number; valid_until?: string; created_at?: string; notes?: string; lines?: Record<string, unknown>[] }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
  DRAFT: { label: 'Draft', color: 'var(--app-muted-foreground)' }, SENT: { label: 'Sent', color: '#3b82f6' },
@@ -25,7 +24,13 @@ const ALL_COLUMNS = [
 const COLUMN_WIDTHS: Record<string, string> = { supplier: 'w-28', created: 'w-24', valid: 'w-24', status: 'w-20', amount: 'w-24' }
 const fmt = (n: number | string | null | undefined) => { if (n == null || n === '') return '—'; const v = typeof n === 'string' ? parseFloat(n) : n; if (isNaN(v)) return '—'; return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(v) }
 
-function CustomizePanel({ isOpen, onClose, visibleColumns, setVisibleColumns }: any) {
+interface CustomizePanelProps {
+ isOpen: boolean
+ onClose: () => void
+ visibleColumns: Record<string, boolean>
+ setVisibleColumns: (cols: Record<string, boolean>) => void
+}
+function CustomizePanel({ isOpen, onClose, visibleColumns, setVisibleColumns }: CustomizePanelProps) {
  if (!isOpen) return null; return (
   <div className="fixed inset-0 z-50"><div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
    <div className="fixed right-0 top-0 bottom-0 w-80 bg-app-surface border-l border-app-border shadow-2xl p-5 overflow-y-auto animate-in slide-in-from-right-5 duration-200">

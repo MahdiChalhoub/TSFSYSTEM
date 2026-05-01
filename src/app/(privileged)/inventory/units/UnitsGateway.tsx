@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import dynamic from 'next/dynamic'
@@ -30,7 +29,7 @@ function GatewaySkeleton() {
     )
 }
 
-export function UnitsGateway({ initialUnits }: { initialUnits: any[] }) {
+export function UnitsGateway({ initialUnits }: { initialUnits: Array<Record<string, unknown>> }) {
     const isMobile = useIsMobile()
     return isMobile
         ? <MobileErrorBoundary><MobileClient initialUnits={initialUnits} /></MobileErrorBoundary>

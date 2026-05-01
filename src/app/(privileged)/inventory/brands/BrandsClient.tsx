@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useTransition } from 'react'
@@ -27,8 +26,8 @@ type Brand = {
 
 type Props = {
     brands: Brand[]
-    countries: Array<Record<string, any>>
-    categories: Array<Record<string, any>>
+    countries: Array<Record<string, unknown>>
+    categories: Array<Record<string, unknown>>
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -45,6 +44,10 @@ export function BrandsClient({ brands, countries, categories }: Props) {
 
     // Every brand is a root — give them parent=null so buildTree returns a flat list.
     const data = useMemo(() => brands.map(b => ({ ...b, parent: null })), [brands])
+    // Adapter for TreeMasterPage's Record<string, unknown>[] generic — kept narrow so
+    // value-side reads (b.categories.length etc.) get Brand inference.
+    const dataAsRecords = data as unknown as Array<Record<string, unknown>>
+    const asBrand = (item: Record<string, unknown>) => item as unknown as Brand
 
     const openNew = useCallback(() => { setEditingBrand(null); setModalOpen(true) }, [])
     const openEdit = useCallback((b: Brand) => { setEditingBrand(b); setModalOpen(true) }, [])
@@ -60,8 +63,8 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                 await erpFetch(`brands/${t.id}/`, { method: 'DELETE' })
                 toast.success(`"${t.name}" deleted`)
                 router.refresh()
-            } catch (e: any) {
-                toast.error(e?.message || 'Failed to delete brand')
+            } catch (e: unknown) {
+                toast.error(e instanceof Error ? e.message : 'Failed to delete brand')
             }
         })
     }
@@ -80,10 +83,10 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                     exportFilename: 'brands',
                     exportColumns: [
                         { key: 'name', label: 'Name' },
-                        { key: 'short_name', label: 'Short Name', format: (b: Brand) => b.short_name || '' },
-                        { key: 'countries', label: 'Countries', format: (b: Brand) => (b.countries || []).map(c => c.code || c.name).join(' | ') },
-                        { key: 'categories', label: 'Categories', format: (b: Brand) => (b.categories || []).map(c => c.code || c.name).join(' | ') },
-                        { key: 'product_count', label: 'Products', format: (b: Brand) => b.product_count || 0 },
+                        { key: 'short_name', label: 'Short Name', format: (item) => asBrand(item).short_name || '' },
+                        { key: 'countries', label: 'Countries', format: (item) => (asBrand(item).countries || []).map(c => c.code || c.name).join(' | ') },
+                        { key: 'categories', label: 'Categories', format: (item) => (asBrand(item).categories || []).map(c => c.code || c.name).join(' | ') },
+                        { key: 'product_count', label: 'Products', format: (item) => asBrand(item).product_count || 0 },
                     ],
                     print: {
                         title: 'Brands',
@@ -99,15 +102,18 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                             { key: 'cat_count', label: 'Cat #', align: 'right', defaultOn: true, width: '70px' },
                             { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
                         ],
-                        rowMapper: (b: Brand) => ({
-                            name: b.name,
-                            short: b.short_name || '',
-                            countries: (b.countries || []).map(c => c.code || c.name).join(', '),
-                            country_count: (b.countries || []).length,
-                            categories: (b.categories || []).map(c => c.code || c.name).join(', '),
-                            cat_count: (b.categories || []).length,
-                            products: b.product_count || 0,
-                        }),
+                        rowMapper: (item) => {
+                            const b = asBrand(item)
+                            return {
+                                name: b.name,
+                                short: b.short_name || '',
+                                countries: (b.countries || []).map(c => c.code || c.name).join(', '),
+                                country_count: (b.countries || []).length,
+                                categories: (b.categories || []).map(c => c.code || c.name).join(', '),
+                                cat_count: (b.categories || []).length,
+                                products: b.product_count || 0,
+                            }
+                        },
                     },
                     import: {
                         entity: 'brand',
@@ -139,7 +145,7 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                 ],
 
                 // ── Template owns filtering ──
-                data,
+                data: dataAsRecords,
                 searchFields: ['name', 'short_name'],
                 selectable: true,
                 onBulkDelete: async (ids, clear) => {
@@ -157,15 +163,18 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                     targetLabel: 'category',
                     field: 'categories',
                     endpoint: 'brands',
-                    targets: categories.map((c: any) => ({ id: c.id, name: c.name })),
+                    targets: categories.map((c) => {
+                        const obj = c as { id: number; name: string }
+                        return { id: obj.id, name: obj.name }
+                    }),
                 },
                 onRefresh: () => router.refresh(),
                 kpiPredicates: {
-                    withCategory: (b) => (b.categories?.length || 0) > 0,
-                    orphan: (b) => (b.categories?.length || 0) === 0,
-                    withCountry: (b) => (b.countries?.length || 0) > 0,
-                    products: (b) => (b.product_count || 0) > 0,
-                    logoless: (b) => !b.logo,
+                    withCategory: (item) => (asBrand(item).categories?.length || 0) > 0,
+                    orphan: (item) => (asBrand(item).categories?.length || 0) === 0,
+                    withCountry: (item) => (asBrand(item).countries?.length || 0) > 0,
+                    products: (item) => (asBrand(item).product_count || 0) > 0,
+                    logoless: (item) => !asBrand(item).logo,
                 },
 
                 kpis: [
@@ -486,7 +495,7 @@ function BrandDetailPanel({
     )
 }
 
-function SectionCard({ title, icon, color, count, children }: any) {
+function SectionCard({ title, icon, color, count, children }: { title: string; icon: React.ReactNode; color: string; count: number; children: React.ReactNode }) {
     return (
         <div className="rounded-xl p-3"
             style={{ background: 'color-mix(in srgb, var(--app-border) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>

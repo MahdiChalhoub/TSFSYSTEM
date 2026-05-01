@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -14,7 +13,7 @@
  * - Real-time counters
  */
 
-import { useState, useEffect } from 'react'
+import { useState, type ComponentType } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -125,7 +124,17 @@ const mockApprovals: ApprovalItem[] = [
 
 // ─── Config ─────────────────────────────────────────────────────────
 
-const TYPE_CONFIG = {
+type ApprovalType = ApprovalItem['type']
+type ApprovalPriority = ApprovalItem['priority']
+
+interface TypeConfigEntry {
+  label: string
+  icon: ComponentType<{ size?: number; className?: string }>
+  color: string
+  bg: string
+}
+
+const TYPE_CONFIG: Record<ApprovalType, TypeConfigEntry> = {
   PAYMENT: { label: 'Payment', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   PURCHASE: { label: 'Purchase', icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
   EXPENSE: { label: 'Expense', icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50' },
@@ -134,7 +143,7 @@ const TYPE_CONFIG = {
   LEAVE: { label: 'Leave', icon: Calendar, color: 'text-pink-600', bg: 'bg-pink-50' },
 }
 
-const PRIORITY_CONFIG = {
+const PRIORITY_CONFIG: Record<ApprovalPriority, { label: string; color: string }> = {
   HIGH: { label: 'High', color: 'bg-red-100 text-red-700 border-red-200' },
   MEDIUM: { label: 'Medium', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
   LOW: { label: 'Low', color: 'bg-app-surface-2 text-app-foreground border-app-border' },
@@ -168,7 +177,7 @@ export default function ApprovalCenterPage() {
     amount: approvals
       .filter(a => a.status === 'PENDING' && a.amount)
       .reduce((sum, a) => sum + (a.amount || 0), 0),
-    byType: Object.keys(TYPE_CONFIG).map(type => ({
+    byType: (Object.keys(TYPE_CONFIG) as ApprovalType[]).map(type => ({
       type,
       count: approvals.filter(a => a.status === 'PENDING' && a.type === type).length
     }))

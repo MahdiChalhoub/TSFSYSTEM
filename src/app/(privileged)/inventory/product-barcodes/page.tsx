@@ -1,13 +1,30 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { Barcode, Search, QrCode, Copy, Filter } from 'lucide-react'
+import { Barcode, Search, QrCode, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 
+type BarcodeRow = {
+    id?: number | string
+    product?: number | string
+    product_name?: string
+    barcode?: string
+    barcode_type?: string
+    is_primary?: boolean
+}
+
+function asArray(d: unknown): unknown[] {
+    if (Array.isArray(d)) return d
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as { results?: unknown }).results
+        if (Array.isArray(r)) return r
+    }
+    return []
+}
+
 export default function ProductBarcodesPage() {
-    const [barcodes, setBarcodes] = useState<any[]>([])
+    const [barcodes, setBarcodes] = useState<BarcodeRow[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
@@ -17,7 +34,7 @@ export default function ProductBarcodesPage() {
         setLoading(true)
         try {
             const res = await erpFetch('/inventory/product-barcodes/')
-            setBarcodes(Array.isArray(res) ? res : res?.results || [])
+            setBarcodes(asArray(res) as BarcodeRow[])
         } catch { setBarcodes([]) }
         setLoading(false)
     }
@@ -74,7 +91,7 @@ export default function ProductBarcodesPage() {
                                 <td className="px-4 py-3 font-mono text-xs text-app-foreground flex items-center gap-2">
                                     <Barcode size={14} className="text-app-muted-foreground" />
                                     {b.barcode}
-                                    <button onClick={() => { navigator.clipboard.writeText(b.barcode); toast.success('Copied!') }} className="p-1 rounded hover:bg-app-surface-hover"><Copy size={10} /></button>
+                                    <button onClick={() => { navigator.clipboard.writeText(b.barcode || ''); toast.success('Copied!') }} className="p-1 rounded hover:bg-app-surface-hover"><Copy size={10} /></button>
                                 </td>
                                 <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: 'color-mix(in srgb, var(--app-info) 15%, transparent)', color: 'var(--app-info)' }}>{b.barcode_type || 'EAN-13'}</span></td>
                                 <td className="px-4 py-3">{b.is_primary ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-app-success-bg text-app-success">PRIMARY</span> : <span className="text-[10px] text-app-muted-foreground">Alt</span>}</td>

@@ -1,12 +1,23 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
 import { getLabelRecords } from '@/app/actions/plm-governance'
-import { FileText, Search, Filter, Printer, Calendar } from 'lucide-react'
+import { FileText, Search, Printer, Calendar } from 'lucide-react'
+
+type LabelRecord = {
+    id?: number | string
+    product_name?: string
+    product?: string
+    barcode?: string
+    label_type?: string
+    type?: string
+    quantity?: number
+    copies?: number
+    created_at?: string
+}
 
 export default function LabelRecordsPage() {
-    const [records, setRecords] = useState<any[]>([])
+    const [records, setRecords] = useState<LabelRecord[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
@@ -15,7 +26,15 @@ export default function LabelRecordsPage() {
     async function loadData() {
         setLoading(true)
         const res = await getLabelRecords()
-        if (res.success) setRecords(Array.isArray(res.data) ? res.data : res.data?.results || [])
+        if (res.success) {
+            const data = res.data
+            const rows = Array.isArray(data)
+                ? data
+                : (data && typeof data === 'object' && 'results' in data && Array.isArray((data as { results?: unknown[] }).results))
+                    ? (data as { results: unknown[] }).results
+                    : []
+            setRecords(rows as LabelRecord[])
+        }
         setLoading(false)
     }
 

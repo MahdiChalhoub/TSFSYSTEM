@@ -1,17 +1,76 @@
-// @ts-nocheck
 'use client';
 
 import { useActionState, useState, useEffect } from 'react';
 import { createProduct } from '../actions';
 import type { ProductNamingRule } from '@/app/actions/settings';
 import type { ProductAttribute } from '@/types/erp';
-import { getBrandsByCategory } from '@/app/actions/inventory/brands';
 import { getAttributesByCategory } from '@/app/actions/attributes';
 
 import { CategorySelector } from '@/components/admin/CategorySelector';
 import { toast } from 'sonner';
-import { PackagePlus, Plus, Search, History, Percent, BarChart3, Package, Zap, Wand2, Trash2, ShoppingCart, Truck, DollarSign, Warehouse, Lock, ChevronDown } from 'lucide-react';
+import { PackagePlus, Plus, Search, History, Percent, BarChart3, Package, Zap, Wand2, Trash2, Truck, DollarSign, Warehouse, Lock } from 'lucide-react';
 import { PackagingSuggestions } from '@/components/inventory/PackagingSuggestions';
+import type { PackagingSuggestionRule } from '@/app/actions/inventory/packaging-suggestions';
+
+interface CategoryOption {
+    id: number | string;
+    name?: string;
+    shortName?: string;
+    [key: string]: unknown;
+}
+
+interface BrandOption {
+    id: number | string;
+    name?: string;
+    countries?: { id: number | string; [key: string]: unknown }[];
+    [key: string]: unknown;
+}
+
+interface UnitOption {
+    id: number | string;
+    name?: string;
+    shortName?: string;
+    type?: string;
+    code?: string;
+    [key: string]: unknown;
+}
+
+interface CountryOption {
+    id: number | string;
+    name?: string;
+    code?: string;
+    [key: string]: unknown;
+}
+
+interface ProductInitialData {
+    productType?: string;
+    categoryId?: number;
+    brandId?: number | string;
+    parfumName?: string;
+    costPrice?: number | string;
+    basePrice?: number | string;
+    taxRate?: number | string;
+    isTaxIncluded?: boolean;
+    isExpiryTracked?: boolean;
+    minStockLevel?: number | string;
+    [key: string]: unknown;
+}
+
+interface NamingComponentEntry {
+    id: string;
+    name?: string;
+    enabled?: boolean;
+    useShortName?: boolean;
+    [key: string]: unknown;
+}
+
+interface PackagingLevelLite {
+    id: string;
+    unitId: string;
+    ratio: number;
+    barcode: string;
+    price: number;
+}
 
 /* ─────────────────────────── Styles ─────────────────────────── */
 const card = "bg-app-surface rounded-xl border border-app-border/80 overflow-hidden";
@@ -28,37 +87,35 @@ export default function AdvancedProductForm({
  countries,
  namingRule,
  initialData,
- worksInTTC = true
 }: {
- categories: Record<string, any>[],
- units: Record<string, any>[],
- brands: Record<string, any>[],
- countries: Record<string, any>[],
+ categories: CategoryOption[],
+ units: UnitOption[],
+ brands: BrandOption[],
+ countries: CountryOption[],
  namingRule: ProductNamingRule,
- initialData?: Record<string, any>,
+ initialData?: ProductInitialData,
  worksInTTC?: boolean
 }) {
- const initialState = { message: '', errors: {} as Record<string, string[]> };
+ const initialState: { message: string; errors: Record<string, string[]> } = { message: '', errors: {} };
  const [state, formAction, isPending] = useActionState(createProduct, initialState);
 
 
 
  /* ── Layout State ── */
  const [activeTab, setActiveTab] = useState('packaging');
- const [productType, setProductType] = useState(initialData?.productType || 'SINGLE');
+ const [productType, setProductType] = useState<string>(initialData?.productType || 'SINGLE');
  const isCombo = productType === 'COMBO';
 
  /* ── Cascading Filters ── */
- const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId || null);
- const [selectedBrandId, setSelectedBrandId] = useState(initialData?.brandId ? String(initialData.brandId) : '');
- const [filteredBrands, setFilteredBrands] = useState(brands);
- const [loadingBrands, setLoadingBrands] = useState(false);
+ const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId ?? null);
+ const [selectedBrandId, setSelectedBrandId] = useState<string>(initialData?.brandId ? String(initialData.brandId) : '');
+ const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>(brands);
  const [filteredAttributes, setFilteredAttributes] = useState<ProductAttribute[]>([]);
 
  const filteredCountries = (() => {
  const selectedBrand = brands.find(b => String(b.id) === String(selectedBrandId));
  return (selectedBrand?.countries?.length)
- ? countries.filter(c => selectedBrand.countries.some((bc: Record<string, any>) => bc.id === c.id))
+ ? countries.filter(c => selectedBrand.countries!.some((bc) => bc.id === c.id))
  : countries;
  })();
 
@@ -67,7 +124,7 @@ export default function AdvancedProductForm({
  const [emballageUnitId, setEmballageUnitId] = useState('');
 
  /* ── Mass Variation ── */
- const [packagingLevels, setPackagingLevels] = useState<{ id: string, unitId: string, ratio: number, barcode: string, price: number }[]>([]);
+ const [packagingLevels, setPackagingLevels] = useState<PackagingLevelLite[]>([]);
  const [variationsText, setVariationsText] = useState(initialData?.parfumName || '');
  const [variations, setVariations] = useState<{ id: string, name: string, barcode: string, sku: string }[]>([]);
 
@@ -80,11 +137,17 @@ export default function AdvancedProductForm({
  }));
  }, [variationsText]);
 
+ const numOrZero = (v: unknown, fallback = 0): number => {
+ if (typeof v === 'number') return v;
+ const n = parseFloat(String(v ?? ''));
+ return isNaN(n) ? fallback : n;
+ };
+
  /* ── Dynamic Pricing ── */
  const [pricing, setPricing] = useState({
- cost: parseFloat(initialData?.costPrice || '0') || 0,
- sell: parseFloat(initialData?.basePrice || '0') || 0,
- taxPercent: parseFloat(initialData?.taxRate || '0.11') || 0.11,
+ cost: numOrZero(initialData?.costPrice),
+ sell: numOrZero(initialData?.basePrice),
+ taxPercent: numOrZero(initialData?.taxRate, 0.11) || 0.11,
  included: initialData?.isTaxIncluded ?? true
  });
 
@@ -126,16 +189,16 @@ export default function AdvancedProductForm({
  const brandMatch = brands.find(b => String(b.id) === selectedBrandId);
  const emballageUnitMatch = units.find(u => String(u.id) === emballageUnitId);
 
- const componentValues: Record<string, any> = {
+ const componentValues: Record<string, { short: string; full: string }> = {
  category: { short: categoryMatch?.shortName || '', full: categoryMatch?.name || '' },
  brand: { short: brandMatch?.name?.substring(0, 3).toUpperCase() || '', full: brandMatch?.name || '' },
  family: { short: variationsText.split(',')[0]?.trim() || '', full: variationsText.split(',')[0]?.trim() || '' },
  emballage: {
- short: emballageVal && emballageUnitMatch ? `${emballageVal}${emballageUnitMatch.shortName || emballageUnitMatch.name}` : (emballageVal || ''),
- full: emballageVal && emballageUnitMatch ? `${emballageVal} ${emballageUnitMatch.name}` : (emballageVal || '')
+ short: emballageVal && emballageUnitMatch ? `${emballageVal}${emballageUnitMatch.shortName || emballageUnitMatch.name || ''}` : (emballageVal || ''),
+ full: emballageVal && emballageUnitMatch ? `${emballageVal} ${emballageUnitMatch.name ?? ''}` : (emballageVal || '')
  }
  };
- const parts = namingRule.components.filter(c => c.enabled).map(c => {
+ const parts = (namingRule.components as NamingComponentEntry[]).filter(c => c.enabled).map(c => {
  const value = componentValues[c.id];
  return c.useShortName ? value?.short : value?.full;
  }).filter(Boolean);
@@ -155,12 +218,12 @@ export default function AdvancedProductForm({
  <form action={formAction} className="max-w-[1440px] mx-auto pb-24">
  {/* Global Errors */}
  {state.message && (
- <div className={`mb-5 px-4 py-3 rounded-lg border text-[13px] font-medium ${(state as any).errors ? 'bg-app-error-bg text-app-error border-app-error' : 'bg-app-primary-light text-app-success border-app-success'}`}>
+ <div className={`mb-5 px-4 py-3 rounded-lg border text-[13px] font-medium ${state.errors ? 'bg-app-error-bg text-app-error border-app-error' : 'bg-app-primary-light text-app-success border-app-success'}`}>
  <p className="font-semibold">{state.message}</p>
- {(state as any).errors && Object.keys((state as any).errors).length > 0 && (
+ {state.errors && Object.keys(state.errors).length > 0 && (
  <ul className="list-disc pl-5 mt-1 space-y-0.5 text-[12px]">
- {Object.entries((state as any).errors).map(([field, messages]) => (
- <li key={field}><span className="font-semibold capitalize">{field}:</span> {(messages as string[]).join(', ')}</li>
+ {Object.entries(state.errors).map(([field, messages]) => (
+ <li key={field}><span className="font-semibold capitalize">{field}:</span> {messages.join(', ')}</li>
  ))}
  </ul>
  )}
@@ -181,7 +244,7 @@ export default function AdvancedProductForm({
  {/* Grid container for dynamic field pushing */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start mb-5">
  {/* Category Selector inserts 1 to 3 dynamic grid cells here */}
- <CategorySelector categories={categories as any[]} onChange={(id) => setSelectedCategoryId(id)} compact />
+ <CategorySelector categories={categories as unknown as Parameters<typeof CategorySelector>[0]['categories']} onChange={(id) => setSelectedCategoryId(id)} />
  <input type="hidden" name="categoryId" value={selectedCategoryId || ''} />
 
  <div>
@@ -192,8 +255,8 @@ export default function AdvancedProductForm({
  value={selectedBrandId}
  onChange={(e) => setSelectedBrandId(e.target.value)}
  >
- <option value="">Select brand...{loadingBrands ? ' (loading...)' : ''}</option>
- {filteredBrands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+ <option value="">Select brand...</option>
+ {filteredBrands.map(b => <option key={String(b.id)} value={b.id}>{b.name}</option>)}
  </select>
  </div>
 
@@ -274,7 +337,7 @@ export default function AdvancedProductForm({
  <input type="text" name="shortName" className="w-[140px] bg-app-surface border border-app-border rounded-lg px-3 py-2 text-[12px] outline-none placeholder:text-app-muted-foreground font-medium" placeholder="Short name" />
  </div>
  <p className="text-[10px] text-app-info/70 mt-1.5 font-medium">
- Rule: {namingRule.components.filter(c => c.enabled).map(c => (c as any).name).join(` ${namingRule.separator} `)}
+ Rule: {(namingRule.components as NamingComponentEntry[]).filter(c => c.enabled).map(c => c.name ?? '').join(` ${namingRule.separator} `)}
  </p>
  </div>
 
@@ -504,12 +567,12 @@ export default function AdvancedProductForm({
      categoryId={selectedCategoryId}
      brandId={selectedBrandId || undefined}
      attributeId={filteredAttributes?.[0]?.id}
-     onAccept={(rule) => {
+     onAccept={(rule: PackagingSuggestionRule) => {
          if (!rule.packaging || !rule.packaging_ratio) return;
          const pkgUnitCode = rule.packaging_unit_code;
-         const matchedUnit = units.find((u: any) => u.code === pkgUnitCode) || units[0];
-         setPackagingLevels((prev: any[]) => {
-             if (prev.some((p: any) => Number(p.ratio) === Number(rule.packaging_ratio) && p.unitId === String(matchedUnit?.id))) {
+         const matchedUnit = units.find((u) => u.code === pkgUnitCode) || units[0];
+         setPackagingLevels((prev) => {
+             if (prev.some((p) => Number(p.ratio) === Number(rule.packaging_ratio) && p.unitId === String(matchedUnit?.id))) {
                  return prev;
              }
              return [...prev, {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client"
 import { useState, useActionState, useEffect } from "react";
 import { registerUserAction, getPublicConfig } from "@/app/actions/onboarding";
@@ -12,8 +11,34 @@ import { Loader2, AlertCircle, CheckCircle2, UserPlus, ShieldCheck, Sparkles, Ar
 import { PLATFORM_CONFIG } from "@/lib/saas_config";
 import { PasswordStrength } from "@/components/ui/password-strength";
 
+interface RegisterUserError {
+    root?: string;
+    email?: string | string[];
+    username?: string | string[];
+    role_id?: string | string[];
+    [key: string]: string | string[] | undefined;
+}
+
+interface RegisterUserState {
+    success?: boolean;
+    message?: string;
+    error?: RegisterUserError;
+}
+
+interface PublicTenantRole {
+    id: number | string;
+    name: string;
+    [key: string]: unknown;
+}
+
 export default function UserRegisterPage() {
-    const [state, action, isPending] = useActionState(registerUserAction, null);
+    const [state, action, isPending] = useActionState<RegisterUserState | null, FormData>(
+        registerUserAction as unknown as (
+            prevState: RegisterUserState | null,
+            formData: FormData,
+        ) => Promise<RegisterUserState | null>,
+        null,
+    );
     const [config, setConfig] = useState<PublicConfig>({ tenant: { roles: [] } });
     const [passwordValue, setPasswordValue] = useState('');
 
@@ -89,10 +114,10 @@ export default function UserRegisterPage() {
                 <CardContent className="p-10">
                     <form action={action} className="space-y-6">
 
-                        {(state?.error as any)?.root && (
+                        {state?.error?.root && (
                             <div className="p-4 bg-app-error-bg/50 border border-app-error/20 rounded-2xl flex items-center gap-3 text-app-error text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
-                                {(state?.error as any).root}
+                                {state.error.root}
                             </div>
                         )}
 
@@ -110,14 +135,14 @@ export default function UserRegisterPage() {
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Email</Label>
                             <Input id="email" name="email" type="email" required className="bg-app-surface/50 border-app-border h-14 rounded-xl text-app-foreground font-medium focus:ring-1 focus:ring-app-primary" />
-                            {(state as any)?.error?.email && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{(state as any).error.email}</p>}
+                            {state?.error?.email && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{Array.isArray(state.error.email) ? state.error.email.join(', ') : state.error.email}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="username" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Username</Label>
                                 <Input id="username" name="username" required className="bg-app-surface/50 border-app-border h-14 rounded-xl font-mono text-app-info focus:ring-1 focus:ring-app-primary" />
-                                {(state as any)?.error?.username && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{(state as any).error.username}</p>}
+                                {state?.error?.username && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{Array.isArray(state.error.username) ? state.error.username.join(', ') : state.error.username}</p>}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="password" title="password" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Password</Label>
@@ -134,8 +159,8 @@ export default function UserRegisterPage() {
                                 </SelectTrigger>
                                 <SelectContent className="bg-app-surface border-app-border text-app-foreground">
                                     {roles.length > 0 ? (
-                                        roles.map((r: Record<string, any>) => (
-                                            <SelectItem key={r.id} value={r.id.toString()}>
+                                        (roles as unknown as PublicTenantRole[]).map((r) => (
+                                            <SelectItem key={String(r.id)} value={String(r.id)}>
                                                 {r.name}
                                             </SelectItem>
                                         ))
@@ -144,7 +169,7 @@ export default function UserRegisterPage() {
                                     )}
                                 </SelectContent>
                             </Select>
-                            {(state as any)?.error?.role_id && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{(state as any).error.role_id}</p>}
+                            {state?.error?.role_id && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{Array.isArray(state.error.role_id) ? state.error.role_id.join(', ') : state.error.role_id}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 pt-2">

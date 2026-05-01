@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
@@ -14,7 +13,7 @@ type Invoice = {
  id: number; po_number?: string; invoice_number?: string; ref_code?: string
  supplier?: { id: number; name: string }; supplier_name?: string; supplier_display?: string
  contact_name?: string; status: string; order_date?: string; created_at?: string
- total_amount: number; notes?: string; is_legacy?: boolean; lines?: any[]
+ total_amount: number; notes?: string; is_legacy?: boolean; lines?: Record<string, unknown>[]
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -53,9 +52,31 @@ function renderInvoiceCell(key: string, inv: Invoice, fmt: (n: number) => string
  }
 }
 
-async function getLegacyPurchases() {
- try { const data = await erpFetch('orders/?type=PURCHASE'); const results = Array.isArray(data) ? data : (data.results || [])
-  return results.map((o: any) => ({ ...o, po_number: o.ref_code || `LEGACY-${o.id}`, supplier_name: o.contact_name || 'Legacy Supplier', is_legacy: true }))
+async function getLegacyPurchases(): Promise<Invoice[]> {
+ try {
+  const data = await erpFetch('orders/?type=PURCHASE')
+  const results: unknown[] = Array.isArray(data)
+   ? data
+   : (data && typeof data === 'object' && 'results' in data && Array.isArray((data as { results?: unknown[] }).results)
+     ? (data as { results: unknown[] }).results
+     : [])
+  return results.map((row): Invoice => {
+   const o = row as Record<string, unknown>
+   return {
+    id: Number(o.id),
+    po_number: (typeof o.ref_code === 'string' ? o.ref_code : null) || `LEGACY-${o.id}`,
+    invoice_number: typeof o.invoice_number === 'string' ? o.invoice_number : undefined,
+    ref_code: typeof o.ref_code === 'string' ? o.ref_code : undefined,
+    supplier_name: (typeof o.contact_name === 'string' ? o.contact_name : undefined) || 'Legacy Supplier',
+    contact_name: typeof o.contact_name === 'string' ? o.contact_name : undefined,
+    status: typeof o.status === 'string' ? o.status : 'RECEIVED',
+    order_date: typeof o.order_date === 'string' ? o.order_date : undefined,
+    created_at: typeof o.created_at === 'string' ? o.created_at : undefined,
+    total_amount: Number(o.total_amount || 0),
+    notes: typeof o.notes === 'string' ? o.notes : undefined,
+    is_legacy: true,
+   }
+  })
  } catch { return [] }
 }
 
@@ -68,13 +89,20 @@ export default function PurchaseInvoicesPage() {
  const [pageSize, setPageSize] = useState(50)
  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({})
  const [columnOrder, setColumnOrder] = useState<string[]>(ALL_COLUMNS.map(c => c.key))
- const searchRef = useRef<HTMLInputElement>(null)
+ // React 19 typed ref `null` initial widens to `RefObject<HTMLInputElement | null>`,
+ // but DajingoListView's `searchRef?: RefObject<HTMLInputElement>` is non-null.
+ // Cast with `as` since the runtime guarantees null-or-element at most.
+ const searchRef = useRef<HTMLInputElement>(null as unknown as HTMLInputElement)
 
  const load = useCallback(async () => {
    setLoading(true)
    try {
      const [poData, legacyData] = await Promise.all([fetchPurchaseOrders(), getLegacyPurchases()])
-     const rawPO = Array.isArray(poData) ? poData : (poData?.results ?? [])
+     const rawPO: Invoice[] = Array.isArray(poData)
+       ? (poData as Invoice[])
+       : ((poData && typeof poData === 'object' && 'results' in poData && Array.isArray((poData as { results?: unknown[] }).results))
+         ? ((poData as { results: Invoice[] }).results)
+         : [])
      setOrders([...rawPO, ...legacyData].filter((o: Invoice) => ['RECEIVED', 'INVOICED', 'COMPLETED', 'FINAL'].includes(o.status)))
    } catch { setOrders([]) }
    setLoading(false)

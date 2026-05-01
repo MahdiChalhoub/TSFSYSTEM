@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useActionState } from 'react';
@@ -12,6 +11,57 @@ import { getAttributesByCategory } from '@/app/actions/attributes';
 import { CategorySelector } from '@/components/admin/CategorySelector';
 import { toast } from 'sonner';
 
+interface CategoryOption {
+    id: number | string;
+    name?: string;
+    shortName?: string;
+    [key: string]: unknown;
+}
+
+interface BrandOption {
+    id: number | string;
+    name: string;
+    countries?: { id: number | string; [key: string]: unknown }[];
+    [key: string]: unknown;
+}
+
+interface UnitOption {
+    id: number | string;
+    name?: string;
+    shortName?: string;
+    type?: string;
+    [key: string]: unknown;
+}
+
+interface CountryOption {
+    id: number | string;
+    name?: string;
+    code?: string;
+    [key: string]: unknown;
+}
+
+interface ProductInitialData {
+    name?: string;
+    sku?: string;
+    barcode?: string;
+    categoryId?: number;
+    brandId?: number | string;
+    costPrice?: number | string;
+    basePrice?: number | string;
+    taxRate?: number | string;
+    isTaxIncluded?: boolean;
+    isExpiryTracked?: boolean;
+    minStockLevel?: number | string;
+    [key: string]: unknown;
+}
+
+interface NamingComponentLite {
+    id: string;
+    enabled?: boolean;
+    useShortName?: boolean;
+    [key: string]: unknown;
+}
+
 export default function AddProductForm({
     categories,
     units,
@@ -19,28 +69,26 @@ export default function AddProductForm({
     countries,
     namingRule,
     initialData,
-    worksInTTC = true
 }: {
-    categories: Record<string, any>[],
-    units: Record<string, any>[],
-    brands: Record<string, any>[],
-    countries: Record<string, any>[],
+    categories: CategoryOption[],
+    units: UnitOption[],
+    brands: BrandOption[],
+    countries: CountryOption[],
     namingRule: ProductNamingRule,
-    initialData?: Record<string, any>,
+    initialData?: ProductInitialData,
     worksInTTC?: boolean
 }) {
-    const initialState = { message: '', errors: {} };
+    const initialState: { message: string; errors: Record<string, string[]> } = { message: '', errors: {} };
     // useActionState returns [state, formAction, isPending]
     const [state, formAction, isPending] = useActionState(createProduct, initialState);
-    const [autoSku, setAutoSku] = useState(true);
 
     const generateSku = () => {
         const timestamp = Date.now().toString().slice(-6);
         return `PRD-${timestamp}`;
     };
 
-    const [selectedBrandId, setSelectedBrandId] = useState(initialData?.brandId ? String(initialData.brandId) : '');
-    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId || null);
+    const [selectedBrandId, setSelectedBrandId] = useState<string>(initialData?.brandId ? String(initialData.brandId) : '');
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId ?? null);
 
     // Initial effect to populate form if cloning
     useEffect(() => {
@@ -50,13 +98,13 @@ export default function AddProductForm({
     }, [initialData]);
 
     // Filtered brands based on selected category
-    const [filteredBrands, setFilteredBrands] = useState(brands);
+    const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>(brands);
     const [loadingBrands, setLoadingBrands] = useState(false);
 
     const filteredCountries = (() => {
         const selectedBrand = brands.find(b => String(b.id) === String(selectedBrandId));
         return (selectedBrand?.countries?.length)
-            ? countries.filter(c => selectedBrand.countries.some((bc: Record<string, any>) => bc.id === c.id))
+            ? countries.filter(c => selectedBrand.countries!.some((bc) => bc.id === c.id))
             : countries;
     })();
 
@@ -81,13 +129,14 @@ export default function AddProductForm({
                     getAttributesByCategory(selectedCategoryId)
                 ]);
 
-                setFilteredBrands(filteredBrandList);
+                const brandList = (filteredBrandList ?? []) as unknown as BrandOption[];
+                setFilteredBrands(brandList);
                 setFilteredAttributes(filteredAttributeList);
 
                 // Reset brand if not in filtered list
-                if (selectedBrandId && !filteredBrandList.find(b => String(b.id) === selectedBrandId)) {
+                if (selectedBrandId && !brandList.find(b => String(b.id) === selectedBrandId)) {
                     setSelectedBrandId('');
-                    const brandSelect = document.getElementById('brand-select') as HTMLSelectElement;
+                    const brandSelect = document.getElementById('brand-select') as HTMLSelectElement | null;
                     if (brandSelect) brandSelect.value = '';
                 }
             } catch (error) {
@@ -116,7 +165,7 @@ export default function AddProductForm({
                         <ul className="list-disc pl-5 text-sm space-y-1">
                             {Object.entries(state.errors).map(([field, messages]) => (
                                 <li key={field}>
-                                    <span className="font-medium capitalize">{field}:</span> {(messages as string[]).join(', ')}
+                                    <span className="font-medium capitalize">{field}:</span> {messages.join(', ')}
                                 </li>
                             ))}
                         </ul>
@@ -134,7 +183,7 @@ export default function AddProductForm({
                         {/* Step 1: Category FIRST */}
                         <div>
                             <label className="block text-sm font-medium text-app-foreground mb-1">1∩╕ÅΓâú Category</label>
-                            <CategorySelector categories={categories} onChange={(id) => setSelectedCategoryId(id)} />
+                            <CategorySelector categories={categories as unknown as Parameters<typeof CategorySelector>[0]['categories']} onChange={(id) => setSelectedCategoryId(id)} />
                             <input type="hidden" name="categoryId" value={selectedCategoryId || ''} />
                             <p className="text-xs text-app-muted-foreground mt-1">≡ƒÆí This will filter available brands</p>
                         </div>
@@ -156,7 +205,7 @@ export default function AddProductForm({
                                     <option disabled>No brands available for this category</option>
                                 ) : (
                                     filteredBrands.map(b => (
-                                        <option key={b.id} value={b.id} data-short={b.name.substring(0, 3).toUpperCase()}>
+                                        <option key={String(b.id)} value={String(b.id)} data-short={(b.name ?? '').substring(0, 3).toUpperCase()}>
                                             {b.name}
                                         </option>
                                     ))
@@ -181,7 +230,7 @@ export default function AddProductForm({
                             <select name="countryId" id="country-select" className="w-full input-field">
                                 <option value="">Select Country...</option>
                                 {filteredCountries.map(c => (
-                                    <option key={c.id} value={c.id} data-code={c.code}>
+                                    <option key={String(c.id)} value={String(c.id)} data-code={c.code}>
                                         {c.name} ({c.code})
                                     </option>
                                 ))}
@@ -199,8 +248,8 @@ export default function AddProductForm({
                                     autoComplete="off"
                                 />
                                 <datalist id="parfums-list">
-                                    {filteredAttributes.map((p: Record<string, any>) => (
-                                        <option key={p.id} value={p.name} />
+                                    {filteredAttributes.map((p) => (
+                                        <option key={String(p.id)} value={p.name} />
                                     ))}
                                 </datalist>
                             </div>
@@ -225,7 +274,7 @@ export default function AddProductForm({
                                     />
                                     <select name="sizeUnitId" className="w-24 input-field bg-app-surface text-sm">
                                         <option value="">Unit</option>
-                                        {units.map(u => <option key={u.id} value={u.id}>{u.shortName || u.name}</option>)}
+                                        {units.map(u => <option key={String(u.id)} value={String(u.id)}>{u.shortName || u.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -234,7 +283,7 @@ export default function AddProductForm({
                                 <select name="unitId" id="unit-select" className="w-full input-field" required>
                                     <option value="">Select Unit...</option>
                                     {units.map(u => (
-                                        <option key={u.id} value={u.id} data-short={u.shortName || u.name}>
+                                        <option key={String(u.id)} value={String(u.id)} data-short={u.shortName || u.name}>
                                             {u.name} ({u.type})
                                         </option>
                                     ))}
@@ -251,7 +300,7 @@ export default function AddProductForm({
                                     const countrySelect = document.getElementById('country-select') as HTMLSelectElement;
 
                                     // Collect all possible component values
-                                    const componentValues: Record<string, any> = {
+                                    const componentValues: Record<string, { short: string; full: string }> = {
                                         category: {
                                             short: categories.find(c => c.id === selectedCategoryId)?.shortName || '',
                                             full: categories.find(c => c.id === selectedCategoryId)?.name || ''
@@ -287,7 +336,7 @@ export default function AddProductForm({
                                     };
 
                                     // Build name based on naming rule
-                                    const parts = namingRule.components
+                                    const parts = (namingRule.components as NamingComponentLite[])
                                         .filter(c => c.enabled)
                                         .map(c => {
                                             const value = componentValues[c.id];
@@ -301,7 +350,7 @@ export default function AddProductForm({
                                 }} className="text-xs text-app-info font-medium hover:underline">Auto-Format</button>
                             </div>
                             <input name="name" type="text" className="w-full input-field" placeholder="e.g. Organic Bananas" required defaultValue={initialData?.name} />
-                            {state.errors?.name && <p className="text-app-error text-xs mt-1">{state.errors.name}</p>}
+                            {state.errors?.name && <p className="text-app-error text-xs mt-1">{state.errors.name.join(', ')}</p>}
                         </div>
                     </div>
                 </div>
@@ -320,7 +369,7 @@ export default function AddProductForm({
                                 }} className="text-xs text-app-info font-medium">Auto-Generate</button>
                             </div>
                             <input name="sku" type="text" className="w-full input-field font-mono" placeholder="PRD-000123" required defaultValue={initialData?.sku} />
-                            {state.errors?.sku && <p className="text-app-error text-xs mt-1">{state.errors.sku}</p>}
+                            {state.errors?.sku && <p className="text-app-error text-xs mt-1">{state.errors.sku.join(', ')}</p>}
                         </div>
 
                         <div>

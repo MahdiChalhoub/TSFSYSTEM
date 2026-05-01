@@ -1,12 +1,35 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { PackageCheck, Search, Eye, Calendar, Truck, CheckCircle, Clock } from 'lucide-react'
+import { PackageCheck, Search, Calendar, Truck, CheckCircle, Clock } from 'lucide-react'
+
+type GoodsReceipt = {
+    id?: number | string
+    receipt_number?: string
+    reference?: string
+    supplier?: number | string
+    supplier_name?: string
+    purchase_order_number?: string
+    po_reference?: string
+    status?: string
+    received_at?: string
+    created_at?: string
+    line_count?: number
+    total_items?: number
+}
+
+function asArray(d: unknown): unknown[] {
+    if (Array.isArray(d)) return d
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as { results?: unknown }).results
+        if (Array.isArray(r)) return r
+    }
+    return []
+}
 
 export default function GoodsReceiptsPage() {
-    const [receipts, setReceipts] = useState<any[]>([])
+    const [receipts, setReceipts] = useState<GoodsReceipt[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
@@ -16,7 +39,7 @@ export default function GoodsReceiptsPage() {
         setLoading(true)
         try {
             const res = await erpFetch('/inventory/goods-receipts/')
-            setReceipts(Array.isArray(res) ? res : res?.results || [])
+            setReceipts(asArray(res) as GoodsReceipt[])
         } catch { setReceipts([]) }
         setLoading(false)
     }
@@ -83,7 +106,7 @@ export default function GoodsReceiptsPage() {
                                         {r.status || 'PENDING'}
                                     </span>
                                 </td>
-                                <td className="px-4 py-3 text-xs text-app-muted-foreground flex items-center gap-1"><Calendar size={10} />{r.received_at || r.created_at ? new Date(r.received_at || r.created_at).toLocaleDateString() : '—'}</td>
+                                <td className="px-4 py-3 text-xs text-app-muted-foreground flex items-center gap-1"><Calendar size={10} />{(() => { const d = r.received_at || r.created_at; return d ? new Date(d).toLocaleDateString() : '—' })()}</td>
                                 <td className="px-4 py-3 text-xs text-app-foreground font-bold">{r.line_count ?? r.total_items ?? '—'}</td>
                             </tr>
                         ))}

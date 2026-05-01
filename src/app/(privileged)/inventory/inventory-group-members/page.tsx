@@ -1,13 +1,30 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { Users, Search, Plus, Trash2, Package } from 'lucide-react'
+import { Users, Search, Trash2, Package } from 'lucide-react'
 import { toast } from 'sonner'
 
+type GroupMember = {
+    id: number
+    group?: number | string
+    group_name?: string
+    warehouse?: number | string
+    warehouse_name?: string
+    role?: string
+}
+
+function asArray(d: unknown): unknown[] {
+    if (Array.isArray(d)) return d
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as { results?: unknown }).results
+        if (Array.isArray(r)) return r
+    }
+    return []
+}
+
 export default function InventoryGroupMembersPage() {
-    const [members, setMembers] = useState<any[]>([])
+    const [members, setMembers] = useState<GroupMember[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
@@ -17,7 +34,7 @@ export default function InventoryGroupMembersPage() {
         setLoading(true)
         try {
             const res = await erpFetch('/inventory/inventory-group-members/')
-            setMembers(Array.isArray(res) ? res : res?.results || [])
+            setMembers(asArray(res) as GroupMember[])
         } catch { setMembers([]) }
         setLoading(false)
     }

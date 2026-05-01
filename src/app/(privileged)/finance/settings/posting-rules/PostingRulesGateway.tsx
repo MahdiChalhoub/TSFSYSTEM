@@ -1,9 +1,9 @@
-// @ts-nocheck
 'use client'
 
 import dynamic from 'next/dynamic'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
+import type { PostingRuleV2, CatalogModule } from '@/app/actions/finance/posting-rules'
 
 const MobileClient = dynamic(
     () => import('./mobile/MobilePostingRulesClient').then(m => m.MobilePostingRulesClient),
@@ -29,7 +29,14 @@ function Skeleton() {
     )
 }
 
-export function PostingRulesGateway(props: any) {
+interface PostingRulesGatewayProps {
+    rulesByModule: Record<string, PostingRuleV2[]>
+    catalog: { modules: CatalogModule[]; total_events: number }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    accounts: Record<string, any>[]
+}
+
+export function PostingRulesGateway(props: PostingRulesGatewayProps) {
     const isMobile = useIsMobile()
     return isMobile
         ? <MobileErrorBoundary><MobileClient {...props} /></MobileErrorBoundary>

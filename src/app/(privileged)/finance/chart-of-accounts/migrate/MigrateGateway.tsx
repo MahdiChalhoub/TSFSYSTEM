@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import dynamic from 'next/dynamic'
@@ -26,7 +25,15 @@ function Skeleton() {
     )
 }
 
-export function MigrateGateway(props: any) {
+interface MigrateGatewayProps {
+    templateList: { key: string; name: string }[]
+    currentTemplateKey: string
+    accountCount: number
+    journalEntryCount: number
+    hasData: boolean
+}
+
+export function MigrateGateway(props: MigrateGatewayProps) {
     const isMobile = useIsMobile()
     return isMobile
         ? <MobileErrorBoundary><MobileClient {...props} /></MobileErrorBoundary>

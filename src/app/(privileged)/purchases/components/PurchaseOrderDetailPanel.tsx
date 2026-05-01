@@ -1,14 +1,14 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import {
     X, Pencil, Bookmark, Layers, List, Truck, FileText, ExternalLink,
     Calendar, User, Hash, MapPin, CreditCard, Loader2, Package,
 } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
-import { STATUS_CONFIG } from './PurchaseOrderRow'
+import { STATUS_CONFIG, type PurchaseOrderNode } from './PurchaseOrderRow'
 
 /* ═══════════════════════════════════════════════════════════
  *  PO DETAIL PANEL — slots into TreeMasterPage's detailPanel.
@@ -24,7 +24,7 @@ function formatDate(iso?: string | null) {
     return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-function formatMoney(v: any, currency = 'USD') {
+function formatMoney(v: number | string | null | undefined, currency = 'USD') {
     const n = Number(v || 0)
     try {
         return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(n)
@@ -33,9 +33,21 @@ function formatMoney(v: any, currency = 'USD') {
     }
 }
 
+interface DetailNode extends PurchaseOrderNode {
+    purchase_sub_type?: string
+    site_name?: string
+}
+
+interface PurchaseOrderDetailPanelProps {
+    node: DetailNode
+    initialTab?: Tab
+    onClose: () => void
+    onPin?: (node: DetailNode) => void
+}
+
 export function PurchaseOrderDetailPanel({
     node, initialTab, onClose, onPin,
-}: any) {
+}: PurchaseOrderDetailPanelProps) {
     const [tab, setTab] = useState<Tab>((initialTab as Tab) ?? 'overview')
     useEffect(() => { setTab((initialTab as Tab) ?? 'overview') }, [node.id, initialTab])
 
@@ -120,8 +132,8 @@ export function PurchaseOrderDetailPanel({
     )
 }
 
-function OverviewTab({ node }: any) {
-    const rows = [
+function OverviewTab({ node }: { node: DetailNode }) {
+    const rows: [string, string | null | undefined, ReactNode][] = [
         ['Supplier',       node.supplier_display || node.supplier_name, <User size={11} />],
         ['Priority',       node.priority,                                <Hash size={11} />],
         ['Sub-type',       node.purchase_sub_type,                       <Layers size={11} />],
@@ -129,7 +141,8 @@ function OverviewTab({ node }: any) {
         ['Expected',       formatDate(node.expected_date),               <Truck size={11} />],
         ['Currency',       node.currency,                                <CreditCard size={11} />],
         ['Site',           node.site_name,                               <MapPin size={11} />],
-    ].filter(([, v]) => v != null && v !== '')
+    ]
+    const visibleRows = rows.filter(([, v]) => v != null && v !== '')
 
     return (
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -145,8 +158,8 @@ function OverviewTab({ node }: any) {
                 </p>
             </div>
 
-            {rows.map(([k, v, icon]) => (
-                <div key={k as string} className="flex items-center gap-3 px-3 py-2 rounded-xl"
+            {visibleRows.map(([k, v, icon]) => (
+                <div key={k} className="flex items-center gap-3 px-3 py-2 rounded-xl"
                     style={{ background: 'color-mix(in srgb, var(--app-border) 15%, transparent)' }}>
                     <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
                         style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
@@ -154,15 +167,25 @@ function OverviewTab({ node }: any) {
                     </span>
                     <span className="text-tp-xxs font-bold uppercase tracking-wide w-20 flex-shrink-0"
                         style={{ color: 'var(--app-muted-foreground)' }}>{k}</span>
-                    <span className="text-tp-sm font-bold text-app-foreground flex-1 min-w-0 truncate">{v as any}</span>
+                    <span className="text-tp-sm font-bold text-app-foreground flex-1 min-w-0 truncate">{v}</span>
                 </div>
             ))}
         </div>
     )
 }
 
+interface POLine {
+    id?: number
+    product_name?: string
+    name?: string
+    sku?: string
+    quantity?: number | string
+    line_total?: number | string
+    amount?: number | string
+}
+
 function LinesTab({ poId, currency }: { poId: number; currency?: string }) {
-    const [lines, setLines] = useState<any[]>([])
+    const [lines, setLines] = useState<POLine[]>([])
     const [loading, setLoading] = useState(true)
     const [err, setErr] = useState<string | null>(null)
 
@@ -171,14 +194,16 @@ function LinesTab({ poId, currency }: { poId: number; currency?: string }) {
         setLoading(true)
         setErr(null)
         erpFetch(`purchase-orders/${poId}/`)
-            .then((data: any) => {
+            .then((data: unknown) => {
                 if (cancelled) return
-                setLines(Array.isArray(data?.lines) ? data.lines : (Array.isArray(data?.items) ? data.items : []))
+                const obj = (data && typeof data === 'object') ? (data as Record<string, unknown>) : {}
+                const linesArr = Array.isArray(obj.lines) ? obj.lines : (Array.isArray(obj.items) ? obj.items : [])
+                setLines(linesArr as POLine[])
                 setLoading(false)
             })
-            .catch((e) => {
+            .catch((e: unknown) => {
                 if (cancelled) return
-                setErr(e?.message || 'Failed to load lines')
+                setErr(e instanceof Error ? e.message : 'Failed to load lines')
                 setLoading(false)
             })
         return () => { cancelled = true }

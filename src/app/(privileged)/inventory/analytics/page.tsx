@@ -1,13 +1,15 @@
-// @ts-nocheck
 'use client'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
+import type { ComponentType } from 'react'
 import {
     Search, Filter, Package, AlertTriangle, TrendingUp, ShoppingCart,
     Activity, Eye, EyeOff, RefreshCw, ChevronDown, ArrowUpDown,
     Heart, Zap, Clock, XCircle, CheckCircle2, BarChart3,
     FileText, Truck, Box
 } from 'lucide-react'
+
+type IconComponent = ComponentType<{ size?: number; className?: string }>
 import {
     getProductAnalytics, getWarehouses, getCategories, getBrands,
     type ProductAnalytics, type AnalyticsFilters
@@ -37,25 +39,25 @@ function healthBg(score: number) {
 }
 
 function statusBadge(status: string | null) {
-    if (!status) return { label: 'Available', cls: 'bg-app-surface-2 text-app-muted-foreground ring-slate-200', icon: CheckCircle2 }
-    const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
+    if (!status) return { label: 'Available', cls: 'bg-app-surface-2 text-app-muted-foreground ring-slate-200', icon: CheckCircle2 as IconComponent }
+    const map: Record<string, { label: string; cls: string; icon: IconComponent }> = {
         PENDING: { label: 'Requested', cls: 'bg-app-info-bg text-app-info ring-blue-200', icon: Clock },
         APPROVED: { label: 'Approved', cls: 'bg-app-info-bg text-app-info ring-indigo-200', icon: CheckCircle2 },
         CONVERTED: { label: 'Order Created', cls: 'bg-app-success-bg text-app-success ring-emerald-200', icon: FileText },
         REJECTED: { label: 'Failed', cls: 'bg-app-error-bg text-app-error ring-red-200', icon: XCircle },
         CANCELLED: { label: 'Cancelled', cls: 'bg-app-surface-2 text-app-muted-foreground ring-app-border', icon: XCircle },
     }
-    return map[status] || { label: status, cls: 'bg-app-surface-2 text-app-muted-foreground ring-app-border', icon: Box }
+    return map[status] || { label: status, cls: 'bg-app-surface-2 text-app-muted-foreground ring-app-border', icon: Box as IconComponent }
 }
 
 function orderTypeBadge(type: string | null) {
     if (!type) return null
-    const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
+    const map: Record<string, { label: string; cls: string; icon: IconComponent }> = {
         stock_adjustment: { label: 'Adjustment', cls: 'bg-purple-50 text-purple-700', icon: BarChart3 },
         stock_transfer: { label: 'Transfer', cls: 'bg-cyan-50 text-cyan-700', icon: Truck },
         purchase_order: { label: 'Purchase', cls: 'bg-app-warning-bg text-app-warning', icon: ShoppingCart },
     }
-    return map[type] || { label: type, cls: 'bg-app-surface text-app-muted-foreground', icon: FileText }
+    return map[type] || { label: type, cls: 'bg-app-surface text-app-muted-foreground', icon: FileText as IconComponent }
 }
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────
@@ -151,14 +153,14 @@ export default function ProductAnalyticsPage() {
     // ── Sort ──
     const sorted = useMemo(() => {
         return [...products].sort((a, b) => {
-            let av: Record<string, any> = (a as any)[sortField]
-            let bv: Record<string, any> = (b as any)[sortField]
+            let av = (a as unknown as Record<string, unknown>)[sortField]
+            let bv = (b as unknown as Record<string, unknown>)[sortField]
             if (typeof av === 'string') av = av.toLowerCase()
             if (typeof bv === 'string') bv = bv.toLowerCase()
             if (av == null) return 1
             if (bv == null) return -1
-            if (av < bv) return sortDir === 'asc' ? -1 : 1
-            if (av > bv) return sortDir === 'asc' ? 1 : -1
+            if ((av as number | string) < (bv as number | string)) return sortDir === 'asc' ? -1 : 1
+            if ((av as number | string) > (bv as number | string)) return sortDir === 'asc' ? 1 : -1
             return 0
         })
     }, [products, sortField, sortDir])

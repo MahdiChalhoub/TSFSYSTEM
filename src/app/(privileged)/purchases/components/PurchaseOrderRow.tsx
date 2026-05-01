@@ -1,11 +1,13 @@
-// @ts-nocheck
 'use client'
 
+import type { ComponentType } from 'react'
 import {
     FileText, Clock, CheckCircle2, XCircle, Truck, Package, AlertTriangle,
     Calendar, User,
 } from 'lucide-react'
-import { MasterListCard } from '@/components/templates/MasterListCard'
+
+type IconComponent = ComponentType<{ size?: number | string; className?: string }>
+import { MasterListCard, type MasterListBadge } from '@/components/templates/MasterListCard'
 
 /* ═══════════════════════════════════════════════════════════
  *  PURCHASE ORDER ROW — thin consumer of MasterListCard.
@@ -14,7 +16,7 @@ import { MasterListCard } from '@/components/templates/MasterListCard'
  *  KPI filter chips in TreeMasterPage).
  * ═══════════════════════════════════════════════════════════ */
 
-export const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
+export const STATUS_CONFIG: Record<string, { label: string; color: string; icon: IconComponent }> = {
     DRAFT:              { label: 'Draft',             color: 'var(--app-muted-foreground)', icon: FileText },
     SUBMITTED:          { label: 'Pending Approval',  color: 'var(--app-warning)',          icon: Clock },
     APPROVED:           { label: 'Approved',          color: 'var(--app-info)',             icon: CheckCircle2 },
@@ -42,7 +44,7 @@ function formatDate(iso?: string | null) {
     return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-function formatMoney(v: any, currency = 'USD') {
+function formatMoney(v: number | string | null | undefined, currency = 'USD') {
     const n = Number(v || 0)
     try {
         return new Intl.NumberFormat(undefined, { style: 'currency', currency, maximumFractionDigits: 0 }).format(n)
@@ -51,23 +53,37 @@ function formatMoney(v: any, currency = 'USD') {
     }
 }
 
+export interface PurchaseOrderNode {
+    id: number
+    po_number?: string
+    status: string
+    priority?: string
+    supplier_display?: string
+    supplier_name?: string
+    created_at?: string | null
+    expected_date?: string | null
+    total_amount?: number | string | null
+    currency?: string
+    [key: string]: unknown
+}
+
 export function PurchaseOrderRow({
     node, onSelect, isSelected,
 }: {
-    node: any
-    onSelect: (n: any) => void
+    node: PurchaseOrderNode
+    onSelect: (n: PurchaseOrderNode) => void
     isSelected?: boolean
 }) {
     const status = STATUS_CONFIG[node.status] || {
         label: node.status, color: 'var(--app-muted-foreground)', icon: FileText,
     }
-    const priority = PRIORITY_CONFIG[node.priority] || {
-        label: node.priority, color: 'var(--app-muted-foreground)',
+    const priority = PRIORITY_CONFIG[node.priority || 'NORMAL'] || {
+        label: node.priority || '', color: 'var(--app-muted-foreground)',
     }
     const StatusIcon = status.icon
     const isUrgent = node.priority === 'URGENT'
 
-    const badges: any[] = [{ label: status.label, color: status.color }]
+    const badges: MasterListBadge[] = [{ label: status.label, color: status.color }]
     if (isUrgent) {
         badges.push({
             label: 'Urgent',

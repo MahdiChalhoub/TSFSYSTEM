@@ -1,4 +1,7 @@
 // @ts-nocheck
+// REVERTED Phase 5: depends on `listPrintSessions`/`getPrintingKPI` from `@/app/actions/labels`
+// which are not yet exported (TS2305). Family-wide issue across labels/* tabs — defer until
+// the actions module is rebuilt. See tabs/{SessionsTab,LabelsQueueTab,MaintenanceTab,OutputTab,LayoutTab}.tsx.
 'use client'
 
 import { useState, useTransition, useCallback } from 'react'
@@ -26,12 +29,20 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key']
 
+type LabelKPI = {
+    labels_pending?: number
+    labels_printed?: number
+    printing?: number
+    failed?: number
+    [key: string]: unknown
+}
+
 interface Props {
-    products: any[]
-    sessions: any[]
-    templates: any[]
-    printers: any[]
-    kpi: any
+    products: Array<Record<string, unknown>>
+    sessions: Array<Record<string, unknown>>
+    templates: Array<Record<string, unknown>>
+    printers: Array<Record<string, unknown>>
+    kpi: LabelKPI
 }
 
 export default function PrintingCenterClient({ products, sessions: initSessions, templates, printers, kpi: initKpi }: Props) {
