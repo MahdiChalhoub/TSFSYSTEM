@@ -41,7 +41,7 @@ interface OrderDetail {
 }
 
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-    CART: { label: 'In Cart', icon: Package, color: 'text-app-muted-foreground', bg: 'bg-slate-500/10' },
+    CART: { label: 'In Cart', icon: Package, color: 'text-app-muted-foreground', bg: 'bg-app-surface-2/10' },
     PLACED: { label: 'Placed', icon: Clock, color: 'text-app-info', bg: 'bg-app-info/10' },
     CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-app-success', bg: 'bg-app-success/10' },
     PROCESSING: { label: 'Processing', icon: Package, color: 'text-app-warning', bg: 'bg-app-warning/10' },
@@ -211,9 +211,9 @@ export default function OrderDetailPage() {
                                     <div key={step} className="flex flex-col items-center relative z-10" style={{ width: '20%' }}>
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all
                                             ${isCurrent
-                                                ? 'bg-app-success/20 border-emerald-500 text-app-success scale-110'
+                                                ? 'bg-app-success/20 border-app-primary text-app-success scale-110'
                                                 : isCompleted
-                                                    ? 'bg-app-primary border-emerald-500 text-white'
+                                                    ? 'bg-app-primary border-app-primary text-white'
                                                     : 'bg-app-surface border-app-border-strong text-app-faint'
                                             }`}>
                                             <StepIcon size={18} />

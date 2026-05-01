@@ -20,11 +20,11 @@ export function BlogHomePage({ org }: { org: any }) {
  {dummyPosts.map((post, i) => (
  <article key={i} className="group cursor-pointer">
  <div className="flex items-center gap-4 text-xs font-bold text-app-text-faint uppercase tracking-widest mb-3">
- <span className="text-indigo-600">{post.category}</span>
+ <span className="text-app-accent">{post.category}</span>
  <span>&bull;</span>
  <span className="flex items-center gap-1"><Clock size={12} /> {post.readTime} read</span>
  </div>
- <h2 className="text-2xl font-black text-app-text mb-3 group-hover:text-indigo-600 transition-colors">
+ <h2 className="text-2xl font-black text-app-text mb-3 group-hover:text-app-accent transition-colors">
  {post.title}
  </h2>
  <p className="text-app-text-muted font-medium leading-relaxed mb-4 max-w-2xl">
@@ -38,7 +38,7 @@ export function BlogHomePage({ org }: { org: any }) {
  </div>
 
  <div className="mt-16 pt-16 border-t border-app-border text-center">
- <button className="h-12 px-8 rounded-full border-2 border-app-border text-sm font-bold text-app-text-muted hover:border-gray-900 hover:text-app-text transition-colors flex items-center gap-2 mx-auto">
+ <button className="h-12 px-8 rounded-full border-2 border-app-border text-sm font-bold text-app-text-muted hover:border-app-foreground hover:text-app-text transition-colors flex items-center gap-2 mx-auto">
  <Rss size={16} /> Subscribe to RSS
  </button>
  </div>

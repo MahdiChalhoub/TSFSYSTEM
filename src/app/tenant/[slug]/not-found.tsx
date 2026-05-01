@@ -63,13 +63,13 @@ export default function TenantNotFound() {
                     <div className="flex gap-3">
                         <Link
                             href="/"
-                            className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-slate-700 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all"
+                            className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-app-surface-2 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all"
                         >
                             Home
                         </Link>
                         <Link
                             href="/login"
-                            className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-slate-700 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all"
+                            className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-app-surface-2 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all"
                         >
                             Sign In
                         </Link>

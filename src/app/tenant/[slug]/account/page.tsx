@@ -206,8 +206,8 @@ export default function AccountPage() {
                     </Link>
 
                     <Link href={`/tenant/${slug}/account/profile`}
-                        className="group p-6 bg-app-surface/60 border border-white/5 rounded-2xl flex items-center gap-4 hover:border-slate-500/30 transition-all">
-                        <div className="w-12 h-12 bg-slate-500/10 rounded-xl flex items-center justify-center text-app-muted-foreground group-hover:scale-110 transition-transform">
+                        className="group p-6 bg-app-surface/60 border border-white/5 rounded-2xl flex items-center gap-4 hover:border-app-border-strong/30 transition-all">
+                        <div className="w-12 h-12 bg-app-surface-2/10 rounded-xl flex items-center justify-center text-app-muted-foreground group-hover:scale-110 transition-transform">
                             <User size={22} />
                         </div>
                         <div className="flex-1 min-w-0">

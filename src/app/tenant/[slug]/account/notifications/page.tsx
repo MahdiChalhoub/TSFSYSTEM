@@ -25,7 +25,7 @@ const TYPE_MAP: Record<string, { icon: any; color: string; bg: string }> = {
     PROMO: { icon: Gift, color: 'text-app-warning', bg: 'bg-app-warning/10' },
     ALERT: { icon: AlertTriangle, color: 'text-app-error', bg: 'bg-app-error/10' },
     WALLET: { icon: CheckCircle2, color: 'text-app-success', bg: 'bg-app-success/10' },
-    INFO: { icon: Info, color: 'text-app-muted-foreground', bg: 'bg-slate-500/10' },
+    INFO: { icon: Info, color: 'text-app-muted-foreground', bg: 'bg-app-surface-2/10' },
 }
 
 function timeAgo(dateStr: string) {

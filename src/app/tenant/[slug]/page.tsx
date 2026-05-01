@@ -22,9 +22,9 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                         <ShieldCheck size={40} />
                     </div>
                     <h1 className="text-3xl font-black text-white">Instance Suspended</h1>
-                    <p className="text-gray-400">The account for <span className="text-white font-bold">{org.name}</span> has been temporarily suspended. Please contact platform administration.</p>
+                    <p className="text-app-faint">The account for <span className="text-white font-bold">{org.name}</span> has been temporarily suspended. Please contact platform administration.</p>
                     <Link href="/">
-                        <Button variant="outline" className="border-gray-800 text-white rounded-xl">
+                        <Button variant="outline" className="border-app-border-strong text-white rounded-xl">
                             Back to Home
                         </Button>
                     </Link>

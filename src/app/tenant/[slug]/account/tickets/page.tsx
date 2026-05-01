@@ -26,7 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
     IN_PROGRESS: 'text-app-warning bg-app-warning/10 border-app-warning/20',
     WAITING_CLIENT: 'text-app-accent bg-app-accent/10 border-app-accent/20',
     RESOLVED: 'text-app-success bg-app-success/10 border-app-success/20',
-    CLOSED: 'text-app-muted-foreground bg-slate-500/10 border-slate-500/20',
+    CLOSED: 'text-app-muted-foreground bg-app-surface-2/10 border-app-border-strong/20',
 }
 
 const TICKET_TYPES = [
@@ -131,7 +131,7 @@ export default function TicketsPage() {
                         <h1 className="text-4xl font-black text-white">Support Tickets</h1>
                     </div>
                     <button onClick={() => setShowCreate(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-app-accent transition-all">
+                        className="flex items-center gap-2 px-6 py-3 bg-app-accent-strong text-white rounded-xl font-bold hover:bg-app-accent transition-all">
                         <Plus size={18} /> New Ticket
                     </button>
                 </div>
@@ -162,7 +162,7 @@ export default function TicketsPage() {
                             <textarea placeholder="Describe your issue..." value={description} onChange={e => setDescription(e.target.value)} required rows={4}
                                 className="w-full bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-accent transition-all placeholder:text-app-faint resize-none" />
                             <button type="submit" disabled={creating}
-                                className="w-full bg-purple-600 hover:bg-app-accent text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+                                className="w-full bg-app-accent-strong hover:bg-app-accent text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
                                 {creating ? <Loader2 className="animate-spin" size={18} /> : <><Send size={18} /> Submit Ticket</>}
                             </button>
                         </form>

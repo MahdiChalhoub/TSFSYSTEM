@@ -96,13 +96,13 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
                     <div className="flex gap-3">
                         <Link
                             href={`https://${rootDomain}`}
-                            className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-slate-700 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all duration-200"
+                            className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-app-surface-2 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all duration-200"
                         >
                             Home
                         </Link>
                         <Link
                             href={`https://${rootDomain}/login`}
-                            className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-slate-700 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all duration-200"
+                            className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-app-surface-2 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all duration-200"
                         >
                             Sign In
                         </Link>
