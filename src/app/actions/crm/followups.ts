@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
 // ── RELATIONSHIP ASSIGNMENTS ──────────────────────────────────────────────
@@ -10,7 +10,8 @@ export async function getAssignments(contactId?: number) {
     try {
         const data = await erpFetch(`relationship-assignments/${query}`)
         return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }
@@ -35,7 +36,8 @@ export async function getPolicies(contactId?: number) {
     try {
         const data = await erpFetch(`followup-policies/${query}`)
         return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }
@@ -95,7 +97,8 @@ export async function getActivities(params?: Record<string, string>) {
     try {
         const data = await erpFetch(`activities/?${qp.toString()}`)
         return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }
@@ -141,7 +144,8 @@ export async function getInteractions(contactId?: number) {
     try {
         const data = await erpFetch(`interactions/${query}`)
         return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }
@@ -166,7 +170,8 @@ export async function getSupplierProductPolicies(supplierId?: number) {
     try {
         const data = await erpFetch(`supplier-product-policies/${query}`)
         return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }

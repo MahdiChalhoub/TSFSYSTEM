@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 
 export async function getPublicConfig() {
     try {
@@ -19,6 +19,7 @@ export async function getPublicPlans() {
         const data = await erpFetch('saas/pricing/');
         return Array.isArray(data) ? data : [];
     } catch (error) {
+        handleAuthError(error)
         console.error("Public plans fetch error:", error);
         return [];
     }

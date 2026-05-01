@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 
 /**
  * Resolve a custom domain to an organization slug.
@@ -18,7 +18,8 @@ export async function resolveCustomDomain(domain: string): Promise<{
  })
  if (!res.ok) return null
  return await res.json()
- } catch {
+ } catch (error) {
+ handleAuthError(error)
  return null
  }
 }
@@ -30,7 +31,8 @@ export async function listCustomDomains() {
  try {
  const data = await erpFetch('domains/')
  return Array.isArray(data) ? data : (data?.results || [])
- } catch {
+ } catch (error) {
+ handleAuthError(error)
  return []
  }
 }

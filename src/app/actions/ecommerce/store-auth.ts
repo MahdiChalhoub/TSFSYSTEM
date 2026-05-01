@@ -1,7 +1,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 const STORE_TOKEN_COOKIE = 'store_token'
 const STORE_USER_COOKIE = 'store_user'
@@ -56,7 +56,8 @@ export async function getClientUser(): Promise<StoreUser | null> {
         const raw = jar.get(STORE_USER_COOKIE)?.value
         if (!raw) return null
         return JSON.parse(raw) as StoreUser
-    } catch { return null }
+    } catch (error) {        handleAuthError(error)
+ return null }
 }
 
 export async function getStoreToken(): Promise<string | null> {
@@ -107,5 +108,6 @@ export async function getStorefrontPublicConfig(): Promise<StorefrontConfig | nu
         })
         if (!res.ok) return null
         return await res.json()
-    } catch { return null }
+    } catch (error) {        handleAuthError(error)
+ return null }
 }

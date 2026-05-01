@@ -1,6 +1,6 @@
 'use server';
 
-import { erpFetch } from '@/lib/erp-api';
+import { erpFetch, handleAuthError } from '@/lib/erp-api';
 
 // ── Price Groups ──────────────────────────────────────────────────────────────
 
@@ -8,6 +8,7 @@ export async function getPriceGroups() {
     try {
         return await erpFetch('price-groups/');
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch price groups:", e);
         return [];
     }
@@ -44,6 +45,7 @@ export async function getGroupMembers(groupId: number) {
     try {
         return await erpFetch(`price-groups/${groupId}/members/`);
     } catch (e) {
+        handleAuthError(e)
         return [];
     }
 }
@@ -78,6 +80,7 @@ export async function getPriceRules() {
     try {
         return await erpFetch('price-rules/');
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch price rules:", e);
         return [];
     }
@@ -125,6 +128,7 @@ export async function getRulesForContact(contactId: number) {
     try {
         return await erpFetch(`price-rules/for-contact/${contactId}/`);
     } catch (e) {
+        handleAuthError(e)
         return [];
     }
 }

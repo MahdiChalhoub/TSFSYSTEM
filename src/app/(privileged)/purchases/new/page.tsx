@@ -2,8 +2,6 @@ import { erpFetch } from "@/lib/erp-api";
 import { getContactsByType } from "@/app/actions/crm/contacts";
 import { getFinancialSettings } from "@/app/actions/finance/settings";
 import PurchaseForm from "./form";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { serializeDecimals } from "@/lib/utils/serialization";
 import { getUsers } from "@/app/actions/users";
 import { getAnalyticsProfiles } from "@/app/actions/settings/analytics-profiles";
@@ -40,13 +38,38 @@ async function getSitesAndWarehouses() {
     }
 }
 
-export default async function NewPurchasePage() {
-    const [suppliers, sites, financialSettings, users, profilesData] = await Promise.all([
+/**
+ * Fetch a single PO for the `?edit=<id>` flow. We swallow the error
+ * (returning null) so the page falls back to a blank create form rather
+ * than 500ing — the operator gets a usable screen even if the id is bad.
+ */
+async function getEditableOrder(id: string): Promise<Record<string, unknown> | null> {
+    try {
+        const po: any = await erpFetch(`purchase-orders/${id}/`)
+        return po && typeof po === 'object' ? po : null
+    } catch (e) {
+        console.error('Failed to fetch PO for edit:', e)
+        return null
+    }
+}
+
+export default async function NewPurchasePage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ edit?: string }>
+}) {
+    // Next 15 ships `searchParams` as a promise even when there are no
+    // params — `await` it once and read keys off the resolved object.
+    const params = (await searchParams) ?? {}
+    const editId = params.edit && /^\d+$/.test(params.edit) ? params.edit : null
+
+    const [suppliers, sites, financialSettings, users, profilesData, initialPO] = await Promise.all([
         getContactsByType('SUPPLIER'),
         getSitesAndWarehouses(),
         getFinancialSettings(),
         getUsers(),
-        getAnalyticsProfiles('purchase-order')
+        getAnalyticsProfiles('purchase-order'),
+        editId ? getEditableOrder(editId) : Promise.resolve(null),
     ]);
 
     return (
@@ -56,6 +79,8 @@ export default async function NewPurchasePage() {
             financialSettings={serializeDecimals(financialSettings)}
             users={users}
             profilesData={profilesData}
+            mode={initialPO ? 'edit' : 'create'}
+            initialPO={initialPO ? (serializeDecimals(initialPO) as Record<string, unknown>) : null}
         />
     );
 }

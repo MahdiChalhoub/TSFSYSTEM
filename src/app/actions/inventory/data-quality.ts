@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
 // ─── Data Quality ────────────────────────────────────────────────
@@ -9,6 +9,7 @@ export async function getDataQuality() {
     try {
         return await erpFetch('inventory/products/data-quality/')
     } catch (e) {
+        handleAuthError(e)
         console.error('[data-quality] getDataQuality failed', e)
         return null
     }
@@ -68,6 +69,7 @@ export async function getProductsForMaintenance(params?: Record<string, string>)
     try {
         return await erpFetch(`products/${query}`)
     } catch (e) {
+        handleAuthError(e)
         console.error('[data-quality] getProductsForMaintenance failed', e)
         return []
     }

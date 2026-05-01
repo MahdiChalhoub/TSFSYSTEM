@@ -16,7 +16,7 @@
  *   - active_profile_id: string
  */
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 export interface ListPreferencePayload {
   visible_columns: string[]
@@ -41,7 +41,8 @@ export async function getUserListPreference(listKey: string): Promise<ListPrefer
   try {
     const res = await erpFetch(`list-preferences/${listKey}/`)
     return res ?? null
-  } catch {
+  } catch (error) {
+    handleAuthError(error)
     return null
   }
 }

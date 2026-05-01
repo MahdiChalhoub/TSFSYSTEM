@@ -1,6 +1,6 @@
 'use server';
 
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type CountryState = {
@@ -52,6 +52,7 @@ export async function getCountryHierarchy(countryId: number) {
     try {
         return await erpFetch(`countries/${countryId}/hierarchy/`);
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch country hierarchy:", e);
         return [];
     }

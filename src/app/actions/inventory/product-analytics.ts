@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 
 export interface ProductAnalytics {
     id: number
@@ -69,6 +69,7 @@ export async function getWarehouses() {
     try {
         return await erpFetch('warehouses/')
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch warehouses:", error)
         return []
     }
@@ -78,6 +79,7 @@ export async function getCategories() {
     try {
         return await erpFetch('categories/')
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch categories:", error)
         return []
     }
@@ -87,6 +89,7 @@ export async function getBrands() {
     try {
         return await erpFetch('brands/')
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch brands:", error)
         return []
     }

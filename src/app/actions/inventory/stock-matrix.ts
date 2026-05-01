@@ -7,7 +7,7 @@
  * parfums (variants), sizes, warehouses, and branches.
  */
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 // ═══════════════════════════════════════════════════════════════
 // Types
@@ -222,6 +222,7 @@ export async function getProductSalesPeriods(
         )
         return data
     } catch (error) {
+        handleAuthError(error)
         console.error('[StockMatrix] salesPeriods failed:', error)
         return null
     }

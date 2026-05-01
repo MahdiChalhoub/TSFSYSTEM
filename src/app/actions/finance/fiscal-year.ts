@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 const PeriodUpdateSchema = z.object({
     name: z.string().min(1).optional(),
@@ -51,6 +51,7 @@ export async function getFiscalYears(): Promise<FiscalYearDTO[]> {
         const years = Array.isArray(data) ? data : (data?.results || [])
         return years.map(normalizeFiscalYear)
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch fiscal years:", error)
         return []
     }
@@ -64,6 +65,7 @@ export async function getLatestFiscalYear(): Promise<FiscalYearDTO | null> {
         const year = years[0] || null
         return year ? normalizeFiscalYear(year) : null
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch latest fiscal year:", error)
         return null
     }
@@ -78,7 +80,8 @@ export async function getCurrentFiscalYear(): Promise<FiscalYearDTO | null> {
     try {
         const raw = await erpFetch('fiscal-years/current/')
         return raw ? normalizeFiscalYear(raw) : null
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return null
     }
 }
@@ -322,6 +325,7 @@ export async function getCloseChecklist(fiscalYearId: number): Promise<CloseChec
     try {
         return await erpFetch(`fiscal-years/${fiscalYearId}/close-checklist/`) as CloseChecklistReport
     } catch (error) {
+        handleAuthError(error)
         console.error('Failed to fetch close checklist:', error)
         return null
     }
@@ -410,6 +414,7 @@ export async function getYoyComparison(yearId: number): Promise<YoyReport | null
         // toggle is interactive enough that any caching gets confusing fast.
         return await erpFetch(`fiscal-years/${yearId}/yoy-comparison/?scope=${scope}`, { cache: 'no-store' }) as YoyReport
     } catch (error) {
+        handleAuthError(error)
         console.error('Failed to fetch YoY comparison:', error)
         return null
     }
@@ -430,6 +435,7 @@ export async function getMultiYearComparison(years: number = 3): Promise<MultiYe
         const scope = await _readScopeFromCookie()
         return await erpFetch(`fiscal-years/multi-year-comparison/?years=${years}&scope=${scope}`, { cache: 'no-store' }) as MultiYearReport
     } catch (error) {
+        handleAuthError(error)
         console.error('Failed to fetch multi-year comparison:', error)
         return null
     }
@@ -459,6 +465,7 @@ export async function getSnapshotChain(): Promise<SnapshotChainReport | null> {
     try {
         return await erpFetch('fiscal-years/snapshot-chain/') as SnapshotChainReport
     } catch (error) {
+        handleAuthError(error)
         console.error('Failed to fetch snapshot chain:', error)
         return null
     }
@@ -552,6 +559,7 @@ export async function listPriorPeriodAdjustments(yearId: number): Promise<PPAHis
         const scope = await _readScopeFromCookie()
         return await erpFetch(`fiscal-years/${yearId}/prior-period-adjustments/?scope=${scope}`) as PPAHistoryRow[]
     } catch (error) {
+        handleAuthError(error)
         console.error('Failed to list PPAs:', error)
         return []
     }
@@ -561,6 +569,7 @@ export async function getIntegrityCanary(): Promise<CanaryReport | null> {
     try {
         return await erpFetch('fiscal-years/integrity-canary/') as CanaryReport
     } catch (error) {
+        handleAuthError(error)
         console.error('Failed to fetch integrity canary:', error)
         return null
     }
@@ -673,6 +682,7 @@ export async function getClosePreview(yearId: number): Promise<ClosePreview | nu
         const scope = await _readScopeFromCookie()
         return await erpFetch(`fiscal-years/${yearId}/close-preview/?scope=${scope}`)
     } catch (error: unknown) {
+        handleAuthError(error)
         console.error("Failed to get close preview:", error)
         return null
     }
@@ -718,7 +728,8 @@ export async function getYearSummary(yearId: number): Promise<YearSummary | null
         // right trade-off for an interactive toggle that drives accounting UI.
         const scope = await _readScopeFromCookie()
         return await erpFetch(`fiscal-years/${yearId}/summary/?scope=${scope}`, { cache: 'no-store' })
-    } catch { return null }
+    } catch (error) {        handleAuthError(error)
+ return null }
 }
 
 export async function getYearHistory(yearId: number): Promise<{ events: YearHistoryEvent[]; je_by_month: { month: string; count: number }[] }> {

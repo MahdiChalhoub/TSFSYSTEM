@@ -36,7 +36,10 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
     return (
         <div className="space-y-6">
             {/* Balance Summary Header */}
-            <div className="GlassCard p-8 rounded-2xl border border-white/5 bg-gradient-to-br from-blue-500/10 to-purple-500/10 relative overflow-hidden">
+            <div
+                className="GlassCard p-8 rounded-2xl border border-white/5 relative overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-info) 10%, transparent), color-mix(in srgb, var(--app-accent) 10%, transparent))' }}
+            >
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                     <History className="w-32 h-32" />
                 </div>

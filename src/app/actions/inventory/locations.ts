@@ -1,18 +1,20 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 // ── Warehouse Zones, Aisles, Racks, Shelves, Bins ────────────────
 
 export async function getWarehouseZones(warehouseId?: number) {
  const qs = warehouseId ? `?warehouse=${warehouseId}` : ''
- try { return await erpFetch(`inventory/zones/${qs}`) } catch { return [] }
+ try { return await erpFetch(`inventory/zones/${qs}`) } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function getAisles(zoneId?: number) {
  const qs = zoneId ? `?zone=${zoneId}` : ''
- try { return await erpFetch(`inventory/aisles/${qs}`) } catch { return [] }
+ try { return await erpFetch(`inventory/aisles/${qs}`) } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function createAisle(data: Record<string, any>) {
@@ -23,7 +25,8 @@ export async function createAisle(data: Record<string, any>) {
 
 export async function getRacks(aisleId?: number) {
  const qs = aisleId ? `?aisle=${aisleId}` : ''
- try { return await erpFetch(`inventory/racks/${qs}`) } catch { return [] }
+ try { return await erpFetch(`inventory/racks/${qs}`) } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function createRack(data: Record<string, any>) {
@@ -34,7 +37,8 @@ export async function createRack(data: Record<string, any>) {
 
 export async function getShelves(rackId?: number) {
  const qs = rackId ? `?rack=${rackId}` : ''
- try { return await erpFetch(`inventory/shelves/${qs}`) } catch { return [] }
+ try { return await erpFetch(`inventory/shelves/${qs}`) } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function createShelf(data: Record<string, any>) {
@@ -45,7 +49,8 @@ export async function createShelf(data: Record<string, any>) {
 
 export async function getBins(shelfId?: number) {
  const qs = shelfId ? `?shelf=${shelfId}` : ''
- try { return await erpFetch(`inventory/bins/${qs}`) } catch { return [] }
+ try { return await erpFetch(`inventory/bins/${qs}`) } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function createBin(data: Record<string, any>) {
@@ -56,7 +61,8 @@ export async function createBin(data: Record<string, any>) {
 
 export async function getProductLocations(productId?: number) {
  const qs = productId ? `?product=${productId}` : ''
- try { return await erpFetch(`inventory/product-locations/${qs}`) } catch { return [] }
+ try { return await erpFetch(`inventory/product-locations/${qs}`) } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function assignProductLocation(data: Record<string, any>) {
@@ -67,13 +73,15 @@ export async function getWarehouses() {
  try {
  const data = await erpFetch('inventory/warehouses/');
  return Array.isArray(data) ? data : (data?.results ?? []);
- } catch { return [] }
+ } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 // ── Consignment Settlements ───────────────────────────────────────
 
 export async function getConsignmentSettlements() {
- try { return await erpFetch('pos/consignment-settlements/') } catch { return [] }
+ try { return await erpFetch('pos/consignment-settlements/') } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function getConsignmentSettlement(id: number) {
@@ -84,7 +92,8 @@ export async function getConsignmentSettlement(id: number) {
 
 export async function getSupplierSourcing(productId?: number) {
  const qs = productId ? `?product=${productId}` : ''
- try { return await erpFetch(`pos/sourcing/${qs}`) } catch { return [] }
+ try { return await erpFetch(`pos/sourcing/${qs}`) } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function getSupplierPricingHistory(productId?: number, supplierId?: number) {
@@ -92,19 +101,22 @@ export async function getSupplierPricingHistory(productId?: number, supplierId?:
  if (productId) p.set('product', String(productId))
  if (supplierId) p.set('supplier', String(supplierId))
  const qs = p.toString() ? `?${p.toString()}` : ''
- try { return await erpFetch(`pos/supplier-pricing/${qs}`) } catch { return [] }
+ try { return await erpFetch(`pos/supplier-pricing/${qs}`) } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 // ── Credit Notes ──────────────────────────────────────────────────
 
 export async function getCreditNotes() {
- try { return await erpFetch('pos/credit-notes/') } catch { return [] }
+ try { return await erpFetch('pos/credit-notes/') } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 // ── Purchase Orders ───────────────────────────────────────────────
 
 export async function getPurchaseOrders() {
- try { return await erpFetch('pos/purchase-orders/') } catch { return [] }
+ try { return await erpFetch('pos/purchase-orders/') } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function getPurchaseOrder(id: number) {
@@ -112,7 +124,8 @@ export async function getPurchaseOrder(id: number) {
 }
 
 export async function getLegacyPurchases() {
- try { return await erpFetch('pos/purchase/') } catch { return [] }
+ try { return await erpFetch('pos/purchase/') } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function getLegacyPurchase(id: number) {

@@ -1,5 +1,7 @@
 'use server'
 
+
+import { handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 // ─── V1 Types (kept for backward compat) ──────────────────────────────────
@@ -111,7 +113,8 @@ export async function getPostingRulesByModule(): Promise<Record<string, PostingR
     try {
         const { erpFetch } = await import('@/lib/erp-api')
         return await erpFetch('posting-rules/by-module/')
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return {}
     }
 }
@@ -192,7 +195,8 @@ export async function getRuleHistory(): Promise<any[]> {
     try {
         const { erpFetch } = await import('@/lib/erp-api')
         return await erpFetch('posting-rules/history/')
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }

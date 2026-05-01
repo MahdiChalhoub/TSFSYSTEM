@@ -1,13 +1,14 @@
 'use server';
 
-import { erpFetch } from '@/lib/erp-api';
+import { erpFetch, handleAuthError } from '@/lib/erp-api';
 
 // =============================================================================
 // ADMIN: PORTAL ACCESS MANAGEMENT
 // =============================================================================
 
 export async function getPortalAccesses() {
-    try { return await erpFetch('supplier-portal/portal-access/'); } catch { return []; }
+    try { return await erpFetch('supplier-portal/portal-access/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function createPortalAccess(data: any) {
     return erpFetch('supplier-portal/portal-access/', { method: 'POST', body: JSON.stringify(data) });
@@ -35,7 +36,8 @@ export async function setPortalPermissions(id: number, permissions: string[]) {
 // =============================================================================
 
 export async function getAdminProformas() {
-    try { return await erpFetch('supplier-portal/admin-proformas/'); } catch { return []; }
+    try { return await erpFetch('supplier-portal/admin-proformas/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function getAdminProforma(id: number) {
     return erpFetch(`supplier-portal/admin-proformas/${id}/`);
@@ -62,7 +64,8 @@ export async function convertProformaToPO(id: number) {
 // =============================================================================
 
 export async function getAdminPriceRequests() {
-    try { return await erpFetch('supplier-portal/admin-price-requests/'); } catch { return []; }
+    try { return await erpFetch('supplier-portal/admin-price-requests/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function approvePriceRequest(id: number, notes?: string) {
     return erpFetch(`supplier-portal/admin-price-requests/${id}/approve/`, {
@@ -85,7 +88,8 @@ export async function counterProposePriceRequest(id: number, counterPrice: numbe
 // =============================================================================
 
 export async function getSupplierDashboard() {
-    try { return await erpFetch('supplier-portal/dashboard/'); } catch { return null; }
+    try { return await erpFetch('supplier-portal/dashboard/'); } catch (error) {        handleAuthError(error)
+ return null; }
 }
 
 // =============================================================================
@@ -94,7 +98,8 @@ export async function getSupplierDashboard() {
 
 export async function getSupplierOrders(status?: string) {
     const params = status ? `?status=${status}` : '';
-    try { return await erpFetch(`supplier-portal/my-orders/${params}`); } catch { return []; }
+    try { return await erpFetch(`supplier-portal/my-orders/${params}`); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 
 // =============================================================================
@@ -102,7 +107,8 @@ export async function getSupplierOrders(status?: string) {
 // =============================================================================
 
 export async function getSupplierStock() {
-    try { return await erpFetch('supplier-portal/my-stock/'); } catch { return []; }
+    try { return await erpFetch('supplier-portal/my-stock/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 
 // =============================================================================
@@ -110,7 +116,8 @@ export async function getSupplierStock() {
 // =============================================================================
 
 export async function getMyProformas() {
-    try { return await erpFetch('supplier-portal/my-proformas/'); } catch { return []; }
+    try { return await erpFetch('supplier-portal/my-proformas/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function getMyProforma(id: number) {
     return erpFetch(`supplier-portal/my-proformas/${id}/`);
@@ -132,7 +139,8 @@ export async function addProformaLine(proformaId: number, data: any) {
 // =============================================================================
 
 export async function getMyPriceRequests() {
-    try { return await erpFetch('supplier-portal/my-price-requests/'); } catch { return []; }
+    try { return await erpFetch('supplier-portal/my-price-requests/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function createPriceRequest(data: any) {
     return erpFetch('supplier-portal/my-price-requests/', { method: 'POST', body: JSON.stringify(data) });
@@ -146,7 +154,8 @@ export async function acceptCounterProposal(id: number) {
 // =============================================================================
 
 export async function getSupplierNotifications() {
-    try { return await erpFetch('supplier-portal/my-notifications/'); } catch { return []; }
+    try { return await erpFetch('supplier-portal/my-notifications/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function markNotificationRead(id: number) {
     return erpFetch(`supplier-portal/my-notifications/${id}/mark_read/`, { method: 'POST' });

@@ -1,6 +1,6 @@
 'use server';
 
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type BrandState = {
@@ -15,7 +15,8 @@ function parseTranslations(formData: FormData): Record<string, { name?: string; 
     try {
         const raw = (formData.get('translationsJson') as string) || '';
         return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
+    } catch (error) {        handleAuthError(error)
+ return {}; }
 }
 
 export async function createBrand(prevState: BrandState, formData: FormData): Promise<BrandState> {
@@ -91,6 +92,7 @@ export async function getBrandHierarchy(brandId: number) {
     try {
         return await erpFetch(`brands/${brandId}/hierarchy/`);
     } catch (e) {
+        handleAuthError(e)
         console.error("Error fetching hierarchy:", e);
         return null;
     }

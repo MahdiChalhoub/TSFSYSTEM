@@ -243,7 +243,7 @@ export default function LandingPage() {
 
             {/* Main Unified Portal */}
             <Card className="w-full max-w-2xl bg-[#0f172a]/40 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border-t border-t-white/10 relative z-10 transition-all duration-500">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-app-primary/40 to-transparent" />
 
                 {/* Mode Switcher */}
                 <div className="grid grid-cols-3 border-b border-white/5 bg-black/20">

@@ -1,16 +1,18 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
 // ── Departments ──────────────────────────────────────────────
 
 export async function getDepartments() {
-    try { return await erpFetch('departments/') } catch { return [] }
+    try { return await erpFetch('departments/') } catch (error) {        handleAuthError(error)
+ return [] }
 }
 
 export async function getDepartmentTree() {
-    try { return await erpFetch('departments/tree/') } catch { return [] }
+    try { return await erpFetch('departments/tree/') } catch (error) {        handleAuthError(error)
+ return [] }
 }
 
 export async function createDepartment(data: Record<string, any>) {
@@ -33,7 +35,8 @@ export async function deleteDepartment(id: string) {
 // ── Shifts ───────────────────────────────────────────────────
 
 export async function getShifts() {
-    try { return await erpFetch('shifts/') } catch { return [] }
+    try { return await erpFetch('shifts/') } catch (error) {        handleAuthError(error)
+ return [] }
 }
 
 export async function createShift(data: Record<string, any>) {
@@ -56,7 +59,8 @@ export async function deleteShift(id: string) {
 // ── Attendance ───────────────────────────────────────────────
 
 export async function getAttendance() {
-    try { return await erpFetch('attendance/') } catch { return [] }
+    try { return await erpFetch('attendance/') } catch (error) {        handleAuthError(error)
+ return [] }
 }
 
 export async function createAttendance(data: Record<string, any>) {
@@ -80,7 +84,8 @@ export async function checkOut(id: string) {
 // ── Leave Requests ───────────────────────────────────────────
 
 export async function getLeaves() {
-    try { return await erpFetch('leaves/') } catch { return [] }
+    try { return await erpFetch('leaves/') } catch (error) {        handleAuthError(error)
+ return [] }
 }
 
 export async function createLeave(data: Record<string, any>) {

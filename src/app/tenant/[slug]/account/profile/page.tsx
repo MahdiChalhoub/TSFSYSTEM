@@ -108,7 +108,7 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-app-bg p-4 lg:p-8 relative">
-            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-accent-cyan/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-2xl mx-auto relative z-10 space-y-6">
                 <h1 className="text-3xl font-black text-white flex items-center gap-3">

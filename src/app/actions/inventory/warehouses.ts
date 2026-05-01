@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
 export async function getWarehouses() {
@@ -11,7 +11,8 @@ export async function getAllWarehouseContextItems(): Promise<Record<string, any>
     try {
         const data = await erpFetch('warehouses/')
         return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch { return [] }
+    } catch (error) {        handleAuthError(error)
+ return [] }
 }
 
 export type WarehouseState = {

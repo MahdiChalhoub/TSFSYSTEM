@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 // ── Purchase Orders ─────────────────────────────────────────
 
@@ -39,12 +39,31 @@ export async function fetchPurchaseOrder(id: number | string) {
     return erpFetch(`purchase-orders/${id}/`)
 }
 
+/**
+ * PATCH a Purchase Order. Used by the `/purchases/new?edit=<id>` flow so
+ * the New Order screen can double as an editor for an existing PO
+ * (header fields + lines). The backend's `purchase-orders/{id}/` endpoint
+ * accepts a partial body — we mirror that here without re-validating
+ * shape (the page-level zod schema already did that).
+ */
+export async function updatePurchaseOrder(
+    id: number | string,
+    data: Record<string, unknown>,
+) {
+    return erpFetch(`purchase-orders/${id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+}
+
 export async function deletePO(id: number | string) {
     return erpFetch(`purchase-orders/${id}/`, { method: 'DELETE' })
 }
 
 export async function fetchPODashboard() {
-    try { return await erpFetch('purchase-orders/dashboard/') } catch { return null }
+    try { return await erpFetch('purchase-orders/dashboard/') } catch (error) {        handleAuthError(error)
+ return null }
 }
 
 // ── PO Workflow Actions ─────────────────────────────────────

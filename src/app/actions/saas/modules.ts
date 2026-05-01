@@ -1,12 +1,13 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 export async function getSaaSModules() {
     try {
         return await erpFetch('saas/modules/')
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch SaaS modules:", e)
         return []
     }
@@ -26,6 +27,7 @@ export async function getDynamicSidebar() {
     try {
         return await erpFetch('saas/modules/sidebar/')
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch dynamic sidebar:", e)
         return []
     }
@@ -39,6 +41,7 @@ export async function getActiveModules() {
         }
         return []
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch active modules:", e)
         return []
     }
@@ -101,6 +104,7 @@ export async function getModuleBackups(code: string) {
     try {
         return await erpFetch(`saas/modules/${code}/backups/`)
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch backups:", e)
         return []
     }
@@ -142,6 +146,7 @@ export async function getOrgModules(orgId: string) {
     try {
         return await erpFetch(`saas/org-modules/${orgId}/modules/`)
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch org modules:", e)
         return []
     }

@@ -7,7 +7,7 @@
  * returning total virtual stock, per-variant breakdown, and sourcing intel.
  */
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 export interface GroupStockSummary {
     group_id: number
@@ -77,6 +77,7 @@ export async function getProductGroupStock(productId: number): Promise<GroupStoc
             variants,
         }
     } catch (error) {
+        handleAuthError(error)
         console.error('[GroupStock] Failed:', error)
         return null
     }

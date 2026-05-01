@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -44,7 +44,8 @@ export async function getStorefrontConfig(): Promise<StorefrontConfig | null> {
         const res = await erpFetch('storefront/config/', { method: 'GET' })
         if (!res.ok) return null
         return await res.json()
-    } catch { return null }
+    } catch (error) {        handleAuthError(error)
+ return null }
 }
 
 // ── Cart ──────────────────────────────────────────────────────────────────
@@ -56,7 +57,8 @@ export async function getCart(): Promise<CartOrder | null> {
         const data = await res.json()
         const orders = data.results ?? data
         return Array.isArray(orders) && orders.length > 0 ? orders[0] : null
-    } catch { return null }
+    } catch (error) {        handleAuthError(error)
+ return null }
 }
 
 export async function addToCart(
@@ -150,7 +152,8 @@ export async function getShippingRatesForZone(zoneId: number) {
         })
         if (!res.ok) return []
         return await res.json()
-    } catch { return [] }
+    } catch (error) {        handleAuthError(error)
+ return [] }
 }
 
 export async function placeOrder(orderId: number, payload: {

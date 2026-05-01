@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -85,6 +85,7 @@ export async function getUnitProducts(unitId: number | string) {
  const data = await erpFetch(`/units/${unitId}/products/`)
  return Array.isArray(data) ? data : data?.results || []
  } catch (e) {
+ handleAuthError(e)
  console.error("Failed to fetch products for unit:", e)
  return []
  }
@@ -122,6 +123,7 @@ export async function getUnitPackaging(unitId: number | string) {
  const data = await erpFetch(`/units/${unitId}/linked_packaging/`)
  return Array.isArray(data) ? data : []
  } catch (e) {
+ handleAuthError(e)
  console.error("Failed to fetch packaging for unit:", e)
  return []
  }
@@ -168,6 +170,7 @@ export async function listUnitPackages(unitId: number | string) {
         const data = await erpFetch(`unit-packages/?unit=${unitId}`, { cache: 'no-store' } as any)
         return Array.isArray(data) ? data : (data?.results ?? [])
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch unit packages:', e)
         return []
     }

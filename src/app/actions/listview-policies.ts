@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 /**
  * Fetch the effective ListViewPolicy for a specific view key.
@@ -10,7 +10,8 @@ export async function getListViewPolicy(viewKey: string) {
     try {
         const res = await erpFetch(`listview-policies/resolve/${viewKey}/`)
         return res ?? null
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return null
     }
 }
@@ -22,7 +23,8 @@ export async function getListViewPoliciesBulk(viewKeys: string[]) {
     try {
         const res = await erpFetch(`listview-policies/resolve-bulk/?keys=${viewKeys.join(',')}`)
         return res ?? {}
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return {}
     }
 }
@@ -57,7 +59,8 @@ export async function listAllPolicies() {
 export async function getAvailableModels() {
     try {
         return await erpFetch(`listview-policies/available-models/`)
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }
@@ -68,7 +71,8 @@ export async function getAvailableModels() {
 export async function getModelFields(modelKey: string) {
     try {
         return await erpFetch(`listview-policies/model-fields/${modelKey}/`)
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return null
     }
 }

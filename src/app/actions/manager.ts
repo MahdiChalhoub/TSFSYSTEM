@@ -1,12 +1,13 @@
 'use server'
 
 import { revalidatePath } from "next/cache";
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 
 export async function fetchPendingUsers() {
     try {
         return await erpFetch('manager/approvals/pending/');
     } catch (e) {
+        handleAuthError(e)
         console.error("Fetch pending failed", e);
         return [];
     }

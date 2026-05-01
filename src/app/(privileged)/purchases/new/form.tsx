@@ -2,9 +2,9 @@
 
 import { useActionState, useState, useEffect, useRef, useMemo } from 'react'
 import type { PurchaseLine } from '@/types/erp'
-import { createPurchaseInvoice } from '@/app/actions/commercial/purchases'
+import { createPurchaseInvoice, updatePurchaseInvoice } from '@/app/actions/commercial/purchases'
 import {
-    ShoppingCart, ArrowLeft, Settings2, FileText,
+    ShoppingCart, ArrowLeft, Settings2,
     ListFilter, BookOpen, Plus, ArrowRight,
     DollarSign, Hash, Layers, TrendingUp,
     Building2, MapPin,
@@ -20,45 +20,113 @@ import { POLifecycle } from './_components/POLifecycle'
 import type { AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
 import { peekNextCode, prefetchNextCode, resolveDocSeqKey } from '@/lib/sequences-client'
 
+type PurchaseFormMode = 'create' | 'edit'
+
 export default function PurchaseForm({
-    suppliers, sites, financialSettings, users, profilesData
+    suppliers, sites, financialSettings, users, profilesData,
+    mode = 'create', initialPO = null,
 }: {
     suppliers: Record<string, any>[]
     sites: Record<string, any>[]
     financialSettings: Record<string, any>
     users: Record<string, any>[]
     profilesData: AnalyticsProfilesData
+    /** When 'edit', the form prefills from `initialPO` and submits via
+     *  `updatePurchaseInvoice` (PATCH) instead of the create action. */
+    mode?: PurchaseFormMode
+    initialPO?: Record<string, any> | null
 }) {
+    const isEdit = mode === 'edit' && !!initialPO
+    const editId = isEdit ? Number(initialPO?.id) : null
     const initialState = { message: '', errors: {} }
-    const [state, formAction, isPending] = useActionState(createPurchaseInvoice, initialState)
+    // Pick the right server action up-front so we don't change hook
+    // identity on a subsequent re-render. The `useActionState` contract
+    // assumes a stable function reference per mount.
+    const submitAction = isEdit ? updatePurchaseInvoice : createPurchaseInvoice
+    const [state, formAction, isPending] = useActionState(submitAction, initialState)
     const searchRef = useRef<HTMLInputElement>(null)
 
-    const [reference, setReference] = useState('')
+    // Edit-mode prefill helper. `useState` initializers run once at mount,
+    // so we wrap each `useState(initial)` with a value derived from
+    // `initialPO`. The shape handled here mirrors the `purchase-orders/`
+    // serializer: nested supplier/warehouse objects, snake_case dates,
+    // `lines[]` with `product`/`quantity_ordered`/`unit_price`.
+    const seedNumber = (val: unknown): number | '' => {
+        const n = Number(val)
+        return Number.isFinite(n) && n > 0 ? n : ''
+    }
+
+    const seededLines: PurchaseLine[] = useMemo(() => {
+        if (!isEdit || !Array.isArray(initialPO?.lines)) return []
+        return (initialPO!.lines as Record<string, any>[]).map((l): PurchaseLine => {
+            const taxRate = Number(l.tax_rate ?? l.taxRate ?? 0.18)
+            const unitCostHT = Number(l.unit_cost_ht ?? l.unit_price ?? l.unitCostHT ?? 0)
+            const sellingPriceHT = Number(l.selling_price_ht ?? l.sellingPriceHT ?? 0)
+            const productId = Number(l.product?.id ?? l.product ?? l.productId ?? 0)
+            return {
+                productId,
+                productName: l.product?.name || l.product_name || l.productName,
+                quantity: Number(l.quantity_ordered ?? l.quantity ?? 0),
+                unitCostHT,
+                unitCostTTC: Number(l.unit_cost_ttc ?? l.unitCostTTC ?? unitCostHT * (1 + taxRate)),
+                sellingPriceHT,
+                sellingPriceTTC: Number(l.selling_price_ttc ?? l.sellingPriceTTC ?? sellingPriceHT * (1 + taxRate)),
+                taxRate,
+                expiryDate: typeof l.expiry_date === 'string' ? l.expiry_date : (l.expiryDate as string | undefined) || '',
+            }
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    const [reference, setReference] = useState(() => (isEdit ? String(initialPO?.po_number || initialPO?.ref_code || '') : ''))
     // True if the user has hand-typed into the reference field. Once they
     // do, we never overwrite it with a fresh sequence peek — auto-fill is
-    // a convenience, not a constraint.
-    const [referenceTouched, setReferenceTouched] = useState(false)
+    // a convenience, not a constraint. In edit mode we start as "touched"
+    // so the sequence peek doesn't clobber the saved reference.
+    const [referenceTouched, setReferenceTouched] = useState(isEdit)
     // Optional second reference. Operators use this to capture the
     // supplier's own PO/quote number, an internal cost-center code, or a
     // legacy ERP reference — anything they want to track alongside the
     // tenant-generated PO number. Always editable, never auto-filled.
-    const [supplierRef, setSupplierRef] = useState('')
+    const [supplierRef, setSupplierRef] = useState(() => (isEdit ? String(initialPO?.supplier_ref || initialPO?.supplierRef || '') : ''))
     // Order date defaults to today; expected delivery to tomorrow — sane
     // defaults so the operator only changes them when their workflow needs
     // a different date. The operator can still pick any date afterwards.
-    const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
+    const [date, setDate] = useState(() => {
+        if (isEdit && typeof initialPO?.order_date === 'string') return initialPO.order_date as string
+        return new Date().toISOString().split('T')[0]
+    })
     const [deliveryDate, setDeliveryDate] = useState(() => {
+        if (isEdit && typeof initialPO?.expected_delivery === 'string') return initialPO.expected_delivery as string
         const t = new Date()
         t.setDate(t.getDate() + 1)
         return t.toISOString().split('T')[0]
     })
-    const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL')
-    const [supplierId, setSupplierId] = useState<number | ''>('')
-    const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('')
-    const [warehouseId, setWarehouseId] = useState<number | ''>('')
-    const [assigneeId, setAssigneeId] = useState<number | ''>('')
-    const [driverId, setDriverId] = useState<number | ''>('')
-    const [lines, setLines] = useState<PurchaseLine[]>([])
+    const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>(() => {
+        const s = isEdit ? (initialPO?.scope as string | undefined) : undefined
+        return s === 'INTERNAL' ? 'INTERNAL' : 'OFFICIAL'
+    })
+    const [supplierId, setSupplierId] = useState<number | ''>(() =>
+        isEdit ? seedNumber(initialPO?.supplier?.id ?? initialPO?.supplier ?? initialPO?.supplier_id) : ''
+    )
+    const [selectedSiteId, setSelectedSiteId] = useState<number | ''>(() => {
+        if (!isEdit) return ''
+        // Backend stores `warehouse` (the leaf) — use its `parent` (or
+        // `site`/`branch` if the serializer surfaces it directly) for the
+        // site selector.
+        const wh = initialPO?.warehouse as Record<string, unknown> | undefined
+        return seedNumber(initialPO?.site?.id ?? initialPO?.site ?? wh?.parent ?? wh?.site ?? initialPO?.branch_id)
+    })
+    const [warehouseId, setWarehouseId] = useState<number | ''>(() =>
+        isEdit ? seedNumber(initialPO?.warehouse?.id ?? initialPO?.warehouse ?? initialPO?.warehouse_id) : ''
+    )
+    const [assigneeId, setAssigneeId] = useState<number | ''>(() =>
+        isEdit ? seedNumber(initialPO?.assignee?.id ?? initialPO?.assignee ?? initialPO?.assignee_id) : ''
+    )
+    const [driverId, setDriverId] = useState<number | ''>(() =>
+        isEdit ? seedNumber(initialPO?.driver?.id ?? initialPO?.driver ?? initialPO?.driver_id) : ''
+    )
+    const [lines, setLines] = useState<PurchaseLine[]>(seededLines)
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
     const selectedSupplier = useMemo(() => suppliers.find(s => Number(s.id) === Number(supplierId)), [suppliers, supplierId])
@@ -159,8 +227,8 @@ export default function PurchaseForm({
                         <div className="min-w-0 flex-1">
                             <h1 className="font-black text-app-foreground tracking-tight leading-none truncate"
                                 style={{ fontSize: 'var(--tp-lg)' }}
-                                title="New Purchase Order">
-                                New Purchase Order
+                                title={isEdit ? `Edit PO ${reference || `#${editId}`}` : 'New Purchase Order'}>
+                                {isEdit ? `Edit PO ${reference || `#${editId}`}` : 'New Purchase Order'}
                             </h1>
                             {/* Subtitle is conditional:
                              *   - When the user hasn't configured anything yet → soft hint.
@@ -255,6 +323,13 @@ export default function PurchaseForm({
 
                         {/* Submit — same height, same radius, primary fill (always-on accent). */}
                         <form id="po-form" action={formAction}>
+                            {/* Edit-mode marker. The update server action
+                             *  reads `__poId` to know which PO to PATCH;
+                             *  absent in create mode so the create action
+                             *  ignores it. */}
+                            {isEdit && editId !== null && (
+                                <input type="hidden" name="__poId" value={editId} />
+                            )}
                             <input type="hidden" name="scope" value={scope} />
                             <input type="hidden" name="supplierId" value={supplierId} />
                             <input type="hidden" name="siteId" value={selectedSiteId} />
@@ -281,7 +356,11 @@ export default function PurchaseForm({
                                             : 'none',
                                     }}>
                                 <ArrowRight size={14} />
-                                <span className="hidden sm:inline">{isPending ? 'Processing…' : 'Create PO'}</span>
+                                <span className="hidden sm:inline">
+                                    {isPending
+                                        ? (isEdit ? 'Saving…' : 'Processing…')
+                                        : (isEdit ? 'Save Changes' : 'Create PO')}
+                                </span>
                             </button>
                         </form>
                     </div>

@@ -1,6 +1,6 @@
 'use server';
 
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type AttributeState = {
@@ -15,6 +15,7 @@ export async function getAttributes() {
         const data = await erpFetch('parfums/');
         return data;
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch attributes:", error);
         return [];
     }
@@ -24,7 +25,8 @@ function parseTranslations(formData: FormData): Record<string, { name?: string; 
     try {
         const raw = (formData.get('translationsJson') as string) || '';
         return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
+    } catch (error) {        handleAuthError(error)
+ return {}; }
 }
 
 export async function createAttribute(prevState: AttributeState, formData: FormData): Promise<AttributeState> {
@@ -101,6 +103,7 @@ export async function getAttributesByCategory(categoryId: number | null) {
     try {
         return await erpFetch(`parfums/by_category/?categoryId=${categoryId}`);
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch attributes by category", e);
         return [];
     }
@@ -119,6 +122,7 @@ export async function getAttributeHierarchy(parfumId: number) {
             name: item.brand?.name,
         }));
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch hierarchy", e);
         return [];
     }

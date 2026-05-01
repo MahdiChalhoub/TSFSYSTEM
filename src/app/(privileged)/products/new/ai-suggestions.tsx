@@ -115,7 +115,7 @@ export default function AISuggestionsPanel({ productName, onAccept }: AISuggesti
     };
 
     return (
-        <div className="relative overflow-hidden rounded-xl border border-app-primary/30 bg-gradient-to-r from-app-primary/5 via-app-info/5 to-purple-500/5 p-4 fade-in-up">
+        <div className="relative overflow-hidden rounded-xl border border-app-primary/30 bg-gradient-to-r from-app-primary/5 via-app-info/5 to-app-accent/5 p-4 fade-in-up">
             {/* Shimmer effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse pointer-events-none" />
 

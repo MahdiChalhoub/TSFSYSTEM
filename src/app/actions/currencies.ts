@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { revalidatePath } from 'next/cache'
 
 export type Currency = {
@@ -15,6 +15,7 @@ export async function getCurrencies(): Promise<Currency[]> {
         const result = await erpFetch('currencies/')
         return Array.isArray(result) ? result : (result.results || [])
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch currencies:", error)
         return []
     }

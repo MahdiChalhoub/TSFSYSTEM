@@ -59,6 +59,33 @@ export class ErpApiError extends Error {
     }
 }
 
+/**
+ * Auth-error guard for server-action catch blocks.
+ *
+ * Server actions historically wrapped erpFetch in `try { ... } catch { return [] }`,
+ * which silently swallowed 401/403 from a stale/expired token — pages then
+ * rendered as "no data" instead of redirecting to login. Call this at the top
+ * of every catch block: it triggers a Next.js redirect (which throws internally)
+ * for auth errors and returns void otherwise so the catch can fall through to
+ * its existing default-return behavior for transient backend errors.
+ *
+ * Usage:
+ *   } catch (error) {
+ *       handleAuthError(error)
+ *       console.error("...", error)
+ *       return []
+ *   }
+ */
+export function handleAuthError(error: unknown): void {
+    if (error instanceof ErpApiError && (error.status === 401 || error.status === 403)) {
+        // Lazy import keeps this module usable in non-RSC contexts.
+        // redirect() throws NEXT_REDIRECT internally — control never returns.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { redirect } = require('next/navigation') as typeof import('next/navigation')
+        redirect('/login?error=session_expired')
+    }
+}
+
 // Client-side singleton cache for the resolved tenant context. React.cache()
 // below only dedupes within a single server render — the browser would
 // otherwise call /tenant/resolve on EVERY erpFetch (one per component mount),

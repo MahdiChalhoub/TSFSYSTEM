@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { fetchPurchaseOrders } from '@/app/actions/pos/purchases'
+import { handleSessionExpired } from '@/lib/session-expiry'
 import { useRouter } from 'next/navigation'
 import { useAdmin } from '@/context/AdminContext'
 import {
@@ -79,22 +80,15 @@ export default function PurchaseOrdersManager({
     const result = await fetchPurchaseOrders()
     setOrders(result.data)
     if (result.error) {
-      // Auth failures get a prompt to re-login; everything else gets a
-      // generic toast so the user knows the list isn't authoritative.
-      // Without these, an expired session looked identical to "no POs"
-      // — operators thought their data was gone.
-      const { toast } = await import('sonner')
       if (result.auth) {
-        toast.error('Session expired', {
-          description: 'Log out and back in to continue.',
-          duration: 8000,
-        })
-      } else {
-        toast.error('Couldn\'t refresh purchase orders', {
-          description: result.error,
-          duration: 6000,
-        })
+        handleSessionExpired()
+        return
       }
+      const { toast } = await import('sonner')
+      toast.error('Couldn\'t refresh purchase orders', {
+        description: result.error,
+        duration: 6000,
+      })
     }
     setLoading(false)
   }, [])

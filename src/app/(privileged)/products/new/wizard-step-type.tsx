@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Package, Wrench, Layers, Monitor, Zap, ArrowRight, Sparkles } from 'lucide-react';
 
 export type ProductTypeChoice = 'SINGLE' | 'SERVICE' | 'COMBO' | 'DIGITAL';
@@ -11,7 +11,10 @@ interface ProductTypeOption {
     subtitle: string;
     icon: typeof Package;
     accent: string;
-    gradient: string;
+    /** Inline-style background — uses CSS color-mix to preserve translucent gradient
+     *  semantics (Tailwind v4 lost the `from-X/N` opacity-stop syntax, so we tint
+     *  the explicit hex stops manually). */
+    gradientStyle: React.CSSProperties;
     features: string[];
     hiddenFields: string[];
 }
@@ -23,7 +26,7 @@ const PRODUCT_TYPES: ProductTypeOption[] = [
         subtitle: 'Tangible items with stock tracking',
         icon: Package,
         accent: 'from-emerald-500 to-teal-600',
-        gradient: 'from-emerald-500/10 to-teal-500/5',
+        gradientStyle: { background: 'linear-gradient(135deg, color-mix(in srgb, #10B981 10%, transparent), color-mix(in srgb, #14B8A6 5%, transparent))' },
         features: ['Inventory tracking', 'Barcode / SKU', 'Packaging levels', 'Supplier mapping'],
         hiddenFields: [],
     },
@@ -33,7 +36,7 @@ const PRODUCT_TYPES: ProductTypeOption[] = [
         subtitle: 'Billable labor or consulting',
         icon: Wrench,
         accent: 'from-blue-500 to-indigo-600',
-        gradient: 'from-blue-500/10 to-indigo-500/5',
+        gradientStyle: { background: 'linear-gradient(135deg, color-mix(in srgb, #3B82F6 10%, transparent), color-mix(in srgb, #6366F1 5%, transparent))' },
         features: ['Hourly / fixed pricing', 'No inventory', 'Tax configuration', 'Service categories'],
         hiddenFields: ['inventory', 'packaging', 'supplier', 'barcode'],
     },
@@ -43,7 +46,7 @@ const PRODUCT_TYPES: ProductTypeOption[] = [
         subtitle: 'Assembled from other products',
         icon: Layers,
         accent: 'from-purple-500 to-fuchsia-600',
-        gradient: 'from-purple-500/10 to-fuchsia-500/5',
+        gradientStyle: { background: 'linear-gradient(135deg, color-mix(in srgb, #A855F7 10%, transparent), color-mix(in srgb, #D946EF 5%, transparent))' },
         features: ['Combo builder', 'Auto-pricing', 'Component stock check', 'Bundle discounts'],
         hiddenFields: ['supplier'],
     },
@@ -53,7 +56,7 @@ const PRODUCT_TYPES: ProductTypeOption[] = [
         subtitle: 'Downloads, licenses, subscriptions',
         icon: Monitor,
         accent: 'from-amber-500 to-orange-600',
-        gradient: 'from-amber-500/10 to-orange-500/5',
+        gradientStyle: { background: 'linear-gradient(135deg, color-mix(in srgb, #F59E0B 10%, transparent), color-mix(in srgb, #F97316 5%, transparent))' },
         features: ['No physical stock', 'License keys', 'Download links', 'Subscription billing'],
         hiddenFields: ['inventory', 'packaging', 'supplier'],
     },
@@ -100,13 +103,12 @@ export default function WizardStepType({ onSelect, onQuickCreate }: WizardStepTy
                             onMouseLeave={() => setHoveredId(null)}
                             className={`
                 relative group text-left p-5 rounded-2xl border-2 transition-all duration-300 ease-out
-                bg-gradient-to-br ${type.gradient}
                 ${isSelected
                                     ? 'border-app-primary shadow-lg shadow-app-primary/10 scale-[1.02]'
                                     : 'border-app-border/60 hover:border-app-primary/40 hover:shadow-md'
                                 }
               `}
-                            style={{ animationDelay: `${idx * 80}ms` }}
+                            style={{ animationDelay: `${idx * 80}ms`, ...type.gradientStyle }}
                         >
                             {/* Selection indicator */}
                             {isSelected && (

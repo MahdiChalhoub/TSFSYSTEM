@@ -10,7 +10,10 @@ export default function TenantNotFound() {
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-app-success/5 rounded-full blur-3xl" />
                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-app-accent/5 rounded-full blur-3xl" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/3 to-indigo-500/3 rounded-full blur-3xl" />
+                <div
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl"
+                    style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 3%, transparent), color-mix(in srgb, var(--app-accent) 3%, transparent))' }}
+                />
             </div>
 
             <div className="relative z-10 max-w-lg w-full text-center space-y-8">

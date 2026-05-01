@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { erpFetch } from '@/lib/erp-api';
+import { erpFetch, handleAuthError } from '@/lib/erp-api';
 
 export interface SuggestedQuantity {
     product_id: number;
@@ -22,6 +22,7 @@ export async function getSuggestedQuantity(productId: number): Promise<Suggested
         if (result && typeof result === 'object' && 'suggested_qty' in result) return result as SuggestedQuantity;
         return null;
     } catch (error) {
+        handleAuthError(error)
         console.error('Failed to fetch suggested quantity', error);
         return null;
     }

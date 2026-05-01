@@ -107,17 +107,17 @@ function BusinessRegisterContent() {
                 <div className="flex items-center justify-between relative">
                     <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-800 -translate-y-1/2 z-0" />
                     <div
-                        className="absolute top-1/2 left-0 h-[2px] bg-cyan-500 -translate-y-1/2 z-0 transition-all duration-500"
+                        className="absolute top-1/2 left-0 h-[2px] bg-app-accent-cyan -translate-y-1/2 z-0 transition-all duration-500"
                         style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
                     />
 
                     {steps.map((s) => (
                         <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${step >= s.id ? 'bg-cyan-500 border-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-slate-900 border-slate-700 text-app-muted-foreground'
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${step >= s.id ? 'bg-app-accent-cyan border-app-accent-cyan text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-slate-900 border-slate-700 text-app-muted-foreground'
                                 }`}>
                                 <span className="font-mono text-xs font-black">{s.id.toString().padStart(2, '0')}</span>
                             </div>
-                            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-500 ${step >= s.id ? 'text-cyan-400' : 'text-app-muted-foreground'
+                            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-500 ${step >= s.id ? 'text-app-accent-cyan' : 'text-app-muted-foreground'
                                 }`}>
                                 {s.name}
                             </span>
@@ -127,7 +127,7 @@ function BusinessRegisterContent() {
             </div>
 
             <Card className="w-full max-w-4xl bg-[#0f172a]/80 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-app-accent-cyan/40 to-transparent" />
 
                 <CardContent className="p-10 md:p-16">
                     <form action={action} className="space-y-12">
@@ -147,7 +147,7 @@ function BusinessRegisterContent() {
                         {/* STEP 01: Admin Authorization */}
                         <div className={step === 1 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
                             <div className="flex items-center gap-3 mb-8">
-                                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-inner">
+                                <div className="w-12 h-12 rounded-2xl bg-app-accent-cyan-bg border border-app-accent-cyan-border flex items-center justify-center text-app-accent-cyan shadow-inner">
                                     <ShieldCheck size={24} />
                                 </div>
                                 <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Admin Account</h3>
@@ -156,28 +156,28 @@ function BusinessRegisterContent() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Admin First Name</Label>
-                                    <Input name="admin_first_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
+                                    <Input name="admin_first_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-app-accent-cyan/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Admin Last Name</Label>
-                                    <Input name="admin_last_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
+                                    <Input name="admin_last_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-app-accent-cyan/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Username</Label>
-                                    <Input name="admin_username" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-cyan-400 focus:ring-2 focus:ring-cyan-500/20" />
+                                    <Input name="admin_username" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-app-accent-cyan focus:ring-2 focus:ring-app-accent-cyan/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Email</Label>
-                                    <Input name="admin_email" type="email" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-cyan-500/20" />
+                                    <Input name="admin_email" type="email" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-app-accent-cyan/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Password</Label>
-                                    <Input name="admin_password" type="password" required value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
+                                    <Input name="admin_password" type="password" required value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-app-accent-cyan/20" />
                                     <PasswordStrength password={adminPassword} />
                                 </div>
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Confirm Password</Label>
-                                    <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
+                                    <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-app-accent-cyan/20" />
                                 </div>
                             </div>
 
@@ -205,7 +205,7 @@ function BusinessRegisterContent() {
                                     if (password !== confirmPassword) errors.push('Passwords do not match');
                                     setStepErrors(errors);
                                     if (errors.length === 0) setStep(2);
-                                }} className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black text-lg rounded-2xl shadow-xl transition-all">
+                                }} className="w-full h-16 bg-app-accent-cyan-strong hover:bg-app-accent-cyan text-white font-black text-lg rounded-2xl shadow-xl transition-all">
                                     Next: Business Identity <ArrowRight className="ml-2" />
                                 </Button>
                             </div>
@@ -321,7 +321,7 @@ function BusinessRegisterContent() {
                                                 )}
                                             </div>
                                             <div className="flex-1">
-                                                <Input name="logo" type="file" accept="image/*" onChange={handleLogoChange} className="bg-slate-900/50 border-white/10 h-10 rounded-lg text-xs file:bg-transparent file:border-0 file:text-[10px] file:text-cyan-400 file:font-black text-app-muted-foreground" />
+                                                <Input name="logo" type="file" accept="image/*" onChange={handleLogoChange} className="bg-slate-900/50 border-white/10 h-10 rounded-lg text-xs file:bg-transparent file:border-0 file:text-[10px] file:text-app-accent-cyan file:font-black text-app-muted-foreground" />
                                                 <p className="text-[8px] text-app-muted-foreground mt-2 uppercase tracking-tight">SVG, PNG, or JPG. Max 5MB recommended.</p>
                                             </div>
                                         </div>
@@ -389,7 +389,7 @@ function BusinessRegisterContent() {
 
                 <CardFooter className="bg-black/20 py-8 justify-center border-t border-white/5">
                     <div className="grid grid-cols-4 gap-4 text-center text-[8px] font-black uppercase tracking-[0.4em] text-app-muted-foreground">
-                        <div className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-cyan-500" /> Authorized access</div>
+                        <div className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-app-accent-cyan" /> Authorized access</div>
                         <div className="flex items-center gap-1.5"><Building2 size={12} className="text-app-warning" /> multi-tenant</div>
                         <div className="flex items-center gap-1.5"><Globe size={12} className="text-app-success" /> Isolated stack</div>
                         <div className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-app-success" /> compliance a-1</div>

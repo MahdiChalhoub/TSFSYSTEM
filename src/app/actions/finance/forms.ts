@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -64,6 +64,7 @@ export async function getFormDefinitions(activeOnly = false): Promise<FormDefini
         const data = await erpFetch(path)
         return Array.isArray(data) ? data : (data?.results ?? [])
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch form definitions:', e)
         return []
     }
@@ -76,6 +77,7 @@ export async function getFormDefinition(key: string): Promise<FormDefinition | n
         const list = Array.isArray(data) ? data : (data?.results ?? [])
         return list.find((f: FormDefinition) => f.key === key) ?? null
     } catch (e) {
+        handleAuthError(e)
         console.error(`Failed to fetch form definition "${key}":`, e)
         return null
     }
@@ -150,6 +152,7 @@ export async function getFormResponses(opts: {
         const data = await erpFetch(`form-responses/?${params.toString()}`)
         return Array.isArray(data) ? data : (data?.results ?? [])
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch form responses:', e)
         return []
     }

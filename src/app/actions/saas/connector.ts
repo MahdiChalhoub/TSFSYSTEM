@@ -6,7 +6,7 @@
  * Data fetching and mutations for the Connector admin panel.
  */
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 // =============================================================================
 // DASHBOARD & STATES
@@ -34,6 +34,7 @@ export async function getModuleStates(organizationId?: number) {
             : 'connector/states/'
         return await erpFetch(url) || []
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch module states:', e)
         return []
     }
@@ -47,6 +48,7 @@ export async function getConnectorPolicies() {
     try {
         return await erpFetch('connector/policies/') || []
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch policies:', e)
         return []
     }
@@ -117,6 +119,7 @@ export async function getBufferedRequests(filters?: {
         const url = `connector/buffer/?${params.toString()}`
         return await erpFetch(url) || []
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch buffered requests:', e)
         return []
     }
@@ -178,6 +181,7 @@ export async function getConnectorLogs(filters?: {
         const url = `connector/logs/?${params.toString()}`
         return await erpFetch(url) || []
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch logs:', e)
         return []
     }
@@ -191,6 +195,7 @@ export async function getModuleContracts() {
     try {
         return await erpFetch('connector/contracts/') || []
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch contracts:', e)
         return []
     }

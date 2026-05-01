@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
 // ─── Read helpers ───────────────────────────────────────────────
@@ -43,6 +43,7 @@ export async function getOrganizationProfile() {
         const result = await erpFetch('organizations/me/')
         return result || null
     } catch (error) {
+        handleAuthError(error)
         // Expected when at SaaS root with no tenant context
         return null
     }

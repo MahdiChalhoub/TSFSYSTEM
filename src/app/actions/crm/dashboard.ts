@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 
 export async function getDashboardStats() {
     try {
@@ -14,7 +14,8 @@ export async function getMyTasks(mode: string = 'my_tasks') {
     try {
         const data = await erpFetch(`activities/?mode=${mode}`)
         return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }

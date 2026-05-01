@@ -7,7 +7,7 @@
  * Countries come from Settings → Regional (OrgCountry).
  */
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { getOrgCountries, getRefCountries } from "@/app/actions/reference"
 
 export interface InventoryCountry {
@@ -82,6 +82,7 @@ export async function getInventoryCountries(): Promise<InventoryCountry[]> {
             }
         }).sort((a, b) => a.name.localeCompare(b.name))
     } catch (error) {
+        handleAuthError(error)
         console.error("[Inventory] Failed to fetch countries:", error)
         return []
     }
@@ -106,7 +107,8 @@ export async function getCountryProducts(countryId: number) {
             brand: p.brand_name,
             category: p.category_name,
         }))
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }

@@ -1,5 +1,5 @@
 'use server';
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 interface PaymentTerm {
@@ -44,7 +44,8 @@ export async function getPaymentTerms(): Promise<PaymentTerm[]> {
     try {
         const data = (await erpFetch('payment-terms/')) as PaymentTerm[] | PaymentTermsResponse;
         return Array.isArray(data) ? data : (data?.results ?? []);
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return [];
     }
 }

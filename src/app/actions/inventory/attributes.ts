@@ -7,7 +7,7 @@
  * Used for dynamic product classification and variant generation.
  * V3: Brand linking, requires_barcode, product matrix explorer.
  */
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 const BASE = 'inventory/product-attributes'
@@ -24,6 +24,7 @@ export async function getAttributeTree() {
         if (res && typeof res === 'object' && Array.isArray((res as any).results)) return (res as any).results
         return []
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch attribute tree', e)
         return []
     }
@@ -37,6 +38,7 @@ export async function listAttributes(params?: Record<string, string>) {
         const qs = params ? '?' + new URLSearchParams(params).toString() : ''
         return await erpFetch(`${BASE}/${qs}`)
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to list attributes', e)
         return []
     }
@@ -49,6 +51,7 @@ export async function getAttribute(id: number) {
     try {
         return await erpFetch(`${BASE}/${id}/`)
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to get attribute', e)
         return null
     }
@@ -273,6 +276,7 @@ export async function getAllCategories() {
         const data = await erpFetch('categories/')
         return Array.isArray(data) ? data : data?.results || []
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch categories', e)
         return []
     }
@@ -286,6 +290,7 @@ export async function getAllBrands() {
         const data = await erpFetch('brands/?page_size=9999')
         return Array.isArray(data) ? data : data?.results || []
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch brands', e)
         return []
     }

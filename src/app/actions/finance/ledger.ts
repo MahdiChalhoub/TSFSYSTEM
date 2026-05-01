@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -154,6 +154,7 @@ export async function getLedgerEntries(
 
         return await erpFetch(path)
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch ledger entries:", error)
         return []
     }
@@ -264,6 +265,7 @@ export async function getOpeningEntries() {
         const result = await erpFetch('journal/opening_entries/')
         return result
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch opening entries:", error)
         return []
     }
@@ -274,6 +276,7 @@ export async function getJournalEntry(id: number) {
         const result = await erpFetch(`journal/${id}/`)
         return result
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch journal entry:", error)
         return null
     }

@@ -1,13 +1,14 @@
 'use server';
 
-import { erpFetch } from '@/lib/erp-api';
+import { erpFetch, handleAuthError } from '@/lib/erp-api';
 
 // =============================================================================
 // ADMIN: CLIENT ACCESS MANAGEMENT
 // =============================================================================
 
 export async function getClientAccesses() {
-    try { return await erpFetch('client-portal/client-access/'); } catch { return []; }
+    try { return await erpFetch('client-portal/client-access/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function createClientAccess(data: any) {
     return erpFetch('client-portal/client-access/', { method: 'POST', body: JSON.stringify(data) });
@@ -38,7 +39,8 @@ export async function generateClientBarcode(id: number) {
 // =============================================================================
 
 export async function getAdminClientOrders() {
-    try { return await erpFetch('client-portal/admin-orders/'); } catch { return []; }
+    try { return await erpFetch('client-portal/admin-orders/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function getAdminClientOrder(id: number) {
     return erpFetch(`client-portal/admin-orders/${id}/`);
@@ -66,7 +68,8 @@ export async function cancelClientOrder(id: number) {
 // =============================================================================
 
 export async function getAdminClientTickets() {
-    try { return await erpFetch('client-portal/admin-tickets/'); } catch { return []; }
+    try { return await erpFetch('client-portal/admin-tickets/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function assignTicket(id: number, userId: number) {
     return erpFetch(`client-portal/admin-tickets/${id}/assign/`, {
@@ -90,7 +93,8 @@ export async function reopenTicket(id: number) {
 // =============================================================================
 
 export async function getAdminWallets() {
-    try { return await erpFetch('client-portal/admin-wallets/'); } catch { return []; }
+    try { return await erpFetch('client-portal/admin-wallets/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function manualWalletCredit(id: number, amount: number, reason: string) {
     return erpFetch(`client-portal/admin-wallets/${id}/manual_credit/`, {
@@ -108,10 +112,12 @@ export async function manualWalletDebit(id: number, amount: number, reason: stri
 // =============================================================================
 
 export async function getPortalConfig() {
-    try { return await erpFetch('client-portal/config/'); } catch { return []; }
+    try { return await erpFetch('client-portal/config/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function getCurrentPortalConfig() {
-    try { return await erpFetch('client-portal/config/current/'); } catch { return null; }
+    try { return await erpFetch('client-portal/config/current/'); } catch (error) {        handleAuthError(error)
+ return null; }
 }
 export async function updatePortalConfig(id: number, data: any) {
     return erpFetch(`client-portal/config/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
@@ -122,7 +128,8 @@ export async function updatePortalConfig(id: number, data: any) {
 // =============================================================================
 
 export async function getClientDashboard() {
-    try { return await erpFetch('client-portal/dashboard/'); } catch { return null; }
+    try { return await erpFetch('client-portal/dashboard/'); } catch (error) {        handleAuthError(error)
+ return null; }
 }
 
 // =============================================================================
@@ -130,7 +137,8 @@ export async function getClientDashboard() {
 // =============================================================================
 
 export async function getMyClientOrders() {
-    try { return await erpFetch('client-portal/my-orders/'); } catch { return []; }
+    try { return await erpFetch('client-portal/my-orders/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function createCartOrder(data: any) {
     return erpFetch('client-portal/my-orders/', { method: 'POST', body: JSON.stringify(data) });
@@ -156,10 +164,12 @@ export async function rateDelivery(orderId: number, rating: number, feedback?: s
 // =============================================================================
 
 export async function getMyWallet() {
-    try { return await erpFetch('client-portal/my-wallet/'); } catch { return null; }
+    try { return await erpFetch('client-portal/my-wallet/'); } catch (error) {        handleAuthError(error)
+ return null; }
 }
 export async function getMyWalletTransactions() {
-    try { return await erpFetch('client-portal/my-wallet/transactions/'); } catch { return []; }
+    try { return await erpFetch('client-portal/my-wallet/transactions/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function redeemLoyaltyPoints(points: number) {
     return erpFetch('client-portal/my-wallet/redeem_points/', {
@@ -172,7 +182,8 @@ export async function redeemLoyaltyPoints(points: number) {
 // =============================================================================
 
 export async function getMyTickets() {
-    try { return await erpFetch('client-portal/my-tickets/'); } catch { return []; }
+    try { return await erpFetch('client-portal/my-tickets/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function createTicket(data: any) {
     return erpFetch('client-portal/my-tickets/', { method: 'POST', body: JSON.stringify(data) });
@@ -188,7 +199,8 @@ export async function rateTicketResolution(ticketId: number, rating: number, fee
 // =============================================================================
 
 export async function getQuoteRequests() {
-    try { return await erpFetch('client-portal/quote-requests/'); } catch { return []; }
+    try { return await erpFetch('client-portal/quote-requests/'); } catch (error) {        handleAuthError(error)
+ return []; }
 }
 export async function getQuoteRequest(id: number) {
     return erpFetch(`client-portal/quote-requests/${id}/`);

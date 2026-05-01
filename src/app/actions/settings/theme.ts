@@ -1,5 +1,7 @@
 'use server';
 
+
+import { handleAuthError } from '@/lib/erp-api'
 /**
  * Theme Settings — Server Actions
  * ================================
@@ -99,7 +101,8 @@ export async function getOrgDefaultTheme(): Promise<string | null> {
         const data = await res.json();
         const theme = data?.default_theme as string | null;
         return theme || null;
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return null;
     }
 }

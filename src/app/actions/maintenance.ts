@@ -1,6 +1,6 @@
 'use server';
 
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type MaintenanceEntity = {
@@ -35,6 +35,7 @@ export async function getMaintenanceEntities(type: 'category' | 'brand' | 'unit'
             children: item.children // For categories
         }));
     } catch (e) {
+        handleAuthError(e)
         console.error(`Failed to fetch ${type} entities:`, e);
         return [];
     }

@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
 export type SiteState = {
@@ -22,6 +22,7 @@ export async function getSites() {
             }
         }))
     } catch (error: unknown) {
+        handleAuthError(error)
         // Suppress auth errors or 404s (e.g. valid for root domain or logged out state)
         // We just return empty list so the Layout doesn't crash
         if ((error instanceof Error ? error.message : String(error)) && (

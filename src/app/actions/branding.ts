@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -11,6 +11,7 @@ export async function getLoginBranding() {
         const data = await erpFetch('settings/item/login_branding/');
         return data || {};
     } catch (error) {
+        handleAuthError(error)
         console.error("[getLoginBranding] Error:", error);
         return {};
     }

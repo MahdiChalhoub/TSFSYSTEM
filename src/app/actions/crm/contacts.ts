@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { z } from 'zod'
 
 const ContactSchema = z.object({
@@ -18,7 +18,8 @@ export async function getContacts() {
     try {
         const data = await erpFetch('contacts/')
         return Array.isArray(data) ? data : []
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }
@@ -27,7 +28,8 @@ export async function getContactsByType(type: 'PARTNER' | 'SUPPLIER' | 'CUSTOMER
     try {
         const all = await erpFetch('contacts/')
         return Array.isArray(all) ? all.filter((c: Record<string, any>) => c.type === type) : []
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }
@@ -35,7 +37,8 @@ export async function getContactsByType(type: 'PARTNER' | 'SUPPLIER' | 'CUSTOMER
 export async function getContact(id: number) {
     try {
         return await erpFetch(`contacts/${id}/`)
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return null
     }
 }
@@ -85,7 +88,8 @@ export async function searchContacts(query: string) {
     try {
         const data = await erpFetch(`contacts/?search=${encodeURIComponent(query)}`)
         return Array.isArray(data) ? data : (data as any)?.results || []
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }
@@ -95,6 +99,7 @@ export async function getSupplierScorecard(supplierId: number) {
     try {
         return await erpFetch(`contacts/${supplierId}/scorecard/`)
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to fetch supplier scorecard:", error)
         return null
     }

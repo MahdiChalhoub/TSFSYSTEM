@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { serialize } from '@/lib/utils'
 
 export async function submitEInvoice(invoiceId: string | number) {
@@ -19,7 +19,8 @@ export async function getGatewayConfigs() {
  try {
  const data = await erpFetch('finance/gateway-configs/')
  return serialize(data)
- } catch { return [] }
+ } catch (error) {     handleAuthError(error)
+ return [] }
 }
 
 export async function createGatewayConfig(data: Record<string, any>) {

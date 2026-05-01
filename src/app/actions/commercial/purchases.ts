@@ -86,6 +86,76 @@ export async function createPurchaseInvoice(prevState: PurchaseFormState, formDa
     redirect('/purchases');
 }
 
+/**
+ * Update an existing Purchase Order from the same New Order form.
+ *
+ * Wires the `/purchases/new?edit=<id>` flow into a `useActionState`
+ * server action with the same `(prevState, formData)` shape as
+ * `createPurchaseInvoice`, so `form.tsx` can swap in/out by mode without
+ * restructuring its hooks. Reads the same hidden fields (supplierId,
+ * warehouseId, scope, lines, …) and PATCHes the JSON envelope to
+ * `purchase-orders/{id}/`.
+ *
+ * The PO id travels via a hidden `__poId` field — we can't curry it with
+ * `bind()` because `useActionState` already supplies prevState/formData.
+ */
+export async function updatePurchaseInvoice(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
+    const id = formData.get('__poId');
+    if (!id) {
+        return { message: 'Missing PO id for update.' };
+    }
+
+    let lines: Record<string, unknown>[] = [];
+    const linesRaw = formData.get('lines');
+    if (typeof linesRaw === 'string' && linesRaw.length) {
+        try {
+            const parsed = JSON.parse(linesRaw);
+            if (Array.isArray(parsed)) lines = parsed as Record<string, unknown>[];
+        } catch { /* fall through to []; backend will reject below */ }
+    }
+
+    const rawData = {
+        supplierId: formData.get('supplierId'),
+        warehouseId: formData.get('warehouseId'),
+        siteId: formData.get('siteId'),
+        scope: formData.get('scope'),
+        refCode: formData.get('reference') || formData.get('refCode'),
+        supplierRef: formData.get('supplierRef'),
+        orderDate: formData.get('orderDate'),
+        expectedDelivery: formData.get('expectedDelivery'),
+        notes: formData.get('notes'),
+        lines: lines.filter((l) => l && (l as Record<string, unknown>).productId),
+    };
+
+    const validated = purchaseSchema.safeParse({
+        ...rawData,
+        invoicePriceType: 'HT' as const,
+        vatRecoverable: true,
+    });
+
+    if (!validated.success) {
+        return {
+            errors: validated.error.flatten().fieldErrors,
+            message: 'Some fields are missing or invalid.',
+        };
+    }
+
+    try {
+        await erpFetch(`purchase-orders/${String(id)}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(validated.data),
+        });
+    } catch (e: unknown) {
+        console.error('Purchase Update Error:', e);
+        return { message: (e instanceof Error ? e.message : String(e)) || 'Could not save changes to this Purchase Order.' };
+    }
+
+    revalidatePath('/purchases');
+    revalidatePath(`/purchases/${String(id)}`);
+    redirect(`/purchases/${String(id)}`);
+}
+
 export async function getProcurementIntelligence() {
     try {
         const [dashboard, trend, recent, suppliers] = await Promise.all([

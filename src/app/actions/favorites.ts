@@ -12,7 +12,7 @@
  * Priority: backend (cross-device) → localStorage cache (instant display)
  */
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 const FAVORITES_PREF_KEY = 'user_quick_favorites'
 
@@ -32,7 +32,8 @@ export async function getFavorites(): Promise<FavoriteEntry[]> {
         })
         const favs = res?.default_filters?.favorites
         return Array.isArray(favs) ? favs : []
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }

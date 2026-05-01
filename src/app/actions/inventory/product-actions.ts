@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 
 export async function searchProductsSimple(
     query: string,
@@ -19,6 +19,7 @@ export async function searchProductsSimple(
 
         return await erpFetch(`products/search_enhanced/?${q.toString()}`)
     } catch (error) {
+        handleAuthError(error)
         console.error("Failed to search products:", error)
         return []
     }

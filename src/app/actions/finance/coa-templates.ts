@@ -1,5 +1,7 @@
 'use server'
 
+
+import { handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -186,6 +188,7 @@ export async function getMigrationPreview(targetTemplateKey: string): Promise<Mi
             body: JSON.stringify({ target_template_key: targetTemplateKey }),
         })
     } catch (error) {
+        handleAuthError(error)
         console.error('[COA_TEMPLATE] Migration preview failed:', error)
         return null
     }
@@ -263,6 +266,7 @@ export async function getMigrationMapsList(): Promise<MigrationMapPair[]> {
         const data = await erpFetch('coa/db-templates/migration-maps/')
         return Array.isArray(data) ? data : []
     } catch (error) {
+        handleAuthError(error)
         console.error('[COA_MAP] getMigrationMapsList failed:', error)
         return []
     }

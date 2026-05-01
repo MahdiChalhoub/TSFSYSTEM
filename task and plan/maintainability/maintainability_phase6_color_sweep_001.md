@@ -169,7 +169,7 @@ These appear in the hardcoded set but lack a direct app-* alias. Document as **p
 1. **No `ring-app-error`** — ring colors don't include error. Best workaround: `ring-app-warning` (semantic mismatch) or extend `globals.css` to add `--color-app-error-ring`.
 2. **No purple / violet / fuchsia / pink semantic** — used in some marketing surfaces (`(auth)/register`, `landing`, `tenant/[slug]`). These are decorative gradients with no semantic meaning; safe to leave or replace with `app-primary`.
 3. **No second-tier brand color** — pages like `(privileged)/(saas)` mix `text-purple-500` and `bg-indigo-100` for category accents. Recommend adding `--app-accent` and `--app-accent-bg` to the theme engine before migrating those.
-4. **`from-…` / `to-…` gradients** — 442 occurrences. Most are decorative. ~~Preserve as-is in PoC; defer their migration to a separate sub-phase that introduces gradient tokens or replaces them with solid surfaces.~~ **RESOLVED Session 10 (2026-05-01)**: 14 `bg-app-gradient-{family}{,-soft}` utilities added to `globals.css`; 128 plain triplets across 60 files swapped to semantic utilities. ~21 opacity-modified gradient stops (`from-X/N to-Y/M`) remain deferred until opacity-aware tokens are added.
+4. **`from-…` / `to-…` gradients** — 442 occurrences. Most are decorative. ~~Preserve as-is in PoC; defer their migration to a separate sub-phase that introduces gradient tokens or replaces them with solid surfaces.~~ **RESOLVED Session 10 (2026-05-01)**: 14 `bg-app-gradient-{family}{,-soft}` utilities added to `globals.css`; 128 plain triplets across 60 files swapped to semantic utilities. ~~~21 opacity-modified gradient stops (`from-X/N to-Y/M`) remain deferred until opacity-aware tokens are added.~~ **RESOLVED Session 11 (2026-05-01)**: 9 remaining opacity-modified gradient sites swept — 2 collapsed to single-tone `bg-app-accent/N`, 4 swapped to `from-app-X/N` (theme tokens with Tailwind opacity), 3 rewritten as inline `linear-gradient(... color-mix(...))` styles when the color combination required mixing two distinct CSS vars.
 5. **Hex literals in inline `style={{}}`** — 2,901 raw hex/rgb strings. Many are SVG `fill=`/`stroke=`, charts, or `boxShadow`. Out-of-scope for class-token sweep; document for a follow-up.
 
 ---
@@ -1447,9 +1447,58 @@ Plain triplets only — opacity-modified `from-X/N to-Y/M` skipped.
 
 ### Precursors still pending
 
-- `--app-accent` cyan variant for `(auth)/register` + `tenant/[slug]/quote` + `tenant/[slug]/account/page` (portal-specific brand cyan).
-- Opacity-aware status tokens (e.g. `bg-app-info/10`, `bg-app-error/10`) for the ~21 opacity-modified gradient residuals + dozens of opacity-modified plain colors documented across Sessions 7–9.
-- Hex/rgb literal phase (~2,900 inline-style hex values + 4 module `accentColor` props).
+- ~~`--app-accent` cyan variant for `(auth)/register` + `tenant/[slug]/quote` + `tenant/[slug]/account/page`~~ **RESOLVED Session 11**.
+- Opacity-aware status tokens (e.g. `bg-app-info/10`, `bg-app-error/10`) — Session 11 used inline `style={{ background: 'color-mix(...)' }}` instead of new tokens (only 9 sites, not enough to amortize a token), but if more accumulate, this remains a candidate.
+- Hex/rgb literal phase (~2,900 inline-style hex values across components, e.g. `style={{ color: '#10b981' }}` in chart configs / icon-tile maps / etc.). Per-file context required; some are genuinely arbitrary (chart palettes) and some are theme candidates.
+
+---
+
+## Session 11 results — post-Tailwind-class final cleanup (2026-05-01)
+
+### Tokens added (5 vars, 1 family — `globals.css` @theme block)
+
+```css
+--color-app-accent-cyan:        var(--app-accent-cyan, #06B6D4);                       /* cyan-500 */
+--color-app-accent-cyan-bg:     var(--app-accent-cyan-bg, rgba(6,182,212,0.12));       /* cyan-500 @12% */
+--color-app-accent-cyan-bg-soft:var(--app-accent-cyan-bg-soft, rgba(6,182,212,0.06));  /* cyan-500 @6% */
+--color-app-accent-cyan-border: var(--app-accent-cyan-border, rgba(6,182,212,0.32));   /* cyan-500 @32% */
+--color-app-accent-cyan-strong: var(--app-accent-cyan-strong, #0E7490);                /* cyan-700 */
+```
+
+Mirrors the `--color-app-accent` violet family. Mapped cleanly to all 21 deferred cyan brand-references in `(auth)/register` and `tenant/[slug]/account`.
+
+### Bucket counts — before / after
+
+| Bucket | Before | After | Δ |
+|---|---:|---:|---:|
+| `cyan-{300,400,500,600,700}` in `(auth)/register/{user,business}` + `tenant/[slug]/account/{page,profile,wallet}` | 21 | 0* | −21 |
+| `accentColor="#hex"` in `src/app/(privileged)/*/error.tsx` | 22 | 0 | −22 |
+| Opacity-modified gradient stops in `src/app/` (regex: `from-[a-z]*-500/[0-9]+`/`from-X/[N]`/`to-X/N`/`via-X/N`) | 9 | 0 | −9 |
+
+*One residual `from-cyan-600 to-cyan-700` remains in `wallet/page.tsx` TIERS array — it's a base-color-stop (no opacity) used in a dynamic `bg-gradient-to-br ${tier.color}` interpolation; the brand-tier color identity is intentional.
+
+### Key migrations
+
+- **Cyan brand**: 14 swaps in `register/business/page.tsx`, 3 in `register/user/page.tsx`, 2 in `tenant/[slug]/account/page.tsx`, 1 each in `account/profile/page.tsx` and `account/wallet/page.tsx`.
+- **`accentColor` props**: 22 `error.tsx` files mapped to closest semantic var using `var(--app-X, #fallback)` form. Fallback hex preserved for SSR/no-CSS render parity. `ModuleErrorBoundary` reads the prop into `style={{ color }}` and `color-mix(in srgb, ${accentColor} N%, transparent)` blocks — both work natively with `var(...)`.
+- **Opacity gradients**: 9 sites covering 8 files. Strategy decided per-site:
+  - 2 sites used new app-accent tokens (`bg-app-accent/{20,5}`) for single-tone fades that previously used same-family duplicates.
+  - 4 sites kept Tailwind opacity-stop syntax but swapped raw color → app token (`from-app-primary/60 via-app-accent/40`, `via-app-primary/40`, `border-app-primary/20`, `to-app-accent/5`).
+  - 3 sites converted to inline `style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-X) N%, transparent), ...)' }}` — chosen when 2 distinct theme colors mix at low opacity (DriverStatement, OrgNotFoundPage, not-found), since Tailwind v4's class-based opacity stops can't compose two `var(...)`s.
+  - `wizard-step-type.tsx` refactored: `gradient: string` (Tailwind class) → `gradientStyle: React.CSSProperties` (inline `linear-gradient(...)`); applied via `style={{ ...type.gradientStyle }}`.
+  - `encryption/page.tsx` cleaned up dead `hover:from-X hover:to-Y` attached to a `bg-app-gradient-primary` utility (would never apply since class isn't a Tailwind gradient) — replaced with `hover:brightness-110 ... shadow-app-primary/20`.
+
+### Verification
+
+- `npx tsc --noEmit` exit 0 (post-Session 11). Same baseline 5 pre-existing errors as Session 10 — 0 new errors introduced.
+- `grep -rn 'from-[a-z]*-500/[0-9]+\|from-[a-z]*-500/\[\|to-[a-z]*-500/[0-9]+\|to-[a-z]*-500/\[\|via-[a-z]*-500/[0-9]+' src/app/` returns **0 matches**.
+- `grep -rn 'accentColor="#'` returns **0 matches**.
+- Cyan check: 3 hits in scope, all on `app-accent-cyan*` token names + 1 dynamic `from-cyan-600 to-cyan-700` Tailwind class in wallet TIERS array.
+
+### Residuals (none in scope)
+
+All three deliverables zero out. Remaining cleanup phases (separate work):
+- ~2,900 inline-style hex/rgb literals (`style={{ color: '#10b981' }}`, chart palette objects, etc.) — needs per-file context, not a bulk sweep.
 
 ---
 

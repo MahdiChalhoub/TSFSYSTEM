@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 
 export async function getStockValuation(warehouseId?: number) {
     const params = warehouseId ? `?warehouse_id=${warehouseId}` : ''
@@ -11,7 +11,8 @@ export async function getWarehouses() {
     try {
         const data = await erpFetch('inventory/warehouses/')
         return Array.isArray(data) ? data : []
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }

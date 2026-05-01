@@ -10,7 +10,7 @@
  * API Base: /api/reference/
  */
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 import type {
     RefCountry,
@@ -45,6 +45,7 @@ export async function getRefCountries(params?: {
         const result = await erpFetch(url)
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch countries:", error)
         return []
     }
@@ -67,6 +68,7 @@ export async function getRefCurrencies(params?: {
         const result = await erpFetch(url)
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch currencies:", error)
         return []
     }
@@ -80,6 +82,7 @@ export async function getCountryRegions(): Promise<string[]> {
         const result = await erpFetch('reference/countries/regions/')
         return Array.isArray(result) ? result : []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch regions:", error)
         return []
     }
@@ -102,6 +105,7 @@ export async function getCountryCurrencyMap(params?: {
         const result = await erpFetch(url)
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch country-currency map:", error)
         return []
     }
@@ -119,6 +123,7 @@ export async function getOrgCountries(): Promise<OrgCountry[]> {
         const result = await erpFetch('reference/org-countries/')
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch org countries:", error)
         return []
     }
@@ -206,6 +211,7 @@ export async function getOrgCurrencies(): Promise<OrgCurrency[]> {
         const result = await erpFetch('reference/org-currencies/')
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch org currencies:", error)
         return []
     }
@@ -326,6 +332,7 @@ export async function getSourcingCountries(): Promise<any[]> {
         const result = await erpFetch('reference/sourcing-countries/')
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch sourcing countries:", error)
         return []
     }
@@ -418,6 +425,7 @@ export async function getRefPaymentGateways(country?: string): Promise<any[]> {
         const result = await erpFetch(url)
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch payment gateways:", error)
         return []
     }
@@ -431,6 +439,7 @@ export async function getOrgPaymentGateways(): Promise<any[]> {
         const result = await erpFetch('reference/org-payment-gateways/')
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
+        handleAuthError(error)
         console.error("[Reference] Failed to fetch org payment gateways:", error)
         return []
     }

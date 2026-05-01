@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 // ═══════════════════════════════════════════════════════════════════
 // TYPES
@@ -58,7 +58,8 @@ export async function getResolvedConfig(pageContext: string): Promise<ResolvedCo
     try {
         const data = await erpFetch(`settings/analytics-profiles/?page_context=${pageContext}&resolve=true`);
         return (data?.resolved_config || {}) as ResolvedConfig;
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return {} as ResolvedConfig;
     }
 }

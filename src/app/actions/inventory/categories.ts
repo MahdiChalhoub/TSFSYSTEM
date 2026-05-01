@@ -1,6 +1,6 @@
 'use server';
 
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type CategoryState = {
@@ -159,6 +159,7 @@ export async function getCategoryProducts(categoryId: number) {
  const data = await erpFetch(`inventory/products/?category=${categoryId}`);
  return Array.isArray(data) ? data : data?.results || [];
  } catch (e) {
+ handleAuthError(e)
  console.error("Failed to fetch products for category:", e);
  return [];
  }

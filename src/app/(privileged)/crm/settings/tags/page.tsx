@@ -151,7 +151,7 @@ export default function ContactTagsPage() {
 
                         {/* Tree */}
                         <div className="bg-app-surface/80 backdrop-blur-sm border border-app-border/40 rounded-2xl overflow-hidden shadow-lg shadow-app-primary/5 min-h-[480px]">
-                            <div className="h-[2px] bg-gradient-to-r from-app-primary/60 via-indigo-500/40 to-transparent" />
+                            <div className="h-[2px] bg-gradient-to-r from-app-primary/60 via-app-accent/40 to-transparent" />
                             <div className="p-4">
                                 {loading ? (
                                     <div className="space-y-3 py-8">
@@ -197,7 +197,7 @@ export default function ContactTagsPage() {
                             </p>
 
                             <div className="bg-app-surface/80 backdrop-blur-sm border border-app-border/40 rounded-2xl overflow-hidden shadow-xl shadow-app-primary/5">
-                                <div className="h-[2px] bg-gradient-to-r from-app-primary/60 via-indigo-500/40 to-transparent" />
+                                <div className="h-[2px] bg-gradient-to-r from-app-primary/60 via-app-accent/40 to-transparent" />
                                 <div className="p-6 space-y-6">
 
                                     {/* Name */}

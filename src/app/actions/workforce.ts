@@ -1,12 +1,13 @@
 'use server';
 
-import { erpFetch } from '@/lib/erp-api';
+import { erpFetch, handleAuthError } from '@/lib/erp-api';
 
 // ── My Summary ────────────────────────────────────────────────────
 
 export async function getWorkforceSummary() {
     try { return await erpFetch('/workforce/summaries/my_summary/'); }
-    catch { return null; }
+    catch (error) {        handleAuthError(error)
+ return null; }
 }
 
 export async function getWorkforceSummaryForEmployee(employeeId: string | number) {
@@ -14,17 +15,20 @@ export async function getWorkforceSummaryForEmployee(employeeId: string | number
         return await erpFetch(`/workforce/summaries/?employee=${employeeId}&limit=1`)
             .then((r: any) => Array.isArray(r) ? r[0] : r?.results?.[0] ?? null);
     }
-    catch { return null; }
+    catch (error) {        handleAuthError(error)
+ return null; }
 }
 
 export async function getWorkforceLeaderboard(limit = 10) {
     try { return await erpFetch(`/workforce/summaries/leaderboard/?limit=${limit}`); }
-    catch { return []; }
+    catch (error) {        handleAuthError(error)
+ return []; }
 }
 
 export async function getWorkforceRiskHeatmap() {
     try { return await erpFetch('/workforce/summaries/risk_heatmap/'); }
-    catch { return []; }
+    catch (error) {        handleAuthError(error)
+ return []; }
 }
 
 // ── Events Ledger ─────────────────────────────────────────────────
@@ -56,7 +60,8 @@ export async function reverseWorkforceEvent(eventId: number): Promise<{ success:
 export async function getWorkforceBadges(employeeId?: number) {
     const query = employeeId ? `?employee=${employeeId}` : '';
     try { return await erpFetch(`/workforce/badges/${query}`); }
-    catch { return []; }
+    catch (error) {        handleAuthError(error)
+ return []; }
 }
 
 // ── Historical Periods ────────────────────────────────────────────
@@ -65,7 +70,8 @@ export async function getWorkforcePeriods(employeeId?: number, type = 'MONTHLY')
     const params = new URLSearchParams({ period_type: type });
     if (employeeId) params.set('employee', String(employeeId));
     try { return await erpFetch(`/workforce/periods/?${params.toString()}`); }
-    catch { return []; }
+    catch (error) {        handleAuthError(error)
+ return []; }
 }
 
 export async function getWorkforcePeriodsForEmployee(employeeId: string | number) {
@@ -80,12 +86,14 @@ export async function getWorkforcePeriodsForEmployee(employeeId: string | number
 export async function getWorkforceRules(module?: string) {
     const query = module ? `?module=${module}` : '';
     try { return await erpFetch(`/workforce/rules/by_module/${query}`); }
-    catch { return []; }
+    catch (error) {        handleAuthError(error)
+ return []; }
 }
 
 export async function getWorkforceRulesAll() {
     try { return await erpFetch('/workforce/rules/?limit=200&ordering=module'); }
-    catch { return []; }
+    catch (error) {        handleAuthError(error)
+ return []; }
 }
 
 // ── Org Statistics ───────────────────────────────────────────────
@@ -109,7 +117,8 @@ export interface WorkforceStatistics {
 
 export async function getWorkforceStatistics(): Promise<WorkforceStatistics | null> {
     try { return await erpFetch('/workforce/summaries/statistics/'); }
-    catch { return null; }
+    catch (error) {        handleAuthError(error)
+ return null; }
 }
 
 // ── Manual Adjustment ───────────────────────────────────────────

@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -58,7 +58,8 @@ export async function getAccountSummary(): Promise<AccountSummary | null> {
         })
         if (!res.ok) return null
         return await res.json()
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return null
     }
 }
@@ -74,7 +75,8 @@ export async function trackOrder(orderId: number): Promise<OrderTracking | null>
         })
         if (!res.ok) return null
         return await res.json()
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return null
     }
 }
@@ -92,7 +94,8 @@ export async function getShippingRates(
         })
         if (!res.ok) return null
         return await res.json()
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return null
     }
 }
@@ -141,7 +144,8 @@ export async function previewCartPromotions(
         if (!res.ok) return []
         const data = await res.json()
         return data.promotions || []
-    } catch {
+    } catch (error) {
+        handleAuthError(error)
         return []
     }
 }

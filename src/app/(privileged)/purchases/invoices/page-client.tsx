@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { fetchPurchaseOrders } from '@/app/actions/pos/purchases'
 import { erpFetch } from '@/lib/erp-api'
-import { Receipt, Clock, CheckCircle, Building2, DollarSign, Eye, BookOpen, FileText } from 'lucide-react'
+import { Receipt, Clock, CheckCircle, Building2, DollarSign, Eye, BookOpen, FileText, X } from 'lucide-react'
 import Link from 'next/link'
 import { KPIStrip } from '@/components/ui/KPIStrip'
 import { DajingoListView, type DajingoColumnDef } from '@/components/common/DajingoListView'
@@ -14,6 +14,10 @@ type Invoice = {
  supplier?: { id: number; name: string }; supplier_name?: string; supplier_display?: string
  contact_name?: string; status: string; order_date?: string; created_at?: string
  total_amount: number; notes?: string; is_legacy?: boolean; lines?: Record<string, unknown>[]
+ // The list intermixes invoices and (legacy) purchase orders. When the
+ // backend returns a PO row, its `id` IS the PO id — the `?from_po=<id>`
+ // landing-from-PO filter matches `String(inv.id) === fromPo`.
+ po_id?: number
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -80,7 +84,7 @@ async function getLegacyPurchases(): Promise<Invoice[]> {
  } catch { return [] }
 }
 
-export default function PurchaseInvoicesPage() {
+export default function PurchaseInvoicesPage({ fromPo }: { fromPo?: string } = {}) {
  const { fmt } = useCurrency()
  const [orders, setOrders] = useState<Invoice[]>([])
  const [loading, setLoading] = useState(true)
@@ -89,6 +93,11 @@ export default function PurchaseInvoicesPage() {
  const [pageSize, setPageSize] = useState(50)
  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({})
  const [columnOrder, setColumnOrder] = useState<string[]>(ALL_COLUMNS.map(c => c.key))
+ // PO scope from `?from_po=<id>` (server-passed). Held in state so the
+ // operator can clear it without a navigation round-trip — clearing
+ // strips the param via `history.replaceState` so a refresh reflects
+ // the cleared state.
+ const [poScope, setPoScope] = useState<string | undefined>(fromPo)
  // React 19 typed ref `null` initial widens to `RefObject<HTMLInputElement | null>`,
  // but DajingoListView's `searchRef?: RefObject<HTMLInputElement>` is non-null.
  // Cast with `as` since the runtime guarantees null-or-element at most.
@@ -105,17 +114,67 @@ export default function PurchaseInvoicesPage() {
  }, [])
  useEffect(() => { load() }, [load])
 
- // Search filter
+ // Resolve the scoped PO row (if any) once orders + scope are known.
+ // Used by the banner to show the supplier/PO number context, and by
+ // the row highlight code to scroll-into-view + flash.
+ const scopedPO = useMemo(() => {
+   if (!poScope) return null
+   return orders.find(o => String(o.id) === String(poScope) || String(o.po_id) === String(poScope)) || null
+ }, [orders, poScope])
+
+ // Filter chain: from_po → search. When a `from_po` scope is active we
+ // reduce the dataset to that single PO (and any invoices flagged as
+ // belonging to it). The banner gives the operator a clear way out.
  const filtered = useMemo(() => {
-   if (!search) return orders
-   const q = search.toLowerCase()
-   return orders.filter(inv =>
-     (inv.invoice_number || '').toLowerCase().includes(q) ||
-     (inv.po_number || '').toLowerCase().includes(q) ||
-     (inv.supplier?.name || inv.supplier_name || inv.contact_name || '').toLowerCase().includes(q) ||
-     String(inv.id).includes(q)
-   )
- }, [orders, search])
+   let rows = orders
+   if (poScope) {
+     rows = rows.filter(inv => String(inv.id) === String(poScope) || String(inv.po_id) === String(poScope))
+   }
+   if (search) {
+     const q = search.toLowerCase()
+     rows = rows.filter(inv =>
+       (inv.invoice_number || '').toLowerCase().includes(q) ||
+       (inv.po_number || '').toLowerCase().includes(q) ||
+       (inv.supplier?.name || inv.supplier_name || inv.contact_name || '').toLowerCase().includes(q) ||
+       String(inv.id).includes(q)
+     )
+   }
+   return rows
+ }, [orders, search, poScope])
+
+ // When `from_po` is set, scroll the matching row into view and flash a
+ // ring so the operator's eye finds it. Runs once per scope/load
+ // transition, after the list has rendered.
+ useEffect(() => {
+   if (!poScope || loading) return
+   if (typeof window === 'undefined') return
+   const tries = [50, 200, 500]
+   const timers = tries.map(ms => window.setTimeout(() => {
+     // DajingoListView keys rows by `getRowId(inv)` — find it by partial
+     // id match, then scroll into view + flash via a transient class.
+     const el = document.querySelector<HTMLElement>(`[data-row-id$="-p"][data-row-id^="${poScope}-"]`)
+       || document.querySelector<HTMLElement>(`[data-row-id$="-l"][data-row-id^="${poScope}-"]`)
+     if (el) {
+       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+       el.style.transition = 'box-shadow 600ms ease-out'
+       el.style.boxShadow = '0 0 0 2px var(--app-primary)'
+       window.setTimeout(() => { el.style.boxShadow = '' }, 1800)
+     }
+   }, ms))
+   return () => { timers.forEach(t => window.clearTimeout(t)) }
+ }, [poScope, loading, orders.length])
+
+ const clearPoScope = () => {
+   setPoScope(undefined)
+   if (typeof window !== 'undefined') {
+     // Strip the param from the URL without a refresh so the user's
+     // back-stack stays intact. Server-side state of the page resets on
+     // their next navigation.
+     const url = new URL(window.location.href)
+     url.searchParams.delete('from_po')
+     window.history.replaceState({}, '', url.toString())
+   }
+ }
 
  const totalValue = orders.reduce((s, o) => s + Number(o.total_amount || 0), 0)
  const pendingCount = orders.filter(o => ['RECEIVED'].includes(o.status)).length
@@ -125,7 +184,7 @@ export default function PurchaseInvoicesPage() {
  const clampedPage = Math.min(currentPage, totalPages)
  const paginated = filtered.slice((clampedPage - 1) * pageSize, clampedPage * pageSize)
 
- const hasFilters = !!search
+ const hasFilters = !!search || !!poScope
 
  return (
    <div className="flex flex-col h-[calc(100vh-8rem)] animate-in fade-in duration-300">
@@ -155,6 +214,37 @@ export default function PurchaseInvoicesPage() {
          { label: 'Pending Invoice', value: pendingCount, icon: <Clock size={11} />, color: '#f59e0b' },
          { label: 'Settled', value: settledCount, icon: <CheckCircle size={11} />, color: '#22c55e' },
        ]} />
+       {/* PO-scoped banner. Appears when the operator landed here from
+         * a PO list "→ Invoice" action (`?from_po=<id>`). Resolves the
+         * matching PO/invoice row from the current dataset for context
+         * (supplier, ref code) so the banner reads as "Showing invoices
+         * for PO PO-2024-…" rather than a bare id. Clearable. */}
+       {poScope && (
+         <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl"
+           style={{
+             background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+             border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)',
+           }}>
+           <div className="flex items-center gap-2 min-w-0">
+             <Receipt size={13} style={{ color: 'var(--app-primary)' }} className="flex-shrink-0" />
+             <span className="text-[11px] font-bold text-app-foreground truncate">
+               Showing invoices for PO{' '}
+               <span style={{ color: 'var(--app-primary)' }}>
+                 {scopedPO?.po_number || scopedPO?.ref_code || `#${poScope}`}
+               </span>
+               {scopedPO && (scopedPO.supplier?.name || scopedPO.supplier_name || scopedPO.contact_name) && (
+                 <span className="text-app-muted-foreground font-normal">
+                   {' '}· {scopedPO.supplier?.name || scopedPO.supplier_name || scopedPO.contact_name}
+                 </span>
+               )}
+             </span>
+           </div>
+           <button type="button" onClick={clearPoScope}
+             className="flex items-center gap-1 text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground px-2 py-1 rounded-lg hover:bg-app-surface transition-all flex-shrink-0">
+             <X size={11} /> Clear
+           </button>
+         </div>
+       )}
      </div>
 
      <DajingoListView<Invoice>

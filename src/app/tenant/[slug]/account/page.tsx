@@ -182,8 +182,8 @@ export default function AccountPage() {
                     </Link>
 
                     <Link href={`/tenant/${slug}/account/notifications`}
-                        className="group p-6 bg-app-surface/60 border border-white/5 rounded-2xl flex items-center gap-4 hover:border-cyan-500/30 transition-all">
-                        <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                        className="group p-6 bg-app-surface/60 border border-white/5 rounded-2xl flex items-center gap-4 hover:border-app-accent-cyan/30 transition-all">
+                        <div className="w-12 h-12 bg-app-accent-cyan/10 rounded-xl flex items-center justify-center text-app-accent-cyan group-hover:scale-110 transition-transform">
                             <Bell size={22} />
                         </div>
                         <div className="flex-1 min-w-0">

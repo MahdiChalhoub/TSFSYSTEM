@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -64,6 +64,7 @@ export async function listProductPackagings(filters: {
         const data = await erpFetch(`product-packaging/${qs}`, { cache: 'no-store' } as any)
         return Array.isArray(data) ? data : (data?.results ?? [])
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to list product packagings:', e)
         return []
     }
@@ -136,5 +137,6 @@ export async function listUnitPackageTemplates(unitId?: number | string) {
         const qs = unitId ? `?unit=${unitId}` : ''
         const data = await erpFetch(`unit-packages/${qs}`, { cache: 'no-store' } as any)
         return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch (e) { return [] }
+    } catch (e) {        handleAuthError(e)
+ return [] }
 }

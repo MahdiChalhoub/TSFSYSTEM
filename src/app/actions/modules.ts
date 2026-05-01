@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 export interface ModuleInfo {
@@ -17,6 +17,7 @@ export async function getModules(): Promise<ModuleInfo[]> {
     try {
         return await erpFetch('modules/') as ModuleInfo[]
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch modules:", e)
         return []
     }

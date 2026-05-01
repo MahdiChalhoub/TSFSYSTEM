@@ -125,7 +125,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                             {/* Level header */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-fuchsia-500/20 text-app-accent flex items-center justify-center text-[10px] font-black border border-app-accent">
+                                    <div className="w-6 h-6 rounded-full bg-app-accent/20 text-app-accent flex items-center justify-center text-[10px] font-black border border-app-accent">
                                         {idx + 2}
                                     </div>
                                     <span className="text-[12px] font-bold text-app-foreground">
@@ -298,7 +298,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
 
             {/* Visual tree summary */}
             {levels.length > 0 && levels.some(l => l.ratio > 0 && l.unitId) && (
-                <div className="p-3 bg-gradient-to-r from-purple-500/5 to-fuchsia-500/5 border border-app-accent/30 rounded-xl">
+                <div className="p-3 bg-app-accent/5 border border-app-accent/30 rounded-xl">
                     <p className="text-[10px] font-bold text-app-accent uppercase tracking-widest mb-2">Packaging Tree</p>
                     <div className="flex items-center gap-2 flex-wrap text-[11px] font-semibold text-app-foreground">
                         {levels.filter(l => l.ratio > 0 && l.unitId).map((l, i) => (

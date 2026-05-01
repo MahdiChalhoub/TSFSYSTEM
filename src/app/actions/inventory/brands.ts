@@ -1,6 +1,6 @@
 'use server';
 
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, handleAuthError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type BrandState = {
@@ -115,6 +115,7 @@ export async function getBrandHierarchy(brandId: number) {
     try {
         return await erpFetch(`inventory/brands/${brandId}/hierarchy/`);
     } catch (e) {
+        handleAuthError(e)
         console.error("Error fetching hierarchy:", e);
         return null;
     }

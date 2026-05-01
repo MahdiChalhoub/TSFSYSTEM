@@ -22,6 +22,9 @@ from apps.inventory.views.location_views import (
     WarehouseZoneViewSet, WarehouseAisleViewSet, WarehouseRackViewSet,
     WarehouseShelfViewSet, WarehouseBinViewSet, ProductLocationViewSet,
 )
+from apps.inventory.views.print_session_views import (
+    LabelTemplateViewSet, PrinterConfigViewSet, PrintSessionViewSet,
+)
 from kernel.audit.views import AuditTrailViewSet
 
 router = DefaultRouter()
@@ -55,6 +58,11 @@ router.register(r'racks', WarehouseRackViewSet, basename='warehouse-racks')
 router.register(r'shelves', WarehouseShelfViewSet, basename='warehouse-shelves')
 router.register(r'bins', WarehouseBinViewSet, basename='warehouse-bins')
 router.register(r'product-locations', ProductLocationViewSet, basename='product-locations')
+
+# Label printing system
+router.register(r'label-templates', LabelTemplateViewSet, basename='label-templates')
+router.register(r'printer-configs', PrinterConfigViewSet, basename='printer-configs')
+router.register(r'print-sessions', PrintSessionViewSet, basename='print-sessions')
 
 urlpatterns = [
     path('', include(router.urls)),

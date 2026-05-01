@@ -253,7 +253,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
 
                 return (
                   <div key={`lvl-${level}-${parentId || 'root'}`}
-                    className={`animate-in fade-in slide-in-from-top-2 duration-300 ${level > 0 ? 'ml-3 pl-3 border-l-2 border-emerald-500/20' : ''}`}>
+                    className={`animate-in fade-in slide-in-from-top-2 duration-300 ${level > 0 ? 'ml-3 pl-3 border-l-2 border-app-primary/20' : ''}`}>
                     {/* Label */}
                     <label className="block text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-1.5">
                       {level === 0 ? (

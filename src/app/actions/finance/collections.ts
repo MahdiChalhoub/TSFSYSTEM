@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 export type OverdueCustomerRow = {
     contact_id: number
@@ -49,6 +49,7 @@ export async function getOverdueCustomers(): Promise<OverdueReport | null> {
     try {
         return (await erpFetch('collections/overdue-customers/')) as OverdueReport
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch overdue customers:', e)
         return null
     }
@@ -63,6 +64,7 @@ export async function getDunningHistory(
         if (contactId) q.set('contact_id', String(contactId))
         return (await erpFetch(`collections/history/?${q.toString()}`)) as DunningHistoryRow[]
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch dunning history:', e)
         return []
     }
@@ -100,6 +102,7 @@ export async function getContactStatement(
         if (opts.endDate) q.set('end_date', opts.endDate)
         return (await erpFetch(`statement/contact/?${q.toString()}`)) as ContactStatement
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch contact statement:', e)
         return null
     }

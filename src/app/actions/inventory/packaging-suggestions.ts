@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -52,6 +52,7 @@ export async function listPackagingRules(filters: Record<string, string | number
         const data = await erpFetch(`packaging-suggestions/${qs}`, { cache: 'no-store' } as any)
         return Array.isArray(data) ? data : (data?.results ?? [])
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to list packaging rules:', e)
         return []
     }
@@ -129,6 +130,7 @@ export async function acceptPackagingSuggestion(ruleId: number) {
             body: '{}',
         })
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to accept suggestion:', e)
         return null
     }

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from "next/cache";
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, handleAuthError } from "@/lib/erp-api"
 
 export type UnitState = {
     message?: string;
@@ -130,6 +130,7 @@ export async function getInventoryMovementsUDLE(params: string = "") {
         const url = params ? `inventory/inventory-movements/?${params}` : 'inventory/inventory-movements/';
         return await erpFetch(url);
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch movements", e);
         return [];
     }
@@ -148,6 +149,7 @@ export async function getSerialHistoryAction(serialId: number) {
     try {
         return await erpFetch(`serials/${serialId}/history/`);
     } catch (e) {
+        handleAuthError(e)
         console.error("Failed to fetch serial history", e);
         return [];
     }

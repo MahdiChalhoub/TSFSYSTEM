@@ -119,7 +119,7 @@ export default function UserRegisterPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="username" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Username</Label>
-                                <Input id="username" name="username" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-cyan-400" />
+                                <Input id="username" name="username" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-app-accent-cyan" />
                                 {(state as any)?.error?.username && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{(state as any).error.username}</p>}
                             </div>
                             <div className="space-y-2">
@@ -171,14 +171,14 @@ export default function UserRegisterPage() {
 
                         <div className="text-center pt-4 border-t border-white/5">
                             <span className="text-[10px] text-app-muted-foreground uppercase font-bold">Already registered? </span>
-                            <a href="/login" className="text-[10px] text-cyan-400 hover:text-white uppercase font-black tracking-widest transition-colors">Log In</a>
+                            <a href="/login" className="text-[10px] text-app-accent-cyan hover:text-white uppercase font-black tracking-widest transition-colors">Log In</a>
                         </div>
                     </form>
                 </CardContent>
 
                 <CardFooter className="bg-black/20 py-4 justify-center">
                     <div className="text-[9px] font-black text-app-foreground uppercase tracking-[0.3em] flex items-center gap-2">
-                        <ShieldCheck size={12} className="text-cyan-500/50" />
+                        <ShieldCheck size={12} className="text-app-accent-cyan/50" />
                         Secured by {PLATFORM_CONFIG.federation_name}
                     </div>
                 </CardFooter>

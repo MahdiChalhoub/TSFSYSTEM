@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 export type UnallocatedPayment = {
     id: number
@@ -50,6 +50,7 @@ export async function getAllocationWorkbench(
         if (contactId) q.set('contact_id', String(contactId))
         return (await erpFetch(`allocation/workbench/?${q.toString()}`)) as WorkbenchReport
     } catch (e) {
+        handleAuthError(e)
         console.error('Failed to fetch allocation workbench:', e)
         return null
     }
