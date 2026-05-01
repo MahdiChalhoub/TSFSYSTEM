@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,6 +6,12 @@ import { Save, RefreshCw, Barcode } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 import { redirect } from 'next/navigation';
+
+type BarcodeFormValues = {
+    prefix: string
+    nextSequence: number
+    isEnabled: boolean
+}
 
 export default function BarcodeSettingsPage() {
     // [TEMPORARY] Simulate installed modules
@@ -20,7 +25,7 @@ export default function BarcodeSettingsPage() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-    const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+    const { register, handleSubmit, setValue, watch } = useForm<BarcodeFormValues>({
         defaultValues: {
             prefix: '200',
             nextSequence: 1000,
@@ -33,16 +38,17 @@ export default function BarcodeSettingsPage() {
             setLoading(true);
             const res = await getBarcodeSettings();
             if (res.success && res.data) {
-                setValue('prefix', res.data.prefix);
-                setValue('nextSequence', res.data.nextSequence);
-                setValue('isEnabled', res.data.isEnabled);
+                const d = res.data as Partial<BarcodeFormValues>
+                if (typeof d.prefix === 'string') setValue('prefix', d.prefix);
+                if (typeof d.nextSequence === 'number') setValue('nextSequence', d.nextSequence);
+                if (typeof d.isEnabled === 'boolean') setValue('isEnabled', d.isEnabled);
             }
             setLoading(false);
         }
         load();
     }, [setValue]);
 
-    const onSubmit = async (data: Record<string, any>) => {
+    const onSubmit = async (data: BarcodeFormValues) => {
         setSaving(true);
         setMessage(null);
 
@@ -51,7 +57,7 @@ export default function BarcodeSettingsPage() {
         if (res.success) {
             setMessage({ type: 'success', text: 'Settings saved successfully' });
         } else {
-            setMessage({ type: 'error', text: res.error || 'Failed to save' });
+            setMessage({ type: 'error', text: ('error' in res && res.error) || 'Failed to save' });
         }
         setSaving(false);
     };

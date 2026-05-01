@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -10,11 +9,34 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+type CategoryRule = {
+    id?: number
+    category?: number
+    category_name?: string
+    requires_barcode?: boolean
+    requires_brand?: boolean
+    requires_unit?: boolean
+    requires_packaging?: boolean
+    requires_photo?: boolean
+    requires_supplier?: boolean
+    barcode_prefix?: string
+    barcode_mode_override?: string
+    default_product_type?: string
+    default_tva_rate?: number | null
+    auto_create_packaging?: boolean
+    packaging_template?: unknown[]
+    auto_print_label?: boolean
+    shelf_placement_required?: boolean
+    [key: string]: unknown
+}
+
+type CategoryOption = { id: number; name: string }
+
 export default function CategoryRulesPage() {
-    const [rules, setRules] = useState<any[]>([])
-    const [categories, setCategories] = useState<any[]>([])
+    const [rules, setRules] = useState<CategoryRule[]>([])
+    const [categories, setCategories] = useState<CategoryOption[]>([])
     const [loading, setLoading] = useState(true)
-    const [editing, setEditing] = useState<any>(null)
+    const [editing, setEditing] = useState<CategoryRule | null>(null)
     const [saving, setSaving] = useState(false)
 
     useEffect(() => { loadData() }, [])
@@ -23,10 +45,19 @@ export default function CategoryRulesPage() {
         setLoading(true)
         const [rulesRes, catData] = await Promise.all([
             getCategoryRules(),
-            erpFetch('inventory/categories/').then(d => Array.isArray(d) ? d : d.results || []).catch(() => [])
+            erpFetch('inventory/categories/').then(d => {
+                if (Array.isArray(d)) return d
+                if (d && typeof d === 'object' && 'results' in d) {
+                    const r = (d as { results?: unknown }).results
+                    if (Array.isArray(r)) return r
+                }
+                return []
+            }).catch(() => [])
         ])
-        if (rulesRes.success) setRules(rulesRes.data)
-        setCategories(catData)
+        if (rulesRes.success) {
+            setRules((rulesRes.data as CategoryRule[]) || [])
+        }
+        setCategories(catData as CategoryOption[])
         setLoading(false)
     }
 
@@ -36,9 +67,9 @@ export default function CategoryRulesPage() {
         const data = { ...editing }
         let res
         if (data.id) {
-            res = await updateCategoryRule(data.id, data)
+            res = await updateCategoryRule(data.id, data as Record<string, unknown>)
         } else {
-            res = await createCategoryRule(data)
+            res = await createCategoryRule(data as Record<string, unknown>)
         }
         if (res.success) {
             toast.success(data.id ? 'Rule updated' : 'Rule created')
@@ -119,7 +150,7 @@ export default function CategoryRulesPage() {
                                     className="p-2 rounded-lg hover:bg-app-surface-hover transition-all" title="Edit">
                                     <Pencil size={14} className="text-app-muted-foreground" />
                                 </button>
-                                <button onClick={() => handleDelete(rule.id)}
+                                <button onClick={() => rule.id != null && handleDelete(rule.id)}
                                     className="p-2 rounded-lg hover:bg-app-error-bg transition-all" title="Delete">
                                     <Trash2 size={14} className="text-red-400" />
                                 </button>
@@ -179,7 +210,7 @@ export default function CategoryRulesPage() {
                                     ].map(f => (
                                         <label key={f.key} className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all"
                                             style={{ background: editing[f.key] ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'var(--app-surface)', border: `1px solid ${editing[f.key] ? 'var(--app-primary)' : 'var(--app-border)'}` }}>
-                                            <input type="checkbox" checked={editing[f.key] || false}
+                                            <input type="checkbox" checked={!!editing[f.key]}
                                                 onChange={e => setEditing({ ...editing, [f.key]: e.target.checked })}
                                                 className="rounded" />
                                             <span className="text-xs font-bold text-app-foreground">{f.label}</span>
@@ -230,7 +261,7 @@ export default function CategoryRulesPage() {
                                     ].map(f => (
                                         <label key={f.key} className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer"
                                             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                            <input type="checkbox" checked={editing[f.key] || false}
+                                            <input type="checkbox" checked={!!editing[f.key]}
                                                 onChange={e => setEditing({ ...editing, [f.key]: e.target.checked })} className="rounded" />
                                             <span className="text-xs font-medium text-app-foreground">{f.label}</span>
                                         </label>

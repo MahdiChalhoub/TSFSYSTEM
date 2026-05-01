@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useTransition } from 'react'
@@ -13,8 +12,10 @@ import { deleteWarehouse } from '@/app/actions/inventory/warehouses'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 
 import WarehouseModal from './form'
-import { WarehouseRow } from './components/WarehouseRow'
+import { WarehouseRow, type WarehouseNode } from './components/WarehouseRow'
 import { WarehouseDetailPanel } from './components/WarehouseDetailPanel'
+
+type DeleteResult = { success: boolean; message?: string; deactivated?: boolean; blockers?: string[] }
 
 /* ═══════════════════════════════════════════════════════════
  *  WarehouseClient — thin TreeMasterPage consumer.
@@ -29,19 +30,21 @@ export function WarehouseClient({
     countries = [],
     defaultCountryId = null,
 }: {
-    initialWarehouses: any[]
+    initialWarehouses: WarehouseNode[]
     countries?: { id: number; name: string; iso2: string }[]
     defaultCountryId?: number | null
 }) {
     const router = useRouter()
     const [, startTransition] = useTransition()
     const data = initialWarehouses
+    const dataAsRecords = data as unknown as Array<Record<string, unknown>>
+    const asWarehouse = (item: Record<string, unknown>) => item as unknown as WarehouseNode
 
     const [isFormOpen, setIsFormOpen] = useState(false)
-    const [editingWarehouse, setEditingWarehouse] = useState<any>(null)
+    const [editingWarehouse, setEditingWarehouse] = useState<WarehouseNode | null>(null)
     const [defaultParent, setDefaultParent] = useState<number | null>(null)
     const [formKey, setFormKey] = useState(0)
-    const [deleteTarget, setDeleteTarget] = useState<any>(null)
+    const [deleteTarget, setDeleteTarget] = useState<WarehouseNode | null>(null)
 
     const openForm = useCallback((parentId?: number) => {
         setEditingWarehouse(null)
@@ -50,7 +53,7 @@ export function WarehouseClient({
         setIsFormOpen(true)
     }, [])
 
-    const openEditForm = useCallback((w: any) => {
+    const openEditForm = useCallback((w: WarehouseNode) => {
         setEditingWarehouse(w)
         setDefaultParent(null)
         setFormKey(k => k + 1)
@@ -63,7 +66,7 @@ export function WarehouseClient({
         setDeleteTarget(null)
         startTransition(async () => {
             try {
-                const result = await deleteWarehouse(target.id)
+                const result = await deleteWarehouse(target.id) as DeleteResult
                 if (!result.success) {
                     toast.error(result.message || 'Failed to remove location')
                 } else if (result.deactivated) {
@@ -84,8 +87,11 @@ export function WarehouseClient({
     // Parent options for the form — only branches can parent children.
     const parentOptions = useMemo(
         () => data
-            .filter((w: any) => w.location_type === 'BRANCH')
-            .map((w: any) => ({ id: w.id, name: w.name, country: w.country, country_name: w.country_name })),
+            .filter((w) => w.location_type === 'BRANCH')
+            .map((w) => {
+                const ext = w as WarehouseNode & { country?: number | null; country_name?: string }
+                return { id: w.id, name: w.name, country: ext.country ?? null, country_name: ext.country_name }
+            }),
         [data],
     )
 
@@ -93,23 +99,23 @@ export function WarehouseClient({
         <TreeMasterPage
             config={{
                 title: 'Locations',
-                subtitle: (filtered, all) =>
-                    `${all.length} locations · ${all.filter((w: any) => w.location_type === 'BRANCH').length} branches · ${all.filter((w: any) => w.can_sell).length} retail`,
+                subtitle: (_filtered, all) =>
+                    `${all.length} locations · ${all.filter((w) => asWarehouse(w).location_type === 'BRANCH').length} branches · ${all.filter((w) => asWarehouse(w).can_sell).length} retail`,
                 icon: <GitBranch size={20} />,
                 iconColor: 'var(--app-primary)',
                 searchPlaceholder: 'Search by name, code, or city...',
                 primaryAction: { label: 'New Location', icon: <Plus size={14} />, onClick: () => openForm() },
 
                 // Template owns filtering + tree build.
-                data,
+                data: dataAsRecords,
                 searchFields: ['name', 'code', 'city', 'country_name', 'reference_code'],
                 treeParentKey: 'parent',
                 kpiPredicates: {
-                    branch:    (w) => w.location_type === 'BRANCH',
-                    store:     (w) => w.location_type === 'STORE',
-                    warehouse: (w) => w.location_type === 'WAREHOUSE',
-                    virtual:   (w) => w.location_type === 'VIRTUAL',
-                    retail:    (w) => !!w.can_sell,
+                    branch:    (w) => asWarehouse(w).location_type === 'BRANCH',
+                    store:     (w) => asWarehouse(w).location_type === 'STORE',
+                    warehouse: (w) => asWarehouse(w).location_type === 'WAREHOUSE',
+                    virtual:   (w) => asWarehouse(w).location_type === 'VIRTUAL',
+                    retail:    (w) => !!asWarehouse(w).can_sell,
                 },
 
                 kpis: [
@@ -121,27 +127,27 @@ export function WarehouseClient({
                     {
                         label: 'Branches', icon: <Building2 size={12} />, color: 'var(--app-success)',
                         filterKey: 'branch', hint: 'Only branch/site locations',
-                        value: (f) => f.filter((w: any) => w.location_type === 'BRANCH').length,
+                        value: (f) => f.filter((w) => asWarehouse(w).location_type === 'BRANCH').length,
                     },
                     {
                         label: 'Stores', icon: <Store size={12} />, color: 'var(--app-info)',
                         filterKey: 'store', hint: 'Only retail stores',
-                        value: (f) => f.filter((w: any) => w.location_type === 'STORE').length,
+                        value: (f) => f.filter((w) => asWarehouse(w).location_type === 'STORE').length,
                     },
                     {
                         label: 'Warehouses', icon: <WarehouseIcon size={12} />, color: 'var(--app-warning)',
                         filterKey: 'warehouse', hint: 'Only pure-storage warehouses',
-                        value: (f) => f.filter((w: any) => w.location_type === 'WAREHOUSE').length,
+                        value: (f) => f.filter((w) => asWarehouse(w).location_type === 'WAREHOUSE').length,
                     },
                     {
                         label: 'Virtual', icon: <Cloud size={12} />, color: 'var(--app-primary)',
                         filterKey: 'virtual', hint: 'Only virtual / transit locations',
-                        value: (f) => f.filter((w: any) => w.location_type === 'VIRTUAL').length,
+                        value: (f) => f.filter((w) => asWarehouse(w).location_type === 'VIRTUAL').length,
                     },
                     {
                         label: 'Retail', icon: <Package size={12} />, color: 'var(--app-success)',
                         filterKey: 'retail', hint: 'Only POS-enabled locations',
-                        value: (f) => f.filter((w: any) => w.can_sell).length,
+                        value: (f) => f.filter((w) => !!asWarehouse(w).can_sell).length,
                     },
                 ],
                 columnHeaders: [
@@ -162,9 +168,9 @@ export function WarehouseClient({
                     <>
                         <span>{all.length} locations</span>
                         <span style={{ color: 'var(--app-border)' }}>·</span>
-                        <span>{all.filter((w: any) => w.location_type === 'BRANCH').length} branches</span>
+                        <span>{all.filter((w) => asWarehouse(w).location_type === 'BRANCH').length} branches</span>
                         <span style={{ color: 'var(--app-border)' }}>·</span>
-                        <span>{all.filter((w: any) => w.can_sell).length} retail</span>
+                        <span>{all.filter((w) => asWarehouse(w).can_sell).length} retail</span>
                     </>
                 ),
             }}
@@ -205,21 +211,24 @@ export function WarehouseClient({
         >
             {(renderProps) => {
                 const { tree, expandKey, expandAll, searchQuery, isSelected, openNode } = renderProps
-                return tree.map((node: any) => (
-                    <div key={`${node.id}-${expandKey}`}
+                return tree.map((node) => {
+                    const w = asWarehouse(node)
+                    return (
+                    <div key={`${w.id}-${expandKey}`}
                         className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
                         <WarehouseRow
-                            node={node}
+                            node={w}
                             level={0}
                             onEdit={openEditForm}
                             onAdd={openForm}
-                            onDelete={(n: any) => setDeleteTarget(n)}
-                            onSelect={(n: any) => openNode(n, 'inventory')}
+                            onDelete={(n) => setDeleteTarget(n)}
+                            onSelect={(n) => openNode(n as unknown as Record<string, unknown>, 'inventory')}
                             searchQuery={searchQuery}
                             forceExpanded={expandAll}
                         />
                     </div>
-                ))
+                    )
+                })
             }}
         </TreeMasterPage>
     )

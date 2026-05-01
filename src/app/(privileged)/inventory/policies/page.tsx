@@ -1,26 +1,51 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, type ComponentType, type ReactNode } from 'react'
 import {
     getLabelPolicy, updateLabelPolicy,
     getBarcodePolicy, updateBarcodePolicy,
     getWeightPolicy, updateWeightPolicy,
-    getCategoryRules, createCategoryRule, updateCategoryRule, deleteCategoryRule,
+    getCategoryRules, deleteCategoryRule,
 } from '@/app/actions/plm-governance'
 import { getProductNamingRule, saveProductNamingRule } from '@/app/actions/settings'
-import type { NamingFormulaSlot } from '@/app/actions/settings'
 import { getAttributeTree } from '@/app/actions/inventory/attributes'
-import { erpFetch } from '@/lib/erp-api'
+
+// V3 naming formula slot — extends the action's component type with attribute-specific
+// fields. The settings action only knows about the v1 component shape; the v3 formula
+// is stored alongside under `v3_formula` and read back at render time.
+type NamingFormulaSlot = {
+    id: string
+    label: string
+    enabled: boolean
+    type: 'static' | 'attribute'
+    useShortLabel: boolean
+    useShortName: boolean
+}
 import {
     Shield, Tag, Barcode, Scale, FolderCog, Eye,
     Save, RefreshCw, Settings, Printer, AlertTriangle,
-    Plus, Pencil, Trash2, X, Check, MapPin, Building2, Globe, Layers,
-    ChevronRight, Warehouse, GitBranch, Network,
-    Wand2, GripVertical, ArrowUp, ArrowDown, Tags, Type,
-    EyeOff, ToggleLeft, ToggleRight, Sparkles
+    Plus, Pencil, Trash2, Check, MapPin, Building2, Globe, Layers,
+    Warehouse, GitBranch, Network,
+    Wand2, ArrowUp, ArrowDown, Tags, Type,
+    EyeOff, Sparkles
 } from 'lucide-react'
 import { toast } from 'sonner'
+
+type IconComponent = ComponentType<{ size?: number; className?: string; strokeWidth?: number }>
+
+type LabelPolicyShape = { id?: number; default_output_method?: string; default_copies?: number; [key: string]: unknown }
+type BarcodePolicyShape = { id?: number; default_mode?: string; internal_prefix?: string; [key: string]: unknown }
+type WeightPolicyShape = { id?: number; default_weight_unit?: string; weight_tolerance_pct?: number; [key: string]: unknown }
+type CategoryRuleShape = { id: number; category?: number; category_name?: string; barcode_mode?: string; label_template?: string; require_weight?: boolean; [key: string]: unknown }
+type VisibilityPolicyShape = {
+    default_scope?: string; multi_branch_mode?: string;
+    allow_cross_branch_transfer_view?: boolean; show_transit_stock?: boolean;
+    show_reserved_stock?: boolean; show_available_only?: boolean;
+    aggregate_packaging_levels?: boolean; hide_zero_stock?: boolean;
+    allow_scope_override_per_user?: boolean; show_stock_value?: boolean;
+    [key: string]: unknown
+}
+type AttributeNode = { id: number | string; name: string; parent?: number | string | null; show_in_name?: boolean; short_label?: string; children?: AttributeNode[] }
 
 // ═══════════════════════════════════════════════════════════════
 // Policy Tab Definitions
@@ -101,11 +126,11 @@ export default function InventoryPoliciesPage() {
     const [saving, setSaving] = useState(false)
 
     // Policy states
-    const [labelPolicy, setLabelPolicy] = useState<any>({})
-    const [barcodePolicy, setBarcodePolicy] = useState<any>({})
-    const [weightPolicy, setWeightPolicy] = useState<any>({})
-    const [categoryRules, setCategoryRules] = useState<any[]>([])
-    const [visibilityPolicy, setVisibilityPolicy] = useState<any>({
+    const [labelPolicy, setLabelPolicy] = useState<LabelPolicyShape>({})
+    const [barcodePolicy, setBarcodePolicy] = useState<BarcodePolicyShape>({})
+    const [weightPolicy, setWeightPolicy] = useState<WeightPolicyShape>({})
+    const [categoryRules, setCategoryRules] = useState<CategoryRuleShape[]>([])
+    const [visibilityPolicy, setVisibilityPolicy] = useState<VisibilityPolicyShape>({
         default_scope: 'BRANCH',
         multi_branch_mode: 'STRICT',
         allow_cross_branch_transfer_view: true,
@@ -121,12 +146,11 @@ export default function InventoryPoliciesPage() {
     // ── Naming rule state ──
     const [namingFormula, setNamingFormula] = useState<NamingFormulaSlot[]>(STATIC_SLOTS)
     const [namingSeparator, setNamingSeparator] = useState(' ')
-    const [attributeTree, setAttributeTree] = useState<any[]>([])
+    const [attributeTree, setAttributeTree] = useState<AttributeNode[]>([])
     const [namingRuleLoaded, setNamingRuleLoaded] = useState(false)
 
-    // Category rules editing
-    const [editingRule, setEditingRule] = useState<any>(null)
-    const [categories, setCategories] = useState<any[]>([])
+    // Category rules editing (kept for back-compat with the inline rule editor — see categoryRulesPage for full editor)
+    const [, setEditingRule] = useState<CategoryRuleShape | null>(null)
 
     const loadAllPolicies = useCallback(async () => {
         setLoading(true)
@@ -137,10 +161,10 @@ export default function InventoryPoliciesPage() {
                 getWeightPolicy(),
                 getCategoryRules(),
             ])
-            if (labelRes.status === 'fulfilled' && labelRes.value?.success) setLabelPolicy(labelRes.value.data || {})
-            if (barcodeRes.status === 'fulfilled' && barcodeRes.value?.success) setBarcodePolicy(barcodeRes.value.data || {})
-            if (weightRes.status === 'fulfilled' && weightRes.value?.success) setWeightPolicy(weightRes.value.data || {})
-            if (catRes.status === 'fulfilled' && catRes.value?.success) setCategoryRules(catRes.value.data || [])
+            if (labelRes.status === 'fulfilled' && labelRes.value?.success) setLabelPolicy((labelRes.value.data as LabelPolicyShape) || {})
+            if (barcodeRes.status === 'fulfilled' && barcodeRes.value?.success) setBarcodePolicy((barcodeRes.value.data as BarcodePolicyShape) || {})
+            if (weightRes.status === 'fulfilled' && weightRes.value?.success) setWeightPolicy((weightRes.value.data as WeightPolicyShape) || {})
+            if (catRes.status === 'fulfilled' && catRes.value?.success) setCategoryRules((catRes.value.data as CategoryRuleShape[]) || [])
         } catch { /* silent */ }
         setLoading(false)
     }, [])
@@ -152,17 +176,22 @@ export default function InventoryPoliciesPage() {
                 getProductNamingRule(),
                 getAttributeTree(),
             ])
-            const attrArr = Array.isArray(tree) ? tree : tree?.results || []
+            const attrArr: AttributeNode[] = Array.isArray(tree)
+                ? (tree as AttributeNode[])
+                : (tree && typeof tree === 'object' && 'results' in tree && Array.isArray((tree as { results?: unknown[] }).results))
+                    ? ((tree as { results: AttributeNode[] }).results)
+                    : []
             setAttributeTree(attrArr)
 
             // Build formula from saved V3 or default
-            if (rule?.v3_formula && rule.v3_formula.length > 0) {
-                setNamingFormula(rule.v3_formula)
+            const ruleObj = rule as { v3_formula?: NamingFormulaSlot[]; separator?: string } | null | undefined
+            if (ruleObj?.v3_formula && ruleObj.v3_formula.length > 0) {
+                setNamingFormula(ruleObj.v3_formula)
             } else {
                 // Build initial formula: static slots + attribute groups from tree
                 const attrSlots: NamingFormulaSlot[] = attrArr
-                    .filter((g: any) => !g.parent)
-                    .map((g: any) => ({
+                    .filter((g) => !g.parent)
+                    .map((g) => ({
                         id: `attr_${g.id}`,
                         label: g.name,
                         enabled: g.show_in_name ?? false,
@@ -172,7 +201,7 @@ export default function InventoryPoliciesPage() {
                     }))
                 setNamingFormula([...STATIC_SLOTS, ...attrSlots])
             }
-            setNamingSeparator(rule?.separator || ' ')
+            setNamingSeparator(ruleObj?.separator || ' ')
             setNamingRuleLoaded(true)
         } catch (e) {
             console.error('Failed to load naming data', e)
@@ -192,25 +221,28 @@ export default function InventoryPoliciesPage() {
         setSaving(true)
         try {
             if (activeTab === 'naming') {
-                const res = await saveProductNamingRule({
+                const payload = {
                     components: namingFormula
                         .filter(s => s.type === 'static')
                         .map(s => ({ id: s.id, label: s.label, enabled: s.enabled, useShortName: s.useShortName })),
                     separator: namingSeparator,
                     v3_formula: namingFormula,
-                })
+                }
+                // The action's `ProductNamingRule` type doesn't model `v3_formula` yet — the backend
+                // accepts it as a passthrough field. Cast at the boundary rather than widen the action.
+                const res = await saveProductNamingRule(payload as unknown as Parameters<typeof saveProductNamingRule>[0])
                 if (res.success) toast.success('Naming formula saved!')
                 else toast.error(res.message || 'Failed to save')
             } else if (activeTab === 'label') {
-                const res = await updateLabelPolicy(labelPolicy)
+                const res = await updateLabelPolicy({ id: labelPolicy.id ?? 'current', ...labelPolicy })
                 if (res.success) toast.success('Label policy saved')
                 else toast.error(res.error || 'Failed')
             } else if (activeTab === 'barcode') {
-                const res = await updateBarcodePolicy(barcodePolicy)
+                const res = await updateBarcodePolicy({ id: barcodePolicy.id ?? 'current', ...barcodePolicy })
                 if (res.success) toast.success('Barcode policy saved')
                 else toast.error(res.error || 'Failed')
             } else if (activeTab === 'weight') {
-                const res = await updateWeightPolicy(weightPolicy)
+                const res = await updateWeightPolicy({ id: weightPolicy.id ?? 'current', ...weightPolicy })
                 if (res.success) toast.success('Weight policy saved')
                 else toast.error(res.error || 'Failed')
             } else if (activeTab === 'visibility') {
@@ -242,7 +274,7 @@ export default function InventoryPoliciesPage() {
         )
     }
 
-    function Section({ title, icon: Icon, children }: { title: string, icon: any, children: React.ReactNode }) {
+    function Section({ title, icon: Icon, children }: { title: string, icon: IconComponent, children: ReactNode }) {
         return (
             <div className="rounded-2xl p-6" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-app-muted-foreground mb-5 flex items-center gap-2">
@@ -279,10 +311,10 @@ export default function InventoryPoliciesPage() {
     const availableAttrGroups = useMemo(() => {
         const usedIds = new Set(namingFormula.filter(s => s.type === 'attribute').map(s => s.id))
         return attributeTree
-            .filter((g: any) => !g.parent && !usedIds.has(`attr_${g.id}`))
+            .filter((g) => !g.parent && !usedIds.has(`attr_${g.id}`))
     }, [attributeTree, namingFormula])
 
-    function addAttrSlot(group: any) {
+    function addAttrSlot(group: AttributeNode) {
         setNamingFormula(prev => [
             ...prev,
             {
@@ -307,7 +339,7 @@ export default function InventoryPoliciesPage() {
             } else {
                 // Attribute: use label as the example value
                 const attrId = slot.id.replace('attr_', '')
-                const group = attributeTree.find((g: any) => String(g.id) === attrId)
+                const group = attributeTree.find((g) => String(g.id) === attrId)
                 if (group) {
                     const firstChild = group.children?.[0]
                     const val = firstChild?.name || group.name
@@ -373,7 +405,7 @@ export default function InventoryPoliciesPage() {
                         {namingFormula.map((slot, index) => {
                             const isStatic = slot.type === 'static'
                             const attrId = slot.id.replace('attr_', '')
-                            const attrGroup = !isStatic ? attributeTree.find((g: any) => String(g.id) === attrId) : null
+                            const attrGroup = !isStatic ? attributeTree.find((g) => String(g.id) === attrId) : null
                             const childCount = attrGroup?.children?.length || 0
 
                             return (
@@ -498,7 +530,7 @@ export default function InventoryPoliciesPage() {
                                 + Add Attribute Groups to Formula
                             </p>
                             <div className="flex flex-wrap gap-1.5">
-                                {availableAttrGroups.map((group: any) => (
+                                {availableAttrGroups.map((group) => (
                                     <button key={group.id}
                                         onClick={() => addAttrSlot(group)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all hover:scale-105"
@@ -509,8 +541,8 @@ export default function InventoryPoliciesPage() {
                                         }}>
                                         <Plus size={12} />
                                         {group.name}
-                                        {group.children?.length > 0 && (
-                                            <span className="text-[9px] opacity-60">({group.children.length})</span>
+                                        {(group.children?.length ?? 0) > 0 && (
+                                            <span className="text-[9px] opacity-60">({group.children?.length})</span>
                                         )}
                                     </button>
                                 ))}
@@ -669,14 +701,14 @@ export default function InventoryPoliciesPage() {
 
                 <Section title="Display & Access Rules" icon={Settings}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <Toggle checked={visibilityPolicy.show_transit_stock} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, show_transit_stock: v })} label="Show in-transit stock" />
-                        <Toggle checked={visibilityPolicy.show_reserved_stock} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, show_reserved_stock: v })} label="Show reserved stock" />
-                        <Toggle checked={visibilityPolicy.show_available_only} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, show_available_only: v })} label="Show available qty only" />
-                        <Toggle checked={visibilityPolicy.hide_zero_stock} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, hide_zero_stock: v })} label="Hide zero-stock items" />
-                        <Toggle checked={visibilityPolicy.aggregate_packaging_levels} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, aggregate_packaging_levels: v })} label="Aggregate across packaging levels" />
-                        <Toggle checked={visibilityPolicy.allow_cross_branch_transfer_view} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, allow_cross_branch_transfer_view: v })} label="Allow cross-branch transfer view" />
-                        <Toggle checked={visibilityPolicy.allow_scope_override_per_user} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, allow_scope_override_per_user: v })} label="Allow per-user scope override" />
-                        <Toggle checked={visibilityPolicy.show_stock_value} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, show_stock_value: v })} label="Show stock monetary value" />
+                        <Toggle checked={!!visibilityPolicy.show_transit_stock} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, show_transit_stock: v })} label="Show in-transit stock" />
+                        <Toggle checked={!!visibilityPolicy.show_reserved_stock} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, show_reserved_stock: v })} label="Show reserved stock" />
+                        <Toggle checked={!!visibilityPolicy.show_available_only} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, show_available_only: v })} label="Show available qty only" />
+                        <Toggle checked={!!visibilityPolicy.hide_zero_stock} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, hide_zero_stock: v })} label="Hide zero-stock items" />
+                        <Toggle checked={!!visibilityPolicy.aggregate_packaging_levels} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, aggregate_packaging_levels: v })} label="Aggregate across packaging levels" />
+                        <Toggle checked={!!visibilityPolicy.allow_cross_branch_transfer_view} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, allow_cross_branch_transfer_view: v })} label="Allow cross-branch transfer view" />
+                        <Toggle checked={!!visibilityPolicy.allow_scope_override_per_user} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, allow_scope_override_per_user: v })} label="Allow per-user scope override" />
+                        <Toggle checked={!!visibilityPolicy.show_stock_value} onChange={v => setVisibilityPolicy({ ...visibilityPolicy, show_stock_value: v })} label="Show stock monetary value" />
                     </div>
                 </Section>
             </div>
@@ -717,7 +749,7 @@ export default function InventoryPoliciesPage() {
                             { key: 'track_label_history', label: 'Track label print history' },
                             { key: 'enforce_template', label: 'Enforce template per category' },
                         ].map(f => (
-                            <Toggle key={f.key} checked={labelPolicy?.[f.key] || false}
+                            <Toggle key={f.key} checked={!!labelPolicy?.[f.key]}
                                 onChange={v => setLabelPolicy({ ...labelPolicy, [f.key]: v })} label={f.label} />
                         ))}
                     </div>
@@ -763,7 +795,7 @@ export default function InventoryPoliciesPage() {
                             { key: 'allow_manual_override', label: 'Allow manual override' },
                             { key: 'require_barcode_for_sale', label: 'Require barcode for sales' },
                         ].map(f => (
-                            <Toggle key={f.key} checked={barcodePolicy?.[f.key] || false}
+                            <Toggle key={f.key} checked={!!barcodePolicy?.[f.key]}
                                 onChange={v => setBarcodePolicy({ ...barcodePolicy, [f.key]: v })} label={f.label} />
                         ))}
                     </div>
@@ -807,7 +839,7 @@ export default function InventoryPoliciesPage() {
                             { key: 'barcode_includes_weight', label: 'Embed weight in barcode' },
                             { key: 'require_scale_verification', label: 'Require scale verification' },
                         ].map(f => (
-                            <Toggle key={f.key} checked={weightPolicy?.[f.key] || false}
+                            <Toggle key={f.key} checked={!!weightPolicy?.[f.key]}
                                 onChange={v => setWeightPolicy({ ...weightPolicy, [f.key]: v })} label={f.label} />
                         ))}
                     </div>
@@ -831,7 +863,7 @@ export default function InventoryPoliciesPage() {
                         </div>
                     ) : (
                         <div className="space-y-2">
-                            {categoryRules.map((rule: any) => (
+                            {categoryRules.map((rule) => (
                                 <div key={rule.id} className="flex items-center justify-between px-4 py-3 rounded-xl"
                                     style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
                                     <div>
@@ -868,7 +900,7 @@ export default function InventoryPoliciesPage() {
     // Tab Map & Render
     // ═══════════════════════════════════════════════════════════════
 
-    const tabContent: Record<TabKey, () => JSX.Element> = {
+    const tabContent: Record<TabKey, () => ReactNode> = {
         naming: renderNaming,
         visibility: renderVisibility,
         label: renderLabel,

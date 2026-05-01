@@ -1,28 +1,47 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useTransition, type ComponentType } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { getExpiryAlerts, scanForExpiry, acknowledgeAlert } from "@/app/actions/inventory/expiry-alerts"
 import { Badge } from '@/components/ui/badge'
 import {
- Clock, Skull, AlertTriangle, ShieldCheck,
- RefreshCw, Trash2, Tag, ArrowRightLeft,
- Calendar, Package, MapPin
+ Clock, Skull, AlertTriangle,
+ Trash2, Tag,
+ Calendar, Package
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useCurrency } from '@/lib/utils/currency'
 
-const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+type IconComponent = ComponentType<{ size?: number; className?: string }>
+
+type ExpiryAlert = {
+ id: number
+ product_name?: string
+ batch_number?: string
+ expiry_date?: string
+ days_until_expiry?: number
+ value_at_risk?: number
+ quantity_at_risk?: number
+ severity?: string
+ warehouse?: string
+ is_acknowledged?: boolean
+}
+
+type InitialExpiryData = {
+ alerts?: ExpiryAlert[]
+ [key: string]: unknown
+} | null | undefined
+
+const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string; icon: IconComponent }> = {
  EXPIRED: { label: 'Expired', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: Skull },
  CRITICAL: { label: 'Critical (0-30d)', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: AlertTriangle },
  WARNING: { label: 'Warning (30-60d)', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Clock },
 }
 
-export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
+export function ExpiryAlertsClient({ initialData }: { initialData: InitialExpiryData }) {
  const { fmt } = useCurrency()
  const settings = useListViewSettings('inv_expiry_alerts', {
  columns: ['batch', 'timeline', 'risk'],
@@ -30,14 +49,14 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  sortKey: 'timeline',
  sortDir: 'asc',
  })
- const [data, setData] = useState<any[]>(initialData?.alerts || [])
+ const [data, setData] = useState<ExpiryAlert[]>(initialData?.alerts || [])
  const [loading, setLoading] = useState(false)
  const [isPending, startTransition] = useTransition()
 
  const loadData = async (severity?: string) => {
  setLoading(true)
  try {
- const res = await getExpiryAlerts(severity)
+ const res = await getExpiryAlerts(severity) as { alerts?: ExpiryAlert[] } | null | undefined
  setData(res?.alerts || [])
  } catch {
  toast.error("Failed to load alerts")
@@ -63,12 +82,13 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  key: 'batch',
  label: 'Batch / Lot Info',
  alwaysVisible: true,
- render: (row: any) => (
+ render: (row: ExpiryAlert) =>(
  <div className="flex items-center gap-3">
- <div className={`p-2 rounded-xl ${(SEVERITY_CONFIG[row.severity] || SEVERITY_CONFIG.WARNING).bg} border`}>
+ <div className={`p-2 rounded-xl ${(SEVERITY_CONFIG[row.severity || 'WARNING'] || SEVERITY_CONFIG.WARNING).bg} border`}>
  {(() => {
- const Icon = (SEVERITY_CONFIG[row.severity] || SEVERITY_CONFIG.WARNING).icon
- return <Icon size={16} className={(SEVERITY_CONFIG[row.severity] || SEVERITY_CONFIG.WARNING).color} />
+ const cfg = SEVERITY_CONFIG[row.severity || 'WARNING'] || SEVERITY_CONFIG.WARNING
+ const Icon = cfg.icon
+ return <Icon size={16} className={cfg.color} />
  })()}
  </div>
  <div>
@@ -83,16 +103,16 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  {
  key: 'timeline',
  label: 'Expiry Timeline',
- render: (row: any) => (
+ render: (row: ExpiryAlert) =>(
  <div className="flex flex-col gap-1">
  <div className="flex items-center gap-2">
  <Calendar size={12} className="text-app-muted-foreground" />
  <span className="text-xs font-bold text-app-muted-foreground">{row.expiry_date}</span>
  </div>
- <Badge variant="outline" className={`text-[9px] uppercase font-black px-1.5 py-0 border-0 ${row.days_until_expiry <= 0 ? 'text-app-error' :
- row.days_until_expiry <= 30 ? 'text-app-warning' : 'text-app-warning'
+ <Badge variant="outline" className={`text-[9px] uppercase font-black px-1.5 py-0 border-0 ${(row.days_until_expiry ?? 0) <= 0 ? 'text-app-error' :
+ (row.days_until_expiry ?? 0) <= 30 ? 'text-app-warning' : 'text-app-warning'
  }`}>
- {row.days_until_expiry <= 0 ? 'OVERDUE' : `${row.days_until_expiry} DAYS REMAINING`}
+ {(row.days_until_expiry ?? 0) <= 0 ? 'OVERDUE' : `${row.days_until_expiry} DAYS REMAINING`}
  </Badge>
  </div>
  )
@@ -101,9 +121,9 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  key: 'risk',
  label: 'At Risk Value',
  align: 'right' as const,
- render: (row: any) => (
+ render: (row: ExpiryAlert) =>(
  <div className="text-right">
- <div className="text-sm font-black text-app-error">{fmt(row.value_at_risk)}</div>
+ <div className="text-sm font-black text-app-error">{fmt(row.value_at_risk ?? 0)}</div>
  <div className="text-[9px] text-app-muted-foreground font-bold uppercase">{row.quantity_at_risk} Units</div>
  </div>
  )
@@ -133,7 +153,11 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  </div>
  }
  expandable={{
- renderActions: (row) => (
+ columns: [
+ { key: 'label', label: 'Detail' },
+ { key: 'value', label: 'Value' },
+ ],
+ renderActions: (_detail, row: ExpiryAlert) => (
  <div className="flex gap-2">
  <Button
  size="sm"
@@ -162,15 +186,15 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  </Button>
  </div>
  ),
- getDetails: (row) => [
+ getDetails: (row: ExpiryAlert) => [
  { label: 'Warehouse', value: row.warehouse || 'Global Storage' },
  { label: 'Status', value: row.is_acknowledged ? 'Risk Managed' : 'Pending Review' }
  ]
  }}
  lifecycle={{
- getStatus: r => {
- const cfg = SEVERITY_CONFIG[r.severity] || SEVERITY_CONFIG.WARNING
- return { label: cfg.label, variant: r.severity === 'EXPIRED' ? 'danger' : r.severity === 'CRITICAL' ? 'warning' : 'default' }
+ getStatus: (r: ExpiryAlert) => {
+ const cfg = SEVERITY_CONFIG[r.severity || 'WARNING'] || SEVERITY_CONFIG.WARNING
+ return { label: cfg.label, variant: (r.severity === 'EXPIRED' ? 'danger' : r.severity === 'CRITICAL' ? 'warning' : 'default') as 'danger' | 'warning' | 'default' }
  }
  }}
  >

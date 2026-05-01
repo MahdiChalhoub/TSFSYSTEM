@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
@@ -36,7 +35,7 @@ interface Props {
     hasData: boolean
 }
 
-const CATEGORY_CONFIG: Record<string, { label: string; color: string; icon: any; hint: string }> = {
+const CATEGORY_CONFIG: Record<string, { label: string; color: string; icon: React.ComponentType<React.ComponentProps<'svg'> & { size?: number | string }>; hint: string }> = {
     HAS_BALANCE: { label: 'With balance', color: 'var(--app-warning, #f59e0b)', icon: DollarSign, hint: 'Non-zero balance; mapping preserves it' },
     HAS_TRANSACTIONS: { label: 'With transactions', color: 'var(--app-info, #3b82f6)', icon: FileText, hint: 'Has journal entries; mapping will remap them' },
     CUSTOM: { label: 'Custom accounts', color: 'var(--app-info)', icon: UserPlus, hint: 'Not in target template — you choose where to map' },

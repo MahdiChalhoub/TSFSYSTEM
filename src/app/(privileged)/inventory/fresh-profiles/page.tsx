@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -6,10 +5,30 @@ import { getFreshProfiles, createFreshProfile, updateFreshProfile } from '@/app/
 import { Leaf, Plus, Pencil, X, Save, RefreshCw, Thermometer, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 
+type FreshProfile = {
+    id?: number
+    product?: number
+    product_name?: string
+    shelf_life_days?: number
+    storage_temp_min?: number
+    storage_temp_max?: number
+    requires_lot_tracking?: boolean
+    [key: string]: unknown
+}
+
+function asArray(d: unknown): unknown[] {
+    if (Array.isArray(d)) return d
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as { results?: unknown }).results
+        if (Array.isArray(r)) return r
+    }
+    return []
+}
+
 export default function FreshProfilesPage() {
-    const [profiles, setProfiles] = useState<any[]>([])
+    const [profiles, setProfiles] = useState<FreshProfile[]>([])
     const [loading, setLoading] = useState(true)
-    const [editing, setEditing] = useState<any>(null)
+    const [editing, setEditing] = useState<FreshProfile | null>(null)
     const [saving, setSaving] = useState(false)
 
     useEffect(() => { loadData() }, [])
@@ -17,14 +36,16 @@ export default function FreshProfilesPage() {
     async function loadData() {
         setLoading(true)
         const res = await getFreshProfiles()
-        if (res.success) setProfiles(Array.isArray(res.data) ? res.data : res.data?.results || [])
+        if (res.success) setProfiles(asArray(res.data) as FreshProfile[])
         setLoading(false)
     }
 
     async function handleSave() {
         if (!editing) return
         setSaving(true)
-        const res = editing.id ? await updateFreshProfile(editing.id, editing) : await createFreshProfile(editing)
+        const res = editing.id
+            ? await updateFreshProfile(editing.id, editing as Record<string, unknown>)
+            : await createFreshProfile(editing as Record<string, unknown>)
         if (res.success) { toast.success(editing.id ? 'Profile updated' : 'Profile created'); setEditing(null); loadData() }
         else toast.error(res.error || 'Failed')
         setSaving(false)
@@ -114,7 +135,7 @@ export default function FreshProfilesPage() {
                                 </div>
                             </div>
                             <label className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                                <input type="checkbox" checked={editing.requires_lot_tracking || false} onChange={e => setEditing({ ...editing, requires_lot_tracking: e.target.checked })} className="rounded" />
+                                <input type="checkbox" checked={!!editing.requires_lot_tracking} onChange={e => setEditing({ ...editing, requires_lot_tracking: e.target.checked })} className="rounded" />
                                 <span className="text-xs font-bold text-app-foreground">Requires lot/batch tracking</span>
                             </label>
                         </div>

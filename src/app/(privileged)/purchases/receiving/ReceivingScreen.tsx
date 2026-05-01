@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -61,6 +60,37 @@ const REJECTION_REASONS = [
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
+// LOCAL DOMAIN TYPES — narrow shapes for opaque server payloads consumed here
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface PurchaseOrderOption {
+    id: number
+    po_number?: string
+    supplier?: number | { id: number; name?: string }
+    [key: string]: unknown
+}
+
+interface WarehouseOption {
+    id: number
+    name: string
+    [key: string]: unknown
+}
+
+interface Supplier {
+    id: number
+    name: string
+    [key: string]: unknown
+}
+
+interface ProductSearchResult {
+    id: number
+    name: string
+    sku?: string
+    barcode?: string
+    [key: string]: unknown
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -81,14 +111,14 @@ export default function ReceivingScreen() {
     const [selectedPO, setSelectedPO] = useState<number | null>(null)
     const [selectedWarehouse, setSelectedWarehouse] = useState<number | null>(null)
     const [selectedSupplier, setSelectedSupplier] = useState<number | null>(null)
-    const [purchaseOrders, setPurchaseOrders] = useState<any[]>([])
-    const [warehouses, setWarehouses] = useState<any[]>([])
-    const [suppliers, setSuppliers] = useState<any[]>([])
+    const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderOption[]>([])
+    const [warehouses, setWarehouses] = useState<WarehouseOption[]>([])
+    const [suppliers, setSuppliers] = useState<Supplier[]>([])
     const autoStarted = useRef(false)
 
     // Product search
     const [searchQuery, setSearchQuery] = useState('')
-    const [searchResults, setSearchResults] = useState<any[]>([])
+    const [searchResults, setSearchResults] = useState<ProductSearchResult[]>([])
     const [searchLoading, setSearchLoading] = useState(false)
     const searchTimeout = useRef<NodeJS.Timeout | null>(null)
 
@@ -178,9 +208,13 @@ export default function ReceivingScreen() {
 
     async function loadSuppliers() {
         try {
-            const data = await getContactsByType('SUPPLIER')
-            const list = Array.isArray(data) ? data : (data?.results ?? [])
-            setSuppliers(list)
+            const data: unknown = await getContactsByType('SUPPLIER')
+            const list = Array.isArray(data)
+                ? data
+                : ((data && typeof data === 'object' && 'results' in data && Array.isArray((data as { results?: unknown[] }).results))
+                    ? ((data as { results: unknown[] }).results)
+                    : [])
+            setSuppliers(list as Supplier[])
         } catch { setSuppliers([]) }
     }
 
@@ -685,8 +719,8 @@ export default function ReceivingScreen() {
                                             {(popup.line?.product_barcode || popup.product?.barcode) && (
                                                 <span className="font-mono">{popup.line?.product_barcode || popup.product?.barcode}</span>
                                             )}
-                                            {popup.line?.qty_ordered > 0 && (
-                                                <span className="font-bold">Ordered: {popup.line.qty_ordered}</span>
+                                            {(popup.line?.qty_ordered ?? 0) > 0 && (
+                                                <span className="font-bold">Ordered: {popup.line?.qty_ordered}</span>
                                             )}
                                         </div>
                                         {popup.line?.is_unexpected && (

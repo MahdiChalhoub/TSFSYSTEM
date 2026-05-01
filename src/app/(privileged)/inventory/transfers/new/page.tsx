@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -49,9 +48,17 @@ export default function NewTransferPage() {
  erpFetch('inventory/warehouses/'),
  erpFetch('inventory/products/?page_size=1000') // Simplification for MVP
  ]);
- setWarehouses(Array.isArray(whRes) ? whRes : (whRes.results || []));
- setProducts(Array.isArray(prRes) ? prRes : (prRes.results || []));
- } catch (e) {
+ const asArr = (raw: unknown): unknown[] => {
+ if (Array.isArray(raw)) return raw;
+ if (raw && typeof raw === 'object' && 'results' in raw) {
+ const r = (raw as { results?: unknown }).results;
+ if (Array.isArray(r)) return r;
+ }
+ return [];
+ };
+ setWarehouses(asArr(whRes) as Warehouse[]);
+ setProducts(asArr(prRes) as Product[]);
+ } catch {
  toast.error("Failed to load metadata for transfer form.");
  } finally {
  setLoading(false);
@@ -136,7 +143,7 @@ export default function NewTransferPage() {
     </div>
   </header>
  <AppPageHeader
- title={<>New <span style={{ color: 'var(--app-primary)' }}>Transfer</span></>}
+ title="New Transfer"
  subtitle="Initiate an inter-warehouse stock movement"
  icon={<Package size={24} color="#fff" />}
  actions={

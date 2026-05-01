@@ -1,15 +1,36 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useEffect } from 'react'
-import { erpFetch } from '@/lib/erp-api'
+import { useState, useEffect, type ComponentType } from 'react'
 import { getReadinessSummary, getReadinessRecords, refreshReadiness } from '@/app/actions/plm-governance'
 import {
     ShieldCheck, ScanBarcode, Tag, MapPin, Truck, BarChart3,
     RefreshCw, CheckCircle2, AlertTriangle, XCircle, Image, Search
 } from 'lucide-react'
 
-const DIMENSIONS = [
+type IconComponent = ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>
+
+type ReadinessSummary = {
+    total: number
+    fully_ready: number
+    [key: string]: number
+}
+
+type ReadinessRecord = {
+    id?: number | string
+    product: number
+    status?: string
+    score?: number
+    missing?: string[]
+    is_scan_ready?: boolean
+    is_label_ready?: boolean
+    is_shelf_ready?: boolean
+    is_purchase_ready?: boolean
+    is_replenishment_ready?: boolean
+    is_catalog_ready?: boolean
+    [key: string]: unknown
+}
+
+const DIMENSIONS: Array<{ key: string; label: string; icon: IconComponent; desc: string }> = [
     { key: 'scan_ready', label: 'Scan Ready', icon: ScanBarcode, desc: 'Has valid barcode' },
     { key: 'label_ready', label: 'Label Ready', icon: Tag, desc: 'Valid label printed' },
     { key: 'shelf_ready', label: 'Shelf Ready', icon: MapPin, desc: 'Location assigned' },
@@ -25,8 +46,8 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function ProductReadinessPage() {
-    const [summary, setSummary] = useState<any>(null)
-    const [records, setRecords] = useState<any[]>([])
+    const [summary, setSummary] = useState<ReadinessSummary | null>(null)
+    const [records, setRecords] = useState<ReadinessRecord[]>([])
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState<number | null>(null)
     const [search, setSearch] = useState('')
@@ -37,8 +58,8 @@ export default function ProductReadinessPage() {
     async function loadData() {
         setLoading(true)
         const [sumRes, recRes] = await Promise.all([getReadinessSummary(), getReadinessRecords()])
-        if (sumRes.success) setSummary(sumRes.data)
-        if (recRes.success) setRecords(recRes.data)
+        if (sumRes.success) setSummary(sumRes.data as ReadinessSummary)
+        if (recRes.success) setRecords((recRes.data as ReadinessRecord[]) || [])
         setLoading(false)
     }
 
@@ -46,7 +67,8 @@ export default function ProductReadinessPage() {
         setRefreshing(productId)
         const res = await refreshReadiness(productId)
         if (res.success) {
-            setRecords(prev => prev.map(r => r.product === productId ? res.data : r))
+            const updated = res.data as ReadinessRecord
+            setRecords(prev => prev.map(r => r.product === productId ? updated : r))
         }
         setRefreshing(null)
     }
@@ -163,7 +185,7 @@ export default function ProductReadinessPage() {
                             style={{ borderBottom: '1px solid var(--app-border)' }}>
                             <div>
                                 <p className="text-sm font-bold text-app-foreground">Product #{r.product}</p>
-                                <StatusBadge status={r.status} />
+                                <StatusBadge status={r.status || 'NOT_READY'} />
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-lg font-black" style={{ color: 'var(--app-primary)' }}>{r.score}/6</span>
@@ -177,7 +199,7 @@ export default function ProductReadinessPage() {
                         </div>
                         <div className="p-3 grid grid-cols-3 gap-2">
                             {DIMENSIONS.map(d => {
-                                const ready = r[`is_${d.key}`]
+                                const ready = (r as Record<string, unknown>)[`is_${d.key}`] as boolean | undefined
                                 return (
                                     <div key={d.key} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg"
                                         style={{ background: ready ? 'color-mix(in srgb, var(--app-success, #10b981) 8%, transparent)' : 'color-mix(in srgb, var(--app-error, #ef4444) 8%, transparent)' }}>

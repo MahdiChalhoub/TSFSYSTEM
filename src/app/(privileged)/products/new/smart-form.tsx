@@ -1,7 +1,6 @@
-// @ts-nocheck
 'use client';
 
-import { useActionState, useState, useEffect, useCallback, useMemo } from 'react';
+import { useActionState, useState, useEffect, useMemo } from 'react';
 import { createProduct } from '../actions';
 import type { ProductNamingRule } from '@/app/actions/settings';
 import type { ProductAttribute } from '@/types/erp';
@@ -15,7 +14,7 @@ import {
 } from 'lucide-react';
 import type { ProductTypeChoice } from './wizard-step-type';
 import PricingEngine from './pricing-engine';
-import PackagingTree from './packaging-tree';
+import PackagingTree, { type PackagingLevel } from './packaging-tree';
 
 /* ── V3 Attribute Tree Types ── */
 type AttrChild = {
@@ -38,15 +37,93 @@ const fieldLabel = "block text-[10px] font-semibold text-app-muted-foreground mb
 const fieldInput = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[10px] text-[13px] focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 outline-none transition-all text-app-foreground placeholder:text-app-muted-foreground";
 const fieldSelect = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[10px] text-[13px] focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 outline-none transition-all text-app-foreground appearance-none";
 
+interface CategoryOption {
+    id: number | string;
+    name?: string;
+    shortName?: string;
+    code?: string;
+    [key: string]: unknown;
+}
+
+interface BrandOption {
+    id: number | string;
+    name?: string;
+    shortName?: string;
+    [key: string]: unknown;
+}
+
+interface UnitOption {
+    id: number | string;
+    name?: string;
+    shortName?: string;
+    type?: string;
+    [key: string]: unknown;
+}
+
+interface CountryOption {
+    id: number | string;
+    name?: string;
+    code?: string;
+    [key: string]: unknown;
+}
+
+interface ProductGroupOption {
+    id: number | string;
+    name: string;
+    price_sync_enabled?: boolean;
+    [key: string]: unknown;
+}
+
+interface SmartInitialData {
+    name?: string;
+    sku?: string;
+    barcode?: string;
+    description?: string;
+    baseName?: string;
+    categoryId?: number;
+    brandId?: number | string;
+    costPrice?: number | string;
+    basePrice?: number | string;
+    taxRate?: number | string;
+    isTaxIncluded?: boolean;
+    isExpiryTracked?: boolean;
+    minStockLevel?: number | string;
+    costValuationMethod?: string;
+    lotManagement?: string;
+    tracksLots?: boolean;
+    manufacturerShelfLifeDays?: number | string;
+    avgAvailableExpiryDays?: number | string;
+    shippingDurationDays?: number | string;
+    productGroups?: ProductGroupOption[];
+    product_group?: number | string;
+    [key: string]: unknown;
+}
+
+type V3FormulaSlot = {
+    enabled?: boolean;
+    type: 'static' | 'attribute';
+    id: string;
+    useShortName?: boolean;
+    useShortLabel?: boolean;
+};
+
+interface NamingComponentLite {
+    id: string;
+    name?: string;
+    enabled?: boolean;
+    useShortName?: boolean;
+    [key: string]: unknown;
+}
+
 interface SmartProductFormProps {
     productType: ProductTypeChoice;
-    categories: Record<string, any>[];
-    units: Record<string, any>[];
-    brands: Record<string, any>[];
-    countries: Record<string, any>[];
+    categories: CategoryOption[];
+    units: UnitOption[];
+    brands: BrandOption[];
+    countries: CountryOption[];
     namingRule: ProductNamingRule;
     attributeTree?: AttrGroup[];
-    initialData?: Record<string, any>;
+    initialData?: SmartInitialData;
     worksInTTC?: boolean;
     onBack: () => void;
 }
@@ -54,25 +131,31 @@ interface SmartProductFormProps {
 export default function SmartProductForm({
     productType,
     categories, units, brands, countries, namingRule,
-    attributeTree = [], initialData, worksInTTC = true, onBack
+    attributeTree = [], initialData, onBack
 }: SmartProductFormProps) {
-    const initialState = { message: '', errors: {} as Record<string, string[]> };
+    const initialState: { message: string; errors: Record<string, string[]> } = { message: '', errors: {} };
     const [state, formAction, isPending] = useActionState(createProduct, initialState);
 
+    const numOrZero = (v: unknown, fallback = 0): number => {
+        if (typeof v === 'number') return v;
+        const n = parseFloat(String(v ?? ''));
+        return isNaN(n) ? fallback : n;
+    };
+
     /* ── Cascading filter state ── */
-    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId || null);
-    const [selectedBrandId, setSelectedBrandId] = useState(initialData?.brandId ? String(initialData.brandId) : '');
-    const [selectedAttributeId, setSelectedAttributeId] = useState('');
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId ?? null);
+    const [selectedBrandId, setSelectedBrandId] = useState<string>(initialData?.brandId ? String(initialData.brandId) : '');
+    const [selectedAttributeId] = useState('');
     const [activeTab, setActiveTab] = useState('pricing');
 
     /* ── V3 Dynamic Attribute Selections: { groupId → childId } ── */
     const [selectedAttrValues, setSelectedAttrValues] = useState<Record<number, number | null>>({});
-    const [baseName, setBaseName] = useState(initialData?.baseName || '');
+    const [baseName, setBaseName] = useState<string>(initialData?.baseName || '');
     const [showHiddenAttrs, setShowHiddenAttrs] = useState(false);
 
     /* ── Filtered brands + attributes (cascading) ── */
-    const [filteredBrands, setFilteredBrands] = useState(brands);
-    const [filteredAttributes, setFilteredAttributes] = useState<ProductAttribute[]>([]);
+    const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>(brands);
+    const [filteredAttributes] = useState<ProductAttribute[]>([]);
     const [loadingFilters, setLoadingFilters] = useState(false);
 
     /* ── V3: Compute relevant attribute groups from tree based on selected category ── */
@@ -95,7 +178,7 @@ export default function SmartProductForm({
     /* ── V3: Auto-generated display name using nomenclature engine ── */
     const v3GeneratedName = useMemo(() => {
         // If a V3 formula is saved, use its ordering
-        const formula = (namingRule as any)?.v3_formula;
+        const formula = (namingRule as ProductNamingRule & { v3_formula?: V3FormulaSlot[] }).v3_formula;
         if (formula && formula.length > 0) {
             const parts: string[] = [];
             for (const slot of formula) {
@@ -103,7 +186,7 @@ export default function SmartProductForm({
                 if (slot.type === 'static') {
                     if (slot.id === 'brand' && selectedBrandId) {
                         const b = brands.find(br => String(br.id) === selectedBrandId);
-                        if (b) parts.push(slot.useShortName ? (b.shortName || b.name?.substring(0, 3)?.toUpperCase() || '') : b.name);
+                        if (b) parts.push(slot.useShortName ? (b.shortName || b.name?.substring(0, 3)?.toUpperCase() || '') : (b.name ?? ''));
                     } else if (slot.id === 'base_name' && baseName.trim()) {
                         parts.push(baseName.trim());
                     }
@@ -111,8 +194,9 @@ export default function SmartProductForm({
                 } else if (slot.type === 'attribute') {
                     const attrId = parseInt(slot.id.replace('attr_', ''));
                     const group = attributeTree.find(g => g.id === attrId);
-                    if (group && selectedAttrValues[group.id]) {
-                        const child = group.children.find(c => c.id === selectedAttrValues[group.id]);
+                    const childIdSel = group ? selectedAttrValues[group.id] : null;
+                    if (group && childIdSel != null) {
+                        const child = group.children.find(c => c.id === childIdSel);
                         if (child) {
                             parts.push(slot.useShortLabel && group.short_label
                                 ? `${child.name}${group.short_label}`
@@ -121,14 +205,14 @@ export default function SmartProductForm({
                     }
                 }
             }
-            return parts.join((namingRule as any)?.separator || ' ').trim();
+            return parts.join(namingRule.separator || ' ').trim();
         }
 
         // Default fallback: [Brand] + [Base Name] + [Shown Attributes by name_position]
         const parts: string[] = [];
         if (selectedBrandId) {
             const b = brands.find(br => String(br.id) === selectedBrandId);
-            if (b) parts.push(b.name);
+            if (b?.name) parts.push(b.name);
         }
         const base = baseName.trim();
         if (base) parts.push(base);
@@ -137,6 +221,7 @@ export default function SmartProductForm({
             .sort((a, b) => a.name_position - b.name_position);
         for (const group of shownAttrs) {
             const childId = selectedAttrValues[group.id];
+            if (childId == null) continue;
             const child = group.children.find(c => c.id === childId);
             if (child) {
                 parts.push(group.short_label ? `${child.name}${group.short_label}` : child.name);
@@ -154,7 +239,7 @@ export default function SmartProductForm({
     /* ── Unit Type Filtering ── */
     const [unitType, setUnitType] = useState('');
     const filteredUnits = unitType ? units.filter(u => u.type === unitType) : units;
-    const unitTypes = [...new Set(units.map(u => u.type).filter(Boolean))];
+    const unitTypes = Array.from(new Set(units.map(u => u.type).filter((t): t is string => Boolean(t))));
 
     /* ── Auto Name ── */
     const [autoName, setAutoName] = useState('');
@@ -164,29 +249,29 @@ export default function SmartProductForm({
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     /* ── Pricing State ── */
-    const [costPrice, setCostPrice] = useState(parseFloat(initialData?.costPrice || '0') || 0);
-    const [sellPrice, setSellPrice] = useState(parseFloat(initialData?.basePrice || '0') || 0);
-    const [taxPercent, setTaxPercent] = useState(parseFloat(initialData?.taxRate || '0.11') || 0.11);
-    const [isTaxIncluded, setIsTaxIncluded] = useState(initialData?.isTaxIncluded ?? true);
+    const [costPrice, setCostPrice] = useState(numOrZero(initialData?.costPrice));
+    const [sellPrice, setSellPrice] = useState(numOrZero(initialData?.basePrice));
+    const [taxPercent, setTaxPercent] = useState(numOrZero(initialData?.taxRate, 0.11) || 0.11);
+    const [isTaxIncluded, setIsTaxIncluded] = useState<boolean>(initialData?.isTaxIncluded ?? true);
 
     /* ── Packaging State ── */
-    const [packagingLevels, setPackagingLevels] = useState<any[]>([]);
-    const productGroups: any[] = initialData?.productGroups || [];
+    const [packagingLevels, setPackagingLevels] = useState<PackagingLevel[]>([]);
+    const productGroups: ProductGroupOption[] = initialData?.productGroups || [];
 
     /* ── Inventory State ── */
     const [stockStrategy, setStockStrategy] = useState('make_to_stock');
-    const [minStock, setMinStock] = useState(initialData?.minStockLevel || 10);
+    const [minStock, setMinStock] = useState<number>(numOrZero(initialData?.minStockLevel, 10) || 10);
     const [maxStock, setMaxStock] = useState(300);
     const [reorderPoint, setReorderPoint] = useState(80);
 
     /* ── Cost Valuation & Lot Management State ── */
-    const [costValuation, setCostValuation] = useState(initialData?.costValuationMethod || 'WAVG');
-    const [lotManagement, setLotManagement] = useState(initialData?.lotManagement || 'NONE');
-    const [tracksLots, setTracksLots] = useState(initialData?.tracksLots ?? false);
-    const [expiryTracked, setExpiryTracked] = useState(initialData?.isExpiryTracked ?? false);
-    const [mfgShelfLife, setMfgShelfLife] = useState(initialData?.manufacturerShelfLifeDays || 0);
-    const [avgExpiry, setAvgExpiry] = useState(initialData?.avgAvailableExpiryDays || 0);
-    const [shippingDays, setShippingDays] = useState(initialData?.shippingDurationDays || 0);
+    const [costValuation, setCostValuation] = useState<string>(initialData?.costValuationMethod || 'WAVG');
+    const [lotManagement, setLotManagement] = useState<string>(initialData?.lotManagement || 'NONE');
+    const [tracksLots, setTracksLots] = useState<boolean>(initialData?.tracksLots ?? false);
+    const [expiryTracked, setExpiryTracked] = useState<boolean>(initialData?.isExpiryTracked ?? false);
+    const [mfgShelfLife, setMfgShelfLife] = useState<number>(numOrZero(initialData?.manufacturerShelfLifeDays));
+    const [avgExpiry, setAvgExpiry] = useState<number>(numOrZero(initialData?.avgAvailableExpiryDays));
+    const [shippingDays, setShippingDays] = useState<number>(numOrZero(initialData?.shippingDurationDays));
 
     /* ── Type-based visibility ── */
     const isService = productType === 'SERVICE';
@@ -201,9 +286,10 @@ export default function SmartProductForm({
         const loadFiltered = async () => {
             setLoadingFilters(true);
             try {
-                const brandList = selectedCategoryId
+                const brandListRaw = selectedCategoryId
                     ? await getBrandsByCategory(selectedCategoryId)
                     : brands;
+                const brandList = (brandListRaw ?? []) as unknown as BrandOption[];
                 setFilteredBrands(brandList.length > 0 ? brandList : brands);
                 // Reset if current brand not in filtered list
                 if (selectedBrandId && brandList.length > 0 && !brandList.find(b => String(b.id) === selectedBrandId)) {
@@ -213,6 +299,7 @@ export default function SmartProductForm({
             finally { setLoadingFilters(false); }
         };
         loadFiltered();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCategoryId]);
 
     /* ── Auto-generate name: use V3 nomenclature if attribute tree exists, else legacy rule ── */
@@ -228,16 +315,16 @@ export default function SmartProductForm({
         const attrMatch = filteredAttributes.find(a => String(a.id) === selectedAttributeId);
         const emballageUnitMatch = units.find(u => String(u.id) === emballageUnitId);
 
-        const componentValues: Record<string, any> = {
+        const componentValues: Record<string, { short: string; full: string }> = {
             category: { short: categoryMatch?.shortName || categoryMatch?.code || '', full: categoryMatch?.name || '' },
             brand: { short: brandMatch?.name?.substring(0, 3).toUpperCase() || '', full: brandMatch?.name || '' },
             family: { short: attrMatch?.name || '', full: attrMatch?.name || '' },
             emballage: {
-                short: emballageVal && emballageUnitMatch ? `${emballageVal}${emballageUnitMatch.shortName || emballageUnitMatch.name}` : (emballageVal || ''),
-                full: emballageVal && emballageUnitMatch ? `${emballageVal} ${emballageUnitMatch.name}` : (emballageVal || '')
+                short: emballageVal && emballageUnitMatch ? `${emballageVal}${emballageUnitMatch.shortName || emballageUnitMatch.name || ''}` : (emballageVal || ''),
+                full: emballageVal && emballageUnitMatch ? `${emballageVal} ${emballageUnitMatch.name ?? ''}` : (emballageVal || '')
             }
         };
-        const parts = namingRule.components.filter(c => c.enabled).map(c => {
+        const parts = (namingRule.components as NamingComponentLite[]).filter(c => c.enabled).map(c => {
             const value = componentValues[c.id];
             return c.useShortName ? value?.short : value?.full;
         }).filter(Boolean);
@@ -304,7 +391,7 @@ export default function SmartProductForm({
                     {state.errors && Object.keys(state.errors).length > 0 && (
                         <ul className="list-disc pl-5 mt-1 space-y-0.5 text-[12px]">
                             {Object.entries(state.errors).map(([field, msgs]) => (
-                                <li key={field}><span className="font-bold capitalize">{field}:</span> {(msgs as string[]).join(', ')}</li>
+                                <li key={field}><span className="font-bold capitalize">{field}:</span> {msgs.join(', ')}</li>
                             ))}
                         </ul>
                     )}
@@ -364,7 +451,7 @@ export default function SmartProductForm({
                                     />
                                 </div>
                                 <p className="text-[9px] text-app-info/70 mt-1.5 font-medium">
-                                    Rule: {namingRule.components.filter(c => c.enabled).map(c => (c as any).name).join(` ${namingRule.separator} `)}
+                                    Rule: {(namingRule.components as NamingComponentLite[]).filter(c => c.enabled).map(c => c.name ?? '').join(` ${namingRule.separator} `)}
                                 </p>
                             </div>
 
@@ -446,7 +533,7 @@ export default function SmartProductForm({
                             {/* ── Category (tree — takes full width, dynamic rows) ── */}
                             <div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 items-start">
-                                    <CategorySelector categories={categories as any[]} onChange={(id) => setSelectedCategoryId(id)} compact />
+                                    <CategorySelector categories={categories as unknown as Parameters<typeof CategorySelector>[0]['categories']} onChange={(id) => setSelectedCategoryId(id)} />
                                 </div>
                             </div>
 
@@ -460,7 +547,7 @@ export default function SmartProductForm({
                                         onChange={(e) => setSelectedBrandId(e.target.value)}
                                     >
                                         <option value="">Select brand...</option>
-                                        {filteredBrands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                        {filteredBrands.map(b => <option key={String(b.id)} value={String(b.id)}>{b.name}</option>)}
                                     </select>
                                     {selectedCategoryId && filteredBrands.length > 0 && filteredBrands.length !== brands.length && (
                                         <p className="text-[9px] text-app-primary mt-1 font-medium">✓ {filteredBrands.length} brand(s) for this category</p>
@@ -538,7 +625,7 @@ export default function SmartProductForm({
                                     <label className={fieldLabel}>Origin Country</label>
                                     <select name="countryId" className={fieldSelect}>
                                         <option value="">Select country...</option>
-                                        {countries.map(c => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
+                                        {countries.map(c => <option key={String(c.id)} value={String(c.id)}>{c.name} ({c.code})</option>)}
                                     </select>
                                 </div>
                                 <div>{/* spacer */}</div>
@@ -566,7 +653,7 @@ export default function SmartProductForm({
                                                 className={fieldSelect + ' w-[45%] text-[11px]'}
                                             >
                                                 <option value="">Unit</option>
-                                                {units.map(u => <option key={u.id} value={u.id}>{u.shortName || u.name}</option>)}
+                                                {units.map(u => <option key={String(u.id)} value={String(u.id)}>{u.shortName || u.name}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -583,7 +670,7 @@ export default function SmartProductForm({
                                             </select>
                                             <select name="unitId" className={fieldSelect + ' w-[60%]'} required>
                                                 <option value="">Select unit...</option>
-                                                {filteredUnits.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                                {filteredUnits.map(u => <option key={String(u.id)} value={String(u.id)}>{u.name}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -695,13 +782,13 @@ export default function SmartProductForm({
                                                             <td className="py-2 px-3 text-right font-medium text-app-muted-foreground">{sellPrice > 0 ? `$${sellPrice.toFixed(2)}` : '—'}</td>
                                                         </tr>
                                                         {/* Packaging levels */}
-                                                        {packagingLevels.filter(l => l.unitId && l.ratio > 0).map((lvl, idx) => {
+                                                        {packagingLevels.filter((l) => l.unitId && l.ratio > 0).map((lvl, idx) => {
                                                             const totalUnits = (() => { let t = 1; for (let i = 0; i <= packagingLevels.indexOf(lvl); i++) { if (packagingLevels[i].ratio > 0) t *= packagingLevels[i].ratio; } return t; })();
                                                             const discountFactor = 1 - (lvl.discountPct / 100);
                                                             const formulaPrice = sellPrice * totalUnits * discountFactor;
                                                             const effectivePrice = lvl.priceMode === 'FIXED' && lvl.price > 0 ? lvl.price : formulaPrice;
                                                             const perUnit = totalUnits > 0 ? effectivePrice / totalUnits : 0;
-                                                            const unitName = units.find(u => String(u.id) === lvl.unitId)?.name || `Level ${idx + 2}`;
+                                                            const unitName = units.find((u) => String(u.id) === lvl.unitId)?.name || `Level ${idx + 2}`;
                                                             return (
                                                                 <tr key={lvl.id} className="hover:bg-app-primary/5 transition-colors">
                                                                     <td className="py-2 px-3 font-bold text-app-foreground flex items-center gap-1.5">
@@ -750,8 +837,8 @@ export default function SmartProductForm({
                                                     defaultValue={initialData?.product_group || ''}
                                                 >
                                                     <option value="">No group (independent pricing)</option>
-                                                    {productGroups.map((g: any) => (
-                                                        <option key={g.id} value={g.id}>
+                                                    {productGroups.map((g) => (
+                                                        <option key={String(g.id)} value={String(g.id)}>
                                                             {g.name}
                                                             {g.price_sync_enabled ? ' 🔗 (price synced)' : ''}
                                                         </option>
@@ -997,7 +1084,7 @@ export default function SmartProductForm({
 
                             {/* ── Packaging Tab ── */}
                             {activeTab === 'packaging' && (
-                                <PackagingTree levels={packagingLevels} onChange={setPackagingLevels} units={units} basePrice={sellPrice} />
+                                <PackagingTree levels={packagingLevels} onChange={setPackagingLevels} units={units as Parameters<typeof PackagingTree>[0]['units']} basePrice={sellPrice} />
                             )}
 
                             {/* ── Supplier Tab ── */}

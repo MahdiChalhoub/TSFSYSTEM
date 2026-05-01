@@ -1,18 +1,40 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
 import { getWeightPolicy, updateWeightPolicy, getFreshProfiles } from '@/app/actions/plm-governance'
-import { erpFetch } from '@/lib/erp-api'
 import {
     Scale, Leaf, Thermometer, AlertTriangle, Save, RefreshCw,
-    Apple, Wheat, Fish, Search
+    Apple, Search
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+type WeightPolicyState = {
+    id?: number
+    encoding_mode?: string
+    scale_unit?: string
+    prefix?: string
+    default_tare_grams?: number
+    default_shelf_life_days?: number
+    label_template?: string
+    [key: string]: unknown
+}
+
+type FreshProfileRow = {
+    id: number
+    product?: number
+    product_name?: string
+    plu_code?: string
+    net_weight_grams?: number
+    price_per_kg?: number | string
+    shelf_life_days?: number
+    estimated_unit_price?: number | string
+    allergens?: string
+    ingredients?: string
+}
+
 export default function FreshProductsPage() {
-    const [policy, setPolicy] = useState<any>(null)
-    const [profiles, setProfiles] = useState<any[]>([])
+    const [policy, setPolicy] = useState<WeightPolicyState | null>(null)
+    const [profiles, setProfiles] = useState<FreshProfileRow[]>([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [tab, setTab] = useState<'profiles' | 'policy'>('profiles')
@@ -23,15 +45,15 @@ export default function FreshProductsPage() {
     async function loadData() {
         setLoading(true)
         const [polRes, profRes] = await Promise.all([getWeightPolicy(), getFreshProfiles()])
-        if (polRes.success) setPolicy(polRes.data)
-        if (profRes.success) setProfiles(profRes.data)
+        if (polRes.success) setPolicy((polRes.data as WeightPolicyState) || null)
+        if (profRes.success) setProfiles((profRes.data as FreshProfileRow[]) || [])
         setLoading(false)
     }
 
     async function handleSavePolicy() {
         if (!policy) return
         setSaving(true)
-        const res = await updateWeightPolicy(policy)
+        const res = await updateWeightPolicy({ id: policy.id ?? 'current', ...policy })
         if (res.success) toast.success('Weight policy saved')
         else toast.error(res.error)
         setSaving(false)
@@ -220,7 +242,7 @@ export default function FreshProductsPage() {
                             ].map(f => (
                                 <label key={f.key} className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"
                                     style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                    <input type="checkbox" checked={policy[f.key] || false}
+                                    <input type="checkbox" checked={!!policy[f.key]}
                                         onChange={e => setPolicy({ ...policy, [f.key]: e.target.checked })} className="rounded" />
                                     <span className="text-[10px] font-medium text-app-foreground">{f.label}</span>
                                 </label>

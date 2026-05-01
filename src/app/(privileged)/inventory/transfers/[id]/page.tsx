@@ -1,23 +1,42 @@
-// @ts-nocheck
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { FormEvent } from 'react';
 import { use } from 'react';
-import { ArrowLeft, CheckCircle2, Truck, XCircle, FileText, Package, Check, MapPin, Calendar, Clock, RotateCcw } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Truck, XCircle, FileText, Package, Check, MapPin, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { erpFetch } from '@/lib/erp-api';
+import { Input } from '@/components/ui/input';
 import { getTransfer, triggerTransferAction } from '@/app/actions/inventory/transfers';
 import Link from 'next/link';
 
+type TransferLine = {
+ id: number | string
+ product?: number | string
+ product_name?: string
+ quantity: number
+ quantity_done?: number
+}
+
+type TransferDoc = {
+ id?: number | string
+ ref_code?: string
+ status?: string
+ lines?: TransferLine[]
+ from_warehouse?: number | string
+ from_warehouse_name?: string
+ to_warehouse?: number | string
+ to_warehouse_name?: string
+ scheduled_date?: string
+ dispatched_at?: string
+ received_at?: string
+ notes?: string
+}
+
 export default function TransferDetailPage({ params }: { params: Promise<{ id: string }> }) {
- const router = useRouter();
  const resolvedParams = use(params);
  const id = resolvedParams.id;
 
- const [transfer, setTransfer] = useState<any>(null);
+ const [transfer, setTransfer] = useState<TransferDoc | null>(null);
  const [loading, setLoading] = useState(true);
  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -27,18 +46,18 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  const loadData = async () => {
  setLoading(true);
  try {
- const res = await getTransfer(id);
+ const res = await getTransfer(id) as TransferDoc | null;
  setTransfer(res);
 
  // Initialize receive quantities dictionary based on planned quantities
  if (res?.lines) {
  const initRecv: Record<string, string> = {};
- res.lines.forEach((l: any) => {
- initRecv[l.id] = String(l.quantity); // default to same as planned
+ res.lines.forEach((l) => {
+ initRecv[String(l.id)] = String(l.quantity); // default to same as planned
  });
  setReceiveQuantities(initRecv);
  }
- } catch (e) {
+ } catch {
  toast.error("Failed to load transfer document");
  } finally {
  setLoading(false);
@@ -105,7 +124,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  DONE: 'bg-app-primary-light text-app-success border-app-success',
  CANCELLED: 'bg-app-error-bg text-app-error border-app-error',
  };
- const active = variants[status] || variants.DRAFT;
+ const active = variants[status || 'DRAFT'] || variants.DRAFT;
  return <span className={`px-3 py-1 text-xs font-black uppercase rounded-full border ${active}`}>{status}</span>;
  };
 
@@ -176,7 +195,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  </tr>
  </thead>
  <tbody className="divide-y divide-app-border bg-app-surface text-sm font-medium">
- {transfer.lines?.map((line: any, idx: number) => (
+ {transfer.lines?.map((line, idx: number) => (
  <tr key={line.id} className="hover:bg-app-surface-hover/50 transition-colors">
  <td className="p-4 text-center text-[10px] font-black text-app-muted-foreground">{idx + 1}</td>
  <td className="p-4">

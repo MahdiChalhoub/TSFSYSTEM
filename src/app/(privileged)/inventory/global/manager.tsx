@@ -1,16 +1,40 @@
-// @ts-nocheck
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { Search, Package, Building2, TrendingUp, DollarSign, Filter, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { Search, Package, TrendingUp, DollarSign, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
+
+type SiteRow = { id: number | string; name: string }
+type ProductRow = {
+    id: number | string
+    name: string
+    sku?: string
+    barcode?: string
+    category?: string
+    brand?: string
+    unit?: string
+    totalQty: number
+    costPrice: number
+    siteStock: Record<string | number, number>
+}
+
+type GlobalInventoryData = {
+    products: ProductRow[]
+    sites: SiteRow[]
+    totalCount: number
+    totalPages: number
+    search?: string
+}
+
+type FetchInput = { search?: string; offset?: number; limit?: number }
+type FetchAction = (input: FetchInput) => Promise<GlobalInventoryData>
 
 export default function GlobalInventoryManager({
     initialData,
     fetchAction
 }: {
-    initialData: Record<string, any>,
-    fetchAction: Record<string, any>
+    initialData: GlobalInventoryData,
+    fetchAction: FetchAction
 }) {
     const [data, setData] = useState(initialData);
     const [search, setSearch] = useState('');
@@ -41,8 +65,8 @@ export default function GlobalInventoryManager({
 
     const stats = {
         totalItems: data.totalCount,
-        totalStock: data.products.reduce((acc: number, p: Record<string, any>) => acc + p.totalQty, 0),
-        totalValue: data.products.reduce((acc: number, p: Record<string, any>) => acc + (p.totalQty * p.costPrice), 0)
+        totalStock: data.products.reduce((acc: number, p) => acc + p.totalQty, 0),
+        totalValue: data.products.reduce((acc: number, p) => acc + (p.totalQty * p.costPrice), 0)
     };
 
     return (
@@ -103,7 +127,7 @@ export default function GlobalInventoryManager({
                             <tr className="bg-app-surface/50">
                                 <th className="px-8 py-6 text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em] border-b border-app-border">Product Info</th>
                                 <th className="px-6 py-6 text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em] border-b border-app-border">Category / Brand</th>
-                                {data.sites.map((site: Record<string, any>) => (
+                                {data.sites.map((site) => (
                                     <th key={site.id} className="px-6 py-6 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] border-b border-app-border text-center bg-app-info-bg/20">
                                         {site.name}
                                     </th>
@@ -113,7 +137,7 @@ export default function GlobalInventoryManager({
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {data.products.map((product: Record<string, any>) => (
+                            {data.products.map((product) => (
                                 <tr key={product.id} className="hover:bg-app-surface transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
@@ -135,7 +159,7 @@ export default function GlobalInventoryManager({
                                             <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-tighter">{product.brand}</span>
                                         </div>
                                     </td>
-                                    {data.sites.map((site: Record<string, any>) => (
+                                    {data.sites.map((site) => (
                                         <td key={site.id} className="px-6 py-6 text-center border-l border-gray-50/50">
                                             <div className={clsx(
                                                 "inline-block px-3 py-1.5 rounded-xl font-black text-sm",

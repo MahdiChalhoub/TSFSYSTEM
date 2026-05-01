@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
@@ -18,13 +17,14 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
 import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
-import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
+import { MobileActionSheet, type ActionItem } from '@/components/mobile/MobileActionSheet'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { PageTour } from '@/components/ui/PageTour'
 import '@/lib/tours/definitions/finance-coa-templates-mobile'
 
-const ICON_MAP: Record<string, any> = {
+type LucideIconLike = React.ComponentType<React.ComponentProps<'svg'> & { size?: number | string }>
+const ICON_MAP: Record<string, LucideIconLike> = {
     Globe, Landmark, BookOpen, FileText, Flag, MapPin, Library, Layers, Scale, Building2,
 }
 function resolveIcon(name?: string) {
@@ -48,7 +48,7 @@ interface TemplateInfo {
 
 interface Props {
     templates: TemplateInfo[]
-    templatesMap: Record<string, any>
+    templatesMap: Record<string, unknown>
     migrationMaps: Record<string, Record<string, string>>
 }
 
@@ -73,22 +73,22 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
     const runImport = useCallback(async (tpl: TemplateInfo, strategy: 'append' | 'replace') => {
         setIsPending(true)
         try {
-            const result = await importChartOfAccountsTemplate(tpl.key, strategy)
+            const result = await importChartOfAccountsTemplate(tpl.key, { reset: strategy === 'replace' }) as { success?: boolean; message?: string } | undefined
             if (result?.success) {
                 toast.success(`Imported ${tpl.name}`)
                 router.push('/finance/chart-of-accounts')
             } else {
                 toast.error(result?.message || 'Import failed')
             }
-        } catch (e: any) {
-            toast.error(e?.message || 'Import failed')
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Import failed')
         } finally {
             setIsPending(false)
             setImportTarget(null)
         }
     }, [router])
 
-    const actionItems = useMemo(() => {
+    const actionItems = useMemo<ActionItem[]>(() => {
         if (!actionNode) return []
         return [
             { key: 'details', label: 'View details', hint: 'Accounts & rules', icon: <ListChecks size={16} />, variant: 'grid', onClick: () => setDetailNode(actionNode) },
@@ -141,7 +141,7 @@ export function MobileTemplatesClient({ templates, templatesMap }: Props) {
                     <ConfirmDialog
                         open={importTarget !== null}
                         onOpenChange={(o) => { if (!o) setImportTarget(null) }}
-                        onConfirm={() => importTarget && runImport(importTarget, 'append')}
+                        onConfirm={() => { if (importTarget) void runImport(importTarget, 'append') }}
                         title={`Import "${importTarget?.name}"?`}
                         description={`This will append ${importTarget?.account_count ?? 0} accounts and ${importTarget?.posting_rule_count ?? 0} posting rules to your current Chart of Accounts.`}
                         confirmText="Import"

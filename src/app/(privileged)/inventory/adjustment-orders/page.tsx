@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
@@ -22,8 +21,11 @@ import {
     Send, ChevronDown, ChevronUp, Trash2, Package, Clock, AlertTriangle,
     ArrowDownUp, History
 } from "lucide-react"
+import type { ComponentType } from 'react'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
+type IconComponent = ComponentType<{ className?: string }>
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: IconComponent }> = {
     OPEN: { label: 'Open', color: 'bg-app-info-bg text-app-info', icon: Clock },
     LOCKED: { label: 'Locked', color: 'bg-app-warning-bg text-app-warning', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'bg-purple-100 text-purple-700', icon: ShieldCheck },
@@ -54,9 +56,17 @@ export default function AdjustmentOrdersPage() {
                 erpFetch('inventory/warehouses/'),
                 erpFetch('inventory/products/')
             ])
-            setOrders(Array.isArray(ordersRes) ? ordersRes : ordersRes?.results || [])
-            setWarehouses(Array.isArray(whRes) ? whRes : whRes?.results || [])
-            setProducts(Array.isArray(prodRes) ? prodRes : prodRes?.results || [])
+            const asArr = (raw: unknown): unknown[] => {
+                if (Array.isArray(raw)) return raw
+                if (raw && typeof raw === 'object' && 'results' in raw) {
+                    const r = (raw as { results?: unknown }).results
+                    if (Array.isArray(r)) return r
+                }
+                return []
+            }
+            setOrders(asArr(ordersRes) as AdjustmentOrder[])
+            setWarehouses(asArr(whRes) as Warehouse[])
+            setProducts(asArr(prodRes) as Product[])
         } catch {
             toast.error("Failed to load data")
         } finally {
@@ -369,30 +379,39 @@ export default function AdjustmentOrdersPage() {
                                                                         </TableRow>
                                                                     </TableHeader>
                                                                     <TableBody>
-                                                                        {(order.lines ?? []).map((line: Record<string, any>) => (
-                                                                            <TableRow key={line.id}>
+                                                                        {(order.lines ?? []).map((line) => {
+                                                                            const ln = line as Record<string, unknown>
+                                                                            const id = ln.id as number
+                                                                            const productName = ln.product_name as string | undefined
+                                                                            const product = ln.product as number | string | undefined
+                                                                            const qty = Number(ln.qty_adjustment ?? 0)
+                                                                            const amount = ln.amount_adjustment as number | string | undefined
+                                                                            const reason = ln.reason as string | undefined
+                                                                            return (
+                                                                            <TableRow key={id}>
                                                                                 <TableCell className="text-sm font-medium">
                                                                                     <div className="flex items-center gap-2">
                                                                                         <Package className="h-4 w-4 text-muted-foreground" />
-                                                                                        {line.product_name || `Product #${line.product}`}
+                                                                                        {productName || `Product #${product}`}
                                                                                     </div>
                                                                                 </TableCell>
-                                                                                <TableCell className={`text-sm text-right font-semibold ${line.qty_adjustment >= 0 ? 'text-app-success' : 'text-app-error'}`}>
-                                                                                    {line.qty_adjustment > 0 ? '+' : ''}{line.qty_adjustment}
+                                                                                <TableCell className={`text-sm text-right font-semibold ${qty >= 0 ? 'text-app-success' : 'text-app-error'}`}>
+                                                                                    {qty > 0 ? '+' : ''}{qty}
                                                                                 </TableCell>
                                                                                 <TableCell className="text-sm text-right">
-                                                                                    {line.amount_adjustment ? `$${parseFloat(line.amount_adjustment).toLocaleString('en', { minimumFractionDigits: 2 })}` : '—'}
+                                                                                    {amount ? `$${parseFloat(String(amount)).toLocaleString('en', { minimumFractionDigits: 2 })}` : '—'}
                                                                                 </TableCell>
-                                                                                <TableCell className="text-sm text-muted-foreground">{line.reason || '—'}</TableCell>
+                                                                                <TableCell className="text-sm text-muted-foreground">{reason || '—'}</TableCell>
                                                                                 {order.lifecycle_status === 'OPEN' && (
                                                                                     <TableCell>
-                                                                                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleRemoveLine(order.id, line.id)} disabled={isPending}>
+                                                                                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleRemoveLine(order.id, id)} disabled={isPending}>
                                                                                             <Trash2 className="h-3 w-3" />
                                                                                         </Button>
                                                                                     </TableCell>
                                                                                 )}
                                                                             </TableRow>
-                                                                        ))}
+                                                                            )
+                                                                        })}
                                                                     </TableBody>
                                                                 </Table>
                                                             </div>
@@ -431,7 +450,7 @@ export default function AdjustmentOrdersPage() {
                                 <label className="text-sm font-medium">Warehouse *</label>
                                 <select name="warehouse" required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option value="">Select warehouse</option>
-                                    {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                    {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
                                 </select>
                             </div>
                             <div className="col-span-2">
@@ -463,7 +482,7 @@ export default function AdjustmentOrdersPage() {
                             <label className="text-sm font-medium">Product *</label>
                             <select name="product" required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                 <option value="">Select product</option>
-                                {products.map((p: Record<string, any>) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -518,20 +537,28 @@ export default function AdjustmentOrdersPage() {
                     </DialogHeader>
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                         {historyDialog?.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No history yet</p>}
-                        {historyDialog?.map((entry: Record<string, any>, i: number) => (
+                        {historyDialog?.map((entry, i: number) => {
+                            const e = entry as unknown as Record<string, unknown>
+                            const action = e.action as string | undefined
+                            const level = e.level as number | string | undefined
+                            const by = e.performed_by_name as string | undefined
+                            const at = e.performed_at as string | undefined
+                            const comment = e.comment as string | undefined
+                            return (
                             <div key={i} className="flex items-start gap-3 border-l-2 border-muted pl-4 py-2">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="text-xs">{entry.action}</Badge>
-                                        {entry.level && <span className="text-xs text-muted-foreground">Level {entry.level}</span>}
+                                        <Badge variant="outline" className="text-xs">{action}</Badge>
+                                        {level && <span className="text-xs text-muted-foreground">Level {level}</span>}
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        {entry.performed_by_name || 'System'} · {new Date(entry.performed_at).toLocaleString()}
+                                        {by || 'System'} · {at ? new Date(at).toLocaleString() : '—'}
                                     </p>
-                                    {entry.comment && <p className="text-sm mt-1 bg-muted rounded px-2 py-1">{entry.comment}</p>}
+                                    {comment && <p className="text-sm mt-1 bg-muted rounded px-2 py-1">{comment}</p>}
                                 </div>
                             </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </DialogContent>
             </Dialog>

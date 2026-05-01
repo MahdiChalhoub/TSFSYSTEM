@@ -29,7 +29,21 @@ function GatewaySkeleton() {
     )
 }
 
-export function UnitsGateway({ initialUnits }: { initialUnits: Array<Record<string, unknown>> }) {
+type GatewayUnit = {
+    id: number
+    name: string
+    code?: string
+    short_name?: string
+    type?: string
+    base_unit?: number | null
+    conversion_factor?: number
+    needs_balance?: boolean
+    product_count?: number
+    package_count?: number
+    [key: string]: unknown
+}
+
+export function UnitsGateway({ initialUnits }: { initialUnits: GatewayUnit[] }) {
     const isMobile = useIsMobile()
     return isMobile
         ? <MobileErrorBoundary><MobileClient initialUnits={initialUnits} /></MobileErrorBoundary>

@@ -60,7 +60,9 @@ export default function ReceiptsPage() {
  const [pageSize, setPageSize] = useState(50)
  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({})
  const [columnOrder, setColumnOrder] = useState<string[]>(ALL_COLUMNS.map(c => c.key))
- const searchRef = useRef<HTMLInputElement>(null)
+ // React 19 typed-ref null widens to RefObject<HTMLInputElement | null>; the
+ // DajingoListView prop is non-null. Cast to satisfy the consumer.
+ const searchRef = useRef<HTMLInputElement>(null as unknown as HTMLInputElement)
 
  const load = useCallback(async () => {
    setLoading(true)
@@ -93,7 +95,7 @@ export default function ReceiptsPage() {
    if (!receiveLine || !receiveQty) return
    setActionLoading(true)
    try {
-     await receivePOLine(receiveLine.poId, receiveLine.line.id, Number(receiveQty))
+     await receivePOLine(receiveLine.poId, { line_id: receiveLine.line.id, quantity: Number(receiveQty) })
      toast.success(`Received ${receiveQty} units`)
      setReceiveLine(null); setReceiveQty('')
      const d = await fetchPurchaseOrder(receiveLine.poId)
@@ -201,7 +203,7 @@ export default function ReceiptsPage() {
                    </div>
                    <div className="text-right shrink-0">
                      <div className="text-[11px] font-mono text-app-muted-foreground">{ordered} × {fmt(line.unit_price)}</div>
-                     <div className="text-[12px] font-bold text-app-foreground">{fmt(line.line_total || line.subtotal)}</div>
+                     <div className="text-[12px] font-bold text-app-foreground">{fmt(Number(line.line_total ?? line.subtotal ?? 0))}</div>
                    </div>
                    {po.status !== 'RECEIVED' && recv < ordered && (
                      <button onClick={(e) => { e.stopPropagation(); setReceiveLine({ poId: po.id, line }); setReceiveQty(String(ordered - recv)) }}

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useRef, useTransition } from 'react'
@@ -19,39 +18,61 @@ import '@/lib/tours/definitions/inventory-units'
 import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
 import { erpFetch } from '@/lib/erp-api'
 
-import { UnitRow } from './components/UnitRow'
+import { UnitRow, type UnitNode } from './components/UnitRow'
 import { UnitDetailPanel } from './components/UnitDetailPanel'
+
+type DeleteUnitResult = {
+    success: boolean
+    message?: string
+    conflict?: unknown
+    actionHint?: string
+}
+
+type DeleteConflictState = { conflict: unknown; source: UnitNode }
+
+type RenderPropsRef = {
+    setExpandAll?: (v: boolean) => void
+    setExpandKey?: (fn: (k: number) => number) => void
+    setSidebarNode?: (n: UnitNode | null) => void
+    setSidebarTab?: (tab: string) => void
+}
 
 /* ═══════════════════════════════════════════════════════════
  *  UnitsClient — thin consumer; TreeMasterPage owns search,
  *  KPI filtering, tree build, and empty-state. This file only
  *  supplies data + row + modals + delete-conflict flow.
  * ═══════════════════════════════════════════════════════════ */
-export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
+export default function UnitsClient({ initialUnits }: { initialUnits: UnitNode[] }) {
     const router = useRouter()
-    const [isPending, startTransition] = useTransition()
+    const [, startTransition] = useTransition()
     const data = initialUnits
+    const dataAsRecords = data as unknown as Array<Record<string, unknown>>
+    const asUnit = (item: Record<string, unknown>) => item as unknown as UnitNode
     const [showCalc, setShowCalc] = useState(false)
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [showBarcodeConfig, setShowBarcodeConfig] = useState(false)
-    const [editingUnit, setEditingUnit] = useState<any>(null)
+    const [editingUnit, setEditingUnit] = useState<(UnitNode & { _parentId?: number }) | null>(null)
     const [formKey, setFormKey] = useState(0)
-    const [deleteTarget, setDeleteTarget] = useState<any>(null)
-    const [deleteConflict, setDeleteConflict] = useState<any>(null)
+    const [deleteTarget, setDeleteTarget] = useState<UnitNode | null>(null)
+    const [deleteConflict, setDeleteConflict] = useState<DeleteConflictState | null>(null)
 
-    const openForm = useCallback((parentId?: number) => { setEditingUnit(parentId ? { _parentId: parentId } : null); setFormKey(k => k + 1); setIsFormOpen(true) }, [])
-    const openEditForm = useCallback((u: any) => { setEditingUnit(u); setFormKey(k => k + 1); setIsFormOpen(true) }, [])
+    const openForm = useCallback((parentId?: number) => {
+        setEditingUnit(parentId ? ({ _parentId: parentId } as UnitNode & { _parentId: number }) : null)
+        setFormKey(k => k + 1)
+        setIsFormOpen(true)
+    }, [])
+    const openEditForm = useCallback((u: UnitNode) => { setEditingUnit(u); setFormKey(k => k + 1); setIsFormOpen(true) }, [])
 
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
         const source = deleteTarget
         setDeleteTarget(null)
         startTransition(async () => {
-            const result = await deleteUnit(source.id)
+            const result = await deleteUnit(source.id) as DeleteUnitResult
             if (result?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
-            if ((result as any)?.conflict) { setDeleteConflict({ conflict: (result as any).conflict, source }); return }
+            if (result?.conflict) { setDeleteConflict({ conflict: result.conflict, source }); return }
             const msg = result?.message || 'Failed to delete'
-            const hint = (result as any)?.actionHint
+            const hint = result?.actionHint
             if (hint) toast.error(msg, { description: hint, duration: 8000 })
             else toast.error(msg, { duration: 6000 })
         })
@@ -64,38 +85,38 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
             const moveRes = await erpFetch('/units/move_products/', {
                 method: 'POST',
                 body: JSON.stringify({ source_unit_id: source.id, target_unit_id: targetId }),
-            })
+            }) as { success?: boolean; message?: string } | null
             if (moveRes && moveRes.success === false) { toast.error(moveRes.message || 'Migration failed — delete aborted'); return }
-            const delRes = await deleteUnit(source.id, { force: true })
+            const delRes = await deleteUnit(source.id, { force: true }) as DeleteUnitResult
             if (delRes?.success) { toast.success(`Products migrated and "${source.name}" deleted`); setDeleteConflict(null); router.refresh() }
             else { toast.error(delRes?.message || 'Delete failed after migration') }
-        } catch (e: any) { toast.error(e?.message || 'Migration failed') }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Migration failed') }
     }
 
     const handleForceDeleteUnit = async () => {
         const source = deleteConflict?.source
         if (!source) return
-        const res = await deleteUnit(source.id, { force: true })
+        const res = await deleteUnit(source.id, { force: true }) as DeleteUnitResult
         if (res?.success) { toast.success(`"${source.name}" force-deleted`); setDeleteConflict(null); router.refresh() }
         else { toast.error(res?.message || 'Delete failed') }
     }
 
     const unitMigrationTargets = useMemo(() => {
         const sourceId = deleteConflict?.source?.id
-        return data.filter((u: any) => u.id !== sourceId).map((u: any) => ({ id: u.id, name: u.name, code: u.code }))
+        return data.filter((u) => u.id !== sourceId).map((u) => ({ id: u.id, name: u.name, code: u.code }))
     }, [data, deleteConflict])
 
-    const renderPropsRef = useRef<any>(null)
+    const renderPropsRef = useRef<RenderPropsRef | null>(null)
     const tourStepActions = useMemo(() => ({
-        5: () => { renderPropsRef.current?.setExpandAll(true); renderPropsRef.current?.setExpandKey((k: number) => k + 1) },
+        5: () => { renderPropsRef.current?.setExpandAll?.(true); renderPropsRef.current?.setExpandKey?.((k: number) => k + 1) },
         6: () => {
-            const firstBase = data.find((u: any) => !u.base_unit)
-            if (firstBase) { renderPropsRef.current?.setSidebarNode(firstBase); renderPropsRef.current?.setSidebarTab('overview') }
+            const firstBase = data.find((u) => !u.base_unit)
+            if (firstBase) { renderPropsRef.current?.setSidebarNode?.(firstBase); renderPropsRef.current?.setSidebarTab?.('overview') }
         },
-        8: () => { renderPropsRef.current?.setSidebarTab('products') },
-        9: () => { renderPropsRef.current?.setSidebarTab('packages') },
-        10: () => { renderPropsRef.current?.setSidebarTab('calculator') },
-        11: () => { renderPropsRef.current?.setSidebarNode(null) },
+        8: () => { renderPropsRef.current?.setSidebarTab?.('products') },
+        9: () => { renderPropsRef.current?.setSidebarTab?.('packages') },
+        10: () => { renderPropsRef.current?.setSidebarTab?.('calculator') },
+        11: () => { renderPropsRef.current?.setSidebarNode?.(null) },
     }), [data])
 
     return (
@@ -114,16 +135,17 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     exportColumns: [
                         { key: 'name', label: 'Name' },
                         { key: 'code', label: 'Code' },
-                        { key: 'short_name', label: 'Short Name', format: (u: any) => u.short_name || '' },
+                        { key: 'short_name', label: 'Short Name', format: (item) => asUnit(item).short_name || '' },
                         { key: 'type', label: 'Type' },
-                        { key: 'conversion_factor', label: 'Conversion', format: (u: any) => u.conversion_factor ?? 1 },
-                        { key: 'base_unit_code', label: 'Base Unit', format: (u: any) => {
-                            const base = u.base_unit ? data.find((x: any) => x.id === u.base_unit) : null
+                        { key: 'conversion_factor', label: 'Conversion', format: (item) => asUnit(item).conversion_factor ?? 1 },
+                        { key: 'base_unit_code', label: 'Base Unit', format: (item) => {
+                            const u = asUnit(item)
+                            const base = u.base_unit ? data.find((x) => x.id === u.base_unit) : null
                             return base ? (base.code || base.name || '') : ''
                         }},
-                        { key: 'allow_fraction', label: 'Allow Fraction', format: (u: any) => u.allow_fraction ? 'true' : 'false' },
-                        { key: 'needs_balance', label: 'Needs Balance', format: (u: any) => u.needs_balance ? 'true' : 'false' },
-                        { key: 'product_count', label: 'Products', format: (u: any) => u.product_count || 0 },
+                        { key: 'allow_fraction', label: 'Allow Fraction', format: (item) => (item as { allow_fraction?: boolean }).allow_fraction ? 'true' : 'false' },
+                        { key: 'needs_balance', label: 'Needs Balance', format: (item) => asUnit(item).needs_balance ? 'true' : 'false' },
+                        { key: 'product_count', label: 'Products', format: (item) => asUnit(item).product_count || 0 },
                     ],
                     print: {
                         title: 'Units of Measure',
@@ -139,18 +161,21 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                             { key: 'base', label: 'Base Unit', mono: true, defaultOn: true, width: '90px' },
                             { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
                         ],
-                        rowMapper: (u: any) => ({
-                            name: u.name,
-                            code: u.code || '',
-                            short: u.short_name || '',
-                            type: u.type || '',
-                            conv: u.conversion_factor ?? 1,
-                            base: (() => {
-                                const base = u.base_unit ? data.find((x: any) => x.id === u.base_unit) : null
-                                return base ? (base.code || base.name || '') : ''
-                            })(),
-                            products: u.product_count || 0,
-                        }),
+                        rowMapper: (item) => {
+                            const u = asUnit(item)
+                            return {
+                                name: u.name,
+                                code: u.code || '',
+                                short: u.short_name || '',
+                                type: u.type || '',
+                                conv: u.conversion_factor ?? 1,
+                                base: (() => {
+                                    const base = u.base_unit ? data.find((x) => x.id === u.base_unit) : null
+                                    return base ? (base.code || base.name || '') : ''
+                                })(),
+                                products: u.product_count || 0,
+                            }
+                        },
                     },
                     import: {
                         entity: 'unit',
@@ -180,7 +205,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                         buildPayload: (row: Record<string, string>) => {
                             const baseCode = (row.base_unit_code || '').trim()
                             const baseUnit = baseCode
-                                ? (data.find((u: any) => (u.code || '').toLowerCase() === baseCode.toLowerCase())?.id ?? null)
+                                ? (data.find((u) => (u.code || '').toLowerCase() === baseCode.toLowerCase())?.id ?? null)
                                 : null
                             const truthy = (v: string | undefined, def: boolean) => {
                                 if (v == null || v === '') return def
@@ -214,7 +239,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 ],
 
                 // ── Template owns filtering (parent link for Units is `base_unit`) ──
-                data,
+                data: dataAsRecords,
                 searchFields: ['name', 'code', 'short_name', 'type'],
                 treeParentKey: 'base_unit',
                 selectable: true,
@@ -222,7 +247,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     if (!confirm(`Delete ${ids.length} unit(s)? This cannot be undone.`)) return
                     let ok = 0, fail = 0
                     for (const id of ids) {
-                        const res = await deleteUnit(id)
+                        const res = await deleteUnit(id) as DeleteUnitResult
                         if (res?.success) ok++; else fail++
                     }
                     if (ok) toast.success(`Deleted ${ok} unit(s)`)
@@ -230,10 +255,10 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     clear(); router.refresh()
                 },
                 kpiPredicates: {
-                    base: (u) => !u.base_unit,
-                    derived: (u) => !!u.base_unit,
-                    products: (u) => (u.product_count || 0) > 0,
-                    scale: (u) => !!u.needs_balance,
+                    base: (u) => !asUnit(u).base_unit,
+                    derived: (u) => !!asUnit(u).base_unit,
+                    products: (u) => (asUnit(u).product_count || 0) > 0,
+                    scale: (u) => !!asUnit(u).needs_balance,
                 },
 
                 kpis: [
@@ -245,22 +270,22 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     {
                         label: 'Base', icon: <Ruler size={12} />, color: 'var(--app-info)',
                         filterKey: 'base', hint: 'Only base units (no parent)',
-                        value: (filtered) => filtered.filter((u: any) => !u.base_unit).length,
+                        value: (filtered) => filtered.filter((u) => !asUnit(u).base_unit).length,
                     },
                     {
                         label: 'Derived', icon: <GitBranch size={12} />, color: 'var(--app-info)',
                         filterKey: 'derived', hint: 'Only derived units (with parent)',
-                        value: (filtered) => filtered.filter((u: any) => u.base_unit).length,
+                        value: (filtered) => filtered.filter((u) => !!asUnit(u).base_unit).length,
                     },
                     {
                         label: 'Products', icon: <Package size={12} />, color: 'var(--app-success)',
                         filterKey: 'products', hint: 'Only units with products',
-                        value: (filtered) => filtered.reduce((s: number, u: any) => s + (u.product_count || 0), 0),
+                        value: (filtered) => filtered.reduce((s: number, u) => s + (asUnit(u).product_count || 0), 0),
                     },
                     {
                         label: 'Scale', icon: <Scale size={12} />, color: 'var(--app-warning)',
                         filterKey: 'scale', hint: 'Only balance/scale units',
-                        value: (filtered) => filtered.filter((u: any) => u.needs_balance).length,
+                        value: (filtered) => filtered.filter((u) => asUnit(u).needs_balance).length,
                     },
                 ],
                 emptyState: {
@@ -275,18 +300,24 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     <>
                         <span>{all.length} defined units</span>
                         <span style={{ color: 'var(--app-border)' }}>·</span>
-                        <span>{all.filter((u: any) => !u.base_unit).length} base</span>
+                        <span>{all.filter((u) => !asUnit(u).base_unit).length} base</span>
                         <span style={{ color: 'var(--app-border)' }}>·</span>
-                        <span>{all.filter((u: any) => u.base_unit).length} derived</span>
+                        <span>{all.filter((u) => asUnit(u).base_unit).length} derived</span>
                     </>
                 ),
             }}
             modals={<>
-                <UnitFormModal key={formKey} isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSuccess={() => { setIsFormOpen(false); router.refresh() }} potentialParents={data} />
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- UnitFormModal accepts onSuccess at runtime; its type omits it. */}
+                <UnitFormModal
+                    key={formKey}
+                    isOpen={isFormOpen}
+                    onClose={() => setIsFormOpen(false)}
+                    {...({ onSuccess: () => { setIsFormOpen(false); router.refresh() }, potentialParents: data } as any)}
+                />
                 <BalanceBarcodeConfigModal isOpen={showBarcodeConfig} onClose={() => setShowBarcodeConfig(false)} />
                 <PageTour tourId="inventory-units" stepActions={tourStepActions} renderButton={false} />
                 <DeleteConflictDialog
-                    conflict={deleteConflict?.conflict || null}
+                    conflict={(deleteConflict?.conflict ?? null) as React.ComponentProps<typeof DeleteConflictDialog>['conflict']}
                     sourceName={deleteConflict?.source?.name || ''}
                     entityName="unit"
                     targets={unitMigrationTargets}
@@ -300,28 +331,30 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
             aboveTree={showCalc ? (
                 <div className="animate-in slide-in-from-top-2 duration-200 px-4 pt-3 pb-2"
                     style={{ borderBottom: '1px solid var(--app-border)' }}>
-                    <UnitCalculator units={data} variant="embedded" />
+                    <UnitCalculator units={data as unknown as React.ComponentProps<typeof UnitCalculator>['units']} variant="embedded" />
                 </div>
             ) : undefined}
             detailPanel={(node, { tab, onClose, onPin }) => (
-                <UnitDetailPanel node={node} onEdit={openEditForm} onAdd={openForm} onDelete={(n: any) => setDeleteTarget(n)} allUnits={data} initialTab={tab} onClose={onClose} onPin={onPin} />
+                <UnitDetailPanel node={asUnit(node)} onEdit={openEditForm} onAdd={openForm} onDelete={(n: UnitNode) => setDeleteTarget(n)} allUnits={data} initialTab={tab} onClose={onClose} onPin={onPin} />
             )}
         >
             {(renderProps) => {
                 const { tree, expandKey, expandAll, searchQuery, isSelected, openNode, selectedIds, toggleSelect } = renderProps
-                renderPropsRef.current = renderProps
+                renderPropsRef.current = renderProps as unknown as RenderPropsRef
 
-                return tree.map((node: any) => (
+                return tree.map((rawNode) => {
+                    const node = asUnit(rawNode)
+                    return (
                     <div key={`${node.id}-${expandKey}`}
-                        className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
+                        className={`rounded-xl transition-all duration-300 ${isSelected(rawNode) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
                         <UnitRow
                             node={node}
                             level={0}
                             onEdit={openEditForm}
                             onAdd={openForm}
-                            onDelete={(n: any) => setDeleteTarget(n)}
-                            onViewProducts={(n: any) => openNode(n, 'products')}
-                            onSelect={(n: any) => openNode(n, 'overview')}
+                            onDelete={(n: UnitNode) => setDeleteTarget(n)}
+                            onViewProducts={(n: UnitNode) => openNode(n as unknown as Record<string, unknown>, 'products')}
+                            onSelect={(n: UnitNode) => openNode(n as unknown as Record<string, unknown>, 'overview')}
                             searchQuery={searchQuery}
                             forceExpanded={expandAll}
                             allUnits={data}
@@ -330,7 +363,8 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                             onToggleCheck={toggleSelect}
                         />
                     </div>
-                ))
+                    )
+                })
             }}
         </TreeMasterPage>
     )

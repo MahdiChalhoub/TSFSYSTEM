@@ -1,13 +1,23 @@
-// @ts-nocheck
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import {
-    FileText, Scale, Sigma, Landmark, TrendingUp, Calendar,
+    FileText, Scale, Sigma, Landmark, TrendingUp,
     Clock, Wrench, ArrowRight, Sparkles,
 } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
+
+type IconComp = ComponentType<{ size?: number | string; className?: string }>
+
+interface ReportInfo {
+    href: string
+    label: string
+    description: string
+    Icon: IconComp
+    color: string
+    category?: string
+}
 
 /* ═══════════════════════════════════════════════════════════
  *  FINANCE REPORTS HUB
@@ -74,8 +84,12 @@ export default function ReportsHubPage() {
 
     useEffect(() => {
         erpFetch('finance/reports/')
-            .then((data: any) => {
-                const list = Array.isArray(data) ? data : (data?.results || [])
+            .then((data: unknown) => {
+                const list = Array.isArray(data)
+                    ? data
+                    : ((data && typeof data === 'object' && 'results' in data && Array.isArray((data as { results?: unknown[] }).results))
+                        ? ((data as { results: unknown[] }).results)
+                        : [])
                 setSavedCount(list.length)
             })
             .catch(() => setSavedCount(0))
@@ -196,7 +210,7 @@ export default function ReportsHubPage() {
     )
 }
 
-function Section({ title, subtitle, children }: any) {
+function Section({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
     return (
         <section className="space-y-2">
             <div className="flex items-baseline gap-3">
@@ -214,7 +228,7 @@ function Section({ title, subtitle, children }: any) {
     )
 }
 
-function ReportCard({ report, compact }: { report: any; compact?: boolean }) {
+function ReportCard({ report, compact }: { report: ReportInfo; compact?: boolean }) {
     const { Icon } = report
     return (
         <Link href={report.href}

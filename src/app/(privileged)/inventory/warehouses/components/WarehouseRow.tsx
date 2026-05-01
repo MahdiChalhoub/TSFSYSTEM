@@ -1,7 +1,6 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type ComponentType } from 'react'
 import {
     ChevronRight, Plus, Pencil, Trash2, MapPin,
     Building2, Store, Warehouse as WarehouseIcon, Cloud, Package,
@@ -15,7 +14,37 @@ import { MasterListCard } from '@/components/templates/MasterListCard'
  *  badges, right slot, hover-actions) comes from the shared card.
  * ═══════════════════════════════════════════════════════════ */
 
-const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string }> = {
+type IconComponent = ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>
+
+export type WarehouseNode = {
+    id: number
+    name: string
+    code?: string
+    reference_code?: string
+    city?: string
+    location_type?: string
+    can_sell?: boolean
+    is_active?: boolean
+    inventory_count?: number
+    country_name?: string
+    country_iso2?: string
+    children?: WarehouseNode[]
+}
+
+type WarehouseRowProps = {
+    node: WarehouseNode
+    level: number
+    onEdit: (n: WarehouseNode) => void
+    onAdd: (parentId: number) => void
+    onDelete: (n: WarehouseNode) => void
+    onSelect?: (n: WarehouseNode) => void
+    searchQuery?: string
+    forceExpanded?: boolean
+}
+
+type Badge = { label: string; color: string }
+
+const TYPE_CONFIG: Record<string, { icon: IconComponent; label: string; color: string }> = {
     BRANCH:    { icon: Building2,     label: 'Branch',    color: 'var(--app-success)' },
     STORE:     { icon: Store,         label: 'Store',     color: 'var(--app-info)' },
     WAREHOUSE: { icon: WarehouseIcon, label: 'Warehouse', color: 'var(--app-warning)' },
@@ -25,7 +54,7 @@ const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string }> =
 export const WarehouseRow = ({
     node, level, onEdit, onAdd, onDelete, onSelect,
     searchQuery, forceExpanded,
-}: any) => {
+}: WarehouseRowProps) => {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
     const prevForceExpanded = useRef(forceExpanded)
@@ -35,13 +64,13 @@ export const WarehouseRow = ({
         prevForceExpanded.current = forceExpanded
     }, [forceExpanded])
 
-    const cfg = TYPE_CONFIG[node.location_type] || TYPE_CONFIG.WAREHOUSE
+    const cfg = TYPE_CONFIG[node.location_type || 'WAREHOUSE'] || TYPE_CONFIG.WAREHOUSE
     const Icon = cfg.icon
     const skuCount = node.inventory_count ?? 0
     const childCount = node.children?.length ?? 0
 
     // Badges: type always; POS + Inactive conditionally.
-    const badges: any[] = [{ label: cfg.label, color: cfg.color }]
+    const badges: Badge[] = [{ label: cfg.label, color: cfg.color }]
     if (node.can_sell) badges.push({ label: 'POS', color: 'var(--app-success)' })
     if (node.is_active === false) badges.push({ label: 'Inactive', color: 'var(--app-error)' })
 
@@ -152,7 +181,7 @@ export const WarehouseRow = ({
             </div>
             {isParent && isOpen && (
                 <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-                    {node.children.map((child: any) => (
+                    {node.children?.map((child) => (
                         <WarehouseRow key={child.id} node={child} level={level + 1}
                             onEdit={onEdit} onAdd={onAdd} onDelete={onDelete} onSelect={onSelect}
                             searchQuery={searchQuery} forceExpanded={forceExpanded} />

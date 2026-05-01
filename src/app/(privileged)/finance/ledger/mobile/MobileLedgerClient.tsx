@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
@@ -23,10 +22,57 @@ import {
 } from '@/app/actions/finance/ledger'
 import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
-import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
+import { MobileActionSheet, type ActionItem } from '@/components/mobile/MobileActionSheet'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-const STATUS_META: Record<string, { label: string; color: string; icon: any }> = {
+type IconLike = React.ComponentType<React.ComponentProps<'svg'> & { size?: number | string }>
+
+interface LedgerLine {
+    id?: number
+    account?: number | string
+    accountCode?: string
+    account_code?: string
+    accountName?: string
+    account_name?: string
+    debit?: number | string
+    credit?: number | string
+    description?: string
+}
+
+interface LedgerEntry {
+    id: number
+    reference?: string
+    date?: string
+    status?: string
+    isLocked?: boolean
+    is_locked?: boolean
+    description?: string
+    source?: string
+    sourceModule?: string
+    source_module?: string
+    sourceModel?: string
+    source_model?: string
+    isVerified?: boolean
+    is_verified?: boolean
+    lineCount?: number
+    line_count?: number
+    journalType?: string
+    journal_type?: string
+    scope?: string
+    currency?: string
+    totalDebit?: number | string
+    total_debit?: number | string
+    totalCredit?: number | string
+    total_credit?: number | string
+    createdAt?: string
+    created_at?: string
+    postedAt?: string
+    posted_at?: string
+    lines?: LedgerLine[]
+    journal_lines?: LedgerLine[]
+}
+
+const STATUS_META: Record<string, { label: string; color: string; icon: IconLike }> = {
     POSTED:   { label: 'Posted',   color: 'var(--app-success, #22c55e)', icon: CheckCircle2 },
     DRAFT:    { label: 'Draft',    color: 'var(--app-warning, #f59e0b)', icon: Clock },
     REVERSED: { label: 'Reversed', color: 'var(--app-error, #ef4444)',   icon: RotateCcw },
@@ -52,14 +98,14 @@ export function MobileLedgerClient() {
     const { viewScope } = useAdmin()
     const { fmt } = useCurrency()
     const [isPending, startTransition] = useTransition()
-    const [entries, setEntries] = useState<any[]>([])
+    const [entries, setEntries] = useState<LedgerEntry[]>([])
     const [loading, setLoading] = useState(true)
     const [statusFilter, setStatusFilter] = useState<string>('')
     const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month' | 'qtd' | 'ytd'>('all')
-    const [sheetEntry, setSheetEntry] = useState<any | null>(null)
-    const [actionEntry, setActionEntry] = useState<any | null>(null)
-    const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
-    const [reverseTarget, setReverseTarget] = useState<any | null>(null)
+    const [sheetEntry, setSheetEntry] = useState<LedgerEntry | null>(null)
+    const [actionEntry, setActionEntry] = useState<LedgerEntry | null>(null)
+    const [deleteTarget, setDeleteTarget] = useState<LedgerEntry | null>(null)
+    const [reverseTarget, setReverseTarget] = useState<LedgerEntry | null>(null)
 
     const dateBounds = useMemo(() => {
         const now = new Date()
@@ -102,9 +148,9 @@ export function MobileLedgerClient() {
                 date_from: dateBounds?.from,
                 date_to: dateBounds?.to,
             })
-            setEntries(Array.isArray(data) ? data : [])
-        } catch (e: any) {
-            toast.error(e?.message || 'Failed to load entries')
+            setEntries(Array.isArray(data) ? (data as LedgerEntry[]) : [])
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to load entries')
         } finally {
             setLoading(false)
         }
@@ -122,19 +168,23 @@ export function MobileLedgerClient() {
         return { total, posted, draft, reversed, totalDebit, totalCredit }
     }, [entries])
 
-    const openSheet = useCallback((e: any) => setSheetEntry(e), [])
-    const openActions = useCallback((e: any) => setActionEntry(e), [])
+    const openSheet = useCallback((e: LedgerEntry) => setSheetEntry(e), [])
+    const openActions = useCallback((e: LedgerEntry) => setActionEntry(e), [])
 
     const handleDelete = useCallback(() => {
         if (!deleteTarget) return
         startTransition(async () => {
-            const res = await deleteJournalEntry(deleteTarget.id)
-            if (res?.success !== false) {
-                toast.success('Entry deleted')
-                setDeleteTarget(null)
-                loadData()
-            } else {
-                toast.error(res?.message || 'Delete failed')
+            try {
+                const res = await deleteJournalEntry(deleteTarget.id)
+                if (res?.success !== false) {
+                    toast.success('Entry deleted')
+                    setDeleteTarget(null)
+                    loadData()
+                } else {
+                    toast.error('Delete failed')
+                }
+            } catch (e: unknown) {
+                toast.error(e instanceof Error ? e.message : 'Delete failed')
             }
         })
     }, [deleteTarget, loadData])
@@ -153,7 +203,7 @@ export function MobileLedgerClient() {
         })
     }, [reverseTarget, loadData])
 
-    const actionItems = useMemo(() => {
+    const actionItems = useMemo<ActionItem[]>(() => {
         if (!actionEntry) return []
         const isPosted = actionEntry.status === 'POSTED'
         const isLocked = actionEntry.isLocked || actionEntry.is_locked
@@ -356,7 +406,7 @@ export function MobileLedgerClient() {
                             </div>
                         ) : (
                             filtered.map(e => {
-                                const status = STATUS_META[e.status] || STATUS_META.DRAFT
+                                const status = STATUS_META[e.status || 'DRAFT'] || STATUS_META.DRAFT
                                 const SIcon = status.icon
                                 const isLocked = e.isLocked || e.is_locked
                                 const isVerified = e.isVerified || e.is_verified
@@ -459,10 +509,17 @@ export function MobileLedgerClient() {
 }
 
 /* ─── Entry detail sheet ─── */
-function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
-    const status = STATUS_META[entry.status] || STATUS_META.DRAFT
+interface LedgerEntryDetailProps {
+    entry: LedgerEntry & { journal_lines?: LedgerLine[] }
+    fmt: (n: number) => string
+    onEdit: () => void
+    onOpen: () => void
+    onClose: () => void
+}
+function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: LedgerEntryDetailProps) {
+    const status = STATUS_META[entry.status || 'DRAFT'] || STATUS_META.DRAFT
     const SIcon = status.icon
-    const lines = entry.lines || entry.journal_lines || []
+    const lines: LedgerLine[] = entry.lines || entry.journal_lines || []
     const debit = Number(entry.totalDebit ?? entry.total_debit ?? 0)
     const credit = Number(entry.totalCredit ?? entry.total_credit ?? 0)
     const isBalanced = Math.abs(debit - credit) < 0.01
@@ -600,7 +657,7 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: any) {
                                 background: 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
                                 border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
                             }}>
-                            {lines.slice(0, 50).map((l: any, i: number) => {
+                            {lines.slice(0, 50).map((l: LedgerLine, i: number) => {
                                 const ld = Number(l.debit ?? 0)
                                 const lc = Number(l.credit ?? 0)
                                 return (

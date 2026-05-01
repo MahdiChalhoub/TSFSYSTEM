@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
@@ -6,17 +5,49 @@ import {
     ChevronRight, Plus, Pencil, Trash2, Ruler, Scale, Package, AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { MasterListCard } from '@/components/templates/MasterListCard'
+import { MasterListCard, type MasterListBadge } from '@/components/templates/MasterListCard'
 
 /* ═══════════════════════════════════════════════════════════
  *  UNIT ROW — thin MasterListCard consumer.
  *  Only bespoke concern: tree recursion + expand/collapse.
  * ═══════════════════════════════════════════════════════════ */
+
+export type UnitNode = {
+    id: number
+    name: string
+    code?: string
+    short_name?: string
+    reference_code?: string
+    type?: string
+    base_unit?: number | null
+    conversion_factor?: number
+    needs_balance?: boolean
+    product_count?: number
+    package_count?: number
+    children?: UnitNode[]
+}
+
+type UnitRowProps = {
+    node: UnitNode
+    level: number
+    onEdit: (n: UnitNode) => void
+    onAdd: (parentId?: number) => void
+    onDelete: (n: UnitNode) => void
+    searchQuery?: string
+    forceExpanded?: boolean
+    onViewProducts: (n: UnitNode) => void
+    onSelect?: (n: UnitNode) => void
+    allUnits: UnitNode[]
+    selectable?: boolean
+    isCheckedFn?: (id: number) => boolean
+    onToggleCheck?: (id: number) => void
+}
+
 export const UnitRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
     onViewProducts, onSelect, allUnits,
     selectable, isCheckedFn, onToggleCheck,
-}: any) => {
+}: UnitRowProps) => {
     const rowChecked = isCheckedFn ? isCheckedFn(node.id) : false
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 2)
@@ -34,7 +65,7 @@ export const UnitRow = ({
     const convFactor = node.conversion_factor ?? 1
     const unitType = (node.type || 'COUNT').charAt(0) + (node.type || 'COUNT').slice(1).toLowerCase()
 
-    const badges: any[] = [{ label: unitType, color: 'var(--app-info)' }]
+    const badges: MasterListBadge[] = [{ label: unitType, color: 'var(--app-info)' }]
 
     return (
         <div>
@@ -159,7 +190,7 @@ export const UnitRow = ({
             </div>
             {isParent && isOpen && (
                 <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-                    {node.children.map((child: any) => (
+                    {node.children?.map((child) => (
                         <UnitRow key={child.id} node={child} level={level + 1}
                             onEdit={onEdit} onAdd={onAdd} onDelete={onDelete}
                             onViewProducts={onViewProducts} onSelect={onSelect}

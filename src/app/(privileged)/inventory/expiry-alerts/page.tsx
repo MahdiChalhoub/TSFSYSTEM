@@ -1,7 +1,6 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, type ComponentType } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import type { ExpiryAlertResponse } from '@/types/erp'
@@ -14,14 +13,33 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
     AlertTriangle, Skull, Clock, Shield, RefreshCw,
-    Search, CheckCircle2, Package, DollarSign, Boxes
+    CheckCircle2, Package, DollarSign
 } from "lucide-react"
+
+type IconComponent = ComponentType<{ size?: number; className?: string }>
+
+type ExpiryAlertRow = {
+    id: number
+    product_id?: number | string
+    product?: number | string
+    product_name?: string
+    batch_number?: string
+    expiry_date?: string
+    days_until_expiry?: number
+    quantity_at_risk?: number
+    value_at_risk?: number
+    warehouse?: string
+    severity?: string
+    is_acknowledged?: boolean
+}
+
+type StatsShape = { expired: number; critical: number; warning: number; total_value: number; total_quantity: number }
 
 function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
 }
 
-const SEVERITY_CONFIG: Record<string, { color: string, bg: string, icon: Record<string, any>, label: string }> = {
+const SEVERITY_CONFIG: Record<string, { color: string, bg: string, icon: IconComponent, label: string }> = {
     EXPIRED: { color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: Skull, label: 'Expired' },
     CRITICAL: { color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: AlertTriangle, label: 'Critical (0-30 days)' },
     WARNING: { color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Clock, label: 'Warning (30-60 days)' },
@@ -53,8 +71,8 @@ export default function ExpiryAlertsPage() {
     async function handleScan() {
         setScanning(true)
         try {
-            const result = await scanForExpiry()
-            toast.success(result.message)
+            const result = await scanForExpiry() as { message?: string }
+            toast.success(result?.message || 'Scan completed')
             await loadData(activeFilter || undefined)
         } catch {
             toast.error("Scan failed")
@@ -78,20 +96,20 @@ export default function ExpiryAlertsPage() {
         loadData(severity || undefined)
     }
 
-    const allAlerts = data?.alerts || []
+    const allAlerts: ExpiryAlertRow[] = ((data?.alerts as unknown as ExpiryAlertRow[]) || [])
     const alerts = useMemo(() => {
         if (!productFilter) return allAlerts
-        return allAlerts.filter((a: any) => String(a.product_id ?? a.product) === String(productFilter))
+        return allAlerts.filter((a) => String(a.product_id ?? a.product) === String(productFilter))
     }, [allAlerts, productFilter])
     const productName = useMemo(() => {
         if (!productFilter) return null
-        const found = allAlerts.find((a: any) => String(a.product_id ?? a.product) === String(productFilter))
+        const found = allAlerts.find((a) => String(a.product_id ?? a.product) === String(productFilter))
         return found?.product_name ?? `#${productFilter}`
     }, [allAlerts, productFilter])
-    const stats = useMemo(() => {
-        if (!productFilter) return data?.stats || { expired: 0, critical: 0, warning: 0, total_value: 0, total_quantity: 0 }
+    const stats = useMemo<StatsShape>(() => {
+        if (!productFilter) return (data?.stats as unknown as StatsShape) || { expired: 0, critical: 0, warning: 0, total_value: 0, total_quantity: 0 }
         // Recompute stats for the filtered subset
-        return alerts.reduce((s: any, a: any) => {
+        return alerts.reduce<StatsShape>((s, a) => {
             const sev = (a.severity || '').toUpperCase()
             if (sev === 'EXPIRED') s.expired++
             else if (sev === 'CRITICAL') s.critical++
@@ -255,9 +273,10 @@ export default function ExpiryAlertsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {alerts.map((a: Record<string, any>) => {
-                                    const cfg = SEVERITY_CONFIG[a.severity] || SEVERITY_CONFIG.WARNING
+                                {alerts.map((a) => {
+                                    const cfg = SEVERITY_CONFIG[a.severity || 'WARNING'] || SEVERITY_CONFIG.WARNING
                                     const Icon = cfg.icon
+                                    const dueDays = a.days_until_expiry ?? 0
                                     return (
                                         <TableRow key={a.id} className={`hover:bg-app-surface/50 ${a.is_acknowledged ? 'opacity-50' : ''}`}>
                                             <TableCell>
@@ -271,16 +290,16 @@ export default function ExpiryAlertsPage() {
                                             <TableCell className="text-sm text-app-muted-foreground">
                                                 {a.expiry_date || '—'}
                                             </TableCell>
-                                            <TableCell className={`text-right font-bold ${a.days_until_expiry <= 0 ? 'text-app-error' :
-                                                a.days_until_expiry <= 30 ? 'text-app-warning' : 'text-app-warning'
+                                            <TableCell className={`text-right font-bold ${dueDays <= 0 ? 'text-app-error' :
+                                                dueDays <= 30 ? 'text-app-warning' : 'text-app-warning'
                                                 }`}>
-                                                {a.days_until_expiry <= 0 ? `${Math.abs(a.days_until_expiry)} overdue` : `${a.days_until_expiry}d`}
+                                                {dueDays <= 0 ? `${Math.abs(dueDays)} overdue` : `${dueDays}d`}
                                             </TableCell>
                                             <TableCell className="text-right font-semibold">
-                                                {new Intl.NumberFormat('fr-FR').format(a.quantity_at_risk)}
+                                                {new Intl.NumberFormat('fr-FR').format(a.quantity_at_risk ?? 0)}
                                             </TableCell>
                                             <TableCell className="text-right font-bold text-app-error">
-                                                {fmt(a.value_at_risk)}
+                                                {fmt(a.value_at_risk ?? 0)}
                                             </TableCell>
                                             <TableCell className="text-sm text-app-muted-foreground">{a.warehouse || '—'}</TableCell>
                                             <TableCell className="text-center">

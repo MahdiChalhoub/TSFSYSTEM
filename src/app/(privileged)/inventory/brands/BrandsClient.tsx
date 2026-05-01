@@ -186,27 +186,27 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                     {
                         label: 'Categorized', icon: <FolderTree size={11} />, color: 'var(--app-info)',
                         filterKey: 'withCategory', hint: 'Only brands linked to categories',
-                        value: (filtered) => filtered.filter((b: Brand) => (b.categories?.length || 0) > 0).length,
+                        value: (filtered) => filtered.filter((item) => (asBrand(item).categories?.length || 0) > 0).length,
                     },
                     {
                         label: 'Orphans', icon: <X size={11} />, color: 'var(--app-error)',
                         filterKey: 'orphan', hint: 'Brands with no category link',
-                        value: (filtered) => filtered.filter((b: Brand) => (b.categories?.length || 0) === 0).length,
+                        value: (filtered) => filtered.filter((item) => (asBrand(item).categories?.length || 0) === 0).length,
                     },
                     {
                         label: 'Countries', icon: <Globe size={11} />, color: 'var(--app-warning)',
                         filterKey: 'withCountry', hint: 'Brands with country assignment',
-                        value: (filtered) => filtered.filter((b: Brand) => (b.countries?.length || 0) > 0).length,
+                        value: (filtered) => filtered.filter((item) => (asBrand(item).countries?.length || 0) > 0).length,
                     },
                     {
                         label: 'Products', icon: <Package size={11} />, color: 'var(--app-success)',
                         filterKey: 'products', hint: 'Brands with at least one product',
-                        value: (filtered) => filtered.reduce((s: number, b: Brand) => s + (b.product_count || 0), 0),
+                        value: (filtered) => filtered.reduce((s: number, item) => s + (asBrand(item).product_count || 0), 0),
                     },
                     {
                         label: 'Logoless', icon: <ImageIcon size={11} />, color: 'var(--app-muted-foreground)',
                         filterKey: 'logoless', hint: 'Brands missing a logo',
-                        value: (filtered) => filtered.filter((b: Brand) => !b.logo).length,
+                        value: (filtered) => filtered.filter((item) => !asBrand(item).logo).length,
                     },
                 ],
 
@@ -222,7 +222,7 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                     <div className="flex items-center gap-3 flex-wrap">
                         <span>{all.length} total brands</span>
                         <span style={{ color: 'var(--app-border)' }}>·</span>
-                        <span>{all.reduce((s: number, b: Brand) => s + (b.product_count || 0), 0).toLocaleString()} linked products</span>
+                        <span>{all.reduce((s: number, item) => s + (asBrand(item).product_count || 0), 0).toLocaleString()} linked products</span>
                         {filtered.length < all.length && (
                             <>
                                 <span style={{ color: 'var(--app-border)' }}>·</span>
