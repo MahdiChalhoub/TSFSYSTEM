@@ -1,14 +1,14 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
-  Globe, Search, Loader2, Plus, Pencil, Trash2, Check, X,
-  Maximize2, Minimize2, MapPin, DollarSign, Phone, Shield,
-  ChevronRight, ChevronDown, Save, Filter, Hash,
-  LayoutGrid, Rows3,
+  Globe, Loader2, Plus, Pencil, Trash2, Check, X,
+  MapPin, DollarSign, Phone, Shield, Save, Hash,
+  CreditCard, FileText,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
+import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -27,6 +27,50 @@ type Country = {
   default_currency_code: string | null
   default_currency_symbol: string | null
   is_active: boolean
+}
+
+type PaymentGateway = {
+  id: number
+  code: string
+  name: string
+  family?: string
+  /** Empty array / null = available globally; otherwise list of ISO2 codes. */
+  country_codes?: string[] | null
+  is_active?: boolean
+}
+
+type EInvoiceStandard = {
+  id: number
+  code: string
+  name: string
+  region?: string
+  invoice_format?: string
+  is_active?: boolean
+}
+
+type TaxTemplate = {
+  id: number
+  country_code: string
+  name?: string
+}
+
+/**
+ * A discriminated union that lives in the same flat array TreeMasterPage
+ * consumes. The template builds a tree by `parent` — country rows have no
+ * parent (roots), child rows point at the country.id they belong to.
+ */
+type TreeNode = {
+  /** Synthetic ids for child rows; numeric for actual countries. */
+  id: number | string
+  parent?: number | null
+  /** Discriminator for the row renderer. */
+  kind: 'country' | 'currency' | 'gateway' | 'einvoice' | 'tax'
+  /** Unified search/display field. */
+  name: string
+  /** Optional secondary line. */
+  subtitle?: string
+  /** Type-specific payload (only the originating type knows the shape). */
+  data?: any
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -48,15 +92,156 @@ const REGION_COLORS: Record<string, string> = {
   '': 'var(--app-muted-foreground)',
 }
 
+const fieldClass = "w-full px-3 py-2 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+const labelClass = "text-[10px] font-black uppercase tracking-wider text-app-muted-foreground mb-1 block"
+
 /* ═══════════════════════════════════════════════════════
-   Edit Modal
+   Currency Edit Modal
+   ─────────────────────────────────────────────────────────
+   Inline currency CRUD so users don't have to leave the
+   country form to add a missing currency. Reused from the
+   country form's "+" button.
    ═══════════════════════════════════════════════════════ */
 
-function CountryEditModal({ country, currencies, onClose, onSaved }: {
+function CurrencyEditModal({ currency, onClose, onSaved }: {
+  currency: Currency | null
+  onClose: () => void
+  onSaved: (newId?: number) => void
+}) {
+  const isNew = !currency
+  const [form, setForm] = useState({
+    code: currency?.code || '',
+    numeric_code: currency?.numeric_code || '',
+    name: currency?.name || '',
+    symbol: currency?.symbol || '',
+    minor_unit: currency?.minor_unit ?? 2,
+    is_active: currency?.is_active ?? true,
+  })
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const payload = { ...form, code: form.code.toUpperCase() }
+      let result: any
+      if (isNew) {
+        result = await erpFetch('reference/currencies/', { method: 'POST', body: JSON.stringify(payload) })
+        toast.success(`Currency ${payload.code} created`)
+      } else {
+        result = await erpFetch(`reference/currencies/${currency!.id}/`, { method: 'PUT', body: JSON.stringify(payload) })
+        toast.success(`Currency ${payload.code} updated`)
+      }
+      onSaved(result?.id)
+      onClose()
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to save currency')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl animate-in zoom-in-95 duration-200"
+        style={{
+          background: 'var(--app-surface)',
+          border: '1px solid var(--app-border)',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.25)',
+        }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4"
+          style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)' }}>
+            <DollarSign size={16} style={{ color: 'var(--app-info, #3b82f6)' }} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-[14px] font-black text-app-foreground">
+              {isNew ? 'New Currency' : `Edit ${form.code}`}
+            </h3>
+            <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
+              {isNew ? 'Add to global reference' : form.name}
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all">
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div>
+              <label className={labelClass}>Code (ISO 4217)</label>
+              <input className={fieldClass} value={form.code} maxLength={3} placeholder="USD"
+                onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} required />
+            </div>
+            <div>
+              <label className={labelClass}>Numeric</label>
+              <input className={fieldClass} value={form.numeric_code} maxLength={3} placeholder="840"
+                onChange={e => setForm(f => ({ ...f, numeric_code: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelClass}>Symbol</label>
+              <input className={fieldClass} value={form.symbol} maxLength={5} placeholder="$"
+                onChange={e => setForm(f => ({ ...f, symbol: e.target.value }))} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Name</label>
+            <input className={fieldClass} value={form.name} placeholder="US Dollar"
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+          </div>
+
+          <div>
+            <label className={labelClass}>Minor Unit (decimal places)</label>
+            <input className={fieldClass} type="number" min={0} max={6} value={form.minor_unit}
+              onChange={e => setForm(f => ({ ...f, minor_unit: Number(e.target.value) }))} />
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={form.is_active}
+              onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
+              className="w-4 h-4 rounded border-app-border accent-[var(--app-primary)]" />
+            <span className="text-[12px] font-bold text-app-foreground">Active</span>
+          </label>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-[11px] font-bold text-app-muted-foreground border border-app-border rounded-lg hover:bg-app-surface transition-all">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold text-white rounded-lg transition-all hover:brightness-110"
+              style={{ background: 'var(--app-info, #3b82f6)', boxShadow: '0 2px 6px color-mix(in srgb, var(--app-info, #3b82f6) 25%, transparent)' }}>
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+              {isNew ? 'Create' : 'Save'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Country Edit Modal
+   ─────────────────────────────────────────────────────────
+   Adds a "+" button next to the currency dropdown that
+   opens CurrencyEditModal. After save, the new currency
+   is auto-selected and the local list refreshes.
+   ═══════════════════════════════════════════════════════ */
+
+function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesChanged }: {
   country: Country | null
   currencies: Currency[]
   onClose: () => void
   onSaved: () => void
+  onCurrenciesChanged: () => Promise<void> | void
 }) {
   const isNew = !country
   const [form, setForm] = useState({
@@ -68,10 +253,11 @@ function CountryEditModal({ country, currencies, onClose, onSaved }: {
     phone_code: country?.phone_code || '',
     region: country?.region || '',
     subregion: country?.subregion || '',
-    default_currency: country?.default_currency || '',
+    default_currency: country?.default_currency || ('' as number | string),
     is_active: country?.is_active ?? true,
   })
   const [saving, setSaving] = useState(false)
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,10 +283,8 @@ function CountryEditModal({ country, currencies, onClose, onSaved }: {
     }
   }
 
-  const fieldClass = "w-full px-3 py-2 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
-  const labelClass = "text-[10px] font-black uppercase tracking-wider text-app-muted-foreground mb-1 block"
-
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl animate-in zoom-in-95 duration-200"
         style={{
@@ -115,18 +299,17 @@ function CountryEditModal({ country, currencies, onClose, onSaved }: {
           style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)' }}>
-            {/* Show the flag as soon as iso2 has the 2 letters we need to compute it.
-                Falling back to the + icon for empty/invalid iso2 keeps the "creating
-                a new record" affordance until the user starts typing. */}
-            {form.iso2 && form.iso2.length >= 2 ? getFlagEmoji(form.iso2) : <Plus size={16} style={{ color: 'var(--app-primary)' }} />}
+            {form.iso2 && form.iso2.length >= 2
+              ? getFlagEmoji(form.iso2)
+              : <Plus size={16} style={{ color: 'var(--app-primary)' }} />}
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-[14px] font-black text-app-foreground">{isNew ? 'New Country' : `Edit ${form.name}`}</h3>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
               {isNew ? 'Add to global reference' : `${form.iso2} · ${form.iso3}`}
             </p>
           </div>
-          <button onClick={onClose} className="ml-auto p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all">
             <X size={14} />
           </button>
         </div>
@@ -164,7 +347,7 @@ function CountryEditModal({ country, currencies, onClose, onSaved }: {
               onChange={e => setForm(f => ({ ...f, official_name: e.target.value }))} />
           </div>
 
-          {/* Phone + Currency */}
+          {/* Phone + Currency (with inline create) */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px' }}>
             <div>
               <label className={labelClass}>Phone Code</label>
@@ -172,7 +355,19 @@ function CountryEditModal({ country, currencies, onClose, onSaved }: {
                 onChange={e => setForm(f => ({ ...f, phone_code: e.target.value }))} />
             </div>
             <div>
-              <label className={labelClass}>Default Currency</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className={labelClass + ' mb-0'}>Default Currency</label>
+                <button
+                  type="button"
+                  onClick={() => setShowCurrencyModal(true)}
+                  className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider transition-colors"
+                  style={{ color: 'var(--app-info, #3b82f6)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-primary)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-info, #3b82f6)' }}
+                >
+                  <Plus size={10} /> New
+                </button>
+              </div>
               <select className={fieldClass} value={form.default_currency}
                 onChange={e => setForm(f => ({ ...f, default_currency: e.target.value }))}>
                 <option value="">— None —</option>
@@ -221,24 +416,136 @@ function CountryEditModal({ country, currencies, onClose, onSaved }: {
         </form>
       </div>
     </div>
+
+    {/* Inline currency creation. After save we refresh the parent's currency
+        list and auto-select the newly created one. */}
+    {showCurrencyModal && (
+      <CurrencyEditModal
+        currency={null}
+        onClose={() => setShowCurrencyModal(false)}
+        onSaved={async (newId) => {
+          await onCurrenciesChanged()
+          if (newId) setForm(f => ({ ...f, default_currency: newId }))
+        }}
+      />
+    )}
+    </>
   )
 }
 
 /* ═══════════════════════════════════════════════════════
-   Country Row
+   Linked Entity Row — currency / gateway / e-invoice / tax
+   children rendered under their country in the tree.
+   Click navigates to the matching admin page so the user
+   can manage that entity directly.
    ═══════════════════════════════════════════════════════ */
 
-function CountryRow({ item, hasTaxTemplate, onEdit, onDelete }: {
+const LINKED_KIND_META: Record<TreeNode['kind'], { color: string; href: string; icon: React.ReactNode; label: string }> = {
+  country: { color: 'var(--app-primary)', href: '', icon: <Globe size={11} />, label: 'Country' },
+  currency: { color: 'var(--app-info, #3b82f6)', href: '/currencies', icon: <DollarSign size={11} />, label: 'Currency' },
+  gateway: { color: 'var(--app-accent)', href: '/payment-gateways', icon: <CreditCard size={11} />, label: 'Payment Gateway' },
+  einvoice: { color: 'var(--app-warning, #f59e0b)', href: '/e-invoice-standards', icon: <FileText size={11} />, label: 'E-invoice' },
+  tax: { color: 'var(--app-success, #22c55e)', href: '/country-tax-templates', icon: <Shield size={11} />, label: 'Tax Template' },
+}
+
+function LinkedRow({ node, depth }: { node: TreeNode; depth: number }) {
+  const meta = LINKED_KIND_META[node.kind]
+  return (
+    <a
+      href={meta.href}
+      onClick={e => { if (!meta.href) e.preventDefault() }}
+      className="group flex items-center gap-2 transition-all duration-150 rounded-lg no-underline"
+      style={{
+        paddingLeft: `${24 + depth * 16}px`,
+        paddingRight: '10px',
+        paddingTop: '4px',
+        paddingBottom: '4px',
+        color: 'inherit',
+      }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+    >
+      <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+        style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
+        {meta.icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[12px] font-bold text-app-foreground truncate">{node.name}</div>
+        {node.subtitle && (
+          <div className="text-[10px] text-app-muted-foreground truncate">{node.subtitle}</div>
+        )}
+      </div>
+      <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+        style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
+        {meta.label}
+      </span>
+    </a>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Country Row — TreeMasterPage-compatible flat row
+   ═══════════════════════════════════════════════════════ */
+
+function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDelete, compact, selectable, isCheckedFn, onToggleCheck, children, forceExpanded }: {
   item: Country
   hasTaxTemplate: boolean
+  isSelected: boolean
+  onSelect: () => void
   onEdit: () => void
   onDelete: () => void
+  compact?: boolean
+  selectable?: boolean
+  isCheckedFn?: (id: number) => boolean
+  onToggleCheck?: (id: number) => void
+  /** Linked-entity rows to render nested under this country. */
+  children?: TreeNode[]
+  /** When set, overrides the per-row expand state (from "Expand all"). */
+  forceExpanded?: boolean
 }) {
   const regionColor = REGION_COLORS[item.region] || 'var(--app-muted-foreground)'
+  const checked = isCheckedFn ? isCheckedFn(item.id) : false
+  const hasChildren = (children?.length ?? 0) > 0
+  const [openLocal, setOpenLocal] = useState(false)
+  const isOpen = forceExpanded ?? openLocal
 
   return (
-    <div className="group flex items-center gap-2 md:gap-3 transition-all duration-150 border-b border-app-border/30 hover:bg-app-surface/40 py-2 md:py-2.5"
-      style={{ paddingLeft: '12px', paddingRight: '12px' }}>
+    <div className="rounded-lg"
+      style={{
+        background: isSelected ? 'color-mix(in srgb, var(--app-primary) 6%, transparent)' : 'transparent',
+        border: isSelected ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid transparent',
+      }}
+    >
+    <div
+      className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer"
+      style={{ padding: '8px 10px' }}
+      onClick={onSelect}
+      onMouseEnter={e => { if (!isSelected) (e.currentTarget.parentElement as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}
+      onMouseLeave={e => { if (!isSelected) (e.currentTarget.parentElement as HTMLElement).style.background = 'transparent' }}
+    >
+      {/* Expand toggle */}
+      {hasChildren ? (
+        <button
+          onClick={e => { e.stopPropagation(); setOpenLocal(o => !o) }}
+          className="w-5 h-5 rounded-md flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0"
+          style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 150ms' }}
+          title={isOpen ? 'Collapse' : 'Expand'}>
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M4 2 L8 6 L4 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+      ) : (
+        <div className="w-5 h-5 flex-shrink-0" />
+      )}
+
+      {/* Selection checkbox */}
+      {selectable && (
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={() => onToggleCheck?.(item.id)}
+          onClick={e => e.stopPropagation()}
+          className="w-3.5 h-3.5 rounded border-app-border accent-[var(--app-primary)] flex-shrink-0"
+        />
+      )}
 
       {/* Flag */}
       <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
@@ -259,169 +566,176 @@ function CountryRow({ item, hasTaxTemplate, onEdit, onDelete }: {
           {hasTaxTemplate && (
             <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
               style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
-              Tax Template
+              Tax
             </span>
           )}
         </div>
-        {item.official_name && (
+        {item.official_name && !compact && (
           <p className="text-[10px] text-app-muted-foreground truncate">{item.official_name}</p>
         )}
       </div>
 
-      {/* Codes */}
-      <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
-        <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded"
-          style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', color: 'var(--app-foreground)' }}>
-          {item.iso2}
-        </span>
-        <span className="font-mono text-[10px] font-bold text-app-muted-foreground">{item.iso3}</span>
-      </div>
+      {!compact && (
+        <>
+          {/* Codes */}
+          <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
+            <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded"
+              style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', color: 'var(--app-foreground)' }}>
+              {item.iso2}
+            </span>
+            <span className="font-mono text-[10px] font-bold text-app-muted-foreground">{item.iso3}</span>
+          </div>
 
-      {/* Phone */}
-      <div className="hidden md:flex items-center gap-1 w-16 flex-shrink-0">
-        <Phone size={10} className="text-app-muted-foreground" />
-        <span className="text-[11px] font-bold text-app-muted-foreground">{item.phone_code || '—'}</span>
-      </div>
+          {/* Phone */}
+          <div className="hidden md:flex items-center gap-1 w-16 flex-shrink-0">
+            <Phone size={10} className="text-app-muted-foreground" />
+            <span className="text-[11px] font-bold text-app-muted-foreground">{item.phone_code || '—'}</span>
+          </div>
 
-      {/* Currency */}
-      <div className="hidden sm:flex items-center gap-1 w-16 flex-shrink-0">
-        <DollarSign size={10} style={{ color: 'var(--app-info, #3b82f6)' }} />
-        <span className="font-mono text-[11px] font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>
-          {item.default_currency_code || '—'}
-        </span>
-      </div>
+          {/* Currency */}
+          <div className="hidden sm:flex items-center gap-1 w-16 flex-shrink-0">
+            <DollarSign size={10} style={{ color: 'var(--app-info, #3b82f6)' }} />
+            <span className="font-mono text-[11px] font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>
+              {item.default_currency_code || '—'}
+            </span>
+          </div>
 
-      {/* Region */}
-      <div className="hidden lg:flex w-24 flex-shrink-0">
-        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded truncate"
-          style={{ background: `color-mix(in srgb, ${regionColor} 10%, transparent)`, color: regionColor }}>
-          {item.region || 'None'}
-        </span>
-      </div>
+          {/* Region */}
+          <div className="hidden lg:flex w-24 flex-shrink-0">
+            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded truncate"
+              style={{ background: `color-mix(in srgb, ${regionColor} 10%, transparent)`, color: regionColor }}>
+              {item.region || 'None'}
+            </span>
+          </div>
+        </>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={onEdit} title="Edit"
+        <button onClick={e => { e.stopPropagation(); onEdit() }} title="Edit"
           className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors">
           <Pencil size={12} />
         </button>
-        <button onClick={onDelete} title="Delete"
+        <button onClick={e => { e.stopPropagation(); onDelete() }} title="Delete"
           className="p-1.5 hover:bg-app-border/50 rounded-lg transition-colors"
           style={{ color: 'var(--app-error, #ef4444)' }}>
           <Trash2 size={12} />
         </button>
       </div>
     </div>
+
+    {/* Linked entities — currency, gateways, e-invoice, tax — rendered as
+        nested rows when this country is expanded. */}
+    {hasChildren && isOpen && (
+      <div className="pb-1">
+        {children!.map(child => (
+          <LinkedRow key={String(child.id)} node={child} depth={1} />
+        ))}
+      </div>
+    )}
+    </div>
   )
 }
 
-
 /* ═══════════════════════════════════════════════════════
-   Country Card (compact tile for grid view)
+   Country Detail Panel — sidebar / split-pane content
    ═══════════════════════════════════════════════════════ */
 
-function CountryCard({ item, hasTaxTemplate, onEdit, onDelete }: {
-  item: Country
+function CountryDetailPanel({ country, hasTaxTemplate, currencies, onEdit, onDelete, onClose }: {
+  country: Country
   hasTaxTemplate: boolean
+  currencies: Currency[]
   onEdit: () => void
   onDelete: () => void
+  onClose: () => void
 }) {
-  const regionColor = REGION_COLORS[item.region] || 'var(--app-muted-foreground)'
+  const regionColor = REGION_COLORS[country.region] || 'var(--app-muted-foreground)'
+  const currency = currencies.find(c => c.id === country.default_currency)
+
+  const Stat = ({ label, value, icon, color }: { label: string; value: React.ReactNode; icon: React.ReactNode; color?: string }) => (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
+      style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+      <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+        style={{ background: `color-mix(in srgb, ${color || 'var(--app-muted-foreground)'} 10%, transparent)`, color: color || 'var(--app-muted-foreground)' }}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-app-muted-foreground">{label}</div>
+        <div className="text-[12px] font-black text-app-foreground truncate">{value}</div>
+      </div>
+    </div>
+  )
 
   return (
-    <div
-      className="group relative rounded-xl p-3 transition-all duration-150 cursor-pointer flex flex-col gap-2"
-      style={{
-        background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
-        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-      }}
-      onClick={onEdit}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-border)';
-        (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 90%, transparent)';
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 50%, transparent)';
-        (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 60%, transparent)';
-      }}
-    >
-      {/* Top: flag + name + iso */}
-      <div className="flex items-start gap-2.5">
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl flex-shrink-0"
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-start gap-3 px-4 py-3" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+        <div className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl flex-shrink-0"
           style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
-          {getFlagEmoji(item.iso2)}
+          {getFlagEmoji(country.iso2)}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[13px] font-black text-app-foreground truncate">{item.name}</span>
-            {!item.is_active && (
-              <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
+            <h2 className="text-[15px] font-black text-app-foreground truncate">{country.name}</h2>
+            {!country.is_active && (
+              <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                 style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
-                Off
+                Inactive
               </span>
             )}
           </div>
-          {item.official_name && (
-            <p className="text-[10px] text-app-muted-foreground truncate mt-0.5">{item.official_name}</p>
+          {country.official_name && (
+            <p className="text-[11px] text-app-muted-foreground truncate mt-0.5">{country.official_name}</p>
           )}
-          <div className="flex items-center gap-1 mt-1">
+          <div className="flex items-center gap-1 mt-1.5">
             <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
               style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', color: 'var(--app-foreground)' }}>
-              {item.iso2}
+              {country.iso2}
             </span>
-            <span className="font-mono text-[9px] font-bold text-app-muted-foreground">{item.iso3}</span>
-            {item.numeric_code && (
-              <span className="font-mono text-[9px] text-app-muted-foreground">· {item.numeric_code}</span>
+            <span className="font-mono text-[9px] font-bold text-app-muted-foreground">{country.iso3}</span>
+            {country.numeric_code && (
+              <span className="font-mono text-[9px] text-app-muted-foreground">· {country.numeric_code}</span>
             )}
           </div>
         </div>
-      </div>
-
-      {/* Middle: chips row — region, currency, phone */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {item.region && (
-          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-            style={{ background: `color-mix(in srgb, ${regionColor} 10%, transparent)`, color: regionColor }}>
-            <MapPin size={9} /> {item.region}
-          </span>
-        )}
-        {item.default_currency_code && (
-          <span className="flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
-            style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
-            <DollarSign size={9} /> {item.default_currency_code}
-          </span>
-        )}
-        {item.phone_code && (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-app-muted-foreground">
-            <Phone size={9} /> {item.phone_code}
-          </span>
-        )}
-        {hasTaxTemplate && (
-          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ml-auto"
-            style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 12%, transparent)', color: 'var(--app-success, #22c55e)' }}>
-            <Shield size={9} /> Tax
-          </span>
-        )}
-      </div>
-
-      {/* Hover actions */}
-      <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={e => { e.stopPropagation(); onEdit(); }}
-          title="Edit"
-          className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"
-          style={{ background: 'color-mix(in srgb, var(--app-background) 70%, transparent)' }}>
-          <Pencil size={11} />
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all flex-shrink-0">
+          <X size={14} />
         </button>
-        <button
-          onClick={e => { e.stopPropagation(); onDelete(); }}
-          title="Delete"
-          className="p-1.5 rounded-lg transition-colors"
-          style={{
-            color: 'var(--app-error, #ef4444)',
-            background: 'color-mix(in srgb, var(--app-background) 70%, transparent)',
-          }}>
-          <Trash2 size={11} />
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+        <Stat label="Region" value={country.region || '—'} icon={<MapPin size={12} />} color={regionColor} />
+        {country.subregion && <Stat label="Subregion" value={country.subregion} icon={<MapPin size={12} />} color={regionColor} />}
+        <Stat label="Phone Code" value={country.phone_code || '—'} icon={<Phone size={12} />} color="var(--app-muted-foreground)" />
+        <Stat
+          label="Default Currency"
+          value={currency ? `${currency.code} ${currency.symbol ? `(${currency.symbol})` : ''} — ${currency.name}` : '—'}
+          icon={<DollarSign size={12} />}
+          color="var(--app-info, #3b82f6)"
+        />
+        {country.numeric_code && (
+          <Stat label="ISO Numeric" value={country.numeric_code} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+        )}
+        <Stat
+          label="Tax Template"
+          value={hasTaxTemplate ? 'Configured' : 'Not configured'}
+          icon={<Shield size={12} />}
+          color={hasTaxTemplate ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)'}
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="flex-shrink-0 flex gap-2 px-4 py-3" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+        <button onClick={onEdit}
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold text-white rounded-lg transition-all hover:brightness-110"
+          style={{ background: 'var(--app-primary)' }}>
+          <Pencil size={12} /> Edit
+        </button>
+        <button onClick={onDelete}
+          className="flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all"
+          style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
+          <Trash2 size={12} /> Delete
         </button>
       </div>
     </div>
@@ -429,65 +743,52 @@ function CountryCard({ item, hasTaxTemplate, onEdit, onDelete }: {
 }
 
 /* ═══════════════════════════════════════════════════════
-   Main Page
+   Main Page — TreeMasterPage consumer
    ═══════════════════════════════════════════════════════ */
 
 export default function SaaSCountriesPage() {
   const [countries, setCountries] = useState<Country[]>([])
   const [currencies, setCurrencies] = useState<Currency[]>([])
-  const [taxTemplateCountries, setTaxTemplateCountries] = useState<Set<string>>(new Set())
+  const [paymentGateways, setPaymentGateways] = useState<PaymentGateway[]>([])
+  const [eInvoiceStandards, setEInvoiceStandards] = useState<EInvoiceStandard[]>([])
+  const [taxTemplates, setTaxTemplates] = useState<TaxTemplate[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [regionFilter, setRegionFilter] = useState<string>('')
-  const [focusMode, setFocusMode] = useState(false)
   const [editingCountry, setEditingCountry] = useState<Country | null | 'new'>(null)
-  // View mode: persisted per user so the choice survives reloads. Defaults to
-  // list — the historical view — so existing users see no change until they
-  // opt in. Storage key namespaced with v1 in case we change shape later.
-  const [viewMode, setViewMode] = useState<'list' | 'cards'>('list')
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const saved = window.localStorage.getItem('saas_countries_view_v1')
-    if (saved === 'cards' || saved === 'list') setViewMode(saved)
+  const [editingCurrency, setEditingCurrency] = useState<Currency | null | 'new'>(null)
+
+  const fetchCurrencies = useCallback(async () => {
+    try {
+      const data = await erpFetch('reference/currencies/?limit=300')
+      const list = Array.isArray(data) ? data : data?.results || []
+      setCurrencies(list)
+    } catch { /* swallow — modal will show empty list */ }
   }, [])
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem('saas_countries_view_v1', viewMode)
-  }, [viewMode])
-  const searchRef = useRef<HTMLInputElement>(null)
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [countriesData, currenciesData, templatesData] = await Promise.all([
+      const [countriesData, _curr, templatesData, gatewaysData, eiData] = await Promise.all([
         erpFetch('reference/countries/?limit=300'),
-        erpFetch('reference/currencies/?limit=300'),
+        fetchCurrencies(),
         erpFetch('finance/country-tax-templates/').catch(() => []),
+        erpFetch('reference/payment-gateways/?limit=200').catch(() => []),
+        erpFetch('reference/e-invoice-standards/?limit=200').catch(() => []),
       ])
       const cList = Array.isArray(countriesData) ? countriesData : countriesData?.results || []
-      const curList = Array.isArray(currenciesData) ? currenciesData : currenciesData?.results || []
       const tList = Array.isArray(templatesData) ? templatesData : templatesData?.results || []
-
+      const gList = Array.isArray(gatewaysData) ? gatewaysData : gatewaysData?.results || []
+      const eList = Array.isArray(eiData) ? eiData : eiData?.results || []
       setCountries(cList)
-      setCurrencies(curList)
-      setTaxTemplateCountries(new Set(tList.map((t: any) => t.country_code)))
+      setTaxTemplates(tList)
+      setPaymentGateways(gList)
+      setEInvoiceStandards(eList)
     } catch {
       toast.error('Failed to load data')
     }
     setLoading(false)
-  }, [])
+  }, [fetchCurrencies])
 
   useEffect(() => { fetchAll() }, [fetchAll])
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(p => !p) }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
 
   const handleDelete = async (c: Country) => {
     if (!confirm(`Delete ${c.name} (${c.iso2})?`)) return
@@ -498,31 +799,11 @@ export default function SaaSCountriesPage() {
     } catch { toast.error('Failed to delete') }
   }
 
-  // Computed
-  const regions = useMemo(() => {
-    const set = new Set(countries.map(c => c.region).filter(Boolean))
-    return Array.from(set).sort()
-  }, [countries])
+  // Quick-lookup sets
+  const taxTemplateCountries = useMemo(() => new Set(taxTemplates.map(t => t.country_code)), [taxTemplates])
 
-  const filtered = useMemo(() => {
-    let list = countries
-    if (search) {
-      const q = search.toLowerCase()
-      list = list.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.iso2.toLowerCase().includes(q) ||
-        c.iso3.toLowerCase().includes(q) ||
-        c.official_name?.toLowerCase().includes(q) ||
-        c.phone_code?.includes(q) ||
-        c.default_currency_code?.toLowerCase().includes(q)
-      )
-    }
-    if (regionFilter) {
-      list = list.filter(c => c.region === regionFilter)
-    }
-    return list
-  }, [countries, search, regionFilter])
-
+  // Computed sets
+  const regions = useMemo(() => Array.from(new Set(countries.map(c => c.region).filter(Boolean))).sort(), [countries])
   const stats = useMemo(() => {
     const active = countries.filter(c => c.is_active).length
     const withCurrency = countries.filter(c => c.default_currency_code).length
@@ -530,219 +811,272 @@ export default function SaaSCountriesPage() {
     return { total: countries.length, active, regions: regions.length, withCurrency, withTemplate }
   }, [countries, regions, taxTemplateCountries])
 
-  const kpis = [
-    { label: 'Countries', value: stats.total, icon: <Globe size={13} />, color: 'var(--app-primary)' },
-    { label: 'Active', value: stats.active, icon: <Check size={13} />, color: 'var(--app-success, #22c55e)' },
-    { label: 'Regions', value: stats.regions, icon: <MapPin size={13} />, color: 'var(--app-info, #3b82f6)' },
-    { label: 'With Currency', value: stats.withCurrency, icon: <DollarSign size={13} />, color: 'var(--app-accent)' },
-    { label: 'Tax Templates', value: stats.withTemplate, icon: <Shield size={13} />, color: 'var(--app-warning, #f59e0b)' },
-  ]
+  /**
+   * Build the combined tree dataset: each country is a root, with synthetic
+   * child rows for the entities linked to it. TreeMasterPage's `data` +
+   * default `treeParentKey: 'parent'` flattens this into the expected
+   * country → linked-entity hierarchy.
+   *
+   * Linking rules:
+   *  - Currency: country.default_currency (1 child if set)
+   *  - Tax template: any tax template with matching country_code
+   *  - Payment gateway: any gateway whose country_codes includes the iso2
+   *    (gateways with empty country_codes are global → attached to every
+   *    country so users can see "what's available here?" at a glance)
+   *  - E-invoice: any standard whose region matches country.region
+   */
+  const treeData = useMemo<TreeNode[]>(() => {
+    if (countries.length === 0) return []
+    const out: TreeNode[] = []
+    const currencyById = new Map(currencies.map(c => [c.id, c]))
+    const taxByCountry = new Map<string, TaxTemplate[]>()
+    for (const t of taxTemplates) {
+      const arr = taxByCountry.get(t.country_code) || []
+      arr.push(t)
+      taxByCountry.set(t.country_code, arr)
+    }
+
+    for (const c of countries) {
+      out.push({
+        id: c.id,
+        kind: 'country',
+        name: c.name,
+        subtitle: c.official_name || undefined,
+        data: c,
+      })
+
+      // 1) Currency
+      if (c.default_currency != null) {
+        const curr = currencyById.get(c.default_currency)
+        out.push({
+          id: `c${c.id}-cur`,
+          parent: c.id,
+          kind: 'currency',
+          name: curr ? `${curr.code} — ${curr.name}` : (c.default_currency_code || 'Currency'),
+          subtitle: curr?.symbol ? `Symbol ${curr.symbol}` : undefined,
+          data: curr,
+        })
+      }
+
+      // 2) Tax templates
+      const taxes = taxByCountry.get(c.iso2) || []
+      for (const tx of taxes) {
+        out.push({
+          id: `c${c.id}-tax-${tx.id}`,
+          parent: c.id,
+          kind: 'tax',
+          name: tx.name || `Tax template ${tx.country_code}`,
+          subtitle: 'Country tax profile',
+          data: tx,
+        })
+      }
+
+      // 3) Payment gateways — country-scoped + global (empty country_codes)
+      for (const g of paymentGateways) {
+        const codes = g.country_codes || []
+        const isGlobal = !codes || codes.length === 0
+        const matches = isGlobal || codes.includes(c.iso2)
+        if (!matches) continue
+        out.push({
+          id: `c${c.id}-pg-${g.id}`,
+          parent: c.id,
+          kind: 'gateway',
+          name: g.name,
+          subtitle: isGlobal ? 'Global gateway' : (g.family || g.code),
+          data: g,
+        })
+      }
+
+      // 4) E-invoice standards by region match
+      if (c.region) {
+        for (const ei of eInvoiceStandards) {
+          if (!ei.region) continue
+          if (ei.region.toLowerCase() === c.region.toLowerCase()) {
+            out.push({
+              id: `c${c.id}-ei-${ei.id}`,
+              parent: c.id,
+              kind: 'einvoice',
+              name: ei.name,
+              subtitle: ei.invoice_format ? `${ei.code} · ${ei.invoice_format}` : ei.code,
+              data: ei,
+            })
+          }
+        }
+      }
+    }
+    return out
+  }, [countries, currencies, paymentGateways, eInvoiceStandards, taxTemplates])
+
+  // Loading splash — TreeMasterPage handles empty-state but not initial spinner.
+  if (loading && countries.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 size={28} className="animate-spin text-app-primary" />
+      </div>
+    )
+  }
 
   return (
-    <div className={`flex flex-col h-full animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-3rem)]' : 'max-h-[calc(100vh-6rem)]'}`}>
-
-      {/* ── Header ── */}
-      {!focusMode ? (
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2 flex-shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="page-header-icon bg-app-primary" style={{ width: 36, height: 36, boxShadow: '0 3px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-              <Globe size={18} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-base md:text-lg font-black text-app-foreground tracking-tight leading-tight">
-                Countries & Regions
-              </h1>
-              <p className="text-[9px] md:text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                {stats.total} Countries · {stats.regions} Regions · SaaS Global Registry
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button onClick={() => setFocusMode(true)}
-              className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-1.5 py-1 rounded-lg hover:bg-app-surface transition-all">
-              <Maximize2 size={12} />
-            </button>
-            <button onClick={() => setEditingCountry('new' as any)}
-              className="flex items-center gap-1 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-2.5 py-1 rounded-lg transition-all"
-              style={{ boxShadow: '0 2px 6px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-              <Plus size={13} />
-              <span className="hidden sm:inline">New Country</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2 mb-2 flex-shrink-0">
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <div className="w-6 h-6 rounded-md bg-app-primary flex items-center justify-center">
-              <Globe size={12} className="text-white" />
-            </div>
-            <span className="text-[11px] font-black text-app-foreground hidden sm:inline">Countries</span>
-            <span className="text-[9px] font-bold text-app-muted-foreground">{filtered.length}/{stats.total}</span>
-          </div>
-          <div className="flex-1 relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-            <input ref={searchRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search... (Ctrl+K)"
-              className="w-full pl-8 pr-2.5 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
-          </div>
-          <button onClick={() => setFocusMode(false)}
-            className="p-1 rounded-md border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
-            <Minimize2 size={12} />
-          </button>
-        </div>
-      )}
-
-      {/* ── KPI Strip ── */}
-      {!focusMode && (
-        <div className="flex-shrink-0 mb-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '6px' }}>
-          {kpis.map(s => (
-            <div key={s.label}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all text-left"
-              style={{
-                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-              }}>
-              <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-                style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
-                {s.icon}
-              </div>
-              <div className="min-w-0">
-                <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                <div className="text-[13px] font-black text-app-foreground tabular-nums leading-tight">{s.value}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Filters ── */}
-      {!focusMode && (
-        <div className="flex-shrink-0 mb-2 flex items-center gap-2 flex-wrap">
-          <div className="flex-1 relative min-w-[200px]">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-            <input ref={searchRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name, code, phone, currency... (Ctrl+K)"
-              className="w-full pl-8 pr-2.5 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
-          </div>
-          <div className="relative flex items-center">
-            <Filter size={11} className="absolute left-2 text-app-muted-foreground pointer-events-none" />
-            <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
-              className="pl-6 pr-6 py-1.5 text-[11px] font-bold bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground appearance-none cursor-pointer focus:ring-2 focus:ring-app-primary/10 outline-none transition-all">
-              <option value="">All Regions</option>
-              {regions.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-            <ChevronDown size={10} className="absolute right-2 text-app-muted-foreground pointer-events-none" />
-          </div>
-          {(search || regionFilter) && (
-            <button onClick={() => { setSearch(''); setRegionFilter('') }}
-              className="flex items-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded-lg border transition-all"
-              style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 20%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
-              <X size={10} /> Clear
-            </button>
-          )}
-          {/* View toggle — list vs card grid. Persists per user. */}
-          <div className="flex items-center rounded-lg overflow-hidden ml-auto"
-            style={{ border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-            <button
-              onClick={() => setViewMode('list')}
-              title="List view"
-              className="flex items-center justify-center px-2 py-1.5 transition-colors"
-              style={{
-                background: viewMode === 'list' ? 'var(--app-primary)' : 'transparent',
-                color: viewMode === 'list' ? '#fff' : 'var(--app-muted-foreground)',
-              }}>
-              <Rows3 size={12} />
-            </button>
-            <button
-              onClick={() => setViewMode('cards')}
-              title="Card view"
-              className="flex items-center justify-center px-2 py-1.5 transition-colors"
-              style={{
-                background: viewMode === 'cards' ? 'var(--app-primary)' : 'transparent',
-                color: viewMode === 'cards' ? '#fff' : 'var(--app-muted-foreground)',
-                borderLeft: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-              }}>
-              <LayoutGrid size={12} />
-            </button>
-          </div>
-          <span className="text-[10px] font-bold text-app-muted-foreground">
-            {filtered.length} of {stats.total}
-          </span>
-        </div>
-      )}
-
-      {/* ── Body: list or card grid ── */}
-      <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
-        {/* Column Headers — only in list view */}
-        {viewMode === 'list' && (
-          <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
-            <div className="w-8 flex-shrink-0" />
-            <div className="flex-1 min-w-0">Country</div>
-            <div className="hidden sm:block w-20 flex-shrink-0">Codes</div>
-            <div className="hidden md:block w-16 flex-shrink-0">Phone</div>
-            <div className="hidden sm:block w-16 flex-shrink-0">Currency</div>
-            <div className="hidden lg:block w-24 flex-shrink-0">Region</div>
-            <div className="w-16 flex-shrink-0" />
-          </div>
-        )}
-
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 size={24} className="animate-spin text-app-primary" />
-            </div>
-          ) : filtered.length > 0 ? (
-            viewMode === 'list' ? (
-              filtered.map(item => (
+    <div className="h-full flex flex-col">
+      <TreeMasterPage
+        config={{
+          title: 'Countries & Regions',
+          subtitle: (_filtered, all) => `${all.length} Countries · ${stats.regions} Regions · SaaS Global Registry`,
+          icon: <Globe size={20} />,
+          iconColor: 'var(--app-primary)',
+          searchPlaceholder: 'Search by name, code, phone, currency... (Ctrl+K)',
+          primaryAction: {
+            label: 'New Country',
+            icon: <Plus size={14} />,
+            onClick: () => setEditingCountry('new' as any),
+          },
+          // Manage currencies as a secondary action — still part of this
+          // master-data surface, just not the primary CTA.
+          secondaryActions: [
+            {
+              label: 'New Currency',
+              icon: <DollarSign size={13} />,
+              onClick: () => setEditingCurrency('new' as any),
+            },
+          ],
+          dataTools: {
+            title: 'Country Data',
+            exportFilename: 'countries',
+            exportColumns: [
+              { key: 'iso2', label: 'ISO2' },
+              { key: 'iso3', label: 'ISO3' },
+              { key: 'numeric_code', label: 'Numeric' },
+              { key: 'name', label: 'Name' },
+              { key: 'official_name', label: 'Official Name' },
+              { key: 'phone_code', label: 'Phone' },
+              { key: 'region', label: 'Region' },
+              { key: 'subregion', label: 'Subregion' },
+              { key: 'default_currency_code', label: 'Currency' },
+              { key: 'is_active', label: 'Active', format: (c: any) => c.is_active ? 'Yes' : 'No' },
+            ],
+            print: {
+              title: 'Countries',
+              subtitle: 'Global Registry',
+              prefKey: 'print.saas-countries',
+              sortBy: 'name',
+              columns: [
+                { key: 'name', label: 'Country', defaultOn: true },
+                { key: 'iso2', label: 'ISO2', mono: true, defaultOn: true, width: '60px' },
+                { key: 'iso3', label: 'ISO3', mono: true, defaultOn: true, width: '60px' },
+                { key: 'phone', label: 'Phone', mono: true, defaultOn: true, width: '70px' },
+                { key: 'currency', label: 'Currency', mono: true, defaultOn: true, width: '70px' },
+                { key: 'region', label: 'Region', defaultOn: true, width: '100px' },
+              ],
+              rowMapper: (c: any) => ({
+                name: c.name,
+                iso2: c.iso2,
+                iso3: c.iso3,
+                phone: c.phone_code || '',
+                currency: c.default_currency_code || '',
+                region: c.region || '',
+              }),
+            },
+          },
+          columnHeaders: [
+            { label: 'Country', width: 'auto' },
+            { label: 'Codes', width: '80px', hideOnMobile: true },
+            { label: 'Phone', width: '64px', hideOnMobile: true },
+            { label: 'Currency', width: '64px', color: 'var(--app-info, #3b82f6)', hideOnMobile: true },
+            { label: 'Region', width: '96px', hideOnMobile: true },
+          ],
+          // Single-source-of-truth: template owns search + KPI filtering.
+          // Combined dataset = countries (kind:'country') + linked entities
+          // (kind: currency/gateway/einvoice/tax). buildTree groups children
+          // under their country via the synthetic `parent` field.
+          data: treeData as unknown as Record<string, unknown>[],
+          searchFields: ['name', 'subtitle'],
+          kpiPredicates: {
+            // Predicates only inspect TREE NODES; we route on `kind` so KPI
+            // counts measure countries, not linked-row noise.
+            active: (n: any) => n.kind === 'country' && Boolean(n.data?.is_active),
+            withCurrency: (n: any) => n.kind === 'country' && Boolean(n.data?.default_currency_code),
+            withTaxTemplate: (n: any) => n.kind === 'country' && taxTemplateCountries.has(String(n.data?.iso2)),
+          },
+          kpis: [
+            { label: 'Total', icon: <Globe size={11} />, color: 'var(--app-primary)', filterKey: 'all', value: (_, all) => all.filter((n: any) => n.kind === 'country').length },
+            { label: 'Active', icon: <Check size={11} />, color: 'var(--app-success, #22c55e)', filterKey: 'active', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && n.data?.is_active).length },
+            { label: 'Regions', icon: <MapPin size={11} />, color: 'var(--app-info, #3b82f6)', value: () => stats.regions },
+            { label: 'With Currency', icon: <DollarSign size={11} />, color: 'var(--app-accent)', filterKey: 'withCurrency', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && n.data?.default_currency_code).length },
+            { label: 'Tax Templates', icon: <Shield size={11} />, color: 'var(--app-warning, #f59e0b)', filterKey: 'withTaxTemplate', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && taxTemplateCountries.has(n.data?.iso2)).length },
+          ],
+          emptyState: {
+            icon: <Globe size={36} />,
+            title: (hasSearch) => hasSearch ? 'No matching countries' : 'No countries defined yet',
+            subtitle: (hasSearch) => hasSearch
+              ? 'Try a different search term or clear filters.'
+              : 'Click "New Country" to add one.',
+            actionLabel: 'Add First Country',
+          },
+          onRefresh: fetchAll,
+        }}
+        detailPanel={(node, { onClose }) => {
+          // The tree node is our combined-shape; only country rows have the
+          // detail panel — children open the editor for their own type.
+          const country: Country | null = node?.kind === 'country' ? node.data : null
+          if (!country) return null
+          return (
+            <CountryDetailPanel
+              country={country}
+              hasTaxTemplate={taxTemplateCountries.has(country.iso2)}
+              currencies={currencies}
+              onEdit={() => { setEditingCountry(country); onClose() }}
+              onDelete={() => { handleDelete(country); onClose() }}
+              onClose={onClose}
+            />
+          )
+        }}
+      >
+        {(renderProps) => {
+          const { tree, isSelected, openNode, isCompact, expandAll } = renderProps
+          // tree contains TreeNode objects (built by buildTree) with `children`.
+          // We only render top-level country nodes here — linked children are
+          // rendered inside CountryRow when expanded.
+          return tree
+            .filter((n: any) => n.kind === 'country')
+            .map((n: any) => {
+              const country = n.data as Country
+              return (
                 <CountryRow
-                  key={item.id}
-                  item={item}
-                  hasTaxTemplate={taxTemplateCountries.has(item.iso2)}
-                  onEdit={() => setEditingCountry(item)}
-                  onDelete={() => handleDelete(item)}
+                  key={String(n.id)}
+                  item={country}
+                  hasTaxTemplate={taxTemplateCountries.has(country.iso2)}
+                  isSelected={isSelected(n)}
+                  onSelect={() => openNode(n, 'overview')}
+                  onEdit={() => setEditingCountry(country)}
+                  onDelete={() => handleDelete(country)}
+                  compact={isCompact}
+                  forceExpanded={expandAll}
+                  // `children` is populated by buildTree on the wrapper node;
+                  // pass it through so CountryRow can render linked rows.
+                  children={(n.children as TreeNode[]) || []}
                 />
-              ))
-            ) : (
-              <div
-                className="p-3"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-                  gap: '10px',
-                }}>
-                {filtered.map(item => (
-                  <CountryCard
-                    key={item.id}
-                    item={item}
-                    hasTaxTemplate={taxTemplateCountries.has(item.iso2)}
-                    onEdit={() => setEditingCountry(item)}
-                    onDelete={() => handleDelete(item)}
-                  />
-                ))}
-              </div>
-            )
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-              <Globe size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-              <p className="text-sm font-bold text-app-muted-foreground">No countries found</p>
-              <p className="text-[11px] text-app-muted-foreground mt-1">
-                {search || regionFilter ? 'Try adjusting your filters.' : 'Click "New Country" to add one.'}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+              )
+            })
+        }}
+      </TreeMasterPage>
 
-      {/* ── Edit Modal ── */}
+      {/* Country edit modal */}
       {editingCountry !== null && (
         <CountryEditModal
           country={editingCountry === 'new' ? null : editingCountry as Country}
           currencies={currencies}
           onClose={() => setEditingCountry(null)}
           onSaved={fetchAll}
+          onCurrenciesChanged={fetchCurrencies}
+        />
+      )}
+
+      {/* Standalone currency modal (from secondaryActions "New Currency") */}
+      {editingCurrency !== null && (
+        <CurrencyEditModal
+          currency={editingCurrency === 'new' ? null : editingCurrency as Currency}
+          onClose={() => setEditingCurrency(null)}
+          onSaved={() => fetchCurrencies()}
         />
       )}
     </div>

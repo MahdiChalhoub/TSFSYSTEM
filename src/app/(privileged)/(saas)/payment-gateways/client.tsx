@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo, useTransition, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
     CreditCard, Search, ArrowLeft, X, Check,
-    Globe, Filter, ExternalLink, Layers, Eye, EyeOff,
-    Building2, MapPin, Lock, Settings2, Plus, Pencil, Trash2, Power,
+    Globe, Filter, Layers, MapPin, Plus, LayoutGrid, MapPinned,
 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
@@ -15,40 +14,36 @@ import {
 } from '@/app/actions/reference'
 import { runTimed } from '@/lib/perf-timing'
 import { GatewayEditorDialog } from './GatewayEditorDialog'
+import ViewByGateway from './view-by-gateway'
+import ViewByCountry from './view-by-country'
+import type { RefGateway, RefCountryLite } from './shared'
 
-/* ── Input styles ── */
 const inputCls = "w-full text-[12px] font-bold px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary focus:ring-2 focus:ring-app-primary/10 transition-all"
 
-type RefGatewayConfigField = { key: string; label?: string; type?: string; required?: boolean;[key: string]: unknown };
-type RefGateway = {
-    id: number;
-    name: string;
-    code: string;
-    is_active: boolean;
-    is_global?: boolean;
-    provider_family?: string;
-    description?: string;
-    config_schema?: RefGatewayConfigField[];
-    color?: string;
-    logo_emoji?: string;
-    country_codes?: string[];
-    website_url?: string;
-    [key: string]: unknown;
-};
+type ViewMode = 'gateway' | 'country'
 
-export default function PaymentGatewaysClient({ allGateways, initialOrgGateways }: {
+export default function PaymentGatewaysClient({ allGateways, initialOrgGateways, countries }: {
     allGateways: RefGateway[]
     initialOrgGateways: Array<Record<string, unknown>>
+    countries: RefCountryLite[]
 }) {
     const router = useRouter()
     const [, startTransition] = useTransition()
+
+    const [viewMode, setViewMode] = useState<ViewMode>('gateway')
     const [search, setSearch] = useState('')
     const [familyFilter, setFamilyFilter] = useState('')
     const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'inactive'>('')
+    const [regionFilter, setRegionFilter] = useState('')
+
     const [expanded, setExpanded] = useState<number | null>(null)
     const [editorOpen, setEditorOpen] = useState(false)
     const [editorTarget, setEditorTarget] = useState<RefGateway | null>(null)
     const [pendingDelete, setPendingDelete] = useState<RefGateway | null>(null)
+
+    // Cross-navigation focus state — set when user pivots from one view to the other
+    const [focusGatewayId, setFocusGatewayId] = useState<number | null>(null)
+    const [focusCountryIso2, setFocusCountryIso2] = useState<string | null>(null)
 
     function openCreate() {
         setEditorTarget(null)
@@ -85,14 +80,61 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
             toast.error(res.error || 'Failed to delete')
         }
     }
+    function askDelete(gw: RefGateway) {
+        const inUse = initialOrgGateways.some(og => og.gateway === gw.id)
+        if (inUse) {
+            toast.error('In use by one or more orgs — deactivate instead.')
+            return
+        }
+        setPendingDelete(gw)
+    }
 
-    /* ── Derived state ── */
-    const families = useMemo(() => {
-        const fams = [...new Set(allGateways.map(g => g.provider_family).filter(Boolean))]
-        return fams.sort()
-    }, [allGateways])
+    // Pivot: gateway-card flag → country view
+    function gotoCountry(iso2: string) {
+        const code = iso2.toUpperCase()
+        setViewMode('country')
+        setFocusCountryIso2(code)
+        setFocusGatewayId(null)
+    }
+    // Pivot: country chip → gateway view
+    function gotoGateway(gatewayId: number) {
+        setViewMode('gateway')
+        setFocusGatewayId(gatewayId)
+        setFocusCountryIso2(null)
+        setExpanded(gatewayId)
+    }
 
-    const filtered = useMemo(() => {
+    // Scroll-to-focused-card after pivot
+    useEffect(() => {
+        if (viewMode === 'gateway' && focusGatewayId != null) {
+            const el = document.getElementById(`gw-card-${focusGatewayId}`)
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+        if (viewMode === 'country' && focusCountryIso2) {
+            const el = document.getElementById(`country-card-${focusCountryIso2.toUpperCase()}`)
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+    }, [viewMode, focusGatewayId, focusCountryIso2])
+
+    /* ── Derived data ── */
+    const families = useMemo(
+        () => [...new Set(allGateways.map(g => g.provider_family).filter(Boolean))].sort() as string[],
+        [allGateways],
+    )
+
+    const regions = useMemo(
+        () => [...new Set(countries.map(c => c.region).filter(Boolean))].sort() as string[],
+        [countries],
+    )
+
+    const countriesByIso2 = useMemo(() => {
+        const map: Record<string, RefCountryLite> = {}
+        countries.forEach(c => { map[c.iso2.toUpperCase()] = c })
+        return map
+    }, [countries])
+
+    // Filter gateways for "By Gateway" view (search/family/status)
+    const filteredGateways = useMemo(() => {
         let list = allGateways
         if (search) {
             const q = search.toLowerCase()
@@ -100,32 +142,50 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                 g.name.toLowerCase().includes(q) ||
                 g.code.toLowerCase().includes(q) ||
                 (g.provider_family || '').toLowerCase().includes(q) ||
-                (g.description || '').toLowerCase().includes(q)
+                (g.description || '').toLowerCase().includes(q) ||
+                (g.country_codes || []).some(cc => {
+                    if (cc.toLowerCase().includes(q)) return true
+                    const c = countriesByIso2[cc.toUpperCase()]
+                    return c?.name.toLowerCase().includes(q) || false
+                }),
             )
         }
-        if (familyFilter) {
-            list = list.filter(g => g.provider_family === familyFilter)
-        }
+        if (familyFilter) list = list.filter(g => g.provider_family === familyFilter)
         if (statusFilter === 'active') list = list.filter(g => g.is_active)
         if (statusFilter === 'inactive') list = list.filter(g => !g.is_active)
         return list
-    }, [allGateways, search, familyFilter, statusFilter])
+    }, [allGateways, search, familyFilter, statusFilter, countriesByIso2])
 
+    // Filter for "By Country" view: same gateway-level filters apply, plus a country search.
+    const filteredCountries = useMemo(() => {
+        if (!search) return countries
+        const q = search.toLowerCase()
+        return countries.filter(c =>
+            c.name.toLowerCase().includes(q) ||
+            c.iso2.toLowerCase().includes(q) ||
+            (c.iso3 || '').toLowerCase().includes(q) ||
+            (c.region || '').toLowerCase().includes(q) ||
+            (c.subregion || '').toString().toLowerCase().includes(q),
+        )
+    }, [countries, search])
+
+    // KPIs
     const activeCount = allGateways.filter(g => g.is_active).length
     const globalCount = allGateways.filter(g => g.is_global).length
     const regionalCount = allGateways.length - globalCount
     const familyCount = families.length
+    const countriesCovered = useMemo(() => {
+        const set = new Set<string>()
+        allGateways.forEach(g => (g.country_codes || []).forEach(cc => set.add(cc.toUpperCase())))
+        return set.size
+    }, [allGateways])
 
-    // Group by family for visual organization
-    const familyGroups = useMemo(() => {
-        const groups: Record<string, RefGateway[]> = {}
-        filtered.forEach(gw => {
-            const fam = gw.provider_family || 'Other'
-            if (!groups[fam]) groups[fam] = []
-            groups[fam].push(gw)
-        })
-        return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
-    }, [filtered])
+    const hasActiveFilters = !!(search || familyFilter || statusFilter || regionFilter)
+
+    function clearFilters() {
+        setSearch(''); setFamilyFilter(''); setStatusFilter(''); setRegionFilter('')
+        setFocusGatewayId(null); setFocusCountryIso2(null)
+    }
 
     return (
         <div className="app-page max-w-6xl mx-auto space-y-6 animate-in fade-in duration-300">
@@ -149,7 +209,7 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                             Payment Gateway Catalog
                         </h1>
                         <p className="text-[11px] text-app-muted-foreground mt-0.5">
-                            Global catalog of digital payment providers. Tenants activate these for their organizations.
+                            Browse the catalog from either side: by gateway brand or by country coverage.
                         </p>
                     </div>
                 </div>
@@ -168,6 +228,7 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                     { label: 'Global', value: globalCount, color: 'var(--app-info, #3b82f6)', icon: <Globe size={14} /> },
                     { label: 'Regional', value: regionalCount, color: 'var(--app-accent)', icon: <MapPin size={14} /> },
                     { label: 'Families', value: familyCount, color: 'var(--app-warning)', icon: <Filter size={14} /> },
+                    { label: 'Countries Covered', value: countriesCovered, color: 'var(--app-info, #3b82f6)', icon: <Globe size={14} /> },
                 ].map(s => (
                     <div key={s.label} className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
                         style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
@@ -181,246 +242,131 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                 ))}
             </div>
 
-            {/* ═══ Search & Filter Bar ═══ */}
-            <div className="flex items-center gap-3 flex-wrap">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" />
-                    <input value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by name, code, family…" className={`${inputCls} pl-9`} />
-                </div>
-                <select value={familyFilter} onChange={e => setFamilyFilter(e.target.value)}
-                    className={`${inputCls} w-[160px] appearance-none pr-7`}
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
-                    <option value="">All Families</option>
-                    {families.map(f => <option key={f} value={f}>{f}</option>)}
-                </select>
-                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as '' | 'active' | 'inactive')}
-                    className={`${inputCls} w-[120px] appearance-none pr-7`}
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-                {(search || familyFilter || statusFilter) && (
-                    <button onClick={() => { setSearch(''); setFamilyFilter(''); setStatusFilter('') }}
-                        className="text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground px-2 py-1.5 rounded-lg hover:bg-app-surface transition-all flex items-center gap-1">
-                        <X size={10} /> Clear
+            {/* ═══ View Toggle + Filters ═══ */}
+            <div className="flex flex-col gap-3">
+                {/* Segmented view toggle */}
+                <div className="inline-flex items-center gap-1 p-1 rounded-xl self-start"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                    <button
+                        onClick={() => { setViewMode('gateway'); setFocusCountryIso2(null) }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black rounded-lg transition-all"
+                        style={{
+                            background: viewMode === 'gateway' ? 'var(--app-primary)' : 'transparent',
+                            color: viewMode === 'gateway' ? '#fff' : 'var(--app-muted-foreground)',
+                        }}>
+                        <LayoutGrid size={12} /> By Gateway
                     </button>
-                )}
-                <div className="ml-auto text-[10px] font-bold text-app-muted-foreground">
-                    {filtered.length} of {allGateways.length} shown
+                    <button
+                        onClick={() => { setViewMode('country'); setFocusGatewayId(null) }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black rounded-lg transition-all"
+                        style={{
+                            background: viewMode === 'country' ? 'var(--app-primary)' : 'transparent',
+                            color: viewMode === 'country' ? '#fff' : 'var(--app-muted-foreground)',
+                        }}>
+                        <MapPinned size={12} /> By Country
+                    </button>
                 </div>
+
+                {/* Filter row */}
+                <div className="flex items-center gap-3 flex-wrap">
+                    <div className="relative flex-1 min-w-[200px]">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" />
+                        <input value={search} onChange={e => setSearch(e.target.value)}
+                            placeholder={viewMode === 'gateway' ? 'Search by gateway name, code, family, country…' : 'Search countries by name, ISO, region…'}
+                            className={`${inputCls} pl-9`} />
+                    </div>
+
+                    {viewMode === 'gateway' ? (
+                        <select value={familyFilter} onChange={e => setFamilyFilter(e.target.value)}
+                            className={`${inputCls} w-[160px] appearance-none pr-7`}
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+                            <option value="">All Families</option>
+                            {families.map(f => <option key={f} value={f}>{f}</option>)}
+                        </select>
+                    ) : (
+                        <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
+                            className={`${inputCls} w-[160px] appearance-none pr-7`}
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+                            <option value="">All Regions</option>
+                            {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                    )}
+
+                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as '' | 'active' | 'inactive')}
+                        className={`${inputCls} w-[120px] appearance-none pr-7`}
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+
+                    {hasActiveFilters && (
+                        <button onClick={clearFilters}
+                            className="text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground px-2 py-1.5 rounded-lg hover:bg-app-surface transition-all flex items-center gap-1">
+                            <X size={10} /> Clear
+                        </button>
+                    )}
+
+                    <div className="ml-auto text-[10px] font-bold text-app-muted-foreground">
+                        {viewMode === 'gateway'
+                            ? `${filteredGateways.length} of ${allGateways.length} gateways`
+                            : `${countries.length} countries · ${allGateways.length} gateways`}
+                    </div>
+                </div>
+
+                {/* Cross-pivot focus banner */}
+                {viewMode === 'country' && focusCountryIso2 && (
+                    <PivotBanner
+                        text={`Showing payment gateways in ${countriesByIso2[focusCountryIso2.toUpperCase()]?.name || focusCountryIso2.toUpperCase()}`}
+                        onClear={() => setFocusCountryIso2(null)}
+                    />
+                )}
+                {viewMode === 'gateway' && focusGatewayId != null && (
+                    <PivotBanner
+                        text={`Focused on ${allGateways.find(g => g.id === focusGatewayId)?.name || 'gateway'} — click another card or clear to reset.`}
+                        onClear={() => { setFocusGatewayId(null); setExpanded(null) }}
+                    />
+                )}
             </div>
 
-            {/* ═══ Gateway Catalog — Grouped by Family ═══ */}
-            {familyGroups.map(([family, gateways]) => (
-                <div key={family} className="space-y-3">
-                    {/* Family Header */}
-                    <div className="flex items-center gap-2 pt-2">
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-primary)' }} />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">{family}</span>
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                            style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', color: 'var(--app-primary)' }}>
-                            {gateways.length}
-                        </span>
-                        <div className="flex-1 border-t border-app-border/30" />
-                    </div>
+            {/* ═══ Active View ═══ */}
+            {viewMode === 'gateway' ? (
+                <ViewByGateway
+                    gateways={filteredGateways}
+                    orgGateways={initialOrgGateways}
+                    countriesByIso2={countriesByIso2}
+                    expanded={expanded}
+                    setExpanded={setExpanded}
+                    focusGatewayId={focusGatewayId}
+                    onGotoCountry={gotoCountry}
+                    onToggle={handleToggle}
+                    onEdit={openEdit}
+                    onAskDelete={askDelete}
+                />
+            ) : (
+                <ViewByCountry
+                    gateways={filteredGateways}
+                    countries={filteredCountries}
+                    orgGateways={initialOrgGateways}
+                    regionFilter={regionFilter}
+                    onGotoGateway={gotoGateway}
+                    focusCountryIso2={focusCountryIso2}
+                />
+            )}
 
-                    {/* Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {gateways.map(gw => {
-                            const color = gw.color || '#6366f1'
-                            const fieldCount = gw.config_schema?.length || 0
-                            const countryList: string[] = gw.country_codes || []
-                            const isExpanded = expanded === gw.id
-
-                            return (
-                                <div key={gw.id}
-                                    className="rounded-2xl p-4 flex flex-col gap-2.5 transition-all group hover:shadow-lg relative overflow-hidden cursor-pointer"
-                                    onClick={() => setExpanded(isExpanded ? null : gw.id)}
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
-                                        border: `1.5px solid color-mix(in srgb, var(--app-border) 50%, transparent)`,
-                                        opacity: gw.is_active ? 1 : 0.6,
-                                    }}>
-                                    {/* Status badge */}
-                                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
-                                        {gw.is_active ? (
-                                            <span className="inline-flex items-center gap-0.5 text-[7px] font-black px-1.5 py-0.5 rounded-full"
-                                                style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 12%, transparent)', color: 'var(--app-success, #22c55e)' }}>
-                                                <Eye size={7} /> LIVE
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-0.5 text-[7px] font-black px-1.5 py-0.5 rounded-full"
-                                                style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)', color: 'var(--app-muted-foreground)' }}>
-                                                <EyeOff size={7} /> DRAFT
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Header */}
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
-                                            style={{ background: `color-mix(in srgb, ${color} 12%, transparent)` }}>
-                                            {gw.logo_emoji || '💳'}
-                                        </div>
-                                        <div className="min-w-0 flex-1 pr-12">
-                                            <h3 className="text-[13px] font-black text-app-foreground truncate">{gw.name}</h3>
-                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                <span className="text-[9px] font-mono font-bold text-app-muted-foreground">{gw.code}</span>
-                                                {gw.is_global && (
-                                                    <span className="inline-flex items-center gap-0.5 text-[7px] font-bold px-1 py-px rounded"
-                                                        style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
-                                                        <Globe size={7} /> GLOBAL
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Description */}
-                                    <p className="text-[10px] font-bold text-app-muted-foreground leading-relaxed line-clamp-2 min-h-[28px]">
-                                        {gw.description || 'No description available'}
-                                    </p>
-
-                                    {/* Country tags + metadata */}
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex flex-wrap gap-1">
-                                            {countryList.slice(0, 4).map((code: string) => (
-                                                <span key={code} className="text-[8px] font-bold px-1.5 py-0.5 rounded"
-                                                    style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>
-                                                    {code}
-                                                </span>
-                                            ))}
-                                            {countryList.length > 4 && (
-                                                <span className="text-[8px] font-bold text-app-muted-foreground">+{countryList.length - 4}</span>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {fieldCount > 0 && (
-                                                <span className="text-[8px] font-bold text-app-muted-foreground flex items-center gap-0.5">
-                                                    <Lock size={7} /> {fieldCount} config fields
-                                                </span>
-                                            )}
-                                            {gw.website_url && (
-                                                <a href={gw.website_url} target="_blank" rel="noopener noreferrer"
-                                                    className="text-app-muted-foreground hover:text-app-foreground transition-colors"
-                                                    onClick={e => e.stopPropagation()}>
-                                                    <ExternalLink size={10} />
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded Details */}
-                                    {isExpanded && (
-                                        <div className="space-y-2.5 pt-2 border-t animate-in fade-in slide-in-from-top-2 duration-200"
-                                            style={{ borderColor: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                                            {/* Config Schema */}
-                                            {fieldCount > 0 && (
-                                                <div>
-                                                    <div className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 flex items-center gap-1">
-                                                        <Settings2 size={9} /> Config Schema ({fieldCount})
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-1">
-                                                        {(gw.config_schema || []).map((f) => (
-                                                            <div key={f.key} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[9px]"
-                                                                style={{ background: `color-mix(in srgb, ${color} 5%, transparent)` }}>
-                                                                <span className="font-mono font-bold" style={{ color }}>{f.key}</span>
-                                                                <span className="text-app-muted-foreground">{f.type}</span>
-                                                                {f.required && <span className="text-[7px] font-black" style={{ color: 'var(--app-error, #ef4444)' }}>REQ</span>}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Countries */}
-                                            {countryList.length > 0 && (
-                                                <div>
-                                                    <div className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 flex items-center gap-1">
-                                                        <MapPin size={9} /> Available Countries ({countryList.length})
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {countryList.map((code: string) => (
-                                                            <span key={code} className="text-[8px] font-bold px-1.5 py-0.5 rounded"
-                                                                style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
-                                                                {code}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Tenant Activation Summary */}
-                                            {(() => {
-                                                const activations = initialOrgGateways.filter(og => og.gateway === gw.id)
-                                                return activations.length > 0 ? (
-                                                    <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg"
-                                                        style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)' }}>
-                                                        <Building2 size={11} style={{ color: 'var(--app-success, #22c55e)' }} />
-                                                        <span className="text-[10px] font-bold text-app-foreground">
-                                                            Used by <span className="font-black">{activations.length}</span> org(s)
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-[9px] font-bold text-app-muted-foreground text-center py-1">
-                                                        Not yet activated by any organization
-                                                    </div>
-                                                )
-                                            })()}
-
-                                            {/* Admin Actions */}
-                                            <div className="flex items-center justify-end gap-1 pt-2"
-                                                 style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                                                <button onClick={(e) => { e.stopPropagation(); handleToggle(gw) }}
-                                                    title={gw.is_active ? 'Deactivate' : 'Activate'}
-                                                    className="flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg hover:bg-app-surface-hover transition-all"
-                                                    style={{ color: gw.is_active ? 'var(--app-warning, #f59e0b)' : 'var(--app-success, #22c55e)' }}>
-                                                    <Power size={10} /> {gw.is_active ? 'Deactivate' : 'Activate'}
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); openEdit(gw) }}
-                                                    title="Edit"
-                                                    className="flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg hover:bg-app-surface-hover transition-all text-app-muted-foreground hover:text-app-foreground">
-                                                    <Pencil size={10} /> Edit
-                                                </button>
-                                                <button onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    const inUse = initialOrgGateways.some(og => og.gateway === gw.id)
-                                                    if (inUse) {
-                                                        toast.error('In use by one or more orgs — deactivate instead.')
-                                                        return
-                                                    }
-                                                    setPendingDelete(gw)
-                                                }}
-                                                    title="Delete"
-                                                    className="flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg hover:bg-app-error/10 transition-all"
-                                                    style={{ color: 'var(--app-error, #ef4444)' }}>
-                                                    <Trash2 size={10} /> Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            ))}
-
-            {/* Empty State */}
-            {filtered.length === 0 && (
+            {/* Empty states */}
+            {viewMode === 'gateway' && filteredGateways.length === 0 && (
                 <div className="text-center py-16 rounded-2xl border-2 border-dashed border-app-border">
                     <CreditCard size={40} className="mx-auto mb-3 opacity-20" />
                     <p className="text-sm font-bold text-app-muted-foreground">
-                        {search || familyFilter || statusFilter ? 'No gateways match your filters' : 'No payment gateways in the catalog'}
+                        {hasActiveFilters ? 'No gateways match your filters' : 'No payment gateways in the catalog'}
                     </p>
                     <p className="text-[11px] text-app-muted-foreground mt-1">
-                        {search || familyFilter || statusFilter
+                        {hasActiveFilters
                             ? 'Try adjusting your search or filter.'
                             : 'Click "Add Gateway" above, or run the seed_payment_gateways command.'}
                     </p>
-                    {!(search || familyFilter || statusFilter) && (
+                    {!hasActiveFilters && (
                         <button onClick={openCreate}
                                 className="mt-4 inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-xl text-white"
                                 style={{ background: 'var(--app-primary)' }}>
@@ -446,6 +392,24 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                 variant="danger"
                 onConfirm={handleConfirmDelete}
             />
+        </div>
+    )
+}
+
+function PivotBanner({ text, onClear }: { text: string; onClear: () => void }) {
+    return (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-bold animate-in fade-in slide-in-from-top-2 duration-200"
+            style={{
+                background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                color: 'var(--app-primary)',
+            }}>
+            <Filter size={11} />
+            <span className="flex-1">{text}</span>
+            <button onClick={onClear}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black hover:bg-app-surface transition-all">
+                <X size={10} /> Clear pivot
+            </button>
         </div>
     )
 }

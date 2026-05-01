@@ -17,11 +17,9 @@ export default async function SaasLayout({
         redirect('/login?error=unauthorized_saas_access');
     }
 
-    return (
-        <div className="bg-app-surface/50 min-h-full">
-            <div className="p-4 md:p-8 max-w-[1800px] mx-auto">
-                {children}
-            </div>
-        </div>
-    );
+    // Match the finance/inventory pattern: no padding here, no max-width.
+    // Pages own their own layout (TreeMasterPage handles its own spacing).
+    // The previous wrapper forced p-4..p-8 + max-w-[1800px] which double-
+    // padded master-page screens (Countries) and wasted horizontal space.
+    return <>{children}</>;
 }
