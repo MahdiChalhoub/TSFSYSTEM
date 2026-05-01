@@ -1,26 +1,53 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useTransition, useMemo, useCallback } from 'react'
+import { useTransition, useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
-    Wrench, AlertTriangle, RotateCcw, Trash2, Activity,
-    FileText, CheckCircle2, XCircle, Clock, Loader2,
-    Printer, RefreshCw, ShieldCheck, Bug, Zap,
+    AlertTriangle, RotateCcw, Trash2, Activity,
+    CheckCircle2, XCircle, Clock,
+    Printer, RefreshCw, ShieldCheck, Bug,
 } from 'lucide-react'
 import {
-    retryPrintSession, cancelPrintSession, listPrintSessions,
+    retryPrintSession, cancelPrintSession,
+    type PrintSession, type PrintingKPI,
 } from '@/app/actions/labels'
 
 const v = (name: string) => `var(${name})`
 const soft = (varName: string, pct = 10) => ({ backgroundColor: `color-mix(in srgb, ${v(varName)} ${pct}%, transparent)` })
-const grad = (varName: string) => ({ background: `linear-gradient(135deg, ${v(varName)}, color-mix(in srgb, ${v(varName)} 80%, black))` })
+
+type SessionRow = PrintSession & {
+    failure_reason?: string
+}
+
+type PrinterRow = {
+    id: number
+    name?: string
+    printer_type?: string
+    connection_type?: string
+    test_status?: 'PASS' | 'FAIL' | string
+    is_active?: boolean
+    last_tested_at?: string
+}
+
+type TemplateRow = {
+    id: number
+    name?: string
+    label_type?: string
+    version?: number | string
+    is_active?: boolean
+    is_system?: boolean
+}
+
+type MaintenanceKPI = PrintingKPI & {
+    failed?: number
+    cancelled?: number
+}
 
 interface Props {
-    sessions: any[]
-    printers: any[]
-    templates: any[]
-    kpi: any
+    sessions: SessionRow[]
+    printers: PrinterRow[]
+    templates: TemplateRow[]
+    kpi: MaintenanceKPI
     onRefresh: () => void
 }
 

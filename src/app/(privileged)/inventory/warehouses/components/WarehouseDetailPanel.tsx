@@ -1,7 +1,7 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useRef, useEffect, useMemo, useLayoutEffect, useCallback } from 'react'
+import type { ComponentType } from 'react'
 import {
     X, Pencil, Trash2, Bookmark, Building2, Store, Warehouse as WarehouseIcon, Cloud,
     Layers, Package, PackagePlus, Search, Loader2, Plus, Minus, MapPin,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
+import type { WarehouseNode } from './WarehouseRow'
 
 /* ═══════════════════════════════════════════════════════════
  *  WAREHOUSE DETAIL PANEL
@@ -19,7 +20,7 @@ import { erpFetch } from '@/lib/erp-api'
  *    Inventory — virtualized product list + Add-Product picker
  * ═══════════════════════════════════════════════════════════ */
 
-const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string }> = {
+const TYPE_CONFIG: Record<string, { icon: ComponentType<{ size?: number; className?: string }>; label: string; color: string }> = {
     BRANCH:    { icon: Building2,     label: 'Branch',    color: 'var(--app-success)' },
     STORE:     { icon: Store,         label: 'Store',     color: 'var(--app-info)' },
     WAREHOUSE: { icon: WarehouseIcon, label: 'Warehouse', color: 'var(--app-warning)' },
@@ -56,13 +57,23 @@ function useWindowedList<T>(items: T[], rowHeight: number, overscan = 8) {
 
 type Tab = 'overview' | 'inventory'
 
+interface WarehouseDetailPanelProps {
+    node: WarehouseNode
+    initialTab?: Tab | string
+    onClose?: () => void
+    onPin?: (n: WarehouseNode) => void
+    onEdit: (n: WarehouseNode) => void
+    onDelete: (n: WarehouseNode) => void
+    allLocations?: WarehouseNode[]
+}
+
 export function WarehouseDetailPanel({
     node, initialTab, onClose, onPin, onEdit, onDelete, allLocations,
-}: any) {
+}: WarehouseDetailPanelProps) {
     const [tab, setTab] = useState<Tab>((initialTab as Tab) ?? 'overview')
     useEffect(() => { setTab((initialTab as Tab) ?? 'overview') }, [node.id, initialTab])
 
-    const cfg = TYPE_CONFIG[node.location_type] || TYPE_CONFIG.WAREHOUSE
+    const cfg = (node.location_type ? TYPE_CONFIG[node.location_type] : undefined) ?? TYPE_CONFIG.WAREHOUSE
     const Icon = cfg.icon
 
     return (
@@ -145,9 +156,14 @@ export function WarehouseDetailPanel({
 }
 
 /* ─── Overview tab ─── */
-function OverviewTab({ node }: any) {
-    const rows = [
-        ['Type', TYPE_CONFIG[node.location_type]?.label || node.location_type],
+type OverviewNode = WarehouseNode & {
+    address?: string
+    phone?: string
+}
+
+function OverviewTab({ node }: { node: OverviewNode }) {
+    const rows: Array<[string, string | undefined]> = [
+        ['Type', (node.location_type ? TYPE_CONFIG[node.location_type]?.label : undefined) ?? node.location_type],
         ['Code', node.code],
         ['Reference', node.reference_code],
         ['City', node.city],
@@ -156,18 +172,19 @@ function OverviewTab({ node }: any) {
         ['Phone', node.phone],
         ['POS Enabled', node.can_sell ? 'Yes' : 'No'],
         ['Active', node.is_active === false ? 'No' : 'Yes'],
-    ].filter(([, v]) => v != null && v !== '')
+    ]
+    const visibleRows = rows.filter(([, v]) => v != null && v !== '')
     return (
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {rows.map(([k, v]) => (
-                <div key={k as string} className="flex items-start gap-3 px-3 py-2 rounded-xl"
+            {visibleRows.map(([k, v]) => (
+                <div key={k} className="flex items-start gap-3 px-3 py-2 rounded-xl"
                     style={{ background: 'color-mix(in srgb, var(--app-border) 15%, transparent)' }}>
                     <span className="text-tp-xxs font-bold uppercase tracking-wide w-24 flex-shrink-0 pt-0.5"
                         style={{ color: 'var(--app-muted-foreground)' }}>{k}</span>
-                    <span className="text-tp-sm font-bold text-app-foreground flex-1">{v as any}</span>
+                    <span className="text-tp-sm font-bold text-app-foreground flex-1">{v}</span>
                 </div>
             ))}
-            {rows.length === 0 && (
+            {visibleRows.length === 0 && (
                 <p className="text-tp-sm text-app-muted-foreground text-center py-8">No metadata.</p>
             )}
         </div>
@@ -177,18 +194,41 @@ function OverviewTab({ node }: any) {
 /* ─── Inventory tab — list + add-product picker ─── */
 type FilterMode = 'IN_LOCATION' | 'NOT_IN_OTHER' | 'IN_ALL'
 
-function InventoryTab({ node, allLocations }: any) {
-    const [items, setItems] = useState<any[]>([])
+type InventoryRow = {
+    id?: number
+    product?: number
+    product_id?: number
+    product_name?: string
+    sku?: string
+    batch_number?: string
+    quantity?: number | string
+}
+
+type ProductPickerRow = {
+    id: number
+    name?: string
+    sku?: string
+    barcode?: string
+    category_name?: string
+}
+
+interface InventoryTabProps {
+    node: WarehouseNode
+    allLocations?: WarehouseNode[]
+}
+
+function InventoryTab({ node, allLocations }: InventoryTabProps) {
+    const [items, setItems] = useState<InventoryRow[]>([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [filterMode, setFilterMode] = useState<FilterMode>('IN_LOCATION')
     const [compareLocationId, setCompareLocationId] = useState<number | null>(null)
-    const [compareItems, setCompareItems] = useState<any[]>([])
+    const [compareItems, setCompareItems] = useState<InventoryRow[]>([])
     const [loadingCompare, setLoadingCompare] = useState(false)
 
     const [showPicker, setShowPicker] = useState(false)
     const [pickerSearch, setPickerSearch] = useState('')
-    const [allProducts, setAllProducts] = useState<any[]>([])
+    const [allProducts, setAllProducts] = useState<ProductPickerRow[]>([])
     const [loadingProducts, setLoadingProducts] = useState(false)
     const [addingProductId, setAddingProductId] = useState<number | null>(null)
     const [removingId, setRemovingId] = useState<number | null>(null)
@@ -197,7 +237,7 @@ function InventoryTab({ node, allLocations }: any) {
     const loadInventory = useCallback(async () => {
         setLoading(true)
         try {
-            const res = await erpFetch(`inventory/?warehouse=${node.id}&page_size=50`)
+            const res = await erpFetch(`inventory/?warehouse=${node.id}&page_size=50`) as { results?: InventoryRow[] } | InventoryRow[]
             setItems(Array.isArray(res) ? res : (res?.results ?? []))
         } catch { setItems([]) }
         setLoading(false)
@@ -210,7 +250,7 @@ function InventoryTab({ node, allLocations }: any) {
         if (filterMode === 'NOT_IN_OTHER' && compareLocationId) {
             setLoadingCompare(true)
             erpFetch(`inventory/?warehouse=${compareLocationId}&page_size=500`)
-                .then(res => setCompareItems(Array.isArray(res) ? res : (res?.results ?? [])))
+                .then((res: { results?: InventoryRow[] } | InventoryRow[]) => setCompareItems(Array.isArray(res) ? res : (res?.results ?? [])))
                 .catch(() => setCompareItems([]))
                 .finally(() => setLoadingCompare(false))
         } else {
@@ -219,19 +259,19 @@ function InventoryTab({ node, allLocations }: any) {
     }, [filterMode, compareLocationId])
 
     const currentIds = useMemo(
-        () => new Set(items.map((i: any) => i.product ?? i.product_id)),
+        () => new Set(items.map((i) => i.product ?? i.product_id)),
         [items]
     )
 
     const filteredItems = useMemo(() => {
         let list = items
         if (filterMode === 'NOT_IN_OTHER' && compareLocationId) {
-            const cmp = new Set(compareItems.map((i: any) => i.product ?? i.product_id))
-            list = list.filter((i: any) => !cmp.has(i.product ?? i.product_id))
+            const cmp = new Set(compareItems.map((i) => i.product ?? i.product_id))
+            list = list.filter((i) => !cmp.has(i.product ?? i.product_id))
         }
         if (!searchQuery.trim()) return list
         const q = searchQuery.toLowerCase()
-        return list.filter((i: any) =>
+        return list.filter((i) =>
             (i.product_name || '').toLowerCase().includes(q) ||
             (i.sku || '').toLowerCase().includes(q) ||
             String(i.product ?? i.product_id).includes(q)
@@ -246,7 +286,7 @@ function InventoryTab({ node, allLocations }: any) {
         try {
             // `lite=1` drops nested serializers + on_hand_qty etc. —
             // ~1 query instead of ~1200 for a 200-row list.
-            const res = await erpFetch('products/?page_size=500&is_active=true&lite=1')
+            const res = await erpFetch('products/?page_size=500&is_active=true&lite=1') as { results?: ProductPickerRow[] } | ProductPickerRow[]
             setAllProducts(Array.isArray(res) ? res : (res?.results ?? []))
         } catch { setAllProducts([]) }
         setLoadingProducts(false)
@@ -263,7 +303,7 @@ function InventoryTab({ node, allLocations }: any) {
             toast.success('Product added')
             setShowPicker(false)
             loadInventory()
-        } catch (err: any) { toast.error(err?.message || 'Failed to add product') }
+        } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Failed to add product') }
         setAddingProductId(null)
     }
 
@@ -273,20 +313,20 @@ function InventoryTab({ node, allLocations }: any) {
             await erpFetch(`inventory/${inventoryId}/`, { method: 'DELETE' })
             toast.success('Removed')
             loadInventory()
-        } catch (err: any) { toast.error(err?.message || 'Failed to remove') }
+        } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Failed to remove') }
         setRemovingId(null)
     }
 
     const otherLocations = useMemo(
-        () => (allLocations || []).filter((l: any) => l.id !== node.id),
+        () => (allLocations ?? []).filter((l) => l.id !== node.id),
         [allLocations, node.id]
     )
 
     const addableProducts = useMemo(() => {
-        const list = allProducts.filter((p: any) => !currentIds.has(p.id))
+        const list = allProducts.filter((p) => !currentIds.has(p.id))
         if (!pickerSearch.trim()) return list
         const q = pickerSearch.toLowerCase()
-        return list.filter((p: any) =>
+        return list.filter((p) =>
             (p.name || '').toLowerCase().includes(q) ||
             (p.sku || '').toLowerCase().includes(q) ||
             (p.barcode || '').toLowerCase().includes(q)
@@ -351,7 +391,7 @@ function InventoryTab({ node, allLocations }: any) {
                             color: 'var(--app-foreground)',
                         }}>
                         <option value="">Select location to compare...</option>
-                        {otherLocations.map((loc: any) => (
+                        {otherLocations.map((loc) => (
                             <option key={loc.id} value={loc.id}>{loc.name} ({loc.location_type})</option>
                         ))}
                     </select>
@@ -375,7 +415,7 @@ function InventoryTab({ node, allLocations }: any) {
                 ) : (
                     <div style={{ height: invVirt.totalHeight, position: 'relative' }}>
                         <div style={{ transform: `translateY(${invVirt.offsetY}px)` }}>
-                            {invVirt.visibleItems.map((item: any, i: number) => {
+                            {invVirt.visibleItems.map((item, i) => {
                                 const idx = invVirt.startIndex + i
                                 return (
                                     <div key={item.id || idx}
@@ -401,7 +441,7 @@ function InventoryTab({ node, allLocations }: any) {
                                                 {typeof item.quantity === 'number' ? Number(item.quantity).toLocaleString() : 0}
                                             </p>
                                         </div>
-                                        <button onClick={() => removeProduct(item.id)}
+                                        <button onClick={() => item.id !== undefined && removeProduct(item.id)}
                                             disabled={removingId === item.id}
                                             className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                                             style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}>
@@ -420,7 +460,7 @@ function InventoryTab({ node, allLocations }: any) {
                 style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)' }}>
                 <span>{filteredItems.length} product{filteredItems.length !== 1 ? 's' : ''}</span>
                 <span className="tabular-nums">
-                    Total qty: {filteredItems.reduce((s: number, i: any) => s + (Number(i.quantity) || 0), 0).toLocaleString()}
+                    Total qty: {filteredItems.reduce((s, i) => s + (Number(i.quantity) || 0), 0).toLocaleString()}
                 </span>
             </div>
 
@@ -476,7 +516,7 @@ function InventoryTab({ node, allLocations }: any) {
                         ) : (
                             <div style={{ height: pickVirt.totalHeight, position: 'relative' }}>
                                 <div style={{ transform: `translateY(${pickVirt.offsetY}px)` }}>
-                                    {pickVirt.visibleItems.map((p: any) => (
+                                    {pickVirt.visibleItems.map((p) => (
                                         <button key={p.id} onClick={() => addProduct(p.id)}
                                             disabled={addingProductId === p.id}
                                             className="w-full flex items-center gap-2 px-3 text-left hover:bg-app-surface/60 transition-colors disabled:opacity-50"

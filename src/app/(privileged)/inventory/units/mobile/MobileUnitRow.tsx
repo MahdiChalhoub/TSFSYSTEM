@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
@@ -14,17 +13,18 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRowGestures } from '@/hooks/use-row-gestures'
+import type { UnitNode } from '../components/UnitRow'
 
 interface Props {
-    node: any
+    node: UnitNode
     level: number
     searchQuery: string
     forceExpanded?: boolean
-    onOpenSheet: (n: any) => void
-    onEdit: (n: any) => void
+    onOpenSheet: (n: UnitNode) => void
+    onEdit: (n: UnitNode) => void
     onAdd: (parentId?: number) => void
-    onDelete: (n: any) => void
-    onLongPress?: (n: any) => void
+    onDelete: (n: UnitNode) => void
+    onLongPress?: (n: UnitNode) => void
     selected?: boolean
 }
 
@@ -225,7 +225,7 @@ export function MobileUnitRow({
 
             {isParent && isOpen && (
                 <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-                    {node.children.map((child: any) => (
+                    {(node.children ?? []).map((child) => (
                         <MobileUnitRow
                             key={child.id}
                             node={child}

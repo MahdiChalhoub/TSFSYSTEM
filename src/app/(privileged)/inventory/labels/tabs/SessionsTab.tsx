@@ -1,33 +1,43 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useTransition, useMemo, useCallback } from 'react'
+import type { ComponentType } from 'react'
 import { toast } from 'sonner'
 import {
     History, Search, FileText, Clock, Printer, CheckCircle2, XCircle, Square,
-    Play, RotateCcw, Zap, User, AlertTriangle, Loader2, ShieldCheck, RefreshCw,
+    RotateCcw, Zap, User, Loader2, ShieldCheck, RefreshCw,
 } from 'lucide-react'
 import {
-    queuePrintSession, completePrintSession, failPrintSession,
     cancelPrintSession, retryPrintSession, reprintExact, reprintRegenerate,
-    approvePrintSession, listPrintSessions, getPrintingKPI,
+    approvePrintSession, listPrintSessions,
+    type PrintSession, type PrintSessionActionResult,
 } from '@/app/actions/labels'
 
 const v = (name: string) => `var(${name})`
 const soft = (varName: string, pct = 10) => ({ backgroundColor: `color-mix(in srgb, ${v(varName)} ${pct}%, transparent)` })
 
+type SessionRow = PrintSession & {
+    title?: string
+    is_reprint?: boolean
+    reprint_mode?: string
+    trigger?: string
+    total_products?: number
+    assigned_to_name?: string
+}
+
+type SessionAction =
+    | 'approve' | 'cancel' | 'retry' | 'reprint_exact' | 'reprint_regenerate'
+
 interface Props {
-    initialSessions: any[]
+    initialSessions: SessionRow[]
     onRefresh: () => void
 }
 
 export default function SessionsTab({ initialSessions, onRefresh }: Props) {
     const [isPending, startTransition] = useTransition()
-    const [sessions, setSessions] = useState<any[]>(initialSessions)
+    const [sessions, setSessions] = useState<SessionRow[]>(initialSessions)
     const [sessionSearch, setSessionSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
-    const [expandedId, setExpandedId] = useState<number | null>(null)
-    const [reprintModal, setReprintModal] = useState<{ session: any; open: boolean }>({ session: null, open: false })
 
     const filtered = useMemo(() => {
         let list = sessions
@@ -43,19 +53,16 @@ export default function SessionsTab({ initialSessions, onRefresh }: Props) {
 
     const refreshSessions = useCallback(async () => {
         const res = await listPrintSessions()
-        setSessions(res?.results || [])
+        setSessions((res ?? []) as SessionRow[])
         onRefresh()
     }, [onRefresh])
 
-    const doAction = useCallback((action: string, sessionId: number, extra?: any) => {
+    const doAction = useCallback((action: SessionAction, sessionId: number) => {
         startTransition(async () => {
             try {
-                let res: any
+                let res: PrintSessionActionResult | undefined
                 switch (action) {
                     case 'approve': res = await approvePrintSession(sessionId); break
-                    case 'queue': res = await queuePrintSession(sessionId); break
-                    case 'complete': res = await completePrintSession(sessionId); break
-                    case 'fail': res = await failPrintSession(sessionId, extra?.reason); break
                     case 'cancel': res = await cancelPrintSession(sessionId); break
                     case 'retry': res = await retryPrintSession(sessionId); break
                     case 'reprint_exact': res = await reprintExact(sessionId); break
@@ -71,8 +78,8 @@ export default function SessionsTab({ initialSessions, onRefresh }: Props) {
         })
     }, [refreshSessions])
 
-    const statusBadge = (status: string) => {
-        const map: Record<string, { color: string; icon: any; label: string }> = {
+    const statusBadge = (status: string | undefined) => {
+        const map: Record<string, { color: string; icon: ComponentType<{ size?: number }>; label: string }> = {
             DRAFT: { color: '--app-muted-foreground', icon: FileText, label: 'Draft' },
             APPROVED: { color: '--app-info', icon: ShieldCheck, label: 'Approved' },
             QUEUED: { color: '--app-info', icon: Clock, label: 'Queued' },
@@ -81,7 +88,7 @@ export default function SessionsTab({ initialSessions, onRefresh }: Props) {
             FAILED: { color: '--app-error', icon: XCircle, label: 'Failed' },
             CANCELLED: { color: '--app-muted-foreground', icon: Square, label: 'Cancelled' },
         }
-        const m = map[status] || map.DRAFT
+        const m = (status ? map[status] : undefined) ?? map.DRAFT
         const Icon = m.icon
         return (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border"
@@ -91,7 +98,7 @@ export default function SessionsTab({ initialSessions, onRefresh }: Props) {
         )
     }
 
-    const triggerBadge = (trigger: string) => {
+    const triggerBadge = (trigger: string | undefined) => {
         if (trigger === 'MANUAL') return <span className="inline-flex items-center gap-1 text-[9px] font-bold text-app-muted-foreground"><User size={10} /> Manual</span>
         return <span className="inline-flex items-center gap-1 text-[9px] font-bold" style={{ color: v('--app-warning') }}><Zap size={10} /> Auto</span>
     }
@@ -160,12 +167,9 @@ export default function SessionsTab({ initialSessions, onRefresh }: Props) {
                         <span className="flex-1 text-[10px] text-app-muted-foreground truncate">{s.assigned_to_name || '—'}</span>
                         <span className="w-[90px] text-center">{statusBadge(s.status)}</span>
                         <div className="w-[120px] flex items-center justify-center gap-1">
-                            {s.status === 'DRAFT' && <>
+                            {s.status === 'DRAFT' && (
                                 <button onClick={() => doAction('approve', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-info/10" title="Approve"><ShieldCheck size={13} style={{ color: v('--app-info') }} /></button>
-                                <button onClick={() => doAction('queue', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-info/10" title="Queue"><Play size={13} style={{ color: v('--app-info') }} /></button>
-                            </>}
-                            {s.status === 'APPROVED' && <button onClick={() => doAction('queue', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-info/10" title="Queue"><Play size={13} style={{ color: v('--app-info') }} /></button>}
-                            {s.status === 'QUEUED' && <button onClick={() => doAction('complete', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-success/10" title="Complete"><CheckCircle2 size={13} style={{ color: v('--app-success') }} /></button>}
+                            )}
                             {s.status === 'FAILED' && <>
                                 <button onClick={() => doAction('retry', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-warning/10" title="Retry"><RefreshCw size={13} style={{ color: v('--app-warning') }} /></button>
                                 <button onClick={() => doAction('reprint_exact', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-primary/10" title="Exact Reprint"><RotateCcw size={13} style={{ color: v('--app-primary') }} /></button>
@@ -174,7 +178,7 @@ export default function SessionsTab({ initialSessions, onRefresh }: Props) {
                                 <button onClick={() => doAction('reprint_exact', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-primary/10" title="Exact Reprint"><RotateCcw size={13} style={{ color: v('--app-primary') }} /></button>
                                 <button onClick={() => doAction('reprint_regenerate', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-warning/10" title="Regenerate"><RefreshCw size={13} style={{ color: v('--app-warning') }} /></button>
                             </>}
-                            {!['COMPLETED', 'CANCELLED'].includes(s.status) && <button onClick={() => doAction('cancel', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-rose-500/10" title="Cancel"><XCircle size={13} className="text-app-error" /></button>}
+                            {s.status && !['COMPLETED', 'CANCELLED'].includes(s.status) && <button onClick={() => doAction('cancel', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-rose-500/10" title="Cancel"><XCircle size={13} className="text-app-error" /></button>}
                         </div>
                     </div>
                 ))}

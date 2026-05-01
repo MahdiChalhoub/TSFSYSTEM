@@ -1,45 +1,74 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
 import {
     ChevronRight, Plus, Pencil, X, Ruler, Trash2, Layers, Package, GitBranch,
-    Bookmark, Scale, Loader2, ArrowRightLeft, ArrowUpDown, Box, Calculator, Save
+    Bookmark, Scale, Loader2, ArrowRightLeft, ArrowUpDown, Box, Calculator,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { getUnitPackaging, listUnitPackages, createUnitPackage, deleteUnitPackage } from '@/app/actions/inventory/units'
+import { getUnitPackaging, listUnitPackages, deleteUnitPackage } from '@/app/actions/inventory/units'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
 import { EntityProductsTab } from '@/components/templates/EntityProductsTab'
 import { erpFetch } from '@/lib/erp-api'
 import { TemplateFormModal } from '@/app/(privileged)/inventory/packages/_shared/TemplateFormModal'
+import type { UnitNode } from './UnitRow'
 
 /* ═══════════════════════════════════════════════════════════
  *  DETAIL PANEL — 4 tabs: Overview, Products, Packages, Calculator
  * ═══════════════════════════════════════════════════════════ */
 type PanelTab = 'overview' | 'products' | 'packages' | 'calculator'
 
-export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, onClose, onPin }: any) {
+type LinkedPackage = {
+    id: number
+    name?: string
+    ratio?: number | string
+    product_name?: string
+    barcode?: string
+    selling_price?: number | string
+    is_default_sale?: boolean
+    is_default_purchase?: boolean
+}
+
+type UnitPackageTemplate = {
+    id: number
+    name?: string
+    code?: string
+    ratio?: number | string
+    is_default?: boolean
+}
+
+interface UnitDetailPanelProps {
+    node: UnitNode
+    onEdit: (n: UnitNode) => void
+    onAdd: (parentId?: number) => void
+    onDelete: (n: UnitNode) => void
+    allUnits: UnitNode[]
+    initialTab?: PanelTab | string
+    onClose?: () => void
+    onPin?: (n: UnitNode) => void
+}
+
+export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, onClose, onPin }: UnitDetailPanelProps) {
     const [activeTab, setActiveTab] = useState<PanelTab>((initialTab as PanelTab) ?? 'overview')
-    const [packages, setPackages] = useState<any[]>([])
+    const [packages, setPackages] = useState<LinkedPackage[]>([])
     const [pkgLoading, setPkgLoading] = useState(false)
     const [pkgLoaded, setPkgLoaded] = useState(false)
-    const [unitPackages, setUnitPackages] = useState<any[]>([])
+    const [unitPackages, setUnitPackages] = useState<UnitPackageTemplate[]>([])
     const [unitPkgLoading, setUnitPkgLoading] = useState(false)
     const [showNewPkg, setShowNewPkg] = useState(false)
-    const [newPkgName, setNewPkgName] = useState('')
-    const [newPkgRatio, setNewPkgRatio] = useState<string>('')
-    const [newPkgCode, setNewPkgCode] = useState('')
-    const [savingPkg, setSavingPkg] = useState(false)
 
     const reloadUnitPackages = useCallback(async () => {
         setUnitPkgLoading(true)
-        try { setUnitPackages(await listUnitPackages(node.id)) } catch { /* noop */ }
+        try {
+            const list = (await listUnitPackages(node.id)) as UnitPackageTemplate[]
+            setUnitPackages(list)
+        } catch { /* noop */ }
         setUnitPkgLoading(false)
     }, [node.id])
 
     const isBase = !node.base_unit
-    const children = allUnits.filter((u: any) => u.base_unit === node.id)
-    const parent = allUnits.find((u: any) => u.id === node.base_unit)
+    const children = allUnits.filter((u) => u.base_unit === node.id)
+    const parent = allUnits.find((u) => u.id === node.base_unit)
     const productCount = node.product_count ?? 0
     const childCount = children.length
 
@@ -50,11 +79,11 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
         if (activeTab === 'packages' && !pkgLoaded) {
             setPkgLoading(true)
             getUnitPackaging(node.id)
-                .then((data: any) => { setPackages(data); setPkgLoaded(true); setPkgLoading(false) })
+                .then((data) => { setPackages((data ?? []) as LinkedPackage[]); setPkgLoaded(true); setPkgLoading(false) })
                 .catch(() => setPkgLoading(false))
             reloadUnitPackages()
         }
-    }, [activeTab, node.id, pkgLoaded])
+    }, [activeTab, node.id, pkgLoaded, reloadUnitPackages])
 
     const tabs = [
         { key: 'overview' as PanelTab, label: 'Overview', icon: <Layers size={13} />, color: 'var(--app-info)' },
@@ -174,7 +203,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                                     <span className="text-tp-xs font-semibold" style={{ color: 'var(--app-info)' }}>{childCount}</span>
                                 </div>
                                 <div className="divide-y divide-app-border/30">
-                                    {children.map((child: any) => (
+                                    {children.map((child) => (
                                         <div key={child.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-app-surface-hover transition-colors">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-lg flex items-center justify-center text-tp-xxs font-bold" style={{ background: 'color-mix(in srgb, var(--app-info) 8%, transparent)', color: 'var(--app-info)' }}>
@@ -223,7 +252,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                         exploreEndpoint: `units/${node.id}/explore/`,
                         moveEndpoint: 'units/move_products/',
                         moveTargetKey: 'target_unit_id',
-                        moveTargets: allUnits.filter((u: any) => u.id !== node.id),
+                        moveTargets: allUnits.filter((u) => u.id !== node.id),
                         moveLabel: 'Move to Unit',
                         moveIcon: <Ruler size={12} />,
                     }} />
@@ -257,7 +286,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                                     <div className="flex items-center justify-center py-6"><Loader2 size={16} className="animate-spin" style={{ color: 'var(--app-primary)' }} /></div>
                                 ) : unitPackages.length > 0 ? (
                                     <div className="divide-y divide-app-border/30 rounded-lg overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
-                                        {unitPackages.map((pkg: any) => (
+                                        {unitPackages.map((pkg) => (
                                             <div key={pkg.id} className="flex items-center gap-2 px-3 py-2.5 hover:bg-app-surface-hover transition-colors group">
                                                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}><Box size={12} /></div>
                                                 <div className="flex-1 min-w-0">
@@ -272,7 +301,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                                                 </div>
                                                 <button type="button" onClick={async () => {
                                                     if (!confirm(`Delete "${pkg.name}"?`)) return
-                                                    try { await deleteUnitPackage(pkg.id); toast.success(`Package "${pkg.name}" removed`); await reloadUnitPackages() } catch (e: any) { toast.error(e?.message || 'Delete failed') }
+                                                    try { await deleteUnitPackage(pkg.id); toast.success(`Package "${pkg.name}" removed`); await reloadUnitPackages() } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Delete failed') }
                                                 }} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-opacity" style={{ color: 'var(--app-error, #ef4444)' }} title="Delete">
                                                     <Trash2 size={12} />
                                                 </button>
@@ -302,7 +331,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                                     <div className="flex items-center justify-center py-6"><Loader2 size={14} className="animate-spin text-app-muted-foreground" /></div>
                                 ) : (
                                     <div className="rounded-lg overflow-hidden divide-y divide-app-border/30" style={{ border: '1px solid var(--app-border)' }}>
-                                        {packages.map((pkg: any) => (
+                                        {packages.map((pkg) => (
                                             <div key={pkg.id} className="flex items-center gap-2 px-3 py-2">
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-tp-md font-semibold text-app-foreground truncate">{pkg.name}</div>
@@ -331,7 +360,12 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                 {/* ─── CALCULATOR TAB ─── */}
                 {activeTab === 'calculator' && (
                     <div className="p-3 animate-in fade-in duration-150">
-                        <UnitCalculator units={allUnits} defaultUnit={node} variant="embedded" />
+                        {/* UnitCalculator requires `code: string`; UnitNode types it optional. Coerce per row at the boundary. */}
+                        <UnitCalculator
+                            units={allUnits.map((u) => ({ ...u, code: u.code ?? '' }))}
+                            defaultUnit={{ ...node, code: node.code ?? '' }}
+                            variant="embedded"
+                        />
                     </div>
                 )}
             </div>
@@ -340,8 +374,14 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
              * Unit is locked to the one this panel was opened for. */}
             {showNewPkg && (
                 <TemplateFormModal
-                    units={allUnits}
-                    allTemplates={unitPackages}
+                    units={allUnits.map((u) => ({ id: u.id, name: u.name, code: u.code }))}
+                    allTemplates={unitPackages.map((p) => ({
+                        id: p.id,
+                        name: p.name,
+                        code: p.code,
+                        ratio: typeof p.ratio === 'number' ? p.ratio : Number(p.ratio ?? 0),
+                        is_default: p.is_default,
+                    }))}
                     lockedUnitId={node.id}
                     onClose={() => setShowNewPkg(false)}
                     onSave={async (data) => {
@@ -354,8 +394,8 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                             toast.success(`Template "${data.name}" created`)
                             setShowNewPkg(false)
                             await reloadUnitPackages()
-                        } catch (e: any) {
-                            toast.error(e?.message || 'Failed to create template')
+                        } catch (e: unknown) {
+                            toast.error(e instanceof Error ? e.message : 'Failed to create template')
                             throw e
                         }
                     }}

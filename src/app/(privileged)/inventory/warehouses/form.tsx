@@ -1,8 +1,7 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createWarehouse, updateWarehouse } from '@/app/actions/inventory/warehouses'
+import { createWarehouse, updateWarehouse, type WarehouseState } from '@/app/actions/inventory/warehouses'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { erpFetch } from '@/lib/erp-api'
@@ -52,8 +51,27 @@ const LOCATION_TYPES = [
  *  PROPS
  * ═══════════════════════════════════════════════════════════ */
 
+type WarehouseInput = {
+    id?: number
+    name?: string
+    code?: string
+    location_type?: string
+    address?: string
+    city?: string
+    phone?: string
+    country?: number | null
+    vat_number?: string
+    is_active?: boolean
+    can_sell?: boolean
+    parent?: number | null
+    tax_policy_mode?: 'INHERIT' | 'CUSTOM' | string
+    tax_policy?: number | null
+    product_sharing_scope?: 'NONE' | 'SAME_COUNTRY' | 'SELECTED' | 'ALL' | string
+    product_sharing_targets?: number[]
+}
+
 interface WarehouseModalProps {
-    warehouse?: any
+    warehouse?: WarehouseInput
     onClose: () => void
     parentOptions?: { id: number; name: string; country?: number | null; country_name?: string }[]
     defaultParent?: number | null
@@ -172,7 +190,7 @@ export default function WarehouseModal({
         setIsPending(true)
         setError('')
 
-        const payload: Record<string, any> = {
+        const payload: Record<string, unknown> = {
             name: name.trim(),
             code: code.trim() || undefined,
             location_type: locationType,
@@ -209,8 +227,8 @@ export default function WarehouseModal({
                 }
             })
 
-            let result: any
-            if (isEditing) {
+            let result: WarehouseState
+            if (isEditing && warehouse?.id !== undefined) {
                 result = await updateWarehouse(warehouse.id, { message: '' }, formData)
             } else {
                 result = await createWarehouse({ message: '' }, formData)
@@ -226,8 +244,8 @@ export default function WarehouseModal({
             if (onSaved) await onSaved()
             router.refresh()
             onClose()
-        } catch (err: any) {
-            setError(err?.message || 'Failed to save')
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to save')
             setIsPending(false)
         }
     }

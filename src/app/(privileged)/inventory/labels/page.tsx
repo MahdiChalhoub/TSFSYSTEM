@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from "react"
@@ -110,7 +109,7 @@ export default function LabelPrintingPage() {
                         <div class="barcode">${p.barcode || p.sku || '000000'}</div>
                         <div class="bottom">
                             <span class="sku">${p.barcode || '\u2014'}</span>
-                            <span class="price">${fmt(parseFloat(p.selling_price_ttc || p.cost_price || 0))}</span>
+                            <span class="price">${fmt(Number(p.selling_price_ttc ?? p.cost_price ?? 0))}</span>
                         </div>
                     </div>
                 `).join('')}
@@ -260,7 +259,7 @@ export default function LabelPrintingPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.slice(0, 100).map((p: Record<string, any>) => (
+                                {filtered.slice(0, 100).map((p) => (
                                     <TableRow
                                         key={p.id}
                                         className={`cursor-pointer transition-all ${selected.has(p.id) ? 'bg-app-warning-bg' : 'hover:bg-app-surface/50'}`}
@@ -292,7 +291,7 @@ export default function LabelPrintingPage() {
                                             )}
                                         </TableCell>
                                         <TableCell className="text-xs text-app-muted-foreground">{p.category_name || '\u2014'}</TableCell>
-                                        <TableCell className="text-right font-bold">{fmt(parseFloat(p.selling_price_ttc || 0))}</TableCell>
+                                        <TableCell className="text-right font-bold">{fmt(Number(p.selling_price_ttc ?? 0))}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -321,7 +320,7 @@ export default function LabelPrintingPage() {
                                     </p>
                                     <div className="flex justify-between items-end">
                                         <span className="text-[10px] text-app-muted-foreground">{p.barcode || '\u2014'}</span>
-                                        <span className="font-bold text-sm">{fmt(parseFloat(p.selling_price_ttc || 0))}</span>
+                                        <span className="font-bold text-sm">{fmt(Number(p.selling_price_ttc ?? 0))}</span>
                                     </div>
                                 </div>
                             ))}

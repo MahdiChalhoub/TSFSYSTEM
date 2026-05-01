@@ -103,3 +103,32 @@ export async function unverifyLine(lineId: number) {
     revalidatePath('/inventory/stock-count')
     return result
 }
+
+// ─── Session Population (Sync Panel) ─────────────────────────────
+
+export type PopulateSessionLinesResult =
+    | { success: true; batch_synced: number; last_id: number; done: boolean; error?: undefined }
+    | { success: false; error: string; batch_synced?: undefined; last_id?: undefined; done?: undefined }
+
+export async function populateSessionLines(
+    sessionId: number,
+    lastId: number = 0,
+): Promise<PopulateSessionLinesResult> {
+    try {
+        const result = await erpFetch(`${LINES}/populate/`, {
+            method: 'POST',
+            body: JSON.stringify({ session_id: sessionId, last_id: lastId }),
+        }) as { success?: boolean; batch_synced?: number; last_id?: number; done?: boolean; error?: string }
+        if (result.success) {
+            return {
+                success: true,
+                batch_synced: result.batch_synced ?? 0,
+                last_id: result.last_id ?? lastId,
+                done: result.done ?? false,
+            }
+        }
+        return { success: false, error: result.error ?? 'Population failed' }
+    } catch (e: unknown) {
+        return { success: false, error: e instanceof Error ? e.message : 'Population failed' }
+    }
+}

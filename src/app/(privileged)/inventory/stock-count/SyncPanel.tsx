@@ -1,6 +1,3 @@
-// @ts-nocheck
-// REVERTED Phase 5: depends on `populateSessionLines` from `@/app/actions/inventory/stock-count`
-// which is not exported (TS2305). Defer until the action is added.
 'use client'
 
 import { useState } from "react"
@@ -52,8 +49,8 @@ export function SessionPopulator({ sessionId, sessionRef, onComplete }: SessionP
  setDone(true)
  toast.success(`Session ${sessionRef || sessionId} populated with ${total} products!`)
  if (onComplete) onComplete()
- } catch (e: any) {
- toast.error(`Population failed: ${e.message}`)
+ } catch (e: unknown) {
+ toast.error(`Population failed: ${e instanceof Error ? e.message : String(e)}`)
  } finally {
  setPopulating(false)
  }

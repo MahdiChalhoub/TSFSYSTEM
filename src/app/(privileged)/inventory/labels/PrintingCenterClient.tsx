@@ -1,7 +1,3 @@
-// @ts-nocheck
-// REVERTED Phase 5: depends on `listPrintSessions`/`getPrintingKPI` from `@/app/actions/labels`
-// which are not yet exported (TS2305). Family-wide issue across labels/* tabs — defer until
-// the actions module is rebuilt. See tabs/{SessionsTab,LabelsQueueTab,MaintenanceTab,OutputTab,LayoutTab}.tsx.
 'use client'
 
 import { useState, useTransition, useCallback } from 'react'
@@ -13,7 +9,7 @@ import SessionsTab from './tabs/SessionsTab'
 import LayoutTab from './tabs/LayoutTab'
 import OutputTab from './tabs/OutputTab'
 import MaintenanceTab from './tabs/MaintenanceTab'
-import { listPrintSessions, getPrintingKPI } from '@/app/actions/labels'
+import { listPrintSessions, getPrintingKPI, type PrintSession, type PrintingKPI } from '@/app/actions/labels'
 
 const v = (name: string) => `var(${name})`
 const soft = (varName: string, pct = 10) => ({ backgroundColor: `color-mix(in srgb, ${v(varName)} ${pct}%, transparent)` })
@@ -29,26 +25,31 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key']
 
-type LabelKPI = {
-    labels_pending?: number
-    labels_printed?: number
+type LabelKPI = PrintingKPI & {
     printing?: number
     failed?: number
-    [key: string]: unknown
+    cancelled?: number
 }
 
+// MaintenanceTab/OutputTab/LayoutTab consume narrow row shapes; keep the page-level
+// Props typed as the union below so the page component can be parameterised by the
+// server fetcher's result types without committing to a specific row shape here.
+type ProductRow = { id: number } & Record<string, unknown>
+type PrinterRow = { id: number } & Record<string, unknown>
+type TemplateRow = { id: number } & Record<string, unknown>
+
 interface Props {
-    products: Array<Record<string, unknown>>
-    sessions: Array<Record<string, unknown>>
-    templates: Array<Record<string, unknown>>
-    printers: Array<Record<string, unknown>>
+    products: ProductRow[]
+    sessions: PrintSession[]
+    templates: TemplateRow[]
+    printers: PrinterRow[]
     kpi: LabelKPI
 }
 
 export default function PrintingCenterClient({ products, sessions: initSessions, templates, printers, kpi: initKpi }: Props) {
     const [activeTab, setActiveTab] = useState<TabKey>('labels')
-    const [sessions, setSessions] = useState(initSessions)
-    const [kpi, setKpi] = useState(initKpi)
+    const [sessions, setSessions] = useState<PrintSession[]>(initSessions)
+    const [kpi, setKpi] = useState<LabelKPI>(initKpi)
     const [, startTransition] = useTransition()
 
     const refreshData = useCallback(() => {
@@ -57,8 +58,8 @@ export default function PrintingCenterClient({ products, sessions: initSessions,
                 listPrintSessions(),
                 getPrintingKPI(),
             ])
-            setSessions(sessRes?.results || [])
-            setKpi(kpiRes || {})
+            setSessions(sessRes ?? [])
+            setKpi((kpiRes ?? {}) as LabelKPI)
         })
     }, [])
 

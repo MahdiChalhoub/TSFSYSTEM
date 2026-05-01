@@ -1,4 +1,10 @@
 // @ts-nocheck
+// Phase 5 Session 7: depends on label-template CRUD actions not yet exported from
+// `@/app/actions/labels` (listLabelTemplates, createLabelTemplate, updateLabelTemplate,
+// deleteLabelTemplate, duplicateLabelTemplate, previewLabelTemplate). Defer until the
+// actions module is extended; per the strategy's Rule 6 a structural action-module gap
+// keeps `@ts-nocheck` rather than papering over with `as any` casts that would silently
+// accept null at runtime.
 'use client'
 
 import { useState, useTransition, useMemo, useCallback, useRef, useEffect } from 'react'

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useTransition } from 'react'
@@ -21,55 +20,65 @@ import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { MobileUnitRow } from './MobileUnitRow'
 import { PageTour } from '@/components/ui/PageTour'
 import '@/lib/tours/definitions/inventory-units-mobile'
+import type { UnitNode } from '../components/UnitRow'
 
-export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
+type DeleteUnitResult = {
+    success: boolean
+    conflict?: unknown
+    message?: string
+    actionHint?: string
+}
+
+type DeleteConflictState = { conflict: unknown; source: UnitNode } | null
+
+export function MobileUnitsClient({ initialUnits }: { initialUnits: UnitNode[] }) {
     const router = useRouter()
-    const [isPending, startTransition] = useTransition()
+    const [, startTransition] = useTransition()
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [formKey, setFormKey] = useState(0)
-    const [editingUnit, setEditingUnit] = useState<any | null>(null)
+    const [editingUnit, setEditingUnit] = useState<UnitNode | null>(null)
     const [parentPresetId, setParentPresetId] = useState<number | undefined>(undefined)
-    const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
-    const [sheetNode, setSheetNode] = useState<any | null>(null)
-    const [actionNode, setActionNode] = useState<any | null>(null)
+    const [deleteTarget, setDeleteTarget] = useState<UnitNode | null>(null)
+    const [sheetNode, setSheetNode] = useState<UnitNode | null>(null)
+    const [actionNode, setActionNode] = useState<UnitNode | null>(null)
     const [showCalc, setShowCalc] = useState(false)
 
     const data = initialUnits
 
     const stats = useMemo(() => {
-        const base = data.filter((u: any) => !u.base_unit).length
-        const derived = data.filter((u: any) => u.base_unit).length
-        const totalProducts = data.reduce((s: number, u: any) => s + (u.product_count || 0), 0)
-        const scaleUnits = data.filter((u: any) => u.needs_balance).length
+        const base = data.filter((u) => !u.base_unit).length
+        const derived = data.filter((u) => u.base_unit).length
+        const totalProducts = data.reduce((s, u) => s + (u.product_count || 0), 0)
+        const scaleUnits = data.filter((u) => u.needs_balance).length
         return { total: data.length, base, derived, totalProducts, scaleUnits }
     }, [data])
 
     const openForm = useCallback((parentId?: number) => {
         setEditingUnit(null); setParentPresetId(parentId); setFormKey(k => k + 1); setIsFormOpen(true)
     }, [])
-    const openEditForm = useCallback((u: any) => {
+    const openEditForm = useCallback((u: UnitNode) => {
         setEditingUnit(u); setParentPresetId(undefined); setFormKey(k => k + 1); setIsFormOpen(true)
     }, [])
     const closeForm = useCallback(() => setIsFormOpen(false), [])
 
-    const openSheet = useCallback((n: any) => setSheetNode(n), [])
-    const openActionMenu = useCallback((n: any) => setActionNode(n), [])
-    const requestDelete = useCallback((u: any) => setDeleteTarget(u), [])
+    const openSheet = useCallback((n: UnitNode) => setSheetNode(n), [])
+    const openActionMenu = useCallback((n: UnitNode) => setActionNode(n), [])
+    const requestDelete = useCallback((u: UnitNode) => setDeleteTarget(u), [])
 
-    const [deleteConflict, setDeleteConflict] = useState<any>(null)
+    const [deleteConflict, setDeleteConflict] = useState<DeleteConflictState>(null)
 
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
         const source = deleteTarget
         setDeleteTarget(null)
         startTransition(async () => {
-            const result = await deleteUnit(source.id)
-            if ((result as any)?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
-            if ((result as any)?.conflict) {
-                setDeleteConflict({ conflict: (result as any).conflict, source })
+            const result = (await deleteUnit(source.id)) as DeleteUnitResult
+            if (result?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
+            if (result?.conflict) {
+                setDeleteConflict({ conflict: result.conflict, source })
                 return
             }
-            toast.error((result as any)?.message || 'Failed to delete')
+            toast.error(result?.message || 'Failed to delete')
         })
     }
 
@@ -81,22 +90,22 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 method: 'POST',
                 body: JSON.stringify({ source_unit_id: source.id, target_unit_id: targetId }),
             })
-            const delRes: any = await deleteUnit(source.id, { force: true })
+            const delRes = (await deleteUnit(source.id, { force: true })) as DeleteUnitResult
             if (delRes?.success) {
                 toast.success(`Migrated & deleted "${source.name}"`)
                 setDeleteConflict(null); router.refresh()
             } else {
                 toast.error(delRes?.message || 'Delete failed after migration')
             }
-        } catch (e: any) {
-            toast.error(e?.message || 'Migration failed')
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Migration failed')
         }
     }
 
     const handleForceDelete = async () => {
         const source = deleteConflict?.source
         if (!source) return
-        const res: any = await deleteUnit(source.id, { force: true })
+        const res = (await deleteUnit(source.id, { force: true })) as DeleteUnitResult
         if (res?.success) {
             toast.success(`"${source.name}" force-deleted`)
             setDeleteConflict(null); router.refresh()
@@ -108,16 +117,16 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
     const unitTargets = useMemo(() => {
         const sourceId = deleteConflict?.source?.id
         return data
-            .filter((u: any) => u.id !== sourceId)
-            .map((u: any) => ({ id: u.id, name: u.name, code: u.code }))
+            .filter((u) => u.id !== sourceId)
+            .map((u) => ({ id: u.id, name: u.name, code: u.code }))
     }, [data, deleteConflict])
 
     const actionItems = useMemo(() => {
         if (!actionNode) return []
         const isParent = !!(actionNode.children && actionNode.children.length > 0)
         return [
-            { key: 'view', label: 'Details', hint: 'Info & stats', icon: <Eye size={16} />, variant: 'grid', onClick: () => openSheet(actionNode) },
-            { key: 'add', label: 'Add derived', hint: 'Sub-unit', icon: <Plus size={16} />, variant: 'grid', onClick: () => openForm(actionNode.id) },
+            { key: 'view', label: 'Details', hint: 'Info & stats', icon: <Eye size={16} />, variant: 'grid' as const, onClick: () => openSheet(actionNode) },
+            { key: 'add', label: 'Add derived', hint: 'Sub-unit', icon: <Plus size={16} />, variant: 'grid' as const, onClick: () => openForm(actionNode.id) },
             { key: 'edit', label: 'Edit', icon: <Pencil size={16} />, onClick: () => openEditForm(actionNode) },
             { key: 'copy', label: 'Copy code', hint: actionNode.code || '—', icon: <Copy size={16} />, onClick: () => {
                 try { navigator.clipboard?.writeText(actionNode.code || String(actionNode.id)); toast.success('Copied') }
@@ -177,8 +186,8 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                         key={formKey}
                         isOpen={isFormOpen}
                         onClose={closeForm}
-                        potentialParents={data}
-                        unit={editingUnit || undefined}
+                        potentialParents={data as Record<string, unknown>[]}
+                        unit={editingUnit ? (editingUnit as Record<string, unknown>) : undefined}
                         baseUnitId={parentPresetId ?? null}
                     />
                     <ConfirmDialog
@@ -199,7 +208,8 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     />
                     <PageTour tourId="inventory-units-mobile" renderButton={false} />
                     <DeleteConflictDialog
-                        conflict={deleteConflict?.conflict || null}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- conflict shape is server-derived; the dialog narrows internally
+                        conflict={(deleteConflict?.conflict ?? null) as any}
                         sourceName={deleteConflict?.source?.name || ''}
                         entityName="unit"
                         targets={unitTargets}
@@ -228,7 +238,7 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
             {({ searchQuery, expandAll, expandKey }) => {
                 const q = searchQuery.trim().toLowerCase()
                 const filtered = q
-                    ? data.filter((u: any) =>
+                    ? data.filter((u) =>
                         u.name?.toLowerCase().includes(q)
                         || u.code?.toLowerCase().includes(q)
                         || u.short_name?.toLowerCase().includes(q)
@@ -236,7 +246,7 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     )
                     : data
 
-                const tree = buildTree(filtered, 'base_unit')
+                const tree = buildTree(filtered, 'base_unit') as UnitNode[]
 
                 if (tree.length === 0) {
                     return (
@@ -258,10 +268,10 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
                     <>
                         {showCalc && (
                             <div className="animate-in slide-in-from-top-2 duration-200 mb-3">
-                                <UnitCalculator units={data} />
+                                <UnitCalculator units={data.map((u) => ({ ...u, code: u.code ?? '' }))} />
                             </div>
                         )}
-                        {tree.map((node: any) => (
+                        {tree.map((node) => (
                             <MobileUnitRow
                                 key={`${node.id}-${expandKey}`}
                                 node={node}
@@ -284,7 +294,15 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: any[] }) {
 }
 
 /* Inline minimal detail sheet — keeps Phase 3 scope tight */
-function MobileUnitDetail({ node, onEdit, onAdd, onDelete, onClose }: any) {
+interface MobileUnitDetailProps {
+    node: UnitNode
+    onEdit: (n: UnitNode) => void
+    onAdd: (parentId?: number) => void
+    onDelete: (n: UnitNode) => void   // wired by caller; not consumed here yet
+    onClose: () => void
+}
+
+function MobileUnitDetail({ node, onEdit, onAdd, onClose }: MobileUnitDetailProps) {
     const isBase = !node.base_unit
     const productCount = node.product_count ?? 0
     const childCount = node.children?.length ?? 0

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useTransition, useMemo, useCallback, useEffect } from 'react'
@@ -7,22 +6,31 @@ import {
     Search, Barcode, Package, Plus, Minus, Trash2,
     Printer, Tag, Loader2,
 } from 'lucide-react'
-import { getProductsForLabels, createPrintSession, listPrintSessions, getPrintingKPI } from '@/app/actions/labels'
+import { getProductsForLabels, createPrintSession, type LabelProduct } from '@/app/actions/labels'
 
 const v = (name: string) => `var(${name})`
 const soft = (varName: string, pct = 10) => ({ backgroundColor: `color-mix(in srgb, ${v(varName)} ${pct}%, transparent)` })
 const grad = (varName: string) => ({ background: `linear-gradient(135deg, ${v(varName)}, color-mix(in srgb, ${v(varName)} 80%, black))` })
 
-type QueueItem = { product: any; quantity: number }
+type QueueProduct = LabelProduct & {
+    category_name?: string
+    supplier_name?: string
+    selling_price_ttc?: number | string
+    selling_price?: number | string
+    stock_qty?: number
+    total_stock?: number
+}
+
+type QueueItem = { product: QueueProduct; quantity: number }
 
 interface Props {
-    initialProducts: any[]
+    initialProducts: QueueProduct[]
     onSessionCreated: () => void
 }
 
 export default function LabelsQueueTab({ initialProducts, onSessionCreated }: Props) {
     const [isPending, startTransition] = useTransition()
-    const [products, setProducts] = useState<any[]>(initialProducts)
+    const [products, setProducts] = useState<QueueProduct[]>(initialProducts)
     const [search, setSearch] = useState('')
     const [categoryFilter, setCategoryFilter] = useState('')
     const [supplierFilter, setSupplierFilter] = useState('')
@@ -58,7 +66,7 @@ export default function LabelsQueueTab({ initialProducts, onSessionCreated }: Pr
     const queueProductIds = useMemo(() => new Set(queue.map(q => q.product.id)), [queue])
     const totalLabels = useMemo(() => queue.reduce((s, q) => s + q.quantity, 0), [queue])
 
-    const addToQueue = useCallback((product: any) => {
+    const addToQueue = useCallback((product: QueueProduct) => {
         setQueue(prev => prev.find(q => q.product.id === product.id) ? prev : [...prev, { product, quantity: 1 }])
     }, [])
 
@@ -93,7 +101,7 @@ export default function LabelsQueueTab({ initialProducts, onSessionCreated }: Pr
         const t = setTimeout(() => {
             startTransition(async () => {
                 const res = await getProductsForLabels({ search, page_size: 50 })
-                setProducts(res?.results || [])
+                setProducts((res?.results ?? []) as QueueProduct[])
             })
         }, 300)
         return () => clearTimeout(t)

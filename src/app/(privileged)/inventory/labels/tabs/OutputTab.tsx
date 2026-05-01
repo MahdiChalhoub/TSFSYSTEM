@@ -1,4 +1,9 @@
 // @ts-nocheck
+// Phase 5 Session 7: depends on printer-config CRUD actions not yet exported from
+// `@/app/actions/labels` (listPrinterConfigs, createPrinterConfig, updatePrinterConfig,
+// deletePrinterConfig, testPrinterConnection). Defer until the actions module is
+// extended; per the strategy's Rule 6 a structural action-module gap keeps
+// `@ts-nocheck` rather than papering over with `as any` casts.
 'use client'
 
 import { useState, useTransition, useMemo, useCallback } from 'react'

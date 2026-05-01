@@ -1,7 +1,7 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useTransition, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import {
     Globe, Plus, Trash2, X, MapPin, Bookmark, Check, Pencil,
     Coins, Layers, Power, Search, Tag, Package, Boxes, ChevronRight,
@@ -73,6 +73,22 @@ type Props = {
     initialRefCountries: RefCountry[]
 }
 
+/** Tree node fed to TreeMasterPage — either a synthetic region group or a SourcingCountry leaf. */
+type TreeNode = (SourcingCountry & {
+    _type: 'country'
+    _pk?: number
+    parent: string | null
+}) | {
+    id: string
+    parent: null
+    _type: 'region'
+    name: string
+    country_region: string
+    is_enabled?: boolean
+    notes?: string
+    children?: TreeNode[]
+}
+
 /* ═══════════════════════════════════════════════════════════
  *  CountriesClient — tenant-curated sourcing countries.
  *  Tree: Region → Country. Adding pulls from the global
@@ -95,8 +111,8 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
 
     /* ── Build flat [regionRoot, ...countries] list so TreeMasterPage's
      * buildTree turns regions into collapsible parents. ── */
-    const data = useMemo(() => {
-        const rows: any[] = []
+    const data = useMemo<TreeNode[]>(() => {
+        const rows: TreeNode[] = []
         const seenRegions = new Set<string>()
         for (const sc of sourcing) {
             const region = sc.country_region || 'Unassigned'
@@ -111,7 +127,8 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
         for (const sc of sourcing) {
             rows.push({
                 ...sc,
-                id: `sc:${sc.id}`, _pk: sc.id,
+                id: `sc:${sc.id}` as unknown as number,
+                _pk: sc.id,
                 parent: `region:${sc.country_region || 'Unassigned'}`,
                 _type: 'country',
                 name: sc.country_name,
@@ -153,8 +170,8 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
             })
             toast.success(!sc.is_enabled ? 'Enabled' : 'Paused')
             router.refresh()
-        } catch (e: any) {
-            toast.error(e?.message || 'Failed to toggle')
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to toggle')
         }
     }
 
@@ -168,8 +185,8 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
             toast.success('Notes saved')
             setEditingNotes(null)
             router.refresh()
-        } catch (e: any) {
-            toast.error(e?.message || 'Failed to save notes')
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to save notes')
         }
     }
 
