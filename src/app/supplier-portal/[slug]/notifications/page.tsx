@@ -18,11 +18,11 @@ interface Notification {
 }
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
-    ORDER: { icon: ShoppingCart, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
-    PROFORMA: { icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-    PRICE_REQUEST: { icon: TrendingDown, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-    PAYMENT: { icon: Package, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
-    SYSTEM: { icon: Info, color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20' },
+    ORDER: { icon: ShoppingCart, color: 'text-app-info', bg: 'bg-blue-500/10 border-app-info/20' },
+    PROFORMA: { icon: FileText, color: 'text-app-success', bg: 'bg-app-primary/10 border-app-success/20' },
+    PRICE_REQUEST: { icon: TrendingDown, color: 'text-app-warning', bg: 'bg-amber-500/10 border-app-warning/20' },
+    PAYMENT: { icon: Package, color: 'text-app-accent', bg: 'bg-purple-500/10 border-app-accent/20' },
+    SYSTEM: { icon: Info, color: 'text-app-info', bg: 'bg-sky-500/10 border-app-info/20' },
 }
 
 function getToken(slug: string): string | null {
@@ -111,11 +111,11 @@ export default function SupplierNotificationsPage() {
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">
                         <Link href={`/supplier-portal/${slug}`}
-                            className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-sm font-medium transition-colors">
+                            className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                             <ArrowLeft size={16} /> Dashboard
                         </Link>
                         <h1 className="text-4xl font-black text-white">Notifications</h1>
-                        <p className="text-slate-500 text-sm">
+                        <p className="text-app-muted-foreground text-sm">
                             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up'}
                         </p>
                     </div>
@@ -133,8 +133,8 @@ export default function SupplierNotificationsPage() {
                         <button key={f} onClick={() => setFilter(f)}
                             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all
                                 ${filter === f
-                                    ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                                    : 'bg-white/5 text-slate-400 border border-transparent hover:text-white'
+                                    ? 'bg-indigo-500/20 text-app-accent border border-app-accent/30'
+                                    : 'bg-app-surface/5 text-app-faint border border-transparent hover:text-white'
                                 }`}>
                             {f === 'all' ? `All (${notifications.length})` : `Unread (${unreadCount})`}
                         </button>
@@ -148,11 +148,11 @@ export default function SupplierNotificationsPage() {
                     </div>
                 ) : displayed.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
-                        <Bell size={48} className="mx-auto text-slate-600" />
+                        <Bell size={48} className="mx-auto text-app-muted-foreground" />
                         <h2 className="text-xl font-bold text-white">
                             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
                         </h2>
-                        <p className="text-slate-500 text-sm">
+                        <p className="text-app-muted-foreground text-sm">
                             {filter === 'unread' ? 'You\'re all caught up!' : 'Notifications will appear here'}
                         </p>
                     </div>
@@ -167,7 +167,7 @@ export default function SupplierNotificationsPage() {
                                     className={`p-5 rounded-2xl border transition-all cursor-pointer
                                         ${n.is_read
                                             ? 'bg-slate-900/40 border-white/5'
-                                            : 'bg-slate-900/70 border-indigo-500/20 hover:border-indigo-500/40'
+                                            : 'bg-slate-900/70 border-app-accent/20 hover:border-app-accent/40'
                                         }`}>
                                     <div className="flex items-start gap-4">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${cfg.bg} ${cfg.color}`}>
@@ -175,18 +175,18 @@ export default function SupplierNotificationsPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3">
-                                                <p className={`font-bold text-sm ${n.is_read ? 'text-slate-400' : 'text-white'}`}>
+                                                <p className={`font-bold text-sm ${n.is_read ? 'text-app-faint' : 'text-white'}`}>
                                                     {n.title}
                                                 </p>
                                                 {!n.is_read && (
                                                     <div className="w-2 h-2 bg-indigo-500 rounded-full shrink-0" />
                                                 )}
                                             </div>
-                                            <p className={`text-sm mt-1 ${n.is_read ? 'text-slate-600' : 'text-slate-400'}`}>
+                                            <p className={`text-sm mt-1 ${n.is_read ? 'text-app-muted-foreground' : 'text-app-faint'}`}>
                                                 {n.message}
                                             </p>
                                             <div className="flex items-center gap-3 mt-2">
-                                                <span className="text-[10px] text-slate-600 font-medium flex items-center gap-1">
+                                                <span className="text-[10px] text-app-muted-foreground font-medium flex items-center gap-1">
                                                     <Clock size={10} /> {timeAgo(n.created_at)}
                                                 </span>
                                                 <span className={`text-[10px] font-black uppercase tracking-widest ${cfg.color}`}>

@@ -124,7 +124,7 @@ export function RolesMatrixClient({ data }: { data: RoleData }) {
                                                 {user.is_superuser ? 'Superuser' : (user.role_name || 'No Role')}
                                             </div>
                                         </div>
-                                        {user.is_superuser && <ShieldAlert size={14} className="text-rose-500" />}
+                                        {user.is_superuser && <ShieldAlert size={14} className="text-app-error" />}
                                     </td>
 
                                     {Object.entries(modules).flatMap(([_, codes]) =>
@@ -133,7 +133,7 @@ export function RolesMatrixClient({ data }: { data: RoleData }) {
                                             return (
                                                 <td key={`${user.id}-${code}`} className="p-3 border-r border-app-border/30 text-center last:border-r-0">
                                                     {user.is_superuser ? (
-                                                        <div className="flex justify-center text-rose-300">
+                                                        <div className="flex justify-center text-app-error">
                                                             <Lock size={16} />
                                                         </div>
                                                     ) : (

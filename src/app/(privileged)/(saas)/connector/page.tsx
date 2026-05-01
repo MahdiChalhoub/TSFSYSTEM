@@ -53,10 +53,10 @@ interface ModuleStateInfo {
 }
 
 const stateColors = {
-    available: 'bg-emerald-500',
-    missing: 'bg-amber-500',
-    disabled: 'bg-blue-500',
-    unauthorized: 'bg-red-500'
+    available: 'bg-app-primary',
+    missing: 'bg-app-warning',
+    disabled: 'bg-app-info',
+    unauthorized: 'bg-app-error'
 }
 
 const stateLabels = {
@@ -116,7 +116,7 @@ export default function ConnectorDashboardPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <RefreshCw className="w-8 h-8 animate-spin text-emerald-500" />
+                <RefreshCw className="w-8 h-8 animate-spin text-app-success" />
             </div>
         )
     }
@@ -130,7 +130,7 @@ export default function ConnectorDashboardPage() {
                         <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
                             <Zap size={28} />
                         </div>
-                        <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 px-3 py-1 font-black uppercase text-[10px]">
+                        <Badge className="bg-app-accent-bg text-app-accent border-app-accent px-3 py-1 font-black uppercase text-[10px]">
                             Core Infrastructure
                         </Badge>
                     </div>
@@ -150,7 +150,7 @@ export default function ConnectorDashboardPage() {
                     <Button
                         onClick={handleCleanup}
                         variant="outline"
-                        className="rounded-2xl px-6 py-5 font-bold text-amber-600 border-amber-200 hover:bg-amber-50"
+                        className="rounded-2xl px-6 py-5 font-bold text-app-warning border-app-warning hover:bg-app-warning-bg"
                     >
                         <AlertTriangle size={18} />
                         Cleanup Expired
@@ -166,7 +166,7 @@ export default function ConnectorDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-5xl font-black">{dashboard?.summary.active_policies || 0}</div>
-                        <p className="text-emerald-100 text-sm mt-2">Routing rules configured</p>
+                        <p className="text-app-success text-sm mt-2">Routing rules configured</p>
                     </CardContent>
                 </Card>
 
@@ -176,7 +176,7 @@ export default function ConnectorDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-5xl font-black">{dashboard?.summary.contracts_registered || 0}</div>
-                        <p className="text-blue-100 text-sm mt-2">Module declarations</p>
+                        <p className="text-app-info text-sm mt-2">Module declarations</p>
                     </CardContent>
                 </Card>
 
@@ -186,7 +186,7 @@ export default function ConnectorDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-5xl font-black">{dashboard?.buffer_stats.pending || 0}</div>
-                        <p className="text-amber-100 text-sm mt-2">Awaiting replay</p>
+                        <p className="text-app-warning text-sm mt-2">Awaiting replay</p>
                     </CardContent>
                 </Card>
             </div>
@@ -195,27 +195,27 @@ export default function ConnectorDashboardPage() {
             <Card className="rounded-3xl shadow-xl border-app-border">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
-                        <Database size={24} className="text-indigo-500" />
+                        <Database size={24} className="text-app-accent" />
                         Buffer Queue Status
                     </CardTitle>
                     <CardDescription>Writes queued for unavailable modules</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-amber-50 p-6 rounded-2xl border border-amber-100">
-                            <Clock className="text-amber-500 mb-2" size={24} />
-                            <div className="text-3xl font-black text-amber-600">{dashboard?.buffer_stats.pending || 0}</div>
-                            <div className="text-sm text-amber-500 font-medium">Pending</div>
+                        <div className="bg-app-warning-bg p-6 rounded-2xl border border-app-warning">
+                            <Clock className="text-app-warning mb-2" size={24} />
+                            <div className="text-3xl font-black text-app-warning">{dashboard?.buffer_stats.pending || 0}</div>
+                            <div className="text-sm text-app-warning font-medium">Pending</div>
                         </div>
-                        <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-                            <CheckCircle2 className="text-emerald-500 mb-2" size={24} />
-                            <div className="text-3xl font-black text-emerald-600">{dashboard?.buffer_stats.replayed || 0}</div>
-                            <div className="text-sm text-emerald-500 font-medium">Replayed</div>
+                        <div className="bg-app-success-bg p-6 rounded-2xl border border-app-success">
+                            <CheckCircle2 className="text-app-success mb-2" size={24} />
+                            <div className="text-3xl font-black text-app-success">{dashboard?.buffer_stats.replayed || 0}</div>
+                            <div className="text-sm text-app-success font-medium">Replayed</div>
                         </div>
-                        <div className="bg-red-50 p-6 rounded-2xl border border-red-100">
-                            <XCircle className="text-red-500 mb-2" size={24} />
-                            <div className="text-3xl font-black text-red-600">{dashboard?.buffer_stats.failed || 0}</div>
-                            <div className="text-sm text-red-500 font-medium">Failed</div>
+                        <div className="bg-app-error-bg p-6 rounded-2xl border border-app-error">
+                            <XCircle className="text-app-error mb-2" size={24} />
+                            <div className="text-3xl font-black text-app-error">{dashboard?.buffer_stats.failed || 0}</div>
+                            <div className="text-sm text-app-error font-medium">Failed</div>
                         </div>
                         <div className="bg-app-surface p-6 rounded-2xl border border-app-border">
                             <AlertTriangle className="text-app-muted-foreground mb-2" size={24} />
@@ -230,7 +230,7 @@ export default function ConnectorDashboardPage() {
             <Card className="rounded-3xl shadow-xl border-app-border">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
-                        <Activity size={24} className="text-emerald-500" />
+                        <Activity size={24} className="text-app-success" />
                         Module States
                     </CardTitle>
                     <CardDescription>Current state of all registered modules</CardDescription>
@@ -258,7 +258,7 @@ export default function ConnectorDashboardPage() {
                                     <div className="text-xs text-app-muted-foreground font-mono mb-2">{mod.module_code}</div>
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-app-muted-foreground">Pending buffers:</span>
-                                        <span className={`font-bold ${mod.pending_buffers > 0 ? 'text-amber-500' : 'text-app-muted-foreground'}`}>
+                                        <span className={`font-bold ${mod.pending_buffers > 0 ? 'text-app-warning' : 'text-app-muted-foreground'}`}>
                                             {mod.pending_buffers}
                                         </span>
                                     </div>
@@ -272,46 +272,46 @@ export default function ConnectorDashboardPage() {
             {/* Quick Links */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Link href="/connector/policies">
-                    <Card className="rounded-3xl border-app-border hover:border-indigo-300 hover:shadow-lg transition-all cursor-pointer group">
+                    <Card className="rounded-3xl border-app-border hover:border-app-accent hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
-                            <div className="p-4 rounded-2xl bg-indigo-100 text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                            <div className="p-4 rounded-2xl bg-app-accent-bg text-app-accent group-hover:bg-app-accent group-hover:text-white transition-all">
                                 <Settings size={28} />
                             </div>
                             <div className="flex-1">
                                 <div className="font-bold text-app-foreground text-lg">Configure Policies</div>
                                 <div className="text-sm text-app-muted-foreground">Set fallback behaviors</div>
                             </div>
-                            <ArrowRight className="text-app-faint group-hover:text-indigo-500 transition-all" />
+                            <ArrowRight className="text-app-faint group-hover:text-app-accent transition-all" />
                         </CardContent>
                     </Card>
                 </Link>
 
                 <Link href="/connector/buffer">
-                    <Card className="rounded-3xl border-app-border hover:border-amber-300 hover:shadow-lg transition-all cursor-pointer group">
+                    <Card className="rounded-3xl border-app-border hover:border-app-warning hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
-                            <div className="p-4 rounded-2xl bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                            <div className="p-4 rounded-2xl bg-app-warning-bg text-app-warning group-hover:bg-app-warning group-hover:text-white transition-all">
                                 <Database size={28} />
                             </div>
                             <div className="flex-1">
                                 <div className="font-bold text-app-foreground text-lg">Manage Buffer</div>
                                 <div className="text-sm text-app-muted-foreground">View & replay requests</div>
                             </div>
-                            <ArrowRight className="text-app-faint group-hover:text-amber-500 transition-all" />
+                            <ArrowRight className="text-app-faint group-hover:text-app-warning transition-all" />
                         </CardContent>
                     </Card>
                 </Link>
 
                 <Link href="/connector/logs">
-                    <Card className="rounded-3xl border-app-border hover:border-emerald-300 hover:shadow-lg transition-all cursor-pointer group">
+                    <Card className="rounded-3xl border-app-border hover:border-app-success hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
-                            <div className="p-4 rounded-2xl bg-emerald-100 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                            <div className="p-4 rounded-2xl bg-app-success-bg text-app-success group-hover:bg-app-primary group-hover:text-white transition-all">
                                 <FileText size={28} />
                             </div>
                             <div className="flex-1">
                                 <div className="font-bold text-app-foreground text-lg">Routing Logs</div>
                                 <div className="text-sm text-app-muted-foreground">Audit trail & debugging</div>
                             </div>
-                            <ArrowRight className="text-app-faint group-hover:text-emerald-500 transition-all" />
+                            <ArrowRight className="text-app-faint group-hover:text-app-success transition-all" />
                         </CardContent>
                     </Card>
                 </Link>
@@ -334,7 +334,7 @@ export default function ConnectorDashboardPage() {
                                     className="flex items-center justify-between p-4 rounded-xl bg-app-surface border border-app-border"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-2 h-2 rounded-full ${log.success ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                        <div className={`w-2 h-2 rounded-full ${log.success ? 'bg-app-primary' : 'bg-app-error'}`} />
                                         <div>
                                             <span className="font-mono text-sm text-app-foreground">
                                                 {log.source_module} → {log.target_module}

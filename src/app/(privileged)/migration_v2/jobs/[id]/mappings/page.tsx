@@ -41,7 +41,7 @@ const ALL_COLUMNS: ColumnDef<MappingRecord>[] = [
         label: 'Target TSFSYSTEM ID',
         sortable: true,
         render: (r) => (
-            <span className="font-mono text-xs font-bold text-emerald-600">{r.target_id || 'Failed/Pending'}</span>
+            <span className="font-mono text-xs font-bold text-app-success">{r.target_id || 'Failed/Pending'}</span>
         )
     },
     {
@@ -49,8 +49,8 @@ const ALL_COLUMNS: ColumnDef<MappingRecord>[] = [
         label: 'Status',
         sortable: true,
         render: (r) => (
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${r.verify_status === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700' :
-                r.verify_status === 'FLAGGED' ? 'bg-amber-100 text-amber-700' :
+            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${r.verify_status === 'VERIFIED' ? 'bg-app-success-bg text-app-success' :
+                r.verify_status === 'FLAGGED' ? 'bg-app-warning-bg text-app-warning' :
                     'bg-app-surface theme-text-muted'
                 }`}>
                 {r.verify_status || 'UNVERIFIED'}

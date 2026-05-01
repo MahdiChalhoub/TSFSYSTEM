@@ -37,8 +37,20 @@ export default function PurchaseForm({
     // do, we never overwrite it with a fresh sequence peek — auto-fill is
     // a convenience, not a constraint.
     const [referenceTouched, setReferenceTouched] = useState(false)
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-    const [deliveryDate, setDeliveryDate] = useState('')
+    // Optional second reference. Operators use this to capture the
+    // supplier's own PO/quote number, an internal cost-center code, or a
+    // legacy ERP reference — anything they want to track alongside the
+    // tenant-generated PO number. Always editable, never auto-filled.
+    const [supplierRef, setSupplierRef] = useState('')
+    // Order date defaults to today; expected delivery to tomorrow — sane
+    // defaults so the operator only changes them when their workflow needs
+    // a different date. The operator can still pick any date afterwards.
+    const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
+    const [deliveryDate, setDeliveryDate] = useState(() => {
+        const t = new Date()
+        t.setDate(t.getDate() + 1)
+        return t.toISOString().split('T')[0]
+    })
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL')
     const [supplierId, setSupplierId] = useState<number | ''>('')
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('')
@@ -200,13 +212,16 @@ export default function PurchaseForm({
                      *  stays consistent across all three.
                      * ───────────────────────────────────────────── */}
                     <div className="flex items-center gap-2 flex-shrink-0 h-9">
-                        {/* Scope toggle */}
+                        {/* Scope toggle —
+                         *  Inactive pill: subtle hover tint so it reads as clickable.
+                         *  All controls: `active:scale-[0.97]` press feedback (the
+                         *  one universally-trusted modern micro-interaction). */}
                         <div className="h-9 flex items-center p-0.5 rounded-xl bg-app-surface border border-app-border">
                             {(['OFFICIAL', 'INTERNAL'] as const).map(s => {
                                 const active = scope === s
                                 return (
                                     <button key={s} type="button" onClick={() => setScope(s)}
-                                            className="h-8 px-3 text-[11px] font-bold rounded-lg transition-all"
+                                            className={`h-8 px-3 text-[11px] font-bold rounded-lg transition-all active:scale-[0.97] ${active ? '' : 'hover:bg-app-surface-hover hover:text-app-foreground'}`}
                                             style={active
                                                 ? { background: 'var(--app-primary)', color: 'white' }
                                                 : { color: 'var(--app-muted-foreground)', background: 'transparent' }}>
@@ -220,7 +235,7 @@ export default function PurchaseForm({
                         <button type="button" onClick={() => setSidebarOpen(true)}
                                 aria-label="Configure setup"
                                 title="Configure setup"
-                                className="h-9 w-9 flex items-center justify-center rounded-xl border transition-all"
+                                className="h-9 w-9 flex items-center justify-center rounded-xl border transition-all active:scale-[0.97] hover:brightness-105"
                                 style={sidebarOpen ? {
                                     background: 'var(--app-primary)',
                                     color: 'white',
@@ -241,13 +256,24 @@ export default function PurchaseForm({
                             <input type="hidden" name="warehouseId" value={warehouseId} />
                             <input type="hidden" name="assigneeId" value={assigneeId} />
                             <input type="hidden" name="driverId" value={driverId} />
+                            <input type="hidden" name="reference" value={reference} />
+                            <input type="hidden" name="supplierRef" value={supplierRef} />
+                            <input type="hidden" name="orderDate" value={date} />
+                            <input type="hidden" name="expectedDelivery" value={deliveryDate} />
                             <input type="hidden" name="lines" value={JSON.stringify(lines)} />
                             <button type="submit" disabled={!canSubmit}
-                                    className="h-9 px-3.5 flex items-center gap-1.5 text-[11px] font-bold rounded-xl border transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+                                    className="h-9 px-3.5 flex items-center gap-1.5 text-[11px] font-bold rounded-xl border transition-all active:scale-[0.97] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
                                     style={{
                                         background: 'var(--app-primary)',
                                         color: 'white',
                                         borderColor: 'var(--app-primary)',
+                                        // Lowest-tier elevation — half a millimeter
+                                        // of lift so the affirmative action reads
+                                        // first. Only on this button; the toggle
+                                        // and configure stay perfectly flat.
+                                        boxShadow: canSubmit
+                                            ? '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.04)'
+                                            : 'none',
                                     }}>
                                 <ArrowRight size={14} />
                                 <span className="hidden sm:inline">{isPending ? 'Processing…' : 'Create PO'}</span>
@@ -332,8 +358,14 @@ export default function PurchaseForm({
                         style={{ background: 'rgba(0, 0, 0, 0.55)', backdropFilter: 'blur(4px)' }}
                         onClick={(e) => { if (e.target === e.currentTarget) setSidebarOpen(false) }}
                     >
+                        {/* Width bumped from 260px → 320px so the two date
+                         *  fields (Order date / Expected) can each render the
+                         *  "May 5, 2026" formatted label + chevron without
+                         *  truncating. 320px also fits "OFFICIAL"/"INTERNAL"
+                         *  scope pills + supplier select comfortably with the
+                         *  new SearchableDropdown. */}
                         <div
-                            className="w-[260px] h-full flex flex-col animate-in slide-in-from-right-4 duration-300 shadow-2xl"
+                            className="w-[320px] max-w-full h-full flex flex-col animate-in slide-in-from-right-4 duration-300 shadow-2xl"
                             style={{ background: 'var(--app-surface)', borderLeft: '1px solid var(--app-border)' }}
                         >
                              <AdminSidebar
@@ -345,6 +377,7 @@ export default function PurchaseForm({
                                 assigneeId={assigneeId} onAssigneeChange={setAssigneeId}
                                 driverId={driverId} onDriverChange={setDriverId}
                                 reference={reference} onReferenceChange={(v) => { setReferenceTouched(true); setReference(v) }}
+                                supplierRef={supplierRef} onSupplierRefChange={setSupplierRef}
                                 date={date} onDateChange={setDate}
                                 expectedDelivery={deliveryDate} onExpectedDeliveryChange={setDeliveryDate}
                                 onClose={() => setSidebarOpen(false)}

@@ -119,7 +119,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                             variant="ghost"
                             size="sm"
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-emerald-50 hover:text-emerald-600"
+                            className="h-8 w-8 p-0 rounded-lg hover:bg-app-success-bg hover:text-app-success"
                         >
                             <Plus size={18} />
                         </Button>
@@ -168,7 +168,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                     {selectedRole?.id !== role.id && role.name !== 'Admin' && (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setDeleteTarget(role.id); }}
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-500 transition-all"
+                                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-app-error transition-all"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -184,16 +184,16 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
             <div className="lg:col-span-8 h-full">
                 {selectedRole ? (
                     <div className="bg-app-surface rounded-[2rem] border border-app-border shadow-sm flex flex-col h-full overflow-hidden">
-                        <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-app-surface/30">
+                        <div className="p-6 border-b border-app-border flex items-center justify-between bg-app-surface/30">
                             <div>
-                                <Badge variant="outline" className="mb-2 rounded-lg text-[10px] font-black uppercase text-emerald-600 border-emerald-100 bg-emerald-50/50">
+                                <Badge variant="outline" className="mb-2 rounded-lg text-[10px] font-black uppercase text-app-success border-app-success bg-app-success-bg/50">
                                     Editing Permissions
                                 </Badge>
                                 <h1 className="text-2xl font-black text-app-foreground uppercase tracking-tighter">{selectedRole.name}</h1>
                                 <p className="text-xs text-app-muted-foreground font-medium italic mt-0.5">{selectedRole.description || 'No description provided'}</p>
                             </div>
                             <div className="text-right flex flex-col items-end gap-1">
-                                <div className="p-2 bg-emerald-100/50 rounded-xl text-emerald-700">
+                                <div className="p-2 bg-app-success-bg/50 rounded-xl text-app-success">
                                     <ShieldCheck size={20} />
                                 </div>
                                 <span className="text-[10px] font-black uppercase text-app-muted-foreground tracking-tighter">Authorized Scope</span>
@@ -218,12 +218,12 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                                         className={cn(
                                                             "p-4 rounded-xl border cursor-pointer transition-all flex items-start justify-between gap-3 group",
                                                             isActive
-                                                                ? "border-emerald-500/20 bg-emerald-50/30 ring-2 ring-emerald-500/5"
-                                                                : "border-gray-50 bg-app-surface hover:border-app-border"
+                                                                ? "border-app-success/20 bg-app-success-bg/30 ring-2 ring-emerald-500/5"
+                                                                : "border-app-border bg-app-surface hover:border-app-border"
                                                         )}
                                                     >
                                                         <div className="min-w-0">
-                                                            <p className={cn("text-xs font-black uppercase tracking-tight mb-1", isActive ? "text-emerald-700" : "text-app-foreground")}>
+                                                            <p className={cn("text-xs font-black uppercase tracking-tight mb-1", isActive ? "text-app-success" : "text-app-foreground")}>
                                                                 {perm.name}
                                                             </p>
                                                             <p className="text-[10px] text-app-muted-foreground leading-tight font-medium">
@@ -232,7 +232,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                                         </div>
                                                         <div className={cn(
                                                             "w-5 h-5 rounded-lg flex items-center justify-center transition-all",
-                                                            isActive ? "bg-emerald-600 text-white" : "bg-app-surface-2 text-app-faint group-hover:bg-app-surface-2"
+                                                            isActive ? "bg-app-primary text-white" : "bg-app-surface-2 text-app-faint group-hover:bg-app-surface-2"
                                                         )}>
                                                             {isActive ? <CheckSquare size={14} /> : <Square size={14} />}
                                                         </div>
@@ -248,7 +248,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                 ) : (
                     <div className="bg-app-surface rounded-[2rem] border border-app-border shadow-sm flex flex-col items-center justify-center p-12 text-center h-full">
                         <div className="w-20 h-20 bg-app-surface rounded-full flex items-center justify-center mb-6">
-                            <ShieldAlert className="text-gray-200" size={40} />
+                            <ShieldAlert className="text-app-faint" size={40} />
                         </div>
                         <h2 className="text-xl font-black text-app-faint uppercase tracking-tighter">No Role Selected</h2>
                         <p className="text-sm text-app-muted-foreground font-bold uppercase tracking-widest mt-1">Select a role from the list to manage its permissions</p>
@@ -271,7 +271,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                 placeholder="e.g. Inventory Manager"
                                 value={newRole.name}
                                 onChange={e => setNewRole({ ...newRole, name: e.target.value })}
-                                className="h-14 rounded-2xl border-app-border bg-app-surface focus:bg-app-surface focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold"
+                                className="h-14 rounded-2xl border-app-border bg-app-surface focus:bg-app-surface focus:border-app-success/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold"
                             />
                         </div>
 
@@ -281,7 +281,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                 placeholder="What can this role do?"
                                 value={newRole.description}
                                 onChange={e => setNewRole({ ...newRole, description: e.target.value })}
-                                className="h-14 rounded-2xl border-app-border bg-app-surface focus:bg-app-surface focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
+                                className="h-14 rounded-2xl border-app-border bg-app-surface focus:bg-app-surface focus:border-app-success/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
                             />
                         </div>
 

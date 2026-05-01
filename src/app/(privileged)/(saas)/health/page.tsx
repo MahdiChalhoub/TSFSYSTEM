@@ -49,8 +49,8 @@ function formatUptime(seconds: number): string {
 }
 
 function LatencyBadge({ ms, label }: { ms: number; label: string }) {
-    const color = ms < 100 ? 'text-emerald-600' : ms < 500 ? 'text-yellow-600' : 'text-red-600'
-    const bg = ms < 100 ? 'bg-emerald-50 border-emerald-200/60' : ms < 500 ? 'bg-yellow-50 border-yellow-200/60' : 'bg-red-50 border-red-200/60'
+    const color = ms < 100 ? 'text-app-success' : ms < 500 ? 'text-app-warning' : 'text-app-error'
+    const bg = ms < 100 ? 'bg-app-success-bg border-app-success/60' : ms < 500 ? 'bg-app-warning-bg border-app-warning/60' : 'bg-app-error-bg border-app-error/60'
     return (
         <div className={`rounded-xl border ${bg} p-4 text-center`}>
             <div className={`text-2xl font-black ${color} tabular-nums`}>{ms.toFixed(1)}<span className="text-xs font-medium opacity-60">ms</span></div>
@@ -61,7 +61,7 @@ function LatencyBadge({ ms, label }: { ms: number; label: string }) {
 
 function StatusDot({ ok }: { ok: boolean }) {
     return (
-        <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]'}`} />
+        <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-app-primary shadow-[0_0_6px_rgba(16,185,129,0.5)]' : 'bg-app-error shadow-[0_0_6px_rgba(239,68,68,0.5)]'}`} />
     )
 }
 
@@ -93,7 +93,7 @@ export default function HealthPage() {
     if (loading && !health) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
-                <RefreshCw className="animate-spin text-emerald-500" size={32} />
+                <RefreshCw className="animate-spin text-app-success" size={32} />
             </div>
         )
     }
@@ -124,7 +124,7 @@ export default function HealthPage() {
             </div>
 
             {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium flex items-center gap-3">
+                <div className="p-4 bg-app-error-bg border border-app-error rounded-xl text-app-error text-sm font-medium flex items-center gap-3">
                     <AlertTriangle size={18} />
                     {error}
                 </div>
@@ -135,8 +135,8 @@ export default function HealthPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Server className="text-emerald-500" size={22} />
-                            <Badge className={isOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'}>
+                            <Server className="text-app-success" size={22} />
+                            <Badge className={isOnline ? 'bg-app-success-bg text-app-success border-app-success' : 'bg-app-error-bg text-app-error border-app-error'}>
                                 <StatusDot ok={!!isOnline} />
                                 <span className="ml-2">{isOnline ? 'Online' : 'Offline'}</span>
                             </Badge>
@@ -149,8 +149,8 @@ export default function HealthPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Database className="text-blue-500" size={22} />
-                            <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200">
+                            <Database className="text-app-info" size={22} />
+                            <Badge className="bg-app-success-bg text-app-success border-app-success">
                                 <StatusDot ok={true} />
                                 <span className="ml-2">Connected</span>
                             </Badge>
@@ -163,7 +163,7 @@ export default function HealthPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Activity className="text-purple-500" size={22} />
+                            <Activity className="text-app-accent" size={22} />
                             <span className="text-2xl font-black text-app-foreground tabular-nums">{traffic?.requests_last_5min || 0}</span>
                         </div>
                         <h3 className="font-bold text-app-foreground">Requests (5m)</h3>
@@ -174,7 +174,7 @@ export default function HealthPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Clock className="text-amber-500" size={22} />
+                            <Clock className="text-app-warning" size={22} />
                             <Badge className="bg-app-surface text-app-muted-foreground border-app-border">
                                 {formatUptime(health?.uptime_seconds || 0)}
                             </Badge>
@@ -190,7 +190,7 @@ export default function HealthPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                            <Zap className="text-cyan-500" size={20} />
+                            <Zap className="text-app-info" size={20} />
                             <CardTitle className="text-app-foreground text-lg">Latency Percentiles</CardTitle>
                         </div>
                         <CardDescription className="text-app-muted-foreground">Based on last {traffic?.tracked_window || 0} tracked requests</CardDescription>
@@ -215,7 +215,7 @@ export default function HealthPage() {
                     <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
-                                <BarChart3 className="text-violet-500" size={20} />
+                                <BarChart3 className="text-app-accent" size={20} />
                                 <CardTitle className="text-app-foreground text-lg">Response Codes</CardTitle>
                             </div>
                         </CardHeader>
@@ -226,7 +226,7 @@ export default function HealthPage() {
                                     .map(([bucket, count]) => {
                                         const total = traffic.tracked_window || 1
                                         const pct = ((count / total) * 100).toFixed(1)
-                                        const color = bucket === '2xx' ? 'bg-emerald-500' : bucket === '3xx' ? 'bg-blue-500' : bucket === '4xx' ? 'bg-yellow-500' : 'bg-red-500'
+                                        const color = bucket === '2xx' ? 'bg-app-primary' : bucket === '3xx' ? 'bg-app-info' : bucket === '4xx' ? 'bg-app-warning' : 'bg-app-error'
                                         return (
                                             <div key={bucket} className="flex items-center gap-3">
                                                 <span className="text-xs font-mono text-app-muted-foreground w-8">{bucket}</span>
@@ -247,7 +247,7 @@ export default function HealthPage() {
                     <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
-                                <TrendingUp className="text-orange-500" size={20} />
+                                <TrendingUp className="text-app-warning" size={20} />
                                 <CardTitle className="text-app-foreground text-lg">Slowest Endpoints</CardTitle>
                             </div>
                             <CardDescription className="text-app-muted-foreground">Top 5 by P95 latency</CardDescription>
@@ -260,7 +260,7 @@ export default function HealthPage() {
                                             <div className="text-sm text-app-foreground font-mono truncate">{ep.endpoint}</div>
                                             <div className="text-[10px] text-app-muted-foreground mt-0.5">{ep.count} requests · avg {ep.avg_ms.toFixed(1)}ms</div>
                                         </div>
-                                        <div className={`text-sm font-bold tabular-nums ${ep.p95_ms < 200 ? 'text-emerald-600' : ep.p95_ms < 1000 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                        <div className={`text-sm font-bold tabular-nums ${ep.p95_ms < 200 ? 'text-app-success' : ep.p95_ms < 1000 ? 'text-app-warning' : 'text-app-error'}`}>
                                             {ep.p95_ms.toFixed(0)}ms
                                         </div>
                                     </div>
@@ -275,14 +275,14 @@ export default function HealthPage() {
             <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden border-l-4 border-l-cyan-500">
                 <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-cyan-50 flex items-center justify-center">
-                            <Shield className="text-cyan-500" size={24} />
+                        <div className="w-12 h-12 rounded-xl bg-app-info-bg flex items-center justify-center">
+                            <Shield className="text-app-info" size={24} />
                         </div>
                         <div className="flex-1">
                             <h3 className="font-bold text-app-foreground">AES-256 Encryption</h3>
                             <p className="text-xs text-app-muted-foreground mt-0.5">Transport Layer Security active · TLS 1.3 in transit</p>
                         </div>
-                        <Badge className="bg-cyan-50 text-cyan-600 border-cyan-200">
+                        <Badge className="bg-app-info-bg text-app-info border-app-info">
                             <StatusDot ok={true} />
                             <span className="ml-2">Active</span>
                         </Badge>

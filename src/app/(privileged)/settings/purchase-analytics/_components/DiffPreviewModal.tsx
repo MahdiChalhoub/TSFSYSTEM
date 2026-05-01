@@ -38,8 +38,8 @@ export function DiffPreviewModal({ config, originalConfig, onClose, onSave }: {
               <div key={k} className="flex items-start gap-2 text-[10px] bg-app-background/50 rounded-lg p-2 border border-app-border/30">
                 <span className="font-bold text-app-foreground min-w-[120px] shrink-0">{k.replace(/_/g, ' ')}</span>
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-red-500 line-through">{typeof (originalConfig as any)[k] === 'object' ? JSON.stringify((originalConfig as any)[k]) : String((originalConfig as any)[k])}</span>
-                  <span className="text-emerald-600 font-bold">{typeof (config as any)[k] === 'object' ? JSON.stringify((config as any)[k]) : String((config as any)[k])}</span>
+                  <span className="text-app-error line-through">{typeof (originalConfig as any)[k] === 'object' ? JSON.stringify((originalConfig as any)[k]) : String((originalConfig as any)[k])}</span>
+                  <span className="text-app-success font-bold">{typeof (config as any)[k] === 'object' ? JSON.stringify((config as any)[k]) : String((config as any)[k])}</span>
                 </div>
               </div>
             ))

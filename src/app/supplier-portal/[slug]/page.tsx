@@ -99,11 +99,11 @@ export default function SupplierPortalPage() {
             <div className="w-full max-w-md relative z-10 space-y-8">
                 {/* Brand */}
                 <div className="text-center space-y-4">
-                    <div className="w-20 h-20 bg-indigo-500/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mx-auto text-indigo-400">
+                    <div className="w-20 h-20 bg-indigo-500/20 border border-app-accent/30 rounded-3xl flex items-center justify-center mx-auto text-app-accent">
                         <Building2 size={36} />
                     </div>
                     <h1 className="text-3xl font-black text-white">Supplier Portal</h1>
-                    <p className="text-slate-500 text-sm">
+                    <p className="text-app-muted-foreground text-sm">
                         Secure access for <span className="text-white font-bold">{slug}</span>
                     </p>
                 </div>
@@ -111,7 +111,7 @@ export default function SupplierPortalPage() {
                 {/* Form */}
                 <div className="p-10 bg-slate-900/50 backdrop-blur-3xl border border-white/5 rounded-[3rem] space-y-6 shadow-2xl">
                     {error && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
+                        <div className="p-4 bg-red-500/10 border border-app-error/20 rounded-2xl text-app-error text-sm font-medium flex items-center gap-3">
                             <AlertCircle size={18} className="shrink-0" /> {error}
                         </div>
                     )}
@@ -123,7 +123,7 @@ export default function SupplierPortalPage() {
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required
-                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-700"
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-foreground"
                         />
                         <input
                             type="password"
@@ -131,7 +131,7 @@ export default function SupplierPortalPage() {
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             required
-                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-700"
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-foreground"
                         />
                         <button type="submit" disabled={loading}
                             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60">
@@ -140,10 +140,10 @@ export default function SupplierPortalPage() {
                     </form>
 
                     <div className="text-center space-y-3">
-                        <button type="button" className="text-sm text-slate-500 hover:text-indigo-400 transition-colors font-medium">
+                        <button type="button" className="text-sm text-app-muted-foreground hover:text-app-accent transition-colors font-medium">
                             Forgot password?
                         </button>
-                        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+                        <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest">
                             <Shield size={12} className="inline mr-1" /> Encrypted Connection
                         </p>
                     </div>
@@ -185,10 +185,10 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
     }, [session.token])
 
     const navItems = [
-        { href: `/supplier-portal/${slug}/orders`, icon: ShoppingCart, label: 'My Purchase Orders', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20 hover:border-blue-500/40' },
-        { href: `/supplier-portal/${slug}/proformas`, icon: FileText, label: 'Proformas', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40' },
-        { href: `/supplier-portal/${slug}/price-requests`, icon: TrendingDown, label: 'Price Change Requests', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20 hover:border-amber-500/40' },
-        { href: `/supplier-portal/${slug}/statement`, icon: BarChart3, label: 'Financial Statement', color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20 hover:border-sky-500/40' },
+        { href: `/supplier-portal/${slug}/orders`, icon: ShoppingCart, label: 'My Purchase Orders', color: 'text-app-info', bg: 'bg-blue-500/10 border-app-info/20 hover:border-app-info/40' },
+        { href: `/supplier-portal/${slug}/proformas`, icon: FileText, label: 'Proformas', color: 'text-app-success', bg: 'bg-app-primary/10 border-app-success/20 hover:border-app-success/40' },
+        { href: `/supplier-portal/${slug}/price-requests`, icon: TrendingDown, label: 'Price Change Requests', color: 'text-app-warning', bg: 'bg-amber-500/10 border-app-warning/20 hover:border-app-warning/40' },
+        { href: `/supplier-portal/${slug}/statement`, icon: BarChart3, label: 'Financial Statement', color: 'text-app-info', bg: 'bg-sky-500/10 border-app-info/20 hover:border-app-info/40' },
     ]
 
     return (
@@ -201,17 +201,17 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
                 <div className="flex justify-between items-start">
                     <div>
                         <h1 className="text-4xl font-black text-white">Supplier Portal</h1>
-                        <p className="text-slate-500 text-sm mt-1">
-                            {session.contact.company || session.contact.name} • <span className="text-indigo-400">{session.contact.supplier_category || 'Supplier'}</span>
+                        <p className="text-app-muted-foreground text-sm mt-1">
+                            {session.contact.company || session.contact.name} • <span className="text-app-accent">{session.contact.supplier_category || 'Supplier'}</span>
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right">
                             <p className="text-white font-medium text-sm">{session.user.name}</p>
-                            <p className="text-slate-500 text-[11px]">{session.user.email}</p>
+                            <p className="text-app-muted-foreground text-[11px]">{session.user.email}</p>
                         </div>
                         <button onClick={onLogout}
-                            className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-all">
+                            className="w-12 h-12 bg-app-surface/5 border border-white/10 rounded-xl flex items-center justify-center text-app-error hover:bg-red-500/10 transition-all">
                             <LogOut size={18} />
                         </button>
                     </div>
@@ -221,27 +221,27 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
                 {!loading && stats && (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in duration-500">
                         <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-2">
-                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Active POs</p>
+                            <p className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Active POs</p>
                             <p className="text-3xl font-black text-white flex items-center gap-2">
-                                <ShoppingCart size={20} className="text-blue-400" /> {stats.active_purchase_orders || 0}
+                                <ShoppingCart size={20} className="text-app-info" /> {stats.active_purchase_orders || 0}
                             </p>
                         </div>
                         <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-2">
-                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Total POs</p>
+                            <p className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Total POs</p>
                             <p className="text-3xl font-black text-white flex items-center gap-2">
-                                <Package size={20} className="text-emerald-400" /> {stats.total_purchase_orders || 0}
+                                <Package size={20} className="text-app-success" /> {stats.total_purchase_orders || 0}
                             </p>
                         </div>
                         <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-2">
-                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Pending Proformas</p>
+                            <p className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Pending Proformas</p>
                             <p className="text-3xl font-black text-white flex items-center gap-2">
-                                <FileText size={20} className="text-amber-400" /> {stats.pending_proformas || 0}
+                                <FileText size={20} className="text-app-warning" /> {stats.pending_proformas || 0}
                             </p>
                         </div>
                         <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-2">
-                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Price Requests</p>
+                            <p className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Price Requests</p>
                             <p className="text-3xl font-black text-white flex items-center gap-2">
-                                <TrendingDown size={20} className="text-purple-400" /> {stats.pending_price_requests || 0}
+                                <TrendingDown size={20} className="text-app-accent" /> {stats.pending_price_requests || 0}
                             </p>
                         </div>
                     </div>
@@ -261,7 +261,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
                             <item.icon size={32} className={item.color} />
                             <div className="flex items-center justify-between">
                                 <span className="text-white font-bold text-lg">{item.label}</span>
-                                <ArrowRight size={18} className="text-slate-600 group-hover:text-white transition-colors" />
+                                <ArrowRight size={18} className="text-app-muted-foreground group-hover:text-white transition-colors" />
                             </div>
                         </Link>
                     ))}
@@ -269,8 +269,8 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
 
                 {/* Unread Notifications */}
                 {stats?.unread_notifications > 0 && (
-                    <div className="p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center gap-4">
-                        <Bell size={20} className="text-indigo-400" />
+                    <div className="p-5 bg-indigo-500/10 border border-app-accent/20 rounded-2xl flex items-center gap-4">
+                        <Bell size={20} className="text-app-accent" />
                         <span className="text-white font-medium flex-1">You have {stats.unread_notifications} unread notification{stats.unread_notifications > 1 ? 's' : ''}</span>
                     </div>
                 )}

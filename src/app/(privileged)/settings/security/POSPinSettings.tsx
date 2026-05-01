@@ -120,14 +120,14 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
 
  {/* Manager Override PIN — only shown if user can set it */}
  {canSetOverride && (
- <div className="p-5 bg-rose-50/60 rounded-2xl border border-rose-100 space-y-3">
+ <div className="p-5 bg-app-error-bg/60 rounded-2xl border border-app-error space-y-3">
  <div className="flex items-center justify-between">
  <div>
- <p className="text-sm font-black text-rose-900 flex items-center gap-2">
- <Shield size={14} className="text-rose-500" />
+ <p className="text-sm font-black text-app-error flex items-center gap-2">
+ <Shield size={14} className="text-app-error" />
  Manager Override PIN
  </p>
- <p className="text-[11px] text-rose-400">
+ <p className="text-[11px] text-app-error">
  Authorizes: void, refund, discount, price override, clear cart, qty decrease
  </p>
  </div>
@@ -150,7 +150,7 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  onChange={e => setOverridePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
  placeholder={hasOverridePin || overrideDone ? 'Enter new override PIN' : 'Enter 4–6 digit PIN'}
  maxLength={6}
- className="w-full px-4 py-2.5 bg-app-surface border border-rose-200 rounded-xl text-sm font-mono font-bold text-app-foreground outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 tracking-[0.3em] text-center transition-all"
+ className="w-full px-4 py-2.5 bg-app-surface border border-app-error rounded-xl text-sm font-mono font-bold text-app-foreground outline-none focus:ring-2 focus:ring-rose-300 focus:border-app-error tracking-[0.3em] text-center transition-all"
  />
  <button onClick={() => setShowOverride(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-muted-foreground transition-colors">
  {showOverride ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -159,7 +159,7 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  <button
  onClick={handleSetOverridePin}
  disabled={savingOverride || overridePin.length < 4}
- className="px-5 py-2.5 bg-app-error text-app-foreground rounded-xl font-bold text-sm hover:bg-rose-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
+ className="px-5 py-2.5 bg-app-error text-app-foreground rounded-xl font-bold text-sm hover:bg-app-error disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
  >
  {savingOverride ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
  Save

@@ -85,7 +85,7 @@ export default function ModuleDependenciesPage() {
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center space-y-4">
-                <Loader2 size={40} className="animate-spin text-emerald-500 mx-auto" />
+                <Loader2 size={40} className="animate-spin text-app-success mx-auto" />
                 <p className="text-app-muted-foreground font-medium text-sm">Loading module graph...</p>
             </div>
         </div>
@@ -94,7 +94,7 @@ export default function ModuleDependenciesPage() {
     if (!graph || graph.nodes.length === 0) return (
         <div className="p-12 text-center">
             <h2 className="text-xl font-bold text-app-foreground">No modules registered</h2>
-            <p className="text-sm text-app-muted-foreground mt-2">Sync modules from the <a href="/modules" className="text-emerald-600 underline">Modules page</a> first.</p>
+            <p className="text-sm text-app-muted-foreground mt-2">Sync modules from the <a href="/modules" className="text-app-success underline">Modules page</a> first.</p>
         </div>
     )
 
@@ -110,12 +110,12 @@ export default function ModuleDependenciesPage() {
                     </Button>
                     <div>
                         <h1 className="text-3xl font-black text-app-foreground tracking-tight flex items-center gap-3">
-                            <Network size={24} className="text-emerald-600" />
+                            <Network size={24} className="text-app-success" />
                             Module Dependencies
                         </h1>
                         <p className="text-sm text-app-muted-foreground mt-1">
                             {graph.nodes.length} modules · {graph.edges.length} dependency edges
-                            {focus && <span className="ml-2">· focused on <strong>{focus}</strong> <button onClick={() => setFocus(null)} className="underline text-emerald-600">clear</button></span>}
+                            {focus && <span className="ml-2">· focused on <strong>{focus}</strong> <button onClick={() => setFocus(null)} className="underline text-app-success">clear</button></span>}
                         </p>
                     </div>
                 </div>
@@ -123,7 +123,7 @@ export default function ModuleDependenciesPage() {
 
             {core.length > 0 && (
                 <section>
-                    <h2 className="text-xs font-black uppercase tracking-widest text-indigo-500 mb-3 flex items-center gap-2">
+                    <h2 className="text-xs font-black uppercase tracking-widest text-app-accent mb-3 flex items-center gap-2">
                         <Crown size={14} /> Core Infrastructure
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -133,7 +133,7 @@ export default function ModuleDependenciesPage() {
             )}
 
             <section>
-                <h2 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-3 flex items-center gap-2">
+                <h2 className="text-xs font-black uppercase tracking-widest text-app-success mb-3 flex items-center gap-2">
                     <Package size={14} /> Business Modules
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -158,11 +158,11 @@ function NodeCard({ node, dependents, focus, setFocus, focusedSubgraph }: {
 
     return (
         <Card className={`transition-all border shadow-sm ${isFocused
-            ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-200'
+            ? 'border-app-primary bg-app-success-bg/40 ring-2 ring-app-primary'
             : isDep
-                ? 'border-indigo-300 bg-indigo-50/40'
+                ? 'border-app-accent bg-app-accent-bg/40'
                 : isUser
-                    ? 'border-amber-300 bg-amber-50/40'
+                    ? 'border-app-warning bg-app-warning-bg/40'
                     : 'border-app-border bg-app-surface'
             } ${dim ? 'opacity-40' : ''}`}>
             <CardHeader className="pb-2">
@@ -175,7 +175,7 @@ function NodeCard({ node, dependents, focus, setFocus, focusedSubgraph }: {
                         <Badge className="bg-app-surface text-app-muted-foreground border-app-border text-[9px] flex items-center gap-1">
                             <Users size={9} /> {node.total_installs}
                         </Badge>
-                        {node.is_core && <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 text-[9px]">Core</Badge>}
+                        {node.is_core && <Badge className="bg-app-accent-bg text-app-accent border-app-accent text-[9px]">Core</Badge>}
                     </div>
                 </div>
                 {node.description && (
@@ -184,9 +184,9 @@ function NodeCard({ node, dependents, focus, setFocus, focusedSubgraph }: {
             </CardHeader>
             <CardContent className="pt-2 space-y-2">
                 {node.missing_dependencies.length > 0 && (
-                    <div className="flex items-start gap-2 p-2 rounded-lg bg-red-50 border border-red-100">
-                        <AlertTriangle size={12} className="text-red-500 mt-0.5 shrink-0" />
-                        <span className="text-[11px] text-red-600">
+                    <div className="flex items-start gap-2 p-2 rounded-lg bg-app-error-bg border border-app-error">
+                        <AlertTriangle size={12} className="text-app-error mt-0.5 shrink-0" />
+                        <span className="text-[11px] text-app-error">
                             Missing dependencies: {node.missing_dependencies.join(', ')}
                         </span>
                     </div>
@@ -201,7 +201,7 @@ function NodeCard({ node, dependents, focus, setFocus, focusedSubgraph }: {
                         <div className="flex flex-wrap gap-1">
                             {node.dependencies.map(d => (
                                 <button key={d} onClick={() => setFocus(d)}
-                                    className="text-[10px] px-2 py-0.5 rounded-md font-mono uppercase bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 cursor-pointer transition-colors">
+                                    className="text-[10px] px-2 py-0.5 rounded-md font-mono uppercase bg-app-accent-bg text-app-accent border border-app-accent hover:bg-app-accent-bg cursor-pointer transition-colors">
                                     {d}
                                 </button>
                             ))}
@@ -218,7 +218,7 @@ function NodeCard({ node, dependents, focus, setFocus, focusedSubgraph }: {
                         <div className="flex flex-wrap gap-1">
                             {dependents.map(d => (
                                 <button key={d} onClick={() => setFocus(d)}
-                                    className="text-[10px] px-2 py-0.5 rounded-md font-mono uppercase bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100 cursor-pointer transition-colors">
+                                    className="text-[10px] px-2 py-0.5 rounded-md font-mono uppercase bg-app-warning-bg text-app-warning border border-app-warning hover:bg-app-warning-bg cursor-pointer transition-colors">
                                     {d}
                                 </button>
                             ))}
@@ -228,7 +228,7 @@ function NodeCard({ node, dependents, focus, setFocus, focusedSubgraph }: {
                 <div className="pt-2 flex justify-end">
                     <Button size="sm" variant={isFocused ? 'default' : 'outline'}
                         onClick={() => setFocus(isFocused ? null : node.code)}
-                        className={`text-[10px] h-7 rounded-xl ${isFocused ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}>
+                        className={`text-[10px] h-7 rounded-xl ${isFocused ? 'bg-app-primary-dark hover:bg-app-primary-dark text-white' : ''}`}>
                         {isFocused ? 'Clear focus' : 'Focus'}
                     </Button>
                 </div>

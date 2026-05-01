@@ -49,9 +49,9 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
         return (
             <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
                 <div className="text-center space-y-6">
-                    <Building2 size={48} className="mx-auto text-slate-600" />
+                    <Building2 size={48} className="mx-auto text-app-muted-foreground" />
                     <h2 className="text-xl font-bold text-white">Session Expired</h2>
-                    <p className="text-slate-500 text-sm">Please log in to access the supplier portal</p>
+                    <p className="text-app-muted-foreground text-sm">Please log in to access the supplier portal</p>
                     <Link href={`/supplier-portal/${slug}`}
                         className="inline-block px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-500 transition-all">
                         Go to Login
@@ -96,15 +96,15 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                 <div className="p-6 border-b border-white/5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-indigo-500/20 border border-indigo-500/30 rounded-xl flex items-center justify-center text-indigo-400">
+                            <div className="w-10 h-10 bg-indigo-500/20 border border-app-accent/30 rounded-xl flex items-center justify-center text-app-accent">
                                 <Building2 size={20} />
                             </div>
                             <div>
                                 <p className="text-white font-bold text-sm">Supplier Portal</p>
-                                <p className="text-[10px] text-slate-500 font-medium">{session?.organization.name}</p>
+                                <p className="text-[10px] text-app-muted-foreground font-medium">{session?.organization.name}</p>
                             </div>
                         </div>
-                        <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-500 hover:text-white">
+                        <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-app-muted-foreground hover:text-white">
                             <X size={20} />
                         </button>
                     </div>
@@ -117,8 +117,8 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                             onClick={() => setSidebarOpen(false)}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
                                 ${isActive(item.href)
-                                    ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                                    ? 'bg-indigo-500/10 text-app-accent border border-app-accent/20'
+                                    : 'text-app-faint hover:text-white hover:bg-app-surface/5 border border-transparent'
                                 }`}>
                             <item.icon size={18} />
                             {item.label}
@@ -130,16 +130,16 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                 {/* User */}
                 <div className="p-4 border-t border-white/5">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-black">
+                        <div className="w-9 h-9 bg-indigo-500/20 rounded-lg flex items-center justify-center text-app-accent text-xs font-black">
                             {session?.user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-medium truncate">{session?.user.name}</p>
-                            <p className="text-[10px] text-slate-500 truncate">{session?.user.email}</p>
+                            <p className="text-[10px] text-app-muted-foreground truncate">{session?.user.email}</p>
                         </div>
                     </div>
                     <button onClick={handleLogout}
-                        className="w-full flex items-center gap-2 justify-center px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-red-400 text-sm font-medium hover:bg-red-500/10 transition-all">
+                        className="w-full flex items-center gap-2 justify-center px-4 py-2.5 bg-app-surface/5 border border-white/10 rounded-xl text-app-error text-sm font-medium hover:bg-red-500/10 transition-all">
                         <LogOut size={14} /> Sign Out
                     </button>
                 </div>
@@ -150,7 +150,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                 {/* Mobile Top Bar */}
                 <div className="lg:hidden sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between">
                     <button onClick={() => setSidebarOpen(true)}
-                        className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-white">
+                        className="w-10 h-10 bg-app-surface/5 border border-white/10 rounded-xl flex items-center justify-center text-white">
                         <Menu size={18} />
                     </button>
                     <p className="text-white font-bold text-sm">Supplier Portal</p>

@@ -35,14 +35,14 @@ export default function DynamicModulePage() {
                 </div>
                 <div>
                     <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight capitalize">{code.replace(/_/g, ' ')} Dashboard</h2>
-                    <p className="text-xs md:text-sm text-app-muted-foreground mt-1 md:mt-2 font-medium">Platform verified module: <code className="text-emerald-400">{code}</code></p>
+                    <p className="text-xs md:text-sm text-app-muted-foreground mt-1 md:mt-2 font-medium">Platform verified module: <code className="text-app-success">{code}</code></p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-emerald-500/30 transition-all">
+                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-primary/30 transition-all">
                     <CardHeader>
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-xl bg-app-primary/10 text-app-success flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Zap size={24} />
                         </div>
                         <CardTitle className="text-xl font-bold text-white">Live Instance</CardTitle>
@@ -53,9 +53,9 @@ export default function DynamicModulePage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-indigo-500/30 transition-all">
+                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-accent/30 transition-all">
                     <CardHeader>
-                        <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-xl bg-app-accent/10 text-app-accent flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Layers size={24} />
                         </div>
                         <CardTitle className="text-xl font-bold text-white">Modular State</CardTitle>
@@ -66,9 +66,9 @@ export default function DynamicModulePage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-amber-500/30 transition-all">
+                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-warning/30 transition-all">
                     <CardHeader>
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-xl bg-app-warning/10 text-app-warning flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Info size={24} />
                         </div>
                         <CardTitle className="text-xl font-bold text-white">Ready for Logic</CardTitle>

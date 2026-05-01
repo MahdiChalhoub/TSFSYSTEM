@@ -20,7 +20,7 @@ export function UsersTab({ users, onCreateUser, onResetPassword }: UsersTabProps
                     <h3 className="text-lg font-bold text-app-foreground">Organization Users</h3>
                     <p className="text-sm text-app-muted-foreground">{users.length} user{users.length !== 1 ? 's' : ''} in this organization</p>
                 </div>
-                <Button onClick={onCreateUser} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md">
+                <Button onClick={onCreateUser} className="bg-app-primary-dark hover:bg-app-primary-dark text-white rounded-xl font-bold shadow-md">
                     <Plus size={16} className="mr-2" /> Create User
                 </Button>
             </div>
@@ -35,7 +35,7 @@ export function UsersTab({ users, onCreateUser, onResetPassword }: UsersTabProps
                         <div key={user.id} className="flex items-center justify-between p-4 bg-app-surface rounded-2xl border border-app-border hover:border-app-border shadow-sm transition-all">
                             <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black ${user.is_superuser
-                                    ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                    ? 'bg-app-accent-bg text-app-accent border border-app-accent'
                                     : 'bg-app-surface text-app-muted-foreground border border-app-border'
                                     }`}>
                                     {user.username.charAt(0).toUpperCase()}
@@ -44,13 +44,13 @@ export function UsersTab({ users, onCreateUser, onResetPassword }: UsersTabProps
                                     <div className="flex items-center gap-2">
                                         <span className="font-bold text-app-foreground text-sm">{user.username}</span>
                                         {user.is_superuser && (
-                                            <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 text-[9px] font-black">SUPER</Badge>
+                                            <Badge className="bg-app-accent-bg text-app-accent border-app-accent text-[9px] font-black">SUPER</Badge>
                                         )}
                                         {user.is_staff && !user.is_superuser && (
-                                            <Badge className="bg-blue-50 text-blue-600 border-blue-100 text-[9px] font-black">STAFF</Badge>
+                                            <Badge className="bg-app-info-bg text-app-info border-app-info text-[9px] font-black">STAFF</Badge>
                                         )}
                                         {!user.is_active && (
-                                            <Badge className="bg-red-50 text-red-500 border-red-100 text-[9px]">Inactive</Badge>
+                                            <Badge className="bg-app-error-bg text-app-error border-app-error text-[9px]">Inactive</Badge>
                                         )}
                                     </div>
                                     <p className="text-xs text-app-muted-foreground">{user.email || 'No email'} {user.role ? `· ${user.role}` : ''}</p>

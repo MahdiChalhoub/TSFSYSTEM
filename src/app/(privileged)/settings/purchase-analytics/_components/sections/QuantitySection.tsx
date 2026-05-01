@@ -42,7 +42,7 @@ export function QuantitySection() {
                             <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                 <button type="button" onClick={() => s.clearOverride('proposed_qty_formula')}
-                                    className="text-app-muted-foreground hover:text-red-500 transition-colors"><X size={9} /></button>
+                                    className="text-app-muted-foreground hover:text-app-error transition-colors"><X size={9} /></button>
                                 <span className="text-[8px] font-bold" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Global: {formulaLabel(s.globalVal('proposed_qty_formula'))}</span>
                             </>
                         )}
@@ -73,7 +73,7 @@ export function QuantitySection() {
                                 <>
                                     <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                     <button type="button" onClick={() => s.clearOverride('proposed_qty_lead_days')}
-                                        className="text-app-muted-foreground hover:text-red-500 transition-colors"><X size={9} /></button>
+                                        className="text-app-muted-foreground hover:text-app-error transition-colors"><X size={9} /></button>
                                 </>
                             )}
                         </div>
@@ -104,7 +104,7 @@ export function QuantitySection() {
                                 <>
                                     <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                     <button type="button" onClick={() => s.clearOverride('proposed_qty_safety_multiplier')}
-                                        className="text-app-muted-foreground hover:text-red-500 transition-colors"><X size={9} /></button>
+                                        className="text-app-muted-foreground hover:text-app-error transition-colors"><X size={9} /></button>
                                 </>
                             )}
                         </div>

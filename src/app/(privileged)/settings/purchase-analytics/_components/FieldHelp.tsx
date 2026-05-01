@@ -25,6 +25,6 @@ export function FieldHelp({ field }: { field: string }) {
 
 export const statusDot = (status: 'ok' | 'warn' | 'error' | null) => {
     if (!status) return null
-    const colors = { ok: 'bg-emerald-500', warn: 'bg-amber-500', error: 'bg-red-500' }
+    const colors = { ok: 'bg-app-primary', warn: 'bg-app-warning', error: 'bg-app-error' }
     return <span className={`inline-block w-1.5 h-1.5 rounded-full ${colors[status]}`} />
 }

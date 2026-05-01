@@ -106,7 +106,7 @@ export default function CurrenciesPage() {
                     </div>
 
                     {error && (
-                        <div className="mb-3 p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-medium">
+                        <div className="mb-3 p-2.5 bg-app-error-bg border border-app-error rounded-lg text-xs text-app-error font-medium">
                             {error}
                         </div>
                     )}
@@ -192,7 +192,7 @@ export default function CurrenciesPage() {
                         ) : currencies.map(c => (
                             <tr key={c.id} className="hover:bg-app-surface transition-colors">
                                 <td className="px-5 py-3.5">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-bold">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-app-warning-bg text-app-warning text-xs font-bold">
                                         {c.code}
                                     </span>
                                 </td>
@@ -202,14 +202,14 @@ export default function CurrenciesPage() {
                                     <div className="flex items-center justify-end gap-1.5">
                                         <button
                                             onClick={() => handleEdit(c)}
-                                            className="p-1.5 text-app-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            className="p-1.5 text-app-muted-foreground hover:text-app-info hover:bg-app-info-bg rounded-lg transition-colors"
                                             title="Edit"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button
                                             onClick={() => setPendingDelete({ id: c.id, code: c.code })}
-                                            className="p-1.5 text-app-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            className="p-1.5 text-app-muted-foreground hover:text-app-error hover:bg-app-error-bg rounded-lg transition-colors"
                                             title="Delete"
                                         >
                                             <Trash2 size={14} />

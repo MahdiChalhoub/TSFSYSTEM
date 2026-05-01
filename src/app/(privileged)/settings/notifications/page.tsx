@@ -15,12 +15,12 @@ const CHANNEL_ICONS: Record<string, { icon: any; label: string }> = {
 }
 
 const TYPE_ICONS: Record<string, { icon: any; color: string }> = {
-    invoice_overdue: { icon: AlertTriangle, color: 'text-red-500' },
-    invoice_paid: { icon: CheckCircle2, color: 'text-emerald-500' },
-    stock_alert: { icon: Package, color: 'text-orange-500' },
-    po_approved: { icon: FileText, color: 'text-blue-500' },
-    po_received: { icon: TrendingUp, color: 'text-indigo-500' },
-    payment_received: { icon: CreditCard, color: 'text-emerald-600' },
+    invoice_overdue: { icon: AlertTriangle, color: 'text-app-error' },
+    invoice_paid: { icon: CheckCircle2, color: 'text-app-success' },
+    stock_alert: { icon: Package, color: 'text-app-warning' },
+    po_approved: { icon: FileText, color: 'text-app-info' },
+    po_received: { icon: TrendingUp, color: 'text-app-info' },
+    payment_received: { icon: CreditCard, color: 'text-app-success' },
     system_update: { icon: Settings, color: 'text-app-muted-foreground' },
     daily_digest: { icon: Clock, color: 'text-purple-500' },
 }
@@ -175,9 +175,9 @@ export default function NotificationPreferencesPage() {
                         log.map((entry: any) => (
                             <div key={entry.id} className="p-4 px-6 flex items-center gap-4 hover:bg-app-surface/50 transition-colors">
                                 <div className={`p-2 rounded-lg ${entry.status === 'SENT' || entry.status === 'DELIVERED'
-                                        ? 'bg-emerald-50 text-emerald-500'
+                                        ? 'bg-app-success-bg text-app-success'
                                         : entry.status === 'FAILED'
-                                            ? 'bg-red-50 text-red-500'
+                                            ? 'bg-app-error-bg text-app-error'
                                             : 'bg-app-surface text-app-muted-foreground'
                                     }`}>
                                     {entry.channel === 'EMAIL' ? <Mail size={14} /> : <Bell size={14} />}
@@ -189,9 +189,9 @@ export default function NotificationPreferencesPage() {
                                     </p>
                                 </div>
                                 <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${entry.status === 'SENT' || entry.status === 'DELIVERED'
-                                        ? 'bg-emerald-100 text-emerald-700'
+                                        ? 'bg-app-success-bg text-app-success'
                                         : entry.status === 'FAILED'
-                                            ? 'bg-red-100 text-red-700'
+                                            ? 'bg-app-error-bg text-app-error'
                                             : 'bg-app-surface-2 text-app-muted-foreground'
                                     }`}>
                                     {entry.status}

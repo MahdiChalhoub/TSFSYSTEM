@@ -65,7 +65,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
         <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm transition-all overflow-hidden">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                    <div className={`p-4 rounded-2xl ${enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                    <div className={`p-4 rounded-2xl ${enabled ? 'bg-app-success-bg text-app-success' : 'bg-app-warning-bg text-app-warning'}`}>
                         {enabled ? <ShieldCheck size={28} /> : <ShieldAlert size={28} />}
                     </div>
                     <div>
@@ -93,7 +93,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                         variant="outline"
                         onClick={handleDisable}
                         disabled={loading}
-                        className="h-14 px-10 border-red-50 text-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-all"
+                        className="h-14 px-10 border-app-error text-app-error rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-app-error-bg transition-all"
                     >
                         {loading ? <Loader2 className="animate-spin" /> : "Disable Protection"}
                     </Button>
@@ -101,7 +101,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
             </div>
 
             {step === 'SETUP' && setupData && (
-                <div className="mt-8 p-10 bg-app-surface rounded-[2.5rem] border border-slate-100 animate-in zoom-in-95 duration-500">
+                <div className="mt-8 p-10 bg-app-surface rounded-[2.5rem] border border-app-border animate-in zoom-in-95 duration-500">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
                         <div className="space-y-8">
                             <div className="space-y-3">
@@ -145,7 +145,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                                     value={token}
                                     onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
                                     maxLength={6}
-                                    className="h-20 rounded-[1.5rem] border-app-border text-center text-4xl font-mono tracking-[0.3em] focus:ring-emerald-500/10 focus:border-emerald-500/50 shadow-inner bg-app-surface"
+                                    className="h-20 rounded-[1.5rem] border-app-border text-center text-4xl font-mono tracking-[0.3em] focus:ring-emerald-500/10 focus:border-app-success/50 shadow-inner bg-app-surface"
                                 />
                                 <div className="flex gap-4">
                                     <Button
@@ -158,7 +158,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                                     <Button
                                         onClick={handleVerify}
                                         disabled={loading || token.length < 6}
-                                        className="h-16 flex-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/10 transition-all flex items-center gap-2"
+                                        className="h-16 flex-2 bg-app-primary hover:bg-app-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/10 transition-all flex items-center gap-2"
                                     >
                                         {loading ? <Loader2 className="animate-spin" /> : <Lock size={16} />}
                                         Verify & Activate

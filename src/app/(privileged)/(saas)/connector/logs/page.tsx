@@ -46,19 +46,19 @@ interface LogEntry {
 }
 
 const decisionColors: Record<string, string> = {
-    forwarded: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    cached: 'bg-blue-100 text-blue-700 border-blue-200',
+    forwarded: 'bg-app-success-bg text-app-success border-app-success',
+    cached: 'bg-app-info-bg text-app-info border-app-info',
     empty: 'bg-app-surface-2 text-app-foreground border-app-border',
-    buffered: 'bg-amber-100 text-amber-700 border-amber-200',
-    dropped: 'bg-red-100 text-red-700 border-red-200',
-    error: 'bg-red-100 text-red-700 border-red-200',
+    buffered: 'bg-app-warning-bg text-app-warning border-app-warning',
+    dropped: 'bg-app-error-bg text-app-error border-app-error',
+    error: 'bg-app-error-bg text-app-error border-app-error',
 }
 
 const stateColors: Record<string, string> = {
-    available: 'bg-emerald-500',
-    missing: 'bg-amber-500',
-    disabled: 'bg-blue-500',
-    unauthorized: 'bg-red-500',
+    available: 'bg-app-primary',
+    missing: 'bg-app-warning',
+    disabled: 'bg-app-info',
+    unauthorized: 'bg-app-error',
 }
 
 export default function ConnectorLogsPage() {
@@ -97,7 +97,7 @@ export default function ConnectorLogsPage() {
                         Back to Connector Dashboard
                     </Link>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600">
+                        <div className="p-3 rounded-2xl bg-app-success-bg text-app-success">
                             <FileText size={28} />
                         </div>
                     </div>
@@ -164,7 +164,7 @@ export default function ConnectorLogsPage() {
                                 <div key={log.id} className="p-5 hover:bg-app-surface/50 transition-colors">
                                     <div className="flex items-center justify-between gap-4 mb-3">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-2 h-2 rounded-full ${log.success ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                            <div className={`w-2 h-2 rounded-full ${log.success ? 'bg-app-primary' : 'bg-app-error'}`} />
                                             <span className="font-mono text-sm font-medium text-app-foreground">
                                                 {log.source_module}
                                             </span>
@@ -183,7 +183,7 @@ export default function ConnectorLogsPage() {
 
                                     <div className="flex flex-wrap items-center gap-3 mb-2">
                                         <Badge
-                                            className={`${stateColors[log.module_state] || 'bg-gray-400'} text-white border-0 text-[10px] font-bold`}
+                                            className={`${stateColors[log.module_state] || 'bg-app-surface-hover'} text-white border-0 text-[10px] font-bold`}
                                         >
                                             {log.module_state?.toUpperCase() || 'UNKNOWN'}
                                         </Badge>
@@ -217,7 +217,7 @@ export default function ConnectorLogsPage() {
                                     </div>
 
                                     {log.error_message && (
-                                        <div className="mt-2 p-2 rounded bg-red-50 text-red-600 text-xs font-mono">
+                                        <div className="mt-2 p-2 rounded bg-app-error-bg text-app-error text-xs font-mono">
                                             {log.error_message}
                                         </div>
                                     )}

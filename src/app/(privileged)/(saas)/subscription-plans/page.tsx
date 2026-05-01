@@ -189,7 +189,7 @@ export default function SubscriptionPlansPage() {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button onClick={handleCreateCategory} disabled={catSaving} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                                <Button onClick={handleCreateCategory} disabled={catSaving} className="bg-app-primary-dark hover:bg-app-primary text-white">
                                     {catSaving ? <Loader2 className="animate-spin" size={16} /> : "Create Category"}
                                 </Button>
                             </DialogFooter>
@@ -198,7 +198,7 @@ export default function SubscriptionPlansPage() {
 
                     <Dialog open={planOpen} onOpenChange={setPlanOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-white">
+                            <Button className="bg-app-primary-dark hover:bg-app-primary gap-2 text-white">
                                 <Plus size={18} />
                                 New Plan
                             </Button>
@@ -323,7 +323,7 @@ export default function SubscriptionPlansPage() {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button onClick={handleCreatePlan} disabled={planSaving} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                                <Button onClick={handleCreatePlan} disabled={planSaving} className="bg-app-primary-dark hover:bg-app-primary text-white">
                                     {planSaving ? <Loader2 className="animate-spin" size={16} /> : "Create Plan"}
                                 </Button>
                             </DialogFooter>
@@ -351,21 +351,21 @@ export default function SubscriptionPlansPage() {
 
                                     return (
                                         <Card key={plan.id} className={`transition-all shadow-sm hover:shadow-lg group overflow-hidden cursor-pointer ${isCustom
-                                            ? 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-purple-200 hover:border-purple-400'
-                                            : 'bg-app-surface hover:border-emerald-500/30'
+                                            ? 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-app-accent hover:border-app-accent'
+                                            : 'bg-app-surface hover:border-app-primary/30'
                                             }`}
                                             onClick={() => router.push(`/subscription-plans/${plan.id}`)}>
                                             <CardHeader className="pb-3">
                                                 <div className="flex justify-between items-start">
                                                     <div className="flex items-center gap-2">
-                                                        <CardTitle className={`text-lg font-bold ${isCustom ? 'text-purple-900' : ''}`}>{plan.name}</CardTitle>
-                                                        {plan.is_public === false && <Lock size={12} className="text-amber-500" />}
+                                                        <CardTitle className={`text-lg font-bold ${isCustom ? 'text-app-accent-strong' : ''}`}>{plan.name}</CardTitle>
+                                                        {plan.is_public === false && <Lock size={12} className="text-app-warning" />}
                                                     </div>
-                                                    <Badge className={plan.is_active ? "bg-emerald-50 text-emerald-600" : "bg-app-surface-2 text-app-muted-foreground"}>
+                                                    <Badge className={plan.is_active ? "bg-app-success-bg text-app-success" : "bg-app-surface-2 text-app-muted-foreground"}>
                                                         {plan.is_active ? 'Active' : 'Draft'}
                                                     </Badge>
                                                 </div>
-                                                <CardDescription className={`line-clamp-2 min-h-[40px] ${isCustom ? 'text-purple-600' : ''}`}>
+                                                <CardDescription className={`line-clamp-2 min-h-[40px] ${isCustom ? 'text-app-accent' : ''}`}>
                                                     {plan.description || "No description provided."}
                                                 </CardDescription>
                                             </CardHeader>
@@ -374,18 +374,18 @@ export default function SubscriptionPlansPage() {
                                                     {isCustom ? (
                                                         <>
                                                             <div className="text-center py-4">
-                                                                <p className="text-3xl font-black text-purple-700">Custom</p>
-                                                                <p className="text-sm text-purple-500 mt-1">Tailored to your needs</p>
+                                                                <p className="text-3xl font-black text-app-accent">Custom</p>
+                                                                <p className="text-sm text-app-accent mt-1">Tailored to your needs</p>
                                                             </div>
                                                             <a href="mailto:sales@tsf-city.com?subject=Custom%20Plan%20Inquiry"
-                                                                className="block w-full text-center py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02]">
+                                                                className="block w-full text-center py-3 rounded-xl bg-app-accent-strong hover:bg-app-accent text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02]">
                                                                 Contact Us →
                                                             </a>
                                                             <div className="flex flex-wrap gap-1.5">
-                                                                <Badge className="bg-purple-100 text-purple-700 text-[10px]">Dedicated Support</Badge>
-                                                                <Badge className="bg-purple-100 text-purple-700 text-[10px]">SLA</Badge>
-                                                                <Badge className="bg-purple-100 text-purple-700 text-[10px]">White-label</Badge>
-                                                                <Badge className="bg-purple-100 text-purple-700 text-[10px]">All Modules</Badge>
+                                                                <Badge className="bg-app-accent-bg text-app-accent text-[10px]">Dedicated Support</Badge>
+                                                                <Badge className="bg-app-accent-bg text-app-accent text-[10px]">SLA</Badge>
+                                                                <Badge className="bg-app-accent-bg text-app-accent text-[10px]">White-label</Badge>
+                                                                <Badge className="bg-app-accent-bg text-app-accent text-[10px]">All Modules</Badge>
                                                             </div>
                                                         </>
                                                     ) : (
@@ -393,7 +393,7 @@ export default function SubscriptionPlansPage() {
                                                             <div className="flex items-end gap-3">
                                                                 <div>
                                                                     <p className="text-[10px] text-app-muted-foreground uppercase font-bold tracking-wider">Monthly</p>
-                                                                    <p className="text-2xl font-black text-emerald-600">
+                                                                    <p className="text-2xl font-black text-app-success">
                                                                         {parseFloat(String(plan.monthly_price ?? '0')) === 0 ? 'Free' : `$${parseFloat(String(plan.monthly_price ?? '0')).toFixed(0)}`}
                                                                     </p>
                                                                 </div>
@@ -451,7 +451,7 @@ export default function SubscriptionPlansPage() {
                                                             {Array.isArray(plan.modules) && plan.modules.length > 0 && (
                                                                 <div className="flex flex-wrap gap-1">
                                                                     {plan.modules.map((m: string) => (
-                                                                        <Badge key={m} className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold capitalize">{m}</Badge>
+                                                                        <Badge key={m} className="bg-app-success-bg text-app-success text-[10px] font-semibold capitalize">{m}</Badge>
                                                                     ))}
                                                                 </div>
                                                             )}
@@ -486,7 +486,7 @@ export default function SubscriptionPlansPage() {
                             </div>
                             <Dialog open={addonOpen} onOpenChange={setAddonOpen}>
                                 <DialogTrigger asChild>
-                                    <Button className="bg-indigo-600 hover:bg-indigo-500 gap-2 text-white">
+                                    <Button className="bg-app-accent-strong hover:bg-app-accent gap-2 text-white">
                                         <Plus size={16} /> New Add-on
                                     </Button>
                                 </DialogTrigger>
@@ -563,7 +563,7 @@ export default function SubscriptionPlansPage() {
                                                 loadData()
                                             } catch { toast.error('Failed to create add-on') }
                                             finally { setAddonSaving(false) }
-                                        }} disabled={addonSaving} className="bg-indigo-600 hover:bg-indigo-500 text-white">
+                                        }} disabled={addonSaving} className="bg-app-accent-strong hover:bg-app-accent text-white">
                                             {addonSaving ? <Loader2 className="animate-spin" size={16} /> : 'Create Add-on'}
                                         </Button>
                                     </DialogFooter>
@@ -576,30 +576,30 @@ export default function SubscriptionPlansPage() {
                                 {addons.map((addon: Record<string, any>) => {
                                     const Icon = ADDON_TYPE_ICONS[addon.addon_type] || Package
                                     return (
-                                        <Card key={addon.id} className="bg-app-surface shadow-sm hover:shadow-md transition-all border-indigo-100 hover:border-indigo-300">
+                                        <Card key={addon.id} className="bg-app-surface shadow-sm hover:shadow-md transition-all border-app-accent hover:border-app-accent">
                                             <CardContent className="pt-5 pb-4">
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                                                            <Icon size={18} className="text-indigo-600" />
+                                                        <div className="w-10 h-10 rounded-xl bg-app-accent-bg flex items-center justify-center">
+                                                            <Icon size={18} className="text-app-accent" />
                                                         </div>
                                                         <div>
                                                             <p className="font-bold text-app-foreground text-sm">{addon.name}</p>
                                                             <p className="text-[10px] text-app-muted-foreground uppercase font-bold">{ADDON_TYPE_LABELS[addon.addon_type] || addon.addon_type}</p>
                                                         </div>
                                                     </div>
-                                                    <button onClick={() => setPendingDeleteAddon(addon)} className="text-app-faint hover:text-red-500 transition-colors">
+                                                    <button onClick={() => setPendingDeleteAddon(addon)} className="text-app-faint hover:text-app-error transition-colors">
                                                         <Trash2 size={14} />
                                                     </button>
                                                 </div>
                                                 <div className="mt-3 flex items-end gap-2">
-                                                    <span className="text-lg font-black text-indigo-600">${parseFloat(addon.monthly_price).toFixed(0)}</span>
+                                                    <span className="text-lg font-black text-app-accent">${parseFloat(addon.monthly_price).toFixed(0)}</span>
                                                     <span className="text-xs text-app-muted-foreground font-bold">/mo</span>
                                                     <span className="text-xs text-app-faint mx-1">|</span>
                                                     <span className="text-sm font-bold text-app-muted-foreground">${parseFloat(addon.annual_price).toFixed(0)}/yr</span>
                                                 </div>
                                                 <div className="mt-2">
-                                                    <Badge className="bg-indigo-50 text-indigo-700 text-[10px]">+{addon.quantity} {addon.addon_type}</Badge>
+                                                    <Badge className="bg-app-accent-bg text-app-accent text-[10px]">+{addon.quantity} {addon.addon_type}</Badge>
                                                     {addon.plan_ids?.length > 0 && (
                                                         <span className="text-[10px] text-app-muted-foreground ml-2">
                                                             {addon.plan_ids.length} plan(s)

@@ -17,12 +17,12 @@ interface PurchaseOrder {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-    DRAFT: { label: 'Draft', color: 'text-slate-400' },
-    SENT: { label: 'Sent', color: 'text-blue-400' },
-    CONFIRMED: { label: 'Confirmed', color: 'text-emerald-400' },
-    IN_TRANSIT: { label: 'In Transit', color: 'text-amber-400' },
-    RECEIVED: { label: 'Received', color: 'text-emerald-400' },
-    CANCELLED: { label: 'Cancelled', color: 'text-red-400' },
+    DRAFT: { label: 'Draft', color: 'text-app-faint' },
+    SENT: { label: 'Sent', color: 'text-app-info' },
+    CONFIRMED: { label: 'Confirmed', color: 'text-app-success' },
+    IN_TRANSIT: { label: 'In Transit', color: 'text-app-warning' },
+    RECEIVED: { label: 'Received', color: 'text-app-success' },
+    CANCELLED: { label: 'Cancelled', color: 'text-app-error' },
 }
 
 function getToken(slug: string): string | null {
@@ -69,11 +69,11 @@ export default function SupplierOrdersPage() {
             <div className="max-w-4xl mx-auto relative z-10 space-y-8">
                 <div className="space-y-2">
                     <Link href={`/supplier-portal/${slug}`}
-                        className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-sm font-medium transition-colors">
+                        className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> Dashboard
                     </Link>
                     <h1 className="text-4xl font-black text-white">Purchase Orders</h1>
-                    <p className="text-slate-500 text-sm">Orders placed by the buyer directed to you</p>
+                    <p className="text-app-muted-foreground text-sm">Orders placed by the buyer directed to you</p>
                 </div>
 
                 {loading ? (
@@ -82,9 +82,9 @@ export default function SupplierOrdersPage() {
                     </div>
                 ) : orders.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
-                        <ShoppingCart size={48} className="mx-auto text-slate-600" />
+                        <ShoppingCart size={48} className="mx-auto text-app-muted-foreground" />
                         <h2 className="text-xl font-bold text-white">No purchase orders yet</h2>
-                        <p className="text-slate-500">When the buyer creates POs for you, they&#39;ll appear here</p>
+                        <p className="text-app-muted-foreground">When the buyer creates POs for you, they&#39;ll appear here</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -93,7 +93,7 @@ export default function SupplierOrdersPage() {
                             return (
                                 <div key={order.id}
                                     className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-white/10 transition-all">
-                                    <div className={`w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center ${st.color}`}>
+                                    <div className={`w-12 h-12 bg-app-surface/5 rounded-xl flex items-center justify-center ${st.color}`}>
                                         <Package size={22} />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -101,14 +101,14 @@ export default function SupplierOrdersPage() {
                                             <p className="text-white font-bold">{order.po_number}</p>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${st.color}`}>{st.label}</span>
                                         </div>
-                                        <p className="text-slate-500 text-sm mt-1">
+                                        <p className="text-app-muted-foreground text-sm mt-1">
                                             {order.line_count} items • {new Date(order.created_at).toLocaleDateString()}
                                             {order.expected_delivery && ` • ETA: ${new Date(order.expected_delivery).toLocaleDateString()}`}
                                         </p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-white font-black text-lg">${parseFloat(order.total_amount).toFixed(2)}</p>
-                                        <p className="text-slate-600 text-[10px] uppercase">{order.currency}</p>
+                                        <p className="text-app-muted-foreground text-[10px] uppercase">{order.currency}</p>
                                     </div>
                                 </div>
                             )

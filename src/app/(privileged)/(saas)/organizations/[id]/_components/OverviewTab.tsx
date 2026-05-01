@@ -163,7 +163,7 @@ export function OverviewTab({ org, usage, modules, activeModules, encryptionStat
  size="sm"
  disabled={togglingEncryption}
  className={`w-full rounded-xl font-bold text-xs mt-2 ${encryptionStatus?.encryption_enabled
- ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
+ ? 'border-app-error text-app-error hover:bg-app-error-bg'
  : 'border-app-success text-app-success hover:bg-app-primary-light'}`}
  onClick={onToggleEncryption}>
  {togglingEncryption ? 'Processing...' : encryptionStatus?.encryption_enabled ? 'Deactivate' : 'Activate'}

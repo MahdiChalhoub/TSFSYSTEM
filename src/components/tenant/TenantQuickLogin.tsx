@@ -4,7 +4,11 @@ import { useActionState } from "react"
 import { loginAction } from "@/app/actions/auth"
 import { ArrowRight, Loader2, AlertCircle, Lock, ShieldCheck } from "lucide-react"
 
-const initialState: Record<string, any> = { error: {} }
+// `loginAction` returns a discriminated union (auth path vs 2FA path); the
+// inferred type from useActionState is the union of all cases. The popup
+// renders fields progressively, so we read the union with narrow checks below.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const initialState: any = { error: {} }
 
 export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: string }) {
     const [state, action, isPending] = useActionState(loginAction, initialState)
@@ -24,10 +28,10 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
 
             <form action={action} className="space-y-4 pt-2 relative">
                 {/* Error Display */}
-                {(state?.error as any)?.root && (
+                {state?.error?.root && (
                     <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
                         <AlertCircle size={18} className="shrink-0" />
-                        {(state?.error as any).root[0]}
+                        {Array.isArray(state.error.root) ? state.error.root[0] : state.error.root}
                     </div>
                 )}
 
@@ -38,7 +42,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                     <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
                         <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-sm font-medium flex items-center gap-3">
                             <ShieldCheck size={18} className="shrink-0" />
-                            {(state as any).message || "Enter your verification code"}
+                            {state.message || "Enter your verification code"}
                         </div>
 
                         <input
@@ -51,7 +55,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                         />
 
                         {/* Server-side 2FA challenge — no passwords in DOM */}
-                        <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
+                        <input type="hidden" name="challenge_id" defaultValue={state.challenge_id} />
 
                         <button
                             type="submit"

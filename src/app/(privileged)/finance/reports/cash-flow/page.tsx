@@ -32,8 +32,14 @@ export default function CashFlowReportPage() {
     return date.toISOString().split('T')[0]
   })
 
+  // Backend payload — many fields render directly into formatters that
+  // accept loose primitives. A typed-narrow pass over this report would
+  // ripple through ~25 call sites; deferred. Loose `any` for now.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type CashFlowReport = any
+
   const [method, setMethod] = useState<'INDIRECT' | 'DIRECT'>('INDIRECT')
-  const [report, setReport] = useState<any>(null)
+  const [report, setReport] = useState<CashFlowReport>(null)
   const [loading, setLoading] = useState(false)
 
   // Refetch on first mount AND whenever the OFFICIAL/INTERNAL toggle flips.
@@ -131,7 +137,7 @@ export default function CashFlowReportPage() {
               <Label htmlFor="method" className="text-xs font-bold uppercase tracking-wider">
                 Method
               </Label>
-              <Select value={method} onValueChange={(v: any) => setMethod(v)}>
+              <Select value={method} onValueChange={(v) => setMethod(v as 'INDIRECT' | 'DIRECT')}>
                 <SelectTrigger className="mt-2 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>

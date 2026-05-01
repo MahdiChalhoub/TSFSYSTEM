@@ -24,6 +24,7 @@ import {
   X, Maximize2, Minimize2, SlidersHorizontal,
   AlertTriangle, RefreshCcw, Settings2, DollarSign,
   ShoppingCart, ArrowRightLeft, Edit,
+  LayoutGrid, List,
 } from 'lucide-react'
 
 /* ── Lib imports ── */
@@ -44,6 +45,7 @@ import { DajingoListView } from '@/components/common/DajingoListView'
 import { DajingoPageShell } from '@/components/common/DajingoPageShell'
 import { ProductDetailCards } from './_components/ProductDetailCards'
 import { renderProductCell } from './_components/ProductColumns'
+import { ProductCardGrid } from './_components/ProductCardGrid'
 import { ProductThumbnail } from '@/components/products/ProductThumbnail'
 import { type RequestableProduct } from '@/components/products/RequestProductDialog'
 import { RequestFlowProvider, useRequestFlow } from '@/components/products/RequestFlowProvider'
@@ -83,6 +85,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
   const searchRef = useRef<HTMLInputElement>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [pageSize, setPageSize] = useState(50)
+  const [viewMode, setViewMode] = useState<'list' | 'card'>('list')
   const [currentPage, setCurrentPage] = useState(1)
 
   // ── SaaS ListViewPolicy enforcement ──
@@ -206,6 +209,24 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
         icon: <Plus size={14} />,
         onClick: () => openTab('New Product', '/products/new'),
       }}
+      secondaryActions={
+        <div className="flex items-center p-0.5 rounded-lg bg-app-surface border border-app-border">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-md transition-all ${viewMode === 'list' ? 'bg-app-primary text-white' : 'text-app-muted-foreground hover:text-app-foreground'}`}
+            title="List View"
+          >
+            <List size={13} />
+          </button>
+          <button
+            onClick={() => setViewMode('card')}
+            className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-md transition-all ${viewMode === 'card' ? 'bg-app-primary text-white' : 'text-app-muted-foreground hover:text-app-foreground'}`}
+            title="Card View"
+          >
+            <LayoutGrid size={13} />
+          </button>
+        </div>
+      }
       search={search}
       onSearchChange={setSearch}
       searchRef={searchRef}
@@ -333,105 +354,110 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
         />
       )}
     >
-      {/* ═══════════════ TREE TABLE (DajingoListView) ═══════════════ */}
-      <DajingoListView<Product>
-        data={paginated}
-        allData={filtered}
-        loading={loading}
-        getRowId={r => r.id}
-        columns={ALL_COLUMNS}
-        visibleColumns={effectiveVisibleColumns}
-        columnWidths={COLUMN_WIDTHS}
-        rightAlignedCols={RIGHT_ALIGNED_COLS}
-        centerAlignedCols={CENTER_ALIGNED_COLS}
-        growCols={GROW_COLS}
-        columnOrder={columnOrder}
-        onColumnReorder={newOrder => {
-          setColumnOrder(newOrder)
-          const updated = profiles.map(p => p.id === activeProfileId ? { ...p, columnOrder: newOrder } : p)
-          setProfiles(updated); saveProfiles(updated)
-          const ap = updated.find(p => p.id === activeProfileId)
-          if (ap) syncProfileToBackend(ap)
-        }}
-        policyHiddenColumns={policyHiddenColumns}
-        entityLabel="Product"
-        /* ── Integrated Toolbar ── */
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search by name, SKU, or barcode... (Ctrl+K)"
-        searchRef={searchRef}
-        showFilters={showFilters}
-        onToggleFilters={() => setShowFilters(!showFilters)}
-        activeFilterCount={activeFilterCount}
-        onToggleCustomize={() => setShowCustomize(true)}
-        /* ── Row rendering ── */
-        renderRowIcon={product => {
-          const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
-          // Thumbnail when an image is set; falls back to the type icon. The
-          // <img> uses native lazy-loading so off-screen rows don't fetch.
-          return (
-            <ProductThumbnail
-              image={product.image}
-              productType={product.product_type}
-              name={product.name}
-              size={28}
-              className="rounded-lg"
-              color={tc.color}
-            />
-          )
-        }}
-        renderRowTitle={product => (
-          <div className="flex-1 min-w-0">
-            <div className="truncate text-[12px] font-bold text-app-foreground">{product.name}</div>
-            <div className="text-[10px] font-mono text-app-muted-foreground">
-              {product.sku}
-              {product.barcode && <span className="ml-2 opacity-60">⎸ {product.barcode}</span>}
+      {/* ═══════════════ CARD VIEW (overlay when active) ═══════════════ */}
+      {viewMode === 'card' && (
+        <ProductCardGrid
+          data={paginated}
+          loading={loading}
+          onView={product => router.push(`/inventory/products/${product.id}`)}
+          onEdit={product => router.push(`/inventory/products/${product.id}`)}
+        />
+      )}
+
+      {/* ═══════════════ LIST VIEW (always mounted, hidden when card mode) ═══════════════ */}
+      <div className={viewMode === 'card' ? 'hidden' : 'contents'}>
+        <DajingoListView<Product>
+          data={paginated}
+          allData={filtered}
+          loading={loading}
+          getRowId={r => r.id}
+          columns={ALL_COLUMNS}
+          visibleColumns={effectiveVisibleColumns}
+          columnWidths={COLUMN_WIDTHS}
+          rightAlignedCols={RIGHT_ALIGNED_COLS}
+          centerAlignedCols={CENTER_ALIGNED_COLS}
+          growCols={GROW_COLS}
+          columnOrder={columnOrder}
+          onColumnReorder={newOrder => {
+            setColumnOrder(newOrder)
+            const updated = profiles.map(p => p.id === activeProfileId ? { ...p, columnOrder: newOrder } : p)
+            setProfiles(updated); saveProfiles(updated)
+            const ap = updated.find(p => p.id === activeProfileId)
+            if (ap) syncProfileToBackend(ap)
+          }}
+          policyHiddenColumns={policyHiddenColumns}
+          entityLabel="Product"
+          /* ── Integrated Toolbar ── */
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search by name, SKU, or barcode... (Ctrl+K)"
+          searchRef={searchRef}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          activeFilterCount={activeFilterCount}
+          onToggleCustomize={() => setShowCustomize(true)}
+          /* ── Row rendering ── */
+          renderRowIcon={product => {
+            const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
+            return (
+              <ProductThumbnail
+                image={product.image}
+                productType={product.product_type}
+                name={product.name}
+                size={28}
+                className="rounded-lg"
+                color={tc.color}
+              />
+            )
+          }}
+          renderRowTitle={product => (
+            <div className="flex-1 min-w-0">
+              <div className="truncate text-[12px] font-bold text-app-foreground">{product.name}</div>
+              <div className="text-[10px] font-mono text-app-muted-foreground">
+                {product.sku}
+                {product.barcode && <span className="ml-2 opacity-60">⎸ {product.barcode}</span>}
+              </div>
             </div>
-          </div>
-        )}
-        renderColumnCell={(key, product) => renderProductCell(key, product)}
-        renderExpanded={product => <ProductDetailCards product={product} marginPct={(() => { const sellHt = parseFloat(product.selling_price_ht) || 0; const costP = parseFloat(product.cost_price) || 0; return sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—' })()} onView={id => router.push(`/inventory/products/${id}`)} />}
-        onView={product => router.push(`/inventory/products/${product.id}`)}
-        menuActions={product => [
-          { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => triggerRequest('PURCHASE', [toRequestable(product)]) },
-          { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => triggerRequest('TRANSFER', [toRequestable(product)]) },
-          { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
-        ]}
-        selectedIds={selectedIds}
-        onToggleSelect={toggleSelect}
-        isAllPageSelected={isAllPageSelected}
-        onToggleSelectAll={toggleSelectAll}
-        bulkActions={
-          <>
-            <button onClick={() => triggerRequest('PURCHASE', items.filter(p => selectedIds.has(p.id)).map(toRequestable))}
-              className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-info/30 text-app-info hover:bg-app-info/10 transition-all">
-              <ShoppingCart size={11} /> Request Purchase
-            </button>
-            <button onClick={() => triggerRequest('TRANSFER', items.filter(p => selectedIds.has(p.id)).map(toRequestable))}
-              className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-warning/30 text-app-warning hover:bg-app-warning/10 transition-all">
-              <ArrowRightLeft size={11} /> Request Transfer
-            </button>
-          </>
-        }
-        hasFilters={hasFilters}
-        onClearFilters={() => { setSearch(''); setFilters(EMPTY_FILTERS) }}
-        emptyIcon={<Package size={36} />}
-        pagination={{
-          // `totalItems` is the count the pagination buttons step through —
-          // matches `totalPages`. `totalAvailable` is the truth from the
-          // server (DRF `count`). When the two differ, the footer surfaces
-          // "X of Y in catalog" so the user knows there's more than they
-          // can see in this fetch.
-          totalItems: filtered.length,
-          totalAvailable: Math.max(serverTotal, items.length),
-          activeFilterCount,
-          currentPage: clampedPage,
-          totalPages,
-          pageSize,
-          onPageChange: setCurrentPage,
-          onPageSizeChange: n => { setPageSize(n); setCurrentPage(1) },
-        }}
-      />
+          )}
+          renderColumnCell={(key, product) => renderProductCell(key, product)}
+          renderExpanded={product => <ProductDetailCards product={product} marginPct={(() => { const sellHt = parseFloat(product.selling_price_ht) || 0; const costP = parseFloat(product.cost_price) || 0; return sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—' })()} onView={id => router.push(`/inventory/products/${id}`)} />}
+          onView={product => router.push(`/inventory/products/${product.id}`)}
+          menuActions={product => [
+            { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => triggerRequest('PURCHASE', [toRequestable(product)]) },
+            { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => triggerRequest('TRANSFER', [toRequestable(product)]) },
+            { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
+          ]}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          isAllPageSelected={isAllPageSelected}
+          onToggleSelectAll={toggleSelectAll}
+          bulkActions={
+            <>
+              <button onClick={() => triggerRequest('PURCHASE', items.filter(p => selectedIds.has(p.id)).map(toRequestable))}
+                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-info/30 text-app-info hover:bg-app-info/10 transition-all">
+                <ShoppingCart size={11} /> Request Purchase
+              </button>
+              <button onClick={() => triggerRequest('TRANSFER', items.filter(p => selectedIds.has(p.id)).map(toRequestable))}
+                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-warning/30 text-app-warning hover:bg-app-warning/10 transition-all">
+                <ArrowRightLeft size={11} /> Request Transfer
+              </button>
+            </>
+          }
+          hasFilters={hasFilters}
+          onClearFilters={() => { setSearch(''); setFilters(EMPTY_FILTERS) }}
+          emptyIcon={<Package size={36} />}
+          pagination={{
+            totalItems: filtered.length,
+            totalAvailable: Math.max(serverTotal, items.length),
+            activeFilterCount,
+            currentPage: clampedPage,
+            totalPages,
+            pageSize,
+            onPageChange: setCurrentPage,
+            onPageSizeChange: n => { setPageSize(n); setCurrentPage(1) },
+          }}
+        />
+      </div>
 
       {/* Customize Panel */}
       <CustomizePanel isOpen={showCustomize} onClose={() => setShowCustomize(false)}

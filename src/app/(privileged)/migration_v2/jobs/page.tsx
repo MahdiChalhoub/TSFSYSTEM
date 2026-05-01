@@ -13,13 +13,13 @@ type Jobs = Record<string, any>
 
 const STATUS_COLORS: Record<string, string> = {
   DRAFT: 'bg-app-surface-2 text-app-foreground',
-  VALIDATING: 'bg-yellow-100 text-yellow-700',
-  MAPPING: 'bg-blue-100 text-blue-700',
-  READY: 'bg-emerald-100 text-emerald-700',
+  VALIDATING: 'bg-app-warning-bg text-app-warning',
+  MAPPING: 'bg-app-info-bg text-app-info',
+  READY: 'bg-app-success-bg text-app-success',
   RUNNING: 'bg-purple-100 text-purple-700',
-  COMPLETED: 'bg-green-100 text-green-800',
-  FAILED: 'bg-red-100 text-red-700',
-  ROLLED_BACK: 'bg-orange-100 text-orange-700',
+  COMPLETED: 'bg-app-success-bg text-app-success',
+  FAILED: 'bg-app-error-bg text-app-error',
+  ROLLED_BACK: 'bg-app-warning-bg text-app-warning',
 }
 
 const ALL_COLUMNS: ColumnDef<Jobs>[] = [
@@ -109,7 +109,7 @@ export default function JobsListPage() {
         headerExtra={
           <Button
             onClick={() => router.push('/migration_v2')}
-            className="h-9 px-4 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
+            className="h-9 px-4 bg-app-primary text-white hover:bg-app-primary-dark rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
           >
             <Plus size={14} className="mr-2" /> New Migration
           </Button>

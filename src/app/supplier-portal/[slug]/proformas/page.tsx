@@ -17,12 +17,12 @@ interface Proforma {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-    DRAFT: 'text-slate-400',
-    SUBMITTED: 'text-blue-400',
-    UNDER_REVIEW: 'text-amber-400',
-    APPROVED: 'text-emerald-400',
-    REJECTED: 'text-red-400',
-    EXPIRED: 'text-slate-500',
+    DRAFT: 'text-app-faint',
+    SUBMITTED: 'text-app-info',
+    UNDER_REVIEW: 'text-app-warning',
+    APPROVED: 'text-app-success',
+    REJECTED: 'text-app-error',
+    EXPIRED: 'text-app-muted-foreground',
 }
 
 function getToken(slug: string): string | null {
@@ -95,46 +95,46 @@ export default function ProformasPage() {
 
     return (
         <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
-            <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-primary/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-8">
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">
                         <Link href={`/supplier-portal/${slug}`}
-                            className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-sm font-medium transition-colors">
+                            className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                             <ArrowLeft size={16} /> Dashboard
                         </Link>
                         <h1 className="text-4xl font-black text-white">Proformas</h1>
-                        <p className="text-slate-500 text-sm">Create and manage quotations sent to the buyer</p>
+                        <p className="text-app-muted-foreground text-sm">Create and manage quotations sent to the buyer</p>
                     </div>
                     <button onClick={() => setShowCreate(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-all">
+                        className="flex items-center gap-2 px-6 py-3 bg-app-primary text-white rounded-xl font-bold hover:bg-app-primary transition-all">
                         <Plus size={18} /> New Proforma
                     </button>
                 </div>
 
                 {/* Create Form */}
                 {showCreate && (
-                    <div className="p-8 bg-slate-900/80 border border-emerald-500/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
+                    <div className="p-8 bg-slate-900/80 border border-app-success/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white flex items-center gap-3">
-                                <FileText size={22} className="text-emerald-400" /> New Proforma
+                                <FileText size={22} className="text-app-success" /> New Proforma
                             </h2>
-                            <button onClick={() => setShowCreate(false)} className="text-slate-500 hover:text-white"><X size={20} /></button>
+                            <button onClick={() => setShowCreate(false)} className="text-app-muted-foreground hover:text-white"><X size={20} /></button>
                         </div>
                         {error && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+                            <div className="p-3 bg-red-500/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
                                 <AlertCircle size={16} /> {error}
                             </div>
                         )}
                         <form onSubmit={handleCreate} className="space-y-4">
                             <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)}
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-emerald-500 transition-all" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all" />
                             <textarea placeholder="Notes / description" value={notes} onChange={e => setNotes(e.target.value)} rows={3}
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-emerald-500 transition-all placeholder:text-slate-700 resize-none" />
-                            <p className="text-[11px] text-slate-600">You can add line items after creating the proforma</p>
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-foreground resize-none" />
+                            <p className="text-[11px] text-app-muted-foreground">You can add line items after creating the proforma</p>
                             <button type="submit" disabled={creating}
-                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+                                className="w-full bg-app-primary hover:bg-app-primary text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
                                 {creating ? <Loader2 className="animate-spin" size={18} /> : <><Send size={18} /> Create Proforma</>}
                             </button>
                         </form>
@@ -148,26 +148,26 @@ export default function ProformasPage() {
                     </div>
                 ) : proformas.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
-                        <FileText size={48} className="mx-auto text-slate-600" />
+                        <FileText size={48} className="mx-auto text-app-muted-foreground" />
                         <h2 className="text-xl font-bold text-white">No proformas yet</h2>
-                        <p className="text-slate-500">Create your first proforma to send a quotation</p>
+                        <p className="text-app-muted-foreground">Create your first proforma to send a quotation</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {proformas.map(p => (
                             <div key={p.id}
                                 className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-white/10 transition-all">
-                                <div className={`w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center ${STATUS_COLORS[p.status] || 'text-slate-400'}`}>
+                                <div className={`w-12 h-12 bg-app-surface/5 rounded-xl flex items-center justify-center ${STATUS_COLORS[p.status] || 'text-app-faint'}`}>
                                     <FileText size={22} />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-3">
                                         <p className="text-white font-bold">{p.proforma_number}</p>
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${STATUS_COLORS[p.status] || 'text-slate-400'}`}>
+                                        <span className={`text-[10px] font-black uppercase tracking-widest ${STATUS_COLORS[p.status] || 'text-app-faint'}`}>
                                             {p.status.replace('_', ' ')}
                                         </span>
                                     </div>
-                                    <p className="text-slate-500 text-sm mt-1 truncate">
+                                    <p className="text-app-muted-foreground text-sm mt-1 truncate">
                                         {p.notes || 'No notes'} • {new Date(p.created_at).toLocaleDateString()}
                                         {p.valid_until && ` • Valid until: ${new Date(p.valid_until).toLocaleDateString()}`}
                                     </p>

@@ -32,17 +32,17 @@ export default function UserRegisterPage() {
                 <Card className="w-full max-w-md bg-app-surface/60 border-app-primary/20 backdrop-blur-[40px] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10">
                     <CardHeader className="text-center pt-10 pb-6">
                         <div className="flex justify-center mb-6">
-                            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <div className="w-16 h-16 rounded-full bg-app-primary/10 border border-app-success/20 flex items-center justify-center text-app-success">
                                 <CheckCircle2 size={32} />
                             </div>
                         </div>
                         <CardTitle className="text-2xl font-black text-white tracking-tight italic">REGISTRATION SUBMITTED</CardTitle>
-                        <CardDescription className="text-slate-500 font-medium">Your account has been created.</CardDescription>
+                        <CardDescription className="text-app-muted-foreground font-medium">Your account has been created.</CardDescription>
                     </CardHeader>
                     <CardContent className="text-center space-y-6 pb-10">
-                        <div className="bg-amber-500/5 p-6 rounded-2xl border border-amber-500/10">
-                            <p className="text-amber-400 font-black text-xs uppercase tracking-[0.2em] mb-2">Pending Authorization</p>
-                            <p className="text-sm text-slate-400 leading-relaxed font-medium">
+                        <div className="bg-app-warning/5 p-6 rounded-2xl border border-app-warning/10">
+                            <p className="text-app-warning font-black text-xs uppercase tracking-[0.2em] mb-2">Pending Authorization</p>
+                            <p className="text-sm text-app-faint leading-relaxed font-medium">
                                 An administrator must approve your account before you can log in.
                             </p>
                         </div>
@@ -85,7 +85,7 @@ export default function UserRegisterPage() {
                         </div>
                         <div>
                             <CardTitle className="text-xl font-black text-white tracking-tight uppercase italic">Employee Registration</CardTitle>
-                            <CardDescription className="text-slate-500 font-medium tracking-tight">Fill in your details below</CardDescription>
+                            <CardDescription className="text-app-muted-foreground font-medium tracking-tight">Fill in your details below</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -93,7 +93,7 @@ export default function UserRegisterPage() {
                 <CardContent className="p-10">
                     <form action={action} className="space-y-6">
                         {(state?.error as any)?.root && (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in zoom-in-95">
+                            <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl flex items-center gap-3 text-app-error text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
                                 {(state?.error as any).root}
                             </div>
@@ -101,36 +101,36 @@ export default function UserRegisterPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="first_name" className="text-[10px] uppercase tracking-widest font-black text-slate-500">First Name</Label>
+                                <Label htmlFor="first_name" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">First Name</Label>
                                 <Input id="first_name" name="first_name" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold" />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="last_name" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Last Name</Label>
+                                <Label htmlFor="last_name" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Last Name</Label>
                                 <Input id="last_name" name="last_name" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold" />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="email" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Email</Label>
+                            <Label htmlFor="email" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Email</Label>
                             <Input id="email" name="email" type="email" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
-                            {(state as any)?.error?.email && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.email}</p>}
+                            {(state as any)?.error?.email && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{(state as any).error.email}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="username" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Username</Label>
+                                <Label htmlFor="username" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Username</Label>
                                 <Input id="username" name="username" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-cyan-400" />
-                                {(state as any)?.error?.username && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.username}</p>}
+                                {(state as any)?.error?.username && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{(state as any).error.username}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="password" title="password" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Password</Label>
+                                <Label htmlFor="password" title="password" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Password</Label>
                                 <Input id="password" name="password" type="password" required value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white" />
                                 <PasswordStrength password={passwordValue} />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="role" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Role</Label>
+                            <Label htmlFor="role" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Role</Label>
                             <Select name="role_id" required>
                                 <SelectTrigger className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium">
                                     <SelectValue placeholder="Select role" />
@@ -147,16 +147,16 @@ export default function UserRegisterPage() {
                                     )}
                                 </SelectContent>
                             </Select>
-                            {(state as any)?.error?.role_id && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.role_id}</p>}
+                            {(state as any)?.error?.role_id && <p className="text-[10px] text-app-error font-bold uppercase tracking-widest">{(state as any).error.role_id}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 pt-2">
                             <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Phone</Label>
+                                <Label htmlFor="phone" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Phone</Label>
                                 <Input id="phone" name="phone" className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="dob" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Date of Birth</Label>
+                                <Label htmlFor="dob" className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground">Date of Birth</Label>
                                 <Input id="dob" name="date_of_birth" type="date" className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
                             </div>
                         </div>
@@ -170,14 +170,14 @@ export default function UserRegisterPage() {
                         </Button>
 
                         <div className="text-center pt-4 border-t border-white/5">
-                            <span className="text-[10px] text-slate-500 uppercase font-bold">Already registered? </span>
+                            <span className="text-[10px] text-app-muted-foreground uppercase font-bold">Already registered? </span>
                             <a href="/login" className="text-[10px] text-cyan-400 hover:text-white uppercase font-black tracking-widest transition-colors">Log In</a>
                         </div>
                     </form>
                 </CardContent>
 
                 <CardFooter className="bg-black/20 py-4 justify-center">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-2">
+                    <div className="text-[9px] font-black text-app-foreground uppercase tracking-[0.3em] flex items-center gap-2">
                         <ShieldCheck size={12} className="text-cyan-500/50" />
                         Secured by {PLATFORM_CONFIG.federation_name}
                     </div>

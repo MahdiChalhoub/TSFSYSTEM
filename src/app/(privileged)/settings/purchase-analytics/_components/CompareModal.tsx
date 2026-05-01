@@ -49,7 +49,7 @@ export function CompareModal({ profiles, config, onClose }: {
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div className="text-[9px] font-black text-app-muted-foreground uppercase">Setting</div>
             <div className="text-[9px] font-black text-app-primary uppercase">{profiles[0].name}</div>
-            <div className="text-[9px] font-black text-emerald-600 uppercase">{profiles[1].name}</div>
+            <div className="text-[9px] font-black text-app-success uppercase">{profiles[1].name}</div>
           </div>
           {fields.map(({ key, label, fmt }) => {
             const overrides0 = profiles[0].overrides as Record<string, unknown> | undefined
@@ -59,17 +59,17 @@ export function CompareModal({ profiles, config, onClose }: {
             const v2 = overrides1?.[key] ?? cfg?.[key]
             const diff = JSON.stringify(v1) !== JSON.stringify(v2)
             return (
-              <div key={key} className={`grid grid-cols-3 gap-2 py-1.5 border-b border-app-border/10 ${diff ? 'bg-amber-500/5' : ''}`}>
+              <div key={key} className={`grid grid-cols-3 gap-2 py-1.5 border-b border-app-border/10 ${diff ? 'bg-app-warning/5' : ''}`}>
                 <span className="text-[10px] text-app-muted-foreground">{label}</span>
                 <span className={`text-[10px] font-medium ${diff ? 'text-app-primary' : 'text-app-foreground'}`}>{fmt(v1)}</span>
-                <span className={`text-[10px] font-medium ${diff ? 'text-emerald-600' : 'text-app-foreground'}`}>{fmt(v2)}</span>
+                <span className={`text-[10px] font-medium ${diff ? 'text-app-success' : 'text-app-foreground'}`}>{fmt(v2)}</span>
               </div>
             )
           })}
-          <div className={`grid grid-cols-3 gap-2 py-1.5 ${wDiff ? 'bg-amber-500/5' : ''}`}>
+          <div className={`grid grid-cols-3 gap-2 py-1.5 ${wDiff ? 'bg-app-warning/5' : ''}`}>
             <span className="text-[10px] text-app-muted-foreground">Score Weights</span>
             <span className={`text-[10px] font-medium ${wDiff ? 'text-app-primary' : 'text-app-foreground'}`}>{w1?.margin}/{w1?.velocity}/{w1?.stock_health}</span>
-            <span className={`text-[10px] font-medium ${wDiff ? 'text-emerald-600' : 'text-app-foreground'}`}>{w2?.margin}/{w2?.velocity}/{w2?.stock_health}</span>
+            <span className={`text-[10px] font-medium ${wDiff ? 'text-app-success' : 'text-app-foreground'}`}>{w2?.margin}/{w2?.velocity}/{w2?.stock_health}</span>
           </div>
         </div>
       </div>

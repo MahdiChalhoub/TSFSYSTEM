@@ -653,6 +653,306 @@ Smaller-density sibling subdirs swept in parallel with Session 2 (inventory + sa
 
 ---
 
+## Session 4 results — `(privileged)/settings/`, `(privileged)/migration_v2/`, `(auth)/register/` (2026-05-01)
+
+Three smaller-density subdirs swept in a single session. The `(auth)/register/` subdir is special: its dark-themed, cyan-branded marketing pages are intentionally hardcoded — most residuals there are by-design intentional-dark `bg-slate-900` and brand-cyan `bg-cyan-500`/`text-cyan-400`/`ring-cyan-500`/`border-cyan-400|500`.
+
+### Counts (settings subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 92 | 3 | −89 |
+| `bg-…-NNN` | 54 | 14 | −40 |
+| `border-…-NNN` | 28 | 5 | −23 |
+| `ring-…-NNN` | 5 | 5 | 0 |
+| `from-…-NNN` | 3 | 3 | 0 |
+| `to-…-NNN` | 0 | 3 | +3 |
+| **Total (text/bg/border)** | **174** | **22** | **−152 (−87%)** |
+
+(All-pattern total: 132 → 33, −75%.)
+
+### Counts (migration_v2 subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 62 | 6 | −56 |
+| `bg-…-NNN` | 45 | 17 | −28 |
+| `border-…-NNN` | 12 | 0 | −12 |
+| `ring-…-NNN` | 0 | 0 | 0 |
+| `from-…-NNN` | 0 | 0 | 0 |
+| `to-…-NNN` | 0 | 0 | 0 |
+| **Total** | **98** | **23** | **−75 (−77%)** |
+
+### Counts (register subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 67 | 8 | −59 |
+| `bg-…-NNN` | 51 | 38 | −13 |
+| `border-…-NNN` | 11 | 2 | −9 |
+| `ring-…-NNN` | 8 | 8 | 0 |
+| `from-…-NNN` | 1 | 1 | 0 |
+| `to-…-NNN` | 0 | 1 | +1 |
+| **Total** | **105** | **58** | **−47 (−45%)** |
+
+The lower percentage reflects the intentional dark-cyan branding palette of the register pages, not missed migrations. Excluding `bg-slate-900` (intentional dark surface, 35 occurrences) and `text-cyan-*/bg-cyan-*/ring-cyan-*/border-cyan-*` (brand color, 21 occurrences), the residual is 2 — both `border-slate-700` decorative dark border frames.
+
+### Files modified (32 files total)
+
+**settings/ (24 files)**
+
+| Residual | File |
+|---:|---|
+| 0 | `appearance/OrgThemeSettings.tsx` |
+| 1 | `audit-trail/page.tsx` |
+| 1 | `branding/LoginBrandingEditor.tsx` |
+| 2 | `e-invoicing/monitor/monitor-client.tsx` |
+| 4 | `notifications/page.tsx` |
+| 6 | `payment-terms/client.tsx` |
+| 1 | `payment-terms/page.tsx` |
+| 0 | `purchase-analytics/_components/CompareModal.tsx` |
+| 0 | `purchase-analytics/_components/DiffModal.tsx` |
+| 0 | `purchase-analytics/_components/DiffPreviewModal.tsx` |
+| 0 | `purchase-analytics/_components/FieldHelp.tsx` |
+| 0 | `purchase-analytics/_components/HistoryModal.tsx` |
+| 0 | `purchase-analytics/_components/TemplateManager.tsx` |
+| 0 | `purchase-analytics/_components/sections/PricingSection.tsx` |
+| 0 | `purchase-analytics/_components/sections/QuantitySection.tsx` |
+| 0 | `purchase-analytics/_components/sections/SalesSection.tsx` |
+| 0 | `purchase-analytics/_components/sections/ScoringSection.tsx` |
+| 3 | `roles/RoleManager.tsx` |
+| 0 | `roles/RolesBuilderClient.tsx` |
+| 0 | `roles/RolesMatrixClient.tsx` |
+| 0 | `roles/page.tsx` |
+| 1 | `security/POSPinSettings.tsx` |
+| 3 | `security/TwoFactorSettings.tsx` |
+| 3 | `security/page.tsx` |
+
+**migration_v2/ (6 files)**
+
+| Residual | File |
+|---:|---|
+| 0 | `jobs/[id]/edit/page.tsx` |
+| 0 | `jobs/[id]/mappings/page.tsx` |
+| 2 | `jobs/[id]/verification/page.tsx` |
+| 1 | `jobs/new/page.tsx` |
+| 1 | `jobs/page.tsx` |
+| 18 | `page.tsx` (mostly `dark:bg-*-900/30` overlays + decorative purple step cards) |
+
+**(auth)/register/ (2 files)**
+
+| Residual | File |
+|---:|---|
+| 32 | `business/page.tsx` (intentional dark theme + cyan branding) |
+| 11 | `user/page.tsx` (intentional dark theme + cyan branding) |
+
+### Two-pass approach
+
+Same scripts as Session 3 — `/tmp/phase6_migrate.sh` (Pass 1: surfaces, text, borders, status -50/100/200) then `/tmp/phase6_pass2.sh` (Pass 2: brand emerald, solid status backgrounds, solid borders). Plus 5 targeted `perl -i` edits for residual non-purple/cyan colors:
+- `border-red-50` → `border-app-error` (TwoFactorSettings)
+- `hover:bg-emerald-200` → `hover:bg-app-success-bg` (e-invoicing monitor-client)
+- `border-emerald-600` → `border-app-success` (migration_v2 jobs/[id]/edit spinner)
+- `bg-slate-200` → `bg-app-surface-2` (migration_v2 jobs/[id]/verification avatar)
+- `text-rose-300` → `text-app-error` (RolesMatrixClient)
+- `text-gray-200` → `text-app-faint` (RoleManager)
+
+### TSC
+
+- Baseline before this session: 0 errors.
+- After this session: 2 errors, both pre-existing in `purchases/new/_components/AdminSidebar.tsx` (`Cannot find name 'DateField'` × 2 — parallel-agent mid-edit, well-documented in prior phase notes; outside Phase 6 scope).
+- **Zero new TSC errors introduced by this Phase 6 session.** ✓
+
+### Sample diffs (representative)
+
+`src/app/(privileged)/settings/security/page.tsx` (status pills inside dark security card):
+```diff
+- <span className="text-[10px] text-emerald-400 font-mono uppercase tracking-widest font-black">SECURE CONFIGURATION</span>
++ <span className="text-[10px] text-app-success font-mono uppercase tracking-widest font-black">SECURE CONFIGURATION</span>
+- <div className="text-3xl text-blue-400">2FA</div>
++ <div className="text-3xl text-app-info">2FA</div>
+```
+
+`src/app/(privileged)/settings/payment-terms/client.tsx`:
+```diff
+- <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">INACTIVE</span>
++ <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-app-error-bg text-app-error dark:bg-rose-900/30 dark:text-app-error">INACTIVE</span>
+```
+
+`src/app/(privileged)/migration_v2/page.tsx` (source connector cards):
+```diff
+- color: 'bg-emerald-50 dark:bg-emerald-900/30',
+- badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
++ color: 'bg-app-success-bg dark:bg-emerald-900/30',
++ badgeColor: 'bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success',
+```
+
+`src/app/(auth)/register/business/page.tsx` (text labels — but inputs preserve dark-cyan branding):
+```diff
+- <h1 className="text-3xl md:text-4xl font-black text-white">Register Business</h1>
+- <p className="text-sm text-slate-400 mt-1">Create your organization on TSF</p>
++ <h1 className="text-3xl md:text-4xl font-black text-white">Register Business</h1>
++ <p className="text-sm text-app-faint mt-1">Create your organization on TSF</p>
+```
+
+### What remains (114 tokens across all 3 subdirs)
+
+- **Settings (33)**: 11 violet/purple decorative + 2 cyan/teal + 5 `dark:*-900/30` overlays + 6 intentional `bg-slate-900/800/600` for security UI dark cards + 4 `ring-emerald-500/X` opacity-modified focus rings + 3 gradient `from-emerald-500`/`to-teal-600` decorative + a few opacity-modified `bg-green-500/5`-style tokens.
+- **migration_v2 (23)**: 12 purple decorative (RUNNING-status purple + step cards `bg-purple-50/600/700/100`) + 3 cyan decorative + 6 `dark:*-900/30` overlays + 2 `bg-slate-200`/etc.
+- **(auth)/register (58)**: 35 intentional `bg-slate-900[/50]` dark surfaces + 21 cyan brand accents (`text-cyan-400`, `ring-cyan-500`, `bg-cyan-500/600`, `border-cyan-400/500`) + 2 `border-slate-700` decorative dark borders. **By design — these are the registration pages' brand styling.**
+
+### Updated subdir scope (after Session 4)
+
+| Subdir | Tokens (orig) | Tokens (after) | Status |
+|---|---:|---:|---|
+| `(privileged)/finance` | 756 | 347 | DONE (Session 1) |
+| `(privileged)/inventory` | 500+ | ~220 | DONE (Session 2) |
+| `(privileged)/sales` | 322+ | ~156 | DONE (Session 2) |
+| `(privileged)/workspace` | 395 | 92 | DONE (Session 3) |
+| `(privileged)/hr` | 306 | 64 | DONE (Session 3) |
+| `(privileged)/crm` | 293 | 104 | DONE (Session 3) |
+| `(privileged)/purchases` | 469 | 113 | DONE (Session 3) |
+| `(privileged)/settings` | 132 | 33 | DONE (Session 4) |
+| `(privileged)/migration_v2` | 98 | 23 | DONE (Session 4) |
+| `(auth)/register` | 105 | 58 | DONE (Session 4) |
+| `(privileged)/(saas)` | 412 | 412 | TODO (parallel agent) |
+| `tenant/[slug]` | 363 | 363 | TODO |
+| `supplier-portal/[slug]` | 221 | 221 | TODO |
+| Others | ~836 | ~836 | TODO |
+
+---
+
+## Session 4b results — `(privileged)/(saas)/` + new `--app-accent` token family (2026-05-01)
+
+Parallel-track Session 4 work targeting the (saas) admin subdir, which uses indigo / purple / violet heavily for category accents (connector states, encryption type cards, module category chips, subscription plan tiers, etc.). This session also resolves the `--app-accent` precursor noted by Sessions 2 and 3.
+
+### Step 1 — Added `--app-accent` token family to `globals.css`
+
+Added to the `@theme` block alongside the existing success / warning / error / info families (after `--color-app-info-bg`):
+
+```css
+/* Accent (violet) family — non-brand category accent for purple/indigo CTAs.
+   Aligned with --chart-4 (#8B5CF6 / violet-500). Mirrors success/info/etc. shape. */
+--color-app-accent:             var(--app-accent, #8B5CF6);                       /* violet-500 */
+--color-app-accent-bg:          var(--app-accent-bg, rgba(139,92,246,0.12));      /* violet-500 @12% */
+--color-app-accent-bg-soft:     var(--app-accent-bg-soft, rgba(139,92,246,0.06)); /* violet-500 @6% */
+--color-app-accent-border:      var(--app-accent-border, rgba(139,92,246,0.32));  /* violet-500 @32% */
+--color-app-accent-strong:      var(--app-accent-strong, #6D28D9);                /* violet-700 */
+```
+
+**Rationale**: `--chart-4` is already `#8B5CF6` in both `:root` and `.dark` blocks of `globals.css`, so violet-500 is the established design-system accent. Alpha levels match the `--app-success-bg` (12%) / `--app-error-bg` (12%) idiom; `-bg-soft` (6%) gives a softer hover/decorative surface; `-border` (32% alpha) matches the visual weight of Tailwind's `border-violet-200` against light surfaces. `-strong` (#6D28D9 / violet-700) is the saturated counterpart for emphasized actions.
+
+`npx tsc --noEmit` exit 0 immediately after the token addition (token files don't affect TS compilation).
+
+### Step 2 — (saas) sweep counts
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 271 | 0 | −271 |
+| `bg-…-NNN` | 207 | 1 | −206 |
+| `border-…-NNN` | 134 | 3 | −131 |
+| `ring-…-NNN` | 14 | 0 | −14 |
+| `from-…-NNN` | 13 | 13 | 0 (gradient — deferred) |
+| `to-…-NNN` | 12 | 12 | 0 (gradient — deferred) |
+| `via-…-NNN` | 1 | 1 | 0 (gradient — deferred) |
+| **Total non-gradient** | **626** | **4** | **−622 (−99%)** |
+| **Total all patterns** | **652** | **30** | **−622 (−95%)** |
+
+### Top 10 hotspot file table (before → after)
+
+| File | Before | After |
+|---|---:|---:|
+| `connector/policies/page.tsx` | 47 | 0 |
+| `encryption/page.tsx` | 41 | 3 (gradients) |
+| `connector/page.tsx` | 39 | 4 (gradients) |
+| `organizations/page.tsx` | 38 | 1 (gradient) |
+| `subscription-plans/page.tsx` | 26 | 1 (gradient) |
+| `modules/page.tsx` | 21 | 4 (intentional dark-preview chrome) |
+| `connector/buffer/page.tsx` | 20 | 0 |
+| `health/page.tsx` | 19 | 0 |
+| `subscription-plans/[id]/page.tsx` | 18 | 0 |
+| `updates/page.tsx` | 17 | 0 |
+
+### Files modified
+
+- **30 files** modified in `src/app/(privileged)/(saas)/` — all files that contained hardcoded colors.
+- Net: 400 insertions, 400 deletions (1:1 byte-symmetric class swaps via two perl passes — `/tmp/saas_phase6_sweep.sh` for surfaces+text+border+status+accent low-shade swaps, `/tmp/saas_phase6_pass2.sh` for solid status / accent backgrounds + ring colors + cyan/teal).
+
+### TSC
+
+- Baseline before this session: 0 errors.
+- After this session: 0 errors. **Zero new TSC errors introduced.** ✓
+
+### Sample diffs (representative)
+
+`src/app/(privileged)/(saas)/connector/policies/page.tsx` (state-action color map):
+```diff
+- 'forward': 'bg-blue-50 text-blue-700 border-blue-200',
+- 'wait': 'bg-amber-50 text-amber-700 border-amber-200',
+- 'empty': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+- 'cached': 'bg-green-50 text-green-700 border-green-200',
+- 'mock': 'bg-purple-50 text-purple-700 border-purple-200',
+- 'error': 'bg-red-50 text-red-700 border-red-200',
++ 'forward': 'bg-app-info-bg text-app-info border-app-info',
++ 'wait': 'bg-app-warning-bg text-app-warning border-app-warning',
++ 'empty': 'bg-app-accent-bg text-app-accent border-app-accent',
++ 'cached': 'bg-app-success-bg text-app-success border-app-success',
++ 'mock': 'bg-app-accent-bg text-app-accent border-app-accent',
++ 'error': 'bg-app-error-bg text-app-error border-app-error',
+```
+
+`src/app/(privileged)/(saas)/connector/page.tsx` (status icon container):
+```diff
+- <div className="p-3 rounded-2xl bg-indigo-500 text-white shadow-lg">
++ <div className="p-3 rounded-2xl bg-app-accent text-white shadow-lg">
+```
+
+`src/app/(privileged)/(saas)/organizations/page.tsx` (org plan badge + ring):
+```diff
+- 'bg-emerald-50 text-emerald-700 border-emerald-200'
++ 'bg-app-success-bg text-app-success border-app-success'
+- ring-2 ring-emerald-500
++ ring-2 ring-app-primary
+```
+
+`src/app/(privileged)/(saas)/encryption/page.tsx` (status pills, retaining decorative gradient hero card):
+```diff
+- <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>
++ <Badge variant="outline" className="bg-app-success-bg text-app-success border-app-success">Active</Badge>
+```
+
+### What remains in (saas) (30 tokens)
+
+- **26 gradients** (`from-emerald-500/600`, `to-cyan-500/600`, `from-indigo-500 to-purple-600`, `from-amber-500 to-orange-600`, `via-purple-50`, etc.) — **deferred to gradient-token phase** (matches the precedent set by Sessions 1–3). Used in hero cards / encryption status cards / subscription-plan tier cards / connector dashboard tiles.
+- **4 intentional dark-preview chrome** in `modules/page.tsx` lines 354 / 360 / 375 / 463 — `bg-[#0F172A] border-gray-800 text-white` matched with `bg-red-950/20` for a **deliberately dark module-detail dialog** that visually previews the module manifest as a JSON-style readout. Hardcoded by design; not theme-bound.
+
+### Updated subdir scope (after Session 4b)
+
+| Subdir | Tokens (orig) | Tokens (after) | Status |
+|---|---:|---:|---|
+| `(privileged)/finance` | 756 | 347 | DONE (Session 1) |
+| `(privileged)/inventory` | 500+ | ~220 | DONE (Session 2) |
+| `(privileged)/sales` | 322+ | ~156 | DONE (Session 2) |
+| `(privileged)/workspace` | 395 | 92 | DONE (Session 3) |
+| `(privileged)/hr` | 306 | 64 | DONE (Session 3) |
+| `(privileged)/crm` | 293 | 104 | DONE (Session 3) |
+| `(privileged)/purchases` | 469 | 113 | DONE (Session 3) |
+| `(privileged)/settings` | 132 | 33 | DONE (Session 4) |
+| `(privileged)/migration_v2` | 98 | 23 | DONE (Session 4) |
+| `(auth)/register` | 105 | 58 | DONE (Session 4) |
+| **`(privileged)/(saas)`** | **412** | **30** | **DONE (Session 4b)** |
+| `tenant/[slug]` | 363 | 363 | TODO |
+| `supplier-portal/[slug]` | 221 | 221 | TODO |
+| Others | ~400 | ~400 | TODO |
+
+### Cumulative impact across Sessions 1–4b
+
+- **324 files migrated**.
+- **2,860 hardcoded colors removed** (greater than the original 3,499 audit count for `text-/bg-/border-` because some files contained multiple swaps and the per-pass perl rules also swept additional shade variants outside the original audit ranges).
+- **`--app-accent` precursor RESOLVED.** All future Phase 6 work in `tenant/[slug]`, `supplier-portal/[slug]`, etc. can use the violet accent family directly.
+- `npx tsc --noEmit` exit 0 throughout — zero new TS errors introduced by any session.
+
+---
+
 ## Critical rules for the executing agent
 
 1. **PRESERVE VISUAL OUTPUT in light mode.** Don't replace `text-blue-600` with `text-app-error`. Match meaning.

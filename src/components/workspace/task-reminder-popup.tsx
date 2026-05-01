@@ -60,8 +60,8 @@ export function TaskReminderPopup() {
 
     const fetchReminders = useCallback(async () => {
         try {
-            const res: any = await erpFetch('tasks/my-reminders/')
-            const list: Reminder[] = res?.results || res || []
+            const res = await erpFetch('tasks/my-reminders/') as { results?: Reminder[] } | Reminder[] | null
+            const list: Reminder[] = (Array.isArray(res) ? res : res?.results) ?? []
             setReminders(Array.isArray(list) ? list : [])
         } catch { /* ignore — layout catch-all handles auth */ }
     }, [])
@@ -77,13 +77,13 @@ export function TaskReminderPopup() {
             const fake: Reminder = {
                 id,
                 title: detail?.title || '🧪 Test reminder — this is a simulated reminder',
-                priority: (detail?.priority as any) || 'URGENT',
+                priority: detail?.priority ?? 'URGENT',
                 due_date: detail?.due_date ?? undefined,
                 related_object_type: detail?.related_object_type ?? undefined,
                 related_object_id: detail?.related_object_id ?? undefined,
                 related_object_label: detail?.related_object_label || 'Triggered from the Test Reminder button',
                 category_name: detail?.category_name || 'Test',
-                source: (detail?.source as any) || 'MANUAL',
+                source: detail?.source ?? 'MANUAL',
                 reminder_at: new Date().toISOString(),
             }
             setTestReminders(prev => [fake, ...prev])

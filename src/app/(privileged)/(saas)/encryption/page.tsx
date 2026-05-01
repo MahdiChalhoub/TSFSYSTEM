@@ -28,8 +28,8 @@ interface OrgItem {
 function StatusPulse({ active }: { active: boolean }) {
     return (
         <span className="relative flex h-3 w-3">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${active ? 'bg-emerald-400' : 'bg-gray-400'}`} />
-            <span className={`relative inline-flex rounded-full h-3 w-3 ${active ? 'bg-emerald-500' : 'bg-app-surface-2'}`} />
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${active ? 'bg-app-primary' : 'bg-app-surface-hover'}`} />
+            <span className={`relative inline-flex rounded-full h-3 w-3 ${active ? 'bg-app-primary' : 'bg-app-surface-2'}`} />
         </span>
     )
 }
@@ -150,7 +150,7 @@ export default function EncryptionPage() {
         return (
             <div className="flex items-center justify-center h-[60vh]">
                 <div className="text-center">
-                    <Shield className="animate-pulse text-cyan-500 mx-auto mb-4" size={48} />
+                    <Shield className="animate-pulse text-app-info mx-auto mb-4" size={48} />
                     <p className="text-app-muted-foreground text-sm">Loading encryption status...</p>
                 </div>
             </div>
@@ -183,28 +183,28 @@ export default function EncryptionPage() {
 
             {/* Alerts */}
             {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top duration-300">
+                <div className="p-4 bg-app-error-bg border border-app-error rounded-xl text-app-error text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top duration-300">
                     <AlertTriangle size={18} />
                     {error}
-                    <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">✕</button>
+                    <button onClick={() => setError(null)} className="ml-auto text-app-error hover:text-app-error">✕</button>
                 </div>
             )}
             {success && (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-600 text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top duration-300">
+                <div className="p-4 bg-app-success-bg border border-app-success rounded-xl text-app-success text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top duration-300">
                     <CheckCircle2 size={18} />
                     {success}
-                    <button onClick={() => setSuccess(null)} className="ml-auto text-emerald-400 hover:text-emerald-600">✕</button>
+                    <button onClick={() => setSuccess(null)} className="ml-auto text-app-success hover:text-app-success">✕</button>
                 </div>
             )}
 
             {/* Main Status Card */}
             <Card className={`bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden border-l-4 ${isActive ? 'border-l-emerald-500' : 'border-l-gray-300'}`}>
-                <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-5 ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+                <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-5 ${isActive ? 'bg-app-primary' : 'bg-app-surface-hover'}`} />
                 <CardContent className="pt-8 pb-8 relative">
                     <div className="flex items-center gap-6">
-                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isActive ? 'bg-gradient-to-br from-emerald-50 to-cyan-50 border border-emerald-200' : 'bg-app-surface border border-app-border'}`}>
+                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isActive ? 'bg-gradient-to-br from-emerald-50 to-cyan-50 border border-app-success' : 'bg-app-surface border border-app-border'}`}>
                             {isActive ? (
-                                <Lock className="text-emerald-500" size={36} />
+                                <Lock className="text-app-success" size={36} />
                             ) : (
                                 <Unlock className="text-app-muted-foreground" size={36} />
                             )}
@@ -229,7 +229,7 @@ export default function EncryptionPage() {
                             )}
                         </div>
                         <Badge className={`px-4 py-2 text-sm font-bold ${isActive
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                            ? 'bg-app-success-bg text-app-success border-app-success'
                             : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
                             {isActive ? 'PROTECTED' : 'UNPROTECTED'}
                         </Badge>
@@ -242,8 +242,8 @@ export default function EncryptionPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Shield className="text-cyan-500" size={22} />
-                            <Badge className={`${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
+                            <Shield className="text-app-info" size={22} />
+                            <Badge className={`${isActive ? 'bg-app-success-bg text-app-success border-app-success' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
                                 {isActive ? 'Active' : 'Inactive'}
                             </Badge>
                         </div>
@@ -255,8 +255,8 @@ export default function EncryptionPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Key className="text-amber-500" size={22} />
-                            <Badge className={`${hasKey ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
+                            <Key className="text-app-warning" size={22} />
+                            <Badge className={`${hasKey ? 'bg-app-warning-bg text-app-warning border-app-warning' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
                                 {hasKey ? 'Generated' : 'None'}
                             </Badge>
                         </div>
@@ -268,8 +268,8 @@ export default function EncryptionPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Zap className="text-violet-500" size={22} />
-                            <Badge className={`${status?.addon_entitled ? 'bg-violet-50 text-violet-600 border-violet-200' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
+                            <Zap className="text-app-accent" size={22} />
+                            <Badge className={`${status?.addon_entitled ? 'bg-app-accent-bg text-app-accent border-app-accent' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
                                 {status?.addon_entitled ? 'Licensed' : 'Not Licensed'}
                             </Badge>
                         </div>
@@ -281,7 +281,7 @@ export default function EncryptionPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Building2 className="text-blue-500" size={22} />
+                            <Building2 className="text-app-info" size={22} />
                             <span className="text-xl font-black text-app-foreground tabular-nums">{orgs.length}</span>
                         </div>
                         <h3 className="font-bold text-app-foreground">Organizations</h3>
@@ -296,7 +296,7 @@ export default function EncryptionPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                            <ShieldCheck className="text-cyan-500" size={20} />
+                            <ShieldCheck className="text-app-info" size={20} />
                             <CardTitle className="text-app-foreground text-lg">Encryption Controls</CardTitle>
                         </div>
                         <CardDescription className="text-app-muted-foreground">Manage encryption for your organization</CardDescription>
@@ -309,7 +309,7 @@ export default function EncryptionPage() {
                                 <select
                                     value={selectedOrgId}
                                     onChange={(e) => setSelectedOrgId(e.target.value)}
-                                    className="w-full bg-app-surface border border-app-border rounded-xl px-4 py-3 text-app-foreground text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                                    className="w-full bg-app-surface border border-app-border rounded-xl px-4 py-3 text-app-foreground text-sm focus:outline-none focus:border-app-info focus:ring-1 focus:ring-app-info/20 transition-all"
                                 >
                                     {orgs.map(org => (
                                         <option key={org.id} value={org.id}>{org.name} ({org.slug})</option>
@@ -352,7 +352,7 @@ export default function EncryptionPage() {
                                 <button
                                     onClick={() => setShowRotateConfirm(true)}
                                     disabled={actionLoading !== null}
-                                    className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-600 font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-app-warning-bg hover:bg-app-warning-bg border border-app-warning text-app-warning font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {actionLoading === 'rotate' ? (
                                         <RefreshCw className="animate-spin" size={18} />
@@ -370,7 +370,7 @@ export default function EncryptionPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                            <Info className="text-blue-500" size={20} />
+                            <Info className="text-app-info" size={20} />
                             <CardTitle className="text-app-foreground text-lg">How It Works</CardTitle>
                         </div>
                         <CardDescription className="text-app-muted-foreground">AES-256-GCM authenticated encryption</CardDescription>
@@ -378,11 +378,11 @@ export default function EncryptionPage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-3">
                             {[
-                                { icon: Key, color: 'text-amber-500', bg: 'bg-amber-50', title: '256-bit Key', desc: 'Unique key generated per organization' },
-                                { icon: Lock, color: 'text-emerald-500', bg: 'bg-emerald-50', title: 'Encrypt on Write', desc: 'Sensitive fields encrypted before saving to database' },
-                                { icon: Unlock, color: 'text-cyan-500', bg: 'bg-cyan-50', title: 'Decrypt on Read', desc: 'Transparently decrypted when accessed by authorized users' },
-                                { icon: ShieldCheck, color: 'text-violet-500', bg: 'bg-violet-50', title: 'Tamper Detection', desc: 'GCM mode detects any unauthorized data modification' },
-                                { icon: RotateCcw, color: 'text-blue-500', bg: 'bg-blue-50', title: 'Key Rotation', desc: 'Rotate keys without downtime or data loss' },
+                                { icon: Key, color: 'text-app-warning', bg: 'bg-app-warning-bg', title: '256-bit Key', desc: 'Unique key generated per organization' },
+                                { icon: Lock, color: 'text-app-success', bg: 'bg-app-success-bg', title: 'Encrypt on Write', desc: 'Sensitive fields encrypted before saving to database' },
+                                { icon: Unlock, color: 'text-app-info', bg: 'bg-app-info-bg', title: 'Decrypt on Read', desc: 'Transparently decrypted when accessed by authorized users' },
+                                { icon: ShieldCheck, color: 'text-app-accent', bg: 'bg-app-accent-bg', title: 'Tamper Detection', desc: 'GCM mode detects any unauthorized data modification' },
+                                { icon: RotateCcw, color: 'text-app-info', bg: 'bg-app-info-bg', title: 'Key Rotation', desc: 'Rotate keys without downtime or data loss' },
                             ].map((item, i) => (
                                 <div key={i} className="flex items-center gap-3 py-2">
                                     <div className={`w-9 h-9 rounded-lg ${item.bg} flex items-center justify-center flex-shrink-0`}>
@@ -413,28 +413,28 @@ export default function EncryptionPage() {
                 <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden border-l-4 border-l-cyan-500 animate-in slide-in-from-top duration-300">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                            <Eye className="text-cyan-500" size={20} />
+                            <Eye className="text-app-info" size={20} />
                             <CardTitle className="text-app-foreground text-lg">Encryption Demo</CardTitle>
                         </div>
                         <CardDescription className="text-app-muted-foreground">See how AES-256 encryption transforms your data</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="rounded-xl bg-emerald-50 border border-emerald-200/60 p-4">
-                                <div className="text-[10px] uppercase tracking-widest text-emerald-600 font-bold mb-2">Original Data</div>
-                                <div className="font-mono text-app-foreground text-sm bg-app-surface rounded-lg p-3 border border-emerald-100">{demoData.original}</div>
+                            <div className="rounded-xl bg-app-success-bg border border-app-success/60 p-4">
+                                <div className="text-[10px] uppercase tracking-widest text-app-success font-bold mb-2">Original Data</div>
+                                <div className="font-mono text-app-foreground text-sm bg-app-surface rounded-lg p-3 border border-app-success">{demoData.original}</div>
                             </div>
-                            <div className="rounded-xl bg-red-50 border border-red-200/60 p-4">
-                                <div className="text-[10px] uppercase tracking-widest text-red-600 font-bold mb-2">Stored in DB (Encrypted)</div>
-                                <div className="font-mono text-red-600 text-xs bg-app-surface rounded-lg p-3 border border-red-100 break-all">{demoData.encrypted}</div>
+                            <div className="rounded-xl bg-app-error-bg border border-app-error/60 p-4">
+                                <div className="text-[10px] uppercase tracking-widest text-app-error font-bold mb-2">Stored in DB (Encrypted)</div>
+                                <div className="font-mono text-app-error text-xs bg-app-surface rounded-lg p-3 border border-app-error break-all">{demoData.encrypted}</div>
                             </div>
-                            <div className="rounded-xl bg-amber-50 border border-amber-200/60 p-4">
-                                <div className="text-[10px] uppercase tracking-widest text-amber-600 font-bold mb-2">Display (Masked)</div>
-                                <div className="font-mono text-amber-600 text-sm bg-app-surface rounded-lg p-3 border border-amber-100">{demoData.masked}</div>
+                            <div className="rounded-xl bg-app-warning-bg border border-app-warning/60 p-4">
+                                <div className="text-[10px] uppercase tracking-widest text-app-warning font-bold mb-2">Display (Masked)</div>
+                                <div className="font-mono text-app-warning text-sm bg-app-surface rounded-lg p-3 border border-app-warning">{demoData.masked}</div>
                             </div>
                         </div>
-                        <div className="mt-4 p-3 bg-cyan-50 border border-cyan-200/60 rounded-xl">
-                            <p className="text-xs text-cyan-700">
+                        <div className="mt-4 p-3 bg-app-info-bg border border-app-info/60 rounded-xl">
+                            <p className="text-xs text-app-info">
                                 <strong>Flow:</strong> User enters plaintext → EncryptedCharField encrypts with org key → Database stores ciphertext → On read, decrypts transparently → UI can optionally mask for display
                             </p>
                         </div>

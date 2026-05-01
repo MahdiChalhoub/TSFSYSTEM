@@ -68,12 +68,12 @@ function BusinessRegisterContent() {
         window.location.href = state.login_url;
         return (
             <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-emerald-500/5 blur-[160px] rounded-full" />
-                <Card className="w-full max-w-md bg-[#0f172a]/60 border-emerald-500/20 backdrop-blur-[40px] rounded-[2.5rem] text-center p-12 relative z-10 transition-all duration-1000">
-                    <Rocket className="mx-auto text-emerald-400 mb-6 animate-bounce" size={48} />
+                <div className="absolute inset-0 bg-app-primary/5 blur-[160px] rounded-full" />
+                <Card className="w-full max-w-md bg-[#0f172a]/60 border-app-success/20 backdrop-blur-[40px] rounded-[2.5rem] text-center p-12 relative z-10 transition-all duration-1000">
+                    <Rocket className="mx-auto text-app-success mb-6 animate-bounce" size={48} />
                     <h2 className="text-3xl font-black text-white tracking-tighter italic mb-4 uppercase">Registration Complete</h2>
-                    <p className="text-slate-400 font-medium mb-8">Your workspace is being set up. You'll be redirected shortly.</p>
-                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-emerald-500" />
+                    <p className="text-app-faint font-medium mb-8">Your workspace is being set up. You'll be redirected shortly.</p>
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-app-success" />
                 </Card>
             </div>
         );
@@ -88,12 +88,12 @@ function BusinessRegisterContent() {
     return (
         <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 py-20 relative overflow-hidden">
             {/* Ambient Background Elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-500/5 blur-[160px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-warning/5 blur-[160px] rounded-full" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-primary/5 blur-[160px] rounded-full" />
 
 
             <div className="text-center mb-12 space-y-4 relative z-10 w-full max-w-lg">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-amber-400 mb-4 backdrop-blur-xl">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-app-warning/5 border border-app-warning/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-app-warning mb-4 backdrop-blur-xl">
                     <Sparkles size={14} className="animate-pulse" />
                     New Business Setup
                 </div>
@@ -113,11 +113,11 @@ function BusinessRegisterContent() {
 
                     {steps.map((s) => (
                         <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${step >= s.id ? 'bg-cyan-500 border-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-slate-900 border-slate-700 text-slate-500'
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${step >= s.id ? 'bg-cyan-500 border-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-slate-900 border-slate-700 text-app-muted-foreground'
                                 }`}>
                                 <span className="font-mono text-xs font-black">{s.id.toString().padStart(2, '0')}</span>
                             </div>
-                            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-500 ${step >= s.id ? 'text-cyan-400' : 'text-slate-500'
+                            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-500 ${step >= s.id ? 'text-cyan-400' : 'text-app-muted-foreground'
                                 }`}>
                                 {s.name}
                             </span>
@@ -133,7 +133,7 @@ function BusinessRegisterContent() {
                     <form action={action} className="space-y-12">
                         {/* Error Reporting */}
                         {((state as any)?.error?.root || state?.error) && (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in zoom-in-95">
+                            <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl flex items-center gap-3 text-app-error text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
                                 <div className="flex-1">
                                     {(state as any).error.root ? (Array.isArray((state as any).error.root) ? (state as any).error.root[0] : (state as any).error.root) : "Registration failed. Please check your details and try again."}
@@ -155,34 +155,34 @@ function BusinessRegisterContent() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Admin First Name</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Admin First Name</Label>
                                     <Input name="admin_first_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Admin Last Name</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Admin Last Name</Label>
                                     <Input name="admin_last_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Username</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Username</Label>
                                     <Input name="admin_username" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-cyan-400 focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Email</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Email</Label>
                                     <Input name="admin_email" type="email" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Password</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Password</Label>
                                     <Input name="admin_password" type="password" required value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
                                     <PasswordStrength password={adminPassword} />
                                 </div>
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Confirm Password</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Confirm Password</Label>
                                     <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                             </div>
 
                             {stepErrors.length > 0 && (
-                                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-bold animate-in zoom-in-95">
+                                <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl text-app-error text-xs font-bold animate-in zoom-in-95">
                                     <div className="flex items-center gap-2 mb-1"><AlertCircle size={14} /> Please fix the following:</div>
                                     <ul className="list-disc list-inside space-y-0.5">{stepErrors.map((e, i) => <li key={i}>{e}</li>)}</ul>
                                 </div>
@@ -214,7 +214,7 @@ function BusinessRegisterContent() {
                         {/* STEP 02: Business Identity */}
                         <div className={step === 2 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
                             <div className="flex items-center gap-3 mb-8">
-                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-inner">
+                                <div className="w-12 h-12 rounded-2xl bg-app-warning/10 border border-app-warning/20 flex items-center justify-center text-app-warning shadow-inner">
                                     <Building2 size={24} />
                                 </div>
                                 <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Business Details</h3>
@@ -222,7 +222,7 @@ function BusinessRegisterContent() {
 
                             <div className="space-y-8">
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Name</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Business Name</Label>
                                     <Input
                                         name="business_name"
                                         required
@@ -234,24 +234,24 @@ function BusinessRegisterContent() {
                                 </div>
 
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Workspace URL (Slug)</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Workspace URL (Slug)</Label>
                                     <div className="flex items-center gap-2 group">
-                                        <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">https://</div>
+                                        <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-app-muted-foreground">https://</div>
                                         <Input
                                             name="slug"
                                             required
                                             placeholder="acme-corp"
                                             value={slug}
                                             onChange={(e) => { setSlug(e.target.value); setSlugManuallyEdited(true); }}
-                                            className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-amber-400 text-sm flex-1"
+                                            className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-app-warning text-sm flex-1"
                                         />
-                                        <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">{branding.suffix}</div>
+                                        <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-app-muted-foreground">{branding.suffix}</div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Type</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Business Type</Label>
                                         <Select name="business_type_id" value={businessTypeId} onValueChange={setBusinessTypeId}>
                                             <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
                                                 <SelectValue placeholder="Select type" />
@@ -264,7 +264,7 @@ function BusinessRegisterContent() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Currency</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Currency</Label>
                                         <Select name="currency_id" value={currencyId} onValueChange={setCurrencyId}>
                                             <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
                                                 <SelectValue placeholder="Select currency" />
@@ -280,7 +280,7 @@ function BusinessRegisterContent() {
                             </div>
 
                             <div className="pt-8 flex gap-4">
-                                <Button type="button" onClick={() => setStep(1)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-slate-400 hover:bg-white/5">Back</Button>
+                                <Button type="button" onClick={() => setStep(1)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-app-faint hover:bg-white/5">Back</Button>
                                 <Button
                                     type="button"
                                     onClick={() => {
@@ -291,7 +291,7 @@ function BusinessRegisterContent() {
                                         setStepErrors([]);
                                         setStep(3);
                                     }}
-                                    className="h-16 flex-[2] bg-amber-600 hover:bg-amber-500 text-white font-black text-lg rounded-2xl shadow-xl"
+                                    className="h-16 flex-[2] bg-app-warning hover:bg-app-warning text-white font-black text-lg rounded-2xl shadow-xl"
                                 >
                                     Next: Location Setup <ArrowRight className="ml-2" />
                                 </Button>
@@ -301,7 +301,7 @@ function BusinessRegisterContent() {
                         {/* STEP 03: Location & Infrastructure */}
                         <div className={step === 3 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
                             <div className="flex items-center gap-3 mb-8">
-                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
+                                <div className="w-12 h-12 rounded-2xl bg-app-primary/10 border border-app-success/20 flex items-center justify-center text-app-success shadow-inner">
                                     <Globe size={24} />
                                 </div>
                                 <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Location & Contact</h3>
@@ -311,34 +311,34 @@ function BusinessRegisterContent() {
                                 {/* Left Side: Media & Core Info */}
                                 <div className="space-y-8">
                                     <div className="space-y-4">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Logo (Optional)</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Logo (Optional)</Label>
                                         <div className="flex items-center gap-4">
                                             <div className="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden">
                                                 {logoPreview ? (
                                                     <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <Building2 className="text-slate-700" size={32} />
+                                                    <Building2 className="text-app-foreground" size={32} />
                                                 )}
                                             </div>
                                             <div className="flex-1">
-                                                <Input name="logo" type="file" accept="image/*" onChange={handleLogoChange} className="bg-slate-900/50 border-white/10 h-10 rounded-lg text-xs file:bg-transparent file:border-0 file:text-[10px] file:text-cyan-400 file:font-black text-slate-500" />
-                                                <p className="text-[8px] text-slate-500 mt-2 uppercase tracking-tight">SVG, PNG, or JPG. Max 5MB recommended.</p>
+                                                <Input name="logo" type="file" accept="image/*" onChange={handleLogoChange} className="bg-slate-900/50 border-white/10 h-10 rounded-lg text-xs file:bg-transparent file:border-0 file:text-[10px] file:text-cyan-400 file:font-black text-app-muted-foreground" />
+                                                <p className="text-[8px] text-app-muted-foreground mt-2 uppercase tracking-tight">SVG, PNG, or JPG. Max 5MB recommended.</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Official Website (Optional)</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Official Website (Optional)</Label>
                                         <Input name="website" placeholder="https://..." className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-emerald-500/20" />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Email</Label>
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Business Email</Label>
                                             <Input name="email" type="email" required placeholder="contact@hq.com" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                         </div>
                                         <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Phone</Label>
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Phone</Label>
                                             <Input name="phone" placeholder="+1..." className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                         </div>
                                     </div>
@@ -347,26 +347,26 @@ function BusinessRegisterContent() {
                                 {/* Right Side: Location Info */}
                                 <div className="space-y-8">
                                     <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Address</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Address</Label>
                                         <Input name="address" placeholder="HQ Physical Address" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">City</Label>
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">City</Label>
                                             <Input name="city" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                         </div>
                                         <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Zip Code</Label>
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Zip Code</Label>
                                             <Input name="zip_code" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium font-mono" />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Country</Label>
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Country</Label>
                                             <Input name="country" placeholder="e.g. United Kingdom" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                         </div>
                                         <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Province (State)</Label>
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-app-muted-foreground ml-1">Province (State)</Label>
                                             <Input name="state" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                         </div>
                                     </div>
@@ -374,8 +374,8 @@ function BusinessRegisterContent() {
                             </div>
 
                             <div className="pt-8 flex gap-4">
-                                <Button type="button" onClick={() => setStep(2)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-slate-400 hover:bg-white/5">Back</Button>
-                                <Button type="submit" disabled={isPending} className="h-20 flex-[3] bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xl rounded-2xl shadow-emerald-500/20 shadow-2xl transition-all active:scale-[0.98] group">
+                                <Button type="button" onClick={() => setStep(2)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-app-faint hover:bg-white/5">Back</Button>
+                                <Button type="submit" disabled={isPending} className="h-20 flex-[3] bg-app-primary hover:bg-app-primary text-white font-black text-xl rounded-2xl shadow-emerald-500/20 shadow-2xl transition-all active:scale-[0.98] group">
                                     {isPending ? <Loader2 className="animate-spin" /> : (
                                         <div className="flex items-center gap-3">
                                             Register Business <ArrowRight className="group-hover:translate-x-2 transition-transform" />
@@ -388,11 +388,11 @@ function BusinessRegisterContent() {
                 </CardContent>
 
                 <CardFooter className="bg-black/20 py-8 justify-center border-t border-white/5">
-                    <div className="grid grid-cols-4 gap-4 text-center text-[8px] font-black uppercase tracking-[0.4em] text-slate-500">
+                    <div className="grid grid-cols-4 gap-4 text-center text-[8px] font-black uppercase tracking-[0.4em] text-app-muted-foreground">
                         <div className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-cyan-500" /> Authorized access</div>
-                        <div className="flex items-center gap-1.5"><Building2 size={12} className="text-amber-500" /> multi-tenant</div>
-                        <div className="flex items-center gap-1.5"><Globe size={12} className="text-emerald-500" /> Isolated stack</div>
-                        <div className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-400" /> compliance a-1</div>
+                        <div className="flex items-center gap-1.5"><Building2 size={12} className="text-app-warning" /> multi-tenant</div>
+                        <div className="flex items-center gap-1.5"><Globe size={12} className="text-app-success" /> Isolated stack</div>
+                        <div className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-app-success" /> compliance a-1</div>
                     </div>
                 </CardFooter>
             </Card>
@@ -404,7 +404,7 @@ export default function BusinessRegisterPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-                <Loader2 className="animate-spin text-amber-500 h-12 w-12" />
+                <Loader2 className="animate-spin text-app-warning h-12 w-12" />
             </div>
         }>
             <BusinessRegisterContent />

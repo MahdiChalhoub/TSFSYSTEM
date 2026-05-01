@@ -142,7 +142,7 @@ export function BillingTab({ org, usage, billing, onPlanSwitch }: {
  {/* Price */}
  <div className="mb-3">
  {isCustom ? (
- <span className="text-xl font-black text-purple-600">Custom</span>
+ <span className="text-xl font-black text-app-accent">Custom</span>
  ) : isFree ? (
  <span className="text-xl font-black text-app-primary">Free</span>
  ) : (

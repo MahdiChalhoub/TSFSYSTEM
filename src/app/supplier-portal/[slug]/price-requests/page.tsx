@@ -17,10 +17,10 @@ interface PriceRequest {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-    PENDING: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    APPROVED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    REJECTED: 'text-red-400 bg-red-500/10 border-red-500/20',
-    COUNTER_OFFER: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+    PENDING: 'text-app-warning bg-amber-500/10 border-app-warning/20',
+    APPROVED: 'text-app-success bg-app-primary/10 border-app-success/20',
+    REJECTED: 'text-app-error bg-red-500/10 border-app-error/20',
+    COUNTER_OFFER: 'text-app-info bg-blue-500/10 border-app-info/20',
 }
 
 function getToken(slug: string): string | null {
@@ -118,11 +118,11 @@ export default function PriceRequestsPage() {
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">
                         <Link href={`/supplier-portal/${slug}`}
-                            className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-sm font-medium transition-colors">
+                            className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                             <ArrowLeft size={16} /> Dashboard
                         </Link>
                         <h1 className="text-4xl font-black text-white">Price Change Requests</h1>
-                        <p className="text-slate-500 text-sm">Request price adjustments for your products</p>
+                        <p className="text-app-muted-foreground text-sm">Request price adjustments for your products</p>
                     </div>
                     <button onClick={() => setShowCreate(true)}
                         className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-500 transition-all">
@@ -132,29 +132,29 @@ export default function PriceRequestsPage() {
 
                 {/* Create Form */}
                 {showCreate && (
-                    <div className="p-8 bg-slate-900/80 border border-amber-500/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
+                    <div className="p-8 bg-slate-900/80 border border-app-warning/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white flex items-center gap-3">
-                                <TrendingDown size={22} className="text-amber-400" /> New Price Request
+                                <TrendingDown size={22} className="text-app-warning" /> New Price Request
                             </h2>
-                            <button onClick={() => setShowCreate(false)} className="text-slate-500 hover:text-white"><X size={20} /></button>
+                            <button onClick={() => setShowCreate(false)} className="text-app-muted-foreground hover:text-white"><X size={20} /></button>
                         </div>
                         {error && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+                            <div className="p-3 bg-red-500/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
                                 <AlertCircle size={16} /> {error}
                             </div>
                         )}
                         <form onSubmit={handleCreate} className="space-y-4">
                             <input type="text" placeholder="Product Name" value={productName} onChange={e => setProductName(e.target.value)} required
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
                             <div className="grid grid-cols-2 gap-4">
                                 <input type="number" step="0.01" placeholder="Current Price" value={currentPrice} onChange={e => setCurrentPrice(e.target.value)} required
-                                    className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+                                    className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
                                 <input type="number" step="0.01" placeholder="Proposed Price" value={proposedPrice} onChange={e => setProposedPrice(e.target.value)} required
-                                    className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+                                    className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
                             </div>
                             <textarea placeholder="Reason for price change" value={reason} onChange={e => setReason(e.target.value)} required rows={3}
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700 resize-none" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground resize-none" />
                             <button type="submit" disabled={creating}
                                 className="w-full bg-amber-600 hover:bg-amber-500 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
                                 {creating ? <Loader2 className="animate-spin" size={18} /> : <><Send size={18} /> Submit Request</>}
@@ -170,9 +170,9 @@ export default function PriceRequestsPage() {
                     </div>
                 ) : requests.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
-                        <TrendingDown size={48} className="mx-auto text-slate-600" />
+                        <TrendingDown size={48} className="mx-auto text-app-muted-foreground" />
                         <h2 className="text-xl font-bold text-white">No price requests yet</h2>
-                        <p className="text-slate-500">Submit a request to adjust pricing for your products</p>
+                        <p className="text-app-muted-foreground">Submit a request to adjust pricing for your products</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -189,23 +189,23 @@ export default function PriceRequestsPage() {
                                                     {req.status.replace('_', ' ')}
                                                 </span>
                                             </div>
-                                            <p className="text-slate-500 text-sm mt-1">{req.reason}</p>
+                                            <p className="text-app-muted-foreground text-sm mt-1">{req.reason}</p>
                                         </div>
                                         <div className="text-right shrink-0">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-slate-500 line-through">${parseFloat(req.current_price).toFixed(2)}</span>
-                                                <span className="text-emerald-400 font-black">${parseFloat(req.proposed_price).toFixed(2)}</span>
+                                                <span className="text-app-muted-foreground line-through">${parseFloat(req.current_price).toFixed(2)}</span>
+                                                <span className="text-app-success font-black">${parseFloat(req.proposed_price).toFixed(2)}</span>
                                             </div>
-                                            <p className="text-[10px] text-slate-600 mt-1">{getDiscount(req.current_price, req.proposed_price)}</p>
+                                            <p className="text-[10px] text-app-muted-foreground mt-1">{getDiscount(req.current_price, req.proposed_price)}</p>
                                         </div>
                                     </div>
                                     {req.admin_response && (
-                                        <div className="p-3 bg-white/5 rounded-xl text-sm text-slate-400">
-                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Buyer Response</span>
+                                        <div className="p-3 bg-app-surface/5 rounded-xl text-sm text-app-faint">
+                                            <span className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest block mb-1">Buyer Response</span>
                                             {req.admin_response}
                                         </div>
                                     )}
-                                    <p className="text-[11px] text-slate-600">{new Date(req.created_at).toLocaleDateString()}</p>
+                                    <p className="text-[11px] text-app-muted-foreground">{new Date(req.created_at).toLocaleDateString()}</p>
                                 </div>
                             )
                         })}

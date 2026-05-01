@@ -82,7 +82,11 @@ export interface DajingoPageStateReturn {
   selectedIds: Set<number>
   setSelectedIds: (ids: Set<number>) => void
   toggleSelect: (id: number | string) => void
+  // Loose because consumers pass row arrays of various entity shapes; we
+  // only read `.id` (number) from each row.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   isAllPageSelected: (pageData: any[]) => boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toggleSelectAll: (pageData: any[]) => void
 
   /* ── Pagination ── */
@@ -171,10 +175,12 @@ export function useDajingoPageState(config: DajingoPageStateConfig): DajingoPage
     })
   }, [])
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isAllPageSelected = useCallback((pageData: any[]): boolean => {
     return pageData.length > 0 && pageData.every(r => selectedIds.has(r.id))
   }, [selectedIds])
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toggleSelectAll = useCallback((pageData: any[]) => {
     if (isAllPageSelected(pageData)) {
       setSelectedIds(prev => {

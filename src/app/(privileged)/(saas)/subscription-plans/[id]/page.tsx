@@ -195,11 +195,11 @@ export default function PlanDetailPage() {
                 <div className="flex-1">
                     <div className="flex items-center gap-3">
                         <h2 className="text-3xl font-black text-app-foreground tracking-tight">{plan.name}</h2>
-                        <Badge className={form.is_public ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}>
+                        <Badge className={form.is_public ? "bg-app-success-bg text-app-success" : "bg-app-warning-bg text-app-warning"}>
                             {form.is_public ? <><Globe size={12} className="mr-1" /> Public</> : <><Lock size={12} className="mr-1" /> Private</>}
                         </Badge>
-                        {isCustom && <Badge className="bg-purple-100 text-purple-700">Custom</Badge>}
-                        {form.trial_days > 0 && <Badge className="bg-blue-50 text-blue-700"><Clock size={12} className="mr-1" />{form.trial_days}d trial</Badge>}
+                        {isCustom && <Badge className="bg-app-accent-bg text-app-accent">Custom</Badge>}
+                        {form.trial_days > 0 && <Badge className="bg-app-info-bg text-app-info"><Clock size={12} className="mr-1" />{form.trial_days}d trial</Badge>}
                     </div>
                     <p className="text-app-muted-foreground mt-1 text-sm">{plan.description || 'No description'}</p>
                 </div>
@@ -209,7 +209,7 @@ export default function PlanDetailPage() {
                         Make {form.is_public ? 'Private' : 'Public'}
                     </Button>
                     {editing ? (
-                        <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2">
+                        <Button onClick={handleSave} disabled={saving} className="bg-app-primary-dark hover:bg-app-primary text-white gap-2">
                             {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                             Save Changes
                         </Button>
@@ -270,7 +270,7 @@ export default function PlanDetailPage() {
                                         className="bg-app-surface border-app-border rounded-xl"
                                         placeholder="0 = no trial" />
                                     {form.trial_days > 0 && (
-                                        <p className="text-[10px] text-blue-500 font-bold">
+                                        <p className="text-[10px] text-app-info font-bold">
                                             {form.trial_days} days = ~{Math.round(form.trial_days / 30)} month(s) free trial
                                         </p>
                                     )}
@@ -286,8 +286,8 @@ export default function PlanDetailPage() {
                         <CardContent className="space-y-4">
                             {isCustom ? (
                                 <div className="text-center py-8">
-                                    <p className="text-3xl font-black text-purple-700">Custom Pricing</p>
-                                    <p className="text-sm text-purple-500 mt-2">Contact-based — no fixed pricing</p>
+                                    <p className="text-3xl font-black text-app-accent">Custom Pricing</p>
+                                    <p className="text-sm text-app-accent mt-2">Contact-based — no fixed pricing</p>
                                 </div>
                             ) : (
                                 <>
@@ -304,11 +304,11 @@ export default function PlanDetailPage() {
                                             className="bg-app-surface border-app-border rounded-xl" />
                                     </div>
                                     <div className="pt-4 border-t text-center">
-                                        <p className="text-3xl font-black text-emerald-600">{parseFloat(form.monthly_price) === 0 ? 'Free' : `$${parseFloat(form.monthly_price).toFixed(0)}`}<span className="text-lg text-app-muted-foreground font-normal">/mo</span></p>
+                                        <p className="text-3xl font-black text-app-success">{parseFloat(form.monthly_price) === 0 ? 'Free' : `$${parseFloat(form.monthly_price).toFixed(0)}`}<span className="text-lg text-app-muted-foreground font-normal">/mo</span></p>
                                         {parseFloat(form.annual_price) > 0 && (
                                             <p className="text-lg text-app-muted-foreground mt-1">${parseFloat(form.annual_price).toFixed(0)}<span className="text-sm font-normal">/yr</span>
                                                 {parseFloat(form.monthly_price) > 0 && (
-                                                    <span className="text-emerald-500 text-xs ml-2 font-bold">
+                                                    <span className="text-app-success text-xs ml-2 font-bold">
                                                         Save {Math.round(100 - (parseFloat(form.annual_price) / (parseFloat(form.monthly_price) * 12)) * 100)}%
                                                     </span>
                                                 )}
@@ -352,7 +352,7 @@ export default function PlanDetailPage() {
                             <CardTitle className="text-lg font-bold">Included Modules & Features</CardTitle>
                             <CardDescription>
                                 Toggle modules on/off, then expand each module to select specific features.
-                                {!editing && <span className="text-amber-600 ml-2 font-bold">Click "Edit Plan" to modify.</span>}
+                                {!editing && <span className="text-app-warning ml-2 font-bold">Click "Edit Plan" to modify.</span>}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
@@ -368,7 +368,7 @@ export default function PlanDetailPage() {
 
                                     return (
                                         <div key={code} className={`rounded-2xl border-2 transition-all overflow-hidden ${isIncluded
-                                            ? 'border-emerald-200 bg-app-surface'
+                                            ? 'border-app-success bg-app-surface'
                                             : 'border-app-border bg-app-surface/50'
                                             }`}>
                                             {/* Module header row */}
@@ -385,8 +385,8 @@ export default function PlanDetailPage() {
                                                         <p className={`font-bold ${isIncluded ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{m.name}</p>
                                                         <span className="text-[10px] font-mono text-app-faint">{code}</span>
                                                         {m.version && <Badge className="bg-app-surface-2 text-app-muted-foreground text-[9px]">v{m.version}</Badge>}
-                                                        <Badge className={`text-[9px] ${m.visibility === 'public' ? 'bg-emerald-50 text-emerald-600' :
-                                                            m.visibility === 'organization' ? 'bg-blue-50 text-blue-600' :
+                                                        <Badge className={`text-[9px] ${m.visibility === 'public' ? 'bg-app-success-bg text-app-success' :
+                                                            m.visibility === 'organization' ? 'bg-app-info-bg text-app-info' :
                                                                 'bg-app-surface-2 text-app-muted-foreground'
                                                             }`}>
                                                             {m.visibility === 'public' ? '🌐 Public' :
@@ -398,7 +398,7 @@ export default function PlanDetailPage() {
                                                         <p className="text-[11px] text-app-muted-foreground mt-0.5 line-clamp-1">{m.description}</p>
                                                     )}
                                                     {hasFeatures && isIncluded && (
-                                                        <p className="text-[11px] text-emerald-500 font-medium mt-0.5">
+                                                        <p className="text-[11px] text-app-success font-medium mt-0.5">
                                                             {activeFeatures.length}/{modFeats.features.length} features active
                                                         </p>
                                                     )}
@@ -424,7 +424,7 @@ export default function PlanDetailPage() {
                                                             return (
                                                                 <div key={feat.code}
                                                                     className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isActive
-                                                                        ? 'bg-emerald-50 border border-emerald-100'
+                                                                        ? 'bg-app-success-bg border border-app-success'
                                                                         : 'bg-app-surface border border-app-border'
                                                                         } ${editing ? 'cursor-pointer hover:shadow-sm' : ''}`}
                                                                     onClick={() => editing && toggleFeature(code, feat.code)}>
@@ -439,7 +439,7 @@ export default function PlanDetailPage() {
                                                                         <p className="text-[10px] text-app-faint font-mono">{feat.code}</p>
                                                                     </div>
                                                                     {feat.default && (
-                                                                        <Badge className="bg-blue-50 text-blue-500 text-[8px]">default</Badge>
+                                                                        <Badge className="bg-app-info-bg text-app-info text-[8px]">default</Badge>
                                                                     )}
                                                                 </div>
                                                             )
@@ -503,14 +503,14 @@ export default function PlanDetailPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {(plan.organizations as Array<{ id: number | string; name?: string; slug?: string; is_active?: boolean }>).map((org) => (
                                     <div key={org.id}
-                                        className="flex items-center justify-between p-4 rounded-2xl bg-app-surface border border-app-border hover:border-emerald-200 hover:shadow-sm transition-all cursor-pointer"
+                                        className="flex items-center justify-between p-4 rounded-2xl bg-app-surface border border-app-border hover:border-app-success hover:shadow-sm transition-all cursor-pointer"
                                         onClick={() => router.push(`/organizations/${org.id}`)}
                                     >
                                         <div>
                                             <p className="font-bold text-app-foreground">{org.name}</p>
                                             <p className="text-xs text-app-muted-foreground font-mono">{org.slug}</p>
                                         </div>
-                                        <Badge className={org.is_active ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}>
+                                        <Badge className={org.is_active ? "bg-app-success-bg text-app-success" : "bg-app-error-bg text-app-error"}>
                                             {org.is_active ? 'Active' : 'Suspended'}
                                         </Badge>
                                     </div>

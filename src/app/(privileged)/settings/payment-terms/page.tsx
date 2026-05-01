@@ -16,12 +16,12 @@ export default async function PaymentTermsPage() {
                 </Link>
 
                 <header className="flex items-center gap-3 md:gap-4">
-                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shadow-sm">
-                        <CreditCard size={24} className="text-emerald-500" />
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-app-success-bg dark:bg-emerald-900/30 flex items-center justify-center shadow-sm">
+                        <CreditCard size={24} className="text-app-success" />
                     </div>
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black tracking-tight theme-text">
-                            Payment <span className="text-emerald-500">Terms</span>
+                            Payment <span className="text-app-success">Terms</span>
                         </h1>
                         <p className="text-xs theme-text-muted mt-0.5">Manage payment conditions for purchase orders and invoices</p>
                     </div>

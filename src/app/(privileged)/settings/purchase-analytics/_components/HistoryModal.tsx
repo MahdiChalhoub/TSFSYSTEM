@@ -43,7 +43,7 @@ export function HistoryModal({ historyData, onClose, onRestore }: {
                         {new Date(entry.changed_at).toLocaleDateString()} {new Date(entry.changed_at).toLocaleTimeString()}
                       </span>
                       {entry.action !== 'save' && (
-                        <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 font-bold">{entry.action}</span>
+                        <span className="text-[8px] px-1.5 py-0.5 rounded bg-app-warning/10 text-app-warning font-bold">{entry.action}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -72,9 +72,9 @@ export function HistoryModal({ historyData, onClose, onRestore }: {
                       {entry.changes.map((c: any, ci: number) => (
                         <div key={ci} className="flex items-center gap-2 text-[9px]">
                           <span className="text-app-muted-foreground min-w-[100px]">{c.field.replace(/_/g, ' ')}</span>
-                          <span className="text-red-500/70 line-through">{typeof c.old === 'object' ? JSON.stringify(c.old) : String(c.old)}</span>
+                          <span className="text-app-error/70 line-through">{typeof c.old === 'object' ? JSON.stringify(c.old) : String(c.old)}</span>
                           <span className="text-app-muted-foreground">→</span>
-                          <span className="text-emerald-600 font-bold">{typeof c.new === 'object' ? JSON.stringify(c.new) : String(c.new)}</span>
+                          <span className="text-app-success font-bold">{typeof c.new === 'object' ? JSON.stringify(c.new) : String(c.new)}</span>
                         </div>
                       ))}
                     </div>

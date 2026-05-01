@@ -171,7 +171,7 @@ export function BrandingTab({ orgId, orgSettings, onSave }: BrandingTabProps) {
                                 style={{ background: `linear-gradient(135deg, ${brandColor}, color-mix(in srgb, ${brandColor} 60%, #6366f1))` }}
                             >T</div>
                             <h4 className="text-base font-black text-white">TENANT</h4>
-                            <p className="text-[9px] text-slate-400">{tagline || "Secure enterprise gateway."}</p>
+                            <p className="text-[9px] text-app-faint">{tagline || "Secure enterprise gateway."}</p>
                         </div>
                     </div>
                     <div className="flex flex-col items-center justify-center p-5" style={{ background: '#111827' }}>
@@ -181,10 +181,10 @@ export function BrandingTab({ orgId, orgSettings, onSave }: BrandingTabProps) {
                             <div className="space-y-1.5">
                                 <div className="flex items-center gap-1.5 h-6 rounded px-2"
                                     style={{ background: '#0f172a', border: `1px solid color-mix(in srgb, ${brandColor} 30%, #1e293b)` }}
-                                ><User size={8} className="text-slate-500" /><span className="text-[7px] text-slate-500">Username</span></div>
+                                ><User size={8} className="text-app-muted-foreground" /><span className="text-[7px] text-app-muted-foreground">Username</span></div>
                                 <div className="flex items-center gap-1.5 h-6 rounded px-2"
                                     style={{ background: '#0f172a', border: '1px solid #1e293b' }}
-                                ><Lock size={8} className="text-slate-500" /><span className="text-[7px] text-slate-500">Password</span></div>
+                                ><Lock size={8} className="text-app-muted-foreground" /><span className="text-[7px] text-app-muted-foreground">Password</span></div>
                             </div>
                             <button className="w-full h-6 rounded text-white text-[7px] font-bold flex items-center justify-center gap-1"
                                 style={{ background: brandColor }}

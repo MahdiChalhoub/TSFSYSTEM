@@ -40,7 +40,7 @@ export default function OrganizationDetailPage() {
     if (d.loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center space-y-4">
-                <Loader2 size={40} className="animate-spin text-emerald-500 mx-auto" />
+                <Loader2 size={40} className="animate-spin text-app-success mx-auto" />
                 <p className="text-app-muted-foreground font-medium text-sm">Loading organization...</p>
             </div>
         </div>
@@ -77,11 +77,11 @@ export default function OrganizationDetailPage() {
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className="text-3xl font-black text-app-foreground tracking-tight">{d.org.name}</h1>
-                            <Badge className={d.org.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}>
+                            <Badge className={d.org.is_active ? "bg-app-success-bg text-app-success border-app-success" : "bg-app-error-bg text-app-error border-app-error"}>
                                 {d.org.is_active ? 'Active' : 'Suspended'}
                             </Badge>
                         </div>
-                        <p className="text-emerald-600 font-mono text-xs tracking-widest uppercase mt-1">{d.org.slug}</p>
+                        <p className="text-app-success font-mono text-xs tracking-widest uppercase mt-1">{d.org.slug}</p>
                     </div>
                 </div>
                 <Badge variant="outline" className="px-4 py-2 text-sm font-mono border-app-border text-app-muted-foreground">

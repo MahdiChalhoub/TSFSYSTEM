@@ -67,7 +67,7 @@ export function TemplateManager({ config, onClose, onLoad }: {
                     Load
                   </button>
                   <button type="button" onClick={() => handleDelete(name)}
-                    className="text-[8px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 font-bold hover:bg-red-500/20">
+                    className="text-[8px] px-1.5 py-0.5 rounded bg-app-error/10 text-app-error font-bold hover:bg-app-error/20">
                     ×
                   </button>
                 </div>

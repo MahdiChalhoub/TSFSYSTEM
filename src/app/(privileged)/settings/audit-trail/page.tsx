@@ -395,11 +395,11 @@ export default function GlobalAuditTrailPage() {
                                                                     {fc.field_name.replace(/_/g, ' ')}
                                                                 </div>
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="flex-1 min-w-0 p-1.5 rounded-lg bg-red-500/5 text-[11px] font-mono text-red-500/80 line-through truncate border border-red-500/10">
+                                                                    <div className="flex-1 min-w-0 p-1.5 rounded-lg bg-app-error/5 text-[11px] font-mono text-app-error/80 line-through truncate border border-app-error/10">
                                                                         {fc.old_value || '(empty)'}
                                                                     </div>
                                                                     <ArrowRight size={10} className="text-app-muted-foreground shrink-0" />
-                                                                    <div className="flex-1 min-w-0 p-1.5 rounded-lg bg-green-500/5 text-[11px] font-mono text-green-500 font-bold truncate border border-green-500/20">
+                                                                    <div className="flex-1 min-w-0 p-1.5 rounded-lg bg-green-500/5 text-[11px] font-mono text-app-success font-bold truncate border border-app-success/20">
                                                                         {fc.new_value || '(empty)'}
                                                                     </div>
                                                                 </div>

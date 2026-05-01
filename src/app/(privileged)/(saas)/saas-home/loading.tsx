@@ -11,7 +11,7 @@
                 <div className="flex gap-3">
                     <div className="h-12 w-28 bg-app-surface-2 rounded-2xl animate-pulse" />
                     <div className="h-12 w-24 bg-app-surface-2 rounded-2xl animate-pulse" />
-                    <div className="h-12 w-32 bg-emerald-100 rounded-2xl animate-pulse" />
+                    <div className="h-12 w-32 bg-app-success-bg rounded-2xl animate-pulse" />
                 </div>
             </div>
 

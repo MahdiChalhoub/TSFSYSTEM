@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { useTranslation } from '@/hooks/use-translation'
+import { LOCALES, type Locale } from '@/translations/dictionaries'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Languages, Check } from 'lucide-react'
@@ -12,13 +13,10 @@ interface LanguageSwitcherProps {
 }
 
 export function LanguageSwitcher({ className, showLabel = true }: LanguageSwitcherProps) {
-    const { locale, switchLocale, t } = useTranslation()
+    const { locale, switchLocale } = useTranslation()
     const [isOpen, setIsOpen] = React.useState(false)
 
-    const languages = [
-        { id: 'en', name: 'English', flag: '🇬🇧' },
-        { id: 'fr', name: 'Français', flag: '🇫🇷' },
-    ]
+    const languages = LOCALES
 
     const currentLang = languages.find(l => l.id === locale) || languages[0]
 
@@ -56,8 +54,9 @@ export function LanguageSwitcher({ className, showLabel = true }: LanguageSwitch
                             {languages.map((lang) => (
                                 <button
                                     key={lang.id}
+                                    dir={lang.dir}
                                     onClick={() => {
-                                        switchLocale(lang.id as any)
+                                        switchLocale(lang.id as Locale)
                                         setIsOpen(false)
                                     }}
                                     className={cn(

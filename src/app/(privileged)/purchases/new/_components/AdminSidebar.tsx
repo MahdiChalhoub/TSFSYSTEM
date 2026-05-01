@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
     User, MapPin, Warehouse, UserCheck,
     Settings2, X, Check, ChevronRight, ChevronDown,
-    Building2, Shield, Calendar, Hash, Clock, AlertCircle,
+    Building2, Shield, Calendar, Hash, Clock, AlertCircle, Tag,
 } from 'lucide-react'
 import AnalyticsProfileSelector from '@/components/analytics/AnalyticsProfileSelector'
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
@@ -27,6 +27,11 @@ type Props = {
     onDriverChange: (id: number | '') => void
     reference: string
     onReferenceChange: (val: string) => void
+    /** Optional second reference — supplier's PO/quote number, internal
+     *  cost-center code, or any external identifier the operator wants to
+     *  carry on this PO. Always hand-typed; never auto-filled. */
+    supplierRef?: string
+    onSupplierRefChange?: (val: string) => void
     date: string
     onDateChange: (val: string) => void
     expectedDelivery: string
@@ -38,9 +43,14 @@ type Props = {
  *  One source-of-truth for the form's input/select/label styles
  *  so the whole panel reads as a single coherent surface. Lifted
  *  out of components so a theme tweak hits every field.
+ *
+ *  All sizes resolve through the theme typography tokens
+ *  (`text-tp-*`) — never raw `text-[Npx]`. Anything below the
+ *  10px accessibility floor (the theme's documented minimum) is
+ *  forbidden.
  */
 const fieldBase =
-    'w-full text-[12px] font-medium px-2.5 py-2 rounded-xl outline-none border transition-all ' +
+    'w-full text-tp-sm font-medium px-2.5 py-2 rounded-xl outline-none border transition-all ' +
     'focus:ring-2 focus:ring-app-primary/15 placeholder:text-app-muted-foreground/60 ' +
     'disabled:opacity-50 disabled:cursor-not-allowed'
 const fieldStyle: React.CSSProperties = {
@@ -49,7 +59,11 @@ const fieldStyle: React.CSSProperties = {
     color: 'var(--app-foreground)',
 }
 const labelCls =
-    'text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 block'
+    'text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1.5 block'
+/* Soft divider (35%) for in-section separators; firm divider (60%) for
+ * field outlines. Two opacities, used consistently. */
+const SOFT_DIVIDER = 'color-mix(in srgb, var(--app-border) 35%, transparent)'
+const FIRM_DIVIDER = 'color-mix(in srgb, var(--app-border) 60%, transparent)'
 
 export function AdminSidebar({
     suppliers, sites, users,
@@ -60,6 +74,7 @@ export function AdminSidebar({
     assigneeId, onAssigneeChange,
     driverId, onDriverChange,
     reference, onReferenceChange,
+    supplierRef = '', onSupplierRefChange,
     date, onDateChange,
     expectedDelivery, onExpectedDeliveryChange,
     onClose,
@@ -174,10 +189,10 @@ export function AdminSidebar({
             {/* PROGRESS ─────────────────────────────────────────── */}
             <div className="flex-shrink-0 px-4 pt-3 pb-2.5">
                 <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
+                    <span className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">
                         {totalDone} of 5 sections
                     </span>
-                    <span className="text-[10px] font-black tabular-nums"
+                    <span className="text-tp-xxs font-bold tabular-nums"
                           style={{ color: requiredDone ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
                         {progress}%
                     </span>
@@ -199,28 +214,70 @@ export function AdminSidebar({
 
                 <Step n={1} title="Document Info" icon={<Hash size={12} />}
                       done={stepDone.document}
-                      summary={stepDone.document ? `${reference} · ${date}` : undefined}>
-                    <label className={labelCls}>Reference</label>
+                      summary={stepDone.document
+                          ? `${reference}${supplierRef ? ` · ${supplierRef}` : ''} · ${date}`
+                          : undefined}>
+                    {/* Primary reference — auto-filled from /settings/sequences,
+                     *  but always hand-editable. The "Auto" pill signals that
+                     *  the value came from the sequence so the operator knows
+                     *  it'll change if they don't override. */}
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className={labelCls + ' mb-0'}>Reference</label>
+                        <span className="text-tp-xxs font-bold uppercase tracking-widest px-1.5 py-px rounded"
+                              style={{
+                                  background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                  color: 'var(--app-primary)',
+                              }}
+                              title="Auto-filled from /settings/sequences. Edit to override.">
+                            Auto · editable
+                        </span>
+                    </div>
                     <Field icon={<Hash size={11} />}>
                         <input value={reference} onChange={e => onReferenceChange(e.target.value)}
                                placeholder="PO Reference / Invoice #"
                                className={fieldBase + ' pl-8'} style={fieldStyle} />
                     </Field>
+
+                    {/* Optional second reference — supplier PO/quote number,
+                     *  internal cost-center code, legacy ERP id, etc. */}
+                    {onSupplierRefChange && (
+                        <div className="mt-2">
+                            <label className={labelCls}>
+                                Supplier / Internal ref
+                                <span className="ml-1 font-medium normal-case tracking-normal text-app-muted-foreground/70">(optional)</span>
+                            </label>
+                            <Field icon={<Tag size={11} />}>
+                                <input value={supplierRef}
+                                       onChange={e => onSupplierRefChange(e.target.value)}
+                                       placeholder="Supplier's PO #, internal code…"
+                                       className={fieldBase + ' pl-8'} style={fieldStyle} />
+                            </Field>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                        <div>
-                            <label className={labelCls}>Order date</label>
-                            <Field icon={<Calendar size={11} />}>
-                                <input type="date" value={date} onChange={e => onDateChange(e.target.value)}
-                                       className={fieldBase + ' pl-8'} style={fieldStyle} />
-                            </Field>
-                        </div>
-                        <div>
-                            <label className={labelCls}>Expected</label>
-                            <Field icon={<Clock size={11} />}>
-                                <input type="date" value={expectedDelivery} onChange={e => onExpectedDeliveryChange(e.target.value)}
-                                       className={fieldBase + ' pl-8'} style={fieldStyle} />
-                            </Field>
-                        </div>
+                        <DateField
+                            label="Order date"
+                            icon={<Calendar size={11} />}
+                            value={date}
+                            onChange={onDateChange}
+                            quickAdds={[
+                                { label: 'Today', from: 'today', delta: 0 },
+                                { label: 'Yesterday', from: 'today', delta: -1 },
+                            ]}
+                        />
+                        <DateField
+                            label="Expected"
+                            icon={<Clock size={11} />}
+                            value={expectedDelivery}
+                            onChange={onExpectedDeliveryChange}
+                            quickAdds={[
+                                { label: '+5d', from: 'order', delta: 5 },
+                                { label: '+10d', from: 'order', delta: 10 },
+                                { label: '+15d', from: 'order', delta: 15 },
+                            ]}
+                            anchorDate={date}
+                        />
                     </div>
                 </Step>
 
@@ -229,15 +286,12 @@ export function AdminSidebar({
                       summary={supplierName ? `${scope.charAt(0) + scope.slice(1).toLowerCase()} · ${supplierName}` : undefined}>
                     <label className={labelCls}>Scope</label>
                     <div className="flex gap-1 p-1 rounded-xl mb-3"
-                         style={{
-                             background: 'var(--app-bg)',
-                             border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
-                         }}>
+                         style={{ background: 'var(--app-bg)', border: `1px solid ${FIRM_DIVIDER}` }}>
                         {(['OFFICIAL', 'INTERNAL'] as const).map(s => {
                             const active = scope === s
                             return (
                                 <button key={s} type="button" onClick={() => onScopeChange(s)}
-                                        className="flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                        className="flex-1 py-1.5 text-tp-xxs font-bold uppercase tracking-widest rounded-lg transition-all active:scale-[0.97]"
                                         style={active
                                             ? { background: 'var(--app-primary)', color: 'white' }
                                             : { color: 'var(--app-muted-foreground)' }}>
@@ -306,7 +360,7 @@ export function AdminSidebar({
                         />
                     </div>
                     {/* Tiny hints — make optional fields explicit. */}
-                    <p className="text-[10px] font-medium text-app-muted-foreground/70 mt-2 flex items-start gap-1">
+                    <p className="text-tp-xxs font-medium text-app-muted-foreground/70 mt-2 flex items-start gap-1">
                         <UserCheck size={10} className="mt-0.5 flex-shrink-0" />
                         Optional. Defaults: assignee = creator; driver = none.
                     </p>
@@ -315,10 +369,7 @@ export function AdminSidebar({
                 <Step n={5} title="Analytics" icon={<Shield size={12} />}>
                     <label className={labelCls}>Profile</label>
                     <div className="rounded-xl overflow-hidden"
-                         style={{
-                             background: 'var(--app-bg)',
-                             border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
-                         }}>
+                         style={{ background: 'var(--app-bg)', border: `1px solid ${FIRM_DIVIDER}` }}>
                         <AnalyticsProfileSelector pageContext="purchase-order" onProfileChange={() => {}} compact />
                     </div>
                 </Step>
@@ -334,7 +385,7 @@ export function AdminSidebar({
                              border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)',
                          }}>
                         <AlertCircle size={12} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                        <span className="text-[11px] font-bold leading-snug" style={{ color: 'var(--app-foreground)' }}>
+                        <span className="text-tp-xs font-bold leading-snug" style={{ color: 'var(--app-foreground)' }}>
                             {!stepDone.vendor && !stepDone.node
                                 ? 'Choose a vendor and a fulfillment node to continue.'
                                 : !stepDone.vendor
@@ -351,7 +402,7 @@ export function AdminSidebar({
                 <button type="button"
                         onClick={() => onClose?.()}
                         disabled={!requiredDone}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12px] font-bold transition-all disabled:opacity-40"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-tp-sm font-bold transition-all active:scale-[0.97] disabled:opacity-40 disabled:active:scale-100"
                         style={{
                             background: requiredDone ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-primary) 50%, var(--app-border))',
                             color: 'white',
@@ -386,14 +437,17 @@ function Step({ n, title, icon, done, required, summary, children }: {
 
     return (
         <section className="px-4 py-3"
-                 style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 35%, transparent)' }}>
+                 style={{ borderBottom: `1px solid ${SOFT_DIVIDER}` }}>
             <button
                 type="button"
                 onClick={() => summary && setOpen(o => !o)}
                 disabled={!summary}
                 className="w-full flex items-center gap-2 disabled:cursor-default text-left"
             >
-                <div className="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-black flex-shrink-0 transition-colors"
+                {/* Step indicator. Sized at tp-xxs (10px) — the theme floor;
+                 *  using `text-[9px]` (the previous value) violated the
+                 *  documented accessibility minimum. */}
+                <div className="w-5 h-5 rounded-md flex items-center justify-center text-tp-xxs font-bold flex-shrink-0 transition-colors"
                      style={done
                          ? { background: 'var(--app-success, #22c55e)', color: 'white' }
                          : {
@@ -403,12 +457,12 @@ function Step({ n, title, icon, done, required, summary, children }: {
                          }}>
                     {done ? <Check size={11} strokeWidth={3} /> : n}
                 </div>
-                <span className="flex items-center gap-1.5 text-[12px] font-black tracking-tight text-app-foreground min-w-0">
+                <span className="flex items-center gap-1.5 text-tp-sm font-bold tracking-tight text-app-foreground min-w-0">
                     <span style={{ color: 'var(--app-muted-foreground)' }} className="flex-shrink-0">{icon}</span>
                     <span className="truncate">{title}</span>
                 </span>
                 {required && !done && (
-                    <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-px rounded ml-auto flex-shrink-0"
+                    <span className="text-tp-xxs font-bold uppercase tracking-widest px-1.5 py-px rounded ml-auto flex-shrink-0"
                           style={{
                               background: 'color-mix(in srgb, var(--app-error, #ef4444) 12%, transparent)',
                               color: 'var(--app-error, #ef4444)',
@@ -424,7 +478,7 @@ function Step({ n, title, icon, done, required, summary, children }: {
             </button>
 
             {collapsed ? (
-                <p className="text-[11px] font-medium text-app-muted-foreground mt-1.5 ml-7 truncate">
+                <p className="text-tp-xs font-medium text-app-muted-foreground mt-1.5 ml-7 truncate">
                     {summary}
                 </p>
             ) : (
@@ -445,6 +499,147 @@ function Field({ icon, children }: { icon?: React.ReactNode; children: React.Rea
                 </div>
             )}
             {children}
+        </div>
+    )
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ *  DateField — single dropdown that combines preset offsets + a "Custom"
+ *  option that pops the native calendar.
+ *
+ *  Why this shape:
+ *    - The native `<input type="date">` icon is platform-default (looks
+ *      foreign and doesn't match the app's theme).
+ *    - Operators almost always pick either Today or a small offset
+ *      (+5/+10/+15 days). Surfacing those as the FIRST options in the
+ *      dropdown means most date entries are a single click — no calendar
+ *      navigation at all.
+ *    - The native calendar still lives behind a "Custom date…" footer so
+ *      uncommon dates remain reachable without a custom calendar
+ *      implementation (which would be ~300 lines and a maintenance tax).
+ *
+ *  `from: 'today'` → delta from today.
+ *  `from: 'order'` → delta from `anchorDate` (so "+10d" on Expected means
+ *                    10 days after the Order date, not 10 days from today).
+ * ───────────────────────────────────────────────────────────────────── */
+type QuickAdd = { label: string; from: 'today' | 'order'; delta: number }
+
+function DateField({ label, icon, value, onChange, quickAdds, anchorDate }: {
+    label: string
+    icon: React.ReactNode
+    value: string
+    onChange: (v: string) => void
+    quickAdds?: QuickAdd[]
+    /** Used when a preset's `from` is 'order' — typically the order date. */
+    anchorDate?: string
+}) {
+    const [open, setOpen] = useState(false)
+    const wrapperRef = useRef<HTMLDivElement | null>(null)
+    const hiddenInputRef = useRef<HTMLInputElement | null>(null)
+
+    /* Click-outside closes the dropdown. Same idiom used by SearchableDropdown. */
+    useEffect(() => {
+        if (!open) return
+        const onDocClick = (e: MouseEvent) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+                setOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', onDocClick)
+        return () => document.removeEventListener('mousedown', onDocClick)
+    }, [open])
+
+    const computeDate = (q: QuickAdd): string => {
+        const base = q.from === 'order' && anchorDate
+            ? new Date(anchorDate)
+            : new Date()
+        base.setHours(0, 0, 0, 0)
+        base.setDate(base.getDate() + q.delta)
+        return base.toISOString().split('T')[0]
+    }
+
+    const display = value
+        ? new Date(value + 'T00:00:00').toLocaleDateString(undefined, {
+            year: 'numeric', month: 'short', day: '2-digit',
+        })
+        : 'Pick a date…'
+
+    const openCustomPicker = () => {
+        setOpen(false)
+        // Native calendar — `showPicker()` is the modern API; falls back
+        // to a synthesised click for older browsers.
+        const el = hiddenInputRef.current
+        if (!el) return
+        try {
+            (el as HTMLInputElement & { showPicker?: () => void }).showPicker?.()
+        } catch { /* fall through */ }
+    }
+
+    return (
+        <div ref={wrapperRef} className="relative">
+            <label className={labelCls}>{label}</label>
+            {/* Trigger — looks identical to the other Field inputs. */}
+            <button type="button"
+                    onClick={() => setOpen(o => !o)}
+                    className={fieldBase + ' pl-8 pr-7 text-left flex items-center'}
+                    style={fieldStyle}>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none">
+                    {icon}
+                </span>
+                <span className={value ? '' : 'text-app-muted-foreground/60'}>{display}</span>
+                <ChevronDown size={11}
+                             className="absolute right-2 top-1/2 -translate-y-1/2 text-app-muted-foreground transition-transform pointer-events-none"
+                             style={{ transform: open ? 'translateY(-50%) rotate(180deg)' : undefined }} />
+            </button>
+
+            {/* Hidden native input — only used by the "Custom date…" path. */}
+            <input ref={hiddenInputRef} type="date" value={value}
+                   onChange={e => onChange(e.target.value)}
+                   className="sr-only"
+                   tabIndex={-1} aria-hidden />
+
+            {open && (
+                <div className="absolute z-30 left-0 right-0 mt-1 rounded-xl shadow-xl overflow-hidden"
+                     style={{
+                         background: 'var(--app-surface)',
+                         border: `1px solid ${FIRM_DIVIDER}`,
+                     }}>
+                    {/* Quick-add presets */}
+                    {quickAdds && quickAdds.length > 0 && (
+                        <div className="py-1">
+                            {quickAdds.map(q => {
+                                const target = computeDate(q)
+                                const active = value === target
+                                return (
+                                    <button key={q.label} type="button"
+                                            onClick={() => { onChange(target); setOpen(false) }}
+                                            className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-tp-sm font-medium transition-colors hover:bg-app-surface-hover"
+                                            style={active ? { color: 'var(--app-primary)' } : { color: 'var(--app-foreground)' }}>
+                                        <span className="flex items-center gap-2">
+                                            {active && <Check size={11} strokeWidth={3} />}
+                                            <span className={active ? 'font-bold' : ''}>{q.label}</span>
+                                        </span>
+                                        <span className="text-tp-xxs font-mono text-app-muted-foreground">
+                                            {target}
+                                        </span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    )}
+                    {/* Custom — opens the native calendar */}
+                    <button type="button"
+                            onClick={openCustomPicker}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-tp-sm font-bold transition-colors hover:bg-app-surface-hover"
+                            style={{
+                                color: 'var(--app-primary)',
+                                borderTop: quickAdds && quickAdds.length > 0 ? `1px solid ${SOFT_DIVIDER}` : undefined,
+                            }}>
+                        <Calendar size={11} />
+                        Custom date…
+                    </button>
+                </div>
+            )}
         </div>
     )
 }

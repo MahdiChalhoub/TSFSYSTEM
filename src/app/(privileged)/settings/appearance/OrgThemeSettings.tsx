@@ -265,7 +265,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: str
       {/* ── Structural Tuning Section ────────────────────────────────────────── */}
       <div className="mt-8 pt-8 border-t border-app-border">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 text-emerald-500">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-app-primary/10 text-app-success">
             <Layers size={18} />
           </div>
           <div>

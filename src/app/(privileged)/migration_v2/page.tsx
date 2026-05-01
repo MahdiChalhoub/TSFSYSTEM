@@ -25,18 +25,18 @@ const IMPORT_MODULES = [
         label: 'Full Migration',
         description: 'Products, Contacts, Transactions, Stock — everything',
         icon: Layers,
-        color: 'bg-emerald-50 dark:bg-emerald-900/30',
-        iconColor: 'text-emerald-600',
+        color: 'bg-app-success-bg dark:bg-emerald-900/30',
+        iconColor: 'text-app-success',
         badge: 'Recommended',
-        badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+        badgeColor: 'bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success',
     },
     {
         id: 'PRODUCTS',
         label: 'Products Only',
         description: 'Units, Categories, Brands, Products, Variants',
         icon: Package,
-        color: 'bg-blue-50 dark:bg-blue-900/30',
-        iconColor: 'text-blue-600',
+        color: 'bg-app-info-bg dark:bg-blue-900/30',
+        iconColor: 'text-app-info',
     },
     {
         id: 'CONTACTS',
@@ -51,8 +51,8 @@ const IMPORT_MODULES = [
         label: 'Transactions',
         description: 'Sales, Purchases, Payments, Journal Entries',
         icon: ShoppingCart,
-        color: 'bg-orange-50 dark:bg-orange-900/30',
-        iconColor: 'text-orange-600',
+        color: 'bg-app-warning-bg dark:bg-orange-900/30',
+        iconColor: 'text-app-warning',
     },
     {
         id: 'STOCK',
@@ -72,8 +72,8 @@ const SOURCE_SYSTEMS = [
         label: 'UltimatePOS',
         description: 'Import from UltimatePOS SQL database dump',
         icon: Database,
-        color: 'bg-blue-50 dark:bg-blue-900/30',
-        iconColor: 'text-blue-600',
+        color: 'bg-app-info-bg dark:bg-blue-900/30',
+        iconColor: 'text-app-info',
         available: true,
     },
     {
@@ -81,8 +81,8 @@ const SOURCE_SYSTEMS = [
         label: 'Excel / CSV',
         description: 'Import from spreadsheets (products, contacts, stock)',
         icon: FileSpreadsheet,
-        color: 'bg-green-50 dark:bg-green-900/30',
-        iconColor: 'text-green-600',
+        color: 'bg-app-success-bg dark:bg-green-900/30',
+        iconColor: 'text-app-success',
         available: false,
     },
     {
@@ -122,8 +122,8 @@ export default function MigrationImportHub() {
 
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                        <Monitor className="w-7 h-7 text-emerald-600" />
+                    <div className="w-14 h-14 rounded-2xl bg-app-success-bg dark:bg-emerald-900/30 flex items-center justify-center">
+                        <Monitor className="w-7 h-7 text-app-success" />
                     </div>
                     <div>
                         <h1 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">
@@ -140,7 +140,7 @@ export default function MigrationImportHub() {
                     <button
                         onClick={() => setStep('module')}
                         className={`px-3 py-1.5 rounded-lg transition-colors ${step === 'module'
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                ? 'bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success'
                                 : 'text-app-muted-foreground hover:text-app-foreground'
                             }`}
                     >
@@ -149,7 +149,7 @@ export default function MigrationImportHub() {
                     <ChevronRight size={14} className="text-app-muted-foreground" />
                     <span
                         className={`px-3 py-1.5 rounded-lg ${step === 'source'
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                ? 'bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success'
                                 : 'text-app-muted-foreground'
                             }`}
                     >
@@ -182,8 +182,8 @@ export default function MigrationImportHub() {
                                         key={mod.id}
                                         onClick={() => handleModuleSelect(mod.id)}
                                         className={`text-left p-5 rounded-2xl border-2 transition-all group hover:shadow-lg ${isSelected
-                                                ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10 shadow-md'
-                                                : 'border-app-border bg-app-surface hover:border-emerald-400/50'
+                                                ? 'border-app-success bg-app-success-bg/50 dark:bg-emerald-900/10 shadow-md'
+                                                : 'border-app-border bg-app-surface hover:border-app-success/50'
                                             } ${mod.id === 'FULL' ? 'md:col-span-2' : ''}`}
                                     >
                                         <div className="flex items-start gap-4">
@@ -237,7 +237,7 @@ export default function MigrationImportHub() {
                                     Where are you importing from?
                                 </h2>
                                 <p className="text-sm text-app-muted-foreground mt-0.5">
-                                    Importing: <span className="font-bold text-emerald-600">{IMPORT_MODULES.find(m => m.id === selectedModule)?.label}</span>
+                                    Importing: <span className="font-bold text-app-success">{IMPORT_MODULES.find(m => m.id === selectedModule)?.label}</span>
                                 </p>
                             </div>
                         </div>
@@ -249,14 +249,14 @@ export default function MigrationImportHub() {
                                     <button
                                         key={source.id}
                                         onClick={() => handleSourceSelect(source.id)}
-                                        className="text-left p-6 rounded-2xl bg-app-surface border-2 border-app-border hover:border-emerald-500 hover:shadow-lg transition-all group"
+                                        className="text-left p-6 rounded-2xl bg-app-surface border-2 border-app-border hover:border-app-success hover:shadow-lg transition-all group"
                                     >
-                                        <div className={`w-14 h-14 rounded-xl ${source.color} flex items-center justify-center mb-4 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/30 transition-colors`}>
-                                            <Icon className={`w-7 h-7 ${source.iconColor} group-hover:text-emerald-600 transition-colors`} />
+                                        <div className={`w-14 h-14 rounded-xl ${source.color} flex items-center justify-center mb-4 group-hover:bg-app-success-bg dark:group-hover:bg-emerald-900/30 transition-colors`}>
+                                            <Icon className={`w-7 h-7 ${source.iconColor} group-hover:text-app-success transition-colors`} />
                                         </div>
                                         <h3 className="text-lg font-black text-app-foreground">{source.label}</h3>
                                         <p className="text-xs text-app-muted-foreground mt-1">{source.description}</p>
-                                        <span className="inline-block mt-3 px-2.5 py-1 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase">
+                                        <span className="inline-block mt-3 px-2.5 py-1 rounded-full text-[9px] font-black bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success uppercase">
                                             Available
                                         </span>
                                     </button>

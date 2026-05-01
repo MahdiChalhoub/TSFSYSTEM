@@ -43,8 +43,8 @@ const VERIFICATION_COLUMNS: ColumnDef<MappingRecord>[] = [
         label: 'Validation Status',
         sortable: true,
         render: (r) => (
-            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${r.verify_status === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700' :
-                r.verify_status === 'FLAGGED' ? 'bg-amber-100 text-amber-700' :
+            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${r.verify_status === 'VERIFIED' ? 'bg-app-success-bg text-app-success' :
+                r.verify_status === 'FLAGGED' ? 'bg-app-warning-bg text-app-warning' :
                     'bg-app-surface theme-text-muted'
                 }`}>
                 {r.verify_status || 'PENDING'}
@@ -56,7 +56,7 @@ const VERIFICATION_COLUMNS: ColumnDef<MappingRecord>[] = [
         label: 'Verification Notes',
         sortable: false,
         render: (r) => (
-            <span className="text-xs text-amber-600 font-medium italic">
+            <span className="text-xs text-app-warning font-medium italic">
                 {r.verify_status === 'FLAGGED' ? 'Data discrepancy detected' : 'Automated checks passed'}
             </span>
         )
@@ -146,25 +146,25 @@ export default function VerificationPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <AppCard className="p-6 bg-emerald-50 border-emerald-100 shadow-sm">
+                    <AppCard className="p-6 bg-app-success-bg border-app-success shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-[10px] font-black uppercase text-emerald-600 tracking-widest mb-1">Passed Checks</p>
-                                <p className="text-3xl font-black text-emerald-800">{verifiedCount}</p>
+                                <p className="text-[10px] font-black uppercase text-app-success tracking-widest mb-1">Passed Checks</p>
+                                <p className="text-3xl font-black text-app-success">{verifiedCount}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                            <div className="w-12 h-12 rounded-full bg-app-success-bg flex items-center justify-center">
+                                <CheckCircle2 className="w-6 h-6 text-app-success" />
                             </div>
                         </div>
                     </AppCard>
-                    <AppCard className="p-6 bg-amber-50 border-amber-100 shadow-sm">
+                    <AppCard className="p-6 bg-app-warning-bg border-app-warning shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-[10px] font-black uppercase text-amber-600 tracking-widest mb-1">Flagged / Anomalies</p>
-                                <p className="text-3xl font-black text-amber-800">{flaggedCount}</p>
+                                <p className="text-[10px] font-black uppercase text-app-warning tracking-widest mb-1">Flagged / Anomalies</p>
+                                <p className="text-3xl font-black text-app-warning">{flaggedCount}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                                <AlertTriangle className="w-6 h-6 text-amber-600" />
+                            <div className="w-12 h-12 rounded-full bg-app-warning-bg flex items-center justify-center">
+                                <AlertTriangle className="w-6 h-6 text-app-warning" />
                             </div>
                         </div>
                     </AppCard>
@@ -174,7 +174,7 @@ export default function VerificationPage() {
                                 <p className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest mb-1">Awaiting Verification</p>
                                 <p className="text-3xl font-black text-app-foreground">{pendingCount}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-full bg-app-surface-2 flex items-center justify-center">
                                 <ShieldCheck className="w-6 h-6 text-app-muted-foreground" />
                             </div>
                         </div>

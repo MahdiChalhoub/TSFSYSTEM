@@ -80,7 +80,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
         return (
             <div className="bg-app-surface rounded-[2rem] border border-app-border p-12 text-center shadow-sm">
                 <div className="w-20 h-20 bg-app-surface rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Check className="text-gray-200" size={40} />
+                    <Check className="text-app-faint" size={40} />
                 </div>
                 <h2 className="text-xl font-black text-app-faint uppercase tracking-tighter">Queue Empty</h2>
                 <p className="text-sm text-app-muted-foreground font-bold uppercase tracking-widest mt-1">No pending registrations at the moment</p>
@@ -103,7 +103,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                                         <h3 className="text-lg font-black text-app-foreground uppercase tracking-tighter truncate">
                                             {user.organization?.name || 'New Organization'}
                                         </h3>
-                                        <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">
+                                        <p className="text-[10px] font-black uppercase text-app-info tracking-widest">
                                             {user.organization?.slug || 'pending-slug'}
                                         </p>
                                     </div>
@@ -137,7 +137,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                                         <span className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest block mb-1">Status</span>
                                         <Badge className={cn(
                                             "rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest border-none",
-                                            user.registration_status === 'PENDING' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                                            user.registration_status === 'PENDING' ? "bg-app-warning-bg text-app-warning" : "bg-app-info-bg text-app-info"
                                         )}>
                                             {user.registration_status}
                                         </Badge>
@@ -149,7 +149,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                                         variant="outline"
                                         onClick={() => setPendingRejectId(user.id)}
                                         disabled={loadingMap[user.id]}
-                                        className="h-12 w-12 rounded-2xl border-app-border hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all p-0"
+                                        className="h-12 w-12 rounded-2xl border-app-border hover:bg-app-error-bg hover:text-app-error hover:border-app-error transition-all p-0"
                                     >
                                         <X size={20} />
                                     </Button>
@@ -157,7 +157,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                                         variant="outline"
                                         onClick={() => setCorrectionModal({ open: true, userId: user.id })}
                                         disabled={loadingMap[user.id]}
-                                        className="h-12 px-6 rounded-2xl border-app-border text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-all"
+                                        className="h-12 px-6 rounded-2xl border-app-border text-[10px] font-black uppercase tracking-widest hover:bg-app-info-bg hover:text-app-info hover:border-app-info transition-all"
                                     >
                                         Correction
                                     </Button>
@@ -189,7 +189,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                                 placeholder="Explain what needs to be changed..."
                                 value={correctionNotes}
                                 onChange={e => setCorrectionNotes(e.target.value)}
-                                className="min-h-[120px] rounded-2xl border-app-border bg-app-surface focus:bg-app-surface focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
+                                className="min-h-[120px] rounded-2xl border-app-border bg-app-surface focus:bg-app-surface focus:border-app-info/50 focus:ring-4 focus:ring-app-info/10 transition-all font-medium"
                             />
                         </div>
 
@@ -204,7 +204,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                             <Button
                                 onClick={handleRequestCorrection}
                                 disabled={!correctionNotes}
-                                className="flex-1 h-14 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest"
+                                className="flex-1 h-14 rounded-2xl bg-app-info text-white text-[10px] font-black uppercase tracking-widest"
                             >
                                 Send Request
                             </Button>

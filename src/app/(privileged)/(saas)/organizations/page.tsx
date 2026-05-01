@@ -195,7 +195,7 @@ export default function OrganizationsPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
-                    <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">
+                    <div className="flex items-center gap-2 text-app-success font-bold text-xs uppercase tracking-[0.2em] mb-2">
                         <Building size={14} /> Tenant Registry
                     </div>
                     <h2 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">Organizations</h2>
@@ -203,7 +203,7 @@ export default function OrganizationsPage() {
                 </div>
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        <Button className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] text-xs md:text-sm">
+                        <Button className="w-full sm:w-auto bg-app-primary-dark hover:bg-app-primary text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] text-xs md:text-sm">
                             <Plus size={18} />
                             Register Instance
                         </Button>
@@ -219,7 +219,7 @@ export default function OrganizationsPage() {
                                 <Label className="text-xs font-bold text-app-muted-foreground uppercase tracking-widest">Business Legal Name *</Label>
                                 <Input
                                     placeholder="e.g. Acme Global Industries"
-                                    className="bg-app-surface border-app-border rounded-xl py-6 focus:ring-emerald-500"
+                                    className="bg-app-surface border-app-border rounded-xl py-6 focus:ring-app-primary"
                                     value={newOrg.name}
                                     onChange={(e) => setNewOrg({ ...newOrg, name: e.target.value })}
                                 />
@@ -229,7 +229,7 @@ export default function OrganizationsPage() {
                                 <div className="flex items-center gap-2">
                                     <Input
                                         placeholder="acme-corp"
-                                        className="bg-app-surface border-app-border rounded-xl py-6 focus:ring-emerald-500 font-mono text-emerald-600"
+                                        className="bg-app-surface border-app-border rounded-xl py-6 focus:ring-app-primary font-mono text-app-success"
                                         value={newOrg.slug}
                                         onChange={(e) => setNewOrg({ ...newOrg, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
                                     />
@@ -265,7 +265,7 @@ export default function OrganizationsPage() {
                                     <div className="space-y-1.5">
                                         <Label className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider flex items-center gap-1"><Building size={10} /> Industry Vector</Label>
                                         <select
-                                            className="w-full bg-app-surface border border-app-border rounded-xl py-2.5 px-3 text-sm text-app-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                            className="w-full bg-app-surface border border-app-border rounded-xl py-2.5 px-3 text-sm text-app-foreground focus:outline-none focus:ring-2 focus:ring-app-primary/30"
                                             value={newOrg.business_type}
                                             onChange={(e) => setNewOrg({ ...newOrg, business_type: e.target.value })}
                                         >
@@ -276,7 +276,7 @@ export default function OrganizationsPage() {
                                     <div className="space-y-1.5">
                                         <Label className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider flex items-center gap-1">Base Currency</Label>
                                         <select
-                                            className="w-full bg-app-surface border border-app-border rounded-xl py-2.5 px-3 text-sm text-app-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                            className="w-full bg-app-surface border border-app-border rounded-xl py-2.5 px-3 text-sm text-app-foreground focus:outline-none focus:ring-2 focus:ring-app-primary/30"
                                             value={newOrg.base_currency}
                                             onChange={(e) => setNewOrg({ ...newOrg, base_currency: e.target.value })}
                                         >
@@ -296,10 +296,10 @@ export default function OrganizationsPage() {
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                            <div className="p-4 bg-app-success-bg rounded-2xl border border-app-success">
                                 <div className="flex gap-3">
-                                    <Zap className="text-emerald-600 shrink-0" size={18} />
-                                    <p className="text-[10px] leading-relaxed text-emerald-800 font-medium">
+                                    <Zap className="text-app-success shrink-0" size={18} />
+                                    <p className="text-[10px] leading-relaxed text-app-success font-medium">
                                         Provisioning creates: default branch, warehouse, fiscal year with monthly periods, chart of accounts, cash drawer, posting rules, and financial settings.
                                     </p>
                                 </div>
@@ -307,7 +307,7 @@ export default function OrganizationsPage() {
                         </div>
                         <DialogFooter className="pt-6">
                             <Button
-                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl py-6 font-black shadow-xl shadow-emerald-900/40"
+                                className="w-full bg-app-primary-dark hover:bg-app-primary text-white rounded-2xl py-6 font-black shadow-xl shadow-emerald-900/40"
                                 onClick={handleCreate}
                                 disabled={isCreating}
                             >
@@ -323,32 +323,32 @@ export default function OrganizationsPage() {
                 <div className="relative flex-1 min-w-[200px]">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <input type="text" placeholder="Search by name or slug..." value={search} onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2.5 text-sm border border-app-border rounded-xl bg-app-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-300" />
+                        className="w-full pl-9 pr-3 py-2.5 text-sm border border-app-border rounded-xl bg-app-surface focus:outline-none focus:ring-2 focus:ring-app-primary/30 focus:border-app-success" />
                 </div>
                 <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                    className="text-xs font-bold border border-app-border rounded-xl px-3 py-2.5 bg-app-surface text-app-foreground focus:ring-2 focus:ring-emerald-500/30">
+                    className="text-xs font-bold border border-app-border rounded-xl px-3 py-2.5 bg-app-surface text-app-foreground focus:ring-2 focus:ring-app-primary/30">
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
                     <option value="suspended">Suspended</option>
                 </select>
                 <select value={filterPlan} onChange={e => setFilterPlan(e.target.value)}
-                    className="text-xs font-bold border border-app-border rounded-xl px-3 py-2.5 bg-app-surface text-app-foreground focus:ring-2 focus:ring-emerald-500/30">
+                    className="text-xs font-bold border border-app-border rounded-xl px-3 py-2.5 bg-app-surface text-app-foreground focus:ring-2 focus:ring-app-primary/30">
                     <option value="all">All Plans</option>
                     {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
                 {businessTypes.length > 0 && (
                     <select value={filterType} onChange={e => setFilterType(e.target.value)}
-                        className="text-xs font-bold border border-app-border rounded-xl px-3 py-2.5 bg-app-surface text-app-foreground focus:ring-2 focus:ring-emerald-500/30">
+                        className="text-xs font-bold border border-app-border rounded-xl px-3 py-2.5 bg-app-surface text-app-foreground focus:ring-2 focus:ring-app-primary/30">
                         <option value="all">All Types</option>
                         {businessTypes.map(bt => <option key={bt.id} value={bt.name}>{bt.name}</option>)}
                     </select>
                 )}
                 <input type="text" placeholder="Filter by country..." value={filterCountry === 'all' ? '' : filterCountry}
                     onChange={e => setFilterCountry(e.target.value || 'all')}
-                    className="text-xs font-bold border border-app-border rounded-xl px-3 py-2.5 bg-app-surface text-app-foreground focus:ring-2 focus:ring-emerald-500/30 w-[140px]" />
+                    className="text-xs font-bold border border-app-border rounded-xl px-3 py-2.5 bg-app-surface text-app-foreground focus:ring-2 focus:ring-app-primary/30 w-[140px]" />
                 {hasFilters && (
                     <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
-                        className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 px-3 py-2.5 rounded-xl border border-red-100 hover:bg-red-50 transition-all">
+                        className="text-xs font-bold text-app-error hover:text-app-error flex items-center gap-1 px-3 py-2.5 rounded-xl border border-app-error hover:bg-app-error-bg transition-all">
                         <X size={12} /> Clear
                     </button>
                 )}
@@ -367,30 +367,30 @@ export default function OrganizationsPage() {
 
                     return (
                         <Card key={org.id}
-                            className="bg-app-surface border-app-border hover:border-emerald-500/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl cursor-pointer"
+                            className="bg-app-surface border-app-border hover:border-app-primary/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl cursor-pointer"
                             onClick={() => router.push(`/organizations/${org.id}`)}
                         >
                             <CardHeader className="pb-4">
                                 <div className="flex justify-between items-start">
-                                    <div className={`p-3 rounded-2xl shadow-sm border ${isSaasOrg ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                    <div className={`p-3 rounded-2xl shadow-sm border ${isSaasOrg ? 'bg-app-accent-bg text-app-accent border-app-accent' : 'bg-app-success-bg text-app-success border-app-success'}`}>
                                         {isSaasOrg ? <ShieldCheck size={24} /> : <Building size={24} />}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {isSaasOrg && (
-                                            <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 text-[9px] font-black uppercase tracking-widest">
+                                            <Badge className="bg-app-accent-bg text-app-accent border-app-accent text-[9px] font-black uppercase tracking-widest">
                                                 <Lock size={10} className="mr-1" /> Protected
                                             </Badge>
                                         )}
-                                        <Badge className={org.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}>
+                                        <Badge className={org.is_active ? "bg-app-success-bg text-app-success border-app-success" : "bg-app-error-bg text-app-error border-app-error"}>
                                             {org.is_active ? 'Active' : 'Suspended'}
                                         </Badge>
-                                        <Badge className="bg-purple-50 text-purple-600 border-purple-100 text-[9px] font-black">
+                                        <Badge className="bg-app-accent-bg text-app-accent border-app-accent text-[9px] font-black">
                                             {org.current_plan_name || 'Free Tier'}
                                         </Badge>
                                     </div>
                                 </div>
                                 <CardTitle className="text-2xl font-bold text-app-foreground mt-4">{org.name}</CardTitle>
-                                <CardDescription className="text-emerald-600 font-mono text-[10px] tracking-widest uppercase mt-1">
+                                <CardDescription className="text-app-success font-mono text-[10px] tracking-widest uppercase mt-1">
                                     {org.slug}{branding.suffix}
                                 </CardDescription>
                             </CardHeader>
@@ -428,8 +428,8 @@ export default function OrganizationsPage() {
                                         className={`flex-1 py-5 rounded-2xl border-app-border font-bold text-sm transition-all ${isSaasOrg
                                             ? 'bg-app-surface text-app-faint cursor-not-allowed'
                                             : org.is_active
-                                                ? 'bg-app-surface hover:bg-orange-50 text-app-muted-foreground hover:text-orange-600 hover:border-orange-200'
-                                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200'
+                                                ? 'bg-app-surface hover:bg-app-warning-bg text-app-muted-foreground hover:text-app-warning hover:border-app-warning'
+                                                : 'bg-app-success-bg hover:bg-app-success-bg text-app-success hover:border-app-success'
                                             }`}
                                         onClick={() => handleToggle(String(org.id), Boolean(org.is_active), org.slug || '')}
                                         disabled={isSaasOrg}
@@ -441,7 +441,7 @@ export default function OrganizationsPage() {
                                     {/* Features / Modules */}
                                     <Button
                                         variant="outline"
-                                        className="px-5 py-5 rounded-2xl border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all font-bold shadow-sm"
+                                        className="px-5 py-5 rounded-2xl border-app-success bg-app-success-bg text-app-success hover:bg-app-success-bg transition-all font-bold shadow-sm"
                                         onClick={() => handleOpenModules(org)}
                                     >
                                         <Settings2 size={18} />
@@ -451,8 +451,8 @@ export default function OrganizationsPage() {
                                     <Button
                                         variant="ghost"
                                         className={`px-5 py-5 rounded-2xl transition-all ${isSaasOrg
-                                            ? 'text-gray-200 cursor-not-allowed'
-                                            : 'text-app-muted-foreground hover:text-red-500 hover:bg-red-50'
+                                            ? 'text-app-faint cursor-not-allowed'
+                                            : 'text-app-muted-foreground hover:text-app-error hover:bg-app-error-bg'
                                             }`}
                                         onClick={() => setPendingDeleteOrg(org)}
                                         disabled={isSaasOrg}
@@ -471,10 +471,10 @@ export default function OrganizationsPage() {
                 <DialogContent className="bg-app-surface border-app-border text-app-foreground rounded-[2rem] max-w-2xl overflow-hidden p-0 shadow-2xl">
                     <div className="p-8 bg-gradient-to-r from-emerald-50 to-white border-b border-app-border">
                         <DialogTitle className="text-2xl font-black flex items-center gap-3">
-                            <Layers size={24} className="text-emerald-600" /> Feature Activation
+                            <Layers size={24} className="text-app-success" /> Feature Activation
                         </DialogTitle>
                         <CardDescription className="text-app-muted-foreground mt-1">
-                            Managing modules for <span className="text-emerald-600 font-bold">{selectedOrg?.name}</span>
+                            Managing modules for <span className="text-app-success font-bold">{selectedOrg?.name}</span>
                         </CardDescription>
                     </div>
 
@@ -484,15 +484,15 @@ export default function OrganizationsPage() {
                         ) : orgModules.length === 0 ? (
                             <div className="py-12 text-center text-app-muted-foreground">No available features found for this instance.</div>
                         ) : orgModules.map((m) => (
-                            <div key={m.code} className="p-5 bg-app-surface border border-app-border rounded-2xl group hover:border-emerald-500/30 transition-all shadow-sm">
+                            <div key={m.code} className="p-5 bg-app-surface border border-app-border rounded-2xl group hover:border-app-primary/30 transition-all shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h4 className="font-bold text-app-foreground group-hover:text-emerald-700 transition-colors">{m.name}</h4>
+                                        <h4 className="font-bold text-app-foreground group-hover:text-app-success transition-colors">{m.name}</h4>
                                         <p className="text-[10px] text-app-muted-foreground uppercase tracking-widest font-mono">{m.code}</p>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Badge className={m.status === 'INSTALLED'
-                                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                            ? "bg-app-success-bg text-app-success border-app-success"
                                             : "bg-app-surface-2 text-app-muted-foreground border-app-border"
                                         }>
                                             {m.status === 'INSTALLED' ? 'Active' : 'Inactive'}
@@ -501,15 +501,15 @@ export default function OrganizationsPage() {
                                             <Button
                                                 size="sm"
                                                 className={m.status === 'INSTALLED'
-                                                    ? "bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-xl px-4"
-                                                    : "bg-emerald-600 text-white hover:bg-emerald-500 rounded-xl px-4"
+                                                    ? "bg-app-error-bg text-app-error hover:bg-app-error-bg border border-app-error rounded-xl px-4"
+                                                    : "bg-app-primary-dark text-white hover:bg-app-primary rounded-xl px-4"
                                                 }
                                                 onClick={() => handleModuleToggle(m.code, m.status ?? '')}
                                             >
                                                 {m.status === 'INSTALLED' ? 'Deactivate' : 'Activate'}
                                             </Button>
                                         ) : (
-                                            <div className="text-[10px] text-indigo-500 font-bold uppercase tracking-tighter bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+                                            <div className="text-[10px] text-app-accent font-bold uppercase tracking-tighter bg-app-accent-bg px-3 py-1.5 rounded-lg border border-app-accent">
                                                 Core
                                             </div>
                                         )}
@@ -525,7 +525,7 @@ export default function OrganizationsPage() {
                                                 <label key={f.code} className="flex items-center gap-2 text-sm text-app-muted-foreground hover:text-app-foreground cursor-pointer select-none p-2 rounded-lg hover:bg-app-surface transition-colors">
                                                     <input
                                                         type="checkbox"
-                                                        className="rounded border-app-border text-emerald-500 focus:ring-emerald-500/20"
+                                                        className="rounded border-app-border text-app-success focus:ring-app-primary/20"
                                                         checked={m.active_features?.includes(f.code) || false}
                                                         onChange={async (e) => {
                                                             const newFeatures = e.target.checked
@@ -542,7 +542,7 @@ export default function OrganizationsPage() {
                                                             }
                                                         }}
                                                     />
-                                                    <span className={m.active_features?.includes(f.code) ? "text-emerald-600 font-medium" : ""}>
+                                                    <span className={m.active_features?.includes(f.code) ? "text-app-success font-medium" : ""}>
                                                         {f.name}
                                                     </span>
                                                 </label>

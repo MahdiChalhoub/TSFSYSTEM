@@ -24,9 +24,9 @@ export default function CatchAllPage() {
             <div className="max-w-lg w-full text-center">
                 {/* Icon */}
                 <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 
-                    border border-indigo-100 flex items-center justify-center mb-8
+                    border border-app-accent flex items-center justify-center mb-8
                     shadow-lg shadow-indigo-100/50">
-                    <Package className="w-10 h-10 text-indigo-500" />
+                    <Package className="w-10 h-10 text-app-accent" />
                 </div>
 
                 {/* Title */}
@@ -40,12 +40,12 @@ export default function CatchAllPage() {
                 </p>
 
                 {/* Message */}
-                <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-200/50">
-                    <div className="flex items-center justify-center gap-2 text-amber-700 font-semibold text-sm">
+                <div className="mt-6 p-4 rounded-xl bg-app-warning-bg border border-app-warning/50">
+                    <div className="flex items-center justify-center gap-2 text-app-warning font-semibold text-sm">
                         <Wrench className="w-4 h-4" />
                         Module Page Under Construction
                     </div>
-                    <p className="mt-2 text-amber-600/80 text-sm leading-relaxed">
+                    <p className="mt-2 text-app-warning/80 text-sm leading-relaxed">
                         This page is registered in the platform but hasn't been built yet.
                         The module's backend API is ready — the UI is coming soon.
                     </p>

@@ -46,7 +46,7 @@ export function SalesSection() {
                             <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                 <button type="button" onClick={() => s.clearOverride('sales_avg_period_days')}
-                                    className="text-app-muted-foreground hover:text-red-500 transition-colors" title="Reset to global"><X size={9} /></button>
+                                    className="text-app-muted-foreground hover:text-app-error transition-colors" title="Reset to global"><X size={9} /></button>
                             </>
                         )}
                     </div>
@@ -81,7 +81,7 @@ export function SalesSection() {
                             <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                 <button type="button" onClick={() => s.clearOverride('sales_window_size_days')}
-                                    className="text-app-muted-foreground hover:text-red-500 transition-colors" title="Reset to global"><X size={9} /></button>
+                                    className="text-app-muted-foreground hover:text-app-error transition-colors" title="Reset to global"><X size={9} /></button>
                             </>
                         )}
                     </div>
@@ -109,7 +109,7 @@ export function SalesSection() {
                             <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                 <button type="button" onClick={() => s.clearOverride('sales_avg_exclude_types')}
-                                    className="text-app-muted-foreground hover:text-red-500 transition-colors" title="Reset to global"><X size={9} /></button>
+                                    className="text-app-muted-foreground hover:text-app-error transition-colors" title="Reset to global"><X size={9} /></button>
                             </>
                         )}
                     </div>

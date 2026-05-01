@@ -40,7 +40,7 @@ export function ScoringSection() {
                             <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                 <button type="button" onClick={() => s.clearOverride('po_count_source')}
-                                    className="text-app-muted-foreground hover:text-red-500 transition-colors"><X size={9} /></button>
+                                    className="text-app-muted-foreground hover:text-app-error transition-colors"><X size={9} /></button>
                                 <span className="text-[8px] font-bold" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Global: {sourceLabel(s.globalVal('po_count_source'))}</span>
                             </>
                         )}
@@ -64,7 +64,7 @@ export function ScoringSection() {
                             <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                                 <button type="button" onClick={s.clearWeightOverride}
-                                    className="text-app-muted-foreground hover:text-red-500 transition-colors"><X size={9} /></button>
+                                    className="text-app-muted-foreground hover:text-app-error transition-colors"><X size={9} /></button>
                                 <span className="text-[8px] font-bold" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Global: {s.globalWeight('margin')}/{s.globalWeight('velocity')}/{s.globalWeight('stock_health')}</span>
                             </>
                         )}

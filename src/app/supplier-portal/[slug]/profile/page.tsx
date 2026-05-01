@@ -119,7 +119,7 @@ export default function SupplierProfilePage() {
             <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
                     <h1 className="text-2xl font-bold text-white">Session expired</h1>
-                    <Link href={`/supplier-portal/${slug}`} className="text-indigo-400 font-bold">Go to Login</Link>
+                    <Link href={`/supplier-portal/${slug}`} className="text-app-accent font-bold">Go to Login</Link>
                 </div>
             </div>
         )
@@ -132,25 +132,25 @@ export default function SupplierProfilePage() {
             <div className="max-w-3xl mx-auto relative z-10 space-y-8">
                 <div className="space-y-2">
                     <Link href={`/supplier-portal/${slug}`}
-                        className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-sm font-medium transition-colors">
+                        className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> Dashboard
                     </Link>
                     <h1 className="text-4xl font-black text-white">Profile & Settings</h1>
-                    <p className="text-slate-500 text-sm">Manage your account information and security</p>
+                    <p className="text-app-muted-foreground text-sm">Manage your account information and security</p>
                 </div>
 
                 {/* Supplier Info Badge */}
-                <div className="p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center gap-4">
-                    <div className="w-14 h-14 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 text-xl font-black">
+                <div className="p-5 bg-indigo-500/10 border border-app-accent/20 rounded-2xl flex items-center gap-4">
+                    <div className="w-14 h-14 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-app-accent text-xl font-black">
                         {session.user.name?.charAt(0).toUpperCase() || 'S'}
                     </div>
                     <div className="flex-1">
                         <p className="text-white font-bold">{session.contact.company || session.contact.name}</p>
                         <div className="flex items-center gap-3 mt-1">
-                            <span className="text-[10px] text-indigo-400 font-black uppercase tracking-widest flex items-center gap-1">
+                            <span className="text-[10px] text-app-accent font-black uppercase tracking-widest flex items-center gap-1">
                                 <Tag size={10} /> {session.contact.supplier_category || 'Supplier'}
                             </span>
-                            <span className="text-[10px] text-slate-600 font-bold">{session.organization.name}</span>
+                            <span className="text-[10px] text-app-muted-foreground font-bold">{session.organization.name}</span>
                         </div>
                     </div>
                 </div>
@@ -158,42 +158,42 @@ export default function SupplierProfilePage() {
                 {/* Personal Information */}
                 <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-6">
                     <h2 className="text-lg font-bold text-white flex items-center gap-3">
-                        <User size={20} className="text-indigo-400" /> Contact Information
+                        <User size={20} className="text-app-accent" /> Contact Information
                     </h2>
 
                     {error && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+                        <div className="p-3 bg-red-500/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
                             <AlertCircle size={16} /> {error}
                         </div>
                     )}
                     {saved && (
-                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm flex items-center gap-2">
+                        <div className="p-3 bg-app-primary/10 border border-app-success/20 rounded-xl text-app-success text-sm flex items-center gap-2">
                             <CheckCircle2 size={16} /> Profile updated successfully
                         </div>
                     )}
 
                     <div className="space-y-4">
                         <div>
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                 <User size={12} /> Full Name
                             </label>
                             <input value={name} onChange={e => setName(e.target.value)}
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-indigo-500 transition-all" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-accent transition-all" />
                         </div>
                         <div>
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                 <Mail size={12} /> Email
                             </label>
                             <input value={email} disabled
-                                className="w-full bg-slate-950/30 border border-white/5 p-4 rounded-xl text-slate-500 cursor-not-allowed" />
-                            <p className="text-[10px] text-slate-600 mt-1">Contact admin to change email</p>
+                                className="w-full bg-slate-950/30 border border-white/5 p-4 rounded-xl text-app-muted-foreground cursor-not-allowed" />
+                            <p className="text-[10px] text-app-muted-foreground mt-1">Contact admin to change email</p>
                         </div>
                         <div>
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                 <Building2 size={12} /> Company
                             </label>
                             <input value={company} onChange={e => setCompany(e.target.value)}
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-indigo-500 transition-all" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-accent transition-all" />
                         </div>
                     </div>
 
@@ -206,48 +206,48 @@ export default function SupplierProfilePage() {
                 {/* Change Password */}
                 <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-6">
                     <h2 className="text-lg font-bold text-white flex items-center gap-3">
-                        <Lock size={20} className="text-amber-400" /> Change Password
+                        <Lock size={20} className="text-app-warning" /> Change Password
                     </h2>
 
                     {pwError && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+                        <div className="p-3 bg-red-500/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
                             <AlertCircle size={16} /> {pwError}
                         </div>
                     )}
                     {pwSaved && (
-                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm flex items-center gap-2">
+                        <div className="p-3 bg-app-primary/10 border border-app-success/20 rounded-xl text-app-success text-sm flex items-center gap-2">
                             <CheckCircle2 size={16} /> Password changed successfully
                         </div>
                     )}
 
                     <div className="space-y-4">
                         <div className="relative">
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 block">Current Password</label>
+                            <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 block">Current Password</label>
                             <input type={showPasswords ? 'text' : 'password'} value={currentPassword}
                                 onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••"
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700 pr-12" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground pr-12" />
                         </div>
                         <div>
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 block">New Password</label>
+                            <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 block">New Password</label>
                             <input type={showPasswords ? 'text' : 'password'} value={newPassword}
                                 onChange={e => setNewPassword(e.target.value)} placeholder="Min 8 characters"
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
                         </div>
                         <div>
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 block">Confirm New Password</label>
+                            <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 block">Confirm New Password</label>
                             <input type={showPasswords ? 'text' : 'password'} value={confirmPassword}
                                 onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat new password"
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
                         </div>
                     </div>
 
                     <div className="flex items-center justify-between">
                         <button onClick={() => setShowPasswords(!showPasswords)}
-                            className="text-sm text-slate-500 hover:text-white flex items-center gap-2 transition-colors">
+                            className="text-sm text-app-muted-foreground hover:text-white flex items-center gap-2 transition-colors">
                             {showPasswords ? <EyeOff size={14} /> : <Eye size={14} />}
                             {showPasswords ? 'Hide' : 'Show'} passwords
                         </button>
-                        <Shield size={16} className="text-slate-700" />
+                        <Shield size={16} className="text-app-foreground" />
                     </div>
 
                     <button onClick={handleChangePassword} disabled={pwSaving || !currentPassword || !newPassword}

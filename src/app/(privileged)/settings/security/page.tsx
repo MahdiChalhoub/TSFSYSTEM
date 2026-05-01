@@ -13,7 +13,7 @@ export default async function SecurityPage() {
                 <div>
                     <h1 className="text-3xl font-black text-app-foreground uppercase tracking-tighter flex items-center gap-3">
                         <div className="p-2 bg-slate-900 rounded-xl">
-                            <Shield className="text-emerald-400" size={28} />
+                            <Shield className="text-app-success" size={28} />
                         </div>
                         Security Center
                     </h1>
@@ -29,8 +29,8 @@ export default async function SecurityPage() {
 
                     <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm">
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="p-3 bg-blue-50 rounded-2xl">
-                                <Key className="text-blue-600" size={24} />
+                            <div className="p-3 bg-app-info-bg rounded-2xl">
+                                <Key className="text-app-info" size={24} />
                             </div>
                             <div>
                                 <h2 className="text-lg font-black text-app-foreground uppercase tracking-tighter">Session Management</h2>
@@ -49,7 +49,7 @@ export default async function SecurityPage() {
                                         <p className="text-[10px] text-app-muted-foreground font-bold uppercase">Windows 11 • Chrome • 192.168.1.1</p>
                                     </div>
                                 </div>
-                                <Badge className="bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase border-none">Active Now</Badge>
+                                <Badge className="bg-app-success-bg text-app-success rounded-lg text-[10px] font-black uppercase border-none">Active Now</Badge>
                             </div>
                         </div>
                     </div>
@@ -65,9 +65,9 @@ export default async function SecurityPage() {
 
                         <div className="space-y-4 relative z-10">
                             <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 transition-all" style={{ width: user.is_2fa_enabled ? '85%' : '45%' }}></div>
+                                <div className="h-full bg-app-primary transition-all" style={{ width: user.is_2fa_enabled ? '85%' : '45%' }}></div>
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-app-success">
                                 {user.is_2fa_enabled ? 'Strong Protection' : 'Action Required'}
                             </p>
                         </div>

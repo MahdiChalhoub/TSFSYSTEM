@@ -180,7 +180,7 @@ export function RolesBuilderClient({ initialRoles, permissions }: { initialRoles
                                     </p>
                                 </div>
                                 {hasEdits && (
-                                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                                    <div className="w-2 h-2 rounded-full bg-app-error animate-pulse" />
                                 )}
                             </button>
                         )
@@ -196,7 +196,7 @@ export function RolesBuilderClient({ initialRoles, permissions }: { initialRoles
                         <div>
                             <h2 className="text-2xl font-black text-app-foreground flex items-center gap-3">
                                 {activeRole.name}
-                                {activeRole.is_system_role && <span className="bg-rose-500/10 text-rose-500 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">System</span>}
+                                {activeRole.is_system_role && <span className="bg-app-error/10 text-app-error text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">System</span>}
                             </h2>
                             <p className="text-sm text-app-muted-foreground mt-1">Configure permissions for this role across all modules.</p>
                         </div>

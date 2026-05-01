@@ -93,34 +93,34 @@ export default function SupplierStatementPage() {
             <div className="max-w-5xl mx-auto relative z-10 space-y-8">
                 <div className="space-y-2">
                     <Link href={`/supplier-portal/${slug}`}
-                        className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-sm font-medium transition-colors">
+                        className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> Dashboard
                     </Link>
                     <h1 className="text-4xl font-black text-white">Financial Statement</h1>
-                    <p className="text-slate-500 text-sm">Your payable and receivable ledger with this organization</p>
+                    <p className="text-app-muted-foreground text-sm">Your payable and receivable ledger with this organization</p>
                 </div>
 
                 {/* Summary Cards */}
                 {!loading && summary && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in duration-500">
-                        <div className="p-6 bg-gradient-to-br from-blue-600/20 to-blue-900/20 border border-blue-500/20 rounded-2xl space-y-2">
+                        <div className="p-6 bg-gradient-to-br from-blue-600/20 to-blue-900/20 border border-app-info/20 rounded-2xl space-y-2">
                             <div className="flex items-center gap-2">
-                                <TrendingUp size={18} className="text-blue-400" />
-                                <p className="text-[10px] text-blue-400/70 font-black uppercase tracking-widest">Total Invoiced</p>
+                                <TrendingUp size={18} className="text-app-info" />
+                                <p className="text-[10px] text-app-info/70 font-black uppercase tracking-widest">Total Invoiced</p>
                             </div>
                             <p className="text-3xl font-black text-white">${parseFloat(summary.total_invoiced).toFixed(2)}</p>
                         </div>
-                        <div className="p-6 bg-gradient-to-br from-emerald-600/20 to-emerald-900/20 border border-emerald-500/20 rounded-2xl space-y-2">
+                        <div className="p-6 bg-gradient-to-br from-emerald-600/20 to-emerald-900/20 border border-app-success/20 rounded-2xl space-y-2">
                             <div className="flex items-center gap-2">
-                                <ArrowDownRight size={18} className="text-emerald-400" />
-                                <p className="text-[10px] text-emerald-400/70 font-black uppercase tracking-widest">Total Paid</p>
+                                <ArrowDownRight size={18} className="text-app-success" />
+                                <p className="text-[10px] text-app-success/70 font-black uppercase tracking-widest">Total Paid</p>
                             </div>
                             <p className="text-3xl font-black text-white">${parseFloat(summary.total_paid).toFixed(2)}</p>
                         </div>
-                        <div className="p-6 bg-gradient-to-br from-amber-600/20 to-amber-900/20 border border-amber-500/20 rounded-2xl space-y-2">
+                        <div className="p-6 bg-gradient-to-br from-amber-600/20 to-amber-900/20 border border-app-warning/20 rounded-2xl space-y-2">
                             <div className="flex items-center gap-2">
-                                <ArrowUpRight size={18} className="text-amber-400" />
-                                <p className="text-[10px] text-amber-400/70 font-black uppercase tracking-widest">Outstanding</p>
+                                <ArrowUpRight size={18} className="text-app-warning" />
+                                <p className="text-[10px] text-app-warning/70 font-black uppercase tracking-widest">Outstanding</p>
                             </div>
                             <p className="text-3xl font-black text-white">${parseFloat(summary.outstanding).toFixed(2)}</p>
                         </div>
@@ -136,12 +136,12 @@ export default function SupplierStatementPage() {
                 {/* Date Filter */}
                 <form onSubmit={handleFilter}
                     className="p-5 bg-slate-900/40 border border-white/5 rounded-2xl flex items-center gap-4 flex-wrap">
-                    <Filter size={18} className="text-slate-500" />
+                    <Filter size={18} className="text-app-muted-foreground" />
                     <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                        className="bg-slate-950/50 border border-white/5 px-4 py-2 rounded-xl text-white text-sm outline-none focus:border-sky-500 transition-all" />
-                    <span className="text-slate-600">to</span>
+                        className="bg-slate-950/50 border border-white/5 px-4 py-2 rounded-xl text-white text-sm outline-none focus:border-app-info transition-all" />
+                    <span className="text-app-muted-foreground">to</span>
                     <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                        className="bg-slate-950/50 border border-white/5 px-4 py-2 rounded-xl text-white text-sm outline-none focus:border-sky-500 transition-all" />
+                        className="bg-slate-950/50 border border-white/5 px-4 py-2 rounded-xl text-white text-sm outline-none focus:border-app-info transition-all" />
                     <button type="submit"
                         className="px-5 py-2 bg-sky-600 text-white rounded-xl text-sm font-bold hover:bg-sky-500 transition-all">
                         Apply
@@ -151,9 +151,9 @@ export default function SupplierStatementPage() {
                 {/* Ledger Table */}
                 {!loading && entries.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
-                        <Receipt size={48} className="mx-auto text-slate-600" />
+                        <Receipt size={48} className="mx-auto text-app-muted-foreground" />
                         <h2 className="text-xl font-bold text-white">No statement entries</h2>
-                        <p className="text-slate-500">Financial records will appear here once transactions occur</p>
+                        <p className="text-app-muted-foreground">Financial records will appear here once transactions occur</p>
                     </div>
                 ) : !loading && (
                     <div className="bg-slate-900/60 border border-white/5 rounded-2xl overflow-hidden">
@@ -161,24 +161,24 @@ export default function SupplierStatementPage() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-white/5">
-                                        <th className="text-left p-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">Date</th>
-                                        <th className="text-left p-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">Reference</th>
-                                        <th className="text-left p-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">Description</th>
-                                        <th className="text-right p-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">Debit</th>
-                                        <th className="text-right p-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">Credit</th>
-                                        <th className="text-right p-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">Balance</th>
+                                        <th className="text-left p-4 text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Date</th>
+                                        <th className="text-left p-4 text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Reference</th>
+                                        <th className="text-left p-4 text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Description</th>
+                                        <th className="text-right p-4 text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Debit</th>
+                                        <th className="text-right p-4 text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Credit</th>
+                                        <th className="text-right p-4 text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Balance</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {entries.map(entry => (
-                                        <tr key={entry.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                                            <td className="p-4 text-slate-400">{new Date(entry.date).toLocaleDateString()}</td>
+                                        <tr key={entry.id} className="border-b border-white/5 hover:bg-app-surface/[0.02] transition-colors">
+                                            <td className="p-4 text-app-faint">{new Date(entry.date).toLocaleDateString()}</td>
                                             <td className="p-4 text-white font-mono text-xs">{entry.reference}</td>
-                                            <td className="p-4 text-slate-300">{entry.description}</td>
-                                            <td className="p-4 text-right text-red-400 font-medium">
+                                            <td className="p-4 text-app-faint">{entry.description}</td>
+                                            <td className="p-4 text-right text-app-error font-medium">
                                                 {parseFloat(entry.debit) > 0 ? `$${parseFloat(entry.debit).toFixed(2)}` : '—'}
                                             </td>
-                                            <td className="p-4 text-right text-emerald-400 font-medium">
+                                            <td className="p-4 text-right text-app-success font-medium">
                                                 {parseFloat(entry.credit) > 0 ? `$${parseFloat(entry.credit).toFixed(2)}` : '—'}
                                             </td>
                                             <td className="p-4 text-right text-white font-bold">${parseFloat(entry.balance).toFixed(2)}</td>

@@ -1,6 +1,6 @@
 # Page Production Readiness Dashboard
 
-**Generated**: 2026-05-01T00:44:40.540Z
+**Generated**: 2026-05-01T01:02:17.854Z
 **Pages scanned**: 756
 **Scan time**: 0.3s
 
@@ -50,8 +50,8 @@
 | 3/8 | `src/app/(privileged)/crm/contacts/[id]/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 461 |
 | 3/8 | `src/app/(privileged)/access/approvals/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 445 |
 | 3/8 | `src/app/(privileged)/purchases/invoice-verification/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 442 |
+| 3/8 | `src/app/(privileged)/finance/budgets/[id]/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 436 |
 | 3/8 | `src/app/(privileged)/finance/assets/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 421 |
-| 3/8 | `src/app/(privileged)/finance/budgets/[id]/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 421 |
 | 3/8 | `src/app/(privileged)/access/supplier-access/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 416 |
 | 3/8 | `src/app/(auth)/register/business/page.tsx` | Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex), Tenancy/permissions | 414 |
 | 3/8 | `src/app/(privileged)/finance/profit-distribution/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 401 |
@@ -276,7 +276,7 @@
 | Score | Page | Gaps | LOC |
 |---|---|---|---:|
 | 3/8 | `(privileged)/finance/assets/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 421 |
-| 3/8 | `(privileged)/finance/budgets/[id]/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 421 |
+| 3/8 | `(privileged)/finance/budgets/[id]/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 436 |
 | 3/8 | `(privileged)/finance/ledger/import/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 751 |
 | 3/8 | `(privileged)/finance/profit-distribution/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 401 |
 | 3/8 | `(privileged)/finance/settings/form-definitions/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, File size ≤ 400 LOC, Design signals (shell/text/hex) | 565 |
@@ -372,7 +372,7 @@
 | 4/8 | `(privileged)/finance/reports/[id]/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, Design signals (shell/text/hex) | 156 |
 | 4/8 | `(privileged)/finance/reports/aging/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, Design signals (shell/text/hex) | 4 |
 | 4/8 | `(privileged)/finance/reports/builder/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, Design signals (shell/text/hex) | 12 |
-| 4/8 | `(privileged)/finance/reports/cash-flow/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, Design signals (shell/text/hex) | 314 |
+| 4/8 | `(privileged)/finance/reports/cash-flow/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, Design signals (shell/text/hex) | 320 |
 | 4/8 | `(privileged)/finance/reports/new/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, Design signals (shell/text/hex) | 117 |
 | 4/8 | `(privileged)/finance/reports/pnl/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, Design signals (shell/text/hex) | 32 |
 | 4/8 | `(privileged)/finance/reports/statement/page.tsx` | Mobile responsive, Tour (desktop+mobile+anchors), i18n usage, Design signals (shell/text/hex) | 23 |

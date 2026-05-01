@@ -157,7 +157,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                     <div>
                         <h1 className="text-xl font-black text-app-foreground tracking-tight">Tenant Registry</h1>
                         <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                             {filteredOrgs.length} of {totalOrgs} entities
                         </p>
                     </div>
@@ -225,7 +225,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                     const isSaas = org.slug === 'saas'
                     return (
                         <div key={org.id}
-                            className={`group relative bg-app-surface rounded-2xl border overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer ${isSaas ? 'border-amber-500/30' : 'border-app-border/50 hover:border-app-primary/30'}`}
+                            className={`group relative bg-app-surface rounded-2xl border overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer ${isSaas ? 'border-app-warning/30' : 'border-app-border/50 hover:border-app-primary/30'}`}
                             onClick={() => router.push(`/organizations/${org.id}`)}>
                             {/* Top accent bar */}
                             <div className="h-1 w-full" style={isSaas
@@ -247,8 +247,8 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1 shrink-0">
-                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${org.is_active ? 'bg-green-500/10 text-green-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${org.is_active ? 'bg-green-500' : 'bg-rose-500'}`} />
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${org.is_active ? 'bg-app-primary/10 text-app-success' : 'bg-app-error/10 text-app-error'}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${org.is_active ? 'bg-app-primary' : 'bg-app-error'}`} />
                                             {org.is_active ? 'Active' : 'Suspended'}
                                         </span>
                                         <span className="text-[9px] font-bold text-app-muted-foreground bg-app-background px-2 py-0.5 rounded-md">{org.current_plan_name || 'Free'}</span>
@@ -286,8 +286,8 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                                         className={`flex-1 h-9 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${isSaas
                                             ? 'bg-app-background text-app-muted-foreground cursor-not-allowed border border-dashed border-app-border'
                                             : org.is_active
-                                                ? 'bg-app-background border border-app-border text-app-muted-foreground hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/30'
-                                                : 'bg-green-500/10 border border-green-500/20 text-green-500 hover:bg-green-500 hover:text-white'}`}
+                                                ? 'bg-app-background border border-app-border text-app-muted-foreground hover:bg-app-error/10 hover:text-app-error hover:border-app-error/30'
+                                                : 'bg-app-primary/10 border border-app-primary/20 text-app-success hover:bg-app-primary hover:text-white'}`}
                                         onClick={() => handleToggle(String(org.id), !!org.is_active, org.slug ?? '')}
                                         disabled={isSaas}>
                                         <Power size={12} />{org.is_active ? 'Suspend' : 'Activate'}
@@ -295,7 +295,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                                     <button className="h-9 px-3 rounded-lg border border-app-border bg-app-background text-app-muted-foreground hover:text-app-primary hover:border-app-primary/30 transition-all"
                                         onClick={() => handleOpenModules(org)} title="Manage Modules"><Settings2 size={14} /></button>
                                     {!isSaas && (
-                                        <button className="h-9 px-3 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                                        <button className="h-9 px-3 rounded-lg text-app-muted-foreground hover:text-app-error hover:bg-app-error/10 transition-all"
                                             onClick={() => setPendingDeleteOrg(org)} title="Delete"><Trash2 size={14} /></button>
                                     )}
                                 </div>
@@ -422,7 +422,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                                         ) : (
                                             <button
                                                 className={`h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${m.status === 'INSTALLED'
-                                                    ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white'
+                                                    ? 'bg-app-error/10 text-app-error hover:bg-app-error hover:text-white'
                                                     : 'text-white shadow-sm hover:shadow-lg hover:scale-[1.02]'}`}
                                                 style={m.status !== 'INSTALLED' ? gradBg('--app-success') : {}}
                                                 onClick={() => handleModuleToggle(m.code, m.status ?? '')}>

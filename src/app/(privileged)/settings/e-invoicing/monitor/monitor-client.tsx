@@ -131,16 +131,16 @@ export default function FNEMonitorClient() {
  }, [orders])
 
  const statusIcon = (s: string | null) => {
- if (s === 'CERTIFIED') return <CheckCircle2 size={14} className="text-emerald-500" />
- if (s === 'FAILED') return <XCircle size={14} className="text-rose-500" />
- if (s === 'PENDING') return <Clock size={14} className="text-amber-500" />
+ if (s === 'CERTIFIED') return <CheckCircle2 size={14} className="text-app-success" />
+ if (s === 'FAILED') return <XCircle size={14} className="text-app-error" />
+ if (s === 'PENDING') return <Clock size={14} className="text-app-warning" />
  return <AlertTriangle size={14} className="text-app-muted-foreground" />
  }
 
  const statusBadge = (s: string | null) => {
- if (s === 'CERTIFIED') return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] font-black">CERTIFIÉ</Badge>
- if (s === 'FAILED') return <Badge className="bg-rose-100 text-rose-700 border-rose-200 text-[10px] font-black">ÉCHOUÉ</Badge>
- if (s === 'PENDING') return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px] font-black">EN ATTENTE</Badge>
+ if (s === 'CERTIFIED') return <Badge className="bg-app-success-bg text-app-success border-app-success text-[10px] font-black">CERTIFIÉ</Badge>
+ if (s === 'FAILED') return <Badge className="bg-app-error-bg text-app-error border-app-error text-[10px] font-black">ÉCHOUÉ</Badge>
+ if (s === 'PENDING') return <Badge className="bg-app-warning-bg text-app-warning border-app-warning text-[10px] font-black">EN ATTENTE</Badge>
  return <Badge className="bg-app-surface-2 text-app-muted-foreground border-app-border text-[10px] font-black">NON SOUMIS</Badge>
  }
 
@@ -153,7 +153,7 @@ export default function FNEMonitorClient() {
   <ArrowLeft size={14} /> Back to E-Invoicing Settings
  </Link>
  <div className="flex items-center gap-3 mb-2">
-  <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+  <Badge className="bg-app-success-bg text-app-success border-app-success font-black text-[10px] uppercase tracking-widest px-3 py-1">
   🇨🇮 Côte d&apos;Ivoire
   </Badge>
   <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest flex items-center gap-1">
@@ -164,7 +164,7 @@ export default function FNEMonitorClient() {
   <div className="w-16 h-16 rounded-[1.8rem] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-2xl shadow-emerald-200">
   <ShieldCheck size={32} className="text-white" />
   </div>
-  FNE <span className="text-emerald-600">Monitor</span>
+  FNE <span className="text-app-success">Monitor</span>
  </h1>
  </div>
  <div className="flex items-center gap-3">
@@ -189,13 +189,13 @@ export default function FNEMonitorClient() {
  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
  {[
  { label: 'Total Orders', value: stats.total, icon: <Shield size={20} />, bg: 'bg-app-surface', color: 'text-app-text' },
- { label: 'Certified', value: stats.certified, icon: <ShieldCheck size={20} />, bg: 'bg-emerald-50', color: 'text-emerald-700', border: 'border-emerald-200' },
- { label: 'Failed', value: stats.failed, icon: <ShieldAlert size={20} />, bg: 'bg-rose-50', color: 'text-rose-700', border: 'border-rose-200' },
- { label: 'Pending', value: stats.pending, icon: <Clock size={20} />, bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-200' },
+ { label: 'Certified', value: stats.certified, icon: <ShieldCheck size={20} />, bg: 'bg-app-success-bg', color: 'text-app-success', border: 'border-app-success' },
+ { label: 'Failed', value: stats.failed, icon: <ShieldAlert size={20} />, bg: 'bg-app-error-bg', color: 'text-app-error', border: 'border-app-error' },
+ { label: 'Pending', value: stats.pending, icon: <Clock size={20} />, bg: 'bg-app-warning-bg', color: 'text-app-warning', border: 'border-app-warning' },
  { label: 'Compliance Rate', value: `${stats.rate}%`, icon: <CheckCircle2 size={20} />,
- bg: stats.rate >= 90 ? 'bg-emerald-50' : stats.rate >= 60 ? 'bg-amber-50' : 'bg-rose-50',
- color: stats.rate >= 90 ? 'text-emerald-700' : stats.rate >= 60 ? 'text-amber-700' : 'text-rose-700',
- border: stats.rate >= 90 ? 'border-emerald-200' : stats.rate >= 60 ? 'border-amber-200' : 'border-rose-200',
+ bg: stats.rate >= 90 ? 'bg-app-success-bg' : stats.rate >= 60 ? 'bg-app-warning-bg' : 'bg-app-error-bg',
+ color: stats.rate >= 90 ? 'text-app-success' : stats.rate >= 60 ? 'text-app-warning' : 'text-app-error',
+ border: stats.rate >= 90 ? 'border-app-success' : stats.rate >= 60 ? 'border-app-warning' : 'border-app-error',
  },
  ].map(({ label, value, icon, bg, color, border }) => (
  <div key={label} className={`${bg} p-5 rounded-[2rem] border ${border || 'border-app-border'} shadow-sm`}>
@@ -238,7 +238,7 @@ export default function FNEMonitorClient() {
  <div className="bg-app-surface rounded-[2.5rem] border border-app-border shadow-xl overflow-hidden">
  <div className="p-6 border-b border-app-border flex items-center justify-between">
  <div className="flex items-center gap-3">
-  <ShieldCheck size={18} className="text-emerald-600" />
+  <ShieldCheck size={18} className="text-app-success" />
   <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
   FNE Certification Registry
   </span>
@@ -308,9 +308,9 @@ export default function FNEMonitorClient() {
   </td>
   <td className="p-4">
    {order.fne_reference ? (
-   <span className="text-xs font-bold text-emerald-600 font-mono">{order.fne_reference}</span>
+   <span className="text-xs font-bold text-app-success font-mono">{order.fne_reference}</span>
    ) : order.fne_error ? (
-   <span className="text-[10px] text-rose-500 font-medium truncate max-w-[200px] block" title={order.fne_error}>
+   <span className="text-[10px] text-app-error font-medium truncate max-w-[200px] block" title={order.fne_error}>
     {order.fne_error}
    </span>
    ) : (
@@ -322,15 +322,15 @@ export default function FNEMonitorClient() {
    <button
     onClick={() => retryFne(order.id)}
     disabled={retryingIds.has(order.id)}
-    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-wider hover:bg-emerald-200 transition-all disabled:opacity-50"
+    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-app-success-bg text-app-success text-[10px] font-black uppercase tracking-wider hover:bg-app-success-bg transition-all disabled:opacity-50"
    >
     {retryingIds.has(order.id) ? <RefreshCw size={12} className="animate-spin" /> : <Shield size={12} />}
     Certify
    </button>
    ) : order.fne_status === 'CERTIFIED' ? (
-   <span className="text-emerald-500"><CheckCircle2 size={16} /></span>
+   <span className="text-app-success"><CheckCircle2 size={16} /></span>
    ) : (
-   <span className="text-amber-500"><Clock size={16} /></span>
+   <span className="text-app-warning"><Clock size={16} /></span>
    )}
   </td>
   </tr>

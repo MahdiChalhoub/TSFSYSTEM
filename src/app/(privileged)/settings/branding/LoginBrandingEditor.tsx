@@ -286,14 +286,14 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                                         A
                                     </div>
                                     <h3 className="text-xl font-black text-white tracking-tight">YOUR BRAND</h3>
-                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                    <p className="text-xs text-app-faint leading-relaxed">
                                         {tagline || "Secure enterprise gateway. Authorized personnel only."}
                                     </p>
                                     <div className="flex items-center gap-3 pt-2">
                                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: brandColor }} />
-                                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">Secured</span>
+                                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-app-muted-foreground">Secured</span>
                                         <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-                                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">Encrypted</span>
+                                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-app-muted-foreground">Encrypted</span>
                                     </div>
                                 </div>
                             </div>
@@ -323,21 +323,21 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                                 </div>
 
                                 <h4 className="text-sm font-black text-white">Welcome Back</h4>
-                                <p className="text-[8px] text-slate-400">Enter your credentials</p>
+                                <p className="text-[8px] text-app-faint">Enter your credentials</p>
 
                                 {/* Mini form */}
                                 <div className="space-y-2 pt-2">
                                     <div className="flex items-center gap-2 h-7 rounded-lg px-2"
                                         style={{ background: '#0f172a', border: `1.5px solid color-mix(in srgb, ${brandColor} 30%, #1e293b)` }}
                                     >
-                                        <User size={10} className="text-slate-500" />
-                                        <span className="text-[8px] text-slate-500">Username</span>
+                                        <User size={10} className="text-app-muted-foreground" />
+                                        <span className="text-[8px] text-app-muted-foreground">Username</span>
                                     </div>
                                     <div className="flex items-center gap-2 h-7 rounded-lg px-2"
                                         style={{ background: '#0f172a', border: '1.5px solid #1e293b' }}
                                     >
-                                        <Lock size={10} className="text-slate-500" />
-                                        <span className="text-[8px] text-slate-500">Password</span>
+                                        <Lock size={10} className="text-app-muted-foreground" />
+                                        <span className="text-[8px] text-app-muted-foreground">Password</span>
                                     </div>
                                 </div>
 
@@ -350,7 +350,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                                     Sign In <ArrowRight size={10} />
                                 </button>
 
-                                <p className="text-[6px] text-center text-slate-600 pt-1">
+                                <p className="text-[6px] text-center text-app-foreground pt-1">
                                     Powered by Blanc Engine · E2E Encrypted
                                 </p>
                             </div>

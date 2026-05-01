@@ -317,7 +317,7 @@ export default function MigrationWizardPage() {
                     </Button>
                     <div>
                         <h1 className="text-3xl font-black text-app-text tracking-tight">
-                            Migration Wizard <span className="text-emerald-600">v2.0</span>
+                            Migration Wizard <span className="text-app-success">v2.0</span>
                         </h1>
                         <p className="text-sm text-app-text-faint font-medium">
                             {scopeInfo.label} from {sourceInfo.label}
@@ -327,11 +327,11 @@ export default function MigrationWizardPage() {
 
                 {/* Error Banner */}
                 {error && (
-                    <AppCard variant="flat" padding="md" className="mb-6 border-red-500/30 bg-red-50">
+                    <AppCard variant="flat" padding="md" className="mb-6 border-app-error/30 bg-app-error-bg">
                         <div className="flex items-center gap-3">
-                            <AlertTriangle className="w-5 h-5 text-red-600" />
-                            <span className="text-red-800 font-medium">{error}</span>
-                            <button onClick={() => setError(null)} className="ml-auto text-red-600">✕</button>
+                            <AlertTriangle className="w-5 h-5 text-app-error" />
+                            <span className="text-app-error font-medium">{error}</span>
+                            <button onClick={() => setError(null)} className="ml-auto text-app-error">✕</button>
                         </div>
                     </AppCard>
                 )}
@@ -350,20 +350,20 @@ export default function MigrationWizardPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="p-6 bg-app-surface rounded-2xl border border-app-border">
                                     <h3 className="font-black text-app-text mb-2">Import Scope</h3>
-                                    <p className="text-xl font-black text-emerald-600">{scopeInfo.label}</p>
+                                    <p className="text-xl font-black text-app-success">{scopeInfo.label}</p>
                                     <p className="text-sm text-app-text-faint mt-1">{scopeInfo.desc}</p>
                                 </div>
 
                                 <div className="p-6 bg-app-surface rounded-2xl border border-app-border">
                                     <h3 className="font-black text-app-text mb-2">Source Application</h3>
-                                    <p className="text-xl font-black text-blue-600">{sourceInfo.label}</p>
+                                    <p className="text-xl font-black text-app-info">{sourceInfo.label}</p>
                                     <p className="text-sm text-app-text-faint mt-1">{sourceInfo.desc}</p>
                                 </div>
                             </div>
 
                             <Button
                                 onClick={handleConfirmScope}
-                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 rounded-xl"
+                                className="w-full bg-app-primary hover:bg-app-primary-dark text-white font-bold py-6 rounded-xl"
                             >
                                 Continue <ArrowLeft className="w-5 h-5 ml-2 rotate-180" />
                             </Button>
@@ -374,7 +374,7 @@ export default function MigrationWizardPage() {
                     {currentStep === 'SELECT_ORG' && (
                         <div className="space-y-6">
                             <div className="text-center">
-                                <Building2 className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+                                <Building2 className="w-16 h-16 text-app-success mx-auto mb-4" />
                                 <h2 className="text-2xl font-black text-app-text">Select Target Organization</h2>
                                 <p className="text-app-text-faint mt-2">Choose which organization to import data INTO</p>
                             </div>
@@ -393,9 +393,9 @@ export default function MigrationWizardPage() {
                                             key={org.id}
                                             onClick={() => handleSelectOrganization(org)}
                                             disabled={loading}
-                                            className="text-left p-6 rounded-2xl bg-app-surface border border-app-border hover:border-emerald-500/50 hover:shadow-lg transition-all disabled:opacity-50"
+                                            className="text-left p-6 rounded-2xl bg-app-surface border border-app-border hover:border-app-success/50 hover:shadow-lg transition-all disabled:opacity-50"
                                         >
-                                            <Building2 className="w-8 h-8 text-emerald-600 mb-3" />
+                                            <Building2 className="w-8 h-8 text-app-success mb-3" />
                                             <h3 className="text-lg font-black text-app-text">{org.name}</h3>
                                             <p className="text-xs text-app-text-faint mt-1">{org.slug}</p>
                                         </button>
@@ -409,7 +409,7 @@ export default function MigrationWizardPage() {
                     {currentStep === 'SELECT_DATA_SOURCE' && (
                         <div className="space-y-6">
                             <div className="text-center">
-                                <Database className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+                                <Database className="w-16 h-16 text-app-success mx-auto mb-4" />
                                 <h2 className="text-2xl font-black text-app-text">Select Data Source</h2>
                                 <p className="text-app-text-faint mt-2">
                                     Upload SQL dump from your computer or pick from cloud storage
@@ -421,9 +421,9 @@ export default function MigrationWizardPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <button
                                         onClick={() => setDataSourceType('UPLOAD')}
-                                        className="p-8 rounded-2xl bg-app-surface border-2 border-app-border hover:border-emerald-500/50 hover:shadow-lg transition-all text-center"
+                                        className="p-8 rounded-2xl bg-app-surface border-2 border-app-border hover:border-app-success/50 hover:shadow-lg transition-all text-center"
                                     >
-                                        <HardDrive className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                                        <HardDrive className="w-12 h-12 text-app-info mx-auto mb-4" />
                                         <h3 className="text-xl font-black text-app-text mb-2">Upload from PC</h3>
                                         <p className="text-sm text-app-text-faint">
                                             Select a .sql file from your local computer
@@ -432,9 +432,9 @@ export default function MigrationWizardPage() {
 
                                     <button
                                         onClick={() => setDataSourceType('CLOUD')}
-                                        className="p-8 rounded-2xl bg-app-surface border-2 border-app-border hover:border-emerald-500/50 hover:shadow-lg transition-all text-center"
+                                        className="p-8 rounded-2xl bg-app-surface border-2 border-app-border hover:border-app-success/50 hover:shadow-lg transition-all text-center"
                                     >
-                                        <Cloud className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
+                                        <Cloud className="w-12 h-12 text-app-success mx-auto mb-4" />
                                         <h3 className="text-xl font-black text-app-text mb-2">Pick from Cloud Storage</h3>
                                         <p className="text-sm text-app-text-faint">
                                             Choose a file already uploaded to TSF Cloud
@@ -462,14 +462,14 @@ export default function MigrationWizardPage() {
                                             id="file-upload"
                                         />
                                         <label htmlFor="file-upload" className="cursor-pointer">
-                                            <span className="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-4 rounded-xl transition-colors">
+                                            <span className="inline-flex items-center justify-center bg-app-primary hover:bg-app-primary-dark text-white font-bold px-8 py-4 rounded-xl transition-colors">
                                                 Browse Files
                                             </span>
                                         </label>
                                         {selectedFile && (
-                                            <div className="mt-4 p-4 bg-emerald-50 rounded-xl">
-                                                <p className="text-sm font-bold text-emerald-800">{selectedFile.name}</p>
-                                                <p className="text-xs text-emerald-600">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            <div className="mt-4 p-4 bg-app-success-bg rounded-xl">
+                                                <p className="text-sm font-bold text-app-success">{selectedFile.name}</p>
+                                                <p className="text-xs text-app-success">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                                             </div>
                                         )}
                                     </div>
@@ -478,7 +478,7 @@ export default function MigrationWizardPage() {
                                         <Button
                                             onClick={handleUploadFile}
                                             disabled={loading}
-                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 rounded-xl"
+                                            className="w-full bg-app-primary hover:bg-app-primary-dark text-white font-bold py-6 rounded-xl"
                                         >
                                             {loading ? (
                                                 <>
@@ -520,9 +520,9 @@ export default function MigrationWizardPage() {
                                                 <button
                                                     key={file.uuid}
                                                     onClick={() => handleSelectCloudFile(file)}
-                                                    className="w-full text-left p-4 rounded-xl bg-app-surface border border-app-border hover:border-emerald-500/30 transition-all flex items-center gap-4"
+                                                    className="w-full text-left p-4 rounded-xl bg-app-surface border border-app-border hover:border-app-success/30 transition-all flex items-center gap-4"
                                                 >
-                                                    <Database className="w-8 h-8 text-emerald-600 shrink-0" />
+                                                    <Database className="w-8 h-8 text-app-success shrink-0" />
                                                     <div className="flex-1 min-w-0">
                                                         <p className="font-bold text-app-text truncate">
                                                             {file.original_filename || file.filename}
@@ -532,7 +532,7 @@ export default function MigrationWizardPage() {
                                                             {new Date(file.uploaded_at || file.created_at).toLocaleDateString()}
                                                         </p>
                                                     </div>
-                                                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                                                    <CheckCircle2 className="w-5 h-5 text-app-success" />
                                                 </button>
                                             ))}
                                         </div>
@@ -546,19 +546,19 @@ export default function MigrationWizardPage() {
                     {currentStep === 'VALIDATE' && (
                         <div className="space-y-6">
                             <div className="text-center">
-                                <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+                                <CheckCircle2 className="w-16 h-16 text-app-success mx-auto mb-4" />
                                 <h2 className="text-2xl font-black text-app-text">Pre-Flight Validation</h2>
                                 <p className="text-app-text-faint mt-2">Checking COA and posting rules</p>
                             </div>
 
                             {validation ? (
                                 <div className="space-y-4">
-                                    <div className={`p-6 rounded-2xl ${validation.is_valid ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}`}>
+                                    <div className={`p-6 rounded-2xl ${validation.is_valid ? 'bg-app-success-bg border border-app-success' : 'bg-app-error-bg border border-app-error'}`}>
                                         <div className="flex items-center gap-3 mb-4">
                                             {validation.is_valid ? (
-                                                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                                                <CheckCircle2 className="w-6 h-6 text-app-success" />
                                             ) : (
-                                                <XCircle className="w-6 h-6 text-red-600" />
+                                                <XCircle className="w-6 h-6 text-app-error" />
                                             )}
                                             <h3 className="text-lg font-black">
                                                 {validation.is_valid ? 'Validation Passed ✓' : 'Validation Failed'}
@@ -568,7 +568,7 @@ export default function MigrationWizardPage() {
                                         {validation.errors.length > 0 && (
                                             <div className="space-y-2">
                                                 {validation.errors.map((err, i) => (
-                                                    <div key={i} className="p-3 rounded-xl bg-red-100 text-red-800">
+                                                    <div key={i} className="p-3 rounded-xl bg-app-error-bg text-app-error">
                                                         <p className="font-bold">{err.code}</p>
                                                         <p className="text-sm">{err.message}</p>
                                                         {err.action_url && (
@@ -585,7 +585,7 @@ export default function MigrationWizardPage() {
                                     {validation.is_valid && (
                                         <Button
                                             onClick={() => setCurrentStep('MASTER_DATA')}
-                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 rounded-xl"
+                                            className="w-full bg-app-primary hover:bg-app-primary-dark text-white font-bold py-6 rounded-xl"
                                         >
                                             Continue to Import
                                         </Button>
@@ -596,7 +596,7 @@ export default function MigrationWizardPage() {
                                     <Button
                                         onClick={handleValidation}
                                         disabled={loading}
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-12 py-6 rounded-xl"
+                                        className="bg-app-primary hover:bg-app-primary-dark text-white font-bold px-12 py-6 rounded-xl"
                                     >
                                         {loading ? (
                                             <>
@@ -621,12 +621,12 @@ export default function MigrationWizardPage() {
                             <div className="text-center">
                                 {currentStep === 'MASTER_DATA' ? (
                                     <>
-                                        <Package className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+                                        <Package className="w-16 h-16 text-app-success mx-auto mb-4" />
                                         <h2 className="text-2xl font-black text-app-text">Import Master Data</h2>
                                     </>
                                 ) : (
                                     <>
-                                        <Users className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+                                        <Users className="w-16 h-16 text-app-success mx-auto mb-4" />
                                         <h2 className="text-2xl font-black text-app-text">Import Customers & Suppliers</h2>
                                     </>
                                 )}
@@ -634,12 +634,12 @@ export default function MigrationWizardPage() {
 
                             {job && job.status === 'RUNNING' ? (
                                 <div className="text-center py-12">
-                                    <Loader2 className="w-12 h-12 animate-spin text-emerald-600 mx-auto mb-4" />
+                                    <Loader2 className="w-12 h-12 animate-spin text-app-success mx-auto mb-4" />
                                     <p className="text-app-text font-bold">{job.current_step}</p>
                                     <div className="mt-6 max-w-md mx-auto">
                                         <div className="w-full h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-emerald-600 transition-all duration-500"
+                                                className="h-full bg-app-primary transition-all duration-500"
                                                 style={{ width: `${job.progress_percent}%` }}
                                             />
                                         </div>
@@ -650,7 +650,7 @@ export default function MigrationWizardPage() {
                                     <Button
                                         onClick={currentStep === 'MASTER_DATA' ? handleMasterDataImport : handleEntityMigration}
                                         disabled={loading}
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-12 py-6 rounded-xl"
+                                        className="bg-app-primary hover:bg-app-primary-dark text-white font-bold px-12 py-6 rounded-xl"
                                     >
                                         {loading ? (
                                             <>
@@ -671,7 +671,7 @@ export default function MigrationWizardPage() {
                     {/* STEP 8: Complete */}
                     {currentStep === 'COMPLETE' && (
                         <div className="space-y-6 text-center py-12">
-                            <CheckCircle2 className="w-24 h-24 text-emerald-600 mx-auto" />
+                            <CheckCircle2 className="w-24 h-24 text-app-success mx-auto" />
                             <h2 className="text-3xl font-black text-app-text">Migration Complete!</h2>
                             <p className="text-app-text-faint max-w-md mx-auto">
                                 Your data has been successfully migrated.
@@ -680,7 +680,7 @@ export default function MigrationWizardPage() {
                             {job && (
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto mt-8">
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border">
-                                        <Package className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                                        <Package className="w-6 h-6 text-app-info mx-auto mb-2" />
                                         <p className="text-2xl font-black text-app-text">{job.imported_products}</p>
                                         <p className="text-xs text-app-text-faint">Products</p>
                                     </div>
@@ -692,12 +692,12 @@ export default function MigrationWizardPage() {
                                         <p className="text-xs text-app-text-faint">Contacts</p>
                                     </div>
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border">
-                                        <ShoppingCart className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+                                        <ShoppingCart className="w-6 h-6 text-app-warning mx-auto mb-2" />
                                         <p className="text-2xl font-black text-app-text">{job.imported_sales}</p>
                                         <p className="text-xs text-app-text-faint">Sales</p>
                                     </div>
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border">
-                                        <CheckSquare className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+                                        <CheckSquare className="w-6 h-6 text-app-success mx-auto mb-2" />
                                         <p className="text-2xl font-black text-app-text">{job.total_verified}</p>
                                         <p className="text-xs text-app-text-faint">Verified</p>
                                     </div>
@@ -715,7 +715,7 @@ export default function MigrationWizardPage() {
                                 {job && (
                                     <Button
                                         onClick={() => router.push(`/migration_v2/jobs/${job.id}`)}
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-xl font-bold"
+                                        className="bg-app-primary hover:bg-app-primary-dark text-white px-8 py-4 rounded-xl font-bold"
                                     >
                                         View Details
                                     </Button>

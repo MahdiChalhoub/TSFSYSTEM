@@ -35,11 +35,11 @@ interface PurchaseOrder {
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
     DRAFT: { label: 'Draft', color: 'text-app-text-faint', bg: 'bg-slate-500/10' },
     SUBMITTED: { label: 'Pending Approval', color: 'text-app-text-faint', bg: 'bg-slate-500/10' },
-    APPROVED: { label: 'Approved', color: 'text-emerald-400', bg: 'bg-app-success-bg' },
+    APPROVED: { label: 'Approved', color: 'text-app-success', bg: 'bg-app-success-bg' },
     ORDERED: { label: 'Requires Acknowledgment', color: 'text-app-info', bg: 'bg-app-info-bg' },
-    CONFIRMED: { label: 'Preparing for Dispatch', color: 'text-emerald-400', bg: 'bg-app-success-bg' },
+    CONFIRMED: { label: 'Preparing for Dispatch', color: 'text-app-success', bg: 'bg-app-success-bg' },
     IN_TRANSIT: { label: 'In Transit', color: 'text-app-warning', bg: 'bg-app-warning-bg' },
-    RECEIVED: { label: 'Received', color: 'text-emerald-400', bg: 'bg-app-success-bg' },
+    RECEIVED: { label: 'Received', color: 'text-app-success', bg: 'bg-app-success-bg' },
     CANCELLED: { label: 'Cancelled', color: 'text-app-error', bg: 'bg-app-error-bg' },
 }
 
@@ -99,7 +99,7 @@ export default function SupplierOrderDetail() {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative flex items-center justify-center bg-app-bg">
-                <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-12 h-12 border-4 border-app-success border-t-transparent rounded-full animate-spin" />
             </div>
         )
     }
@@ -109,7 +109,7 @@ export default function SupplierOrderDetail() {
             <div className="min-h-screen bg-[#020617] p-4 lg:p-12 text-center flex flex-col items-center justify-center bg-app-bg">
                 <FileText size={48} className="text-app-text-muted mb-4" />
                 <h1 className="text-2xl font-black text-app-text mb-2">Order Not Found</h1>
-                <Link href={`/supplier-portal/${slug}/orders`} className="text-emerald-400 hover:underline">Return to Orders</Link>
+                <Link href={`/supplier-portal/${slug}/orders`} className="text-app-success hover:underline">Return to Orders</Link>
             </div>
         )
     }
@@ -179,7 +179,7 @@ export default function SupplierOrderDetail() {
                                             placeholder="e.g. DHL-12345678"
                                             value={trackingNo}
                                             onChange={e => setTrackingNo(e.target.value)}
-                                            className="w-full bg-app-text/5 border border-app-text/10 rounded-xl px-4 py-3 text-app-text focus:outline-none focus:border-emerald-500/50"
+                                            className="w-full bg-app-text/5 border border-app-text/10 rounded-xl px-4 py-3 text-app-text focus:outline-none focus:border-app-success/50"
                                         />
                                     </div>
                                     <div className="space-y-1">
@@ -189,14 +189,14 @@ export default function SupplierOrderDetail() {
                                             placeholder="https://carrier.com/track/..."
                                             value={trackingUrl}
                                             onChange={e => setTrackingUrl(e.target.value)}
-                                            className="w-full bg-app-text/5 border border-app-text/10 rounded-xl px-4 py-3 text-app-text focus:outline-none focus:border-emerald-500/50"
+                                            className="w-full bg-app-text/5 border border-app-text/10 rounded-xl px-4 py-3 text-app-text focus:outline-none focus:border-app-success/50"
                                         />
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => handleAction('dispatch_order', { tracking_number: trackingNo, tracking_url: trackingUrl })}
                                     disabled={actionLoading || !trackingNo}
-                                    className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-app-text rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:shadow-2xl hover:shadow-emerald-900/40">
+                                    className="w-full sm:w-auto px-8 py-4 bg-app-primary hover:bg-app-primary disabled:opacity-50 text-app-text rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:shadow-2xl hover:shadow-emerald-900/40">
                                     <Truck size={22} />
                                     {actionLoading ? 'Processing...' : 'Confirm Dispatch'}
                                 </button>
@@ -209,7 +209,7 @@ export default function SupplierOrderDetail() {
                 <div className="bg-app-surface/60 border border-app-text/5 rounded-3xl overflow-hidden backdrop-blur-xl">
                     <div className="p-6 border-b border-app-text/5 flex items-center justify-between">
                         <h3 className="text-lg font-bold text-app-text flex items-center gap-2">
-                            <Package size={18} className="text-emerald-400" />
+                            <Package size={18} className="text-app-success" />
                             Requested Items
                         </h3>
                         {order.expected_date && (
@@ -235,8 +235,8 @@ export default function SupplierOrderDetail() {
                                             <p className="text-app-text font-medium">{line.product_name}</p>
                                             {line.description && <p className="text-app-text-muted text-xs mt-1">{line.description}</p>}
                                         </td>
-                                        <td className="p-4 text-slate-300 font-mono text-sm">{parseFloat(line.quantity)}</td>
-                                        <td className="p-4 text-slate-300 font-mono text-sm">${parseFloat(line.unit_price).toFixed(2)}</td>
+                                        <td className="p-4 text-app-faint font-mono text-sm">{parseFloat(line.quantity)}</td>
+                                        <td className="p-4 text-app-faint font-mono text-sm">${parseFloat(line.unit_price).toFixed(2)}</td>
                                         <td className="p-4 pr-6 text-right text-app-text font-bold font-mono text-sm">${parseFloat(line.line_total).toFixed(2)}</td>
                                     </tr>
                                 ))}
@@ -244,8 +244,8 @@ export default function SupplierOrderDetail() {
                             <tfoot className="border-t border-app-text/10 bg-app-text/5">
                                 <tr>
                                     <td colSpan={3} className="p-4 pl-6 text-right text-app-text-faint text-sm font-medium">Grand Total</td>
-                                    <td className="p-4 pr-6 text-right text-emerald-400 font-black text-xl font-mono">
-                                        ${parseFloat(order.total_amount).toFixed(2)} <span className="text-[10px] text-emerald-600 ml-1">{order.currency}</span>
+                                    <td className="p-4 pr-6 text-right text-app-success font-black text-xl font-mono">
+                                        ${parseFloat(order.total_amount).toFixed(2)} <span className="text-[10px] text-app-success ml-1">{order.currency}</span>
                                     </td>
                                 </tr>
                             </tfoot>
@@ -259,7 +259,7 @@ export default function SupplierOrderDetail() {
                         {order.tracking_number && (
                             <div>
                                 <h3 className="text-app-text font-bold mb-2 text-sm flex items-center gap-2">
-                                    <Truck size={16} className="text-emerald-500" /> Dispatch Info
+                                    <Truck size={16} className="text-app-success" /> Dispatch Info
                                 </h3>
                                 <div className="bg-app-text/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-app-text/5">
                                     <div>
@@ -268,7 +268,7 @@ export default function SupplierOrderDetail() {
                                     </div>
                                     {order.tracking_url && (
                                         <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
-                                            className="px-4 py-2 bg-app-success-bg hover:bg-app-success-bg text-emerald-400 rounded-xl text-sm font-bold transition-colors border border-emerald-500/20">
+                                            className="px-4 py-2 bg-app-success-bg hover:bg-app-success-bg text-app-success rounded-xl text-sm font-bold transition-colors border border-app-success/20">
                                             Track Package
                                         </a>
                                     )}

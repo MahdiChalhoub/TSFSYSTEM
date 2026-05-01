@@ -137,7 +137,7 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
             {/* Action Bar */}
             <div className="flex flex-wrap items-center gap-3">
                 <Button onClick={() => { resetForm(); setShowForm(true); }}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs">
+                    className="bg-app-primary hover:bg-app-primary text-white font-bold text-xs">
                     <Plus size={14} className="mr-1" /> New Payment Term
                 </Button>
                 <Button onClick={handleSeedDefaults} variant="outline"
@@ -148,7 +148,7 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
 
             {/* Create/Edit Form */}
             {showForm && (
-                <Card className="border-2 border-emerald-200 dark:border-emerald-800 shadow-lg">
+                <Card className="border-2 border-app-success dark:border-emerald-800 shadow-lg">
                     <CardContent className="p-5 space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-black theme-text">
@@ -214,7 +214,7 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                                 Set as default
                             </label>
                             <Button onClick={handleSave} disabled={loading}
-                                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs ml-auto">
+                                className="bg-app-primary hover:bg-app-primary text-white font-bold text-xs ml-auto">
                                 <Save size={14} className="mr-1" /> {editingId ? 'Update' : 'Create'}
                             </Button>
                         </div>
@@ -233,11 +233,11 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
             ) : (
                 <div className="space-y-2">
                     {terms.map(t => (
-                        <Card key={t.id} className={`border shadow-sm transition-all hover:shadow-md ${t.is_default ? 'border-emerald-300 dark:border-emerald-700' : ''}`}>
+                        <Card key={t.id} className={`border shadow-sm transition-all hover:shadow-md ${t.is_default ? 'border-app-success dark:border-emerald-700' : ''}`}>
                             <CardContent className="p-4 flex items-center gap-4">
                                 {/* Default star */}
                                 <button onClick={() => handleSetDefault(t.id)} title={t.is_default ? 'Default' : 'Set as default'}
-                                    className={`shrink-0 ${t.is_default ? 'text-amber-500' : 'theme-text-muted hover:text-amber-400'}`}>
+                                    className={`shrink-0 ${t.is_default ? 'text-app-warning' : 'theme-text-muted hover:text-app-warning'}`}>
                                     <Star size={16} fill={t.is_default ? 'currentColor' : 'none'} />
                                 </button>
 
@@ -247,10 +247,10 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                                         <span className="font-bold text-sm theme-text">{t.name}</span>
                                         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded theme-surface-alt theme-text-muted">{t.code}</span>
                                         {t.is_default && (
-                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">DEFAULT</span>
+                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success">DEFAULT</span>
                                         )}
                                         {!t.is_active && (
-                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">INACTIVE</span>
+                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-app-error-bg text-app-error dark:bg-rose-900/30 dark:text-app-error">INACTIVE</span>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3 mt-0.5">
@@ -267,11 +267,11 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                                 {/* Actions */}
                                 <div className="flex items-center gap-1 shrink-0">
                                     <button onClick={() => handleEdit(t)}
-                                        className="p-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 theme-text-muted hover:text-indigo-500 transition-colors">
+                                        className="p-2 rounded-lg hover:bg-app-info-bg dark:hover:bg-indigo-900/20 theme-text-muted hover:text-app-info transition-colors">
                                         <Pencil size={14} />
                                     </button>
                                     <button onClick={() => handleDelete(t.id)}
-                                        className="p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 theme-text-muted hover:text-rose-500 transition-colors">
+                                        className="p-2 rounded-lg hover:bg-app-error-bg dark:hover:bg-rose-900/20 theme-text-muted hover:text-app-error transition-colors">
                                         <Trash2 size={14} />
                                     </button>
                                 </div>

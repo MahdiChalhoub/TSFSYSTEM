@@ -11,8 +11,8 @@ export default async function RegistrationsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
                 <div>
                     <h1 className="text-3xl font-black text-app-foreground uppercase tracking-tighter flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 rounded-xl">
-                            <ClipboardList className="text-blue-600" size={28} />
+                        <div className="p-2 bg-app-info-bg rounded-xl">
+                            <ClipboardList className="text-app-info" size={28} />
                         </div>
                         Registration Queue
                     </h1>

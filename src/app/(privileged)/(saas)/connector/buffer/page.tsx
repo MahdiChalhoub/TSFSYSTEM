@@ -52,10 +52,10 @@ interface BufferedRequest {
 }
 
 const statusColors = {
-    pending: 'bg-amber-500',
-    replayed: 'bg-emerald-500',
-    expired: 'bg-gray-400',
-    failed: 'bg-red-500'
+    pending: 'bg-app-warning',
+    replayed: 'bg-app-primary',
+    expired: 'bg-app-surface-hover',
+    failed: 'bg-app-error'
 }
 
 const statusIcons = {
@@ -138,7 +138,7 @@ export default function ConnectorBufferPage() {
                         Back to Connector Dashboard
                     </Link>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 rounded-2xl bg-amber-100 text-amber-600">
+                        <div className="p-3 rounded-2xl bg-app-warning-bg text-app-warning">
                             <Database size={28} />
                         </div>
                     </div>
@@ -149,7 +149,7 @@ export default function ConnectorBufferPage() {
                     <Button
                         onClick={handleCleanup}
                         variant="outline"
-                        className="rounded-2xl px-6 py-5 font-bold text-amber-600 border-amber-200 hover:bg-amber-50"
+                        className="rounded-2xl px-6 py-5 font-bold text-app-warning border-app-warning hover:bg-app-warning-bg"
                     >
                         <AlertTriangle size={18} />
                         Cleanup Expired
@@ -168,30 +168,30 @@ export default function ConnectorBufferPage() {
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="rounded-2xl border-amber-100 bg-amber-50">
+                <Card className="rounded-2xl border-app-warning bg-app-warning-bg">
                     <CardContent className="p-4 flex items-center gap-4">
-                        <Clock className="text-amber-500" size={24} />
+                        <Clock className="text-app-warning" size={24} />
                         <div>
-                            <div className="text-2xl font-black text-amber-600">{pendingCount}</div>
-                            <div className="text-xs text-amber-500 font-medium">Pending</div>
+                            <div className="text-2xl font-black text-app-warning">{pendingCount}</div>
+                            <div className="text-xs text-app-warning font-medium">Pending</div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-emerald-100 bg-emerald-50">
+                <Card className="rounded-2xl border-app-success bg-app-success-bg">
                     <CardContent className="p-4 flex items-center gap-4">
-                        <CheckCircle2 className="text-emerald-500" size={24} />
+                        <CheckCircle2 className="text-app-success" size={24} />
                         <div>
-                            <div className="text-2xl font-black text-emerald-600">{replayedCount}</div>
-                            <div className="text-xs text-emerald-500 font-medium">Replayed</div>
+                            <div className="text-2xl font-black text-app-success">{replayedCount}</div>
+                            <div className="text-xs text-app-success font-medium">Replayed</div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-red-100 bg-red-50">
+                <Card className="rounded-2xl border-app-error bg-app-error-bg">
                     <CardContent className="p-4 flex items-center gap-4">
-                        <XCircle className="text-red-500" size={24} />
+                        <XCircle className="text-app-error" size={24} />
                         <div>
-                            <div className="text-2xl font-black text-red-600">{failedCount}</div>
-                            <div className="text-xs text-red-500 font-medium">Failed</div>
+                            <div className="text-2xl font-black text-app-error">{failedCount}</div>
+                            <div className="text-xs text-app-error font-medium">Failed</div>
                         </div>
                     </CardContent>
                 </Card>
@@ -279,7 +279,7 @@ export default function ConnectorBufferPage() {
                                                     <span>Retries: {buffer.retry_count}/{buffer.max_retries}</span>
                                                 </div>
                                                 {buffer.last_error && (
-                                                    <div className="mt-2 p-2 rounded bg-red-50 text-red-600 text-xs font-mono">
+                                                    <div className="mt-2 p-2 rounded bg-app-error-bg text-app-error text-xs font-mono">
                                                         {buffer.last_error}
                                                     </div>
                                                 )}
@@ -290,7 +290,7 @@ export default function ConnectorBufferPage() {
                                                         size="sm"
                                                         onClick={() => handleRetry(buffer.id)}
                                                         disabled={retrying === buffer.id}
-                                                        className="bg-emerald-600 hover:bg-emerald-500 rounded-xl"
+                                                        className="bg-app-primary-dark hover:bg-app-primary rounded-xl"
                                                     >
                                                         <Play size={14} />
                                                         {retrying === buffer.id ? 'Retrying...' : 'Retry Now'}
