@@ -7,11 +7,11 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || PLATFORM_CONFIG.domain
 
     return (
-        <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden bg-app-bg">
+        <div className="min-h-screen bg-app-bg flex items-center justify-center p-6 relative overflow-hidden bg-app-bg">
             {/* Ambient glow effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse" />
-                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute -top-40 -right-40 w-96 h-96 bg-app-success/5 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-app-accent/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-br from-emerald-500/[0.03] to-indigo-500/[0.03] rounded-full blur-3xl" />
                 {/* Grid overlay */}
                 <div className="absolute inset-0 opacity-[0.015]" style={{
@@ -24,7 +24,7 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
                 {/* Icon cluster */}
                 <div className="flex justify-center">
                     <div className="relative">
-                        <div className="w-28 h-28 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] flex items-center justify-center border border-slate-700/50 shadow-2xl shadow-black/50">
+                        <div className="w-28 h-28 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] flex items-center justify-center border border-app-border-strong/50 shadow-2xl shadow-black/50">
                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-app-text-muted">
                                 <rect width="16" height="20" x="4" y="2" rx="2" ry="2" />
                                 <path d="M9 22v-4h6v4" />
@@ -57,9 +57,9 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
                 </div>
 
                 {/* Slug Display Card */}
-                <div className="bg-app-surface-2/50 border border-slate-700/40 rounded-2xl p-5 backdrop-blur-sm mx-auto max-w-sm">
+                <div className="bg-app-surface-2/50 border border-app-border-strong/40 rounded-2xl p-5 backdrop-blur-sm mx-auto max-w-sm">
                     <p className="text-[10px] font-black text-app-text-muted uppercase tracking-[0.2em] mb-2">Requested Address</p>
-                    <p className="text-slate-300 font-mono font-bold text-lg">
+                    <p className="text-app-foreground font-mono font-bold text-lg">
                         <span className="text-app-text-muted">https://</span>
                         <span className="text-app-warning">{slug}</span>
                         <span className="text-app-text-muted">.{rootDomain}</span>
@@ -67,7 +67,7 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
                 </div>
 
                 {/* Possible reasons */}
-                <div className="bg-app-surface-2/30 border border-slate-700/30 rounded-2xl p-5 text-left space-y-3 max-w-sm mx-auto">
+                <div className="bg-app-surface-2/30 border border-app-border-strong/30 rounded-2xl p-5 text-left space-y-3 max-w-sm mx-auto">
                     <p className="text-[10px] font-black text-app-text-muted uppercase tracking-[0.2em]">This could mean</p>
                     <div className="space-y-2">
                         <div className="flex items-start gap-3">
@@ -89,20 +89,20 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
                 <div className="space-y-3 pt-2 max-w-sm mx-auto">
                     <Link
                         href={`https://${rootDomain}/register/business`}
-                        className="block w-full py-4 px-8 bg-emerald-600 hover:bg-emerald-500 text-app-text font-black text-sm uppercase tracking-[0.15em] rounded-2xl shadow-lg shadow-emerald-500/10 transition-all duration-300 hover:shadow-emerald-500/25 hover:-translate-y-0.5"
+                        className="block w-full py-4 px-8 bg-app-primary-dark hover:bg-app-primary text-app-text font-black text-sm uppercase tracking-[0.15em] rounded-2xl shadow-lg shadow-emerald-500/10 transition-all duration-300 hover:shadow-emerald-500/25 hover:-translate-y-0.5"
                     >
                         Create Your Workspace
                     </Link>
                     <div className="flex gap-3">
                         <Link
                             href={`https://${rootDomain}`}
-                            className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all duration-200"
+                            className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-slate-700 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all duration-200"
                         >
                             Home
                         </Link>
                         <Link
                             href={`https://${rootDomain}/login`}
-                            className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all duration-200"
+                            className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-slate-700 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all duration-200"
                         >
                             Sign In
                         </Link>
@@ -113,7 +113,7 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
                 <div className="pt-6 space-y-2">
                     <p className="text-xs text-app-text-muted">
                         Know your workspace name?{' '}
-                        <Link href={`https://${rootDomain}/login`} className="text-emerald-500 hover:text-emerald-400 font-bold underline underline-offset-2 transition-colors">
+                        <Link href={`https://${rootDomain}/login`} className="text-app-success hover:text-app-success font-bold underline underline-offset-2 transition-colors">
                             Sign in from the main page
                         </Link>
                     </p>

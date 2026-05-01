@@ -26,18 +26,18 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     const isActive = (href: string) => pathname === href
 
     return (
-        <div className="min-h-screen bg-[#020617] flex flex-col lg:flex-row">
+        <div className="min-h-screen bg-app-bg flex flex-col lg:flex-row">
             {/* Sidebar (desktop) / Top Nav (mobile) */}
-            <aside className="lg:w-64 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] bg-slate-950/80 border-b lg:border-b-0 lg:border-r border-white/5 flex flex-col">
+            <aside className="lg:w-64 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] bg-app-bg/80 border-b lg:border-b-0 lg:border-r border-white/5 flex flex-col">
                 {/* User card */}
                 <div className="p-5 border-b border-white/5">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400 text-sm font-black">
+                        <div className="w-10 h-10 bg-app-success/20 border border-app-success/30 rounded-xl flex items-center justify-center text-app-success text-sm font-black">
                             {user?.name?.charAt(0).toUpperCase() || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-bold truncate">{user?.name || 'Client'}</p>
-                            <p className="text-[10px] text-slate-500 truncate">{contact?.tier || 'Standard'} • {contact?.company || ''}</p>
+                            <p className="text-[10px] text-app-muted-foreground truncate">{contact?.tier || 'Standard'} • {contact?.company || ''}</p>
                         </div>
                     </div>
                 </div>
@@ -48,8 +48,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                         <Link key={item.href} href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap
                                 ${isActive(item.href)
-                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                                    ? 'bg-app-success/10 text-app-success border border-app-success/20'
+                                    : 'text-app-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
                                 }`}>
                             <item.icon size={18} />
                             <span className="hidden lg:inline">{item.label}</span>
@@ -62,11 +62,11 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 {/* Footer */}
                 <div className="hidden lg:block p-3 border-t border-white/5 space-y-2">
                     <Link href={`/tenant/${slug}`}
-                        className="flex items-center gap-2 px-4 py-2.5 text-slate-400 hover:text-white text-sm font-medium rounded-xl hover:bg-white/5 transition-all">
+                        className="flex items-center gap-2 px-4 py-2.5 text-app-muted-foreground hover:text-white text-sm font-medium rounded-xl hover:bg-white/5 transition-all">
                         <Store size={14} /> Back to Store
                     </Link>
                     <button onClick={logout}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/10 transition-all">
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-app-error text-sm font-medium rounded-xl hover:bg-app-error/10 transition-all">
                         <LogOut size={14} /> Sign Out
                     </button>
                 </div>

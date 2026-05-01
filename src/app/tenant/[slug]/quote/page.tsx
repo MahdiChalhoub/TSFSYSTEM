@@ -89,16 +89,16 @@ export default function QuotePage() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="max-w-md w-full text-center space-y-6 animate-in fade-in duration-500">
-                    <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+                    <div className="w-20 h-20 bg-app-success/10 border border-app-success/20 rounded-full flex items-center justify-center mx-auto text-app-success">
                         <CheckCircle2 size={40} />
                     </div>
                     <h1 className="text-3xl font-black text-white">Quote Request Sent!</h1>
-                    <p className="text-slate-500">We&#39;ll review your request and get back to you with a detailed quotation.</p>
+                    <p className="text-app-muted-foreground">We&#39;ll review your request and get back to you with a detailed quotation.</p>
                     <div className="flex items-center justify-center gap-4">
                         <Link href={`/tenant/${slug}`}
-                            className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-all">
+                            className="px-6 py-3 bg-app-primary-dark text-white rounded-xl font-bold hover:bg-app-primary transition-all">
                             Back to Store
                         </Link>
                     </div>
@@ -110,45 +110,45 @@ export default function QuotePage() {
     // ─── Form ────────────────────────────────────────────────────────────
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+        <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative">
             <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-3xl mx-auto relative z-10 space-y-8">
                 <div className="space-y-2">
                     <Link href={`/tenant/${slug}`}
-                        className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-sm font-medium transition-colors">
+                        className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> Back to Store
                     </Link>
                     <h1 className="text-4xl font-black text-white flex items-center gap-3">
                         <FileQuestion className="text-teal-400" /> Request a Quote
                     </h1>
-                    <p className="text-slate-500 text-sm">Tell us what you need and we&#39;ll prepare a detailed quotation for you</p>
+                    <p className="text-app-muted-foreground text-sm">Tell us what you need and we&#39;ll prepare a detailed quotation for you</p>
                 </div>
 
                 {error && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm flex items-center gap-3">
+                    <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl text-app-error text-sm flex items-center gap-3">
                         <AlertCircle size={18} /> {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Contact Info */}
-                    <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-5">
+                    <div className="p-8 bg-app-surface/60 border border-white/5 rounded-3xl space-y-5">
                         <h2 className="text-lg font-bold text-white">Contact Information</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" placeholder="Full Name *" value={contactName} onChange={e => setContactName(e.target.value)} required
-                                className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-slate-700" />
+                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
                             <input type="email" placeholder="Email *" value={email} onChange={e => setEmail(e.target.value)} required
-                                className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-slate-700" />
+                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
                             <input type="tel" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)}
-                                className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-slate-700" />
+                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
                             <input type="text" placeholder="Company" value={company} onChange={e => setCompany(e.target.value)}
-                                className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-slate-700" />
+                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
                         </div>
                     </div>
 
                     {/* Line Items */}
-                    <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-5">
+                    <div className="p-8 bg-app-surface/60 border border-white/5 rounded-3xl space-y-5">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-white">Products / Services Needed</h2>
                             <div className="flex gap-2">
@@ -167,34 +167,34 @@ export default function QuotePage() {
 
                         {items.length === 0 ? (
                             <div className="py-10 text-center space-y-3 border border-dashed border-white/10 rounded-2xl">
-                                <Package size={32} className="mx-auto text-slate-600" />
-                                <p className="text-slate-500 text-sm">No items yet — click &quot;Add Item&quot; or import from your cart</p>
+                                <Package size={32} className="mx-auto text-app-faint" />
+                                <p className="text-app-muted-foreground text-sm">No items yet — click &quot;Add Item&quot; or import from your cart</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 {items.map((item, idx) => (
-                                    <div key={idx} className="flex gap-3 items-start p-4 bg-slate-950/50 border border-white/5 rounded-xl">
+                                    <div key={idx} className="flex gap-3 items-start p-4 bg-app-bg/50 border border-white/5 rounded-xl">
                                         <div className="flex-1 space-y-3">
                                             <input type="text" placeholder="Product / Service name *" value={item.product_name}
                                                 onChange={e => updateItem(idx, 'product_name', e.target.value)} required
-                                                className="w-full bg-transparent border-b border-white/10 pb-2 text-white outline-none focus:border-teal-500 transition-all placeholder:text-slate-700" />
+                                                className="w-full bg-transparent border-b border-white/10 pb-2 text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
                                             <div className="flex gap-3">
                                                 <div className="w-28">
-                                                    <label className="text-[10px] text-slate-600 uppercase tracking-wider block mb-1">Qty</label>
+                                                    <label className="text-[10px] text-app-faint uppercase tracking-wider block mb-1">Qty</label>
                                                     <input type="number" min="1" value={item.quantity}
                                                         onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
                                                         className="w-full bg-transparent border border-white/10 p-2 rounded-lg text-white text-center outline-none focus:border-teal-500" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <label className="text-[10px] text-slate-600 uppercase tracking-wider block mb-1">Notes</label>
+                                                    <label className="text-[10px] text-app-faint uppercase tracking-wider block mb-1">Notes</label>
                                                     <input type="text" placeholder="Specs, size, color..." value={item.notes}
                                                         onChange={e => updateItem(idx, 'notes', e.target.value)}
-                                                        className="w-full bg-transparent border border-white/10 p-2 rounded-lg text-white outline-none focus:border-teal-500 placeholder:text-slate-700" />
+                                                        className="w-full bg-transparent border border-white/10 p-2 rounded-lg text-white outline-none focus:border-teal-500 placeholder:text-app-faint" />
                                                 </div>
                                             </div>
                                         </div>
                                         <button type="button" onClick={() => removeItem(idx)}
-                                            className="p-2 text-slate-600 hover:text-red-400 transition-colors mt-1">
+                                            className="p-2 text-app-faint hover:text-app-error transition-colors mt-1">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -204,11 +204,11 @@ export default function QuotePage() {
                     </div>
 
                     {/* Message */}
-                    <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-4">
+                    <div className="p-8 bg-app-surface/60 border border-white/5 rounded-3xl space-y-4">
                         <h2 className="text-lg font-bold text-white">Additional Message</h2>
                         <textarea placeholder="Delivery timeline, budget range, special requirements..." value={message}
                             onChange={e => setMessage(e.target.value)} rows={4}
-                            className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-slate-700 resize-none" />
+                            className="w-full bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint resize-none" />
                     </div>
 
                     {/* Submit */}

@@ -5,11 +5,11 @@ import { PLATFORM_CONFIG } from '@/lib/branding'
 
 export default function TenantNotFound() {
     return (
-        <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden bg-app-bg">
+        <div className="min-h-screen bg-app-bg flex items-center justify-center p-6 relative overflow-hidden bg-app-bg">
             {/* Background effects */}
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl" />
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl" />
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-app-success/5 rounded-full blur-3xl" />
+                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-app-accent/5 rounded-full blur-3xl" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/3 to-indigo-500/3 rounded-full blur-3xl" />
             </div>
 
@@ -17,7 +17,7 @@ export default function TenantNotFound() {
                 {/* Icon */}
                 <div className="flex justify-center">
                     <div className="relative">
-                        <div className="w-28 h-28 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] flex items-center justify-center border border-slate-700/50 shadow-2xl">
+                        <div className="w-28 h-28 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] flex items-center justify-center border border-app-border-strong/50 shadow-2xl">
                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-app-text-muted">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                                 <polyline points="9 22 9 12 15 12 15 22" />
@@ -43,9 +43,9 @@ export default function TenantNotFound() {
                 </div>
 
                 {/* Slug Display */}
-                <div className="bg-app-surface-2/50 border border-slate-700/50 rounded-2xl p-4 inline-block backdrop-blur-sm">
+                <div className="bg-app-surface-2/50 border border-app-border-strong/50 rounded-2xl p-4 inline-block backdrop-blur-sm">
                     <p className="text-xs font-black text-app-text-muted uppercase tracking-widest mb-1">Requested Workspace</p>
-                    <p className="text-slate-300 font-mono font-bold text-lg">
+                    <p className="text-app-foreground font-mono font-bold text-lg">
                         <span className="text-app-text-muted">https://</span>
                         <span className="text-app-warning">???</span>
                         <span className="text-app-text-muted">{PLATFORM_CONFIG.suffix}</span>
@@ -56,20 +56,20 @@ export default function TenantNotFound() {
                 <div className="space-y-3 pt-2">
                     <Link
                         href="/register/business"
-                        className="block w-full py-4 px-8 bg-emerald-600 hover:bg-emerald-500 text-app-text font-black text-sm uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-900/30 transition-all hover:shadow-emerald-500/20 hover:-translate-y-0.5"
+                        className="block w-full py-4 px-8 bg-app-primary-dark hover:bg-app-primary text-app-text font-black text-sm uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-900/30 transition-all hover:shadow-emerald-500/20 hover:-translate-y-0.5"
                     >
                         Register Your Business
                     </Link>
                     <div className="flex gap-3">
                         <Link
                             href="/"
-                            className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all"
+                            className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-slate-700 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all"
                         >
                             Home
                         </Link>
                         <Link
                             href="/login"
-                            className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all"
+                            className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-slate-700 text-app-foreground font-bold text-sm rounded-xl border border-app-border-strong/50 transition-all"
                         >
                             Sign In
                         </Link>
@@ -79,7 +79,7 @@ export default function TenantNotFound() {
                 {/* Footer hint */}
                 <p className="text-xs text-app-text-muted pt-4">
                     Already have a workspace?{' '}
-                    <Link href="/login" className="text-emerald-400 hover:text-app-success font-bold underline underline-offset-2">
+                    <Link href="/login" className="text-app-success hover:text-app-success font-bold underline underline-offset-2">
                         Sign in here
                     </Link>
                 </p>

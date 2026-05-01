@@ -19,13 +19,13 @@ interface Notification {
 }
 
 const TYPE_MAP: Record<string, { icon: any; color: string; bg: string }> = {
-    ORDER_UPDATE: { icon: Package, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    ORDER_SHIPPED: { icon: Package, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    ORDER_DELIVERED: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    PROMO: { icon: Gift, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    ALERT: { icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10' },
-    WALLET: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    INFO: { icon: Info, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+    ORDER_UPDATE: { icon: Package, color: 'text-app-info', bg: 'bg-app-info/10' },
+    ORDER_SHIPPED: { icon: Package, color: 'text-app-accent', bg: 'bg-app-accent/10' },
+    ORDER_DELIVERED: { icon: CheckCircle2, color: 'text-app-success', bg: 'bg-app-success/10' },
+    PROMO: { icon: Gift, color: 'text-app-warning', bg: 'bg-app-warning/10' },
+    ALERT: { icon: AlertTriangle, color: 'text-app-error', bg: 'bg-app-error/10' },
+    WALLET: { icon: CheckCircle2, color: 'text-app-success', bg: 'bg-app-success/10' },
+    INFO: { icon: Info, color: 'text-app-muted-foreground', bg: 'bg-slate-500/10' },
 }
 
 function timeAgo(dateStr: string) {
@@ -101,35 +101,35 @@ export default function NotificationsPage() {
     const unreadCount = notifications.filter(n => !n.is_read).length
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-8 relative">
-            <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+        <div className="min-h-screen bg-app-bg p-4 lg:p-8 relative">
+            <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-info/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-3xl mx-auto relative z-10 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <h1 className="text-3xl font-black text-white flex items-center gap-3">
-                            <Bell size={28} className="text-blue-400" /> Notifications
+                            <Bell size={28} className="text-app-info" /> Notifications
                         </h1>
                         {unreadCount > 0 && (
-                            <p className="text-slate-500 text-sm mt-1">{unreadCount} unread</p>
+                            <p className="text-app-muted-foreground text-sm mt-1">{unreadCount} unread</p>
                         )}
                     </div>
                     <div className="flex items-center gap-3">
                         {/* Filter pills */}
-                        <div className="flex bg-slate-900/60 border border-white/5 rounded-xl overflow-hidden">
+                        <div className="flex bg-app-surface/60 border border-white/5 rounded-xl overflow-hidden">
                             <button onClick={() => setFilter('all')}
-                                className={`px-4 py-2 text-xs font-bold transition-all ${filter === 'all' ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-white'}`}>
+                                className={`px-4 py-2 text-xs font-bold transition-all ${filter === 'all' ? 'bg-white/10 text-white' : 'text-app-muted-foreground hover:text-white'}`}>
                                 All
                             </button>
                             <button onClick={() => setFilter('unread')}
-                                className={`px-4 py-2 text-xs font-bold transition-all ${filter === 'unread' ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-white'}`}>
+                                className={`px-4 py-2 text-xs font-bold transition-all ${filter === 'unread' ? 'bg-white/10 text-white' : 'text-app-muted-foreground hover:text-white'}`}>
                                 Unread
                             </button>
                         </div>
                         {unreadCount > 0 && (
                             <button onClick={markAllRead}
-                                className="px-4 py-2 bg-white/5 border border-white/10 text-slate-400 rounded-xl text-xs font-bold hover:text-white transition-all flex items-center gap-1.5">
+                                className="px-4 py-2 bg-white/5 border border-white/10 text-app-muted-foreground rounded-xl text-xs font-bold hover:text-white transition-all flex items-center gap-1.5">
                                 <Check size={14} /> Mark all read
                             </button>
                         )}
@@ -139,15 +139,15 @@ export default function NotificationsPage() {
                 {/* Content */}
                 {loading ? (
                     <div className="flex items-center justify-center py-24">
-                        <Loader2 className="animate-spin text-blue-500" size={40} />
+                        <Loader2 className="animate-spin text-app-info" size={40} />
                     </div>
                 ) : filtered.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
-                        <Bell size={48} className="mx-auto text-slate-600" />
+                        <Bell size={48} className="mx-auto text-app-faint" />
                         <h2 className="text-xl font-bold text-white">
                             {filter === 'unread' ? 'All caught up!' : 'No notifications yet'}
                         </h2>
-                        <p className="text-slate-500">
+                        <p className="text-app-muted-foreground">
                             {filter === 'unread' ? 'You\'ve read all your notifications' : 'Notifications about orders, promos, and updates will appear here'}
                         </p>
                     </div>
@@ -161,25 +161,25 @@ export default function NotificationsPage() {
                                     onClick={() => !notif.is_read && markRead(notif.id)}
                                     className={`p-5 rounded-2xl flex items-start gap-4 transition-all cursor-pointer border
                                         ${notif.is_read
-                                            ? 'bg-slate-900/40 border-white/5'
-                                            : 'bg-slate-900/80 border-white/10 hover:border-blue-500/20'
+                                            ? 'bg-app-surface/40 border-white/5'
+                                            : 'bg-app-surface/80 border-white/10 hover:border-app-info/20'
                                         }`}>
                                     <div className={`w-10 h-10 ${t.bg} rounded-xl flex items-center justify-center ${t.color} flex-shrink-0 mt-0.5`}>
                                         <Icon size={18} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <p className={`font-bold text-sm ${notif.is_read ? 'text-slate-400' : 'text-white'}`}>
+                                            <p className={`font-bold text-sm ${notif.is_read ? 'text-app-muted-foreground' : 'text-white'}`}>
                                                 {notif.title}
                                             </p>
                                             {!notif.is_read && (
-                                                <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                                                <span className="w-2 h-2 bg-app-info rounded-full flex-shrink-0" />
                                             )}
                                         </div>
-                                        <p className={`text-sm mt-1 ${notif.is_read ? 'text-slate-600' : 'text-slate-400'}`}>
+                                        <p className={`text-sm mt-1 ${notif.is_read ? 'text-app-faint' : 'text-app-muted-foreground'}`}>
                                             {notif.message}
                                         </p>
-                                        <p className="text-slate-600 text-[10px] mt-2 flex items-center gap-1">
+                                        <p className="text-app-faint text-[10px] mt-2 flex items-center gap-1">
                                             <Clock size={10} /> {timeAgo(notif.created_at)}
                                         </p>
                                     </div>

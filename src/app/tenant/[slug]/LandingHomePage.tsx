@@ -6,7 +6,7 @@ export function LandingHomePage({ org }: { org: any }) {
  <div className="min-h-screen bg-app-surface">
  {/* Hero Section */}
  <section className="pt-24 pb-20 px-6 max-w-7xl mx-auto text-center">
- <Badge className="mb-6 bg-indigo-50 text-indigo-600 border-indigo-100 font-bold uppercase tracking-widest px-4 py-1">
+ <Badge className="mb-6 bg-app-accent-bg text-indigo-600 border-indigo-100 font-bold uppercase tracking-widest px-4 py-1">
  Welcome to {org.name}
  </Badge>
  <h1 className="text-6xl md:text-8xl font-black text-app-text tracking-tighter leading-[1.1] mb-8">
@@ -29,21 +29,21 @@ export function LandingHomePage({ org }: { org: any }) {
  <div className="max-w-7xl mx-auto px-6">
  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
- <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6">
+ <div className="w-14 h-14 rounded-2xl bg-app-accent-bg text-indigo-600 flex items-center justify-center mb-6">
  <ShieldCheck size={28} />
  </div>
  <h3 className="text-xl font-bold text-app-text mb-3">Enterprise Security</h3>
  <p className="text-app-text-muted font-medium leading-relaxed">Your data and daily operations are protected by military-grade encryption and compliance standards.</p>
  </div>
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
- <div className="w-14 h-14 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mb-6">
+ <div className="w-14 h-14 rounded-2xl bg-app-accent-bg text-app-accent flex items-center justify-center mb-6">
  <Zap size={28} />
  </div>
  <h3 className="text-xl font-bold text-app-text mb-3">Lightning Fast</h3>
  <p className="text-app-text-muted font-medium leading-relaxed">Built on modern edge infrastructure ensuring operations resolve in milliseconds globally.</p>
  </div>
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
- <div className="w-14 h-14 rounded-2xl bg-app-success-bg text-emerald-600 flex items-center justify-center mb-6">
+ <div className="w-14 h-14 rounded-2xl bg-app-success-bg text-app-success flex items-center justify-center mb-6">
  <Globe size={28} />
  </div>
  <h3 className="text-xl font-bold text-app-text mb-3">Global Reach</h3>

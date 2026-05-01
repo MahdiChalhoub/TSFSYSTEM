@@ -21,14 +21,14 @@ interface Order {
 }
 
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string }> = {
-    CART: { label: 'In Cart', icon: Package, color: 'text-slate-400' },
-    PLACED: { label: 'Placed', icon: Clock, color: 'text-blue-400' },
-    CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-400' },
-    PROCESSING: { label: 'Processing', icon: Package, color: 'text-amber-400' },
-    SHIPPED: { label: 'Shipped', icon: Truck, color: 'text-purple-400' },
-    DELIVERED: { label: 'Delivered', icon: CheckCircle2, color: 'text-emerald-400' },
-    CANCELLED: { label: 'Cancelled', icon: XCircle, color: 'text-red-400' },
-    RETURNED: { label: 'Returned', icon: RotateCcw, color: 'text-amber-400' },
+    CART: { label: 'In Cart', icon: Package, color: 'text-app-muted-foreground' },
+    PLACED: { label: 'Placed', icon: Clock, color: 'text-app-info' },
+    CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-app-success' },
+    PROCESSING: { label: 'Processing', icon: Package, color: 'text-app-warning' },
+    SHIPPED: { label: 'Shipped', icon: Truck, color: 'text-app-accent' },
+    DELIVERED: { label: 'Delivered', icon: CheckCircle2, color: 'text-app-success' },
+    CANCELLED: { label: 'Cancelled', icon: XCircle, color: 'text-app-error' },
+    RETURNED: { label: 'Returned', icon: RotateCcw, color: 'text-app-warning' },
 }
 
 export default function OrdersPage() {
@@ -62,23 +62,23 @@ export default function OrdersPage() {
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
                     <h1 className="text-2xl font-bold text-white">Please log in to view orders</h1>
-                    <Link href={`/tenant/${slug}`} className="text-emerald-400 font-bold">Go to Store</Link>
+                    <Link href={`/tenant/${slug}`} className="text-app-success font-bold">Go to Store</Link>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
-            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+        <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative">
+            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-info/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-8">
                 <div className="space-y-2">
                     <Link href={`/tenant/${slug}/account`}
-                        className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-sm font-medium transition-colors">
+                        className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> My Account
                     </Link>
                     <h1 className="text-4xl font-black text-white">Order History</h1>
@@ -86,15 +86,15 @@ export default function OrdersPage() {
 
                 {loading ? (
                     <div className="space-y-4">
-                        {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-900/60 border border-white/5 rounded-2xl animate-pulse" />)}
+                        {[1, 2, 3].map(i => <div key={i} className="h-24 bg-app-surface/60 border border-white/5 rounded-2xl animate-pulse" />)}
                     </div>
                 ) : orders.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
-                        <Package size={48} className="mx-auto text-slate-600" />
+                        <Package size={48} className="mx-auto text-app-faint" />
                         <h2 className="text-xl font-bold text-white">No orders yet</h2>
-                        <p className="text-slate-500">Start shopping and your orders will appear here</p>
+                        <p className="text-app-muted-foreground">Start shopping and your orders will appear here</p>
                         <Link href={`/tenant/${slug}`}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold">
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-app-primary-dark text-white rounded-xl font-bold">
                             Browse Products
                         </Link>
                     </div>
@@ -105,23 +105,23 @@ export default function OrdersPage() {
                             const Icon = st.icon
                             return (
                                 <Link key={order.id} href={`/tenant/${slug}/account/orders/${order.id}`}
-                                    className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-emerald-500/30 transition-all cursor-pointer group">
+                                    className="p-6 bg-app-surface/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-app-success/30 transition-all cursor-pointer group">
                                     <div className={`w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center ${st.color}`}>
                                         <Icon size={22} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3">
-                                            <p className="text-white font-bold group-hover:text-emerald-400 transition-colors">{order.order_number}</p>
+                                            <p className="text-white font-bold group-hover:text-app-success transition-colors">{order.order_number}</p>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${st.color}`}>{st.label}</span>
                                         </div>
-                                        <p className="text-slate-500 text-sm mt-1">
+                                        <p className="text-app-muted-foreground text-sm mt-1">
                                             {order.line_count} items • {order.placed_at ? new Date(order.placed_at).toLocaleDateString() : 'Draft'}
                                         </p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-white font-black text-lg">${parseFloat(order.total_amount).toFixed(2)}</p>
                                         {order.delivery_rating && (
-                                            <div className="flex items-center gap-1 text-amber-400 text-sm">
+                                            <div className="flex items-center gap-1 text-app-warning text-sm">
                                                 <Star size={14} /> {order.delivery_rating}/5
                                             </div>
                                         )}

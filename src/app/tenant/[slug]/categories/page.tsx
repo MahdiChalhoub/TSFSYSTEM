@@ -7,7 +7,7 @@ export default function CategoriesPageRoute() {
 
     if (loading || !components) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center">
                 <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
             </div>
         )
@@ -15,7 +15,7 @@ export default function CategoriesPageRoute() {
 
     const CategoriesPage = components.CategoriesPage
     if (!CategoriesPage) {
-        return <div className="min-h-screen bg-slate-950 text-white p-8">Categories not available for this theme</div>
+        return <div className="min-h-screen bg-app-bg text-white p-8">Categories not available for this theme</div>
     }
     return <CategoriesPage />
 }

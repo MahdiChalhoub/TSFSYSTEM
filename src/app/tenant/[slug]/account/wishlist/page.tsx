@@ -40,28 +40,28 @@ export default function WishlistPage() {
     }, [slug, wishlist])
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-8 relative">
-            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-rose-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+        <div className="min-h-screen bg-app-bg p-4 lg:p-8 relative">
+            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-error/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-black text-white flex items-center gap-3">
-                        <Heart size={28} className="text-rose-400" /> Wishlist
+                        <Heart size={28} className="text-app-error" /> Wishlist
                     </h1>
-                    <span className="text-slate-500 text-sm font-medium">{wishlist.length} items</span>
+                    <span className="text-app-muted-foreground text-sm font-medium">{wishlist.length} items</span>
                 </div>
 
                 {loading ? (
                     <div className="flex items-center justify-center py-24">
-                        <Loader2 className="animate-spin text-rose-500" size={40} />
+                        <Loader2 className="animate-spin text-app-error" size={40} />
                     </div>
                 ) : wishlist.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
-                        <Heart size={48} className="mx-auto text-slate-600" />
+                        <Heart size={48} className="mx-auto text-app-faint" />
                         <h2 className="text-xl font-bold text-white">Your wishlist is empty</h2>
-                        <p className="text-slate-500">Save products you love and come back to them later</p>
+                        <p className="text-app-muted-foreground">Save products you love and come back to them later</p>
                         <Link href={`/tenant/${slug}`}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-all">
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-app-primary-dark text-white rounded-xl font-bold hover:bg-app-primary transition-all">
                             Browse Products
                         </Link>
                     </div>
@@ -69,15 +69,15 @@ export default function WishlistPage() {
                     <div className="space-y-3">
                         {products.map(product => (
                             <div key={product.id}
-                                className="group flex items-center gap-5 p-5 bg-slate-900/60 border border-white/5 rounded-2xl hover:border-rose-500/20 transition-all">
+                                className="group flex items-center gap-5 p-5 bg-app-surface/60 border border-white/5 rounded-2xl hover:border-app-error/20 transition-all">
                                 {/* Image */}
                                 <Link href={`/tenant/${slug}/product/${product.id}`}
-                                    className="w-20 h-20 bg-slate-800 rounded-xl overflow-hidden flex-shrink-0">
+                                    className="w-20 h-20 bg-app-surface-2 rounded-xl overflow-hidden flex-shrink-0">
                                     {product.image_url ? (
                                         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
-                                            <Package size={24} className="text-slate-700" />
+                                            <Package size={24} className="text-app-faint" />
                                         </div>
                                     )}
                                 </Link>
@@ -85,17 +85,17 @@ export default function WishlistPage() {
                                 {/* Details */}
                                 <div className="flex-1 min-w-0">
                                     <Link href={`/tenant/${slug}/product/${product.id}`}
-                                        className="text-white font-bold hover:text-emerald-400 transition-colors block truncate">
+                                        className="text-white font-bold hover:text-app-success transition-colors block truncate">
                                         {product.name}
                                     </Link>
                                     {product.category_name && (
-                                        <p className="text-slate-500 text-xs mt-0.5">{product.category_name}</p>
+                                        <p className="text-app-muted-foreground text-xs mt-0.5">{product.category_name}</p>
                                     )}
                                     <div className="flex items-center gap-3 mt-2">
                                         {storeMode !== 'CATALOG_QUOTE' && (
-                                            <span className="text-emerald-400 font-black text-lg">${parseFloat(product.price).toFixed(2)}</span>
+                                            <span className="text-app-success font-black text-lg">${parseFloat(product.price).toFixed(2)}</span>
                                         )}
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${product.in_stock ? 'text-emerald-400/60' : 'text-red-400/60'}`}>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${product.in_stock ? 'text-app-success/60' : 'text-app-error/60'}`}>
                                             {product.in_stock ? 'In Stock' : 'Out of Stock'}
                                         </span>
                                     </div>
@@ -112,16 +112,16 @@ export default function WishlistPage() {
                                             image_url: product.image_url,
                                             tax_rate: 0,
                                         })}
-                                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+                                            className="px-4 py-2.5 bg-app-primary-dark hover:bg-app-primary text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
                                             <ShoppingCart size={14} /> Add
                                         </button>
                                     )}
                                     <Link href={`/tenant/${slug}/product/${product.id}`}
-                                        className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-all">
+                                        className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-white transition-all">
                                         <ExternalLink size={16} />
                                     </Link>
                                     <button onClick={() => toggleWishlist(product.id)}
-                                        className="w-10 h-10 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center justify-center text-rose-400 hover:bg-rose-500/20 transition-all">
+                                        className="w-10 h-10 bg-app-error/10 border border-app-error/20 rounded-xl flex items-center justify-center text-app-error hover:bg-app-error/20 transition-all">
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
@@ -130,7 +130,7 @@ export default function WishlistPage() {
 
                         {/* Products in wishlist but not found in API (deleted/unavailable) */}
                         {wishlist.filter(id => !products.find(p => p.id === id)).length > 0 && (
-                            <div className="p-4 bg-slate-900/40 border border-white/5 rounded-xl text-slate-500 text-sm text-center">
+                            <div className="p-4 bg-app-surface/40 border border-white/5 rounded-xl text-app-muted-foreground text-sm text-center">
                                 {wishlist.filter(id => !products.find(p => p.id === id)).length} wishlist item(s) are no longer available
                             </div>
                         )}

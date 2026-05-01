@@ -97,9 +97,9 @@ export default function ProfilePage() {
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
-                    <Shield size={48} className="mx-auto text-slate-600" />
+                    <Shield size={48} className="mx-auto text-app-faint" />
                     <h1 className="text-2xl font-bold text-white">Please log in</h1>
                 </div>
             </div>
@@ -107,119 +107,119 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-8 relative">
+        <div className="min-h-screen bg-app-bg p-4 lg:p-8 relative">
             <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-2xl mx-auto relative z-10 space-y-6">
                 <h1 className="text-3xl font-black text-white flex items-center gap-3">
-                    <User size={28} className="text-slate-400" /> Profile & Settings
+                    <User size={28} className="text-app-muted-foreground" /> Profile & Settings
                 </h1>
 
                 {/* Profile Info */}
-                <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-5">
+                <div className="p-6 bg-app-surface/60 border border-white/5 rounded-2xl space-y-5">
                     <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                        <User size={16} className="text-emerald-400" /> Personal Information
+                        <User size={16} className="text-app-primary" /> Personal Information
                     </h2>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1.5">Full Name</label>
+                            <label className="text-[10px] text-app-muted-foreground uppercase tracking-widest font-bold block mb-1.5">Full Name</label>
                             <input type="text" value={name} onChange={e => setName(e.target.value)}
-                                className="w-full bg-slate-800/60 border border-white/5 text-white px-4 py-3 rounded-xl outline-none focus:border-emerald-500/30 placeholder:text-slate-700" />
+                                className="w-full bg-app-surface-2/60 border border-white/5 text-white px-4 py-3 rounded-xl outline-none focus:border-app-primary/30 placeholder:text-app-faint" />
                         </div>
                         <div>
-                            <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1.5">Email Address</label>
+                            <label className="text-[10px] text-app-muted-foreground uppercase tracking-widest font-bold block mb-1.5">Email Address</label>
                             <div className="relative">
-                                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" />
                                 <input type="email" value={email} readOnly
-                                    className="w-full bg-slate-800/40 border border-white/5 text-slate-500 pl-11 pr-4 py-3 rounded-xl outline-none cursor-not-allowed" />
+                                    className="w-full bg-app-surface-2/40 border border-white/5 text-app-muted-foreground pl-11 pr-4 py-3 rounded-xl outline-none cursor-not-allowed" />
                             </div>
-                            <p className="text-slate-600 text-[10px] mt-1">Email cannot be changed. Contact support for assistance.</p>
+                            <p className="text-app-faint text-[10px] mt-1">Email cannot be changed. Contact support for assistance.</p>
                         </div>
                         <div>
-                            <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1.5">Company</label>
+                            <label className="text-[10px] text-app-muted-foreground uppercase tracking-widest font-bold block mb-1.5">Company</label>
                             <div className="relative">
-                                <Building2 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                                <Building2 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" />
                                 <input type="text" value={company} onChange={e => setCompany(e.target.value)}
                                     placeholder="Your company name"
-                                    className="w-full bg-slate-800/60 border border-white/5 text-white pl-11 pr-4 py-3 rounded-xl outline-none focus:border-emerald-500/30 placeholder:text-slate-700" />
+                                    className="w-full bg-app-surface-2/60 border border-white/5 text-white pl-11 pr-4 py-3 rounded-xl outline-none focus:border-app-primary/30 placeholder:text-app-faint" />
                             </div>
                         </div>
                     </div>
 
                     {error && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+                        <div className="p-3 bg-app-error/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
                             <AlertCircle size={16} /> {error}
                         </div>
                     )}
 
                     <button onClick={handleSaveProfile} disabled={saving}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all disabled:opacity-40">
+                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-app-primary-dark hover:bg-app-primary text-white rounded-xl font-bold transition-all disabled:opacity-40">
                         {saved ? <><CheckCircle2 size={18} /> Saved!</> : saving ? 'Saving...' : <><Save size={18} /> Save Changes</>}
                     </button>
                 </div>
 
                 {/* Change Password */}
-                <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-5">
+                <div className="p-6 bg-app-surface/60 border border-white/5 rounded-2xl space-y-5">
                     <div className="flex items-center justify-between">
                         <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                            <Lock size={16} className="text-amber-400" /> Change Password
+                            <Lock size={16} className="text-app-warning" /> Change Password
                         </h2>
                         <button onClick={() => setShowPasswords(!showPasswords)}
-                            className="text-slate-500 hover:text-white transition-colors">
+                            className="text-app-muted-foreground hover:text-white transition-colors">
                             {showPasswords ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     </div>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1.5">Current Password</label>
+                            <label className="text-[10px] text-app-muted-foreground uppercase tracking-widest font-bold block mb-1.5">Current Password</label>
                             <input type={showPasswords ? 'text' : 'password'}
                                 value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
                                 placeholder="Enter current password"
-                                className="w-full bg-slate-800/60 border border-white/5 text-white px-4 py-3 rounded-xl outline-none focus:border-amber-500/30 placeholder:text-slate-700" />
+                                className="w-full bg-app-surface-2/60 border border-white/5 text-white px-4 py-3 rounded-xl outline-none focus:border-app-warning/30 placeholder:text-app-faint" />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1.5">New Password</label>
+                                <label className="text-[10px] text-app-muted-foreground uppercase tracking-widest font-bold block mb-1.5">New Password</label>
                                 <input type={showPasswords ? 'text' : 'password'}
                                     value={newPassword} onChange={e => setNewPassword(e.target.value)}
                                     placeholder="Min 8 characters"
-                                    className="w-full bg-slate-800/60 border border-white/5 text-white px-4 py-3 rounded-xl outline-none focus:border-amber-500/30 placeholder:text-slate-700" />
+                                    className="w-full bg-app-surface-2/60 border border-white/5 text-white px-4 py-3 rounded-xl outline-none focus:border-app-warning/30 placeholder:text-app-faint" />
                             </div>
                             <div>
-                                <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1.5">Confirm Password</label>
+                                <label className="text-[10px] text-app-muted-foreground uppercase tracking-widest font-bold block mb-1.5">Confirm Password</label>
                                 <input type={showPasswords ? 'text' : 'password'}
                                     value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                                     placeholder="Repeat new password"
-                                    className="w-full bg-slate-800/60 border border-white/5 text-white px-4 py-3 rounded-xl outline-none focus:border-amber-500/30 placeholder:text-slate-700" />
+                                    className="w-full bg-app-surface-2/60 border border-white/5 text-white px-4 py-3 rounded-xl outline-none focus:border-app-warning/30 placeholder:text-app-faint" />
                             </div>
                         </div>
                     </div>
 
                     {pwError && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+                        <div className="p-3 bg-app-error/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
                             <AlertCircle size={16} /> {pwError}
                         </div>
                     )}
 
                     <button onClick={handleChangePassword}
                         disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all disabled:opacity-40">
+                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-app-warning hover:bg-app-warning/80 text-white rounded-xl font-bold transition-all disabled:opacity-40">
                         {pwSaved ? <><CheckCircle2 size={18} /> Password Updated!</> : pwSaving ? 'Updating...' : <><Lock size={18} /> Update Password</>}
                     </button>
                 </div>
 
                 {/* Account Info */}
-                <div className="p-5 bg-slate-900/40 border border-white/5 rounded-2xl space-y-3">
-                    <h3 className="text-xs text-slate-500 font-bold uppercase tracking-widest">Account Info</h3>
+                <div className="p-5 bg-app-surface/40 border border-white/5 rounded-2xl space-y-3">
+                    <h3 className="text-xs text-app-muted-foreground font-bold uppercase tracking-widest">Account Info</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <p className="text-slate-600 text-[10px] uppercase tracking-widest">Tier</p>
+                            <p className="text-app-faint text-[10px] uppercase tracking-widest">Tier</p>
                             <p className="text-white font-medium">{contact?.tier || 'Standard'}</p>
                         </div>
                         <div>
-                            <p className="text-slate-600 text-[10px] uppercase tracking-widest">Loyalty</p>
+                            <p className="text-app-faint text-[10px] uppercase tracking-widest">Loyalty</p>
                             <p className="text-white font-medium">{contact?.loyalty_points || 0} pts</p>
                         </div>
                     </div>
