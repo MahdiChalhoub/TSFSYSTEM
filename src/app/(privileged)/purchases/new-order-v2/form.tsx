@@ -258,7 +258,7 @@ const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
                     <ArrowLeft className="w-4 h-4 text-app-muted-foreground group-hover:text-app-foreground transition-colors" />
                 </Link>
                 <div>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold text-white bg-gradient-to-r from-indigo-500 to-violet-600 mb-0.5">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold text-white bg-app-gradient-accent mb-0.5">
                         {scope === 'OFFICIAL' ? 'Official Scope' : 'Internal Scope'}
                     </span>
                     <h2 className="text-2xl font-black tracking-tight text-app-foreground">

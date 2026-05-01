@@ -1,4 +1,3 @@
-// @ts-nocheck
 /** Master Data Center - Contacts Logic */
 import { erpFetch } from "@/lib/erp-api";
 import ContactManager from "../manager";
@@ -6,17 +5,56 @@ import Link from "next/link";
 import { Users, Building2, TrendingUp, ArrowLeft, CreditCard, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 export const dynamic = 'force-dynamic';
-async function getDeliveryZones() {
+
+interface ContactRow {
+    id: number;
+    name?: string;
+    type?: string;
+    home_site?: unknown;
+    linked_account?: unknown;
+    supplier_category?: unknown;
+    customer_tier?: unknown;
+    company_name?: unknown;
+    payment_terms_days?: unknown;
+    loyalty_points?: unknown;
+    homeSite?: unknown;
+    linkedAccount?: unknown;
+    supplierCategory?: unknown;
+    customerTier?: unknown;
+    companyName?: unknown;
+    paymentTermsDays?: unknown;
+    loyaltyPoints?: unknown;
+    [key: string]: unknown;
+}
+
+interface SiteRow {
+    id: number;
+    name?: string;
+    [key: string]: unknown;
+}
+
+interface ListResponse<T> {
+    results?: T[];
+}
+
+function asArr<T>(d: unknown): T[] {
+    if (Array.isArray(d)) return d as T[];
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as ListResponse<T>).results;
+        return Array.isArray(r) ? r : [];
+    }
+    return [];
+}
+
+async function getDeliveryZones(): Promise<unknown[]> {
     try {
-        const data = await erpFetch('pos/delivery-zones/');
-        return Array.isArray(data) ? data : (data?.results || []);
+        return asArr<unknown>(await erpFetch('pos/delivery-zones/'));
     } catch { return []; }
 }
-async function getContacts() {
+async function getContacts(): Promise<ContactRow[]> {
     try {
-        const data = await erpFetch('crm/contacts/');
-        const list = Array.isArray(data) ? data : (data?.results || []);
-        return list.map((c: Record<string, any>) => ({
+        const list = asArr<ContactRow>(await erpFetch('crm/contacts/'));
+        return list.map((c) => ({
             ...c,
             homeSite: c.home_site,
             linkedAccount: c.linked_account,
@@ -30,16 +68,15 @@ async function getContacts() {
         return [];
     }
 }
-async function getSites() {
+async function getSites(): Promise<SiteRow[]> {
     try {
-        const data = await erpFetch('erp/sites/');
-        return Array.isArray(data) ? data : (data?.results || []);
-    } catch (e) {
+        return asArr<SiteRow>(await erpFetch('erp/sites/'));
+    } catch {
         return [];
     }
 }
 export default async function ContactsPage() {
-    const [contacts, sites, deliveryZones] = await Promise.all([
+    const [contacts, sites] = await Promise.all([
         getContacts(),
         getSites(),
         getDeliveryZones()
@@ -74,7 +111,7 @@ export default async function ContactsPage() {
                         </div>
                         <div>
                             <p className="label-micro text-app-primary mb-0.5">Active Clients</p>
-                            <p className="value-medium">{contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length}</p>
+                            <p className="value-medium">{contacts.filter((c) => c.type === 'CUSTOMER').length}</p>
                         </div>
                     </div>
                 </div>
@@ -85,7 +122,7 @@ export default async function ContactsPage() {
                         </div>
                         <div>
                             <p className="label-micro text-app-muted-foreground mb-0.5">Suppliers</p>
-                            <p className="value-medium">{contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER').length}</p>
+                            <p className="value-medium">{contacts.filter((c) => c.type === 'SUPPLIER').length}</p>
                         </div>
                     </div>
                 </div>
@@ -96,7 +133,7 @@ export default async function ContactsPage() {
                         </div>
                         <div>
                             <p className="label-micro text-app-muted-foreground mb-0.5">Total Leads</p>
-                            <p className="text-xl font-black text-app-foreground tracking-tighter">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</p>
+                            <p className="text-xl font-black text-app-foreground tracking-tighter">{contacts.filter((c) => c.type === 'LEAD').length}</p>
                         </div>
                     </div>
                 </div>
@@ -134,7 +171,6 @@ export default async function ContactsPage() {
             <ContactManager
                 contacts={contacts}
                 sites={sites}
-                deliveryZones={deliveryZones}
             />
         </div>
     );

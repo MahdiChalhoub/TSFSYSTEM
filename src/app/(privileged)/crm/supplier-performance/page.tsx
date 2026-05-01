@@ -1,25 +1,55 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
 import { Contact } from "@/types/erp"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
-    Truck, DollarSign, Package, Star, Search, TrendingUp, Clock
+    Truck, DollarSign, Package, Star, Search,
 } from "lucide-react"
+
+interface PurchaseOrderRow {
+    id?: number
+    contact?: number
+    contact_id?: number
+    status?: string
+    total_amount?: string | number
+    created_at?: string
+    [key: string]: unknown
+}
+
+interface ListResponse<T> {
+    results?: T[]
+}
+
+interface EnrichedSupplier extends Contact {
+    orderCount: number
+    totalSpent: number
+    completedOrders: number
+    completionRate: number
+    lastOrderDate?: string
+    avgOrderValue: number
+}
 
 function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
 }
 
+function asArr<T>(d: unknown): T[] {
+    if (Array.isArray(d)) return d as T[]
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as ListResponse<T>).results
+        return Array.isArray(r) ? r : []
+    }
+    return []
+}
+
 export default function SupplierPerformancePage() {
     const [suppliers, setSuppliers] = useState<Contact[]>([])
-    const [orders, setOrders] = useState<Record<string, unknown>[]>([])
+    const [orders, setOrders] = useState<PurchaseOrderRow[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
@@ -33,9 +63,12 @@ export default function SupplierPerformancePage() {
                 erpFetch('crm/contacts/'),
                 erpFetch('pos/purchase/'),
             ])
-            const contacts = Array.isArray(contactsData) ? contactsData : contactsData.results || []
-            setSuppliers(contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER' || c.type === 'BOTH'))
-            setOrders(Array.isArray(ordersData) ? ordersData : ordersData.results || [])
+            const contacts = asArr<Contact>(contactsData)
+            setSuppliers(contacts.filter((c) => {
+                const t = c.type as string | undefined
+                return t === 'SUPPLIER' || t === 'BOTH'
+            }))
+            setOrders(asArr<PurchaseOrderRow>(ordersData))
         } catch {
             toast.error("Failed to load supplier data")
         } finally {
@@ -44,15 +77,17 @@ export default function SupplierPerformancePage() {
     }
 
     // Enrich suppliers with their order stats
-    const enriched = useMemo(() => {
+    const enriched = useMemo<EnrichedSupplier[]>(() => {
         return suppliers.map(s => {
             const sOrders = orders.filter(o =>
                 o.contact === s.id || o.contact_id === s.id
             )
-            const totalSpent = sOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0)
+            const totalSpent = sOrders.reduce((sum, o) => sum + parseFloat(String(o.total_amount ?? 0)), 0)
             const completedOrders = sOrders.filter(o => o.status === 'COMPLETED')
             const completionRate = sOrders.length > 0 ? (completedOrders.length / sOrders.length * 100) : 0
-            const lastOrder = sOrders.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const lastOrder = sOrders.sort(
+                (a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+            )[0]
 
             return {
                 ...s,

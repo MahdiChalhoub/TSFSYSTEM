@@ -1,17 +1,29 @@
-// @ts-nocheck
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { createEmployee } from '@/app/actions/people';
-import { User, X, Briefcase, Phone, Mail, Building2, CreditCard, ShieldCheck, Key, Users } from 'lucide-react';
+import { User, X, Mail, Briefcase, Building2, CreditCard, Key, Users } from 'lucide-react';
+
+interface SiteOption {
+    id: number;
+    name?: string;
+    [key: string]: unknown;
+}
+
+interface RoleOption {
+    id: number;
+    name?: string;
+    description?: string;
+    [key: string]: unknown;
+}
 
 export default function EmployeeModal({
     sites,
     roles,
     onClose
 }: {
-    sites: Record<string, any>[],
-    roles: Record<string, any>[],
+    sites: SiteOption[],
+    roles: RoleOption[],
     onClose: () => void
 }) {
     const [state, action, isPending] = useActionState(
@@ -20,6 +32,11 @@ export default function EmployeeModal({
     );
 
     const [createLogin, setCreateLogin] = useState(false);
+
+    // Close modal once the server action reports success
+    useEffect(() => {
+        if (state?.success) onClose();
+    }, [state, onClose]);
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
@@ -40,10 +57,7 @@ export default function EmployeeModal({
                     </button>
                 </div>
 
-                <form action={async (fd) => {
-                    const res = await action(fd);
-                    if (res?.success) onClose();
-                }} className="p-8 space-y-8">
+                <form action={action} className="p-8 space-y-8">
 
                     {/* PERSONAL INFO */}
                     <div className="space-y-6">

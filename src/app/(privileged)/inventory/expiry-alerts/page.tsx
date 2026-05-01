@@ -213,7 +213,7 @@ export default function ExpiryAlertsPage() {
                 </Card>
 
                 {/* Value at Risk */}
-                <Card className="bg-gradient-to-br from-red-50 to-orange-50">
+                <Card className="bg-app-gradient-warning-soft">
                     <CardContent className="py-4 text-center">
                         <DollarSign size={24} className="mx-auto mb-2 text-red-400" />
                         <p className="text-xl font-bold text-app-error">{fmt(stats.total_value)}</p>

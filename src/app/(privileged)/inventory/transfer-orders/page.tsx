@@ -209,7 +209,7 @@ export default function TransferOrdersPage() {
 
             {/* ─── Summary Cards ──────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 border-app-info/60">
+                <Card className="bg-app-gradient-accent-soft/50 border-app-info/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -220,7 +220,7 @@ export default function TransferOrdersPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-app-info/60">
+                <Card className="bg-app-gradient-info-soft/50 border-app-info/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -231,7 +231,7 @@ export default function TransferOrdersPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-app-success/60">
+                <Card className="bg-app-gradient-primary-soft/50 border-app-success/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -242,7 +242,7 @@ export default function TransferOrdersPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200/60">
+                <Card className="bg-app-gradient-accent-soft/50 border-purple-200/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>

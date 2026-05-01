@@ -903,13 +903,13 @@ export default function DeliveryPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-200/50">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-gradient-info shadow-lg shadow-blue-200/50">
                         <Truck size={32} className="text-white" />
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Operations</p>
                         <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
-                            Delivery <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Hub</span>
+                            Delivery <span className="text-transparent bg-clip-text bg-app-gradient-info">Hub</span>
                         </h1>
                         <p className="text-xs text-app-muted-foreground mt-0.5">Zones, drivers, and shipping rates — POS & eCommerce</p>
                     </div>

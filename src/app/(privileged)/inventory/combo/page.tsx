@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { erpFetch } from '@/lib/erp-fetch'
 import ComboManager from './manager'
 
@@ -13,10 +12,14 @@ interface Product {
     brand_name: string | null
 }
 
+interface ProductsResponse {
+    results?: Product[]
+}
+
 export default async function ComboPage() {
     let products: Product[] = []
     try {
-        const res = await erpFetch('/products/')
+        const res = (await erpFetch('/products/')) as Product[] | ProductsResponse
         products = Array.isArray(res) ? res : res.results || []
     } catch { /* empty */ }
 

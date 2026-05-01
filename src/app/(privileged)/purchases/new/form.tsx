@@ -16,6 +16,7 @@ import { ProductSearch } from './_components/ProductSearch'
 import { LineColumnHeaders } from './_components/LineColumnHeaders'
 import { LineRowDesktop } from './_components/LineRowDesktop'
 import { AdminSidebar } from './_components/AdminSidebar'
+import { POLifecycle } from './_components/POLifecycle'
 import type { AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
 import { peekNextCode, prefetchNextCode, resolveDocSeqKey } from '@/lib/sequences-client'
 
@@ -193,6 +194,10 @@ export default function PurchaseForm({
                                             onClick={() => setSidebarOpen(true)}
                                         />
                                     )}
+                                    {/* Compact lifecycle chip — same data
+                                     *  source as the sidebar's full version,
+                                     *  so the two stay in sync. */}
+                                    <POLifecycle current="DRAFT" variant="compact" />
                                 </div>
                             ) : (
                                 <p className="font-bold text-app-muted-foreground uppercase tracking-widest mt-0.5"

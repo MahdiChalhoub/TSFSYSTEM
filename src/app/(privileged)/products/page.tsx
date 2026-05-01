@@ -69,7 +69,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                     </Link>
                     <Link
                         href="/products/create-group"
-                        className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3.5 rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+                        className="bg-app-gradient-primary text-white px-6 py-3.5 rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
                     >
                         <Layers size={18} />
                         <span>Create Group</span>

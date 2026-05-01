@@ -107,7 +107,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-info-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center">
@@ -121,7 +121,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-orange-50 to-orange-100/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-warning-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-orange-600/10 flex items-center justify-center">
@@ -135,7 +135,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-accent-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-600/10 flex items-center justify-center">
@@ -149,7 +149,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-green-600/10 flex items-center justify-center">

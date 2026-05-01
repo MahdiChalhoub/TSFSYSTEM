@@ -145,6 +145,88 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* ── Gradient utilities — for hero / dashboard / empty-state decorative
+     gradients. 135deg matches Tailwind's `bg-gradient-to-br` direction so
+     migrations are byte-symmetric. Two intensity tiers per family:
+       • `bg-app-gradient-{family}`        — bold (500→700): hero/header/CTA
+       • `bg-app-gradient-{family}-soft`   — pastel (50→100): summary cards
+     Status families align with the existing app-{status} tokens.
+  ──────────────────────────────────────────────────────────────────────── */
+
+  /* ─── BOLD (full saturation, ~500 → ~700) ─── */
+
+  /* Brand emerald — for hero CTAs and primary dashboard tiles. */
+  .bg-app-gradient-primary {
+    background: linear-gradient(135deg, #10B981 0%, #047857 100%);
+  }
+
+  /* Status success — emerald-500 → emerald-700, positive callouts. */
+  .bg-app-gradient-success {
+    background: linear-gradient(135deg, #10B981 0%, #047857 100%);
+  }
+
+  /* Status info — sky-500 → blue-700, info banners + assistant tiles. */
+  .bg-app-gradient-info {
+    background: linear-gradient(135deg, #0EA5E9 0%, #1D4ED8 100%);
+  }
+
+  /* Status warning — amber-500 → orange-700, attention/empty states. */
+  .bg-app-gradient-warning {
+    background: linear-gradient(135deg, #F59E0B 0%, #C2410C 100%);
+  }
+
+  /* Status error — rose-500 → red-700, destructive empty states. */
+  .bg-app-gradient-error {
+    background: linear-gradient(135deg, #F43F5E 0%, #B91C1C 100%);
+  }
+
+  /* Accent violet — non-brand category accents (purple/indigo/violet). */
+  .bg-app-gradient-accent {
+    background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+  }
+
+  /* Surface neutral bold — slate-800 → slate-900, dark hero canvases. */
+  .bg-app-gradient-surface {
+    background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  }
+
+  /* ─── SOFT (pastel tint, ~50 → ~100) — for summary cards / panels ─── */
+
+  /* Soft brand emerald — pastel emerald-50 → emerald-100. */
+  .bg-app-gradient-primary-soft {
+    background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  }
+
+  /* Soft success — same as primary-soft; alias for semantic clarity. */
+  .bg-app-gradient-success-soft {
+    background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  }
+
+  /* Soft info — blue-50 → blue-100. */
+  .bg-app-gradient-info-soft {
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  }
+
+  /* Soft warning — amber-50 → amber-100 (also covers orange-50/100). */
+  .bg-app-gradient-warning-soft {
+    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  }
+
+  /* Soft error — rose-50 → rose-100 (also covers red-50/100). */
+  .bg-app-gradient-error-soft {
+    background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+  }
+
+  /* Soft accent — violet-50 → violet-100 (covers purple-50/100, indigo-50/100). */
+  .bg-app-gradient-accent-soft {
+    background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+  }
+
+  /* Soft surface — stone-50 → stone-100 (covers slate-50/100, gray-50/100). */
+  .bg-app-gradient-surface-soft {
+    background: linear-gradient(135deg, #FAFAF9 0%, #F5F5F4 100%);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

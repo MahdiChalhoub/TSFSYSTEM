@@ -185,7 +185,7 @@ export default function DeferredExpensesPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -198,7 +198,7 @@ export default function DeferredExpensesPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-indigo-50 to-indigo-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-accent-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -211,7 +211,7 @@ export default function DeferredExpensesPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-warning-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>

@@ -223,7 +223,7 @@ export default function CustomDomainsPage() {
 
             {/* How It Works (empty state) */}
             {domains.length === 0 && !loading && (
-                <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-8">
+                <div className="bg-app-gradient-accent-soft border border-violet-200 rounded-2xl p-8">
                     <h3 className="text-lg font-black text-app-foreground mb-6">How Custom Domains Work</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         {[

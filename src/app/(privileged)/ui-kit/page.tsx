@@ -374,7 +374,7 @@ export default function UIKitShowcasePage() {
             </Card>
 
             {/* Gradient Card */}
-            <Card className="layout-card-radius border-0 shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+            <Card className="layout-card-radius border-0 shadow-lg bg-app-gradient-accent text-white">
               <CardContent className="layout-card-padding">
                 <Heart className="w-8 h-8 mb-4 opacity-80" />
                 <h3 className="text-lg font-bold mb-2">Gradient Card</h3>
@@ -515,7 +515,7 @@ export default function UIKitShowcasePage() {
                 <Card className="layout-card-radius border theme-border">
                   <CardContent className="layout-card-padding">
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl">
+                      <div className="w-16 h-16 rounded-full bg-app-gradient-accent flex items-center justify-center text-white font-bold text-xl">
                         JD
                       </div>
                       <div className="flex-1">

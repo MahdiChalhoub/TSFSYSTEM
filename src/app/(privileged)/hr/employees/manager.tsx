@@ -1,32 +1,71 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
-import type { Employee } from '@/types/erp';
-import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, ShieldCheck, Fingerprint, Lock, AlertTriangle, Link2 } from "lucide-react";
+import { Search, Plus, User, Building2, CreditCard, ShieldCheck, Lock } from "lucide-react";
 import EmployeeModal from './form';
 import ScopePasswordModal from '@/components/admin/ScopePasswordModal';
 import { linkGLAccount } from '@/app/actions/people';
 import { useAdmin } from '@/context/AdminContext';
 import clsx from 'clsx';
 
+interface LinkedAccount {
+    id: number | string;
+    code: string;
+    name?: string;
+}
+
+interface ScopeUser {
+    id: string;
+    has_official_pin?: boolean;
+    has_internal_pin?: boolean;
+}
+
+interface EmployeeRow {
+    id: string;
+    firstName: string;
+    lastName: string;
+    employeeId: string;
+    jobTitle?: string;
+    status?: string;
+    isStandaloneUser?: boolean;
+    homeSite?: { name?: string } | null;
+    linkedAccount?: LinkedAccount | null;
+    dividendsAccount?: LinkedAccount | null;
+    employeeType?: 'EMPLOYEE' | 'PARTNER' | 'BOTH' | string;
+    user?: ScopeUser;
+    [key: string]: unknown;
+}
+
+interface SiteRow {
+    id: number;
+    name?: string;
+    [key: string]: unknown;
+}
+
+interface RoleRow {
+    id: number;
+    name?: string;
+    description?: string;
+    [key: string]: unknown;
+}
+
 export default function EmployeeManager({
     employees,
     sites,
     roles
 }: {
-    employees: Record<string, any>[],
-    sites: Record<string, any>[],
-    roles: Record<string, any>[]
+    employees: EmployeeRow[],
+    sites: SiteRow[],
+    roles: RoleRow[]
 }) {
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [scopeEmployee, setScopeEmployee] = useState<Employee | null>(null);
+    const [scopeEmployee, setScopeEmployee] = useState<EmployeeRow | null>(null);
     const [linkingGL, setLinkingGL] = useState<string | null>(null);
     const [glMessage, setGLMessage] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null);
     const { scopeAccess } = useAdmin();
 
-    async function handleLinkGL(emp: Record<string, any>, empType: 'EMPLOYEE' | 'PARTNER' | 'BOTH') {
+    async function handleLinkGL(emp: EmployeeRow, empType: 'EMPLOYEE' | 'PARTNER' | 'BOTH') {
         setLinkingGL(emp.id);
         setGLMessage(null);
         const result = await linkGLAccount(emp.id, empType);
@@ -42,7 +81,7 @@ export default function EmployeeManager({
 
     const filtered = employees.filter(e =>
         `${e.firstName} ${e.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
-        e.employeeId.toLowerCase().includes(search.toLowerCase())
+        (e.employeeId ?? '').toLowerCase().includes(search.toLowerCase())
     );
 
     return (

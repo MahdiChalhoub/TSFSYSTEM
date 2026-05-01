@@ -127,7 +127,7 @@ export default function ConnectorDashboardPage() {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
+                        <div className="p-3 rounded-2xl bg-app-gradient-accent text-white shadow-lg">
                             <Zap size={28} />
                         </div>
                         <Badge className="bg-app-accent-bg text-app-accent border-app-accent px-3 py-1 font-black uppercase text-[10px]">
@@ -160,7 +160,7 @@ export default function ConnectorDashboardPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0 text-white rounded-3xl shadow-xl">
+                <Card className="bg-app-gradient-primary border-0 text-white rounded-3xl shadow-xl">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-bold text-white/80">Active Policies</CardTitle>
                     </CardHeader>
@@ -170,7 +170,7 @@ export default function ConnectorDashboardPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white rounded-3xl shadow-xl">
+                <Card className="bg-app-gradient-info border-0 text-white rounded-3xl shadow-xl">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-bold text-white/80">Registered Contracts</CardTitle>
                     </CardHeader>
@@ -180,7 +180,7 @@ export default function ConnectorDashboardPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-500 to-orange-600 border-0 text-white rounded-3xl shadow-xl">
+                <Card className="bg-app-gradient-warning border-0 text-white rounded-3xl shadow-xl">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-bold text-white/80">Pending Buffers</CardTitle>
                     </CardHeader>

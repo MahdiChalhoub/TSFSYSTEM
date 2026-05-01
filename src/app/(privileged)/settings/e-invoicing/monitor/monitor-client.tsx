@@ -161,7 +161,7 @@ export default function FNEMonitorClient() {
   </span>
  </div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
-  <div className="w-16 h-16 rounded-[1.8rem] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-2xl shadow-emerald-200">
+  <div className="w-16 h-16 rounded-[1.8rem] bg-app-gradient-primary flex items-center justify-center shadow-2xl shadow-emerald-200">
   <ShieldCheck size={32} className="text-white" />
   </div>
   FNE <span className="text-app-success">Monitor</span>
@@ -171,7 +171,7 @@ export default function FNEMonitorClient() {
   <button
   onClick={bulkRetryFailed}
   disabled={bulkRetrying || stats.failed === 0}
-  className="h-12 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+  className="h-12 px-6 rounded-2xl bg-app-gradient-primary text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
   >
   {bulkRetrying ? <RefreshCw size={18} className="animate-spin" /> : <Shield size={18} />}
   {bulkRetrying ? 'Certification...' : `Retry All Failed (${stats.failed})`}

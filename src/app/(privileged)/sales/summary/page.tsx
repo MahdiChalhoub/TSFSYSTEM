@@ -78,7 +78,7 @@ export default function DailySummaryPage() {
 
       {/* Hero KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-[var(--layout-element-gap)]">
-        <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 layout-card-radius border-0 shadow-xl relative overflow-hidden">
+        <Card className="bg-app-gradient-primary layout-card-radius border-0 shadow-xl relative overflow-hidden">
           <CardContent className="layout-card-padding">
             <div className="absolute top-0 right-0 w-32 h-32 bg-app-surface/5 rounded-full -translate-y-10 translate-x-10" />
             <div className="relative text-white">
@@ -241,7 +241,7 @@ export default function DailySummaryPage() {
                       <span className="text-xs text-app-muted-foreground font-medium">{p.count} orders</span>
                     </div>
                     <div className="h-2 bg-app-border rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                      <div className="h-full bg-app-gradient-primary rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                     </div>
                     <div className="mt-1 text-right text-sm font-bold text-app-primary">{fmt(p.total)}</div>
                   </div>

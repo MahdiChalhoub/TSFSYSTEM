@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import AnalyticsProfileSelector from '@/components/analytics/AnalyticsProfileSelector'
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
+import { POLifecycle } from './POLifecycle'
 
 type Props = {
     suppliers: Record<string, any>[]
@@ -211,6 +212,17 @@ export function AdminSidebar({
                                  : 'var(--app-primary)',
                          }} />
                 </div>
+            </div>
+
+            {/* LIFECYCLE ──────────────────────────────────────────
+             *  Visualises the PO's progression: DRAFT → APPROVED →
+             *  SENT → IN_TRANSIT → PARTIAL → DELIVERED, with FAILED
+             *  shown as an alternate exit. On the New form the
+             *  current stage is always DRAFT (the PO doesn't exist
+             *  yet); when this panel is reused for editing an
+             *  existing PO, swap `current` for `po.status`. */}
+            <div className="flex-shrink-0 px-4 pb-2">
+                <POLifecycle current="DRAFT" variant="full" />
             </div>
 
             {/* BODY ─────────────────────────────────────────────── */}

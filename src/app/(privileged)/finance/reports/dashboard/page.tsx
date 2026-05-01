@@ -114,7 +114,7 @@ export default function FinancialReportsDashboardPage() {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50">
+            <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft/50">
               <CardContent className="pt-5 pb-4 px-5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-app-success/20 flex items-center justify-center">
@@ -130,7 +130,7 @@ export default function FinancialReportsDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-orange-50 to-orange-100/50">
+            <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-warning-soft/50">
               <CardContent className="pt-5 pb-4 px-5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-orange-200/60 flex items-center justify-center">
@@ -146,7 +146,7 @@ export default function FinancialReportsDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className={`rounded-2xl border-0 shadow-sm ${isProfit ? 'bg-gradient-to-br from-blue-50 to-blue-100/50' : 'bg-gradient-to-br from-red-50 to-red-100/50'}`}>
+            <Card className={`rounded-2xl border-0 shadow-sm ${isProfit ? 'bg-app-gradient-info-soft/50' : 'bg-app-gradient-error/50'}`}>
               <CardContent className="pt-5 pb-4 px-5">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-2xl ${isProfit ? 'bg-app-primary/20' : 'bg-app-error/20'} flex items-center justify-center`}>
@@ -164,7 +164,7 @@ export default function FinancialReportsDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100/50">
+            <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-accent-soft/50">
               <CardContent className="pt-5 pb-4 px-5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-purple-200/60 flex items-center justify-center">

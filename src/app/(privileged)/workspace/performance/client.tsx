@@ -30,10 +30,10 @@ interface Props {
 }
 
 const TIER_STYLES: Record<string, { bg: string; text: string; icon: string }> = {
-    PLATINUM: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-white', icon: '💎' },
-    GOLD: { bg: 'bg-gradient-to-r from-amber-400 to-yellow-500', text: 'text-white', icon: '🥇' },
-    SILVER: { bg: 'bg-gradient-to-r from-gray-300 to-gray-400', text: 'text-app-foreground', icon: '🥈' },
-    BRONZE: { bg: 'bg-gradient-to-r from-amber-600 to-orange-700', text: 'text-white', icon: '🥉' },
+    PLATINUM: { bg: 'bg-app-gradient-accent', text: 'text-white', icon: '💎' },
+    GOLD: { bg: 'bg-app-gradient-warning', text: 'text-white', icon: '🥇' },
+    SILVER: { bg: 'bg-app-gradient-surface', text: 'text-app-foreground', icon: '🥈' },
+    BRONZE: { bg: 'bg-app-gradient-warning', text: 'text-white', icon: '🥉' },
 };
 
 export default function PerformanceClient({ leaderboard, myPerformance, kpiConfig }: Props) {
@@ -159,7 +159,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                             <div key={score.id} className="flex items-center gap-6 px-6 py-4 hover:bg-app-surface/50 transition-colors">
                                 <div className="text-sm font-bold text-app-muted-foreground w-24">{score.period_label}</div>
                                 <div className="flex-1 bg-app-surface-2 rounded-full h-3">
-                                    <div className="bg-gradient-to-r from-indigo-500 to-sky-400 h-3 rounded-full transition-all" style={{ width: `${Math.min(score.overall_score, 100)}%` }} />
+                                    <div className="bg-app-gradient-info h-3 rounded-full transition-all" style={{ width: `${Math.min(score.overall_score, 100)}%` }} />
                                 </div>
                                 <span className="text-lg font-black text-app-foreground w-16 text-right">{score.overall_score}</span>
                                 {score.tier && (

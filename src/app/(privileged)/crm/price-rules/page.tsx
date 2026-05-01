@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
@@ -7,7 +6,21 @@ import { DajingoListView, type DajingoColumnDef } from '@/components/common/Daji
 import { erpFetch } from '@/lib/erp-api'
 import { Plus, Percent } from 'lucide-react'
 
-type PriceRule = Record<string, any>
+interface PriceRule {
+  id: number
+  name?: string
+  description?: string
+  type?: string
+  rule_type?: string
+  value?: number | string
+  discount_value?: number | string
+  is_active?: boolean
+  [key: string]: unknown
+}
+
+interface ListResponse<T> {
+  results?: T[]
+}
 
 const ALL_COLUMNS: DajingoColumnDef[] = [
   { key: 'name', label: 'Name', defaultVisible: true },
@@ -28,13 +41,13 @@ export default function PriceRulesListPage() {
   const [pageSize, setPageSize] = useState(50)
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({})
   const [columnOrder, setColumnOrder] = useState<string[]>(ALL_COLUMNS.map(c => c.key))
-  const searchRef = useRef<HTMLInputElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null as unknown as HTMLInputElement)
 
   useEffect(() => {
     (async () => {
       setLoading(true)
       try {
-        const data = await erpFetch('crm/price-rules/')
+        const data = (await erpFetch('crm/price-rules/')) as PriceRule[] | ListResponse<PriceRule>
         setItems(Array.isArray(data) ? data : (data?.results || []))
       } catch { setItems([]) }
       setLoading(false)

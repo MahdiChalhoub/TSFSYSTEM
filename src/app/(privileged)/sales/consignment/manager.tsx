@@ -100,7 +100,7 @@ export default function ConsignmentManager({
         <div className="space-y-6">
             {/* KPI Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-none shadow-lg">
+                <Card className="bg-app-gradient-accent text-white border-none shadow-lg">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
@@ -118,7 +118,7 @@ export default function ConsignmentManager({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-500 to-orange-500 text-white border-none shadow-lg">
+                <Card className="bg-app-gradient-warning text-white border-none shadow-lg">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
@@ -136,7 +136,7 @@ export default function ConsignmentManager({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white border-none shadow-lg">
+                <Card className="bg-app-gradient-primary text-white border-none shadow-lg">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
@@ -244,7 +244,7 @@ export default function ConsignmentManager({
                         )}
                         {Object.values(pendingBySupplier).map((supplier: Record<string, any>) => (
                             <Card key={supplier.id} className="border-none shadow-xl overflow-hidden group">
-                                <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 flex justify-between items-center text-white">
+                                <div className="bg-app-gradient-surface p-6 flex justify-between items-center text-white">
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <Users size={20} className="text-amber-400" />

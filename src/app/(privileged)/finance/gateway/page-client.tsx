@@ -87,7 +87,7 @@ export default function PaymentGatewayPage() {
 
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-app-primary/20">
+ <div className="w-12 h-12 rounded-2xl bg-app-gradient-primary flex items-center justify-center shadow-lg shadow-app-primary/20">
  <CreditCard size={22} className="text-app-foreground" />
  </div>
  <div>

@@ -203,7 +203,7 @@ export default function AssetsPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-surface-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -216,7 +216,7 @@ export default function AssetsPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-indigo-50 to-indigo-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-accent-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -229,7 +229,7 @@ export default function AssetsPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -242,7 +242,7 @@ export default function AssetsPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-warning-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -355,7 +355,7 @@ export default function AssetsPage() {
             {/* Depreciation Schedule Panel */}
             {selectedAsset && (
                 <Card className="rounded-2xl shadow-sm overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-                    <div className="px-5 py-4 border-b flex justify-between items-center bg-gradient-to-r from-stone-50 to-amber-50/30">
+                    <div className="px-5 py-4 border-b flex justify-between items-center bg-app-gradient-warning-soft/30">
                         <div>
                             <h2 className="font-semibold text-app-foreground flex items-center gap-2">
                                 <Calendar size={16} /> Depreciation Schedule: {selectedAsset.name}

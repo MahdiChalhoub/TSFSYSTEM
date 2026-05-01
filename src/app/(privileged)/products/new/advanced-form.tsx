@@ -256,7 +256,7 @@ export default function AdvancedProductForm({
  </div>
 
  {/* Auto-Generated Name */}
- <div className="bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-app-info/60 p-4 rounded-lg">
+ <div className="bg-app-gradient-info-soft/50 border border-app-info/60 p-4 rounded-lg">
  <div className="flex items-center gap-1.5 mb-2">
  <Wand2 className="w-3.5 h-3.5 text-app-info" />
  <span className="text-[11px] font-semibold text-app-info uppercase tracking-wider">Auto-Generated Name</span>

@@ -76,7 +76,7 @@ export default function CurrenciesPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl text-white shadow-lg">
+                    <div className="p-2.5 bg-app-gradient-warning rounded-xl text-white shadow-lg">
                         <Coins size={22} />
                     </div>
                     <div>

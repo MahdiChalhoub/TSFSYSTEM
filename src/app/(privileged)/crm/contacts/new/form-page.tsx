@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -6,39 +5,100 @@ import { useActionState, useState } from 'react';
 import { createContact, updateContact } from '@/app/actions/people';
 import {
   User, ArrowLeft, Briefcase, Phone, Mail, MapPin, Building2,
-  CreditCard, Globe, FileText, Clock, Tag, MessageCircle, Shield,
+  CreditCard, FileText, Clock, Tag, MessageCircle, Shield,
   Save, Plus
 } from 'lucide-react';
 
-type ContactData = Record<string, any>;
+interface ContactData {
+  id?: number;
+  name?: string;
+  entity_type?: string;
+  company_name?: string;
+  email?: string;
+  phone?: string;
+  home_site?: number | string;
+  supplier_category?: string;
+  customer_tier?: string;
+  home_zone?: number | string;
+  whatsapp_group_id?: string;
+  payment_terms_days?: number;
+  credit_limit?: number | string;
+  tax_profile_id?: number | string;
+  tax_profile?: number | string;
+  address?: string;
+  notes?: string;
+  [key: string]: unknown;
+}
+
+interface SiteOption {
+  id: number;
+  name?: string;
+  [key: string]: unknown;
+}
+
+interface DeliveryZoneOption {
+  id: number;
+  name?: string;
+  [key: string]: unknown;
+}
+
+interface TaxProfileOption {
+  id: number;
+  name?: string;
+  is_system_preset?: boolean;
+  vat_registered?: boolean;
+  reverse_charge?: boolean;
+  airsi_subject?: boolean;
+  [key: string]: unknown;
+}
+
+interface ContactTagOption {
+  id: number;
+  name?: string;
+  [key: string]: unknown;
+}
+
+interface ActionState {
+  success: boolean;
+  message?: string;
+  [key: string]: unknown;
+}
 
 export default function ContactFormPage({
   sites,
   type = 'CUSTOMER',
   deliveryZones = [],
   taxProfiles = [],
-  contactTags = [],
   contact,
 }: {
-  sites: Record<string, any>[],
+  sites: SiteOption[],
   type?: string,
-  deliveryZones?: Record<string, any>[],
-  taxProfiles?: Record<string, any>[],
-  contactTags?: Record<string, any>[],
+  deliveryZones?: DeliveryZoneOption[],
+  taxProfiles?: TaxProfileOption[],
+  contactTags?: ContactTagOption[],
   contact?: ContactData,
 }) {
   const router = useRouter();
   const isEdit = !!contact?.id;
-  const [entityType, setEntityType] = useState(contact?.entity_type || 'INDIVIDUAL');
+  const [entityType, setEntityType] = useState<string>(contact?.entity_type || 'INDIVIDUAL');
 
-  const [state, action, isPending] = useActionState(
-    async (prevState: Record<string, any>, formData: FormData) => {
-      let result;
-      if (isEdit) {
-        formData.append('id', String(contact!.id));
-        result = await updateContact(prevState, formData);
+  const [state, action, isPending] = useActionState<ActionState, FormData>(
+    async (prevState, formData) => {
+      let result: ActionState;
+      if (isEdit && contact?.id != null) {
+        const payload: Record<string, FormDataEntryValue> = {};
+        formData.forEach((v, k) => { payload[k] = v; });
+        try {
+          await updateContact(Number(contact.id), payload);
+          result = { success: true, message: 'Contact updated' };
+        } catch (e: unknown) {
+          result = {
+            success: false,
+            message: e instanceof Error ? e.message : 'Failed to update contact',
+          };
+        }
       } else {
-        result = await createContact(prevState, formData);
+        result = (await createContact(prevState as Record<string, unknown>, formData)) as ActionState;
       }
       if (result.success) {
         setTimeout(() => router.push('/crm/contacts'), 500);
@@ -260,7 +320,7 @@ export default function ContactFormPage({
                 <Shield size={15} style={iconCls} />
                 <select name="taxProfileId" className={fieldCls} style={{ appearance: 'none' }} defaultValue={contact?.tax_profile_id || contact?.tax_profile || ''}>
                   <option value="">— Auto-detect (legacy fallback) —</option>
-                  {taxProfiles.map((p: any) => (
+                  {taxProfiles.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                       {p.is_system_preset ? ' ★' : ''}

@@ -10,7 +10,7 @@ export function LandingHomePage({ org }: { org: any }) {
  Welcome to {org.name}
  </Badge>
  <h1 className="text-6xl md:text-8xl font-black text-app-text tracking-tighter leading-[1.1] mb-8">
- Elevating your <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">business standards.</span>
+ Elevating your <br /><span className="text-transparent bg-clip-text bg-app-gradient-accent">business standards.</span>
  </h1>
  <p className="text-xl text-app-text-muted max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
  We provide top-tier industry solutions backed by robust technology and a dedicated team of experts.

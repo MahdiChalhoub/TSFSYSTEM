@@ -195,7 +195,7 @@ export default function InventoryValuationPage() {
                                         <span className="text-xs text-app-muted-foreground w-48 truncate font-medium">{p.product_name}</span>
                                         <div className="flex-1 h-6 bg-app-surface rounded overflow-hidden">
                                             <div
-                                                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded flex items-center justify-end pr-2 transition-all"
+                                                className="h-full bg-app-gradient-primary rounded flex items-center justify-end pr-2 transition-all"
                                                 style={{ width: `${Math.max(pct, 2)}%` }}
                                             >
                                                 {pct > 20 && (

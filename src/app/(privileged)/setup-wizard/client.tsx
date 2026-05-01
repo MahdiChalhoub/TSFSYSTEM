@@ -539,7 +539,7 @@ function StepDataMigration({ config, data, setData, orgProfile }: StepProps) {
  <button onClick={() => setData({ want_migration: true })}
  className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 relative
  ${data.want_migration === true ? 'border-orange-500 bg-orange-50 shadow-lg shadow-orange-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
- <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mb-4 shadow-lg">
+ <div className="w-14 h-14 rounded-2xl bg-app-gradient-warning flex items-center justify-center mb-4 shadow-lg">
  <FileSpreadsheet size={28} className="text-app-foreground" />
  </div>
  <div className="text-lg font-black text-app-foreground">Yes, import my data</div>
@@ -550,7 +550,7 @@ function StepDataMigration({ config, data, setData, orgProfile }: StepProps) {
  <button onClick={() => setData({ want_migration: false })}
  className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 relative
  ${data.want_migration === false ? 'border-app-primary bg-app-primary-light shadow-lg shadow-emerald-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
- <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mb-4 shadow-lg">
+ <div className="w-14 h-14 rounded-2xl bg-app-gradient-primary flex items-center justify-center mb-4 shadow-lg">
  <Sparkles size={28} className="text-app-foreground" />
  </div>
  <div className="text-lg font-black text-app-foreground">No, start fresh</div>
@@ -1175,7 +1175,7 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  return (
  <div className="space-y-6">
  <div className="text-center mb-8">
- <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-emerald-200"><Rocket size={36} className="text-app-foreground" /></div>
+ <div className="w-20 h-20 rounded-[2rem] bg-app-gradient-primary flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-emerald-200"><Rocket size={36} className="text-app-foreground" /></div>
  <h3 className="text-2xl font-black tracking-tight text-app-foreground">Everything looks great!</h3>
  <p className="text-sm text-app-muted-foreground mt-1 font-medium">Review your setup and launch</p>
  </div>
@@ -1256,7 +1256,7 @@ function LaunchAnimation() {
  <div className="min-h-[calc(100vh-120px)] flex items-center justify-center">
  <div className="text-center animate-in fade-in zoom-in-95 duration-700">
  <div className="relative mx-auto mb-6">
- <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200 animate-bounce"><CheckCircle2 size={48} className="text-app-foreground" /></div>
+ <div className="w-24 h-24 rounded-[2rem] bg-app-gradient-primary flex items-center justify-center shadow-2xl shadow-emerald-200 animate-bounce"><CheckCircle2 size={48} className="text-app-foreground" /></div>
  <div className="absolute -inset-4 rounded-[3rem] bg-app-success/10/20 animate-ping" />
  </div>
  <h2 className="text-4xl font-black tracking-tighter text-app-foreground mb-2">You&apos;re all set! 🎉</h2>

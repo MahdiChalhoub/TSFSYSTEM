@@ -24,7 +24,7 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
                 {/* Icon cluster */}
                 <div className="flex justify-center">
                     <div className="relative">
-                        <div className="w-28 h-28 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] flex items-center justify-center border border-app-border-strong/50 shadow-2xl shadow-black/50">
+                        <div className="w-28 h-28 bg-app-gradient-surface rounded-[2rem] flex items-center justify-center border border-app-border-strong/50 shadow-2xl shadow-black/50">
                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-app-text-muted">
                                 <rect width="16" height="20" x="4" y="2" rx="2" ry="2" />
                                 <path d="M9 22v-4h6v4" />

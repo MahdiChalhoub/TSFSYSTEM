@@ -126,7 +126,7 @@ export default function LogExpenseModal({ driverId, driverName, onClose, onSaved
                         <button
                             type="submit"
                             disabled={saving}
-                            className="flex-[2] py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2 hover:from-blue-500 hover:to-blue-400 transition-all disabled:opacity-50"
+                            className="flex-[2] py-4 bg-app-gradient-info text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2 hover:from-blue-500 hover:to-blue-400 transition-all disabled:opacity-50"
                         >
                             {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                             {saving ? 'Processing...' : 'Confirm Expense'}

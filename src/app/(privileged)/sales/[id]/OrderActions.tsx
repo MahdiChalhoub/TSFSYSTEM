@@ -103,7 +103,7 @@ export function OrderActions({ orderId, isLocked: initialLocked, isVerified: ini
  <button
  onClick={handleRetryFne}
  disabled={fneLoading}
- className="flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black transition-all bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+ className="flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black transition-all bg-app-gradient-primary text-white shadow-lg shadow-emerald-200 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
  >
  {fneLoading ? (
  <RefreshCw size={18} className="animate-spin" />

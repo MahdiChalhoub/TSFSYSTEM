@@ -140,7 +140,7 @@ export default function RevenueBreakdownPage() {
                                     <span className="text-sm w-48 truncate">{a.name}</span>
                                     <div className="flex-1 h-5 bg-app-surface-2 rounded-full overflow-hidden relative">
                                         <div
-                                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all"
+                                            className="h-full bg-app-gradient-primary rounded-full transition-all"
                                             style={{ width: `${pct}%` }}
                                         />
                                         {pct > 10 && (

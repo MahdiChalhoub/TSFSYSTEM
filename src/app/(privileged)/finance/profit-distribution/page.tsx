@@ -159,12 +159,12 @@ export default function ProfitDistributionPage() {
                         {/* Step Indicator */}
                         <div className="flex items-center gap-2 py-2">
                             <div className={`flex items-center gap-2 ${wizardStep >= 1 ? "text-app-foreground" : "text-app-faint"}`}>
-                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 1 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-app-surface-2 text-app-muted-foreground"}`}>1</span>
+                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 1 ? "bg-app-gradient-surface text-white shadow-md" : "bg-app-surface-2 text-app-muted-foreground"}`}>1</span>
                                 <span className="text-sm font-semibold">Configure</span>
                             </div>
                             <ChevronRight size={16} className="text-app-faint" />
                             <div className={`flex items-center gap-2 ${wizardStep >= 2 ? "text-app-foreground" : "text-app-faint"}`}>
-                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 2 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-app-surface-2 text-app-muted-foreground"}`}>2</span>
+                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 2 ? "bg-app-gradient-surface text-white shadow-md" : "bg-app-surface-2 text-app-muted-foreground"}`}>2</span>
                                 <span className="text-sm font-semibold">Preview</span>
                             </div>
                         </div>
@@ -243,7 +243,7 @@ export default function ProfitDistributionPage() {
                         {/* Step 2: Preview */}
                         {wizardStep === 2 && preview && (
                             <div className="space-y-5 pt-2">
-                                <div className="bg-gradient-to-br from-stone-50 to-emerald-50/30 rounded-2xl p-5 border">
+                                <div className="bg-app-gradient-primary-soft/30 rounded-2xl p-5 border">
                                     <p className="text-xs font-bold text-app-muted-foreground uppercase">Fiscal Year</p>
                                     <p className="text-lg font-bold text-app-foreground">{String(preview.fiscal_year)}</p>
                                     <p className="text-xs font-bold text-app-muted-foreground uppercase mt-3">Net Profit</p>
@@ -277,7 +277,7 @@ export default function ProfitDistributionPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-surface-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -290,7 +290,7 @@ export default function ProfitDistributionPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-warning-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -303,7 +303,7 @@ export default function ProfitDistributionPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>

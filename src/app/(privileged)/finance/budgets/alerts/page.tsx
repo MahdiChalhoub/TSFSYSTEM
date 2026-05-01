@@ -216,7 +216,7 @@ export default function BudgetAlertsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-slate-50 to-slate-100/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-surface-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-slate-200/60 flex items-center justify-center">
@@ -230,7 +230,7 @@ export default function BudgetAlertsPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-red-50 to-red-100/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-error-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-app-error/20 flex items-center justify-center">
@@ -244,7 +244,7 @@ export default function BudgetAlertsPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-orange-50 to-orange-100/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-warning-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-orange-200/60 flex items-center justify-center">
@@ -258,7 +258,7 @@ export default function BudgetAlertsPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-info-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">

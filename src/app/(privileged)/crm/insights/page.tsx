@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
@@ -10,16 +9,49 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
-    Users, DollarSign, ShoppingCart, TrendingUp, Search, Star, Crown
+    Users, DollarSign, ShoppingCart, TrendingUp, Search, Crown
 } from "lucide-react"
+
+interface OrderRow {
+    id?: number
+    contact?: number
+    contact_id?: number
+    type?: string
+    status?: string
+    total_amount?: string | number
+    created_at?: string
+    [key: string]: unknown
+}
+
+interface ListResponse<T> {
+    results?: T[]
+}
+
+interface EnrichedContact extends Contact {
+    orderCount: number
+    totalSpent: number
+    avgOrderValue: number
+    lastOrderDate?: string
+    daysSinceLast: number
+    tier: string
+}
 
 function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
 }
 
+function asArr<T>(d: unknown): T[] {
+    if (Array.isArray(d)) return d as T[]
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as ListResponse<T>).results
+        return Array.isArray(r) ? r : []
+    }
+    return []
+}
+
 export default function CustomerInsightsPage() {
     const [contacts, setContacts] = useState<Contact[]>([])
-    const [orders, setOrders] = useState<Record<string, unknown>[]>([])
+    const [orders, setOrders] = useState<OrderRow[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
@@ -33,9 +65,14 @@ export default function CustomerInsightsPage() {
                 erpFetch('crm/contacts/'),
                 erpFetch('pos/pos/'),
             ])
-            setContacts((Array.isArray(contactsData) ? contactsData : contactsData.results || [])
-                .filter((c: Record<string, any>) => c.type === 'CLIENT' || c.type === 'CUSTOMER' || c.type === 'BOTH'))
-            setOrders(Array.isArray(ordersData) ? ordersData : ordersData.results || [])
+            setContacts(
+                asArr<Contact>(contactsData)
+                    .filter((c) => {
+                        const t = c.type as string | undefined
+                        return t === 'CLIENT' || t === 'CUSTOMER' || t === 'BOTH'
+                    })
+            )
+            setOrders(asArr<OrderRow>(ordersData))
         } catch {
             toast.error("Failed to load customer data")
         } finally {
@@ -43,14 +80,15 @@ export default function CustomerInsightsPage() {
         }
     }
 
-    const enriched = useMemo(() => {
+    const enriched = useMemo<EnrichedContact[]>(() => {
         return contacts.map(c => {
             const cOrders = orders.filter(o =>
                 (o.contact === c.id || o.contact_id === c.id) && o.type === 'SALE'
             )
-            const totalSpent = cOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0)
-            const completedOrders = cOrders.filter(o => o.status === 'COMPLETED')
-            const lastOrder = cOrders.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const totalSpent = cOrders.reduce((s, o) => s + parseFloat(String(o.total_amount ?? 0)), 0)
+            const lastOrder = cOrders.sort(
+                (a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+            )[0]
 
             // Calculate recency in days
             const lastDate = lastOrder?.created_at ? new Date(lastOrder.created_at) : null
@@ -217,7 +255,7 @@ export default function CustomerInsightsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.map((c: Record<string, any>, i: number) => (
+                                {filtered.map((c, i) => (
                                     <TableRow key={c.id} className="hover:bg-app-surface/50">
                                         <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell>

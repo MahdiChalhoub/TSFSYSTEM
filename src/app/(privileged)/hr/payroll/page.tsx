@@ -1,8 +1,6 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
-import type { Employee } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -13,8 +11,37 @@ import {
     Banknote, Users, DollarSign, TrendingUp, Search, Briefcase
 } from "lucide-react"
 
+interface PayrollEmployee {
+    id: number | string
+    first_name?: string
+    last_name?: string
+    employee_id?: string
+    job_title?: string
+    employee_type?: string
+    salary?: string | number
+    [key: string]: unknown
+}
+
+interface ListResponse<T> {
+    results?: T[]
+}
+
+function asArr<T>(d: unknown): T[] {
+    if (Array.isArray(d)) return d as T[]
+    if (d && typeof d === 'object' && 'results' in d) {
+        const r = (d as ListResponse<T>).results
+        return Array.isArray(r) ? r : []
+    }
+    return []
+}
+
 function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
+}
+
+function num(v: unknown): number {
+    const n = parseFloat(String(v ?? 0))
+    return Number.isFinite(n) ? n : 0
 }
 
 const TYPE_BADGE: Record<string, string> = {
@@ -24,7 +51,7 @@ const TYPE_BADGE: Record<string, string> = {
 }
 
 export default function PayrollSummaryPage() {
-    const [employees, setEmployees] = useState<Employee[]>([])
+    const [employees, setEmployees] = useState<PayrollEmployee[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [typeFilter, setTypeFilter] = useState<string | null>(null)
@@ -36,7 +63,7 @@ export default function PayrollSummaryPage() {
         try {
             const { erpFetch } = await import("@/lib/erp-api")
             const data = await erpFetch('hr/employees/')
-            setEmployees(Array.isArray(data) ? data : data.results || [])
+            setEmployees(asArr<PayrollEmployee>(data))
         } catch {
             toast.error("Failed to load payroll data")
         } finally {
@@ -55,14 +82,17 @@ export default function PayrollSummaryPage() {
                 (e.employee_id || '').toLowerCase().includes(s)
             )
         }
-        return items.sort((a: Record<string, any>, b: Record<string, any>) => parseFloat(b.salary || 0) - parseFloat(a.salary || 0))
+        return [...items].sort((a, b) => num(b.salary) - num(a.salary))
     }, [employees, typeFilter, search])
 
-    const totalPayroll = employees.reduce((s, e) => s + parseFloat(e.salary || 0), 0)
+    const totalPayroll = employees.reduce((s, e) => s + num(e.salary), 0)
     const avgSalary = employees.length > 0 ? totalPayroll / employees.length : 0
-    const maxSalary = Math.max(...employees.map(e => parseFloat(e.salary || 0)), 0)
+    const maxSalary = Math.max(...employees.map(e => num(e.salary)), 0)
     const typeCounts: Record<string, number> = {}
-    employees.forEach(e => { typeCounts[e.employee_type] = (typeCounts[e.employee_type] || 0) + 1 })
+    employees.forEach(e => {
+        const k = e.employee_type ?? 'UNKNOWN'
+        typeCounts[k] = (typeCounts[k] || 0) + 1
+    })
 
     if (loading) {
         return (
@@ -168,8 +198,8 @@ export default function PayrollSummaryPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-2">
-                        {filtered.slice(0, 15).map((e: Record<string, any>) => {
-                            const salary = parseFloat(e.salary || 0)
+                        {filtered.slice(0, 15).map((e) => {
+                            const salary = num(e.salary)
                             const pct = maxSalary > 0 ? (salary / maxSalary * 100) : 0
                             return (
                                 <div key={e.id} className="flex items-center gap-3">
@@ -205,8 +235,8 @@ export default function PayrollSummaryPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filtered.map((e: Record<string, any>, i: number) => {
-                                const salary = parseFloat(e.salary || 0)
+                            {filtered.map((e, i) => {
+                                const salary = num(e.salary)
                                 const pct = totalPayroll > 0 ? (salary / totalPayroll * 100) : 0
                                 return (
                                     <TableRow key={e.id} className="hover:bg-app-surface/50">
@@ -223,7 +253,7 @@ export default function PayrollSummaryPage() {
                                         </TableCell>
                                         <TableCell className="font-mono text-xs text-app-muted-foreground">{e.employee_id}</TableCell>
                                         <TableCell>
-                                            <Badge className={TYPE_BADGE[e.employee_type] || 'bg-app-surface-2'}>
+                                            <Badge className={TYPE_BADGE[e.employee_type ?? ''] || 'bg-app-surface-2'}>
                                                 {e.employee_type}
                                             </Badge>
                                         </TableCell>
