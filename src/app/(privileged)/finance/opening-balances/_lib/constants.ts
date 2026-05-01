@@ -5,7 +5,30 @@
  */
 
 /* ── Types ── */
-export type OpeningEntry = Record<string, any>
+export type OpeningLine = {
+  id?: number;
+  account?: { id?: number; code?: string; name?: string;[key: string]: unknown };
+  debit?: number | string;
+  credit?: number | string;
+  description?: string;
+  [key: string]: unknown;
+};
+export type OpeningEntry = {
+  id: number;
+  reference?: string;
+  description?: string;
+  status?: string;
+  scope?: string;
+  transactionDate?: string;
+  transaction_date?: string;
+  fiscalYear?: { id?: number; name?: string;[key: string]: unknown };
+  fiscal_year?: { id?: number; name?: string;[key: string]: unknown };
+  created_by?: { username?: string; first_name?: string;[key: string]: unknown };
+  createdBy?: string;
+  created_at?: string;
+  lines?: OpeningLine[];
+  [key: string]: unknown;
+}
 
 /* ── Status Config ── */
 export const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -42,8 +65,10 @@ export const GROW_COLS = new Set(['totalDebit', 'totalCredit', 'reference'])
 export const DEFAULT_VISIBLE_COLS = Object.fromEntries(ALL_COLUMNS.map(c => [c.key, c.defaultVisible]))
 
 /* ── Utility ── */
-export function toArr(v: any): any[] {
-  if (Array.isArray(v)) return v
-  if (v && typeof v === 'object' && Array.isArray(v.results)) return v.results
+export function toArr<T = unknown>(v: unknown): T[] {
+  if (Array.isArray(v)) return v as T[]
+  if (v && typeof v === 'object' && Array.isArray((v as { results?: unknown[] }).results)) {
+    return (v as { results: T[] }).results
+  }
   return []
 }

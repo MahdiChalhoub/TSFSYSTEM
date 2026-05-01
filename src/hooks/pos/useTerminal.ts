@@ -184,7 +184,7 @@ export function useTerminal() {
     const isCreditPayment = paymentMethod === 'CREDIT' || paymentLegs.some(l => l.method === 'CREDIT');
 
     // ═══ Product Index Builder ═══════════════════════════════════
-    const onProductsLoaded = useCallback((products: any[]) => {
+    const onProductsLoaded = useCallback((products: Array<Record<string, unknown>>) => {
         products.forEach(p => {
             if (p.barcode) productIndex.current.set(String(p.barcode).toLowerCase(), p);
             if (p.sku) productIndex.current.set(String(p.sku).toLowerCase(), p);
@@ -442,9 +442,10 @@ export function useTerminal() {
         import('@/app/actions/commercial').then(m => m.getCommercialContext()).then(ctx => {
             setCurrency(ctx.currency || 'CFA');
             if (Array.isArray(ctx.posPaymentMethods) && ctx.posPaymentMethods.length > 0) {
-                const normalized: PaymentMethodConfig[] = ctx.posPaymentMethods
-                    .map((m: any) => typeof m === 'string' ? { key: m, label: m, accountId: null } : { key: m.key, label: m.label || m.key, accountId: m.accountId || null })
-                    .filter((m: any) => m.accountId || ['MULTI', 'DELIVERY'].includes(m.key));
+                type RawPaymentMethod = string | { key: string; label?: string; accountId?: number | null };
+                const normalized: PaymentMethodConfig[] = (ctx.posPaymentMethods as RawPaymentMethod[])
+                    .map((m) => typeof m === 'string' ? { key: m, label: m, accountId: null } : { key: m.key, label: m.label || m.key, accountId: m.accountId || null })
+                    .filter((m) => m.accountId || ['MULTI', 'DELIVERY'].includes(m.key));
                 setPaymentMethods(normalized);
                 if (normalized.length > 0 && !normalized.some(m => m.key === 'CASH')) {
                     setPaymentMethod(normalized[0].key);
@@ -453,8 +454,10 @@ export function useTerminal() {
         });
 
         // Categories
-        import('@/app/(privileged)/sales/actions').then(m => m.getCategories()).then((data: any) => {
-            const cats = Array.isArray(data) ? data : data?.results || [];
+        import('@/app/(privileged)/sales/actions').then(m => m.getCategories()).then((data) => {
+            type CategoryEnvelope = { results?: Array<{ id: number; name: string }> } | Array<{ id: number; name: string }>;
+            const env = data as CategoryEnvelope;
+            const cats: Array<{ id: number; name: string }> = Array.isArray(env) ? env : (env?.results ?? []);
             setCategories(cats.slice(0, 500));
         }).catch(() => setCategories([])).finally(() => setCategoriesLoading(false));
 
@@ -470,14 +473,15 @@ export function useTerminal() {
         });
 
         // Stock policy
-        erpFetch('settings/item/pos_security_rules/').then((s: any) => {
+        erpFetch('settings/item/pos_security_rules/').then((s: { allowNegativeStock?: boolean } | null) => {
             if (typeof s?.allowNegativeStock === 'boolean') allowNegativeStockRef.current = s.allowNegativeStock;
         }).catch(() => { });
 
         // Financial/VAT Context
-        import('@/app/actions/finance/settings').then(m => m.getFinancialSettings()).then((s: any) => {
-            setCompanyType(s.companyType || 'REGULAR');
-            setDeclareTVA(!!s.declareTVA);
+        import('@/app/actions/finance/settings').then(m => m.getFinancialSettings()).then((s) => {
+            const cfg = s as { companyType?: string; declareTVA?: boolean };
+            setCompanyType(cfg.companyType || 'REGULAR');
+            setDeclareTVA(!!cfg.declareTVA);
         }).catch(() => { });
     }, []);
 
@@ -494,9 +498,10 @@ export function useTerminal() {
         setActiveSessionId(initial[0].id);
 
         // Cloud restore
-        erpFetch('pos-tickets/').then((cloud: any) => {
+        type CloudTicket = { ticket_id: string; name: string; client_id?: number; cart_data?: unknown[] };
+        erpFetch('pos-tickets/').then((cloud: unknown) => {
             if (!Array.isArray(cloud) || !cloud.length) return;
-            const mapped = cloud.map((ct: any) => ({ id: ct.ticket_id, name: ct.name, clientId: ct.client_id || 1, cart: ct.cart_data || [] }));
+            const mapped = (cloud as CloudTicket[]).map((ct) => ({ id: ct.ticket_id, name: ct.name, clientId: ct.client_id || 1, cart: (ct.cart_data || []) as TicketSession['cart'] }));
             setSessions(prev => {
                 const merged = [...prev];
                 mapped.forEach((ct: TicketSession) => { if (!merged.find(m => m.id === ct.id)) merged.push(ct); });

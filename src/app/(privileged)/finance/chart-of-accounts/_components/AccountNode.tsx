@@ -157,7 +157,7 @@ export const AccountNode = ({
                 {/* Actions */}
                 <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity w-16 justify-end">
                     <button
-                        title="Edit Account"
+                        title={t('finance.coa.action_edit')}
                         onClick={() => onEdit(node)}
                         className="p-1.5 rounded-lg transition-colors"
                         style={{ color: 'var(--app-muted-foreground)' }}
@@ -165,7 +165,7 @@ export const AccountNode = ({
                         <Pencil size={12} />
                     </button>
                     <button
-                        title="Add Sub-Account"
+                        title={t('finance.coa.action_add_sub')}
                         onClick={() => onAddChild(node.id)}
                         className="p-1.5 rounded-lg transition-colors"
                         style={{ color: 'var(--app-muted-foreground)' }}
@@ -174,7 +174,7 @@ export const AccountNode = ({
                     </button>
                     {!node.isActive && (
                         <button
-                            title="Reactivate"
+                            title={t('finance.coa.action_reactivate')}
                             onClick={() => onReactivate(node.id)}
                             className="p-1.5 rounded-lg transition-colors"
                             style={{ color: 'var(--app-success, #10B981)' }}

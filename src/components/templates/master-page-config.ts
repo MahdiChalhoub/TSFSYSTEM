@@ -16,7 +16,7 @@ export interface KPI {
      * filtered view + the full dataset. Functions let KPIs stay reactive
      * to search / KPI filters without the consumer tracking state.
      */
-    value: number | string | ((filtered: any[], all: any[]) => number | string)
+    value: number | string | ((filtered: Array<Record<string, unknown>>, all: Array<Record<string, unknown>>) => number | string)
     icon: ReactNode
     color: string
     /**
@@ -73,7 +73,7 @@ export interface ExportColumn {
     key: string
     label: string
     /** Custom formatter — defaults to `String(item[key] ?? '')` */
-    format?: (item: any) => string | number
+    format?: (item: Record<string, unknown>) => string | number
 }
 
 /** Declarative print config — drives the unified PrintDialog. */
@@ -83,7 +83,7 @@ export interface DataToolsPrintConfig {
     prefKey?: string
     columns: PrintColumn[]
     /** Map each data item to a flat row object keyed by column.key */
-    rowMapper: (item: any) => Record<string, any>
+    rowMapper: (item: Record<string, unknown>) => Record<string, unknown>
     /** Optional pre-print sort field (sorts ascending on this key) */
     sortBy?: string
     filterLine?: string
@@ -104,7 +104,7 @@ export interface DataToolsImportConfig {
     /** Preview table columns. */
     previewColumns: PreviewColumn[]
     /** Map a parsed row to the JSON body posted to the endpoint. */
-    buildPayload: (row: Record<string, string>) => Record<string, any>
+    buildPayload: (row: Record<string, string>) => Record<string, unknown>
     /** Optional extra tutorial hint text. */
     tip?: ReactNode
 }
@@ -146,7 +146,7 @@ export interface DataToolsConfig {
 
 export interface MasterPageConfig {
     title: string
-    subtitle: string | ((filtered: any[], all: any[]) => string)
+    subtitle: string | ((filtered: Array<Record<string, unknown>>, all: Array<Record<string, unknown>>) => string)
     icon: ReactNode
     iconColor: string
     kpis: KPI[]
@@ -156,7 +156,7 @@ export interface MasterPageConfig {
     /** Export / Import / Print affordances — rendered as one unified dropdown
      *  in the toolbar. Leave a handler out to hide that row. */
     dataTools?: DataToolsConfig
-    footerLeft?: ReactNode | ((filtered: any[], all: any[]) => ReactNode)
+    footerLeft?: ReactNode | ((filtered: Array<Record<string, unknown>>, all: Array<Record<string, unknown>>) => ReactNode)
     /**
      * Optional refresh handler. Mobile shell binds it to pull-to-refresh;
      * desktop shell renders a refresh button in the header.
@@ -175,7 +175,7 @@ export interface MasterPageConfig {
      * over the render-prop `tree` / `filteredData`.
      */
     /** Source dataset. When set, template owns filtering and tree build. */
-    data?: any[]
+    data?: Array<Record<string, unknown>>
     /** Fields matched by the search input. Defaults to ['name','code','short_name']. */
     searchFields?: string[]
     /**
@@ -183,7 +183,7 @@ export interface MasterPageConfig {
      * the item and the full dataset (useful for leaf/root detection).
      * Special key `'all'` is reserved and handled internally (clears filters).
      */
-    kpiPredicates?: Record<string, (item: any, allData: any[]) => boolean>
+    kpiPredicates?: Record<string, (item: Record<string, unknown>, allData: Array<Record<string, unknown>>) => boolean>
     /** Parent-id field name for tree building. Defaults to 'parent'. */
     treeParentKey?: string
     /** Config for the automatic empty-state panel shown when tree is empty. */

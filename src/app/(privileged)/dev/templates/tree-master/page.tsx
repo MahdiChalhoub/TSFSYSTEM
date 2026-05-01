@@ -67,7 +67,7 @@ export default function TreeMasterDemo() {
                         roots:    (w) => w.parent == null,
                         leaves:   (w, all) => !all.some(x => x.parent === w.id),
                         featured: (w) => !!w.featured,
-                        large:    (w) => (w.items || 0) >= 40,
+                        large:    (w) => Number(w.items || 0) >= 40,
                     },
 
                     kpis: [

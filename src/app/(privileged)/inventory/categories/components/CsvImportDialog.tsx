@@ -25,6 +25,7 @@ import { erpFetch } from '@/lib/erp-api';
 import { toast } from 'sonner';
 import type { CategoryNode } from './types';
 import { parseSpreadsheet, SPREADSHEET_ACCEPT } from '@/components/admin/_shared/file-parser';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface Props {
     allCategories: CategoryNode[];
@@ -170,6 +171,7 @@ function StatusChip({ kind, count }: { kind: 'new' | 'warning' | 'duplicate' | '
 
 
 export function CsvImportDialog({ allCategories, onClose, onDone }: Props) {
+    const { t } = useTranslation();
     const fileRef = useRef<HTMLInputElement | null>(null);
     const [rows, setRows] = useState<Row[]>([]);
     const [importing, setImporting] = useState(false);
@@ -350,8 +352,8 @@ export function CsvImportDialog({ allCategories, onClose, onDone }: Props) {
                             <Upload size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-app-foreground">Import Categories</h3>
-                            <p className="text-tp-xs font-bold text-app-muted-foreground">Bulk create from a CSV file</p>
+                            <h3 className="text-sm font-bold text-app-foreground">{t('inventory.categories_page.csv_import_title')}</h3>
+                            <p className="text-tp-xs font-bold text-app-muted-foreground">{t('inventory.categories_page.csv_import_subtitle')}</p>
                         </div>
                     </div>
                     <button onClick={onClose}
@@ -411,7 +413,7 @@ export function CsvImportDialog({ allCategories, onClose, onDone }: Props) {
                                 <BookOpen size={12} />
                             </div>
                             <div className="flex-1">
-                                <p className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>How to prepare your CSV</p>
+                                <p className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{t('inventory.categories_page.csv_how_to')}</p>
                                 <p className="text-tp-xxs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                     {tutorialOpen ? 'Close to skip ahead' : `${COLS.length} columns · Download template ready`}
                                 </p>

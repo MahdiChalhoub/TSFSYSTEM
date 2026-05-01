@@ -45,7 +45,7 @@ export default function PurchaseAnalyticsSettingsPage() {
     const [saved, setSaved] = useState(false)
     const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
     const [editingProfile, setEditingProfile] = useState<AnalyticsProfile | null>(null)
-    const [profileOverrides, setProfileOverrides] = useState<Record<string, any>>({})
+    const [profileOverrides, setProfileOverrides] = useState<Record<string, unknown>>({})
     const [creatingForContext, setCreatingForContext] = useState<string | null>(null)
     const [newProfileName, setNewProfileName] = useState('')
     const [newProfileVisibility, setNewProfileVisibility] = useState<'organization' | 'personal'>('organization')
@@ -54,7 +54,7 @@ export default function PurchaseAnalyticsSettingsPage() {
     const [allCollapsed, setAllCollapsed] = useState(false)
     const [configSearch, setConfigSearch] = useState('')
     const [confirmResetAll, setConfirmResetAll] = useState(false)
-    const [undoStack, setUndoStack] = useState<Array<{ key: string; prev: any; configSnapshot?: PurchaseAnalyticsConfig }>>([])
+    const [undoStack, setUndoStack] = useState<Array<{ key: string; prev: unknown; configSnapshot?: PurchaseAnalyticsConfig }>>([])
     const [scrolled, setScrolled] = useState(false)
     const [showDiffPreview, setShowDiffPreview] = useState(false)
     const [originalConfig, setOriginalConfig] = useState<PurchaseAnalyticsConfig | null>(null)
@@ -110,7 +110,7 @@ export default function PurchaseAnalyticsSettingsPage() {
             if (e.key === 'Escape' && isProfileMode) handleBackToGlobal()
             if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); handleSaveActive() }
             if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); handleUndo() }
-            if (e.key === '?' && !e.ctrlKey && !e.metaKey && !(e.target as any)?.closest?.('input,select,textarea')) {
+            if (e.key === '?' && !e.ctrlKey && !e.metaKey && !(e.target instanceof HTMLElement && e.target.closest('input,select,textarea'))) {
                 e.preventDefault(); setShowShortcuts(prev => !prev)
             }
         }
@@ -151,11 +151,13 @@ export default function PurchaseAnalyticsSettingsPage() {
         update, startTransition,
     })
 
+    const origCfg = originalConfig as unknown as Record<string, unknown> | null
+    const curCfg = config as unknown as Record<string, unknown>
     const diffEntries = Object.keys(config)
         .filter(k => !k.startsWith('_'))
         .map(k => ({
-            field: k, oldVal: (originalConfig as any)?.[k], newVal: (config as any)[k],
-            changed: JSON.stringify((originalConfig as any)?.[k]) !== JSON.stringify((config as any)[k]),
+            field: k, oldVal: origCfg?.[k], newVal: curCfg[k],
+            changed: JSON.stringify(origCfg?.[k]) !== JSON.stringify(curCfg[k]),
         }))
         .filter(e => e.changed)
 
@@ -205,8 +207,8 @@ export default function PurchaseAnalyticsSettingsPage() {
                     warnings={warnings}
                     showSuggestions={showSuggestions} setShowSuggestions={setShowSuggestions}
                     suggestions={suggestions}
-                    onApplySuggestion={(field, sug) => update(field as any, sug)}
-                    onApplyConfigPreset={(preset) => Object.entries(preset.values).forEach(([k, v]) => update(k as any, v))}
+                    onApplySuggestion={(field, sug) => update(field as keyof PurchaseAnalyticsConfig, sug)}
+                    onApplyConfigPreset={(preset) => Object.entries(preset.values).forEach(([k, v]) => update(k as keyof PurchaseAnalyticsConfig, v))}
                     onImportProfileFile={handleImport}
                     onBackToGlobal={handleBackToGlobal}
                     onUndo={handleUndo} undoStackLength={undoStack.length}

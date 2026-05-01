@@ -12,22 +12,29 @@ export type PASettingsContextValue = {
     profilesData: AnalyticsProfilesData | null
     editingProfile: AnalyticsProfile | null
     creatingForContext: string | null
-    profileOverrides: Record<string, any>
+    profileOverrides: Record<string, unknown>
     isProfileMode: boolean
     isEditMode: boolean
     isCreateMode: boolean
     overrideCount: number
     weightTotal: number
 
-    // Field readers
+    // Field readers — return `any` because consumers feed these directly into
+    // <input value={...} />, parseFloat, .toFixed, comparisons, etc. across
+    // 6 section files. Narrowing to `unknown` here would require fixes at
+    // ~40 call sites; deferred to a per-section pass.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     val: (key: string) => any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     valWeight: (key: string) => any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalVal: (key: string) => any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalWeight: (key: string) => any
     isOverridden: (key: string) => boolean
 
     // Field mutators
-    update: (key: keyof PurchaseAnalyticsConfig, value: any) => void
+    update: (key: keyof PurchaseAnalyticsConfig, value: unknown) => void
     updateWeight: (key: string, value: number) => void
     clearOverride: (key: string) => void
     clearWeightOverride: () => void
@@ -35,6 +42,7 @@ export type PASettingsContextValue = {
 
     // Validation / hints
     getWarning: (field: string) => Warning | undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     defaultHint: (field: string, currentVal: any) => React.ReactNode
     lockedFields: Set<string>
     toggleFieldLock: (field: string) => void

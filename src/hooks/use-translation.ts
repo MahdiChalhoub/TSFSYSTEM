@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
-import { dictionaries, Locale } from '../translations/dictionaries';
+import { dictionaries, Locale, RTL_LOCALES } from '../translations/dictionaries';
 
 /**
- * Lightweight i18n hook for TSFSYSTEM.
- * Supports English and French with a simple dot-notation access.
- * Defaults to 'en' to maintain consistency across the app.
+ * Lightweight i18n hook for TSFSYSTEM. Multi-locale, with English fallback.
+ *
+ * Lookup order for any key:
+ *   1. dictionaries[currentLocale][...key]
+ *   2. dictionaries.en[...key]            ← guarantees the UI never blanks out
+ *   3. the key itself                      ← last-resort hint to translators
+ *
+ * This means: adding a new locale never breaks the UI. Half-translated locales
+ * silently fall through to English; finished locales render natively.
  */
 export function useTranslation() {
     const [locale, setLocale] = useState<Locale>('en');
@@ -20,22 +26,38 @@ export function useTranslation() {
         }
     }, []);
 
+    // Reflect direction on <html> when locale changes (RTL for ar, etc.)
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+        const dir = (RTL_LOCALES as readonly string[]).includes(locale) ? 'rtl' : 'ltr';
+        document.documentElement.setAttribute('dir', dir);
+        document.documentElement.setAttribute('lang', locale);
+    }, [locale]);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function lookup(dict: any, parts: string[]): string | undefined {
+        let cur: unknown = dict;
+        for (const part of parts) {
+            if (cur && typeof cur === 'object' && part in (cur as Record<string, unknown>)) {
+                cur = (cur as Record<string, unknown>)[part];
+            } else {
+                return undefined;
+            }
+        }
+        return typeof cur === 'string' ? cur : undefined;
+    }
+
     /**
-     * Translate a key using dot notation (e.g., 'crm.followup_board')
+     * Translate a key using dot notation (e.g., 'crm.followup_board').
+     * Falls back to English, then to the key itself.
      */
     const t = (path: string): string => {
         const parts = path.split('.');
-        let result: any = dictionaries[locale];
-
-        for (const part of parts) {
-            if (result && typeof result === 'object' && part in result) {
-                result = result[part];
-            } else {
-                return path; // Fallback: return the key itself
-            }
-        }
-
-        return typeof result === 'string' ? result : path;
+        const localized = lookup(dictionaries[locale], parts);
+        if (localized !== undefined) return localized;
+        const fallback = lookup(dictionaries.en, parts);
+        if (fallback !== undefined) return fallback;
+        return path;
     };
 
     const switchLocale = (newLocale: Locale) => {
@@ -47,5 +69,7 @@ export function useTranslation() {
         window.location.reload();
     };
 
-    return { t, locale, switchLocale };
+    const isRtl = (RTL_LOCALES as readonly string[]).includes(locale);
+
+    return { t, locale, switchLocale, isRtl };
 }

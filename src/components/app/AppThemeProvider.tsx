@@ -389,7 +389,7 @@ export function AppThemeProvider({
 
         // Persist to cookie (server-readable)
         import('@/app/actions/settings/theme')
-            .then(({ setOrgTheme }) => setOrgTheme(slug as any))
+            .then(({ setOrgTheme }) => setOrgTheme(slug))
             .catch(() => { /* non-fatal */ });
 
         // Activate on backend
@@ -456,21 +456,26 @@ export function AppThemeProvider({
         if (!currentTheme) return;
 
         // Recursive merge helper
-        const deepMerge = (target: any, source: any) => {
-            const output = { ...target };
+        const deepMerge = (target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> => {
+            const output: Record<string, unknown> = { ...target };
             if (source && typeof source === 'object' && !Array.isArray(source)) {
                 Object.keys(source).forEach(key => {
-                    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-                        output[key] = deepMerge(target[key] || {}, source[key]);
+                    const sv = source[key];
+                    if (sv && typeof sv === 'object' && !Array.isArray(sv)) {
+                        const tv = (target[key] as Record<string, unknown> | undefined) || {};
+                        output[key] = deepMerge(tv, sv as Record<string, unknown>);
                     } else {
-                        output[key] = source[key];
+                        output[key] = sv;
                     }
                 });
             }
             return output;
         };
 
-        const mergedPreset = deepMerge(currentTheme.presetData, updates);
+        const mergedPreset = deepMerge(
+            currentTheme.presetData as unknown as Record<string, unknown>,
+            updates as Record<string, unknown>,
+        ) as unknown as typeof currentTheme.presetData;
 
         const updatedTheme = { ...currentTheme, presetData: mergedPreset };
         setCurrentTheme(updatedTheme);
@@ -697,7 +702,9 @@ function darkenColor(hex: string, percent: number): string {
     ).toString(16).slice(1);
 }
 
-function enrichColors(colors: any): ColorScheme {
+type ColorsInput = Partial<ColorScheme> & { muted?: string;[key: string]: unknown };
+
+function enrichColors(colors: ColorsInput): ColorScheme {
     return {
         primary: colors.primary || '#10B981',
         primaryDark: colors.primaryDark || darkenColor(colors.primary || '#10B981', 10),
@@ -710,14 +717,37 @@ function enrichColors(colors: any): ColorScheme {
     };
 }
 
-function transformThemeFromAPI(apiTheme: any): ThemePreset {
+type ApiThemePayload = {
+    id: number;
+    slug: string;
+    name: string;
+    description?: string;
+    category?: string;
+    is_system?: boolean;
+    is_active?: boolean;
+    is_default?: boolean;
+    tags?: string[];
+    preset_data?: {
+        colors?: { dark?: ColorsInput; light?: ColorsInput };
+        layout?: unknown;
+        components?: unknown;
+        navigation?: unknown;
+    };
+    usage_count?: number;
+    last_used_at?: string;
+    created_at?: string;
+    updated_at?: string;
+    [key: string]: unknown;
+};
+
+function transformThemeFromAPI(apiTheme: ApiThemePayload): ThemePreset {
     return {
         id: apiTheme.id,
         slug: apiTheme.slug,
         name: apiTheme.name,
-        description: apiTheme.description,
-        category: apiTheme.category,
-        isSystem: apiTheme.is_system,
+        description: apiTheme.description ?? '',
+        category: (apiTheme.category ?? 'custom') as ThemePreset['category'],
+        isSystem: apiTheme.is_system ?? false,
         isActive: apiTheme.is_active ?? true,
         isDefault: apiTheme.is_default ?? false,
         tags: apiTheme.tags || [],
@@ -726,9 +756,9 @@ function transformThemeFromAPI(apiTheme: any): ThemePreset {
                 dark: enrichColors(apiTheme.preset_data?.colors?.dark || {}),
                 light: enrichColors(apiTheme.preset_data?.colors?.light || {}),
             },
-            layout: apiTheme.preset_data?.layout || DEFAULT_LAYOUT,
-            components: apiTheme.preset_data?.components || DEFAULT_COMPONENTS,
-            navigation: apiTheme.preset_data?.navigation || DEFAULT_NAVIGATION,
+            layout: (apiTheme.preset_data?.layout as ThemePreset['presetData']['layout']) || DEFAULT_LAYOUT,
+            components: (apiTheme.preset_data?.components as ThemePreset['presetData']['components']) || DEFAULT_COMPONENTS,
+            navigation: (apiTheme.preset_data?.navigation as ThemePreset['presetData']['navigation']) || DEFAULT_NAVIGATION,
         },
         usageCount: apiTheme.usage_count,
         lastUsedAt: apiTheme.last_used_at,

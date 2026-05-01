@@ -24,9 +24,11 @@ export type CategoryFormData = {
     digital_gateway: string   // OrgPaymentGateway ID (FK)
 }
 
+type LucideLikeIcon = React.ComponentType<{ size?: number | string; className?: string }>;
+
 /* ── Reusable Toggle ── */
 function Toggle({ on, onToggle, icon: Icon, color, title, desc }: {
-    on: boolean; onToggle: () => void; icon: any; color: string; title: string; desc: string
+    on: boolean; onToggle: () => void; icon: LucideLikeIcon; color: string; title: string; desc: string
 }) {
     const c = on ? color : 'var(--app-muted-foreground)'
     return (
@@ -54,7 +56,7 @@ function Toggle({ on, onToggle, icon: Icon, color, title, desc }: {
 
 /* ── Section Header ── */
 function SectionHeader({ icon: Icon, title, color, collapsed, onToggle }: {
-    icon: any; title: string; color: string; collapsed?: boolean; onToggle?: () => void
+    icon: LucideLikeIcon; title: string; color: string; collapsed?: boolean; onToggle?: () => void
 }) {
     return (
         <button type="button" onClick={onToggle}
@@ -80,20 +82,43 @@ const labelCls = "text-[9px] font-black text-app-muted-foreground uppercase trac
 /* ═══════════════════════════════════════════════════════════
  *  CATEGORY FORM MODAL — V2 Redesign (API-driven providers)
  * ═══════════════════════════════════════════════════════════ */
+type COAItem = {
+    id: number;
+    code?: string;
+    name?: string;
+    type?: string;
+    parent?: number | null;
+    [key: string]: unknown;
+};
+type GatewayConfigField = { key: string; label?: string; type?: string; required?: boolean;[key: string]: unknown };
+type OrgGateway = {
+    id: number | string;
+    name?: string;
+    is_enabled?: boolean;
+    config_schema?: GatewayConfigField[];
+    gateway_color?: string;
+    gateway_emoji?: string;
+    gateway_name?: string;
+    gateway_family?: string;
+    gateway_code?: string;
+    gateway_description?: string;
+    [key: string]: unknown;
+};
+
 export function CategoryFormModal({ form, setForm, coaList, editingId, saving, onSave, onClose, orgGateways }: {
     form: CategoryFormData
     setForm: React.Dispatch<React.SetStateAction<CategoryFormData>>
-    coaList: any[]
+    coaList: COAItem[]
     editingId: number | null
     saving: boolean
     onSave: () => void
     onClose: () => void
-    orgGateways: any[]   // OrgPaymentGateway[] from API
+    orgGateways: OrgGateway[]
 }) {
     const [digitalExpanded, setDigitalExpanded] = useState(form.is_digital)
     const [coaExpanded, setCoaExpanded] = useState(!!form.coa_parent)
 
-    const selectedGw = orgGateways.find((g: any) => String(g.id) === form.digital_gateway)
+    const selectedGw = orgGateways.find((g) => String(g.id) === form.digital_gateway)
     const PreviewIcon = getIcon(form.icon)
 
     return (
@@ -249,7 +274,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                                         <div>
                                             <label className={labelCls}>Default Payment Provider</label>
                                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                                {orgGateways.filter((g: any) => g.is_enabled).map((gw: any) => (
+                                                {orgGateways.filter((g) => g.is_enabled).map((gw) => (
                                                     <button key={gw.id} type="button"
                                                         onClick={() => setForm(f => ({ ...f, digital_gateway: String(gw.id) }))}
                                                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all"
@@ -280,7 +305,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                                                     <div className="text-[9px] font-bold text-app-muted-foreground leading-relaxed">{selectedGw.gateway_description}</div>
                                                     {selectedGw.config_schema && selectedGw.config_schema.length > 0 && (
                                                         <div className="flex flex-wrap gap-1 mt-1.5">
-                                                            {selectedGw.config_schema.map((f: any) => (
+                                                            {selectedGw.config_schema.map((f) => (
                                                                 <span key={f.key} className="text-[8px] font-bold px-1.5 py-0.5 rounded"
                                                                     style={{ background: `color-mix(in srgb, ${selectedGw.gateway_color || '#6366f1'} 10%, transparent)`, color: selectedGw.gateway_color || '#6366f1' }}>
                                                                     {f.label}{f.required ? ' *' : ''}
@@ -307,7 +332,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                         />
 
                         {form.coa_parent && (() => {
-                            const sel = coaList.find((a: any) => a.id.toString() === form.coa_parent)
+                            const sel = coaList.find((a) => a.id.toString() === form.coa_parent)
                             return sel ? (
                                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
                                     style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, var(--app-surface))', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)' }}>

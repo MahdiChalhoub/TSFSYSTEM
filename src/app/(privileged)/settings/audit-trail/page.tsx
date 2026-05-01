@@ -37,33 +37,35 @@ interface AuditEntry {
 }
 
 /* ─── Config ───────────────────────────────────────────────────── */
-const ACTION_COLORS: Record<string, { bg: string; fg: string; icon: any; colorToken: string }> = {
+type IconLike = React.ComponentType<React.HTMLAttributes<HTMLElement> & { size?: number | string }>;
+const ACTION_COLORS: Record<string, { bg: string; fg: string; icon: IconLike; colorToken: string }> = {
     create: { bg: 'var(--app-success, #22c55e)', fg: 'white', icon: PlusIcon, colorToken: '--app-success' },
     update: { bg: 'var(--app-info, #3b82f6)', fg: 'white', icon: PencilIcon, colorToken: '--app-info' },
     delete: { bg: 'var(--app-error, #ef4444)', fg: 'white', icon: TrashIcon, colorToken: '--app-error' },
-    test: { bg: 'var(--app-primary, #6366f1)', fg: 'white', icon: Tag, colorToken: '--app-primary' },
+    test: { bg: 'var(--app-primary, #6366f1)', fg: 'white', icon: Tag as unknown as IconLike, colorToken: '--app-primary' },
 }
 
-function PlusIcon(props: any) { return <span {...props}>＋</span> }
-function PencilIcon(props: any) { return <span {...props}>✎</span> }
-function TrashIcon(props: any) { return <span {...props}>✕</span> }
+function PlusIcon(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props}>＋</span> }
+function PencilIcon(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props}>✎</span> }
+function TrashIcon(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props}>✕</span> }
 
 function getActionStyle(action: string) {
     const type = action.split('.').pop() || ''
     return ACTION_COLORS[type] || { bg: 'var(--app-muted-foreground)', fg: 'white', icon: Info, colorToken: '--app-muted-foreground' }
 }
 
-function DynamicIcon({ icon: Icon, size = 14, ...props }: any) {
+function DynamicIcon({ icon: Icon, size = 14, ...props }: { icon: React.ReactNode | React.ComponentType<{ size?: number | string }>; size?: number | string;[key: string]: unknown }) {
     if (!Icon) return null;
     // If it's already a React element (e.g. <History size={14} />)
-    if (Icon.$$typeof && Icon.props !== undefined) {
-        return Icon;
+    if (typeof Icon === 'object' && Icon !== null && '$$typeof' in (Icon as object) && (Icon as { props?: unknown }).props !== undefined) {
+        return Icon as React.ReactElement;
     }
     // If it's a component (function or ForwardRef object)
-    if (typeof Icon === 'function' || (typeof Icon === 'object' && Icon.$$typeof)) {
-        return <Icon size={size} {...props} />
+    if (typeof Icon === 'function' || (typeof Icon === 'object' && Icon !== null && '$$typeof' in (Icon as object))) {
+        const C = Icon as React.ComponentType<{ size?: number | string }>;
+        return <C size={size} {...props} />
     }
-    return Icon;
+    return Icon as React.ReactNode;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -87,9 +89,10 @@ export default function GlobalAuditTrailPage() {
             // Fetch all entries (kernel endpoint)
             const data = await erpFetch('audit-trail/')
             setEntries(Array.isArray(data) ? data : data?.results || [])
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('[AuditTrail] Fetch error:', err)
-            toast.error(`Failed to load audit trail: ${err?.message || err}`)
+            const m = err instanceof Error ? err.message : String(err)
+            toast.error(`Failed to load audit trail: ${m}`)
         } finally {
             setLoading(false)
         }
@@ -120,8 +123,9 @@ export default function GlobalAuditTrailPage() {
             })
             setEntries(prev => prev.map(e => e.id === entryId ? { ...e, ...updated } : e))
             toast.success(`${label} recorded`)
-        } catch (err: any) {
-            toast.error(err?.detail || err?.message || `Failed to ${label.toLowerCase()}`)
+        } catch (err: unknown) {
+            const e = err as { detail?: string; message?: string } | null
+            toast.error(e?.detail || e?.message || `Failed to ${label.toLowerCase()}`)
         } finally {
             setActionInProgress(null)
         }
@@ -483,7 +487,16 @@ export default function GlobalAuditTrailPage() {
 }
 
 /* ─── Sub-Components ────────────────────────────────────────────── */
-function AnnotationCard({ label, isActive, user, at, icon, color, onAction, loading }: any) {
+function AnnotationCard({ label, isActive, user, at, icon, color, onAction, loading }: {
+    label: string;
+    isActive: boolean;
+    user: string | null;
+    at: string | null;
+    icon: React.ReactNode | React.ComponentType<{ size?: number | string }>;
+    color: string;
+    onAction: () => void;
+    loading: boolean;
+}) {
     return (
         <div className={`p-2.5 rounded-xl border flex flex-col justify-between h-full transition-all ${isActive ? 'bg-app-background border-app-border/40' : 'bg-app-surface/20 border-app-border/20 grayscale opacity-70'}`}
              style={isActive ? { borderLeft: `3px solid ${color}` } : {}}>

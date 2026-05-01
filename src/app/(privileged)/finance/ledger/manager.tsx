@@ -75,11 +75,11 @@ function renderLedgerCell(key: string, e: JournalEntry, fmt: (n: number) => stri
     case 'sourceModel': return <span className="text-tp-xs text-app-muted-foreground truncate">{e.source_model || '—'}</span>
     case 'sourceId': return <span className="text-tp-xs font-mono text-app-muted-foreground">{e.source_id || '—'}</span>
     case 'totalDebit': {
-      const total = lines.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0)
+      const total = lines.reduce((s: number, l: { debit?: number | string; [key: string]: unknown }) => s + (Number(l.debit) || 0), 0)
       return <span className="font-mono tabular-nums text-tp-sm" style={total > 0 ? { color: 'var(--app-primary)' } : undefined}>{total > 0 ? fmt(total) : '—'}</span>
     }
     case 'totalCredit': {
-      const total = lines.reduce((s: number, l: any) => s + (Number(l.credit) || 0), 0)
+      const total = lines.reduce((s: number, l: { credit?: number | string; [key: string]: unknown }) => s + (Number(l.credit) || 0), 0)
       return <span className="font-mono tabular-nums text-tp-sm" style={total > 0 ? { color: 'var(--app-error)' } : undefined}>{total > 0 ? fmt(total) : '—'}</span>
     }
     case 'lineCount': return <span className="text-tp-sm font-bold text-app-foreground">{lines.length}</span>
@@ -118,8 +118,14 @@ const EMPTY_LOOKUPS: Lookups = { fiscalYears: [], users: [] }
  * `fiscal_year`, `posted_at`, etc. The page expects camelCase. Run every
  * entry through this once on load so downstream code can stay consistent.
  * Returns a NEW object (non-destructive). */
-function normaliseEntry(e: any): any {
-  if (!e) return e
+// Loose envelope: backend returns snake_case + sometimes camelCase.
+type RawEntry = Record<string, unknown> & {
+  fiscalYear?: { name?: string; label?: string; code?: string; isLocked?: boolean; is_locked?: boolean; status?: string;[key: string]: unknown } | null;
+  fiscal_year?: { name?: string; label?: string; code?: string; isLocked?: boolean; is_locked?: boolean; status?: string;[key: string]: unknown } | null;
+  lines?: unknown[];
+};
+function normaliseEntry(e: RawEntry | null | undefined): JournalEntry {
+  if (!e) return e as unknown as JournalEntry
   const fy = e.fiscalYear ?? e.fiscal_year ?? null
   return {
     ...e,
@@ -150,7 +156,7 @@ function normaliseEntry(e: any): any {
   }
 }
 
-export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS }: { initialEntries?: any; lookups?: Lookups }) {
+export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS }: { initialEntries?: unknown; lookups?: Lookups }) {
   const router = useRouter()
   const { fmt } = useCurrency()
   const { viewScope } = useAdmin()
@@ -509,8 +515,8 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
 function LedgerExpandedRow({ entry, fmt, onView, onDeleted }: { entry: JournalEntry; fmt: (n: number) => string; onView: (id: number) => void; onDeleted?: () => void }) {
   const sc = STATUS_CONFIG[entry.status] || { label: entry.status, color: 'var(--app-muted-foreground)' }
   const lines = entry.lines || []
-  const totalDebit = lines.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0)
-  const totalCredit = lines.reduce((s: number, l: any) => s + (Number(l.credit) || 0), 0)
+  const totalDebit = lines.reduce((s: number, l: { debit?: number | string; [key: string]: unknown }) => s + (Number(l.debit) || 0), 0)
+  const totalCredit = lines.reduce((s: number, l: { credit?: number | string; [key: string]: unknown }) => s + (Number(l.credit) || 0), 0)
   const isLocked = entry.fiscalYear?.status === 'LOCKED' || entry.fiscalYear?.isLocked
   const dateStr = entry.transactionDate ? new Date(entry.transactionDate).toLocaleDateString('en-GB') : '—'
 
@@ -581,7 +587,18 @@ function LedgerExpandedRow({ entry, fmt, onView, onDeleted }: { entry: JournalEn
             <div className="w-24 text-right">Debit</div>
             <div className="w-24 text-right">Credit</div>
           </div>
-          {lines.map((l: any, i: number) => {
+          {lines.map((l: {
+            debit?: number | string;
+            credit?: number | string;
+            account?: { id?: number; code?: string; name?: string;[key: string]: unknown };
+            contact?: { id?: number; name?: string;[key: string]: unknown };
+            costCenter?: string;
+            cost_center?: string;
+            description?: string;
+            transaction_date?: string;
+            transactionDate?: string;
+            [key: string]: unknown;
+          }, i: number) => {
             // Per-line date falls back to the entry's transaction date since
             // every line of a journal entry shares the same posting date.
             const lineDateRaw = l.transactionDate || l.transaction_date || l.date || entry.transactionDate

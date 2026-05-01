@@ -19,8 +19,8 @@ type Args = {
     setProfilesData: React.Dispatch<React.SetStateAction<AnalyticsProfilesData | null>>
     editingProfile: AnalyticsProfile | null
     setEditingProfile: React.Dispatch<React.SetStateAction<AnalyticsProfile | null>>
-    profileOverrides: Record<string, any>
-    setProfileOverrides: React.Dispatch<React.SetStateAction<Record<string, any>>>
+    profileOverrides: Record<string, unknown>
+    setProfileOverrides: React.Dispatch<React.SetStateAction<Record<string, unknown>>>
     creatingForContext: string | null
     setCreatingForContext: React.Dispatch<React.SetStateAction<string | null>>
     newProfileName: string
@@ -32,11 +32,11 @@ type Args = {
     setShowHistory: React.Dispatch<React.SetStateAction<boolean>>
     setSaved: React.Dispatch<React.SetStateAction<boolean>>
     setLastSavedAt: React.Dispatch<React.SetStateAction<Date | null>>
-    undoStack: Array<{ key: string; prev: any; configSnapshot?: PurchaseAnalyticsConfig }>
-    setUndoStack: React.Dispatch<React.SetStateAction<Array<{ key: string; prev: any; configSnapshot?: PurchaseAnalyticsConfig }>>>
+    undoStack: Array<{ key: string; prev: unknown; configSnapshot?: PurchaseAnalyticsConfig }>
+    setUndoStack: React.Dispatch<React.SetStateAction<Array<{ key: string; prev: unknown; configSnapshot?: PurchaseAnalyticsConfig }>>>
     isCreateMode: boolean
     isEditMode: boolean
-    update: (key: keyof PurchaseAnalyticsConfig, value: any) => void
+    update: (key: keyof PurchaseAnalyticsConfig, value: unknown) => void
     startTransition: React.TransitionStartFunction
 }
 
@@ -122,16 +122,16 @@ export function paHandlers(a: Args) {
 
     const handleClipboardImport = async () => {
         try {
-            const parsed = JSON.parse(await navigator.clipboard.readText())
-            if (typeof parsed === 'object' && parsed.sales_avg_period_days !== undefined) {
-                Object.entries(parsed).forEach(([k, v]) => { if (!k.startsWith('_')) a.update(k as any, v) })
+            const parsed = JSON.parse(await navigator.clipboard.readText()) as Record<string, unknown> | null
+            if (parsed && typeof parsed === 'object' && parsed.sales_avg_period_days !== undefined) {
+                Object.entries(parsed).forEach(([k, v]) => { if (!k.startsWith('_')) a.update(k as keyof PurchaseAnalyticsConfig, v) })
             }
         } catch {}
     }
 
     const handleShareUrl = () => {
         if (!a.config) return
-        const { _last_modified_by, _last_modified_at, _version_count, _user_role, _restricted_fields, _active_editors, ...clean } = a.config as any
+        const { _last_modified_by, _last_modified_at, _version_count, _user_role, _restricted_fields, _active_editors, ...clean } = a.config as unknown as Record<string, unknown>
         const encoded = btoa(JSON.stringify(clean))
         navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#config=${encoded}`)
         a.setSaved(true); setTimeout(() => a.setSaved(false), 2000)
@@ -148,10 +148,12 @@ export function paHandlers(a: Args) {
     const generateChangelog = () => {
         if (!a.config || !a.originalConfig) return ''
         const changes: string[] = []
+        const orig = a.originalConfig as unknown as Record<string, unknown>
+        const cur = a.config as unknown as Record<string, unknown>
         Object.keys(a.config).forEach(k => {
             if (k.startsWith('_')) return
-            if (JSON.stringify((a.originalConfig as any)[k]) !== JSON.stringify((a.config as any)[k])) {
-                changes.push(`- **${k.replace(/_/g, ' ')}**: ${JSON.stringify((a.originalConfig as any)[k])} → ${JSON.stringify((a.config as any)[k])}`)
+            if (JSON.stringify(orig[k]) !== JSON.stringify(cur[k])) {
+                changes.push(`- **${k.replace(/_/g, ' ')}**: ${JSON.stringify(orig[k])} → ${JSON.stringify(cur[k])}`)
             }
         })
         if (changes.length === 0) return 'No unsaved changes.'

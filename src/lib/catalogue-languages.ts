@@ -58,7 +58,7 @@ export async function getCatalogueLanguages(): Promise<LocaleCode[]> {
     if (_inflight) return _inflight;
     _inflight = (async () => {
         try {
-            const res: any = await erpFetch('inventory/categories/catalogue-languages/');
+            const res = await erpFetch('inventory/categories/catalogue-languages/') as { languages?: string[]; entries?: CatalogueLanguageEntry[] } | null;
             const langs = Array.isArray(res?.languages) ? res.languages : DEFAULT_LANGUAGES;
             _cachedLanguages = langs;
             return langs;
@@ -72,11 +72,11 @@ export async function getCatalogueLanguages(): Promise<LocaleCode[]> {
 }
 
 export async function setCatalogueLanguages(codes: LocaleCode[]): Promise<LocaleCode[]> {
-    const res: any = await erpFetch('inventory/categories/catalogue-languages/', {
+    const res = await erpFetch('inventory/categories/catalogue-languages/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ languages: codes }),
-    });
+    }) as { languages?: string[]; entries?: CatalogueLanguageEntry[] } | null;
     const langs = Array.isArray(res?.languages) ? res.languages : codes;
     _cachedLanguages = langs;
     return langs;
@@ -91,7 +91,7 @@ export interface CatalogueLanguageEntry {
 
 export async function getCatalogueLanguageEntries(): Promise<CatalogueLanguageEntry[]> {
     try {
-        const res: any = await erpFetch('inventory/categories/catalogue-languages/');
+        const res = await erpFetch('inventory/categories/catalogue-languages/') as { languages?: string[]; entries?: CatalogueLanguageEntry[] } | null;
         if (Array.isArray(res?.entries)) {
             // Side-effect: seed the simple-language cache so future
             // `getCatalogueLanguages()` calls are instant.
@@ -107,11 +107,11 @@ export async function getCatalogueLanguageEntries(): Promise<CatalogueLanguageEn
 }
 
 export async function setCatalogueLanguageEntries(entries: CatalogueLanguageEntry[]): Promise<CatalogueLanguageEntry[]> {
-    const res: any = await erpFetch('inventory/categories/catalogue-languages/', {
+    const res = await erpFetch('inventory/categories/catalogue-languages/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entries }),
-    });
+    }) as { entries?: CatalogueLanguageEntry[] } | null;
     const final: CatalogueLanguageEntry[] = Array.isArray(res?.entries) ? res.entries : entries;
     _cachedLanguages = final.map(e => e.code);
     return final;

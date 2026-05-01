@@ -292,6 +292,20 @@ export const dictionaries = {
                 reopen_period_confirm: "Reopen Period",
                 toast_reopened: "{period} reopened",
                 toast_reopen_failed: "Failed to reopen {period}",
+                tab_years: "Fiscal Years",
+                tab_multi_year: "Multi-Year",
+                search_placeholder: "Search… (Ctrl+K)",
+                focus_enter: "Focus mode — Ctrl+Q",
+                focus_exit: "Exit focus mode — Ctrl+Q",
+                focus_exit_label: "Exit",
+                wizard_title: "Create Fiscal Year",
+                wizard_subtitle: "Configure periods and timeline",
+                toolbar_search: "Search fiscal years... (Ctrl+K)",
+                kpi_fiscal_years: "Fiscal Years",
+                kpi_open_periods: "Open Periods",
+                kpi_closed: "Closed",
+                kpi_future: "Future",
+                kpi_finalized: "Finalized",
             },
             coa_templates_page: {
                 title: "Accounting Standards Library",
@@ -312,6 +326,8 @@ export const dictionaries = {
                 replace_desc: "Your current chart of accounts ({current}) has no transactions, balances, or custom accounts. It will be deleted and replaced with the new template. No migration is needed.",
                 replace_confirm: "Replace & Import",
                 error_prefix: "Error",
+                toolbar_focus_label: "Standards Library",
+                toolbar_search: "Search by name, region, key... (Ctrl+K)",
             },
             coa_migrate_page: {
                 title: "Account Migration",
@@ -330,6 +346,12 @@ export const dictionaries = {
                 toast_auto_detected: "Auto-detected {n} posting rules",
                 toast_no_rules_detected: "No new rules could be auto-detected",
                 toast_saved_with_errors: "Saved with {n} errors",
+                toast_no_changes: "No changes to save",
+                empty_no_matches: "No matches",
+                empty_no_accounts: "No accounts",
+                empty_no_events: "No events",
+                empty_no_matching_events: "No matching events",
+                clear_mapping: "Clear mapping",
             },
         },
         inventory: {
@@ -483,6 +505,13 @@ export const dictionaries = {
                 toast_delete_failed_after_migration: "Delete failed after migration",
                 toast_migration_failed: "Migration failed",
                 toast_migration_failed_aborted: "Migration failed — delete aborted",
+                bulk_selected: "{count} selected",
+                bulk_move: "Move",
+                bulk_delete: "Delete",
+                bulk_clear_title: "Clear selection (Esc)",
+                csv_import_title: "Import Categories",
+                csv_import_subtitle: "Bulk create from a CSV file",
+                csv_how_to: "How to prepare your CSV",
             },
         },
         purchases: {
@@ -800,6 +829,20 @@ export const dictionaries = {
                 reopen_period_confirm: "Rouvrir la période",
                 toast_reopened: "{period} rouverte",
                 toast_reopen_failed: "Échec de la réouverture de {period}",
+                tab_years: "Exercices comptables",
+                tab_multi_year: "Multi-exercice",
+                search_placeholder: "Rechercher… (Ctrl+K)",
+                focus_enter: "Mode focus — Ctrl+Q",
+                focus_exit: "Quitter le mode focus — Ctrl+Q",
+                focus_exit_label: "Quitter",
+                wizard_title: "Créer un exercice",
+                wizard_subtitle: "Configurer les périodes et le calendrier",
+                toolbar_search: "Rechercher des exercices... (Ctrl+K)",
+                kpi_fiscal_years: "Exercices",
+                kpi_open_periods: "Périodes ouvertes",
+                kpi_closed: "Clôturées",
+                kpi_future: "Futures",
+                kpi_finalized: "Finalisées",
             },
             coa_templates_page: {
                 title: "Bibliothèque de référentiels comptables",
@@ -820,6 +863,8 @@ export const dictionaries = {
                 replace_desc: "Votre plan comptable actuel ({current}) ne contient aucune transaction, solde ni compte personnalisé. Il sera supprimé et remplacé par le nouveau modèle. Aucune migration n'est nécessaire.",
                 replace_confirm: "Remplacer et importer",
                 error_prefix: "Erreur",
+                toolbar_focus_label: "Bibliothèque de référentiels",
+                toolbar_search: "Rechercher par nom, région, clé... (Ctrl+K)",
             },
             coa_migrate_page: {
                 title: "Migration des comptes",
@@ -838,6 +883,12 @@ export const dictionaries = {
                 toast_auto_detected: "{n} règles d'imputation détectées automatiquement",
                 toast_no_rules_detected: "Aucune nouvelle règle détectable automatiquement",
                 toast_saved_with_errors: "Enregistré avec {n} erreurs",
+                toast_no_changes: "Aucune modification à enregistrer",
+                empty_no_matches: "Aucun résultat",
+                empty_no_accounts: "Aucun compte",
+                empty_no_events: "Aucun événement",
+                empty_no_matching_events: "Aucun événement correspondant",
+                clear_mapping: "Effacer l'imputation",
             },
         },
         inventory: {
@@ -990,6 +1041,13 @@ export const dictionaries = {
                 toast_delete_failed_after_migration: "Échec de la suppression après migration",
                 toast_migration_failed: "Échec de la migration",
                 toast_migration_failed_aborted: "Échec de la migration — suppression annulée",
+                bulk_selected: "{count} sélectionné(es)",
+                bulk_move: "Déplacer",
+                bulk_delete: "Supprimer",
+                bulk_clear_title: "Effacer la sélection (Échap)",
+                csv_import_title: "Importer des catégories",
+                csv_import_subtitle: "Création en lot depuis un fichier CSV",
+                csv_how_to: "Comment préparer votre CSV",
             },
         },
         purchases: {
@@ -1034,3 +1092,8 @@ export const dictionaries = {
 
 export type Dictionary = typeof dictionaries.en;
 export type Locale = keyof typeof dictionaries;
+
+/** Locale codes that render right-to-left. Empty for now (en/fr only),
+ *  imported by `useTranslation` so the hook can flip `dir="rtl"` on the
+ *  document root when an RTL locale is active. */
+export const RTL_LOCALES: readonly Locale[] = [];

@@ -19,9 +19,26 @@ import { GatewayEditorDialog } from './GatewayEditorDialog'
 /* ── Input styles ── */
 const inputCls = "w-full text-[12px] font-bold px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary focus:ring-2 focus:ring-app-primary/10 transition-all"
 
+type RefGatewayConfigField = { key: string; label?: string; type?: string; required?: boolean;[key: string]: unknown };
+type RefGateway = {
+    id: number;
+    name: string;
+    code: string;
+    is_active: boolean;
+    is_global?: boolean;
+    provider_family?: string;
+    description?: string;
+    config_schema?: RefGatewayConfigField[];
+    color?: string;
+    logo_emoji?: string;
+    country_codes?: string[];
+    website_url?: string;
+    [key: string]: unknown;
+};
+
 export default function PaymentGatewaysClient({ allGateways, initialOrgGateways }: {
-    allGateways: any[]
-    initialOrgGateways: any[]
+    allGateways: RefGateway[]
+    initialOrgGateways: Array<Record<string, unknown>>
 }) {
     const router = useRouter()
     const [, startTransition] = useTransition()
@@ -30,18 +47,18 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
     const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'inactive'>('')
     const [expanded, setExpanded] = useState<number | null>(null)
     const [editorOpen, setEditorOpen] = useState(false)
-    const [editorTarget, setEditorTarget] = useState<any | null>(null)
-    const [pendingDelete, setPendingDelete] = useState<any | null>(null)
+    const [editorTarget, setEditorTarget] = useState<RefGateway | null>(null)
+    const [pendingDelete, setPendingDelete] = useState<RefGateway | null>(null)
 
     function openCreate() {
         setEditorTarget(null)
         setEditorOpen(true)
     }
-    function openEdit(gw: any) {
+    function openEdit(gw: RefGateway) {
         setEditorTarget(gw)
         setEditorOpen(true)
     }
-    async function handleToggle(gw: any) {
+    async function handleToggle(gw: RefGateway) {
         const res = await runTimed(
             'saas.payment-gateways:toggle-active',
             () => toggleRefPaymentGateway(gw.id),
@@ -101,7 +118,7 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
 
     // Group by family for visual organization
     const familyGroups = useMemo(() => {
-        const groups: Record<string, any[]> = {}
+        const groups: Record<string, RefGateway[]> = {}
         filtered.forEach(gw => {
             const fam = gw.provider_family || 'Other'
             if (!groups[fam]) groups[fam] = []
@@ -177,7 +194,7 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                     <option value="">All Families</option>
                     {families.map(f => <option key={f} value={f}>{f}</option>)}
                 </select>
-                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)}
+                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as '' | 'active' | 'inactive')}
                     className={`${inputCls} w-[120px] appearance-none pr-7`}
                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
                     <option value="">All Status</option>
@@ -306,7 +323,7 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                                                         <Settings2 size={9} /> Config Schema ({fieldCount})
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-1">
-                                                        {(gw.config_schema || []).map((f: any) => (
+                                                        {(gw.config_schema || []).map((f) => (
                                                             <div key={f.key} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[9px]"
                                                                 style={{ background: `color-mix(in srgb, ${color} 5%, transparent)` }}>
                                                                 <span className="font-mono font-bold" style={{ color }}>{f.key}</span>

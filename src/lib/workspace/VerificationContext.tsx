@@ -23,8 +23,8 @@ export type ValidationStatus = 'validated' | 'warning' | 'mismatch' | 'pending'
 export interface FieldLink {
   fieldKey: string
   fieldLabel: string
-  systemValue: any
-  documentValue: any
+  systemValue: unknown
+  documentValue: unknown
   confidence: ConfidenceLevel
   status: ValidationStatus
   documentZone?: {
@@ -38,8 +38,8 @@ export interface FieldLink {
 
 export interface MismatchSuggestion {
   fieldKey: string
-  systemValue: any
-  documentValue: any
+  systemValue: unknown
+  documentValue: unknown
   suggestedAction: 'accept_system' | 'accept_document' | 'manual_review'
   reason: string
 }
@@ -65,7 +65,7 @@ interface VerificationContextValue {
 
   // Editing state
   editedFields: Map<string, any>
-  setFieldValue: (fieldKey: string, value: any) => void
+  setFieldValue: (fieldKey: string, value: unknown) => void
   clearEditedFields: () => void
 
   // Validation
@@ -82,8 +82,8 @@ export interface AuditEntry {
   timestamp: string
   action: 'field_edited' | 'field_validated' | 'mismatch_detected' | 'mismatch_resolved' | 'document_linked'
   fieldKey?: string
-  oldValue?: any
-  newValue?: any
+  oldValue?: unknown
+  newValue?: unknown
   user: string
   note?: string
 }
@@ -112,7 +112,7 @@ export function VerificationProvider({ children, invoiceId }: VerificationProvid
   const [fieldLinks, setFieldLinks] = useState<Map<string, FieldLink>>(new Map())
   const [mismatches, setMismatches] = useState<MismatchSuggestion[]>([])
   const [highlightedZone, setHighlightedZone] = useState<FieldLink['documentZone'] | null>(null)
-  const [editedFields, setEditedFieldsState] = useState<Map<string, any>>(new Map())
+  const [editedFields, setEditedFieldsState] = useState<Map<string, unknown>>(new Map())
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([])
 
   // ─── Field Link Management ─────────────────────────────────────
@@ -197,7 +197,7 @@ export function VerificationProvider({ children, invoiceId }: VerificationProvid
 
   // ─── Field Editing ─────────────────────────────────────────────
 
-  const setFieldValue = useCallback((fieldKey: string, value: any) => {
+  const setFieldValue = useCallback((fieldKey: string, value: unknown) => {
     setEditedFieldsState(prev => {
       const next = new Map(prev)
       const oldValue = next.get(fieldKey)

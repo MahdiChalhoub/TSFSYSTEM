@@ -2,6 +2,7 @@
 
 import { Calendar, X, AlertTriangle, Loader2 } from 'lucide-react'
 import { useModalDismiss } from '@/hooks/useModalDismiss'
+import { useTranslation } from '@/hooks/use-translation'
 
 export interface WizardFormData {
     name: string
@@ -22,6 +23,7 @@ interface WizardModalProps {
 
 export function WizardModal({ data, setData, onClose, onSubmit, isPending }: WizardModalProps) {
     const dismiss = useModalDismiss(true, onClose)
+    const { t } = useTranslation()
 
     const sd = new Date(data.startDate)
     const ed = new Date(data.endDate)
@@ -41,8 +43,8 @@ export function WizardModal({ data, setData, onClose, onSubmit, isPending }: Wiz
                             <Calendar size={16} style={{ color: 'var(--app-primary)' }} />
                         </div>
                         <div>
-                            <h2 className="text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>Create Fiscal Year</h2>
-                            <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Configure periods and timeline</p>
+                            <h2 className="text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>{t('finance.fiscal_years_page.wizard_title')}</h2>
+                            <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.fiscal_years_page.wizard_subtitle')}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--app-muted-foreground)' }}><X size={16} /></button>

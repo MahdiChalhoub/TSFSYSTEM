@@ -72,10 +72,14 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                     return
                 }
 
-                const result = await importChartOfAccountsTemplate(selectedTemplate as any, { reset: importMode === 'fresh' })
-                if (result && (result as any).success === false) {
-                    setImportError((result as any).message || 'Import failed')
-                    toast.error('Import failed: ' + ((result as any).message || 'Unknown error'))
+                const result = await importChartOfAccountsTemplate(selectedTemplate, { reset: importMode === 'fresh' })
+                // The action throws on failure; the early-return path for
+                // {success:false} stays as a defensive guard for future shape
+                // changes.
+                const r = result as { success?: boolean; message?: string } | null
+                if (r && r.success === false) {
+                    setImportError(r.message || 'Import failed')
+                    toast.error('Import failed: ' + (r.message || 'Unknown error'))
                     return
                 }
 
@@ -94,8 +98,8 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                 }))
                 toast.success('Template imported & posting rules auto-mapped!')
                 setCurrentStep(2)
-            } catch (error: any) {
-                const msg = error?.message || 'Unknown error'
+            } catch (error: unknown) {
+                const msg = error instanceof Error ? error.message : 'Unknown error'
                 setImportError(msg)
                 toast.error('Import failed: ' + msg)
             }

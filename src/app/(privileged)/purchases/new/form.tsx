@@ -6,7 +6,8 @@ import { createPurchaseInvoice } from '@/app/actions/commercial/purchases'
 import {
     ShoppingCart, ArrowLeft, Settings2, FileText,
     ListFilter, BookOpen, Plus, ArrowRight,
-    DollarSign, Hash, Layers, TrendingUp
+    DollarSign, Hash, Layers, TrendingUp,
+    Building2, MapPin,
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -16,6 +17,7 @@ import { LineColumnHeaders } from './_components/LineColumnHeaders'
 import { LineRowDesktop } from './_components/LineRowDesktop'
 import { AdminSidebar } from './_components/AdminSidebar'
 import type { AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
+import { peekNextCode, prefetchNextCode, resolveDocSeqKey } from '@/lib/sequences-client'
 
 export default function PurchaseForm({
     suppliers, sites, financialSettings, users, profilesData
@@ -31,6 +33,10 @@ export default function PurchaseForm({
     const searchRef = useRef<HTMLInputElement>(null)
 
     const [reference, setReference] = useState('')
+    // True if the user has hand-typed into the reference field. Once they
+    // do, we never overwrite it with a fresh sequence peek — auto-fill is
+    // a convenience, not a constraint.
+    const [referenceTouched, setReferenceTouched] = useState(false)
     const [date, setDate] = useState(new Date().toISOString().split('T')[0])
     const [deliveryDate, setDeliveryDate] = useState('')
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL')
@@ -72,6 +78,28 @@ export default function PurchaseForm({
         window.addEventListener('keydown', handler)
         return () => window.removeEventListener('keydown', handler)
     }, [])
+
+    // Auto-fill the PO reference from the tenant's PURCHASE_ORDER sequence
+    // (configured under /settings/sequences). Picks the OFFICIAL or INTERNAL
+    // tier based on the current scope, so toggling OFFICIAL ⇄ INTERNAL
+    // refreshes the suggested reference (PO-… ⇄ IPO-…) — same convention as
+    // the backend save path. Skipped once the user has hand-edited the
+    // field — `referenceTouched` is the discipline lever.
+    useEffect(() => {
+        // Warm both tiers so a scope toggle is instant on second hit.
+        prefetchNextCode('PURCHASE_ORDER')
+        prefetchNextCode('PURCHASE_ORDER_INTERNAL')
+        if (referenceTouched) return
+        const key = resolveDocSeqKey('PURCHASE_ORDER', scope)
+        peekNextCode(key)
+            .then(code => {
+                // Re-check `referenceTouched` after the await — user could
+                // have started typing during the round-trip.
+                if (!referenceTouched) setReference(code)
+            })
+            .catch(() => { /* keep whatever we already have */ })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [scope])
 
     const addProductToLines = (product: Record<string, any>) => {
         if (lines.find(l => l.productId === product.id)) { toast.info('Already in list'); return }
@@ -115,43 +143,97 @@ export default function PurchaseForm({
                             style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                             <ShoppingCart size={20} className="text-white" />
                         </div>
-                        <div className="min-w-0">
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight leading-none">
+                        <div className="min-w-0 flex-1">
+                            <h1 className="font-black text-app-foreground tracking-tight leading-none truncate"
+                                style={{ fontSize: 'var(--tp-lg)' }}
+                                title="New Purchase Order">
                                 New Purchase Order
                             </h1>
-                            <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest mt-0.5">
-                                {selectedSupplier
-                                    ? `${selectedSupplier.name}${selectedSite ? ` · ${selectedSite.name}` : ''} · ${scope}`
-                                    : `Draft · ${scope} · Click Configure to set up`}
-                            </p>
+                            {/* Subtitle is conditional:
+                             *   - When the user hasn't configured anything yet → soft hint.
+                             *   - Once Reference / Supplier / Site are set → show them as
+                             *     compact chips so the operator can verify at a glance
+                             *     without opening the side panel. After full setup the
+                             *     "Click Configure to set up" hint is dead weight. */}
+                            {(reference || selectedSupplier || selectedSite) ? (
+                                <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                                    {reference && (
+                                        <SummaryChip
+                                            icon={<Hash size={10} />}
+                                            label={reference}
+                                            color="var(--app-primary)"
+                                            onClick={() => setSidebarOpen(true)}
+                                        />
+                                    )}
+                                    {selectedSupplier && (
+                                        <SummaryChip
+                                            icon={<Building2 size={10} />}
+                                            label={selectedSupplier.name}
+                                            color="var(--app-info, #3b82f6)"
+                                            onClick={() => setSidebarOpen(true)}
+                                        />
+                                    )}
+                                    {selectedSite && (
+                                        <SummaryChip
+                                            icon={<MapPin size={10} />}
+                                            label={selectedSite.name}
+                                            color="var(--app-success, #22c55e)"
+                                            onClick={() => setSidebarOpen(true)}
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="font-bold text-app-muted-foreground uppercase tracking-widest mt-0.5"
+                                   style={{ fontSize: 'var(--tp-xxs)' }}>
+                                    Draft · Click <span style={{ color: 'var(--app-primary)' }}>configure</span> to set up
+                                </p>
+                            )}
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <div className="flex items-center p-0.5 rounded-xl bg-app-surface border border-app-border">
-                            {(['OFFICIAL', 'INTERNAL'] as const).map(s => (
-                                <button key={s} type="button" onClick={() => setScope(s)}
-                                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all ${scope === s ? 'bg-app-primary text-white' : 'text-app-muted-foreground hover:text-app-foreground'}`}
-                                    style={scope === s ? { boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' } : {}}>
-                                    {s}
-                                </button>
-                            ))}
+                    {/* ───────────────────────────────────────────
+                     *  HEADER CONTROL ROW — three buttons sharing
+                     *  the same height (h-9 / 36px), border radius
+                     *  (rounded-xl), border treatment (app-border on
+                     *  surface), and primary fill on active state.
+                     *  Built with shared CSS variables so a theme tweak
+                     *  stays consistent across all three.
+                     * ───────────────────────────────────────────── */}
+                    <div className="flex items-center gap-2 flex-shrink-0 h-9">
+                        {/* Scope toggle */}
+                        <div className="h-9 flex items-center p-0.5 rounded-xl bg-app-surface border border-app-border">
+                            {(['OFFICIAL', 'INTERNAL'] as const).map(s => {
+                                const active = scope === s
+                                return (
+                                    <button key={s} type="button" onClick={() => setScope(s)}
+                                            className="h-8 px-3 text-[11px] font-bold rounded-lg transition-all"
+                                            style={active
+                                                ? { background: 'var(--app-primary)', color: 'white' }
+                                                : { color: 'var(--app-muted-foreground)', background: 'transparent' }}>
+                                        {s}
+                                    </button>
+                                )
+                            })}
                         </div>
+
+                        {/* Configure icon button — same height, same surface, same border. */}
                         <button type="button" onClick={() => setSidebarOpen(true)}
-                            className="flex items-center gap-1.5 text-tp-xs font-black uppercase tracking-widest px-2.5 py-1.5 rounded-xl transition-all border group"
-                            style={sidebarOpen ? {
-                                background: 'var(--app-primary)',
-                                color: 'white',
-                                borderColor: 'var(--app-primary)',
-                                boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)'
-                            } : {
-                                background: 'var(--app-surface)',
-                                color: 'var(--app-foreground)',
-                                borderColor: 'var(--app-border)',
-                            }}>
-                            <Settings2 size={14} className={sidebarOpen ? 'text-white' : 'text-app-primary'} />
-                            <span className="hidden md:inline">Configure Setup</span>
+                                aria-label="Configure setup"
+                                title="Configure setup"
+                                className="h-9 w-9 flex items-center justify-center rounded-xl border transition-all"
+                                style={sidebarOpen ? {
+                                    background: 'var(--app-primary)',
+                                    color: 'white',
+                                    borderColor: 'var(--app-primary)',
+                                } : {
+                                    background: 'var(--app-surface)',
+                                    color: 'var(--app-primary)',
+                                    borderColor: 'var(--app-border)',
+                                }}>
+                            <Settings2 size={14} />
                         </button>
+
+                        {/* Submit — same height, same radius, primary fill (always-on accent). */}
                         <form id="po-form" action={formAction}>
                             <input type="hidden" name="scope" value={scope} />
                             <input type="hidden" name="supplierId" value={supplierId} />
@@ -161,8 +243,12 @@ export default function PurchaseForm({
                             <input type="hidden" name="driverId" value={driverId} />
                             <input type="hidden" name="lines" value={JSON.stringify(lines)} />
                             <button type="submit" disabled={!canSubmit}
-                                className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                                style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                    className="h-9 px-3.5 flex items-center gap-1.5 text-[11px] font-bold rounded-xl border transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+                                    style={{
+                                        background: 'var(--app-primary)',
+                                        color: 'white',
+                                        borderColor: 'var(--app-primary)',
+                                    }}>
                                 <ArrowRight size={14} />
                                 <span className="hidden sm:inline">{isPending ? 'Processing…' : 'Create PO'}</span>
                             </button>
@@ -258,7 +344,7 @@ export default function PurchaseForm({
                                 scope={scope} onScopeChange={setScope}
                                 assigneeId={assigneeId} onAssigneeChange={setAssigneeId}
                                 driverId={driverId} onDriverChange={setDriverId}
-                                reference={reference} onReferenceChange={setReference}
+                                reference={reference} onReferenceChange={(v) => { setReferenceTouched(true); setReference(v) }}
                                 date={date} onDateChange={setDate}
                                 expectedDelivery={deliveryDate} onExpectedDeliveryChange={setDeliveryDate}
                                 onClose={() => setSidebarOpen(false)}
@@ -269,5 +355,30 @@ export default function PurchaseForm({
 
             </div>
         </>
+    )
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ *  SummaryChip — compact configured-value badge for the page header.
+ *  Click → opens the configuration panel scrolled to the matching step.
+ * ───────────────────────────────────────────────────────────────────── */
+function SummaryChip({ icon, label, color, onClick }: {
+    icon: React.ReactNode
+    label: string
+    color: string
+    onClick?: () => void
+}) {
+    return (
+        <button type="button" onClick={onClick} title={`${label} — click to edit`}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold transition-all hover:brightness-110 max-w-[200px]"
+                style={{
+                    fontSize: 'var(--tp-xxs)',
+                    background: `color-mix(in srgb, ${color} 10%, transparent)`,
+                    color,
+                    border: `1px solid color-mix(in srgb, ${color} 22%, transparent)`,
+                }}>
+            <span className="flex-shrink-0 opacity-80">{icon}</span>
+            <span className="truncate">{label}</span>
+        </button>
     )
 }

@@ -15,15 +15,29 @@
  *
  *   CATEGORY · BRAND · UNIT · UNIT_PACKAGE ·
  *   PACKAGING_SUGGESTION_RULE · PRODUCT_GROUP ·
- *   PRODUCT_ATTRIBUTE · WAREHOUSE · PARFUM
+ *   PRODUCT_ATTRIBUTE · WAREHOUSE · PARFUM ·
+ *   PURCHASE_ORDER
  */
 
 import { erpFetch } from '@/lib/erp-api';
 
+/**
+ * Document-type sequences come in three tiers (mirrors backend
+ * `TransactionSequence.DOCUMENT_PREFIXES`):
+ *   - OFFICIAL → `<DOC>`              (e.g. PURCHASE_ORDER          → PO-)
+ *   - INTERNAL → `<DOC>_INTERNAL`     (e.g. PURCHASE_ORDER_INTERNAL → IPO-)
+ *   - DRAFT    → `<DOC>_DRAFT`        (e.g. PURCHASE_ORDER_DRAFT    → DFT-)
+ *
+ * Use `resolveDocSeqKey('PURCHASE_ORDER', scope)` to pick the right key
+ * when the user toggles the scope on a draft form.
+ */
 export type SequenceKey =
     | 'CATEGORY' | 'BRAND' | 'UNIT' | 'UNIT_PACKAGE'
     | 'PACKAGING_SUGGESTION_RULE' | 'PRODUCT_GROUP'
-    | 'PRODUCT_ATTRIBUTE' | 'WAREHOUSE' | 'PARFUM';
+    | 'PRODUCT_ATTRIBUTE' | 'WAREHOUSE' | 'PARFUM'
+    | 'PURCHASE_ORDER' | 'PURCHASE_ORDER_INTERNAL' | 'PURCHASE_ORDER_DRAFT';
+
+export type DocScope = 'OFFICIAL' | 'INTERNAL' | 'DRAFT';
 
 const DEFAULT_PREFIXES: Record<SequenceKey, string> = {
     CATEGORY: 'CAT-',
@@ -35,7 +49,21 @@ const DEFAULT_PREFIXES: Record<SequenceKey, string> = {
     PRODUCT_ATTRIBUTE: 'ATT-',
     WAREHOUSE: 'WH-',
     PARFUM: 'PAR-',
+    PURCHASE_ORDER: 'PO-',
+    PURCHASE_ORDER_INTERNAL: 'IPO-',
+    PURCHASE_ORDER_DRAFT: 'DFT-',
 };
+
+/** Mirror of backend `TransactionSequence.resolve_seq_key`. Returns the
+ *  sequence key for a given document type + scope. OFFICIAL is the bare
+ *  doc type (no suffix); INTERNAL/DRAFT add a tier suffix. */
+export function resolveDocSeqKey(
+    doc: 'PURCHASE_ORDER',
+    scope: DocScope = 'OFFICIAL',
+): SequenceKey {
+    if (scope === 'OFFICIAL') return doc
+    return `${doc}_${scope}` as SequenceKey
+}
 
 /** In-memory cache so opening the New dialog multiple times doesn't round-trip
  *  every click. Entries live 30s — plenty of time to draft the form, short
@@ -53,7 +81,13 @@ export async function peekNextCode(type: SequenceKey): Promise<string> {
     try {
         const res: any = await erpFetch(`sequences/?type=${encodeURIComponent(type)}`);
         const rows: any[] = Array.isArray(res) ? res : (res?.results ?? []);
-        const seq = rows.find(r => r.type === type) || rows[0];
+        // EXACT match only. The endpoint sometimes returns the full list
+        // even when ?type= is passed (back-end ignores it on some installs);
+        // falling back to `rows[0]` would silently return another entity's
+        // sequence (e.g. JOU- prefix when asking for PURCHASE_ORDER), which
+        // looks correct but is dangerously wrong. If no exact match, use the
+        // default prefix and a fresh counter — much safer than a random hit.
+        const seq = rows.find(r => r.type === type);
         let value: string;
         if (!seq) {
             value = `${DEFAULT_PREFIXES[type]}${String(1).padStart(5, '0')}`;

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { RefreshCcw, Lock, Check, AlertTriangle, BookOpen, X } from 'lucide-react'
 import { useScope } from '@/hooks/useScope'
+import { useTranslation } from '@/hooks/use-translation'
 
 interface Props {
     open: boolean
@@ -20,6 +21,7 @@ interface Props {
 
 export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Props) {
     const { isOfficial } = useScope()
+    const { t } = useTranslation()
     const [running, setRunning] = useState(false)
 
     const handleConfirm = async () => {
@@ -63,13 +65,13 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
                             className="text-[15px] font-black leading-tight"
                             style={{ color: 'var(--app-foreground)' }}
                         >
-                            Recalculate balances?
+                            {t('finance.coa.recalc_title')}
                         </DialogTitle>
                         <p
                             className="text-[10px] font-bold uppercase tracking-[0.06em] mt-0.5"
                             style={{ color: 'var(--app-muted-foreground)' }}
                         >
-                            Audit · rebuild from journal entries
+                            {t('finance.coa.recalc_subtitle')}
                         </p>
                     </div>
                 </DialogHeader>
@@ -80,7 +82,7 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
                     <Section
                         icon={BookOpen}
                         color="var(--app-info, #3b82f6)"
-                        title="What this does"
+                        title={t('finance.coa.recalc_section_what')}
                         body={
                             isOfficial
                                 ? "Re-aggregates every account's cached balance directly from POSTED journal-entry lines. Runs as a single SQL update — no journal re-posting, no period transitions."
@@ -92,7 +94,7 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
                     <Section
                         icon={Lock}
                         color="var(--app-success, #22c55e)"
-                        title="Safe on closed and finalized years"
+                        title={t('finance.coa.recalc_section_safe')}
                         body="Only the cached balance fields on each account are updated. Journal entries, hash chains, snapshots, and closed-period locks are not touched. You can run this on any org, even ones with finalized fiscal years."
                     >
                         <ul className="mt-1.5 space-y-1 text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -115,7 +117,7 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
                     <Section
                         icon={AlertTriangle}
                         color="var(--app-warning, #f59e0b)"
-                        title="When to run it"
+                        title={t('finance.coa.recalc_section_when')}
                         body="If the integrity canary on the Fiscal Years → Integrity tab reports drift between stored and recomputed balances, click here to sync. Also useful after data imports, manual fixes, or if a balance ever looks wrong on the accounts tree. The lower-level hard-recalc is reserved for migrations and not exposed here."
                     />
                 </div>
@@ -135,7 +137,7 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
                         className="flex-1 sm:flex-none rounded-xl text-[12px] sm:text-[11px] font-bold gap-1.5 h-10 sm:h-9"
                         style={{ borderColor: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}
                     >
-                        <X size={13} /> Cancel
+                        <X size={13} /> {t('common.cancel')}
                     </Button>
                     <Button
                         onClick={handleConfirm}
@@ -148,7 +150,7 @@ export function RecalculateBalancesDialog({ open, onOpenChange, onConfirm }: Pro
                         }}
                     >
                         <RefreshCcw size={13} className={running ? 'animate-spin' : ''} />
-                        {running ? 'Recalculating…' : 'Recalculate'}
+                        {running ? t('finance.coa.recalc_btn_running') : t('finance.coa.recalc_btn_run')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -1,11 +1,7 @@
 import { Calendar, BarChart3, Maximize2, Minimize2, Search } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 
 export type PageTab = 'years' | 'multiyear'
-
-const TABS: { id: PageTab; label: string; icon: typeof Calendar }[] = [
-    { id: 'years', label: 'Fiscal Years', icon: Calendar },
-    { id: 'multiyear', label: 'Multi-Year', icon: BarChart3 },
-]
 
 interface PageTabsProps {
     activeTab: PageTab
@@ -17,17 +13,22 @@ interface PageTabsProps {
 }
 
 export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode, searchQuery, setSearchQuery }: PageTabsProps) {
+    const { t } = useTranslation()
+    const TABS: { id: PageTab; label: string; icon: typeof Calendar }[] = [
+        { id: 'years', label: t('finance.fiscal_years_page.tab_years'), icon: Calendar },
+        { id: 'multiyear', label: t('finance.fiscal_years_page.tab_multi_year'), icon: BarChart3 },
+    ]
     return (
         <div className="flex items-center gap-1 flex-shrink-0 mb-3 px-1 py-1 rounded-xl"
             style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-            {TABS.map(t => {
-                const Icon = t.icon
-                const isActive = activeTab === t.id
+            {TABS.map(tab => {
+                const Icon = tab.icon
+                const isActive = activeTab === tab.id
                 return (
                     <button
-                        key={t.id}
-                        data-tour={`${t.id}-tab`}
-                        onClick={() => onTabChange(t.id)}
+                        key={tab.id}
+                        data-tour={`${tab.id}-tab`}
+                        onClick={() => onTabChange(tab.id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all justify-center"
                         style={{
                             background: isActive ? 'var(--app-primary)' : 'transparent',
@@ -36,7 +37,7 @@ export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode, sear
                         }}
                     >
                         <Icon size={13} />
-                        <span className="hidden sm:inline">{t.label}</span>
+                        <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                 )
             })}
@@ -47,7 +48,7 @@ export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode, sear
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search… (Ctrl+K)"
+                    placeholder={t('finance.fiscal_years_page.search_placeholder')}
                     className="w-full pl-7 pr-2 py-1.5 text-[11px] rounded-lg outline-none transition-all"
                     style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                 />
@@ -55,15 +56,15 @@ export function PageTabs({ activeTab, onTabChange, focusMode, setFocusMode, sear
             <div className="w-px h-5 flex-shrink-0" style={{ background: 'var(--app-border)' }} />
             <button
                 onClick={() => setFocusMode(p => !p)}
-                title={focusMode ? 'Exit focus mode — Ctrl+Q' : 'Focus mode — Ctrl+Q'}
-                aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}
+                title={focusMode ? t('finance.fiscal_years_page.focus_exit') : t('finance.fiscal_years_page.focus_enter')}
+                aria-label={focusMode ? t('finance.fiscal_years_page.focus_exit') : t('finance.fiscal_years_page.focus_enter')}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all flex-shrink-0 text-[11px] font-bold"
                 style={{
                     color: focusMode ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                     background: focusMode ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
                 }}
             >
-                {focusMode ? <><Minimize2 size={13} /><span className="hidden sm:inline">Exit</span></> : <Maximize2 size={13} />}
+                {focusMode ? <><Minimize2 size={13} /><span className="hidden sm:inline">{t('finance.fiscal_years_page.focus_exit_label')}</span></> : <Maximize2 size={13} />}
             </button>
         </div>
     )

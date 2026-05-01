@@ -146,14 +146,14 @@ function AccountTreePicker({
                                 className="w-full flex items-center gap-2 px-3 py-2 text-left transition-all"
                                 style={{ borderBottom: '1px solid var(--app-border)', color: 'var(--app-error, #ef4444)' }}>
                                 <X size={12} />
-                                <span className="text-[10px] font-bold">Clear mapping</span>
+                                <span className="text-[10px] font-bold">{t('finance.posting_rules_page.clear_mapping')}</span>
                             </button>
                         )}
 
                         {(searchResults || currentChildren).length === 0 ? (
                             <div className="py-6 text-center">
                                 <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                                    {search ? 'No matches' : 'No accounts'}
+                                    {search ? t('finance.posting_rules_page.empty_no_matches') : t('finance.posting_rules_page.empty_no_accounts')}
                                 </p>
                             </div>
                         ) : (
@@ -351,7 +351,7 @@ export default function PostingRulesConsole({
     const handleSave = () => {
         const rules = Object.entries(overrides).filter(([, id]) => id !== null && id !== undefined)
             .map(([event_code, account]) => ({ event_code, account_id: account! }))
-        if (rules.length === 0) { toast.info('No changes to save'); return }
+        if (rules.length === 0) { toast.info(t('finance.posting_rules_page.toast_no_changes')); return }
         startTransition(async () => {
             const result = await bulkSaveRules(rules)
             result.errors.length > 0 ? toast.error(t('finance.posting_rules_page.toast_saved_with_errors').replace('{n}', String(result.errors.length))) : toast.success(result.message)
@@ -594,7 +594,7 @@ export default function PostingRulesConsole({
                             <div className="flex flex-col items-center justify-center py-16 text-center">
                                 <Target size={32} className="text-app-muted-foreground mb-2 opacity-30" />
                                 <p className="text-[12px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                                    {searchQuery ? 'No matching events' : kpiFilter ? `No ${kpiFilter.toLowerCase()} events in this module` : 'No events'}
+                                    {searchQuery ? t('finance.posting_rules_page.empty_no_matching_events') : kpiFilter ? `${t('finance.posting_rules_page.empty_no_events')} (${kpiFilter.toLowerCase()})` : t('finance.posting_rules_page.empty_no_events')}
                                 </p>
                             </div>
                         ) : (

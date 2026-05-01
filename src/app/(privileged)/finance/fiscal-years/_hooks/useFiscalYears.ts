@@ -13,11 +13,27 @@ import {
 import { notifyPeriodChange } from '@/components/finance/period-warning-banner'
 import type { WizardFormData } from '../_components/WizardModal'
 import type { UseFiscalYearsReturn } from '../_lib/types'
+import { useTranslation } from '@/hooks/use-translation'
 import { computeWizardDefaults } from '../_lib/wizard-defaults'
 import { useScope } from '@/hooks/useScope'
 
+// Local helper shape for the period rows we read in this hook. Periods are
+// loose-typed across the codebase; narrow at the point of use.
+type FiscalPeriod = {
+    id: number;
+    name?: string;
+    status?: string;
+    is_closed?: boolean;
+    start_date?: string;
+    end_date?: string;
+    journal_entry_count?: number;
+    draft_je_count?: number;
+    [key: string]: unknown;
+}
+
 export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYearsReturn {
     const { scope: viewScope } = useScope()
+    const { t } = useTranslation()
     const [isPending, startTransition] = useTransition()
     const [years, setYears] = useState(initialYears)
     const [expandedYear, setExpandedYear] = useState<number | null>(years[0]?.id ?? null)
@@ -102,11 +118,12 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
     }, [years])
 
     const kpis = useMemo(() => [
-        { label: 'Fiscal Years', value: stats.total, color: 'var(--app-primary)', icon: Calendar, filterKey: 'ALL' as string | null },
-        { label: 'Open Periods', value: stats.openPeriods, color: 'var(--app-success, #22c55e)', icon: PlayCircle, filterKey: 'OPEN' as string | null },
-        { label: 'Closed', value: stats.closedPeriods, color: 'var(--app-muted-foreground)', icon: Lock, filterKey: 'CLOSED' as string | null },
-        { label: 'Future', value: stats.futurePeriods, color: 'var(--app-info, #3b82f6)', icon: Clock, filterKey: 'FUTURE' as string | null },
-        { label: 'Finalized', value: stats.lockedYears, color: 'var(--app-error, #ef4444)', icon: ShieldCheck, filterKey: 'FINALIZED' as string | null },
+        { label: t('finance.fiscal_years_page.kpi_fiscal_years'),  value: stats.total,         color: 'var(--app-primary)',           icon: Calendar,    filterKey: 'ALL' as string | null },
+        { label: t('finance.fiscal_years_page.kpi_open_periods'),  value: stats.openPeriods,   color: 'var(--app-success, #22c55e)',  icon: PlayCircle,  filterKey: 'OPEN' as string | null },
+        { label: t('finance.fiscal_years_page.kpi_closed'),        value: stats.closedPeriods, color: 'var(--app-muted-foreground)',  icon: Lock,        filterKey: 'CLOSED' as string | null },
+        { label: t('finance.fiscal_years_page.kpi_future'),        value: stats.futurePeriods, color: 'var(--app-info, #3b82f6)',     icon: Clock,       filterKey: 'FUTURE' as string | null },
+        { label: t('finance.fiscal_years_page.kpi_finalized'),     value: stats.lockedYears,   color: 'var(--app-error, #ef4444)',    icon: ShieldCheck, filterKey: 'FINALIZED' as string | null },
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- locale change forces full reload
     ], [stats])
 
     const filteredYears = useMemo(() => {
@@ -119,7 +136,7 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
             if (statusFilter === 'FINALIZED') {
                 result = result.filter(y => y.isHardLocked)
             } else {
-                result = result.filter(y => (y.periods || []).some((p: any) => (p.status || 'OPEN') === statusFilter))
+                result = result.filter(y => (y.periods || []).some((p: FiscalPeriod) => (p.status || 'OPEN') === statusFilter))
             }
         }
         return result
@@ -162,12 +179,12 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
         if (!year) return
         const todayISO = new Date().toISOString().slice(0, 10)
         const backlog = [...(year.periods || [])]
-            .filter((p: any) =>
+            .filter((p: FiscalPeriod) =>
                 (p.status || 'OPEN') === 'OPEN' &&
                 p.end_date &&
                 p.end_date < todayISO
             )
-            .sort((a: any, b: any) => (a.start_date || '').localeCompare(b.start_date || ''))
+            .sort((a: FiscalPeriod, b: FiscalPeriod) => (a.start_date || '').localeCompare(b.start_date || ''))
         if (backlog.length === 0) { toast.info('No due periods to close'); return }
 
         startTransition(async () => {
@@ -211,7 +228,7 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
         const prevIsClosed = !!period.is_closed
         setYears(prev => prev.map(y => ({
             ...y,
-            periods: (y.periods || []).map((p: any) =>
+            periods: (y.periods || []).map((p: FiscalPeriod) =>
                 p.id === periodId ? { ...p, status: newStatus, is_closed: newStatus === 'CLOSED' } : p
             ),
         })))
@@ -224,7 +241,7 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
             } catch (err) {
                 setYears(prev => prev.map(y => ({
                     ...y,
-                    periods: (y.periods || []).map((p: any) =>
+                    periods: (y.periods || []).map((p: FiscalPeriod) =>
                         p.id === periodId ? { ...p, status: prevStatus, is_closed: prevIsClosed } : p
                     ),
                 })))
@@ -235,18 +252,18 @@ export function useFiscalYears(initialYears: Record<string, any>[]): UseFiscalYe
     }
 
     const handlePeriodStatus = (periodId: number, newStatus: 'OPEN' | 'CLOSED' | 'FUTURE', yearData?: Record<string, any>) => {
-        const year = yearData || years.find(y => (y.periods || []).some((p: any) => p.id === periodId))
+        const year = yearData || years.find(y => (y.periods || []).some((p: FiscalPeriod) => p.id === periodId))
         if (!year) return
         if (year.isHardLocked) { toast.error(`Cannot modify periods — ${year.name} is permanently locked`); return }
 
-        const periods = [...(year.periods || [])].sort((a: any, b: any) => (a.start_date || '').localeCompare(b.start_date || ''))
-        const periodIdx = periods.findIndex((p: any) => p.id === periodId)
+        const periods = [...(year.periods || [])].sort((a: FiscalPeriod, b: FiscalPeriod) => (a.start_date || '').localeCompare(b.start_date || ''))
+        const periodIdx = periods.findIndex((p: FiscalPeriod) => p.id === periodId)
         const period = periods[periodIdx]
         if (!period) return
 
         const draftCount = period.draft_je_count || 0
         if ((newStatus === 'CLOSED' || newStatus === 'FUTURE') && draftCount > 0) {
-            const fy = yearData || years.find(y => (y.periods || []).some((pp: any) => pp.id === periodId))
+            const fy = yearData || years.find(y => (y.periods || []).some((pp: FiscalPeriod) => pp.id === periodId))
             if (fy) {
                 startTransition(async () => {
                     const audit = await getDraftAudit(fy.id, periodId)

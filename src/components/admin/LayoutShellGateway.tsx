@@ -23,16 +23,22 @@ import { AdminShell } from '@/components/admin/AdminShell'
 import { PeriodWarningBanner } from '@/components/finance/period-warning-banner'
 import { TaskReminderPopup } from '@/components/workspace/task-reminder-popup'
 import { MobileAdminShell } from '@/components/mobile/shell/MobileAdminShell'
+import type { AppUser, SaasOrganization, SaasSite, SidebarDynamicItem } from '@/types/erp'
+
+type UserShape = Partial<AppUser> & {
+    is_superuser?: boolean;
+    [key: string]: unknown;
+} | null;
 
 interface Props {
-    user: any
+    user: UserShape
     isSaas: boolean
     currentSlug: string
-    sites: any[]
-    organizations: any[]
+    sites: SaasSite[]
+    organizations: SaasOrganization[]
     installedModuleCodes: string[]
-    dynamicSidebarItems: any[]
-    financialSettings: any
+    dynamicSidebarItems: SidebarDynamicItem[]
+    financialSettings: Record<string, unknown> | null
     initialIsMobile?: boolean
     children: React.ReactNode
 }
@@ -73,12 +79,12 @@ export function LayoutShellGateway(props: Props) {
             <Sidebar
                 isSaas={props.isSaas}
                 isSuperuser={props.user?.is_superuser || false}
-                dualViewEnabled={(props.user?.is_superuser) || (props.financialSettings?.dualView || false)}
+                dualViewEnabled={!!(props.user?.is_superuser) || !!(props.financialSettings?.dualView)}
                 initialModuleCodes={props.installedModuleCodes}
                 initialDynamicItems={props.dynamicSidebarItems}
             />
             <div className="flex-1 flex flex-col min-w-0">
-                <TopHeader sites={props.sites} organizations={props.organizations} currentSlug={props.currentSlug} user={props.user} />
+                <TopHeader sites={props.sites} organizations={props.organizations} currentSlug={props.currentSlug} user={props.user ?? undefined} />
                 <PeriodWarningBanner isSuperuser={!!props.user?.is_superuser} />
                 <AdminShell>{props.children}</AdminShell>
             </div>

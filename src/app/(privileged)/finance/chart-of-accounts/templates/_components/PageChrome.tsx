@@ -121,6 +121,7 @@ export function Toolbar({
     setFocusMode: (v: boolean) => void
     tourStepActions: Record<number, () => void>
 }) {
+    const { t } = useTranslation()
     return (
         <div data-tour="templates-search-bar" className="flex items-center gap-2 mb-3 flex-shrink-0">
             {focusMode && (
@@ -129,7 +130,7 @@ export function Toolbar({
                         <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
                             <Library size={14} className="text-white" />
                         </div>
-                        <span className="text-tp-md font-bold text-app-foreground hidden sm:inline">Standards Library</span>
+                        <span className="text-tp-md font-bold text-app-foreground hidden sm:inline">{t('finance.coa_templates_page.toolbar_focus_label')}</span>
                     </div>
                     <div className="flex items-center gap-1 p-0.5 rounded-lg flex-shrink-0"
                         style={{ background: 'var(--app-surface)' }}>
@@ -152,7 +153,7 @@ export function Toolbar({
             <div className="flex-1 relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                 <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search by name, region, key... (Ctrl+K)"
+                    placeholder={t('finance.coa_templates_page.toolbar_search')}
                     className="w-full pl-9 pr-3 py-2 text-tp-md md:text-tp-lg bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
             </div>
             {focusMode && (

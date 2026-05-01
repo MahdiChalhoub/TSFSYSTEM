@@ -1,9 +1,9 @@
 # Maintainability Phase 3 — Cross-Module Import Violations
 
-**Status**: PARTIAL DONE (HR + CRM done 2026-04-30, finance/pos/inventory TODO)
+**Status**: DONE 2026-04-30 (all 7 modules zero, with documented Pattern D exceptions)
 **Priority**: HIGH
 **Created**: 2026-04-30
-**Estimated effort**: HR ~30 min, CRM ~1 h, Inventory ~1.5 h, POS ~3 h, Finance ~3 h
+**Effort**: HR ~30 min, CRM ~1 h, Inventory ~1.5 h, POS ~3 h, Finance ~3 h, mop-up (workforce + client_portal) ~30 min
 **Risk**: LOW per module (capability-by-capability swap, behavior-preserving)
 
 ---
@@ -42,13 +42,13 @@ grep -rn "from apps\.X" erp_backend/apps/${module}/ --include="*.py" | grep -v "
 
 | Source module | Imports | Status |
 |--------------|---------|--------|
-| finance      | 44      | TODO — follow same pattern |
-| pos          | 43      | TODO — follow same pattern |
-| inventory    | 25      | TODO — follow same pattern |
+| finance      | 44      | DONE 2026-04-30 (16 Pattern D exceptions documented) |
+| pos          | 43      | DONE 2026-04-30 (7 Pattern D exceptions documented) |
+| inventory    | 25      | DONE 2026-04-30 (1 Pattern D test-fixture exception) |
 | crm          | 12      | DONE 2026-04-30 |
 | hr           | 3       | DONE 2026-04-30 |
-| workforce    | 2       | TODO (low priority) |
-| client_portal| 6       | TODO (low priority) |
+| workforce    | 2       | DONE 2026-04-30 (2 Pattern D test-fixture exceptions) |
+| client_portal| 6       | DONE 2026-04-30 (1 Pattern D test-fixture exception) |
 
 ---
 
@@ -56,12 +56,13 @@ grep -rn "from apps\.X" erp_backend/apps/${module}/ --include="*.py" | grep -v "
 
 Easiest first to build muscle memory, hardest last:
 
-1. **HR (3)** — proof-of-concept ✅ DONE 2026-04-30
-2. **CRM (12)** ✅ DONE 2026-04-30
-3. **Inventory (25)** — TODO
-4. **POS (43)** — TODO
-5. **Finance (44)** — TODO
-6. **Workforce (2) + client_portal (6)** — TODO (mop-up)
+1. **HR (3)** — ✅ DONE 2026-04-30 (proof-of-concept)
+2. **CRM (12)** — ✅ DONE 2026-04-30
+3. **Workforce (2)** — ✅ DONE 2026-04-30 (mop-up; both are Pattern D test fixtures)
+4. **client_portal (6)** — ✅ DONE 2026-04-30 (mop-up)
+5. **Inventory (22)** — ✅ DONE 2026-04-30
+6. **POS (43)** — ✅ DONE 2026-04-30
+7. **Finance (44)** — ✅ DONE 2026-04-30
 
 ---
 
@@ -304,3 +305,62 @@ Acceptable: pre-existing failures (test fixtures referencing missing models, etc
 - Refactoring `models/__init__.py` re-exports that drive `INSTALLED_APPS` → app-load time imports stay gated.
 - Removing the gated imports themselves where they're already isolation-correct (Pattern D).
 - Module *deletion* — that comes later. Phase 3 just untangles the wiring.
+
+---
+
+## DONE — Final Summary (2026-04-30)
+
+### Pattern D inventory (the only remaining direct cross-module imports)
+
+All entries below are **documented exceptions**, not bugs. Each is wrapped in
+`try/except ImportError` (or marked `noqa`) and serves a load-time constraint
+the connector cannot satisfy.
+
+| File:lines | Imports | Reason |
+|---|---|---|
+| `apps/finance/models/__init__.py:57,61,65` | `GiftSampleEvent`, `InternalConsumptionEvent`, `ImportDeclaration` | Re-exported at finance.models app-load time so downstream `Meta.model = ...` resolves. Connector registry not yet hydrated at this point. |
+| `apps/finance/serializers/tax_engine_ext_serializers.py:20-22` | same three | DRF `Meta.model = ...` resolution at class-creation time. |
+| `apps/finance/views/tax_engine_ext_views.py:22-24` | same three | DRF `queryset = Model.objects.all()` resolution at class-creation time. |
+| `apps/finance/report_service.py:74,78,92,99` | `Unit`, `StockAlert`, `Attendance`, `Leave`, `ExternalOrderMapping`, `ExternalProductMapping` | No connector capabilities yet for these legacy models (low-traffic paths). Direct gated import inside `try/except ImportError`. |
+| `apps/finance/management/commands/fire_period_reminders.py:34` | `AutoTaskRule` | No capability yet. Management command runs post-Django-setup so eager import is fine. |
+| `apps/finance/management/commands/seed_fiscal_period_rules.py:12` | `AutoTaskRule`, `TaskTemplate` | Same as above. |
+| `apps/finance/tests/test_golden_pipe.py:12` | `Contact` | Test fixture at module-collection time. |
+| `apps/pos/views/invoice_verification_views.py:30,35` | `Invoice`, `InvoiceLine`, `GoodsReceipt`, `GoodsReceiptLine` | 27 reuses across the file; the entire viewset is dedicated to 3-way matching, so finance/inventory unavailable means the file is meaningless. |
+| `apps/pos/tests/test_pos_integrity.py:19`, `apps/pos/tests/test_reissue_signal.py:22-23` | inventory + crm models | Test fixtures. |
+| `apps/pos/management/commands/smoke_test_reissue.py:33-34` | `Product`, `Contact` | Management command. |
+| `apps/inventory/tests/test_auto_linkage.py:5` | `Country` | Test fixture. |
+| `apps/workforce/tests/test_tenant_isolation.py:18`, `apps/workforce/tests/test_workforce_score_engine.py:20` | `Employee`, `Department` | Test fixtures. |
+| `apps/client_portal/tests/test_wallet_config.py:12` | `Contact` | Test fixture. |
+
+### Why the test-fixture and management-command exceptions are reasonable
+
+The connector's `require()` checks `OrganizationModule.is_enabled` for the
+target module, which DOES NOT EXIST when:
+1. **A test runs in a fresh DB with no org-module mappings yet** — connector
+   returns the fallback (None), and the test crashes at `None.objects.create()`.
+   The connector's role is runtime brokering across enabled modules. In test
+   fixture setup, all modules are conceptually "available."
+2. **A management command runs at admin-level provisioning time** — same
+   logic; the command is creating the org-module rows the connector would later
+   read.
+
+For these two cases, direct `from apps.X.models import …` is the simpler and
+correct choice. We mark them with `# noqa: E402  (Pattern D: test fixture)` /
+`(Pattern D: management cmd)` so future audits don't flag them again.
+
+### Why `apps/finance/models/__init__.py` Pattern D is unavoidable
+
+The three lines re-export inventory + pos models so that
+`tax_engine_ext_serializers.py` can write `class Meta: model = GiftSampleVAT`
+at class-body-evaluation time. DRF uses these at app-startup to register URL
+patterns. The connector registry is **not yet hydrated** at this point —
+auto-discovery only fires the first time `connector.require(...)` is called,
+which happens long after URL registration. The wrapping in
+`try/except ImportError` is the strongest isolation we can offer here without
+re-architecting `tax_engine_ext` into per-module sub-routers.
+
+### Capabilities added in this phase
+
+See WORKMAP entry for the full list. Net new capabilities: 16 (across hr,
+finance, pos, inventory, workspace, reference). One new connector_service file:
+`apps/reference/connector_service.py`.

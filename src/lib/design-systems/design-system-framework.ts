@@ -233,28 +233,29 @@ export interface DesignSystem {
 }
 
 /**
- * Design System Registry
+ * Design System Registry. Each entry starts as null and is populated by the
+ * registration call in the design-system module file.
  */
-export const DESIGN_SYSTEMS: Record<DesignSystemId, DesignSystem> = {
-  "ant-design": null as any, // Will be imported from separate file
-  "material-design": null as any,
-  "apple-hig": null as any,
-  "tailwind": null as any,
-  "tsf-custom": null as any,
+export const DESIGN_SYSTEMS: Record<DesignSystemId, DesignSystem | null> = {
+  "ant-design": null, // Will be imported from separate file
+  "material-design": null,
+  "apple-hig": null,
+  "tailwind": null,
+  "tsf-custom": null,
 };
 
 /**
  * Get design system by ID
  */
 export function getDesignSystem(id: DesignSystemId): DesignSystem | undefined {
-  return DESIGN_SYSTEMS[id];
+  return DESIGN_SYSTEMS[id] ?? undefined;
 }
 
 /**
  * Get all available design systems
  */
 export function getAllDesignSystems(): DesignSystem[] {
-  return Object.values(DESIGN_SYSTEMS).filter(Boolean);
+  return Object.values(DESIGN_SYSTEMS).filter((d): d is DesignSystem => Boolean(d));
 }
 
 /**

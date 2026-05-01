@@ -15,15 +15,20 @@ export function CompareModal({ profiles, config, onClose }: {
   config: PurchaseAnalyticsConfig
   onClose: () => void
 }) {
-  const fields = [
-    { key: 'sales_avg_period_days', label: 'Sales Avg Period', fmt: (v: any) => periodLabel(v) },
-    { key: 'sales_window_size_days', label: 'Window Size', fmt: (v: any) => `${v} days` },
-    { key: 'proposed_qty_formula', label: 'Formula', fmt: (v: any) => formulaLabel(v) },
-    { key: 'proposed_qty_lead_days', label: 'Lead Days', fmt: (v: any) => String(v) },
-    { key: 'proposed_qty_safety_multiplier', label: 'Safety Mult.', fmt: (v: any) => String(v) },
-    { key: 'best_price_period_days', label: 'Best Price Period', fmt: (v: any) => periodLabel(v) },
-    { key: 'purchase_context', label: 'Purchase Context', fmt: (v: any) => contextLabel(v) },
-    { key: 'po_count_source', label: 'PO Count Source', fmt: (v: any) => sourceLabel(v) },
+  type FieldDef = {
+    key: keyof PurchaseAnalyticsConfig & string;
+    label: string;
+    fmt: (v: unknown) => string;
+  };
+  const fields: FieldDef[] = [
+    { key: 'sales_avg_period_days', label: 'Sales Avg Period', fmt: (v) => periodLabel(v as number) },
+    { key: 'sales_window_size_days', label: 'Window Size', fmt: (v) => `${v} days` },
+    { key: 'proposed_qty_formula', label: 'Formula', fmt: (v) => formulaLabel(v as string) },
+    { key: 'proposed_qty_lead_days', label: 'Lead Days', fmt: (v) => String(v) },
+    { key: 'proposed_qty_safety_multiplier', label: 'Safety Mult.', fmt: (v) => String(v) },
+    { key: 'best_price_period_days', label: 'Best Price Period', fmt: (v) => periodLabel(v as number) },
+    { key: 'purchase_context', label: 'Purchase Context', fmt: (v) => contextLabel(v as string) },
+    { key: 'po_count_source', label: 'PO Count Source', fmt: (v) => sourceLabel(v as string) },
   ]
 
   const w1 = profiles[0].overrides?.financial_score_weights || config?.financial_score_weights
@@ -47,8 +52,11 @@ export function CompareModal({ profiles, config, onClose }: {
             <div className="text-[9px] font-black text-emerald-600 uppercase">{profiles[1].name}</div>
           </div>
           {fields.map(({ key, label, fmt }) => {
-            const v1 = profiles[0].overrides?.[key] ?? (config as any)?.[key]
-            const v2 = profiles[1].overrides?.[key] ?? (config as any)?.[key]
+            const overrides0 = profiles[0].overrides as Record<string, unknown> | undefined
+            const overrides1 = profiles[1].overrides as Record<string, unknown> | undefined
+            const cfg = config as unknown as Record<string, unknown> | undefined
+            const v1 = overrides0?.[key] ?? cfg?.[key]
+            const v2 = overrides1?.[key] ?? cfg?.[key]
             const diff = JSON.stringify(v1) !== JSON.stringify(v2)
             return (
               <div key={key} className={`grid grid-cols-3 gap-2 py-1.5 border-b border-app-border/10 ${diff ? 'bg-amber-500/5' : ''}`}>

@@ -37,23 +37,24 @@ import {
  *  COLUMN CELL RENDERER
  * ═══════════════════════════════════════════════════════════ */
 function renderCell(key: string, e: OpeningEntry, fmt: (n: number) => string): React.ReactNode {
-  const sc = STATUS_CONFIG[e.status] || { label: e.status, color: 'var(--app-muted-foreground)' }
+  const status = e.status ?? 'DRAFT'
+  const sc = STATUS_CONFIG[status] || { label: status, color: 'var(--app-muted-foreground)' }
   const lines = e.lines || []
 
   switch (key) {
     case 'reference':
       return <span className="font-mono text-[10px] text-app-muted-foreground">{e.reference || '—'}</span>
-    case 'date':
+    case 'date': {
+      const d = e.transactionDate || e.transaction_date
       return (
         <>
           <span className="text-[11px] text-app-muted-foreground">
-            {e.transactionDate || e.transaction_date
-              ? new Date(e.transactionDate || e.transaction_date).toLocaleDateString('en-GB')
-              : '—'}
+            {d ? new Date(d).toLocaleDateString('en-GB') : '—'}
           </span>
           {e.fiscalYear && <div className="text-[9px] text-app-muted-foreground">{e.fiscalYear.name}</div>}
         </>
       )
+    }
     case 'status':
       return (
         <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
@@ -64,11 +65,11 @@ function renderCell(key: string, e: OpeningEntry, fmt: (n: number) => string): R
     case 'lineCount':
       return <span className="text-[11px] font-bold text-app-foreground">{lines.length}</span>
     case 'totalDebit': {
-      const total = lines.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0)
+      const total = lines.reduce((s: number, l) => s + (Number(l.debit) || 0), 0)
       return <span className="font-mono tabular-nums text-[11px]" style={total > 0 ? { color: 'var(--app-primary)' } : undefined}>{total > 0 ? fmt(total) : '—'}</span>
     }
     case 'totalCredit': {
-      const total = lines.reduce((s: number, l: any) => s + (Number(l.credit) || 0), 0)
+      const total = lines.reduce((s: number, l) => s + (Number(l.credit) || 0), 0)
       return <span className="font-mono tabular-nums text-[11px]" style={total > 0 ? { color: 'var(--app-error)' } : undefined}>{total > 0 ? fmt(total) : '—'}</span>
     }
     case 'fiscalYear':
@@ -90,11 +91,13 @@ function renderCell(key: string, e: OpeningEntry, fmt: (n: number) => string): R
  *  EXPANDED ROW
  * ═══════════════════════════════════════════════════════════ */
 function OpeningExpandedRow({ entry, fmt, onView }: { entry: OpeningEntry; fmt: (n: number) => string; onView: (id: number) => void }) {
-  const sc = STATUS_CONFIG[entry.status] || { label: entry.status, color: 'var(--app-muted-foreground)' }
+  const status = entry.status ?? 'DRAFT'
+  const sc = STATUS_CONFIG[status] || { label: status, color: 'var(--app-muted-foreground)' }
   const lines = entry.lines || []
-  const totalDebit = lines.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0)
-  const totalCredit = lines.reduce((s: number, l: any) => s + (Number(l.credit) || 0), 0)
-  const dateStr = (entry.transactionDate || entry.transaction_date) ? new Date(entry.transactionDate || entry.transaction_date).toLocaleDateString('en-GB') : '—'
+  const totalDebit = lines.reduce((s: number, l) => s + (Number(l.debit) || 0), 0)
+  const totalCredit = lines.reduce((s: number, l) => s + (Number(l.credit) || 0), 0)
+  const d2 = entry.transactionDate || entry.transaction_date
+  const dateStr = d2 ? new Date(d2).toLocaleDateString('en-GB') : '—'
 
   return (
     <div className="px-4 py-3">
@@ -159,7 +162,7 @@ function OpeningExpandedRow({ entry, fmt, onView }: { entry: OpeningEntry; fmt: 
             <div className="w-24 text-right">Debit</div>
             <div className="w-24 text-right">Credit</div>
           </div>
-          {lines.map((l: any, i: number) => (
+          {lines.map((l, i: number) => (
             <div key={i} className="flex items-center gap-3 px-3 py-1.5 border-b border-app-border/10 hover:bg-app-surface/40 transition-all">
               <div className="w-16">
                 <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
@@ -256,7 +259,7 @@ export default function OpeningBalancesManager() {
 
   // Apply search + status filter
   const filtered = useMemo(() => {
-    return toArr(items).filter(e => {
+    return toArr<OpeningEntry>(items).filter(e => {
       if (search) {
         const q = search.toLowerCase()
         const match = (e.description || '').toLowerCase().includes(q) ||
@@ -274,17 +277,17 @@ export default function OpeningBalancesManager() {
 
   // Stats
   const stats = useMemo(() => {
-    const safe = toArr(items)
+    const safe = toArr<OpeningEntry>(items)
     const total = safe.length
     const posted = safe.filter(e => e.status === 'POSTED').length
     const draft = safe.filter(e => e.status === 'DRAFT').length
     const totalDebit = safe.reduce((sum, e) => {
       const lines = e.lines || []
-      return sum + lines.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0)
+      return sum + lines.reduce((s: number, l) => s + (Number(l.debit) || 0), 0)
     }, 0)
     const totalCredit = safe.reduce((sum, e) => {
       const lines = e.lines || []
-      return sum + lines.reduce((s: number, l: any) => s + (Number(l.credit) || 0), 0)
+      return sum + lines.reduce((s: number, l) => s + (Number(l.credit) || 0), 0)
     }, 0)
     const totalLines = safe.reduce((sum, e) => sum + (e.lines?.length || 0), 0)
     return { total, posted, draft, totalDebit, totalCredit, totalLines }
@@ -398,7 +401,8 @@ export default function OpeningBalancesManager() {
         moduleKey="finance.opening-balances"
         /* ── Row rendering ── */
         renderRowIcon={entry => {
-          const sc = STATUS_CONFIG[entry.status] || { label: entry.status, color: 'var(--app-muted-foreground)' }
+          const status = entry.status ?? 'DRAFT'
+          const sc = STATUS_CONFIG[status] || { label: status, color: 'var(--app-muted-foreground)' }
           return (
             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{ background: `color-mix(in srgb, ${sc.color} 12%, transparent)`, color: sc.color }}>

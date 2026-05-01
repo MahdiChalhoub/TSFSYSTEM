@@ -13,7 +13,8 @@ import {
 } from 'lucide-react'
 import { useRowGestures } from '@/hooks/use-row-gestures'
 
-const TYPE_CONFIG: Record<string, { color: string; icon: any; label: string }> = {
+type LucideLikeIcon = React.ComponentType<{ size?: number | string; className?: string }>;
+const TYPE_CONFIG: Record<string, { color: string; icon: LucideLikeIcon; label: string }> = {
     ASSET:     { color: 'var(--app-info, #3B82F6)',    icon: Wallet,       label: 'Asset' },
     LIABILITY: { color: 'var(--app-error, #EF4444)',   icon: TrendingDown, label: 'Liability' },
     EQUITY:    { color: 'var(--app-info)',                     icon: Scale,        label: 'Equity' },
@@ -29,15 +30,27 @@ function formatBalance(n: number | undefined): string {
     return n < 0 ? `(${formatted})` : formatted
 }
 
+type COAAccountNode = {
+    id: number;
+    code?: string;
+    name?: string;
+    type?: string;
+    isActive?: boolean;
+    balance?: number;
+    children?: COAAccountNode[];
+    syscohadaCode?: string;
+    [key: string]: unknown;
+}
+
 interface Props {
-    node: any
+    node: COAAccountNode
     level: number
     searchQuery: string
     forceExpanded?: boolean
-    onOpenSheet: (n: any) => void
-    onEdit: (n: any) => void
-    onLongPress?: (n: any) => void
-    onReactivate?: (n: any) => void
+    onOpenSheet: (n: COAAccountNode) => void
+    onEdit: (n: COAAccountNode) => void
+    onLongPress?: (n: COAAccountNode) => void
+    onReactivate?: (n: COAAccountNode) => void
     selected?: boolean
 }
 
@@ -65,9 +78,9 @@ export function MobileAccountRow({
     const visibleLevel = Math.min(level, 3)
     const indentPx = 12 + visibleLevel * 14
     const deepCap = level > 3
-    const typeConf = TYPE_CONFIG[node.type] ?? TYPE_CONFIG.ASSET
+    const typeConf = TYPE_CONFIG[node.type ?? 'ASSET'] ?? TYPE_CONFIG.ASSET
     const TypeIcon = typeConf.icon
-    const balance = node.rollupBalance ?? node.rollup_balance ?? node.balance ?? 0
+    const balance = Number(node.rollupBalance ?? node.rollup_balance ?? node.balance ?? 0)
 
     return (
         <div style={{
@@ -231,7 +244,7 @@ export function MobileAccountRow({
 
             {isParent && isOpen && (
                 <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-                    {node.children.map((child: any) => (
+                    {node.children!.map((child) => (
                         <MobileAccountRow
                             key={child.id}
                             node={child}

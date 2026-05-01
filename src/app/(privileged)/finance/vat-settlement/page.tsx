@@ -17,12 +17,22 @@ export default function VatSettlementPage() {
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
     const todayStr = today.toISOString().split('T')[0]
 
+    type VATPreview = {
+        net_vat_due?: number | string;
+        total_output?: number | string;
+        total_input?: number | string;
+        adjustments?: number | string;
+        [key: string]: unknown;
+    } | null
+    type FinancialAccountLite = { id: number; name: string; account_number?: string;[key: string]: unknown }
+    type Accrual = { id: number; tax_type?: string; amount?: number | string; period_start?: string; period_end?: string; created_at?: string; status?: string;[key: string]: unknown }
+
     const [periodStart, setPeriodStart] = useState(firstDay)
     const [periodEnd, setPeriodEnd] = useState(todayStr)
-    const [preview, setPreview] = useState<any>(null)
+    const [preview, setPreview] = useState<VATPreview>(null)
     const [bankAccountId, setBankAccountId] = useState('')
-    const [accruals, setAccruals] = useState<any[]>([])
-    const [accounts, setAccounts] = useState<any[]>([])
+    const [accruals, setAccruals] = useState<Accrual[]>([])
+    const [accounts, setAccounts] = useState<FinancialAccountLite[]>([])
     const [loading, setLoading] = useState(false)
     const [posting, setPosting] = useState(false)
     const [runningAccrual, setRunningAccrual] = useState(false)
@@ -45,7 +55,7 @@ export default function VatSettlementPage() {
             const res = await calculateVatSettlement(periodStart + 'T00:00:00', periodEnd + 'T23:59:59')
             if (res?.error || res?.detail) throw new Error(res.error || res.detail)
             setPreview(res)
-        } catch (e: any) { toast.error(e?.message || 'Could not calculate VAT settlement') }
+        } catch (e: unknown) { const m = e instanceof Error ? e.message : null; toast.error(m || 'Could not calculate VAT settlement') }
         finally { setLoading(false) }
     }, [periodStart, periodEnd])
 
@@ -56,7 +66,7 @@ export default function VatSettlementPage() {
         try {
             await postVatSettlement({ period_start: periodStart + 'T00:00:00', period_end: periodEnd + 'T23:59:59', bank_account_id: bankAccountId })
             toast.success('VAT settlement posted to ledger'); setPreview(null)
-        } catch (e: any) { toast.error(e?.message || 'Failed to post settlement') }
+        } catch (e: unknown) { const m = e instanceof Error ? e.message : null; toast.error(m || 'Failed to post settlement') }
         finally { setPosting(false) }
     }
 
@@ -67,11 +77,11 @@ export default function VatSettlementPage() {
             toast.success(`Accrual run: ${res?.accruals?.length ?? 0} entries created`)
             const acc = await getPeriodicTaxAccruals()
             setAccruals(Array.isArray(acc) ? acc : acc?.results || [])
-        } catch (e: any) { toast.error(e?.message || 'Failed to run accrual') }
+        } catch (e: unknown) { const m = e instanceof Error ? e.message : null; toast.error(m || 'Failed to run accrual') }
         finally { setRunningAccrual(false) }
     }
 
-    const n = (v?: any) => parseFloat(String(v ?? '0')) || 0
+    const n = (v?: unknown) => parseFloat(String(v ?? '0')) || 0
     const netDue = n(preview?.net_vat_due)
     const isRefund = netDue < 0
 
@@ -111,7 +121,7 @@ export default function VatSettlementPage() {
                         <select value={bankAccountId} onChange={e => setBankAccountId(e.target.value)}
                             className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                             <option value="">Select account…</option>
-                            {accounts.map((a: any) => (
+                            {accounts.map((a) => (
                                 <option key={a.id} value={String(a.id)}>{a.name} {a.account_number ? `(${a.account_number})` : ''}</option>
                             ))}
                         </select>
@@ -214,7 +224,7 @@ export default function VatSettlementPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {accruals.map((a: any) => (
+                                    {accruals.map((a) => (
                                         <tr key={a.id} className="hover:bg-app-surface/40 transition-colors" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                                             <td className="px-4 py-2 font-mono text-[11px] font-bold text-app-muted-foreground tabular-nums">{a.period_start?.slice(0, 10)} → {a.period_end?.slice(0, 10)}</td>
                                             <td className="px-4 py-2">
