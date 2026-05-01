@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
@@ -8,6 +7,71 @@ import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
 import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
 
+interface BrandRow {
+    id: number
+    name: string
+    source?: string
+    product_count?: number
+    [key: string]: unknown
+}
+
+interface ConflictProduct {
+    id: number
+    sku?: string
+    name: string
+    barcode?: string
+    has_barcode?: boolean
+    [key: string]: unknown
+}
+
+interface ConflictPayload {
+    error?: string
+    affected_count: number
+    barcode_count: number
+    message: string
+    products: ConflictProduct[]
+    _brandId?: number
+    _brandName?: string
+    [key: string]: unknown
+}
+
+interface LinkedBrandsResponse {
+    linked?: BrandRow[]
+    all?: BrandRow[]
+    [key: string]: unknown
+}
+
+interface ApiError extends Error {
+    data?: ConflictPayload
+}
+
+function pickErrorMessage(e: unknown, fallback: string): string {
+    if (e instanceof Error) return e.message || fallback
+    return fallback
+}
+
+function pickConflict(e: unknown): ConflictPayload | null {
+    if (typeof e !== 'object' || e === null) return null
+    const obj = e as { error?: string; data?: { error?: string; products?: unknown } }
+    const cd = obj.data ?? obj
+    if (cd && (cd as { error?: string }).error === 'conflict') {
+        const products = (cd as { products?: unknown }).products
+        if (Array.isArray(products)) {
+            const c = cd as Partial<ConflictPayload>
+            return {
+                error: 'conflict',
+                affected_count: c.affected_count ?? products.length,
+                barcode_count: c.barcode_count ?? 0,
+                message: c.message ?? '',
+                products: products as ConflictProduct[],
+                _brandId: c._brandId,
+                _brandName: c._brandName,
+            }
+        }
+    }
+    return null
+}
+
 /* ═══════════════════════════════════════════════════════════
  *  Brands Tab — pre-register / unlink + conflict resolution
  *  Mirrors AttributesTab: pre-flight warning when products
@@ -15,14 +79,14 @@ import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
  *  DeleteConflictDialog fallback for the 409 guard so the user
  *  always sees it regardless of drawer clipping.
  * ═══════════════════════════════════════════════════════════ */
-export function BrandsTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
-    const [linkedBrands, setLinkedBrands] = useState<any[]>([])
-    const [allBrands, setAllBrands] = useState<any[]>([])
+export function BrandsTab({ categoryId }: { categoryId: number; categoryName: string }) {
+    const [linkedBrands, setLinkedBrands] = useState<BrandRow[]>([])
+    const [allBrands, setAllBrands] = useState<BrandRow[]>([])
     const [loading, setLoading] = useState(true)
     const [linking, setLinking] = useState(false)
     const [showLink, setShowLink] = useState(false)
-    const [conflict, setConflict] = useState<any>(null)
-    const [unlinkTarget, setUnlinkTarget] = useState<any>(null)
+    const [conflict, setConflict] = useState<ConflictPayload | null>(null)
+    const [unlinkTarget, setUnlinkTarget] = useState<BrandRow | null>(null)
     const [bulkTargetId, setBulkTargetId] = useState<string>('')
     const [reassigning, setReassigning] = useState(false)
     const router = useRouter()
@@ -30,9 +94,10 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
     const loadData = useCallback(() => {
         setLoading(true)
         erpFetch(`inventory/categories/${categoryId}/linked_brands/`)
-            .then((data: any) => {
-                setLinkedBrands(Array.isArray(data?.linked) ? data.linked : [])
-                setAllBrands(Array.isArray(data?.all) ? data.all : [])
+            .then((data: unknown) => {
+                const d = (data ?? {}) as LinkedBrandsResponse
+                setLinkedBrands(Array.isArray(d.linked) ? d.linked : [])
+                setAllBrands(Array.isArray(d.all) ? d.all : [])
                 setLoading(false)
             }).catch(() => setLoading(false))
     }, [categoryId])
@@ -54,14 +119,14 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
             })
             toast.success('Brand pre-registered')
             loadData(); router.refresh()
-        } catch (e: any) {
-            toast.error(e?.message || 'Failed to link')
+        } catch (e: unknown) {
+            toast.error(pickErrorMessage(e, 'Failed to link'))
         } finally { setLinking(false) }
     }
 
     // Pre-flight: only prompt when products are affected. Zero products →
     // unlink immediately and show a success toast.
-    const requestUnlink = (brand: any) => {
+    const requestUnlink = (brand: BrandRow) => {
         if ((brand.product_count ?? 0) > 0) setUnlinkTarget(brand)
         else executeUnlink(brand.id)
     }
@@ -79,12 +144,12 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
             })
             toast.success(force ? 'Brand force-unlinked (pre-registration removed)' : 'Brand unlinked')
             loadData(); router.refresh()
-        } catch (e: any) {
-            const cd = e?.data || e
-            if (cd?.error === 'conflict' && cd?.products) {
+        } catch (e: unknown) {
+            const cd = pickConflict(e)
+            if (cd) {
                 setConflict({ ...cd, _brandId: brandId })
             } else {
-                toast.error(e?.message || 'Failed to unlink')
+                toast.error(pickErrorMessage(e, 'Failed to unlink'))
             }
         } finally { setLinking(false) }
     }
@@ -98,7 +163,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
         setReassigning(true)
         try {
             const results = await Promise.allSettled(
-                (conflict.products || []).map((p: any) =>
+                (conflict.products || []).map((p) =>
                     erpFetch(`inventory/products/${p.id}/`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
@@ -208,7 +273,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                         <select value={bulkTargetId} onChange={e => setBulkTargetId(e.target.value)}
                             className="flex-1 text-tp-sm font-semibold rounded-md px-2 py-1 bg-transparent border border-app-border text-app-foreground">
                             <option value="" disabled>Select brand...</option>
-                            {allBrands.filter(b => b.id !== conflict._brandId).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                            {allBrands.filter(b => b.id !== conflict._brandId).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
                         <button onClick={bulkReassign} disabled={reassigning}
                             className="text-tp-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
@@ -217,7 +282,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                         </button>
                     </div>
                     <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
-                        {(conflict.products || []).map((p: any) => (
+                        {(conflict.products || []).map((p) => (
                             <div key={p.id} className="flex items-center gap-2 text-tp-sm py-1.5 px-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
                                 <span className="font-mono font-semibold text-app-muted-foreground flex-shrink-0">{p.sku}</span>
                                 <span className="font-medium text-app-foreground truncate flex-1">{p.name}</span>
@@ -233,7 +298,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                         {conflict.affected_count > 20 && <p className="text-tp-sm font-medium text-app-muted-foreground px-2">...and {conflict.affected_count - 20} more</p>}
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                        <button onClick={() => executeUnlink(conflict._brandId, true)}
+                        <button onClick={() => conflict._brandId != null && executeUnlink(conflict._brandId, true)}
                             className="text-tp-xxs font-bold uppercase tracking-wide px-2 py-1 rounded-lg"
                             style={{ background: 'var(--app-error)', color: 'white' }}>
                             Force Unlink
@@ -254,7 +319,7 @@ export function BrandsTab({ categoryId, categoryName }: { categoryId: number; ca
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
-                        {linkedBrands.map((b: any) => (
+                        {linkedBrands.map((b) => (
                             <div key={b.id} className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover">
                                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}><Paintbrush size={13} /></div>
                                 <div className="flex-1 min-w-0">

@@ -215,6 +215,59 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
             return Response({'success': False, 'error': str(e)}, status=400)
 
     @action(detail=True, methods=['post'])
+    def transition(self, request, pk=None):
+        """Generic status-transition endpoint.
+        Body: { "to": "<NEW_STATUS>", "reason"?: "..." }
+
+        Routes through `PurchaseOrder.transition_to()` so the model's
+        VALID_TRANSITIONS map and side-effect fields (timestamps, actor,
+        rejection_reason) are honored. Without this, the frontend was
+        falling back to a generic PATCH which assigned `status` directly,
+        bypassing the validation and skipping per-stage book-keeping —
+        that's why CONFIRMED → IN_TRANSIT clicks looked like a no-op.
+
+        For transitions with their own dedicated endpoint (submit, approve,
+        send-to-supplier, reject, cancel, complete, revert-to-draft), the
+        frontend should still prefer those because they carry richer
+        signals (supplier-balance updates, task creation, scope promotion).
+        This endpoint covers the in-the-middle stages that lacked one:
+        CONFIRMED, IN_TRANSIT, PARTIALLY_RECEIVED, RECEIVED, INVOICED,
+        PARTIALLY_INVOICED.
+        """
+        po = self.get_object()
+        new_status = (request.data.get('to') or '').upper().strip()
+        reason = request.data.get('reason') or None
+        if not new_status:
+            return Response({"error": "`to` is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Idempotent: a same-state click is a no-op, not an error.
+        # Common cause is a stale dropdown — the row showed the previous
+        # status while the DB had already advanced. Returning the current
+        # state lets the frontend just refresh; no spurious "Cannot
+        # transition from X to X" toast.
+        if po.status == new_status:
+            return Response(PurchaseOrderSerializer(po).data)
+
+        try:
+            po.transition_to(
+                new_status,
+                user=request.user if request.user.is_authenticated else None,
+                reason=reason,
+            )
+        except ValidationError as e:
+            # Refresh from DB so the frontend can sync to truth even on
+            # the error path. Surface the message + the actual current
+            # status so the UI can re-render the dropdown correctly.
+            po.refresh_from_db()
+            return Response({
+                "error": str(e.message if hasattr(e, 'message') else e),
+                "current_status": po.status,
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(PurchaseOrderSerializer(po).data)
+
+    @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
         """Submit PO for approval — promotes DRAFT number to OFFICIAL/INTERNAL."""
         po = self.get_object()

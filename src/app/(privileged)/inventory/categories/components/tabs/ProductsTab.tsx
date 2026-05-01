@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
@@ -6,7 +5,7 @@ import { createPortal } from 'react-dom'
 import {
     Search, Package, Loader2, ExternalLink, X, Info, ArrowRightLeft,
     Check, AlertTriangle, SlidersHorizontal, Paintbrush, Tag, Link2,
-    Plus, Folder, ChevronRight, Pencil
+    Folder, Pencil, ChevronRight
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -15,13 +14,90 @@ import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
 import { NumericRangeFilter, EMPTY_RANGE, type NumericRange } from '@/components/ui/NumericRangeFilter'
 import { erpFetch } from '@/lib/erp-api'
 
+interface ProductRow {
+    id: number
+    name?: string
+    sku?: string
+    brand_name?: string
+    status?: string
+    product_type?: string
+    unit_code?: string
+    tva_rate?: number | string
+    margin_pct?: number | null
+    selling_price_ttc?: number | null
+    [key: string]: unknown
+}
+
+interface FilterOption {
+    value: string
+    [key: string]: unknown
+}
+
+interface FilterOptions {
+    brands?: FilterOption[]
+    statuses?: FilterOption[]
+    types?: FilterOption[]
+    units?: FilterOption[]
+    tva_rates?: FilterOption[]
+    [key: string]: unknown
+}
+
+interface ExploreResponse {
+    products?: ProductRow[]
+    total_count?: number
+    has_more?: boolean
+    next_offset?: number | null
+    filter_options?: FilterOptions
+    [key: string]: unknown
+}
+
+interface TaxGroup {
+    id: number
+    name: string
+    rate: number | string
+    [key: string]: unknown
+}
+
+interface CategoryItem {
+    id: number
+    name?: string
+    full_path?: string
+    code?: string
+}
+
+interface ConflictItem {
+    id: number
+    name?: string
+    code?: string
+    products_using?: number
+    affected_count?: number
+    [key: string]: unknown
+}
+
+interface TargetItem {
+    id: number
+    name?: string
+    [key: string]: unknown
+}
+
+interface MovePreview {
+    target_category?: { id?: number; name?: string }
+    conflict_brands?: ConflictItem[]
+    conflict_attributes?: ConflictItem[]
+    all_brands?: TargetItem[]
+    all_attributes?: TargetItem[]
+    target_brands?: TargetItem[]
+    has_conflicts?: boolean
+    [key: string]: unknown
+}
+
 /* ═══════════════════════════════════════════════════════════
  *  Products Tab — multi-select + filters + smart move modal
  * ═══════════════════════════════════════════════════════════ */
 export function ProductsTab({ categoryId, categoryName, allCategories }: {
-    categoryId: number; categoryName: string; allCategories: any[]
+    categoryId: number; categoryName: string; allCategories: CategoryItem[]
 }) {
-    const [products, setProducts] = useState<any[]>([])
+    const [products, setProducts] = useState<ProductRow[]>([])
     const [loading, setLoading] = useState(true)
     const [loadingMore, setLoadingMore] = useState(false)
     const [hasMore, setHasMore] = useState(false)
@@ -32,14 +108,14 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
     const [selected, setSelected] = useState<Set<number>>(new Set())
     const [sortBy, setSortBy] = useState<'name' | 'stock' | 'price'>('name')
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
-    const [previewProduct, setPreviewProduct] = useState<any>(null)
-    const [filterOptions, setFilterOptions] = useState<any>({})
+    const [previewProduct, setPreviewProduct] = useState<ProductRow | null>(null)
+    const [filterOptions, setFilterOptions] = useState<FilterOptions>({})
     const [filterBrand, setFilterBrand] = useState('')
     const [filterStatus, setFilterStatus] = useState('')
     const [filterType, setFilterType] = useState('')
     const [filterUnit, setFilterUnit] = useState('')
     const [filterTva, setFilterTva] = useState('')
-    const [taxGroups, setTaxGroups] = useState<any[]>([])
+    const [taxGroups, setTaxGroups] = useState<TaxGroup[]>([])
     const [filterMargin, setFilterMargin] = useState<NumericRange>(EMPTY_RANGE)
     const [filterPrice, setFilterPrice] = useState<NumericRange>(EMPTY_RANGE)
     const [showFilterPopup, setShowFilterPopup] = useState(false)
@@ -48,7 +124,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
     const sentinelRef = useRef<HTMLDivElement>(null)
     const [showMoveModal, setShowMoveModal] = useState(false)
     const [moveTarget, setMoveTarget] = useState<number | null>(null)
-    const [movePreview, setMovePreview] = useState<any>(null)
+    const [movePreview, setMovePreview] = useState<MovePreview | null>(null)
     const [moveStep, setMoveStep] = useState<'picking' | 'preview' | 'executing'>('picking')
     const [catSearch, setCatSearch] = useState('')
     const [autoLinkBrands, setAutoLinkBrands] = useState<Set<number>>(new Set())
@@ -56,6 +132,11 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
     const [reassignBrands, setReassignBrands] = useState<Record<number, number>>({})
     const [reassignAttrs, setReassignAttrs] = useState<Record<number, number>>({})
     const router = useRouter()
+
+    function pickErrorMessage(e: unknown, fallback: string): string {
+        if (e instanceof Error) return e.message || fallback
+        return fallback
+    }
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(search), 300)
@@ -72,14 +153,15 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
         params.set('sort_dir', sortDir)
         const qs = params.toString() ? `?${params.toString()}` : ''
         erpFetch(`inventory/categories/${categoryId}/explore/${qs}`)
-            .then((data: any) => {
-                const newProducts = data?.products ?? []
+            .then((data: unknown) => {
+                const d = (data ?? {}) as ExploreResponse
+                const newProducts = d.products ?? []
                 if (append) setProducts(prev => [...prev, ...newProducts])
                 else setProducts(newProducts)
-                setTotalCount(data?.total_count ?? 0)
-                setHasMore(data?.has_more ?? false)
-                setNextOffset(data?.next_offset ?? null)
-                if (!append && data?.filter_options) setFilterOptions(data.filter_options)
+                setTotalCount(d.total_count ?? 0)
+                setHasMore(d.has_more ?? false)
+                setNextOffset(d.next_offset ?? null)
+                if (!append && d.filter_options) setFilterOptions(d.filter_options)
                 setLoading(false); setLoadingMore(false)
             })
             .catch(() => { if (!append) setProducts([]); setLoading(false); setLoadingMore(false) })
@@ -98,15 +180,20 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
         return () => observer.disconnect()
     }, [hasMore, loadingMore, nextOffset, loadProducts])
 
-    const uniqueBrands = useMemo(() => (filterOptions.brands || []).map((o: any) => o.value), [filterOptions])
-    const uniqueStatuses = useMemo(() => (filterOptions.statuses || []).map((o: any) => o.value), [filterOptions])
-    const uniqueTypes = useMemo(() => (filterOptions.types || []).map((o: any) => o.value), [filterOptions])
-    const uniqueUnits = useMemo(() => (filterOptions.units || []).map((o: any) => o.value), [filterOptions])
-    const uniqueTvaRates = useMemo(() => (filterOptions.tva_rates || []).map((o: any) => o.value), [filterOptions])
+    const uniqueBrands = useMemo(() => (filterOptions.brands || []).map((o) => o.value), [filterOptions])
+    const uniqueStatuses = useMemo(() => (filterOptions.statuses || []).map((o) => o.value), [filterOptions])
+    const uniqueTypes = useMemo(() => (filterOptions.types || []).map((o) => o.value), [filterOptions])
+    const uniqueUnits = useMemo(() => (filterOptions.units || []).map((o) => o.value), [filterOptions])
+    const uniqueTvaRates = useMemo(() => (filterOptions.tva_rates || []).map((o) => o.value), [filterOptions])
 
     useEffect(() => {
         erpFetch('finance/tax-groups/')
-            .then((data: any) => { setTaxGroups(Array.isArray(data) ? data : data?.results ?? []) })
+            .then((data: unknown) => {
+                if (Array.isArray(data)) setTaxGroups(data as TaxGroup[])
+                else if (data && typeof data === 'object' && Array.isArray((data as { results?: unknown }).results)) {
+                    setTaxGroups((data as { results: TaxGroup[] }).results)
+                } else setTaxGroups([])
+            })
             .catch(() => {})
     }, [])
 
@@ -158,9 +245,9 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
     const openMoveModal = () => { setShowMoveModal(true); setMoveStep('picking'); setMoveTarget(null); setMovePreview(null); setCatSearch('') }
     const closeMoveModal = () => { setShowMoveModal(false); setMoveStep('picking'); setMoveTarget(null); setMovePreview(null); setCatSearch(''); setReassignBrands({}); setReassignAttrs({}) }
 
-    const moveTargets = allCategories.filter((c: any) => c.id !== categoryId)
+    const moveTargets = allCategories.filter((c) => c.id !== categoryId)
     const filteredTargets = catSearch.trim()
-        ? moveTargets.filter((c: any) => c.name?.toLowerCase().includes(catSearch.toLowerCase()) || c.full_path?.toLowerCase().includes(catSearch.toLowerCase()))
+        ? moveTargets.filter((c) => c.name?.toLowerCase().includes(catSearch.toLowerCase()) || c.full_path?.toLowerCase().includes(catSearch.toLowerCase()))
         : moveTargets
 
     const previewMove = async (targetId: number) => {
@@ -168,12 +255,12 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
         try {
             const preview = await erpFetch('inventory/categories/move_products/', {
                 method: 'POST', body: JSON.stringify({ product_ids: Array.from(selected), target_category_id: targetId, preview: true }),
-            })
+            }) as MovePreview
             setMovePreview(preview)
-            setAutoLinkBrands(new Set((preview.conflict_brands || []).map((b: any) => b.id)))
-            setAutoLinkAttrs(new Set((preview.conflict_attributes || []).map((a: any) => a.id)))
+            setAutoLinkBrands(new Set((preview.conflict_brands || []).map((b) => b.id)))
+            setAutoLinkAttrs(new Set((preview.conflict_attributes || []).map((a) => a.id)))
             setReassignBrands({}); setReassignAttrs({})
-        } catch (e: any) { toast.error(e?.message || 'Failed to analyze move'); setMoveStep('picking') }
+        } catch (e: unknown) { toast.error(pickErrorMessage(e, 'Failed to analyze move')); setMoveStep('picking') }
     }
 
     const executeMove = async () => {
@@ -189,7 +276,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
             })
             toast.success(`Moved ${selected.size} product${selected.size > 1 ? 's' : ''} to "${movePreview?.target_category?.name}"`)
             closeMoveModal(); setSelected(new Set()); loadProducts(0, false); router.refresh()
-        } catch (e: any) { toast.error(e?.message || 'Move failed'); setMoveStep('preview') }
+        } catch (e: unknown) { toast.error(pickErrorMessage(e, 'Move failed')); setMoveStep('preview') }
     }
 
     return (
@@ -384,7 +471,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                 { label: 'Type', value: previewProduct.product_type },
                                 { label: 'Status', value: previewProduct.status?.toUpperCase() },
                                 { label: 'Unit', value: previewProduct.unit_code },
-                                { label: 'Stock', value: Number(previewProduct.stock_on_hand ?? 0).toLocaleString(), color: (previewProduct.stock_on_hand ?? 0) > 0 ? 'var(--app-success)' : 'var(--app-error)' },
+                                { label: 'Stock', value: Number(previewProduct.stock_on_hand ?? 0).toLocaleString(), color: Number(previewProduct.stock_on_hand ?? 0) > 0 ? 'var(--app-success)' : 'var(--app-error)' },
                                 { label: 'Price TTC', value: `${Number(previewProduct.selling_price_ttc ?? 0).toLocaleString()} CFA` },
                                 { label: 'Price HT', value: `${Number(previewProduct.selling_price_ht ?? 0).toLocaleString()} CFA` },
                                 { label: 'Cost', value: `${Number(previewProduct.cost_price ?? 0).toLocaleString()} CFA` },
@@ -494,24 +581,24 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                             </div>
 
                                             {/* Brand conflicts */}
-                                            {movePreview.conflict_brands?.length > 0 && (
+                                            {(movePreview.conflict_brands?.length ?? 0) > 0 && movePreview.conflict_brands && (
                                                 <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
                                                     <div className="px-3 py-2 flex items-center justify-between" style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
                                                         <div className="flex items-center gap-1.5"><Paintbrush size={11} style={{ color: 'var(--app-info)' }} /><span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-info)' }}>Brand Conflicts</span></div>
                                                         <span className="text-tp-xxs font-bold text-app-muted-foreground">{movePreview.conflict_brands.length} to resolve</span>
                                                     </div>
                                                     <div className="divide-y divide-app-border/30">
-                                                        {movePreview.conflict_brands.map((b: any) => {
+                                                        {movePreview.conflict_brands.map((b) => {
                                                             const isLinked = autoLinkBrands.has(b.id)
                                                             const isReassigned = b.id in reassignBrands
                                                             const resolved = isLinked || isReassigned
-                                                            const reassignedTo = isReassigned ? movePreview.target_brands?.find((tb: any) => tb.id === reassignBrands[b.id])?.name : null
+                                                            const reassignedTo = isReassigned ? movePreview.target_brands?.find((tb) => tb.id === reassignBrands[b.id])?.name : null
                                                             return (
                                                                 <div key={b.id} className="px-3 py-2.5">
                                                                     <div className="flex items-center justify-between mb-2">
                                                                         <div className="flex items-center gap-2">
                                                                             <span className="text-tp-md font-bold text-app-foreground">{b.name}</span>
-                                                                            <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>{b.affected_count} product{b.affected_count > 1 ? 's' : ''}</span>
+                                                                            <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>{b.affected_count} product{(b.affected_count ?? 0) > 1 ? 's' : ''}</span>
                                                                         </div>
                                                                         <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded" style={{ background: resolved ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: resolved ? 'var(--app-success)' : 'var(--app-error)' }}>
                                                                             {isLinked ? '✓ Will link' : isReassigned ? `→ ${reassignedTo}` : '⚠ Unresolved'}
@@ -523,12 +610,12 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                                                             style={{ background: isLinked ? 'color-mix(in srgb, var(--app-success) 12%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: isLinked ? 'var(--app-success)' : 'var(--app-muted-foreground)', border: isLinked ? '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                                                                             <Link2 size={10} /> Link to category
                                                                         </button>
-                                                                        {!isLinked && (movePreview.all_brands?.length > 0 ? (
+                                                                        {!isLinked && ((movePreview.all_brands?.length ?? 0) > 0 ? (
                                                                             <select value={isReassigned ? String(reassignBrands[b.id]) : ''} onChange={e => { const val = e.target.value; if (val) { setReassignBrands({ ...reassignBrands, [b.id]: Number(val) }); const next = new Set(autoLinkBrands); next.delete(b.id); setAutoLinkBrands(next) } else { const r = { ...reassignBrands }; delete r[b.id]; setReassignBrands(r) } }}
                                                                                 className="text-tp-xs font-bold px-2 py-1.5 rounded-lg bg-app-background text-app-foreground outline-none flex-1 min-w-0 transition-all"
                                                                                 style={{ border: isReassigned ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid color-mix(in srgb, var(--app-error) 40%, transparent)', color: isReassigned ? 'var(--app-primary)' : undefined, animation: !isReassigned ? 'pulse 2s ease-in-out infinite' : 'none' }}>
                                                                                 <option value="">⚠ Reassign to brand...</option>
-                                                                                {movePreview.all_brands.filter((tb: any) => tb.id !== b.id).map((tb: any) => (<option key={tb.id} value={String(tb.id)}>{tb.name}</option>))}
+                                                                                {(movePreview.all_brands ?? []).filter((tb) => tb.id !== b.id).map((tb) => (<option key={tb.id} value={String(tb.id)}>{tb.name}</option>))}
                                                                             </select>
                                                                         ) : (<span className="text-tp-xxs font-bold px-2 py-1 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)' }}>No brands available — must link</span>))}
                                                                     </div>
@@ -540,18 +627,18 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                             )}
 
                                             {/* Attribute conflicts */}
-                                            {movePreview.conflict_attributes?.length > 0 && (
+                                            {(movePreview.conflict_attributes?.length ?? 0) > 0 && movePreview.conflict_attributes && (
                                                 <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
                                                     <div className="px-3 py-2 flex items-center justify-between" style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '1px solid var(--app-border)' }}>
                                                         <div className="flex items-center gap-1.5"><Tag size={11} style={{ color: 'var(--app-warning)' }} /><span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-warning)' }}>Attribute Conflicts</span></div>
                                                         <span className="text-tp-xxs font-bold text-app-muted-foreground">{movePreview.conflict_attributes.length} to resolve</span>
                                                     </div>
                                                     <div className="divide-y divide-app-border/30">
-                                                        {movePreview.conflict_attributes.map((a: any) => {
+                                                        {movePreview.conflict_attributes.map((a) => {
                                                             const isLinked = autoLinkAttrs.has(a.id)
                                                             const isReassigned = a.id in reassignAttrs
                                                             const resolved = isLinked || isReassigned
-                                                            const reassignedTo = isReassigned ? movePreview.all_attributes?.find((ta: any) => ta.id === reassignAttrs[a.id])?.name : null
+                                                            const reassignedTo = isReassigned ? movePreview.all_attributes?.find((ta) => ta.id === reassignAttrs[a.id])?.name : null
                                                             return (
                                                                 <div key={a.id} className="px-3 py-2.5">
                                                                     <div className="flex items-center justify-between mb-2">
@@ -569,12 +656,12 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                                                             style={{ background: isLinked ? 'color-mix(in srgb, var(--app-success) 12%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: isLinked ? 'var(--app-success)' : 'var(--app-muted-foreground)', border: isLinked ? '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                                                                             <Link2 size={10} /> Link to category
                                                                         </button>
-                                                                        {!isLinked && (movePreview.all_attributes?.length > 0 ? (
+                                                                        {!isLinked && ((movePreview.all_attributes?.length ?? 0) > 0 ? (
                                                                             <select value={isReassigned ? String(reassignAttrs[a.id]) : ''} onChange={e => { const val = e.target.value; if (val) { setReassignAttrs({ ...reassignAttrs, [a.id]: Number(val) }); const next = new Set(autoLinkAttrs); next.delete(a.id); setAutoLinkAttrs(next) } else { const r = { ...reassignAttrs }; delete r[a.id]; setReassignAttrs(r) } }}
                                                                                 className="text-tp-xs font-bold px-2 py-1.5 rounded-lg bg-app-background text-app-foreground outline-none flex-1 min-w-0 transition-all"
                                                                                 style={{ border: isReassigned ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid color-mix(in srgb, var(--app-error) 40%, transparent)', color: isReassigned ? 'var(--app-primary)' : undefined, animation: !isReassigned ? 'pulse 2s ease-in-out infinite' : 'none' }}>
                                                                                 <option value="">⚠ Reassign to attribute...</option>
-                                                                                {movePreview.all_attributes.filter((ta: any) => ta.id !== a.id).map((ta: any) => (<option key={ta.id} value={String(ta.id)}>{ta.name}</option>))}
+                                                                                {(movePreview.all_attributes ?? []).filter((ta) => ta.id !== a.id).map((ta) => (<option key={ta.id} value={String(ta.id)}>{ta.name}</option>))}
                                                                             </select>
                                                                         ) : (<span className="text-tp-xxs font-bold px-2 py-1 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)' }}>No attributes available — must link</span>))}
                                                                     </div>

@@ -1,35 +1,98 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Plus, Tag, Loader2, AlertTriangle, Unlink, Pencil, ShieldAlert, ArrowRightLeft, Package, Barcode, X, ArrowRight, Check } from 'lucide-react'
+import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
+
+interface AttributeValue {
+    id: number
+    name: string
+    code?: string
+    product_count?: number
+    [key: string]: unknown
+}
+
+interface AttributeRow {
+    id: number
+    name: string
+    code?: string
+    source?: string
+    product_count?: number
+    [key: string]: unknown
+}
+
+interface MigratePreview {
+    source_values?: AttributeValue[]
+    target_values?: AttributeValue[]
+    affected_product_count?: number
+    [key: string]: unknown
+}
+
+interface ConflictProduct {
+    id: number
+    sku?: string
+    name?: string
+    has_barcode?: boolean
+    [key: string]: unknown
+}
+
+interface ConflictPayload {
+    error?: string
+    affected_count: number
+    barcode_count?: number
+    message?: string
+    products?: ConflictProduct[]
+    _attrId?: number
+    _source?: AttributeRow
+    [key: string]: unknown
+}
+
+interface LinkedAttrsResponse {
+    linked?: AttributeRow[]
+    all?: AttributeRow[]
+    [key: string]: unknown
+}
+
+function pickErrorMessage(e: unknown, fallback: string): string {
+    if (e instanceof Error) return e.message || fallback
+    return fallback
+}
+
+function pickConflict(e: unknown): ConflictPayload | null {
+    if (typeof e !== 'object' || e === null) return null
+    const obj = e as { error?: string; data?: { error?: string; products?: unknown } }
+    const cd = obj.data ?? obj
+    if (cd && (cd as { error?: string }).error === 'conflict') {
+        const products = (cd as { products?: unknown }).products
+        if (Array.isArray(products)) return cd as ConflictPayload
+    }
+    return null
+}
 
 /* ═══════════════════════════════════════════════════════════
  *  Attributes Tab — pre-register / unlink + full conflict guard
- *  
+ *
  *  Guard mirrors the BrandsTab pattern:
  *  1. Unlink attempt → backend returns 409 with affected products
  *  2. Conflict dialog shows products with barcode severity
  *  3. Per-product "Edit" button (attributes are complex — no bulk dropdown)
  *  4. Only when all products reassigned → Refresh & Retry unlinks
  * ═══════════════════════════════════════════════════════════ */
-export function AttributesTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
-    const [linkedAttrs, setLinkedAttrs] = useState<any[]>([])
-    const [allAttrs, setAllAttrs] = useState<any[]>([])
+export function AttributesTab({ categoryId }: { categoryId: number; categoryName: string }) {
+    const [linkedAttrs, setLinkedAttrs] = useState<AttributeRow[]>([])
+    const [allAttrs, setAllAttrs] = useState<AttributeRow[]>([])
     const [loading, setLoading] = useState(true)
     const [linking, setLinking] = useState(false)
     const [showLink, setShowLink] = useState(false)
-    const [conflict, setConflict] = useState<any>(null)
-    const [unlinkTarget, setUnlinkTarget] = useState<any>(null) // Pre-flight confirmation
+    const [conflict, setConflict] = useState<ConflictPayload | null>(null)
+    const [unlinkTarget, setUnlinkTarget] = useState<AttributeRow | null>(null) // Pre-flight confirmation
     // Migration flow state
-    const [migrateSource, setMigrateSource] = useState<any>(null) // The source group we're migrating away from
+    const [migrateSource, setMigrateSource] = useState<AttributeRow | null>(null) // The source group we're migrating away from
     const [migrateTargetId, setMigrateTargetId] = useState<number | ''>('')
-    const [migratePreview, setMigratePreview] = useState<any>(null)
+    const [migratePreview, setMigratePreview] = useState<MigratePreview | null>(null)
     const [migrateMapping, setMigrateMapping] = useState<Record<number, number | ''>>({})
     const [migrateLoading, setMigrateLoading] = useState(false)
     const router = useRouter()
@@ -37,9 +100,10 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
     const loadData = useCallback(() => {
         setLoading(true)
         erpFetch(`inventory/categories/${categoryId}/linked_attributes/`)
-            .then((data: any) => {
-                setLinkedAttrs(Array.isArray(data?.linked) ? data.linked : [])
-                setAllAttrs(Array.isArray(data?.all) ? data.all : [])
+            .then((data: unknown) => {
+                const d = (data ?? {}) as LinkedAttrsResponse
+                setLinkedAttrs(Array.isArray(d.linked) ? d.linked : [])
+                setAllAttrs(Array.isArray(d.all) ? d.all : [])
                 setLoading(false)
             }).catch(() => setLoading(false))
     }, [categoryId])
@@ -60,14 +124,14 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                 body: JSON.stringify({ attribute_id: attrId }),
             })
             toast.success('Attribute pre-registered'); loadData(); router.refresh()
-        } catch (e: any) { toast.error(e?.message || 'Failed to link') }
+        } catch (e: unknown) { toast.error(pickErrorMessage(e, 'Failed to link')) }
     }
 
     // Step 1: Pre-flight confirmation — only prompt when products are actually
     // at risk. Zero products → unlink is safe, run it directly and let the
     // success toast confirm. Any products → show the guard with the
     // Migrate / Force / Cancel paths.
-    const requestUnlink = (group: any) => {
+    const requestUnlink = (group: AttributeRow) => {
         if ((group.product_count ?? 0) > 0) {
             setUnlinkTarget(group)
         } else {
@@ -82,14 +146,14 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
             await erpFetch(`inventory/categories/${categoryId}/unlink_attribute/`, { method: 'POST', body: JSON.stringify({ attribute_id: attrId }) })
             setLinkedAttrs(prev => prev.filter(a => a.id !== attrId))
             toast.success('Attribute unlinked'); loadData(); router.refresh()
-        } catch (e: any) {
-            const cd = e?.data || e
-            if (cd?.error === 'conflict' && cd?.products) {
+        } catch (e: unknown) {
+            const cd = pickConflict(e)
+            if (cd) {
                 // Attach source attribute ref so the migrate CTA knows which group to migrate from
                 const source = linkedAttrs.find(a => a.id === attrId)
                 setConflict({ ...cd, _attrId: attrId, _source: source })
             } else {
-                toast.error(e?.message || 'Failed to unlink')
+                toast.error(pickErrorMessage(e, 'Failed to unlink'))
             }
         } finally { setLinking(false) }
     }
@@ -98,7 +162,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
     // Open migration from either the conflict dialog (Refresh & Retry isn't
     // enough — the user needs to bulk-move values) or the direct Migrate
     // button on a linked attribute row.
-    const openMigrate = useCallback(async (source: any) => {
+    const openMigrate = useCallback(async (source: AttributeRow) => {
         setMigrateSource(source)
         setConflict(null); setUnlinkTarget(null)
         setMigrateTargetId(''); setMigrateMapping({})
@@ -106,10 +170,10 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
         try {
             const preview = await erpFetch(
                 `inventory/categories/${categoryId}/migrate_attribute_preview/?source_attribute_id=${source.id}`
-            )
-            setMigratePreview(preview)
-        } catch (e: any) {
-            toast.error(e?.message || 'Failed to load migration preview')
+            ) as MigratePreview
+            setMigratePreview(preview ?? null)
+        } catch (e: unknown) {
+            toast.error(pickErrorMessage(e, 'Failed to load migration preview'))
             setMigrateSource(null)
         } finally {
             setMigrateLoading(false)
@@ -130,10 +194,10 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
             const qs = targetId ? `&target_attribute_id=${targetId}` : ''
             const preview = await erpFetch(
                 `inventory/categories/${categoryId}/migrate_attribute_preview/?source_attribute_id=${migrateSource.id}${qs}`
-            )
-            setMigratePreview(preview)
-        } catch (e: any) {
-            toast.error(e?.message || 'Failed to load target values')
+            ) as MigratePreview
+            setMigratePreview(preview ?? null)
+        } catch (e: unknown) {
+            toast.error(pickErrorMessage(e, 'Failed to load target values'))
         } finally {
             setMigrateLoading(false)
         }
@@ -143,7 +207,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
         if (!migrateSource) return
         setMigrateLoading(true)
         try {
-            const body: any = {
+            const body: Record<string, unknown> = {
                 source_attribute_id: migrateSource.id,
                 unlink: true,
             }
@@ -155,14 +219,14 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
             })
             body.value_mapping = mapping
             console.log('[migrate_attribute] POST', body)
-            const res: any = await erpFetch(
+            const res = await erpFetch(
                 `inventory/categories/${categoryId}/migrate_attribute/`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
                 }
-            )
+            ) as { products_updated?: number; unlinked?: boolean } | null
             console.log('[migrate_attribute] response', res)
             const updated = res?.products_updated ?? 0
             const unlinked = !!res?.unlinked
@@ -176,9 +240,9 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                 )
             }
             closeMigrate(); loadData(); router.refresh()
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error('[migrate_attribute] failed', e)
-            toast.error(e?.message || 'Migration failed', { duration: 6000 })
+            toast.error(pickErrorMessage(e, 'Migration failed'), { duration: 6000 })
         } finally {
             setMigrateLoading(false)
         }
@@ -260,7 +324,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                     <div className="flex items-center gap-2 mb-2">
                         <AlertTriangle size={14} style={{ color: 'var(--app-error)' }} />
                         <span className="text-tp-sm font-bold text-app-error">Cannot Unlink — {conflict.affected_count} product{conflict.affected_count !== 1 ? 's' : ''} affected</span>
-                        {conflict.barcode_count > 0 && (
+                        {(conflict.barcode_count ?? 0) > 0 && (
                             <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-error) 12%, transparent)', color: 'var(--app-error)' }}>🔒 {conflict.barcode_count} with barcodes</span>
                         )}
                     </div>
@@ -270,7 +334,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
 
                     {/* Product list with per-product edit access */}
                     <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
-                        {(conflict.products || []).map((p: any) => (
+                        {(conflict.products || []).map((p) => (
                             <div key={p.id} className="flex items-center gap-2 text-tp-xs py-1.5 px-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-error) 4%, transparent)' }}>
                                 <span className="font-mono font-bold text-app-muted-foreground flex-shrink-0">{p.sku}</span>
                                 <span className="font-bold text-app-foreground truncate flex-1">{p.name}</span>
@@ -287,7 +351,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                     </div>
                     <div className="flex items-center gap-3 mt-2 flex-wrap">
                         {conflict._source && (
-                            <button onClick={() => openMigrate(conflict._source)} className="flex items-center gap-1 text-tp-xs font-bold px-2.5 py-1 rounded-lg transition-all" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            <button onClick={() => conflict._source && openMigrate(conflict._source)} className="flex items-center gap-1 text-tp-xs font-bold px-2.5 py-1 rounded-lg transition-all" style={{ background: 'var(--app-primary)', color: 'white' }}>
                                 <ArrowRightLeft size={10} /> Migrate Attribute Values
                             </button>
                         )}
@@ -336,9 +400,9 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                         no native dropdown latency inside the drawer + backdrop-blur stack. */}
                     {migrateLoading ? (
                         <div className="flex items-center justify-center py-4"><Loader2 size={16} className="animate-spin" style={{ color: 'var(--app-primary)' }} /></div>
-                    ) : migratePreview?.source_values?.length > 0 ? (
+                    ) : (migratePreview?.source_values?.length ?? 0) > 0 ? (
                         <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar mb-2">
-                            {migratePreview.source_values.map((sv: any) => {
+                            {(migratePreview?.source_values ?? []).map((sv) => {
                                 const picked = migrateMapping[sv.id]
                                 const setPick = (v: number | '') =>
                                     setMigrateMapping(prev => ({ ...prev, [sv.id]: v }))
@@ -350,7 +414,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-1">
                                                     <span className="text-tp-xs font-bold text-app-foreground truncate">{sv.name}</span>
-                                                    {sv.product_count > 0 && (
+                                                    {(sv.product_count ?? 0) > 0 && (
                                                         <span className="text-tp-xxs font-bold px-1 py-0.5 rounded-full flex-shrink-0"
                                                             style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
                                                             <Package size={8} className="inline mr-0.5" />{sv.product_count}
@@ -373,7 +437,7 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                                                 }}>
                                                 Drop
                                             </button>
-                                            {(migratePreview?.target_values || []).map((tv: any) => {
+                                            {(migratePreview?.target_values || []).map((tv) => {
                                                 const on = picked === tv.id
                                                 return (
                                                     <button type="button" key={tv.id} onClick={() => setPick(tv.id)}
@@ -506,9 +570,14 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                     error: 'conflict',
                     entity: 'attribute',
                     affected_count: conflict.affected_count,
-                    barcode_count: conflict.barcode_count,
-                    message: conflict.message,
-                    products: conflict.products,
+                    barcode_count: conflict.barcode_count ?? 0,
+                    message: conflict.message ?? '',
+                    products: (conflict.products ?? []).map((p) => ({
+                        id: p.id,
+                        sku: p.sku,
+                        name: p.name ?? '',
+                        has_barcode: p.has_barcode,
+                    })),
                 } : null}
                 sourceName={conflict?._source?.name || 'attribute'}
                 entityName="attribute"

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useTransition } from 'react'
@@ -11,13 +10,13 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { deleteCategory } from '@/app/actions/inventory/categories'
-import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
+import { DeleteConflictDialog, type ConflictPayload } from '@/components/ui/DeleteConflictDialog'
 import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
 import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
-import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
+import { MobileActionSheet, type ActionItem } from '@/components/mobile/MobileActionSheet'
 import { MobileCategoryRow } from './MobileCategoryRow'
 import { MobileMoveDialog } from './MobileMoveDialog'
 import { MobileBreadcrumb } from './MobileBreadcrumb'
@@ -28,7 +27,7 @@ import { AuditTrailPanel } from '@/components/templates/AuditTrailPanel'
 import { CsvImportDialog } from '../components/CsvImportDialog'
 import '@/lib/tours/definitions/inventory-categories-mobile'
 
-export function MobileCategoriesClient({ initialCategories }: { initialCategories: any[] }) {
+export function MobileCategoriesClient({ initialCategories }: { initialCategories: CategoryNode[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
@@ -105,10 +104,10 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
         setScopeId(n?.id ?? null)
     }, [])
 
-    const actionItems = useMemo(() => {
+    const actionItems = useMemo<ActionItem[]>(() => {
         if (!actionNode) return []
         const isParent = !!(actionNode.children && actionNode.children.length > 0)
-        const childCountInData = data.filter((c: any) => c.parent === actionNode.id).length
+        const childCountInData = data.filter((c) => c.parent === actionNode.id).length
         const hasSubtree = childCountInData > 0
         return [
             { key: 'view', label: 'Overview', hint: 'Details', icon: <Eye size={16} />, variant: 'grid', onClick: () => openSheet(actionNode, 'overview') },
@@ -128,7 +127,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
         ]
     }, [actionNode, openSheet, openAddModal, openEditModal, requestDelete, drillInto, data])
 
-    const [deleteConflict, setDeleteConflict] = useState<any>(null)
+    const [deleteConflict, setDeleteConflict] = useState<{ conflict: ConflictPayload; source: CategoryNode } | null>(null)
 
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return
@@ -206,7 +205,7 @@ export function MobileCategoriesClient({ initialCategories }: { initialCategorie
                     { label: 'Audit Trail', icon: <ClipboardList size={14} />, onClick: () => setShowAuditTrail(true) },
                     { label: 'Cleanup', icon: <FolderTree size={14} />, href: '/inventory/maintenance?tab=category' },
                 ],
-                data,
+                data: data as unknown as Record<string, unknown>[],
                 dataTools: {
                     title: 'Category Data',
                     exportFilename: 'categories',

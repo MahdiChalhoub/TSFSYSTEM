@@ -1,7 +1,6 @@
-// @ts-nocheck
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { X, Pencil, Pin, Bookmark, Package, Paintbrush, Tag, Clock } from 'lucide-react'
 import type { CategoryNode, PanelTab } from './types'
 import { OverviewTab } from './tabs/OverviewTab'
@@ -18,7 +17,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
     onEdit: (n: CategoryNode) => void
     onAdd: (parentId?: number) => void
     onDelete: (n: CategoryNode) => void
-    allCategories: any[]
+    allCategories: CategoryNode[]
     initialTab?: PanelTab
     onClose: () => void
     onPin?: (n: CategoryNode) => void
@@ -30,7 +29,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
     const brandCount = node.brand_count ?? 0
     const attributeCount = node.attribute_count ?? 0
 
-    const tabs: { key: PanelTab; label: string; icon: any; count?: number; color?: string }[] = [
+    const tabs: { key: PanelTab; label: string; icon: ReactNode; count?: number; color?: string }[] = [
         { key: 'overview', label: 'Overview', icon: <Bookmark size={13} /> },
         { key: 'products', label: 'Products', icon: <Package size={13} />, count: productCount, color: 'var(--app-success)' },
         { key: 'brands', label: 'Brands', icon: <Paintbrush size={13} />, count: brandCount, color: 'var(--app-info)' },

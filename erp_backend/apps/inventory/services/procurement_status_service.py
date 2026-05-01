@@ -62,6 +62,11 @@ REQUEST_LABELS = {
     ('STOCK_TRANSFER', 'APPROVED'): 'Approved to Transfer',
     ('STOCK_ADJUSTMENT', 'PENDING'): 'Adjustment Pending',
     ('STOCK_ADJUSTMENT', 'APPROVED'): 'Adjustment Approved',
+    # Support for ProcurementRequest system
+    ('PURCHASE', 'PENDING'): 'Requested to Purchase',
+    ('PURCHASE', 'APPROVED'): 'Approved to Purchase',
+    ('TRANSFER', 'PENDING'): 'Requested to Transfer',
+    ('TRANSFER', 'APPROVED'): 'Approved to Transfer',
 }
 
 
@@ -114,6 +119,43 @@ def get_procurement_status_batch(organization, product_ids):
             }
     except Exception as exc:
         logger.error('Procurement status: failed to query OperationalRequest', exc_info=exc)
+
+    # ── Phase 1b: Procurement Requests (POS module system) ──
+    try:
+        from erp.connector_registry import ConnectorFacade
+        connector = ConnectorFacade(organization_id=organization.id)
+        ProcurementRequest = connector.require('pos.procurement_requests.get_model')
+        
+        if ProcurementRequest:
+            active_reqs = ProcurementRequest.objects.filter(
+                product_id__in=product_ids,
+                status__in=['PENDING', 'APPROVED']
+            ).order_by('product_id', '-requested_at')
+
+            seen_pids = set()
+            for req in active_reqs:
+                pid = req.product_id
+                if pid in seen_pids:
+                    continue
+                seen_pids.add(pid)
+
+                # Skip if already have a higher priority status from OperationalRequest
+                if pid in result and result[pid]['priority'] >= REQUEST_PRIORITY.get(req.status, 1):
+                    continue
+
+                label = REQUEST_LABELS.get((req.request_type, req.status), 'Requested')
+                priority = REQUEST_PRIORITY.get(req.status, 1)
+                
+                result[pid] = {
+                    'status': label,
+                    'detail': f"Requested · {int(req.quantity)} units",
+                    'po_number': f'REQ-{req.id}',
+                    'qty_ordered': float(req.quantity),
+                    'qty_received': 0,
+                    'priority': priority,
+                }
+    except Exception as exc:
+        logger.error('Procurement status: failed to query ProcurementRequest via connector', exc_info=exc)
 
     # ── Phase 2: PO Lifecycle (overrides requests) ──
     try:

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { ChevronDown, Loader2, X, Check, ArrowRightCircle } from 'lucide-react'
-import { submitPO, approvePO, cancelPO, sendToSupplier, completePO, revertToDraft, rejectPO, type PORejectCategory } from '@/app/actions/pos/purchases'
+import { submitPO, approvePO, cancelPO, sendToSupplier, completePO, revertToDraft, rejectPO, transitionPO, type PORejectCategory } from '@/app/actions/pos/purchases'
 import type { PO } from '../_lib/types'
 import { STATUS_CONFIG } from '../_lib/constants'
 import { RejectPODialog } from './RejectPODialog'
@@ -37,9 +37,33 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [rejectOpen, setRejectOpen] = useState(false)
+    /* Locally-tracked status — starts from the row's snapshot but lets us
+     * re-sync from a fresh fetch when the dropdown opens or after a stale-
+     * state error. Without this, the dropdown could keep building transitions
+     * from a status the DB has already advanced past. */
+    const [liveStatus, setLiveStatus] = useState<string>(po.status)
+    useEffect(() => { setLiveStatus(po.status) }, [po.status])
     const ref = useRef<HTMLDivElement>(null)
-    const sc = STATUS_CONFIG[po.status] || { label: po.status, color: 'var(--app-muted-foreground)' }
-    const transitions = VALID_TRANSITIONS[po.status] || []
+    const sc = STATUS_CONFIG[liveStatus] || { label: liveStatus, color: 'var(--app-muted-foreground)' }
+    const transitions = VALID_TRANSITIONS[liveStatus] || []
+
+    /* Pull the latest status when the user opens the dropdown. Cheap (single
+     * GET, no payload mutation) and prevents the "I clicked CONFIRMED→TRANSIT
+     * but the row had already moved to PARTIALLY_RECEIVED" trap. */
+    const refreshStatus = async () => {
+        try {
+            const { erpFetch } = await import('@/lib/erp-api')
+            const fresh: any = await erpFetch(`purchase-orders/${po.id}/`)
+            if (fresh?.status && fresh.status !== liveStatus) {
+                setLiveStatus(fresh.status)
+            }
+        } catch { /* keep current state on failure */ }
+    }
+    const openDropdown = () => {
+        if (transitions.length === 0) return
+        setOpen(true)
+        refreshStatus()
+    }
 
     useEffect(() => {
         if (!open) return
@@ -61,15 +85,41 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
             await runTimed(
                 `purchases.po:transition-${t.toLowerCase()}`,
                 async () => {
+                    /* Prefer the dedicated endpoint if one exists — those carry
+                     * richer side effects (number promotion on submit, supplier
+                     * notification on send, etc.). For the in-the-middle stages
+                     * that lack a dedicated action (CONFIRMED, IN_TRANSIT,
+                     * PARTIALLY_RECEIVED, RECEIVED, INVOICED), use the generic
+                     * `transitionPO` which routes through the model's
+                     * VALID_TRANSITIONS validator and per-stage book-keeping. */
                     const action = STATUS_ACTIONS[t]
                     if (action) return action(po.id)
-                    const { erpFetch } = await import('@/lib/erp-api')
-                    return erpFetch(`purchase-orders/${po.id}/`, { method: 'PATCH', body: JSON.stringify({ status: t }) })
+                    return transitionPO(po.id, t)
                 },
             )
             toast.success(`${po.po_number || `PO-${po.id}`} → ${(STATUS_CONFIG[t]?.label || t)}`)
+            setLiveStatus(t)
             onRefresh?.()
-        } catch (e: any) { toast.error(e?.message || 'Transition failed') }
+        } catch (e: any) {
+            /* Stale-state recovery: backend returns `current_status` in the
+             * 400 payload. If our cached state was wrong, sync silently and
+             * tell the operator the row has advanced — much cleaner than
+             * the raw "Cannot transition from X to Y" error. */
+            const actual: string | undefined =
+                e?.body?.current_status ||
+                e?.response?.current_status ||
+                e?.data?.current_status
+            if (actual && actual !== liveStatus) {
+                setLiveStatus(actual)
+                toast.info(
+                    `${po.po_number || `PO-${po.id}`} has advanced to ${(STATUS_CONFIG[actual]?.label || actual)}`,
+                    { description: 'Status was out of sync — refreshed to the live value.' },
+                )
+                onRefresh?.()
+            } else {
+                toast.error(e?.message || 'Transition failed')
+            }
+        }
         finally { setLoading(false) }
     }
 
@@ -98,7 +148,7 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
     return (
         <div className="relative" ref={ref} onClick={e => e.stopPropagation()}>
             <button
-                onClick={() => transitions.length > 0 && setOpen(!open)}
+                onClick={() => open ? setOpen(false) : openDropdown()}
                 disabled={transitions.length === 0 || loading}
                 className="flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded transition-all"
                 style={{

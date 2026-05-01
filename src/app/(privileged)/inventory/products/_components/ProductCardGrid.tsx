@@ -14,7 +14,7 @@
 import { memo } from 'react'
 import { Package, Eye, Pencil, Loader2, ShoppingCart, ArrowRightLeft, BellRing, Check } from 'lucide-react'
 import { ProductThumbnail } from '@/components/products/ProductThumbnail'
-import { TYPE_CONFIG, STATUS_CONFIG, fmt } from '../_lib/constants'
+import { TYPE_CONFIG, STATUS_CONFIG, PROCUREMENT_STATUS_CONFIG, fmt } from '../_lib/constants'
 import type { Product } from '../_lib/types'
 
 interface Props {
@@ -124,6 +124,10 @@ const ProductCard = memo(function ProductCard({
       : 'var(--app-success, #22c55e)'
   const stockLabel = isOutOfStock ? 'Out of Stock' : isLowStock ? 'Low Stock' : 'In Stock'
 
+  // Procurement Status Config
+  const ps = PROCUREMENT_STATUS_CONFIG[product.procurement_status as string] || PROCUREMENT_STATUS_CONFIG.NONE
+  const hasProcurement = product.procurement_status && product.procurement_status !== 'NONE'
+
   return (
     <div
       className="group rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
@@ -189,16 +193,32 @@ const ProductCard = memo(function ProductCard({
         </span>
 
         {/* Stock badge — top-right */}
-        <span
-          className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
-          style={{
-            background: `color-mix(in srgb, ${stockColor} 12%, var(--app-surface))`,
-            color: stockColor,
-            border: `1px solid color-mix(in srgb, ${stockColor} 25%, transparent)`,
-          }}
-        >
-          {stockLabel}
-        </span>
+        <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
+          <span
+            className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
+            style={{
+              background: `color-mix(in srgb, ${stockColor} 12%, var(--app-surface))`,
+              color: stockColor,
+              border: `1px solid color-mix(in srgb, ${stockColor} 25%, transparent)`,
+            }}
+          >
+            {stockLabel}
+          </span>
+
+          {/* Procurement badge — shown only if active (Requested, Ordered, etc.) */}
+          {hasProcurement && (
+            <span
+              className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
+              style={{
+                background: `color-mix(in srgb, ${ps.color} 12%, var(--app-surface))`,
+                color: ps.color,
+                border: `1px solid color-mix(in srgb, ${ps.color} 25%, transparent)`,
+              }}
+            >
+              {ps.label}
+            </span>
+          )}
+        </div>
 
         {/* Hover overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-all duration-200">
@@ -303,14 +323,14 @@ const ProductCard = memo(function ProductCard({
             label="Edit"
             icon={<Pencil size={12} />}
             color="var(--app-muted-foreground)"
-            onClick={(e) => { e.stopPropagation(); onEdit() }}
+            onClick={(e) => { e.stopPropagation(); onEdit?.(product) }}
           />
           {onPurchase && (
             <CardIconButton
               label="Purchase"
               icon={<ShoppingCart size={12} />}
               color="var(--app-info, #3b82f6)"
-              onClick={(e) => { e.stopPropagation(); onPurchase() }}
+              onClick={(e) => { e.stopPropagation(); onPurchase(product) }}
             />
           )}
           {onTransfer && (
@@ -318,7 +338,7 @@ const ProductCard = memo(function ProductCard({
               label="Transfer"
               icon={<ArrowRightLeft size={12} />}
               color="var(--app-warning, #f59e0b)"
-              onClick={(e) => { e.stopPropagation(); onTransfer() }}
+              onClick={(e) => { e.stopPropagation(); onTransfer(product) }}
             />
           )}
           {onExpiryAlert && (
@@ -326,7 +346,7 @@ const ProductCard = memo(function ProductCard({
               label="Expiry alert"
               icon={<BellRing size={12} />}
               color="var(--app-error, #ef4444)"
-              onClick={(e) => { e.stopPropagation(); onExpiryAlert() }}
+              onClick={(e) => { e.stopPropagation(); onExpiryAlert(product) }}
             />
           )}
         </div>

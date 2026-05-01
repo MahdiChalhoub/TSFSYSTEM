@@ -73,6 +73,28 @@ export async function revertToDraft(id: number | string, reason?: string) {
     return erpFetch(`purchase-orders/${id}/revert-to-draft/`, { method: 'POST', body: JSON.stringify({ reason }) })
 }
 
+/**
+ * Generic status transition. Calls the backend's
+ * `purchase-orders/{id}/transition/` action which routes through the
+ * model's `transition_to()` validator — honors VALID_TRANSITIONS and
+ * sets per-stage timestamps.
+ *
+ * Use this for transitions that don't have their own dedicated endpoint:
+ * CONFIRMED, IN_TRANSIT, PARTIALLY_RECEIVED, RECEIVED, INVOICED,
+ * PARTIALLY_INVOICED. Transitions that DO have a dedicated endpoint
+ * (submit, approve, sendToSupplier, reject, cancel, complete,
+ * revertToDraft) should keep using their specific helper because the
+ * dedicated endpoints carry richer side effects (number promotion,
+ * notifications, task creation).
+ */
+export async function transitionPO(id: number | string, to: string, reason?: string) {
+    return erpFetch(`purchase-orders/${id}/transition/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reason ? { to, reason } : { to }),
+    })
+}
+
 export async function receivePOLine(poId: number | string, data: Record<string, any>) {
     return erpFetch(`purchase-orders/${poId}/receive-line/`, { method: 'POST', body: JSON.stringify(data) })
 }

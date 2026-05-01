@@ -169,7 +169,7 @@ These appear in the hardcoded set but lack a direct app-* alias. Document as **p
 1. **No `ring-app-error`** — ring colors don't include error. Best workaround: `ring-app-warning` (semantic mismatch) or extend `globals.css` to add `--color-app-error-ring`.
 2. **No purple / violet / fuchsia / pink semantic** — used in some marketing surfaces (`(auth)/register`, `landing`, `tenant/[slug]`). These are decorative gradients with no semantic meaning; safe to leave or replace with `app-primary`.
 3. **No second-tier brand color** — pages like `(privileged)/(saas)` mix `text-purple-500` and `bg-indigo-100` for category accents. Recommend adding `--app-accent` and `--app-accent-bg` to the theme engine before migrating those.
-4. **`from-…` / `to-…` gradients** — 442 occurrences. Most are decorative. Preserve as-is in PoC; defer their migration to a separate sub-phase that introduces gradient tokens or replaces them with solid surfaces.
+4. **`from-…` / `to-…` gradients** — 442 occurrences. Most are decorative. ~~Preserve as-is in PoC; defer their migration to a separate sub-phase that introduces gradient tokens or replaces them with solid surfaces.~~ **RESOLVED Session 10 (2026-05-01)**: 14 `bg-app-gradient-{family}{,-soft}` utilities added to `globals.css`; 128 plain triplets across 60 files swapped to semantic utilities. ~21 opacity-modified gradient stops (`from-X/N to-Y/M`) remain deferred until opacity-aware tokens are added.
 5. **Hex literals in inline `style={{}}`** — 2,901 raw hex/rgb strings. Many are SVG `fill=`/`stroke=`, charts, or `boxShadow`. Out-of-scope for class-token sweep; document for a follow-up.
 
 ---
@@ -1333,6 +1333,123 @@ find "src/app/(privileged)/pos" "src/app/(privileged)/client_portal" \
 ### Verification
 
 `npx tsc --noEmit` exit 0 both before and after the sweep — pure class-name swap, byte-symmetric (113 insertions / 113 deletions).
+
+---
+
+## Session 10 results — gradient sweep + new `bg-app-gradient-*` tokens (2026-05-01)
+
+### Goal
+
+Replace `bg-gradient-to-{dir} from-X-N [via-Z-M] to-Y-K` triplets across `(privileged)/`, `tenant/[slug]/`, and `supplier-portal/[slug]/` with semantic `bg-app-gradient-{family}{,-soft}` utilities. Phase 6 had previously deferred all gradient stops because there was no token to swap them to; this session unblocks that.
+
+### Tokens added to `globals.css`
+
+14 utilities, 7 semantic families × 2 intensity tiers, defined inside the existing `@layer utilities` block. All use `linear-gradient(135deg, ...)` to match Tailwind's `bg-gradient-to-br` direction so the swap is visually byte-symmetric for the dominant case.
+
+| Family | Bold (500→700) | Soft (50→100) | Use case |
+|---|---|---|---|
+| primary | `bg-app-gradient-primary` (#10B981→#047857) | `-primary-soft` (#ECFDF5→#D1FAE5) | Brand emerald hero CTAs / soft summary cards |
+| success | `bg-app-gradient-success` (alias of primary) | `-success-soft` (alias of primary-soft) | Status-positive callouts |
+| info | `bg-app-gradient-info` (#0EA5E9→#1D4ED8) | `-info-soft` (#EFF6FF→#DBEAFE) | Info banner / blue tile |
+| warning | `bg-app-gradient-warning` (#F59E0B→#C2410C) | `-warning-soft` (#FFFBEB→#FEF3C7) | Amber/orange attention |
+| error | `bg-app-gradient-error` (#F43F5E→#B91C1C) | `-error-soft` (#FFF1F2→#FFE4E6) | Rose/red destructive |
+| accent | `bg-app-gradient-accent` (#8B5CF6→#6D28D9) | `-accent-soft` (#F5F3FF→#EDE9FE) | Violet/purple/indigo non-brand category |
+| surface | `bg-app-gradient-surface` (#1E293B→#0F172A) | `-surface-soft` (#FAFAF9→#F5F5F4) | Slate/zinc/stone neutral panel |
+
+### Sweep totals
+
+149 baseline gradient triplets in scope → 21 residual (all opacity-modified or in excluded paths) → **−128 swaps across 60 files**.
+
+| Subdir | before | after | swaps | files |
+|---|---:|---:|---:|---:|
+| (privileged)/finance | 60 | 0 | 60 | 18 |
+| (privileged)/(saas) | 12 | 1 | 11 | 6 |
+| (privileged)/inventory | 16 | 3* | 13 | 7 |
+| (privileged)/sales | 8 | 0 | 8 | 5 |
+| (privileged)/purchases | 1 | 0 | 1 | 1 |
+| (privileged)/workspace | 8 | 0 | 8 | 4 |
+| (privileged)/hr | 6 | 0 | 6 | 5 |
+| (privileged)/products | 9 | 4† | 5 | 4 |
+| (privileged)/delivery | 5 | 1† | 4 | 3 |
+| (privileged)/settings | 3 | 0 | 3 | 3 |
+| (privileged)/ui-kit | (n/a) | 0 | 2 | 1 |
+| (privileged)/setup-wizard | (n/a) | 0 | 4 | 1 |
+| tenant/[slug] | 6 | 3† | 3 | 3 |
+| supplier-portal/[slug] | 3 | 3† | 0 | 0 |
+| (privileged)/crm | 6 | 6* | 0 | 0 |
+| **TOTAL** | **149** | **21** | **128** | **60** |
+
+\* = remaining residuals are in **excluded** files (Phase 5 agent's drop-`@ts-nocheck` scope: `inventory/combo/page.tsx`, `crm/contacts/legacy/page.tsx`, `crm/contacts/page-legacy.tsx`).
+† = remaining residuals are **all opacity-modified** (`from-X/N to-Y/M`) — deferred per skip rules.
+
+### Resolution rules used by the sweep
+
+7-family color map:
+
+| Letter | Family | Tailwind colors |
+|---|---|---|
+| P | primary / success | emerald, green, teal, lime |
+| I | info | blue, sky, cyan |
+| W | warning | amber, orange, yellow |
+| E | error | red, rose |
+| A | accent | violet, purple, indigo, fuchsia, pink |
+| S | surface | slate, gray, zinc, stone, neutral |
+
+Cross-family clean pairs (18 ordered pairs total) handle mixed gradients:
+
+- P↔I → P (emerald + cyan/blue → primary brand wins)
+- P↔A → P, P↔W → P, P↔E → P (brand wins)
+- P↔S → P (any color beats neutral surface)
+- I↔A → I (blue + indigo: blue dominates)
+- I↔W → I, I↔E → I, I↔S → I
+- W↔E → W (orange + rose → orange dominates)
+- W↔A → A, W↔S → W
+- E↔A → A (rose + pink/purple → accent fold; e.g. `from-rose-500 to-pink-600` → `bg-app-gradient-accent`)
+- E↔S → E
+- A↔S → A
+
+Plain triplets only — opacity-modified `from-X/N to-Y/M` skipped.
+
+### Two-pass perl sweep
+
+- **Pass 1** — `/tmp/gradient_sweep.pl`: atomic regex match of full `bg-gradient-to-{dir} from-X-N [via-Z-M] to-Y-K` token, family-resolves, replaces with `bg-app-gradient-{family}` (bold variant by default). Ran across 88 in-scope files; 128 swaps applied to 59 files; 1 unresolved (single `rose→pink` later resolved by adding E↔A rule).
+- **Pass 2** — `/tmp/gradient_softify.pl`: walks `git diff`, finds (-line, +line) pairs where the original from-stop intensity was ≤ 200 (i.e. pastel 50/100), and rewrites the `bg-app-gradient-X` to `bg-app-gradient-X-soft`. 67 swaps applied to 23 files. Net: 67 of 128 sites use soft, 61 use bold.
+
+### Files modified (60 in-scope)
+
+`(saas)`: `[...slug]/page.tsx`, `[code]/page.tsx`, `connector/page.tsx`, `currencies/page.tsx`, `encryption/page.tsx`, `subscription-plans/page.tsx`.
+`finance` (18): `assets/page.tsx`, `bank-reconciliation/page.tsx`, `budgets/[id]/page.tsx`, `budgets/alerts/page.tsx`, `budgets/page.tsx`, `deferred-expenses/page.tsx`, `expenses/page.tsx`, `gateway/page-client.tsx`, `invoices/page.tsx`, `loans/[id]/schedule/page.tsx`, `payments/page.tsx`, `profit-distribution/page.tsx`, `purchase-returns/page.tsx`, `reports/builder/page-client.tsx`, `reports/dashboard/page.tsx`, `revenue/page.tsx`, `sales-returns/page.tsx`, `vouchers/page.tsx`.
+`inventory` (7): `adjustment-orders`, `analytics`, `expiry-alerts`, `listview-settings`, `low-stock`, `transfer-orders`, `valuation`.
+`hr` (5): `attendance`, `departments`, `leaves`, `overview/page-client`, `shifts`.
+`workspace` (4): `checklists/{client,page}`, `performance/{client,page}`.
+`products` (4): `page`, `new/{advanced-form,form-wrapper,packaging-tree}`.
+`sales` (5): `[id]/OrderActions`, `consignment-settlements/page-client`, `consignment/manager`, `summary`.
+`delivery` (3): `_components/{DriverProfileModal,LogExpenseModal}`, `page`.
+`purchases` (1): `new-order-v2/form`.
+`settings` (3): `domains`, `e-invoicing/monitor/monitor-client` (×2 swaps).
+`ui-kit` (1), `setup-wizard` (1).
+`tenant` (3): `LandingHomePage`, `OrgNotFoundPage`, `not-found`.
+
+### Verification
+
+- Baseline `npx tsc --noEmit` (before any Session-10 edit): 5 pre-existing errors in `(privileged)/inventory/products/_components/ProductCardGrid.tsx` (Phase 5 agent's territory).
+- After Session 10: still exactly 5 errors — **0 new errors introduced**. Sweep is pure class-name swaps + atomic CSS-utility additions.
+
+### Residuals (21 — all deferred)
+
+- 4 in `inventory/combo/page.tsx` (excluded — Phase 5 scope).
+- 6 in `crm/contacts/{page-legacy,legacy/page}.tsx` (excluded — Phase 5 scope).
+- 11 opacity-modified plain residuals across `(saas)/(1)`, `products/(4)`, `delivery/(1)`, `tenant/(3)`, `supplier-portal/(3)` — all `from-X/N to-Y/M` patterns where the alpha-channel intent is decorative (icon glows, blur halos, tier coupon pills). Awaiting an opacity-aware token tier in a future phase.
+
+### Precursors RESOLVED this session
+
+- **Gradient utilities** (14, both `-bold` and `-soft` tiers) — added to `globals.css` `@layer utilities` block.
+
+### Precursors still pending
+
+- `--app-accent` cyan variant for `(auth)/register` + `tenant/[slug]/quote` + `tenant/[slug]/account/page` (portal-specific brand cyan).
+- Opacity-aware status tokens (e.g. `bg-app-info/10`, `bg-app-error/10`) for the ~21 opacity-modified gradient residuals + dozens of opacity-modified plain colors documented across Sessions 7–9.
+- Hex/rgb literal phase (~2,900 inline-style hex values + 4 module `accentColor` props).
 
 ---
 

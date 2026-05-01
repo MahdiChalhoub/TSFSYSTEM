@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
@@ -9,7 +8,7 @@
  *  already vertical lists that translate OK to narrow viewports).
  * ═══════════════════════════════════════════════════════════ */
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { X, Bookmark, Pencil, Package, Paintbrush, Tag, Eye } from 'lucide-react'
 import type { CategoryNode, PanelTab } from '../components/types'
 import { MobileOverviewTab } from './tabs/MobileOverviewTab'
@@ -19,7 +18,7 @@ import { AttributesTab } from '../components/tabs/AttributesTab'
 
 interface Props {
     node: CategoryNode
-    allCategories: any[]
+    allCategories: CategoryNode[]
     initialTab?: PanelTab
     onEdit: (n: CategoryNode) => void
     onAdd: (pid?: number) => void
@@ -38,7 +37,7 @@ export function MobileCategoryDetailSheet({
     const brandCount = node.brand_count ?? 0
     const attributeCount = node.attribute_count ?? 0
 
-    const tabs: { key: PanelTab; label: string; icon: any; count?: number; color?: string }[] = [
+    const tabs: { key: PanelTab; label: string; icon: ReactNode; count?: number; color?: string }[] = [
         { key: 'overview', label: 'Overview', icon: <Eye size={14} /> },
         { key: 'products', label: 'Products', icon: <Package size={14} />, count: productCount, color: 'var(--app-success, #10b981)' },
         { key: 'brands', label: 'Brands', icon: <Paintbrush size={14} />, count: brandCount, color: 'var(--app-info)' },

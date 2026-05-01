@@ -1,7 +1,7 @@
-// @ts-nocheck
 'use client'
 
 import dynamic from 'next/dynamic'
+import type { CategoryNode } from './components/types'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { MobileErrorBoundary } from '@/components/mobile/MobileErrorBoundary'
 
@@ -30,7 +30,7 @@ function GatewaySkeleton() {
     )
 }
 
-export function CategoriesGateway({ initialCategories }: { initialCategories: any[] }) {
+export function CategoriesGateway({ initialCategories }: { initialCategories: CategoryNode[] }) {
     const isMobile = useIsMobile()
     // useIsMobile starts as `false` (not undefined in current impl) — but it flips
     // to the correct value on first effect. Brief mismatch is acceptable.

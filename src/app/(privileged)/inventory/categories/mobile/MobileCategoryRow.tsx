@@ -1,7 +1,6 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type ReactNode } from 'react'
 import {
     ChevronRight, Plus, Folder, FolderOpen, Pencil, Trash2,
     Bookmark, AlertCircle, Package, Paintbrush, Tag, Box,
@@ -70,7 +69,7 @@ export function MobileCategoryRow({
     const attributeCount = node.attribute_count ?? 0
     const childCount = node.children?.length ?? 0
 
-    const chip = (count: number, icon: any, color: string, onTap: () => void, title: string) => {
+    const chip = (count: number, icon: ReactNode, color: string, onTap: () => void, title: string) => {
         const enabled = count > 0
         return (
             <button

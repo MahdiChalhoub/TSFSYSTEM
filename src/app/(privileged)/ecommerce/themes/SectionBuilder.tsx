@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState } from 'react'
@@ -6,7 +5,6 @@ import {
  Layout,
  Plus,
  Trash2,
- GripVertical,
  Save,
  ChevronUp,
  ChevronDown,
@@ -14,7 +12,16 @@ import {
  Layers
 } from 'lucide-react'
 import { updatePortalConfig } from '@/app/actions/client-portal'
-import type { StorefrontPageLayout, StorefrontSection } from '@/storefront/engine/types'
+
+interface StorefrontSection {
+ type: string
+ id: string
+ settings?: Record<string, unknown>
+}
+
+interface StorefrontPageLayout {
+ sections?: StorefrontSection[]
+}
 
 interface SectionBuilderProps {
  configId: string

@@ -159,64 +159,49 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.is_complete
 
     def get_procurement_status(self, obj):
-        """
-        Derived lifecycle.
-        Step 1: latest ProcurementRequest:
-            PENDING / APPROVED  → 'REQUESTED'
-            EXECUTED + source_po → see PO mapping below
-            EXECUTED without PO  → 'PO_SENT'
-            REJECTED             → 'FAILED'
-            CANCELLED            → fall through to direct-PO check
-        Step 2: if no active request signal, check for any open PO line:
-            DRAFT / SUBMITTED / APPROVED / SENT / CONFIRMED → 'PO_SENT'
-            IN_TRANSIT / PARTIALLY_RECEIVED                 → 'IN_TRANSIT'
-            (RECEIVED / INVOICED / COMPLETED / CANCELLED / REJECTED → ignored, fall through)
-        Step 3: 'NONE'
-        """
-        po_status_to_label = {
-            'DRAFT': 'PO_SENT', 'SUBMITTED': 'PO_SENT', 'APPROVED': 'PO_SENT',
-            'SENT': 'PO_SENT', 'CONFIRMED': 'PO_SENT',
-            'IN_TRANSIT': 'IN_TRANSIT', 'PARTIALLY_RECEIVED': 'IN_TRANSIT',
-        }
-        from erp.connector_registry import connector
-        ProcurementRequest = connector.require(
-            'pos.procurement_requests.get_model', org_id=getattr(obj, 'organization_id', 0) or 0
+        from apps.inventory.services.procurement_status_service import (
+            get_procurement_status_batch, get_product_display_status
         )
+        # Use request-level cache if available to avoid N+1 in list views
+        cache_key = '_procurement_status_cache'
+        request = self.context.get('request')
+        
+        if request:
+            if not hasattr(request, cache_key):
+                setattr(request, cache_key, {})
+            
+            cache = getattr(request, cache_key)
+            if obj.id in cache:
+                return cache[obj.id]
 
-        if ProcurementRequest is not None:
-            latest = ProcurementRequest.objects.filter(
-                product=obj, organization=obj.organization
-            ).order_by('-requested_at').first()
-            if latest:
-                if latest.status in ('PENDING', 'APPROVED'):
-                    return 'REQUESTED'
-                if latest.status == 'EXECUTED':
-                    po = latest.source_po
-                    if po is None:
-                        return 'PO_SENT'
-                    if po.status in po_status_to_label:
-                        return po_status_to_label[po.status]
-                    if po.status in ('REJECTED', 'CANCELLED'):
-                        return 'FAILED'
-                    if po.status in ('RECEIVED', 'PARTIALLY_INVOICED', 'INVOICED', 'COMPLETED'):
-                        return 'NONE'
-                    return 'PO_SENT'
-                if latest.status == 'REJECTED':
-                    return 'FAILED'
+            # Resolve for this single product (batch of 1)
+            batch_res = get_procurement_status_batch(obj.organization, [obj.id])
+            entry = batch_res.get(obj.id)
+            
+            # Use display status resolver (handles stock tiers too)
+            status, detail = get_product_display_status(
+                entry, 
+                float(getattr(obj, 'on_hand_qty', 0) or 0),
+                float(getattr(obj, 'incoming_transfer_qty', 0) or 0),
+                getattr(obj, 'min_stock_level', 0)
+            )
+            
+            # Map back to constant keys for frontend
+            LABEL_TO_KEY = {
+                'Requested to Purchase': 'REQUESTED',
+                'Requested to Transfer': 'REQUESTED',
+                'Approved to Purchase': 'REQUESTED',
+                'Approved to Transfer': 'REQUESTED',
+                'In Transit': 'IN_TRANSIT',
+                'Ordered': 'PO_SENT',
+                'Received': 'RECEIVED',
+                'Failed': 'FAILED',
+                'Available': 'NONE',
+            }
+            final_status = LABEL_TO_KEY.get(status, 'NONE')
+            cache[obj.id] = final_status
+            return final_status
 
-        # Direct-PO fallback: open PO line not driven by a ProcurementRequest.
-        PurchaseOrderLine = connector.require(
-            'pos.purchase_order_lines.get_model', org_id=getattr(obj, 'organization_id', 0) or 0
-        )
-        if PurchaseOrderLine is None:
-            return 'NONE'
-        open_line = (PurchaseOrderLine.objects
-                     .filter(product=obj, organization=obj.organization,
-                             order__status__in=list(po_status_to_label.keys()))
-                     .order_by('-id')
-                     .first())
-        if open_line:
-            return po_status_to_label.get(open_line.order.status, 'PO_SENT')
         return 'NONE'
 
     def _resolve_warehouse(self, obj):

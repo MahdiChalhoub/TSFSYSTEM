@@ -222,7 +222,9 @@ export function AdminSidebar({
              *  yet); when this panel is reused for editing an
              *  existing PO, swap `current` for `po.status`. */}
             <div className="flex-shrink-0 px-4 pb-2">
-                <POLifecycle current="DRAFT" variant="full" />
+                <POLifecycle current="DRAFT" variant="full"
+                             collapsible
+                             defaultCollapsed />
             </div>
 
             {/* BODY ─────────────────────────────────────────────── */}
@@ -395,11 +397,18 @@ export function AdminSidebar({
                 </Step>
 
                 <Step n={5} title="Analytics" icon={<Shield size={12} />}>
-                    <label className={labelCls}>Profile</label>
-                    <div className="rounded-xl overflow-hidden"
-                         style={{ background: 'var(--app-bg)', border: `1px solid ${FIRM_DIVIDER}` }}>
-                        <AnalyticsProfileSelector pageContext="purchase-order" onProfileChange={() => {}} compact />
-                    </div>
+                    <label className={labelCls}>Active profile</label>
+                    {/* Non-compact selector — surfaces the active profile's
+                     *  name inline ("Default Profile" / "Conservative" / ...)
+                     *  so the operator sees which profile drives this PO's
+                     *  analytics overrides. The compact variant hides the
+                     *  name and was the source of the "what profile am I
+                     *  using?" confusion. */}
+                    <AnalyticsProfileSelector pageContext="purchase-order" onProfileChange={() => {}} />
+                    <p className="text-tp-xxs font-medium text-app-muted-foreground/70 mt-1.5 leading-snug">
+                        Drives sales/cost windows, lead-time, and reorder formulas
+                        for this PO. Click the chip to switch.
+                    </p>
                 </Step>
             </div>
 

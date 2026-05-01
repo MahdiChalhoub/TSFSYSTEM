@@ -15,7 +15,8 @@
  * competes with the forward direction.
  */
 
-import { Check, AlertTriangle } from 'lucide-react'
+import { useState } from 'react'
+import { Check, AlertTriangle, ChevronDown } from 'lucide-react'
 
 export type POStatus =
     | 'DRAFT'
@@ -55,9 +56,26 @@ interface Props {
     /** Current PO status. For a draft form this is `'DRAFT'`. */
     current: POStatus
     variant?: 'full' | 'compact'
+    /** When provided on the `full` variant, stages render as buttons
+     *  and clicking one calls this callback. Use it for editing flows
+     *  where the operator can transition the PO between stages. Leave
+     *  undefined on read-only views (e.g. the New PO form, which is
+     *  always DRAFT). */
+    onStageChange?: (next: POStatus) => void
+    /** When true on the `full` variant, the timeline is collapsible
+     *  via the header. Defaults to true. */
+    collapsible?: boolean
+    /** Initial collapsed state when `collapsible`. Defaults to false. */
+    defaultCollapsed?: boolean
 }
 
-export function POLifecycle({ current, variant = 'full' }: Props) {
+export function POLifecycle({
+    current,
+    variant = 'full',
+    onStageChange,
+    collapsible = true,
+    defaultCollapsed = false,
+}: Props) {
     const isFailed = current === 'FAILED'
     const currentIdx = isFailed ? -1 : indexOfStatus(current)
 
@@ -109,6 +127,30 @@ export function POLifecycle({ current, variant = 'full' }: Props) {
         )
     }
 
+    return (<FullTimeline
+        current={current}
+        currentIdx={currentIdx}
+        isFailed={isFailed}
+        onStageChange={onStageChange}
+        collapsible={collapsible}
+        defaultCollapsed={defaultCollapsed}
+    />)
+}
+
+function FullTimeline({
+    current, currentIdx, isFailed,
+    onStageChange, collapsible, defaultCollapsed,
+}: {
+    current: POStatus
+    currentIdx: number
+    isFailed: boolean
+    onStageChange?: (next: POStatus) => void
+    collapsible: boolean
+    defaultCollapsed: boolean
+}) {
+    const [collapsed, setCollapsed] = useState(defaultCollapsed)
+    const interactive = !!onStageChange
+
     /* Full variant — VERTICAL timeline.
      *
      *  The horizontal stepper required 2-letter abbreviations (DR/AP/SE/IT…)
@@ -117,32 +159,60 @@ export function POLifecycle({ current, variant = 'full' }: Props) {
      *  and lets the FAILED branch sit at the end as a proper "or this"
      *  alternate without dangling visually.
      */
+    /* Header is a clickable region when collapsible; renders a chevron that
+     *  rotates with state. */
     return (
         <div className="rounded-xl p-3"
              style={{
                  background: 'var(--app-bg)',
                  border: '1px solid color-mix(in srgb, var(--app-border) 35%, transparent)',
              }}>
-            <div className="flex items-center justify-between mb-2.5">
-                <span className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">
+            <button type="button"
+                    onClick={() => collapsible && setCollapsed(c => !c)}
+                    disabled={!collapsible}
+                    className={`w-full flex items-center justify-between ${collapsed ? '' : 'mb-2.5'} disabled:cursor-default`}>
+                <span className="flex items-center gap-1.5 text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">
                     Lifecycle
+                    {interactive && (
+                        <span className="font-bold normal-case tracking-normal px-1 py-px rounded"
+                              style={{
+                                  background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                  color: 'var(--app-primary)',
+                                  fontSize: '10px',
+                              }}>
+                            click to switch
+                        </span>
+                    )}
                 </span>
-                <span className="text-tp-xxs font-bold tabular-nums"
-                      style={{ color: isFailed ? PALETTE.failed : PALETTE.current }}>
-                    {isFailed
-                        ? 'Failed'
-                        : `${Math.max(1, currentIdx + 1)} of ${STAGES.length}`}
+                <span className="flex items-center gap-1.5">
+                    <span className="text-tp-xxs font-bold tabular-nums"
+                          style={{ color: isFailed ? PALETTE.failed : PALETTE.current }}>
+                        {isFailed
+                            ? 'Failed'
+                            : `${current === 'DRAFT' && currentIdx === 0 ? 'Draft' : (currentIdx + 1) + ' of ' + STAGES.length}`}
+                    </span>
+                    {collapsible && (
+                        <ChevronDown size={12}
+                                     className="text-app-muted-foreground transition-transform"
+                                     style={{ transform: collapsed ? 'rotate(-90deg)' : undefined }} />
+                    )}
                 </span>
-            </div>
+            </button>
 
+            {collapsed ? null : (
+            <>
             <ol className="relative">
                 {STAGES.map((s, i) => {
                     const past = !isFailed && i < currentIdx
                     const active = !isFailed && i === currentIdx
                     const dotColor = active ? PALETTE.current : past ? PALETTE.past : PALETTE.future
                     const isLast = i === STAGES.length - 1
+                    /* When `interactive`, render the row as a button so
+                     *  operators can click any stage to switch. The current
+                     *  stage isn't switchable (already there). */
+                    const Row: React.ElementType = interactive && !active ? 'button' : 'div'
                     return (
-                        <li key={s.key} className="relative flex items-start" style={{ minHeight: '24px' }}>
+                        <li key={s.key} className="relative" style={{ minHeight: '24px' }}>
                             {/* Vertical rail — connects this dot to the next.
                              *  Hidden on the last item. */}
                             {!isLast && (
@@ -154,39 +224,50 @@ export function POLifecycle({ current, variant = 'full' }: Props) {
                                      }} />
                             )}
 
-                            {/* Dot — slightly larger when active for visual anchor. */}
-                            <div className="relative z-10 flex-shrink-0 flex items-center justify-center transition-all"
-                                 style={{
-                                     width: 15,
-                                     height: 15,
-                                     borderRadius: '50%',
-                                     background: past ? PALETTE.past : active ? PALETTE.current : 'var(--app-bg)',
-                                     border: past || active ? 'none' : `1.5px solid ${dotColor}`,
-                                     color: 'white',
-                                     opacity: past || active ? 1 : 0.5,
-                                     boxShadow: active
-                                         ? `0 0 0 3px color-mix(in srgb, ${PALETTE.current} 18%, transparent)`
-                                         : undefined,
-                                 }}>
-                                {past && <Check size={9} strokeWidth={3} />}
-                            </div>
-
-                            {/* Label */}
-                            <div className="ml-2.5 pb-2 leading-tight">
-                                <div className="text-tp-sm font-bold"
+                            <Row
+                                {...(Row === 'button'
+                                    ? {
+                                        type: 'button' as const,
+                                        onClick: () => onStageChange?.(s.key),
+                                        title: `Switch to ${s.label}`,
+                                    }
+                                    : {})}
+                                className={`flex items-start w-full text-left rounded-md transition-all ${interactive && !active ? 'hover:bg-app-surface-hover active:scale-[0.99] -mx-1 px-1' : ''}`}
+                            >
+                                {/* Dot — slightly larger when active for visual anchor. */}
+                                <div className="relative z-10 flex-shrink-0 flex items-center justify-center transition-all"
                                      style={{
-                                         color: active ? PALETTE.current : past ? 'var(--app-foreground)' : PALETTE.future,
-                                         opacity: past || active ? 1 : 0.7,
+                                         width: 15,
+                                         height: 15,
+                                         borderRadius: '50%',
+                                         background: past ? PALETTE.past : active ? PALETTE.current : 'var(--app-bg)',
+                                         border: past || active ? 'none' : `1.5px solid ${dotColor}`,
+                                         color: 'white',
+                                         opacity: past || active ? 1 : 0.5,
+                                         boxShadow: active
+                                             ? `0 0 0 3px color-mix(in srgb, ${PALETTE.current} 18%, transparent)`
+                                             : undefined,
                                      }}>
-                                    {s.label}
+                                    {past && <Check size={9} strokeWidth={3} />}
                                 </div>
-                                {active && (
-                                    <div className="text-tp-xxs font-bold uppercase tracking-widest mt-0.5"
-                                         style={{ color: PALETTE.current, opacity: 0.7 }}>
-                                        Current stage
+
+                                {/* Label */}
+                                <div className="ml-2.5 pb-2 leading-tight">
+                                    <div className="text-tp-sm font-bold"
+                                         style={{
+                                             color: active ? PALETTE.current : past ? 'var(--app-foreground)' : PALETTE.future,
+                                             opacity: past || active ? 1 : 0.7,
+                                         }}>
+                                        {s.label}
                                     </div>
-                                )}
-                            </div>
+                                    {active && (
+                                        <div className="text-tp-xxs font-bold uppercase tracking-widest mt-0.5"
+                                             style={{ color: PALETTE.current, opacity: 0.7 }}>
+                                            Current stage
+                                        </div>
+                                    )}
+                                </div>
+                            </Row>
                         </li>
                     )
                 })}
@@ -214,11 +295,21 @@ export function POLifecycle({ current, variant = 'full' }: Props) {
                       style={{ color: PALETTE.failed, opacity: isFailed ? 1 : 0.7 }}>
                     Failed
                 </span>
-                <span className="text-tp-xxs font-medium ml-auto"
-                      style={{ color: PALETTE.failed, opacity: 0.5 }}>
-                    alt path
-                </span>
+                {interactive && !isFailed ? (
+                    <button type="button" onClick={() => onStageChange?.('FAILED')}
+                            className="text-tp-xxs font-bold ml-auto px-1.5 py-px rounded transition-all hover:bg-app-error/10"
+                            style={{ color: PALETTE.failed }}>
+                        Mark failed →
+                    </button>
+                ) : (
+                    <span className="text-tp-xxs font-medium ml-auto"
+                          style={{ color: PALETTE.failed, opacity: 0.5 }}>
+                        alt path
+                    </span>
+                )}
             </div>
+            </>
+            )}
         </div>
     )
 }

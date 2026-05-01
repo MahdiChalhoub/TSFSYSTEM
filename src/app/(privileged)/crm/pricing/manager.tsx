@@ -1,11 +1,59 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
-import { Plus, Tag, Users, DollarSign, Percent, Hash, Trash2, ChevronRight, Search, Calendar, Star, AlertCircle } from "lucide-react";
+import { Plus, Tag, DollarSign, Percent, Hash, Trash2, Search, Calendar, AlertCircle } from "lucide-react";
 import clsx from 'clsx';
 import { createPriceGroup, createPriceRule, deletePriceGroup, deletePriceRule } from '@/app/actions/pricing';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+
+interface PriceGroupRow {
+    id: number
+    name: string
+    description?: string
+    priority?: number
+    member_count?: number
+    rule_count?: number
+    valid_from?: string
+    valid_until?: string
+    [key: string]: unknown
+}
+
+interface PriceRuleRow {
+    id: number
+    discount_type: string
+    value: number | string
+    min_quantity?: number
+    contact_name?: string
+    group_name?: string
+    product_name?: string
+    category_name?: string
+    [key: string]: unknown
+}
+
+interface ContactOption {
+    id: number
+    name?: string
+    type?: string
+    [key: string]: unknown
+}
+
+interface ProductOption {
+    id: number
+    name?: string
+    [key: string]: unknown
+}
+
+interface CategoryOption {
+    id: number
+    name?: string
+    [key: string]: unknown
+}
+
+interface ActionResult {
+    success?: boolean
+    message?: string
+    [key: string]: unknown
+}
 
 export default function PricingManager({
     priceGroups,
@@ -14,11 +62,11 @@ export default function PricingManager({
     products,
     categories,
 }: {
-    priceGroups: Record<string, any>[],
-    priceRules: Record<string, any>[],
-    contacts: Record<string, any>[],
-    products: Record<string, any>[],
-    categories: Record<string, any>[],
+    priceGroups: PriceGroupRow[],
+    priceRules: PriceRuleRow[],
+    contacts: ContactOption[],
+    products: ProductOption[],
+    categories: CategoryOption[],
 }) {
     const [tab, setTab] = useState<'groups' | 'rules'>('groups');
     const [showGroupForm, setShowGroupForm] = useState(false);
@@ -49,7 +97,7 @@ export default function PricingManager({
         fd.set('name', groupName);
         fd.set('description', groupDesc);
         fd.set('priority', groupPriority);
-        const result = await createPriceGroup(null, fd);
+        const result = (await createPriceGroup({}, fd)) as ActionResult;
         setSaving(false);
         if (result.success) {
             setShowGroupForm(false);
@@ -71,7 +119,7 @@ export default function PricingManager({
         if (ruleGroupId) fd.set('priceGroupId', ruleGroupId);
         if (ruleProductId) fd.set('productId', ruleProductId);
         if (ruleCategoryId) fd.set('categoryId', ruleCategoryId);
-        const result = await createPriceRule(null, fd);
+        const result = (await createPriceRule({}, fd)) as ActionResult;
         setSaving(false);
         if (result.success) {
             setShowRuleForm(false);
@@ -254,7 +302,7 @@ export default function PricingManager({
                                         <span className="text-lg font-black text-app-foreground">
                                             {rule.discount_type === 'PERCENTAGE' ? `${rule.value}%` : `$${rule.value}`}
                                         </span>
-                                        {rule.min_quantity > 1 && (
+                                        {rule.min_quantity && rule.min_quantity > 1 && (
                                             <span className="text-xs text-app-muted-foreground font-bold">Min qty: {rule.min_quantity}</span>
                                         )}
                                     </div>
@@ -357,7 +405,7 @@ export default function PricingManager({
                                     <select value={ruleContactId} onChange={(e) => { setRuleContactId(e.target.value); if (e.target.value) setRuleGroupId(''); }}
                                         className="w-full px-4 py-2.5 rounded-xl bg-app-surface border-none focus:ring-2 focus:ring-violet-200 outline-none font-bold text-app-foreground text-sm appearance-none">
                                         <option value="">— None —</option>
-                                        {contacts.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
+                                        {contacts.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -365,7 +413,7 @@ export default function PricingManager({
                                     <select value={ruleGroupId} onChange={(e) => { setRuleGroupId(e.target.value); if (e.target.value) setRuleContactId(''); }}
                                         className="w-full px-4 py-2.5 rounded-xl bg-app-surface border-none focus:ring-2 focus:ring-violet-200 outline-none font-bold text-app-foreground text-sm appearance-none">
                                         <option value="">— None —</option>
-                                        {priceGroups.map((g: Record<string, any>) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                        {priceGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -377,7 +425,7 @@ export default function PricingManager({
                                     <select value={ruleProductId} onChange={(e) => setRuleProductId(e.target.value)}
                                         className="w-full px-4 py-2.5 rounded-xl bg-app-surface border-none focus:ring-2 focus:ring-app-border outline-none font-bold text-app-foreground text-sm appearance-none">
                                         <option value="">All Products</option>
-                                        {products.map((p: Record<string, any>) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -385,7 +433,7 @@ export default function PricingManager({
                                     <select value={ruleCategoryId} onChange={(e) => setRuleCategoryId(e.target.value)}
                                         className="w-full px-4 py-2.5 rounded-xl bg-app-surface border-none focus:ring-2 focus:ring-app-border outline-none font-bold text-app-foreground text-sm appearance-none">
                                         <option value="">All Categories</option>
-                                        {categories.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
                             </div>

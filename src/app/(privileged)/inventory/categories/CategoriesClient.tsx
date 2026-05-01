@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react'
@@ -33,7 +32,7 @@ import { CsvImportDialog } from './components/CsvImportDialog'
  *  source of truth for search, KPI filtering, tree build, and
  *  empty-state UI. This file only supplies data + row + modals.
  * ═══════════════════════════════════════════════════════════ */
-export function CategoriesClient({ initialCategories }: { initialCategories: any[] }) {
+export function CategoriesClient({ initialCategories }: { initialCategories: CategoryNode[] }) {
     const router = useRouter()
     const { t } = useTranslation()
     const [isPending, startTransition] = useTransition()
@@ -237,13 +236,13 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 ],
 
                 // ── Template owns filtering ──
-                data,
+                data: data as unknown as Record<string, unknown>[],
                 searchFields: ['name', 'code', 'short_name', 'full_path'],
                 kpiPredicates: {
                     root: (c) => !c.parent,
-                    leaf: (c, all) => !all.some((child: any) => child.parent === c.id),
-                    products: (c) => (c.product_count || 0) > 0,
-                    brands: (c) => (c.brand_count || 0) > 0,
+                    leaf: (c, all) => !all.some((child: { parent?: unknown }) => child.parent === c.id),
+                    products: (c) => Number(c.product_count || 0) > 0,
+                    brands: (c) => Number(c.brand_count || 0) > 0,
                 },
 
                 kpis: [

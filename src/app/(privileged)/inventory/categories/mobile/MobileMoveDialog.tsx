@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
@@ -16,13 +15,20 @@ import type { CategoryNode } from '../components/types'
  *  to prevent cycles). Also offers "Make root".
  * ═══════════════════════════════════════════════════════════ */
 
+interface CategoryItem {
+    id: number
+    name?: string
+    code?: string
+    parent: number | null
+}
+
 interface Props {
     node: CategoryNode | null
-    allCategories: any[]
+    allCategories: CategoryItem[]
     onClose: () => void
 }
 
-function collectDescendantIds(id: number, all: any[]): Set<number> {
+function collectDescendantIds(id: number, all: CategoryItem[]): Set<number> {
     const set = new Set<number>([id])
     let added = true
     while (added) {
