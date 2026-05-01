@@ -9,7 +9,7 @@ import { getFieldStatus } from '../../_lib/validation'
 import { usePASettings } from '../../_hooks/PASettingsContext'
 import { FieldHelp, statusDot } from '../FieldHelp'
 
-const SECTION_COLOR = '#3b82f6'
+const SECTION_COLOR = 'var(--app-info)'
 
 export function SalesSection() {
     const s = usePASettings()

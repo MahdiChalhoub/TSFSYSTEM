@@ -105,8 +105,8 @@ export function OrgTaxPolicyPresetCard({ preset, onImport, importing }: {
                     {preset.required_documents && preset.required_documents.length > 0 && (
                         <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded"
                             style={{
-                                color: '#8b5cf6',
-                                background: 'color-mix(in srgb, #8b5cf6 8%, transparent)',
+                                color: 'var(--app-accent)',
+                                background: 'color-mix(in srgb, var(--app-accent) 8%, transparent)',
                             }}>{preset.required_documents.length} docs</span>
                     )}
                 </div>

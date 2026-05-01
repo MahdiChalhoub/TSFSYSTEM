@@ -215,7 +215,7 @@ export default function ProductsDetailPage() {
             { label: 'Cost Price', value: fmt(item.cost_price), color: 'var(--app-info)', icon: <TrendingUp size={14} /> },
             { label: 'On Hand', value: fmtQty(item.on_hand_qty), color: stockColor, icon: <Box size={14} /> },
             { label: 'Available', value: fmtQty(item.available_qty), color: 'var(--app-primary)', icon: <Archive size={14} /> },
-            { label: 'Reserved', value: fmtQty(item.reserved_qty), color: '#8b5cf6', icon: <Shield size={14} /> },
+            { label: 'Reserved', value: fmtQty(item.reserved_qty), color: 'var(--app-accent)', icon: <Shield size={14} /> },
           ].map(s => (
             <div key={s.label} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all"
               style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
@@ -369,7 +369,7 @@ export default function ProductsDetailPage() {
                 <div className="divide-y divide-app-border/40">
                   {[
                     { label: 'On Hand', value: fmtQty(item.on_hand_qty), color: stockColor },
-                    { label: 'Reserved', value: fmtQty(item.reserved_qty), color: '#8b5cf6' },
+                    { label: 'Reserved', value: fmtQty(item.reserved_qty), color: 'var(--app-accent)' },
                     { label: 'Available', value: fmtQty(item.available_qty), color: 'var(--app-primary)' },
                     { label: 'Min Stock Level', value: fmtQty(item.min_stock_level), color: 'var(--app-muted-foreground)' },
                     { label: 'Max Stock Level', value: fmtQty(item.max_stock_level), color: 'var(--app-muted-foreground)' },
@@ -552,7 +552,7 @@ export default function ProductsDetailPage() {
             style={{ background: 'var(--app-surface)', boxShadow: '0 1px 3px color-mix(in srgb, var(--app-foreground) 4%, transparent)' }}>
             <div className="px-5 py-3.5 border-b border-app-border flex items-center gap-2"
               style={{ background: 'var(--app-bg)' }}>
-              <Activity size={14} style={{ color: '#8b5cf6' }} />
+              <Activity size={14} style={{ color: 'var(--app-accent)' }} />
               <span className="text-[11px] font-black text-app-foreground uppercase tracking-widest">Activity Log</span>
             </div>
             <div className="flex flex-col items-center justify-center py-16 px-5">

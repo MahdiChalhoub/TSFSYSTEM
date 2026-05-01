@@ -214,18 +214,18 @@ function AccountTreePicker({
 // ── Module meta ────────────────────────────────────────────────
 const MODULE_META: Record<string, { icon: any; color: string; label: string }> = {
     sales:       { icon: ShoppingCart,   color: 'var(--app-info, #3b82f6)',    label: 'Sales & Revenue' },
-    purchases:   { icon: CreditCard,     color: '#8b5cf6',                     label: 'Purchases & Suppliers' },
+    purchases:   { icon: CreditCard,     color: 'var(--app-accent)',                     label: 'Purchases & Suppliers' },
     inventory:   { icon: Package,        color: 'var(--app-warning, #f59e0b)', label: 'Inventory Operations' },
     payments:    { icon: Wallet,         color: 'var(--app-success, #22c55e)', label: 'Financial Processing' },
     tax:         { icon: Shield,         color: 'var(--app-error, #ef4444)',   label: 'Tax Engine' },
-    treasury:    { icon: Landmark,       color: '#06b6d4',                     label: 'Treasury & Banking' },
-    assets:      { icon: BarChart3,      color: '#64748b',                     label: 'Fixed Assets' },
-    equity:      { icon: Users,          color: '#8b5cf6',                     label: 'Equity & Capital' },
-    adjustment:  { icon: RefreshCcw,     color: '#f97316',                     label: 'Adjustments' },
+    treasury:    { icon: Landmark,       color: 'var(--app-accent-cyan)',                     label: 'Treasury & Banking' },
+    assets:      { icon: BarChart3,      color: 'var(--app-muted-foreground)',                     label: 'Fixed Assets' },
+    equity:      { icon: Users,          color: 'var(--app-accent)',                     label: 'Equity & Capital' },
+    adjustment:  { icon: RefreshCcw,     color: 'var(--app-warning)',                     label: 'Adjustments' },
     automation:  { icon: Zap,            color: 'var(--app-success, #22c55e)', label: 'Partner Automation' },
     suspense:    { icon: ArrowRightLeft, color: 'var(--app-warning, #f59e0b)', label: 'Suspense & Clearing' },
-    partners:    { icon: Users,          color: '#8b5cf6',                     label: 'Partners' },
-    fixedAssets: { icon: BarChart3,      color: '#64748b',                     label: 'Fixed Assets' },
+    partners:    { icon: Users,          color: 'var(--app-accent)',                     label: 'Partners' },
+    fixedAssets: { icon: BarChart3,      color: 'var(--app-muted-foreground)',                     label: 'Fixed Assets' },
     payroll:     { icon: Users,          color: '#ec4899',                     label: 'Payroll' },
 }
 const getMeta = (mod: string) => MODULE_META[mod] || { icon: Settings2, color: 'var(--app-muted-foreground)', label: mod }
@@ -374,7 +374,7 @@ export default function PostingRulesConsole({
         { label: 'Mapped', value: mappedEvents, color: 'var(--app-success, #22c55e)', icon: <CheckCircle2 size={14} />, filterKey: 'MAPPED' as string | null },
         { label: 'Unmapped', value: unmappedEvents, color: 'var(--app-error, #ef4444)', icon: <XCircle size={14} />, filterKey: 'UNMAPPED' as string | null },
         { label: 'Coverage', value: `${coveragePct}%`, color: coveragePct >= 80 ? 'var(--app-success, #22c55e)' : coveragePct >= 50 ? 'var(--app-warning, #f59e0b)' : 'var(--app-error, #ef4444)', icon: <BarChart3 size={14} />, filterKey: null },
-        { label: 'Modules', value: moduleKeys.length, color: '#8b5cf6', icon: <Package size={14} />, filterKey: null },
+        { label: 'Modules', value: moduleKeys.length, color: 'var(--app-accent)', icon: <Package size={14} />, filterKey: null },
     ]
 
     return (

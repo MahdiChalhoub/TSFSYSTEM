@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
                 <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/5 text-center">
                         <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
             <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/5">
                     <div className="mb-8 text-center">

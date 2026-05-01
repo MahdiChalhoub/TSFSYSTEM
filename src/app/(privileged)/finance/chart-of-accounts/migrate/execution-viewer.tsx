@@ -15,7 +15,7 @@ import {
 const MODE_COLORS: Record<string, { bg: string, text: string, label: string }> = {
     RENAME_IN_PLACE: { bg: 'bg-app-info/15', text: 'text-app-info', label: 'Rename' },
     REPOINT_AND_ARCHIVE: { bg: 'bg-app-warning/15', text: 'text-app-warning', label: 'Archive' },
-    MERGE_FORWARD: { bg: 'bg-[#8b5cf6]/15', text: 'text-[#8b5cf6]', label: 'Merge' },
+    MERGE_FORWARD: { bg: 'bg-[var(--app-accent)]/15', text: 'text-[var(--app-accent)]', label: 'Merge' },
     SPLIT_BY_OPENING_ENTRY: { bg: 'bg-app-info/15', text: 'text-app-info', label: 'Split' },
     DELETE_UNUSED: { bg: 'bg-app-error/15', text: 'text-app-error', label: 'Delete' },
     MANUAL_REVIEW: { bg: 'bg-app-warning/15', text: 'text-app-warning', label: 'Manual' },

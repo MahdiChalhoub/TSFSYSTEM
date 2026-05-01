@@ -21,7 +21,7 @@ export default function EcommerceOrdersPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Online Orders</h1>
-                    <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Manage eCommerce orders from your storefront.</p>
+                    <p style={{ color: 'var(--app-muted-foreground)', marginTop: '0.25rem' }}>Manage eCommerce orders from your storefront.</p>
                 </div>
             </div>
 
@@ -34,8 +34,8 @@ export default function EcommerceOrdersPage() {
                         style={{
                             padding: '0.5rem 1rem',
                             borderRadius: '20px',
-                            border: '1px solid ' + (filter === s ? '#6366f1' : '#e2e8f0'),
-                            background: filter === s ? '#6366f1' : '#fff',
+                            border: '1px solid ' + (filter === s ? 'var(--app-accent)' : 'var(--app-border)'),
+                            background: filter === s ? 'var(--app-accent)' : '#fff',
                             color: filter === s ? '#fff' : '#475569',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
@@ -51,11 +51,11 @@ export default function EcommerceOrdersPage() {
             {orders.length === 0 ? (
                 <div style={{
                     background: '#fff',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid var(--app-border)',
                     borderRadius: '12px',
                     padding: '3rem',
                     textAlign: 'center',
-                    color: '#94a3b8',
+                    color: 'var(--app-faint)',
                 }}>
                     <ShoppingCart size={48} style={{ margin: '0 auto 1rem' }} />
                     <p style={{ fontWeight: 600, fontSize: '1.1rem' }}>No orders yet</p>
@@ -64,25 +64,25 @@ export default function EcommerceOrdersPage() {
             ) : (
                 <div style={{
                     background: '#fff',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid var(--app-border)',
                     borderRadius: '12px',
                     overflow: 'hidden',
                 }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
-                            <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748b' }}>Order #</th>
-                                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748b' }}>Customer</th>
-                                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748b' }}>Status</th>
-                                <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.8rem', color: '#64748b' }}>Total</th>
-                                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748b' }}>Date</th>
+                            <tr style={{ borderBottom: '1px solid var(--app-border)' }}>
+                                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>Order #</th>
+                                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>Customer</th>
+                                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>Status</th>
+                                <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>Total</th>
+                                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             {orders.map((order: any) => {
-                                const sc = STATUS_COLORS[order.status] || { bg: '#f1f5f9', text: '#475569', label: order.status };
+                                const sc = STATUS_COLORS[order.status] || { bg: 'var(--app-surface-2)', text: '#475569', label: order.status };
                                 return (
-                                    <tr key={order.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                    <tr key={order.id} style={{ borderBottom: '1px solid var(--app-surface-2)' }}>
                                         <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>{order.order_number}</td>
                                         <td style={{ padding: '0.75rem 1rem' }}>{order.contact_name}</td>
                                         <td style={{ padding: '0.75rem 1rem' }}>
@@ -91,7 +91,7 @@ export default function EcommerceOrdersPage() {
                                             </span>
                                         </td>
                                         <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600 }}>${order.total}</td>
-                                        <td style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.85rem' }}>
+                                        <td style={{ padding: '0.75rem 1rem', color: 'var(--app-muted-foreground)', fontSize: '0.85rem' }}>
                                             {new Date(order.placed_at).toLocaleDateString()}
                                         </td>
                                     </tr>

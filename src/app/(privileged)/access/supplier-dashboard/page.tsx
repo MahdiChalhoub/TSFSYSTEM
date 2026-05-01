@@ -67,7 +67,7 @@ export default function SupplierDashboardPage() {
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
             {/* Admin Preview Banner */}
             <div style={{
-                background: 'linear-gradient(135deg, #f59e0b, color-mix(in srgb, #f59e0b 70%, #ef4444))',
+                background: 'linear-gradient(135deg, var(--app-warning), color-mix(in srgb, var(--app-warning) 70%, var(--app-error)))',
                 borderRadius: 16, padding: '2rem 2.5rem', marginBottom: '2rem', color: 'white',
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -87,8 +87,8 @@ export default function SupplierDashboardPage() {
                     padding: '1.5rem', borderRadius: 12, background: 'var(--app-card)', border: '1px solid var(--app-border)',
                     display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none', color: 'var(--app-foreground)',
                 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 10, background: 'color-mix(in srgb, #f59e0b 15%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <User size={22} color="#f59e0b" />
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: 'color-mix(in srgb, var(--app-warning) 15%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <User size={22} color="var(--app-warning)" />
                     </div>
                     <div>
                         <div style={{ fontSize: '1rem', fontWeight: 600 }}>Manage Supplier Access</div>

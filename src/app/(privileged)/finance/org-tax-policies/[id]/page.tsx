@@ -364,7 +364,7 @@ export default function OrgTaxPolicyFormPage() {
           { label: 'Country', value: form.country_code || '—', icon: <Globe size={14} />, color: 'var(--app-info, #3b82f6)' },
           { label: 'Currency', value: form.currency_code || '—', icon: <Coins size={14} />, color: 'var(--app-primary)' },
           { label: 'VAT Mode', value: form.official_vat_treatment || '—', icon: <Percent size={14} />, color: 'var(--app-success, #22c55e)' },
-          { label: 'Profit Tax', value: form.profit_tax_mode || '—', icon: <TrendingUp size={14} />, color: '#8b5cf6' },
+          { label: 'Profit Tax', value: form.profit_tax_mode || '—', icon: <TrendingUp size={14} />, color: 'var(--app-accent)' },
           { label: 'Custom Rules', value: `${customRules.length}`, icon: <Layers size={14} />, color: 'var(--app-warning, #f59e0b)' },
         ].map(s => (
           <div key={s.label} className="flex items-center gap-2 px-3 py-2 rounded-xl"

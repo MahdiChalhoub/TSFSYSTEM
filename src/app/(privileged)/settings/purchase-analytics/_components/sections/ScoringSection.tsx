@@ -8,7 +8,7 @@ import {
 import { usePASettings } from '../../_hooks/PASettingsContext'
 import { FieldHelp } from '../FieldHelp'
 
-const C = '#8b5cf6'
+const C = 'var(--app-accent)'
 
 export function ScoringSection() {
     const s = usePASettings()
@@ -80,7 +80,7 @@ export function ScoringSection() {
                     </div>
                     <p className={fieldHint}>Weights should ideally sum to 100%.</p>
                     {s.getWarning('financial_score_weights') && (
-                        <p className="text-[9px] mt-1 flex items-center gap-1" style={{ color: '#f59e0b' }}>
+                        <p className="text-[9px] mt-1 flex items-center gap-1" style={{ color: 'var(--app-warning)' }}>
                             <AlertTriangle size={9} /> {s.getWarning('financial_score_weights')!.message}
                         </p>
                     )}

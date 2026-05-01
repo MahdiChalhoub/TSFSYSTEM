@@ -98,7 +98,7 @@ export default function SupplierOrderDetail() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative flex items-center justify-center bg-app-bg">
+            <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative flex items-center justify-center bg-app-bg">
                 <div className="w-12 h-12 border-4 border-app-success border-t-transparent rounded-full animate-spin" />
             </div>
         )
@@ -106,7 +106,7 @@ export default function SupplierOrderDetail() {
 
     if (!order) {
         return (
-            <div className="min-h-screen bg-[#020617] p-4 lg:p-12 text-center flex flex-col items-center justify-center bg-app-bg">
+            <div className="min-h-screen bg-app-bg p-4 lg:p-12 text-center flex flex-col items-center justify-center bg-app-bg">
                 <FileText size={48} className="text-app-text-muted mb-4" />
                 <h1 className="text-2xl font-black text-app-text mb-2">Order Not Found</h1>
                 <Link href={`/supplier-portal/${slug}/orders`} className="text-app-success hover:underline">Return to Orders</Link>
@@ -117,7 +117,7 @@ export default function SupplierOrderDetail() {
     const st = STATUS_MAP[order.status] || STATUS_MAP.DRAFT
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative overflow-hidden bg-app-bg">
+        <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative overflow-hidden bg-app-bg">
             <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-info-bg blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-8">

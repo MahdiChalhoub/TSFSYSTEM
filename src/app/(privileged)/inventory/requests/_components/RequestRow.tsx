@@ -75,7 +75,7 @@ export function RequestRow({ r, pending, runAction }: {
                     {r.requested_by_name || 'system'}
                 </div>
                 {bumpedAgo && (
-                    <div className="text-[9px] font-bold uppercase tracking-wider truncate" style={{ color: '#8b5cf6' }}
+                    <div className="text-[9px] font-bold uppercase tracking-wider truncate" style={{ color: 'var(--app-accent)' }}
                         title={bumpedAt!.toISOString()}>
                         Bumped {bumpedAgo}{r.bump_count > 1 ? ` · ×${r.bump_count}` : ''}
                     </div>
@@ -152,7 +152,7 @@ function BumpButton({ requestId, currentPriority }: { requestId: number; current
     return (
         <button onClick={handleClick} disabled={pending}
             className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all disabled:opacity-50"
-            style={{ borderColor: 'color-mix(in srgb, #8b5cf6 35%, transparent)', color: '#8b5cf6' }}
+            style={{ borderColor: 'color-mix(in srgb, var(--app-accent) 35%, transparent)', color: 'var(--app-accent)' }}
             title={`Remind procurement — bumps priority above ${currentPriority}`}>
             <Bell size={11} /> Bump
         </button>

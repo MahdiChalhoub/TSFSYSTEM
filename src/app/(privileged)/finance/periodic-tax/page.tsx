@@ -34,7 +34,7 @@ function TaxRow({ item, onView, fmt }: { item: PeriodicTax; onView: (id: number)
             <div className="hidden sm:block w-14 text-right flex-shrink-0 font-mono text-[11px] font-bold tabular-nums text-app-muted-foreground">
                 {item.rate != null ? `${(n(item.rate) * 100).toFixed(1)}%` : '—'}
             </div>
-            <div className="hidden md:block w-20 text-right flex-shrink-0 font-mono text-[12px] font-bold tabular-nums" style={{ color: '#8b5cf6' }}>
+            <div className="hidden md:block w-20 text-right flex-shrink-0 font-mono text-[12px] font-bold tabular-nums" style={{ color: 'var(--app-accent)' }}>
                 {fmt(n(item.accrual_amount))}
             </div>
             <div className="hidden md:flex w-16 flex-shrink-0">
@@ -85,7 +85,7 @@ export default function PeriodicTaxListPage() {
         { label: 'Accruals', value: stats.total, icon: <Clock size={11} />, color: 'var(--app-primary)' },
         { label: 'Posted', value: stats.posted, icon: <Activity size={11} />, color: 'var(--app-success, #22c55e)' },
         { label: 'Pending', value: stats.pending, icon: <Calendar size={11} />, color: 'var(--app-warning, #f59e0b)' },
-        { label: 'Showing', value: stats.filtered, icon: <Layers size={11} />, color: '#8b5cf6' },
+        { label: 'Showing', value: stats.filtered, icon: <Layers size={11} />, color: 'var(--app-accent)' },
     ]
 
     return (

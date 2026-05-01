@@ -204,7 +204,7 @@ export default function PurchaseForm({
     const kpis = [
         { label: 'Lines', value: lines.length.toString(), color: 'var(--app-primary)', icon: <Hash size={14} /> },
         { label: 'Total HT', value: totals.ht.toLocaleString('fr-FR', { minimumFractionDigits: 0 }), color: 'var(--app-info)', icon: <DollarSign size={14} /> },
-        { label: 'VAT', value: totals.vat.toLocaleString('fr-FR', { minimumFractionDigits: 0 }), color: '#8b5cf6', icon: <Layers size={14} /> },
+        { label: 'VAT', value: totals.vat.toLocaleString('fr-FR', { minimumFractionDigits: 0 }), color: 'var(--app-accent)', icon: <Layers size={14} /> },
         { label: 'Total TTC', value: totals.ttc.toLocaleString('fr-FR', { minimumFractionDigits: 0 }), color: 'var(--app-success)', icon: <TrendingUp size={14} /> },
     ]
 

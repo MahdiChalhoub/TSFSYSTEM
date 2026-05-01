@@ -77,22 +77,22 @@ interface AuditEntry {
 
 // ── Config Maps ──
 const TYPE_CONFIG: Record<string, { label: string; icon: any; bg: string; fg: string }> = {
-    FIXED: { label: 'Fixed', icon: Gavel, bg: 'rgba(239,68,68,0.1)', fg: '#ef4444' },
-    MAX: { label: 'Maximum', icon: TrendingUp, bg: 'rgba(251,191,36,0.1)', fg: '#f59e0b' },
-    MIN: { label: 'Minimum', icon: TrendingDown, bg: 'rgba(59,130,246,0.1)', fg: '#3b82f6' },
-    RANGE: { label: 'Range', icon: Layers, bg: 'rgba(139,92,246,0.1)', fg: '#8b5cf6' },
+    FIXED: { label: 'Fixed', icon: Gavel, bg: 'rgba(239,68,68,0.1)', fg: 'var(--app-error)' },
+    MAX: { label: 'Maximum', icon: TrendingUp, bg: 'rgba(251,191,36,0.1)', fg: 'var(--app-warning)' },
+    MIN: { label: 'Minimum', icon: TrendingDown, bg: 'rgba(59,130,246,0.1)', fg: 'var(--app-info)' },
+    RANGE: { label: 'Range', icon: Layers, bg: 'rgba(139,92,246,0.1)', fg: 'var(--app-accent)' },
 }
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; fg: string }> = {
     DRAFT: { label: 'Draft', bg: 'rgba(107,114,128,0.12)', fg: 'var(--app-muted-foreground)' },
     ACTIVE: { label: 'Active', bg: 'rgba(34,197,94,0.12)', fg: 'var(--app-success)' },
-    EXPIRED: { label: 'Expired', bg: 'rgba(239,68,68,0.1)', fg: '#ef4444' },
-    SUSPENDED: { label: 'Suspended', bg: 'rgba(251,191,36,0.1)', fg: '#f59e0b' },
+    EXPIRED: { label: 'Expired', bg: 'rgba(239,68,68,0.1)', fg: 'var(--app-error)' },
+    SUSPENDED: { label: 'Suspended', bg: 'rgba(251,191,36,0.1)', fg: 'var(--app-warning)' },
 }
 
 const SEVERITY_CONFIG: Record<string, { label: string; bg: string; fg: string }> = {
-    BLOCKING: { label: 'Blocking', bg: 'rgba(239,68,68,0.1)', fg: '#ef4444' },
-    WARNING: { label: 'Warning', bg: 'rgba(251,191,36,0.1)', fg: '#f59e0b' },
+    BLOCKING: { label: 'Blocking', bg: 'rgba(239,68,68,0.1)', fg: 'var(--app-error)' },
+    WARNING: { label: 'Warning', bg: 'rgba(251,191,36,0.1)', fg: 'var(--app-warning)' },
 }
 
 type TabKey = 'regulations' | 'audit'
@@ -253,11 +253,11 @@ export default function PriceRegulationsPage() {
         if (!summary) return null
         const cards = [
             { label: 'Active Regulations', value: summary.active_regulations, icon: Scale, color: 'var(--app-primary)' },
-            { label: 'Regulated Products', value: summary.total_regulated_products, icon: Package, color: '#8b5cf6' },
+            { label: 'Regulated Products', value: summary.total_regulated_products, icon: Package, color: 'var(--app-accent)' },
             { label: 'Compliant', value: summary.compliant_products, icon: CheckCircle2, color: 'var(--app-success)' },
-            { label: 'Violations', value: summary.violating_products, icon: ShieldAlert, color: '#ef4444' },
-            { label: 'Compliance Rate', value: `${summary.compliance_rate}%`, icon: BarChart3, color: '#3b82f6' },
-            { label: 'Expiring Soon', value: summary.expiring_soon, icon: Clock, color: '#f59e0b' },
+            { label: 'Violations', value: summary.violating_products, icon: ShieldAlert, color: 'var(--app-error)' },
+            { label: 'Compliance Rate', value: `${summary.compliance_rate}%`, icon: BarChart3, color: 'var(--app-info)' },
+            { label: 'Expiring Soon', value: summary.expiring_soon, icon: Clock, color: 'var(--app-warning)' },
         ]
         return (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
@@ -352,7 +352,7 @@ export default function PriceRegulationsPage() {
                                 </span>
                                 {r.version > 1 && (
                                     <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-                                        style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
+                                        style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--app-info)' }}>
                                         v{r.version}
                                     </span>
                                 )}
@@ -395,7 +395,7 @@ export default function PriceRegulationsPage() {
                             <div className="text-lg font-black" style={{ color: typeCfg.fg }}>{priceDisplay()}</div>
                             <div className="text-[10px] text-app-muted-foreground">
                                 {r.products_count} products · {r.violations_count > 0
-                                    ? <span style={{ color: '#ef4444' }}>{r.violations_count} violations</span>
+                                    ? <span style={{ color: 'var(--app-error)' }}>{r.violations_count} violations</span>
                                     : <span style={{ color: 'var(--app-success)' }}>✓ All compliant</span>}
                             </div>
                         </div>
@@ -407,7 +407,7 @@ export default function PriceRegulationsPage() {
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id) }}
                                 className="p-2 rounded-lg transition-all hover:scale-110"
-                                style={{ color: '#ef4444' }} title="Delete">
+                                style={{ color: 'var(--app-error)' }} title="Delete">
                                 <Trash2 size={14} />
                             </button>
                             {expanded ? <ChevronUp size={16} className="text-app-muted-foreground" />
@@ -456,7 +456,7 @@ export default function PriceRegulationsPage() {
                 style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                     style={{ background: isViolation ? 'rgba(239,68,68,0.1)' : isFix ? 'rgba(34,197,94,0.1)' : 'var(--app-muted)' }}>
-                    {isViolation ? <ShieldAlert size={13} style={{ color: '#ef4444' }} />
+                    {isViolation ? <ShieldAlert size={13} style={{ color: 'var(--app-error)' }} />
                         : isFix ? <CheckCircle2 size={13} style={{ color: 'var(--app-success)' }} />
                             : <Activity size={13} className="text-app-muted-foreground" />}
                 </div>
@@ -468,7 +468,7 @@ export default function PriceRegulationsPage() {
                 </div>
                 <div className="text-right shrink-0">
                     {entry.violation_amount && (
-                        <div className="text-xs font-bold" style={{ color: Number(entry.violation_amount) > 0 ? '#ef4444' : '#3b82f6' }}>
+                        <div className="text-xs font-bold" style={{ color: Number(entry.violation_amount) > 0 ? 'var(--app-error)' : 'var(--app-info)' }}>
                             {Number(entry.violation_amount) > 0 ? '+' : ''}{entry.violation_amount} {entry.currency_code}
                         </div>
                     )}

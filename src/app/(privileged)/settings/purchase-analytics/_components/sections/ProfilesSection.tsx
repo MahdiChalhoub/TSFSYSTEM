@@ -6,7 +6,7 @@ import { PAGE_CONTEXT_LABELS } from '@/lib/analytics-constants'
 import type { AnalyticsProfile, AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
 import AnalyticsProfileSelector from '@/components/analytics/AnalyticsProfileSelector'
 
-const C = '#6366f1'
+const C = 'var(--app-accent)'
 
 type Props = {
     profilesData: AnalyticsProfilesData | null

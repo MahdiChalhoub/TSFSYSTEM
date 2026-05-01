@@ -246,14 +246,14 @@ export default function EInvoiceSettingsPage() {
         }}>
           <div className="flex items-center gap-3 flex-wrap">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'color-mix(in srgb, #8b5cf6 12%, transparent)', color: '#8b5cf6' }}>
+              style={{ background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)', color: 'var(--app-accent)' }}>
               <Zap size={18} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[13px] font-black text-app-foreground">{std.name}</span>
                 <span className="text-[8px] font-black px-1.5 py-px rounded-md uppercase tracking-wider"
-                  style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                  style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}>
                   {std.code}
                 </span>
                 {std.schema_version && (

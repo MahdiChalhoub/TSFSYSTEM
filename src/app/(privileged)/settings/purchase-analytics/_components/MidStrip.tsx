@@ -100,16 +100,16 @@ export function MidStrip(p: Props) {
             {/* Warnings */}
             {p.warnings.length > 0 && (
                 <div className="mb-3 px-4 py-2.5 rounded-xl"
-                    style={{ background: 'color-mix(in srgb, #f59e0b 4%, var(--app-surface))', border: '1px solid color-mix(in srgb, #f59e0b 15%, transparent)' }}>
+                    style={{ background: 'color-mix(in srgb, var(--app-warning) 4%, var(--app-surface))', border: '1px solid color-mix(in srgb, var(--app-warning) 15%, transparent)' }}>
                     <div className="flex items-center gap-2 mb-1.5">
-                        <AlertTriangle size={12} style={{ color: '#f59e0b' }} />
-                        <span className="text-[10px] font-black" style={{ color: '#f59e0b' }}>{p.warnings.length} Warning{p.warnings.length !== 1 ? 's' : ''}</span>
+                        <AlertTriangle size={12} style={{ color: 'var(--app-warning)' }} />
+                        <span className="text-[10px] font-black" style={{ color: 'var(--app-warning)' }}>{p.warnings.length} Warning{p.warnings.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="space-y-1">
                         {p.warnings.map((w, i) => (
                             <div key={i} className="text-[9px] font-bold flex items-center gap-1.5"
-                                style={{ color: w.severity === 'danger' ? 'var(--app-error, #ef4444)' : '#f59e0b' }}>
-                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: w.severity === 'danger' ? 'var(--app-error, #ef4444)' : '#f59e0b' }} />
+                                style={{ color: w.severity === 'danger' ? 'var(--app-error, #ef4444)' : 'var(--app-warning)' }}>
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: w.severity === 'danger' ? 'var(--app-error, #ef4444)' : 'var(--app-warning)' }} />
                                 {w.message}
                             </div>
                         ))}
@@ -120,10 +120,10 @@ export function MidStrip(p: Props) {
             {/* Suggestions */}
             {p.showSuggestions && p.suggestions.length > 0 && (
                 <div className="mb-3 rounded-xl overflow-hidden"
-                    style={{ background: 'color-mix(in srgb, #f59e0b 3%, var(--app-surface))', border: '1px solid color-mix(in srgb, #f59e0b 15%, transparent)' }}>
-                    <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: '1px solid color-mix(in srgb, #f59e0b 10%, transparent)' }}>
-                        <span className="text-[10px] font-black flex items-center gap-1.5" style={{ color: '#f59e0b' }}><Zap size={11} /> Optimization Tips</span>
-                        <button type="button" onClick={() => p.setShowSuggestions(false)} style={{ color: '#f59e0b' }}><X size={13} /></button>
+                    style={{ background: 'color-mix(in srgb, var(--app-warning) 3%, var(--app-surface))', border: '1px solid color-mix(in srgb, var(--app-warning) 15%, transparent)' }}>
+                    <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-warning) 10%, transparent)' }}>
+                        <span className="text-[10px] font-black flex items-center gap-1.5" style={{ color: 'var(--app-warning)' }}><Zap size={11} /> Optimization Tips</span>
+                        <button type="button" onClick={() => p.setShowSuggestions(false)} style={{ color: 'var(--app-warning)' }}><X size={13} /></button>
                     </div>
                     <div className="px-4 py-2 space-y-2">
                         {p.suggestions.map((s, i) => (

@@ -64,8 +64,8 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                 style={{
                                     background: mode === 'self'
                                         ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
-                                        : 'color-mix(in srgb, #f59e0b 12%, transparent)',
-                                    color: mode === 'self' ? 'var(--app-primary)' : '#f59e0b',
+                                        : 'color-mix(in srgb, var(--app-warning) 12%, transparent)',
+                                    color: mode === 'self' ? 'var(--app-primary)' : 'var(--app-warning)',
                                 }}>
                                 {mode === 'self' ? <Key size={18} /> : <Shield size={18} />}
                             </div>
@@ -85,8 +85,8 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                     <div className="px-5 pb-5 space-y-3">
                         {/* Identity verification notice */}
                         <div className="flex items-start gap-2 p-2.5 rounded-xl"
-                            style={{ background: 'color-mix(in srgb, #3b82f6 5%, transparent)', border: '1px solid color-mix(in srgb, #3b82f6 12%, transparent)' }}>
-                            <Lock size={12} className="shrink-0 mt-0.5" style={{ color: '#3b82f6' }} />
+                            style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 12%, transparent)' }}>
+                            <Lock size={12} className="shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
                             <p className="text-[10px] text-app-text-muted leading-relaxed">
                                 Enter your <strong>login password</strong> to verify your identity before changing the PIN.
                             </p>
@@ -160,8 +160,8 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                 disabled={saving || !password || newPin.length < 4 || newPin !== confirmPin}
                                 className="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-2.5 rounded-xl text-white transition-all disabled:opacity-40"
                                 style={{
-                                    background: mode === 'self' ? 'var(--app-primary)' : '#f59e0b',
-                                    boxShadow: `0 2px 12px color-mix(in srgb, ${mode === 'self' ? 'var(--app-primary)' : '#f59e0b'} 25%, transparent)`,
+                                    background: mode === 'self' ? 'var(--app-primary)' : 'var(--app-warning)',
+                                    boxShadow: `0 2px 12px color-mix(in srgb, ${mode === 'self' ? 'var(--app-primary)' : 'var(--app-warning)'} 25%, transparent)`,
                                 }}>
                                 {saving ? <Loader2 size={13} className="animate-spin" /> : <Lock size={13} />}
                                 {mode === 'self' ? 'Update PIN' : 'Reset PIN'}

@@ -70,7 +70,7 @@ function UserRow({ u, onEdit, onBlock, onActivate }: {
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-[13px] font-black"
                 style={{
                     background: u.is_superuser
-                        ? 'linear-gradient(135deg, #f59e0b, #ef4444)'
+                        ? 'linear-gradient(135deg, var(--app-warning), var(--app-error))'
                         : 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
                     color: u.is_superuser ? 'white' : 'var(--app-primary)',
                 }}
@@ -84,7 +84,7 @@ function UserRow({ u, onEdit, onBlock, onActivate }: {
                     <span className="truncate text-[13px] font-bold text-app-foreground">{name}</span>
                     {u.is_superuser && (
                         <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
-                            style={{ background: 'color-mix(in srgb, #f59e0b 10%, transparent)', color: '#f59e0b', border: '1px solid color-mix(in srgb, #f59e0b 20%, transparent)' }}>
+                            style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)' }}>
                             Admin
                         </span>
                     )}
@@ -522,7 +522,7 @@ export default function AccessUsersPage() {
         { label: 'Total Users', value: stats.total, color: 'var(--app-primary)', icon: <Users size={11} /> },
         { label: 'Active', value: stats.active, color: 'var(--app-success, #22c55e)', icon: <CheckCircle size={11} /> },
         { label: 'POS PIN Set', value: stats.withPin, color: 'var(--app-info, #3b82f6)', icon: <Key size={11} /> },
-        { label: 'Staff', value: stats.staff, color: '#8b5cf6', icon: <Shield size={11} /> },
+        { label: 'Staff', value: stats.staff, color: 'var(--app-accent)', icon: <Shield size={11} /> },
         { label: 'Pending', value: stats.pending, color: 'var(--app-warning, #f59e0b)', icon: <Clock size={11} /> },
     ]
 
@@ -679,7 +679,7 @@ export default function AccessUsersPage() {
                                             <p className="text-[13px] font-black text-app-foreground truncate">{nm}</p>
                                             <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                                                 <span className="text-[10px] text-app-muted-foreground font-bold flex items-center gap-1"><Mail size={10} /> {u.email}</span>
-                                                <span className="text-[9px] font-black px-2 py-0.5 rounded-full uppercase" style={{ background: 'color-mix(in srgb, #3b82f6 10%, transparent)', color: '#3b82f6' }}>{u.role}</span>
+                                                <span className="text-[9px] font-black px-2 py-0.5 rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>{u.role}</span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 flex-shrink-0">

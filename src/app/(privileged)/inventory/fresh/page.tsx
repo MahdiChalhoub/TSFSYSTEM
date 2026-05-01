@@ -80,13 +80,13 @@ export default function FreshProductsPage() {
             <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                        style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 15px rgba(16,185,129,0.3)' }}>
+                        style={{ background: 'linear-gradient(135deg, var(--app-primary), #059669)', boxShadow: '0 4px 15px rgba(16,185,129,0.3)' }}>
                         <Leaf className="w-6 h-6 text-white" />
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">PLM Governance</p>
                         <h1 className="text-3xl font-black tracking-tight text-app-foreground">
-                            Fresh <span style={{ color: '#10b981' }}>Products</span>
+                            Fresh <span style={{ color: 'var(--app-primary)' }}>Products</span>
                         </h1>
                     </div>
                 </div>

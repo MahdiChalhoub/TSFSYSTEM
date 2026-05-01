@@ -5,12 +5,12 @@ import { Layers, TrendingUp, Calculator, ShoppingCart, BarChart3, Activity } fro
 export type SectionId = 'profiles' | 'sales' | 'quantity' | 'pricing' | 'scoring' | 'flow'
 
 const SECTIONS: { id: SectionId; label: string; icon: any; color: string; keywords: string }[] = [
-    { id: 'profiles', label: 'Page Profiles', icon: Layers, color: '#6366f1', keywords: 'profiles pages override' },
-    { id: 'sales', label: 'Sales Analysis', icon: TrendingUp, color: '#3b82f6', keywords: 'sales analysis average period window exclusion' },
-    { id: 'quantity', label: 'Proposed Qty', icon: Calculator, color: '#22c55e', keywords: 'proposed quantity formula lead days safety multiplier replenishment' },
-    { id: 'pricing', label: 'Pricing', icon: ShoppingCart, color: '#f59e0b', keywords: 'supplier pricing best price period purchase context retail wholesale' },
-    { id: 'scoring', label: 'Scoring', icon: BarChart3, color: '#8b5cf6', keywords: 'scoring data po count source financial weights margin velocity stock health' },
-    { id: 'flow', label: 'Request Flow', icon: Activity, color: '#06b6d4', keywords: 'request flow mode dialog instant cart purchase transfer button' },
+    { id: 'profiles', label: 'Page Profiles', icon: Layers, color: 'var(--app-accent)', keywords: 'profiles pages override' },
+    { id: 'sales', label: 'Sales Analysis', icon: TrendingUp, color: 'var(--app-info)', keywords: 'sales analysis average period window exclusion' },
+    { id: 'quantity', label: 'Proposed Qty', icon: Calculator, color: 'var(--app-success)', keywords: 'proposed quantity formula lead days safety multiplier replenishment' },
+    { id: 'pricing', label: 'Pricing', icon: ShoppingCart, color: 'var(--app-warning)', keywords: 'supplier pricing best price period purchase context retail wholesale' },
+    { id: 'scoring', label: 'Scoring', icon: BarChart3, color: 'var(--app-accent)', keywords: 'scoring data po count source financial weights margin velocity stock health' },
+    { id: 'flow', label: 'Request Flow', icon: Activity, color: 'var(--app-accent-cyan)', keywords: 'request flow mode dialog instant cart purchase transfer button' },
 ]
 
 type Props = {
@@ -54,7 +54,7 @@ export function SectionNav({ active, onSelect, overrideCounts = {}, warningCount
                         </span>
                         {warn > 0 && (
                             <span className="text-[7px] px-1.5 py-0.5 rounded-full font-black tabular-nums"
-                                style={{ background: 'color-mix(in srgb, #f59e0b 12%, transparent)', color: '#f59e0b' }}>{warn}</span>
+                                style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>{warn}</span>
                         )}
                         {ovr > 0 && (
                             <span className="text-[7px] px-1.5 py-0.5 rounded-full font-black tabular-nums"

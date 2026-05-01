@@ -338,7 +338,7 @@ export default function CounterpartyTaxProfileFormPage() {
         {[
           { label: 'Country', value: form.country_code || '—', icon: <Globe size={14} />, color: 'var(--app-info, #3b82f6)' },
           { label: 'VAT Status', value: form.vat_registered ? 'REGISTERED' : 'UNREGISTERED', icon: <Shield size={14} />, color: form.vat_registered ? 'var(--app-success, #22c55e)' : 'var(--app-warning, #f59e0b)' },
-          { label: 'Documents', value: `${docs.length} Required`, icon: <FileCheck size={14} />, color: '#8b5cf6' },
+          { label: 'Documents', value: `${docs.length} Required`, icon: <FileCheck size={14} />, color: 'var(--app-accent)' },
           { label: 'Jurisdiction', value: `${jurisRules.length} Rules`, icon: <MapPin size={14} />, color: 'var(--app-primary)' },
           { label: 'Compliance', value: form.enforce_compliance ? 'ENFORCED' : 'ADVISORY', icon: <AlertTriangle size={14} />, color: form.enforce_compliance ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)' },
         ].map(s => (

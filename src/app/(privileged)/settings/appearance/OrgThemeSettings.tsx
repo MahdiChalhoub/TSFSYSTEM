@@ -31,9 +31,9 @@ function OrgThemeCard({
 }) {
   const mode = colorMode === 'auto' ? 'dark' : colorMode;
   const colors = theme.presetData?.colors?.[mode] ?? {
-    primary: '#6366F1', primaryDark: '#4F46E5', bg: '#020617',
-    surface: '#0F172A', surfaceHover: 'rgba(255,255,255,0.07)',
-    text: '#F1F5F9', textMuted: '#94A3B8', border: 'rgba(255,255,255,0.08)',
+    primary: 'var(--app-accent)', primaryDark: '#4F46E5', bg: 'var(--app-bg)',
+    surface: 'var(--app-bg)', surfaceHover: 'rgba(255,255,255,0.07)',
+    text: 'var(--app-surface-2)', textMuted: 'var(--app-faint)', border: 'rgba(255,255,255,0.08)',
   };
 
   return (

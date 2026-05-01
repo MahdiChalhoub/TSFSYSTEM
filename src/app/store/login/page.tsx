@@ -44,8 +44,8 @@ export default function StoreLoginPage() {
                     }}>
                         <Store size={28} style={{ color: '#fff' }} />
                     </div>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>Sign In</h1>
-                    <p style={{ color: '#64748b', fontSize: '0.9375rem' }}>Access your account and orders</p>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--app-surface-2)' }}>Sign In</h1>
+                    <p style={{ color: 'var(--app-muted-foreground)', fontSize: '0.9375rem' }}>Access your account and orders</p>
                 </div>
 
                 {/* Card */}
@@ -59,7 +59,7 @@ export default function StoreLoginPage() {
                         <div>
                             <label className="store-label">Email Address</label>
                             <div style={{ position: 'relative' }}>
-                                <Mail size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                <Mail size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--app-faint)' }} />
                                 <input id="login-email" type="email" className="store-input" required
                                     value={email} onChange={e => setEmail(e.target.value)}
                                     placeholder="you@example.com" style={{ paddingLeft: '2.5rem' }} />
@@ -68,12 +68,12 @@ export default function StoreLoginPage() {
                         <div>
                             <label className="store-label">Password</label>
                             <div style={{ position: 'relative' }}>
-                                <Lock size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                <Lock size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--app-faint)' }} />
                                 <input id="login-password" type={showPw ? 'text' : 'password'} className="store-input" required
                                     value={password} onChange={e => setPassword(e.target.value)}
                                     placeholder="••••••••" style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }} />
                                 <button type="button" onClick={() => setShowPw(s => !s)}
-                                    style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
+                                    style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-faint)' }}>
                                     {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
@@ -86,14 +86,14 @@ export default function StoreLoginPage() {
                     </form>
                 </div>
 
-                <p style={{ textAlign: 'center', marginTop: '1.25rem', color: '#64748b', fontSize: '0.9375rem' }}>
+                <p style={{ textAlign: 'center', marginTop: '1.25rem', color: 'var(--app-muted-foreground)', fontSize: '0.9375rem' }}>
                     Don't have an account?{' '}
                     <Link href="/store/register" style={{ color: 'var(--store-accent, #10b981)', fontWeight: 600, textDecoration: 'none' }}>
                         Register
                     </Link>
                 </p>
                 <p style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-                    <Link href="/store" style={{ color: '#94a3b8', fontSize: '0.875rem', textDecoration: 'none' }}>
+                    <Link href="/store" style={{ color: 'var(--app-faint)', fontSize: '0.875rem', textDecoration: 'none' }}>
                         ← Back to store
                     </Link>
                 </p>

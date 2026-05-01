@@ -43,9 +43,9 @@ export function renderRequestCell(key: string, r: ProcurementRequestRecord): Rea
                                 title={`Auto-reissued from request #${reissueOf} after the resulting PO was rejected or cancelled`}
                                 className="inline-flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hover:underline"
                                 style={{
-                                    background: 'color-mix(in srgb, #f59e0b 12%, transparent)',
-                                    color: '#f59e0b',
-                                    border: '1px solid color-mix(in srgb, #f59e0b 25%, transparent)',
+                                    background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)',
+                                    color: 'var(--app-warning)',
+                                    border: '1px solid color-mix(in srgb, var(--app-warning) 25%, transparent)',
                                 }}>
                                 <RefreshCcw size={8} /> Reissue of #{reissueOf}
                             </a>
@@ -113,11 +113,11 @@ export function renderRequestCell(key: string, r: ProcurementRequestRecord): Rea
             if (!r.last_bumped_at) return <span className="text-[10px] text-app-muted-foreground/50">—</span>
             return (
                 <div className="min-w-0" title={r.last_bumped_at}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: '#8b5cf6' }}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: 'var(--app-accent)' }}>
                         {formatRelative(r.last_bumped_at)}
                     </div>
                     {r.bump_count > 1 && (
-                        <div className="text-[9px] font-bold tabular-nums" style={{ color: '#8b5cf6', opacity: 0.7 }}>
+                        <div className="text-[9px] font-bold tabular-nums" style={{ color: 'var(--app-accent)', opacity: 0.7 }}>
                             ×{r.bump_count}
                         </div>
                     )}

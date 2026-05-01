@@ -409,7 +409,7 @@ export default function AutoTaskSettingsPage() {
                                 ? 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)'
                                 : 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)',
                               color: rule.rule_type === 'EVENT' ? 'var(--app-info, #3b82f6)' : 'var(--app-warning, #f59e0b)',
-                              border: `1px solid color-mix(in srgb, ${rule.rule_type === 'EVENT' ? 'var(--app-info, #3b82f6)' : 'var(--app-warning, #f59e0b)'} 25%, transparent)`,
+                              border: `1px solid color-mix(in srgb, ${rule.rule_type === 'EVENT' ? 'var(--app-info)' : 'var(--app-warning)'} 25%, transparent)`,
                             }}
                           >
                             {rule.rule_type === 'EVENT' ? 'Event' : (INTERVAL_LABELS[rule.recurrence_interval] ?? 'Recurring')}

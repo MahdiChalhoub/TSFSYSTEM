@@ -397,7 +397,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                                             onClick={handleSeedDefaults}
                                             disabled={seeding || units.length === 0}
                                             className="px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
-                                            style={{ background: 'color-mix(in srgb, #8b5cf6 12%, transparent)', color: '#8b5cf6', border: '1px solid color-mix(in srgb, #8b5cf6 40%, transparent)' }}
+                                            style={{ background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)', color: 'var(--app-accent)', border: '1px solid color-mix(in srgb, var(--app-accent) 40%, transparent)' }}
                                             title={units.length === 0 ? 'Define a unit first' : 'Bootstrap Pack → Carton → Pallet chain for every unit that has no templates yet'}
                                         >
                                             {seeding ? (
@@ -563,7 +563,7 @@ function TemplateRow({ node, depth, forceExpanded, selectedId, onOpenTemplate, o
                         {/* Chain hint: "×6 pc" (parent step) */}
                         {parentRatio != null && t.parent_name && (
                             <span className="text-tp-xxs font-bold flex items-center gap-0.5"
-                                style={{ color: '#8b5cf6' }}
+                                style={{ color: 'var(--app-accent)' }}
                                 title={`This contains ${parentRatio} × ${t.parent_name}`}>
                                 <ArrowRight size={9} />×{parentRatio} {t.parent_name}
                             </span>

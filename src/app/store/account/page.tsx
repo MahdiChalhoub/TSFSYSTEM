@@ -33,8 +33,8 @@ export default async function AccountPage() {
                                 <Icon size={20} style={{ color: 'var(--store-accent, #10b981)' }} />
                             </div>
                             <div>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-                                <p style={{ fontSize: '1.375rem', fontWeight: 800, color: '#1e293b' }}>{value}</p>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--app-faint)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+                                <p style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--app-surface-2)' }}>{value}</p>
                             </div>
                         </div>
                     ))}
@@ -47,8 +47,8 @@ export default async function AccountPage() {
                             style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none', transition: 'transform 0.15s' }}
                             id={`acct-link-${label.replace(/\s+/g, '-').toLowerCase()}`}>
                             <Icon size={18} style={{ color: 'var(--store-accent, #10b981)' }} />
-                            <span style={{ fontWeight: 600, color: '#1e293b', flex: 1 }}>{label}</span>
-                            <ArrowRight size={16} style={{ color: '#94a3b8' }} />
+                            <span style={{ fontWeight: 600, color: 'var(--app-surface-2)', flex: 1 }}>{label}</span>
+                            <ArrowRight size={16} style={{ color: 'var(--app-faint)' }} />
                         </Link>
                     ))}
                 </div>

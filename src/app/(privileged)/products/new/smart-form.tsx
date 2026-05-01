@@ -1159,8 +1159,8 @@ function AttrGroupSelector({
             <div className="flex items-center gap-2 px-3 py-2">
                 <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
                     style={{
-                        background: group.is_variant ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, #f59e0b 10%, transparent)',
-                        color: group.is_variant ? 'var(--app-success)' : '#f59e0b',
+                        background: group.is_variant ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-warning) 10%, transparent)',
+                        color: group.is_variant ? 'var(--app-success)' : 'var(--app-warning)',
                     }}>
                     {group.is_variant ? <Package className="w-3 h-3" /> : <Tags className="w-3 h-3" />}
                 </div>

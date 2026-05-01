@@ -28,7 +28,7 @@ const CHANNEL_ICONS: Record<string, any> = {
 }
 const CHANNEL_COLORS: Record<string, string> = {
     CALL: 'var(--app-info)', VISIT: 'var(--app-success)', WHATSAPP: '#25D366',
-    EMAIL: 'var(--app-warning)', NOTE: 'var(--app-text-muted)', SMS: '#8B5CF6', OTHER: 'var(--app-text-faint)',
+    EMAIL: 'var(--app-warning)', NOTE: 'var(--app-text-muted)', SMS: 'var(--app-accent)', OTHER: 'var(--app-text-faint)',
 }
 
 type TabKey = 'queue' | 'history' | 'analytics'

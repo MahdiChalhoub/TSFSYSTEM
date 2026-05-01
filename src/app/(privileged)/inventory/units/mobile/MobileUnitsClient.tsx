@@ -318,7 +318,7 @@ function MobileUnitDetail({ node, onEdit, onAdd, onClose }: MobileUnitDetailProp
                 <div className="flex items-center justify-center flex-shrink-0 rounded-xl"
                     style={{
                         width: 40, height: 40,
-                        background: 'linear-gradient(135deg, var(--app-info, #3b82f6), color-mix(in srgb, var(--app-info, #3b82f6) 70%, #6366f1))',
+                        background: 'linear-gradient(135deg, var(--app-info, #3b82f6), color-mix(in srgb, var(--app-info, #3b82f6) 70%, var(--app-accent)))',
                         boxShadow: '0 4px 14px color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)',
                         color: '#fff',
                     }}>

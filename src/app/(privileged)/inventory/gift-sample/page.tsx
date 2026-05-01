@@ -124,7 +124,7 @@ function GiftEditor({ item, onSave, onCancel }: { item: Rec | null; onSave: (d: 
       </div>
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4">
         {/* Threshold Gauge */}
-        <div className="rounded-2xl p-4" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${aboveThreshold ? 'var(--app-error, #ef4444)' : 'var(--app-success, #22c55e)'} 6%, transparent), color-mix(in srgb, var(--app-surface) 80%, transparent))`, border: `1px solid color-mix(in srgb, ${aboveThreshold ? 'var(--app-error, #ef4444)' : 'var(--app-success, #22c55e)'} 15%, transparent)` }}>
+        <div className="rounded-2xl p-4" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${aboveThreshold ? 'var(--app-error)' : 'var(--app-success)'} 6%, transparent), color-mix(in srgb, var(--app-surface) 80%, transparent))`, border: `1px solid color-mix(in srgb, ${aboveThreshold ? 'var(--app-error)' : 'var(--app-success)'} 15%, transparent)` }}>
           <div className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-2">THRESHOLD CHECK</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px' }}>
             {[

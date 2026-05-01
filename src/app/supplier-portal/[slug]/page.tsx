@@ -91,7 +91,7 @@ export default function SupplierPortalPage() {
     // ─── Login Form ─────────────────────────────────────────────────────
 
     return (
-        <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative">
+        <div className="min-h-screen bg-app-bg flex items-center justify-center p-6 relative">
             {/* Ambient */}
             <div className="fixed top-[-15%] left-[20%] w-[60%] h-[50%] bg-app-accent/10 blur-[200px] rounded-full pointer-events-none z-0" />
             <div className="fixed bottom-[-10%] right-[10%] w-[40%] h-[40%] bg-app-info/10 blur-[150px] rounded-full pointer-events-none z-0" />
@@ -192,7 +192,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
     ]
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+        <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative">
             <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-accent/10 blur-[150px] rounded-full pointer-events-none z-0" />
             <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-info/10 blur-[150px] rounded-full pointer-events-none z-0" />
 

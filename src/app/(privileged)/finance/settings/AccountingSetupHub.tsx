@@ -32,7 +32,7 @@ const STEP_CONFIG: Record<string, {
 }> = {
     tax_policy: {
         icon: Shield,
-        color: '#8b5cf6',
+        color: 'var(--app-accent)',
         href: '/finance/tax-policy',
         description: 'Configure your organization\'s tax behavior — VAT, AIRSI, withholding, and periodic taxes.',
     },

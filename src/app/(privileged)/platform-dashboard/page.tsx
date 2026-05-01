@@ -198,7 +198,7 @@ export default function SaaSPlatformDashboard() {
                     value={activeOrgs}
                     sub={`${stats?.inactiveOrgs ?? 0} suspended`}
                     icon={CheckCircle}
-                    accent="#10B981"
+                    accent="var(--app-primary)"
                     delay={100}
                 />
                 <KPICard
@@ -206,7 +206,7 @@ export default function SaaSPlatformDashboard() {
                     value={totalModules}
                     sub={`${installedModules} installed globally`}
                     icon={Package}
-                    accent="#8B5CF6"
+                    accent="var(--app-accent)"
                     delay={200}
                 />
                 <KPICard
@@ -326,7 +326,7 @@ export default function SaaSPlatformDashboard() {
                     <div className="rounded-2xl p-5"
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                         <div className="flex items-center gap-2 mb-4">
-                            <Package size={16} style={{ color: '#8B5CF6' }} />
+                            <Package size={16} style={{ color: 'var(--app-accent)' }} />
                             <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-text)' }}>
                                 Modules
                             </h2>

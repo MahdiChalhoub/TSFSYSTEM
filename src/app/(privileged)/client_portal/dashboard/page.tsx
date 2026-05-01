@@ -83,8 +83,8 @@ export default function ClientDashboardPage() {
           padding: '1.5rem', borderRadius: 12, background: 'var(--app-card)', border: '1px solid var(--app-border)',
           display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none', color: 'var(--app-foreground)',
         }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'color-mix(in srgb, #10b981 15%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ShoppingBag size={22} color="#10b981" />
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShoppingBag size={22} color="var(--app-primary)" />
           </div>
           <div>
             <div style={{ fontSize: '1rem', fontWeight: 600 }}>Manage Client Access</div>

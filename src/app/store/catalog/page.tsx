@@ -69,7 +69,7 @@ export default function StoreCatalogPage() {
                 {/* Search + Filter bar */}
                 <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                     <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
-                        <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--app-faint)' }} />
                         <input
                             id="catalog-search"
                             className="store-input"
@@ -107,7 +107,7 @@ export default function StoreCatalogPage() {
                 )}
 
                 {/* Results summary */}
-                <p style={{ color: '#94a3b8', fontSize: '0.875rem', marginBottom: '1rem' }}>
+                <p style={{ color: 'var(--app-faint)', fontSize: '0.875rem', marginBottom: '1rem' }}>
                     {loading ? 'Loading…' : `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`}
                     {search && ` for "${search}"`}
                 </p>
@@ -142,7 +142,7 @@ export default function StoreCatalogPage() {
                         </div>
                     ))}
                     {!loading && filtered.length === 0 && (
-                        <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#94a3b8', padding: '3rem 0' }}>
+                        <p style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--app-faint)', padding: '3rem 0' }}>
                             No products found.
                         </p>
                     )}
@@ -153,7 +153,7 @@ export default function StoreCatalogPage() {
             {toast && (
                 <div style={{
                     position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 50,
-                    background: '#1e293b', color: '#fff', padding: '0.75rem 1.25rem',
+                    background: 'var(--app-surface-2)', color: '#fff', padding: '0.75rem 1.25rem',
                     borderRadius: '0.75rem', fontSize: '0.875rem', fontWeight: 600,
                     boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
                 }}>

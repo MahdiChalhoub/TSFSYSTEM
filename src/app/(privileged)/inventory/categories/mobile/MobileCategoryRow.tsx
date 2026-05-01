@@ -172,7 +172,7 @@ export function MobileCategoryRow({
                         style={{
                             width: 32, height: 32,
                             background: isRoot
-                                ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))'
+                                ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))'
                                 : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
                             color: isRoot ? '#fff' : 'var(--app-muted-foreground)',
                             boxShadow: isRoot ? '0 2px 8px color-mix(in srgb, var(--app-primary) 22%, transparent)' : 'none',
@@ -193,7 +193,7 @@ export function MobileCategoryRow({
                                 <span className="flex-shrink-0 font-bold uppercase tracking-wide rounded-full"
                                     style={{
                                         fontSize: 'var(--tp-xxs)', padding: '2px 6px',
-                                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
+                                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))',
                                         color: '#fff',
                                     }}>ROOT</span>
                             )}

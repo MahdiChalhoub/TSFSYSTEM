@@ -233,7 +233,7 @@ export default function VatSettlementPage() {
                                             </td>
                                             <td className="px-4 py-2 text-right font-bold text-app-foreground font-mono tabular-nums">{fmt(n(a.base_amount))}</td>
                                             <td className="px-4 py-2 text-right font-mono font-bold tabular-nums">{(n(a.rate) * 100).toFixed(2)}%</td>
-                                            <td className="px-4 py-2 text-right font-black font-mono tabular-nums" style={{ color: '#8b5cf6' }}>{fmt(n(a.accrual_amount))}</td>
+                                            <td className="px-4 py-2 text-right font-black font-mono tabular-nums" style={{ color: 'var(--app-accent)' }}>{fmt(n(a.accrual_amount))}</td>
                                             <td className="px-4 py-2 text-center">
                                                 <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
                                                     style={{

@@ -22,9 +22,9 @@ type PortalAccess = {
 }
 
 const STATUS_STYLE: Record<string, { color: string; label: string }> = {
-    ACTIVE: { color: '#10b981', label: 'Active' },
-    BLOCKED: { color: '#f59e0b', label: 'Blocked' },
-    REVOKED: { color: '#ef4444', label: 'Revoked' },
+    ACTIVE: { color: 'var(--app-primary)', label: 'Active' },
+    BLOCKED: { color: 'var(--app-warning)', label: 'Blocked' },
+    REVOKED: { color: 'var(--app-error)', label: 'Revoked' },
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -81,7 +81,7 @@ export default function SupplierAccessPage() {
         <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--app-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Truck size={24} color="white" />
                 </div>
                 <div style={{ flex: '1 1 auto', minWidth: 200 }}>
@@ -92,7 +92,7 @@ export default function SupplierAccessPage() {
                     <button onClick={load} style={{ padding: '0.5rem 1rem', borderRadius: 8, background: 'var(--app-muted)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--app-foreground)', fontSize: '0.875rem' }}>
                         <RefreshCw size={14} /> Refresh
                     </button>
-                    <button onClick={() => setGrantOpen(true)} style={{ padding: '0.5rem 1rem', borderRadius: 8, background: '#f59e0b', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', fontSize: '0.875rem', fontWeight: 600 }}>
+                    <button onClick={() => setGrantOpen(true)} style={{ padding: '0.5rem 1rem', borderRadius: 8, background: 'var(--app-warning)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', fontSize: '0.875rem', fontWeight: 600 }}>
                         <UserPlus size={14} /> Grant Access
                     </button>
                 </div>
@@ -102,9 +102,9 @@ export default function SupplierAccessPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 {[
                     { label: 'Total Records', value: kpis.total, icon: Users, color: 'var(--app-primary)' },
-                    { label: 'Active Access', value: kpis.active, icon: ShieldCheck, color: '#10b981' },
-                    { label: 'Active Reps', value: kpis.reps, icon: Link2, color: '#f59e0b' },
-                    { label: 'Revoked', value: kpis.revoked, icon: Ban, color: '#ef4444' },
+                    { label: 'Active Access', value: kpis.active, icon: ShieldCheck, color: 'var(--app-primary)' },
+                    { label: 'Active Reps', value: kpis.reps, icon: Link2, color: 'var(--app-warning)' },
+                    { label: 'Revoked', value: kpis.revoked, icon: Ban, color: 'var(--app-error)' },
                 ].map(k => (
                     <div key={k.label} style={{ padding: '1.25rem', borderRadius: 12, background: 'var(--app-card)', border: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{ width: 40, height: 40, borderRadius: 10, background: `color-mix(in srgb, ${k.color} 15%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -153,7 +153,7 @@ export default function SupplierAccessPage() {
                                 const st = STATUS_STYLE[r.status] || STATUS_STYLE.ACTIVE
                                 return (
                                     <tr key={r.id} onClick={() => setSelectedRecord(r)} style={{ borderBottom: '1px solid var(--app-border)', cursor: 'pointer' }}
-                                        onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in srgb, #f59e0b 4%, transparent)')}
+                                        onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in srgb, var(--app-warning) 4%, transparent)')}
                                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                                         <td style={{ padding: '0.75rem 1rem' }}>
                                             <div style={{ fontWeight: 600, color: 'var(--app-foreground)', fontSize: '0.875rem' }}>{r.user_name}</div>
@@ -167,7 +167,7 @@ export default function SupplierAccessPage() {
                                         </td>
                                         <td style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>{ROLE_LABELS[r.relationship_role] || r.relationship_role}</td>
                                         <td style={{ padding: '0.75rem 1rem' }}>
-                                            {r.is_primary ? <CheckCircle size={16} color="#10b981" /> : <XCircle size={16} color="var(--app-muted-foreground)" />}
+                                            {r.is_primary ? <CheckCircle size={16} color="var(--app-primary)" /> : <XCircle size={16} color="var(--app-muted-foreground)" />}
                                         </td>
                                         <td style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>{r.last_portal_login ? new Date(r.last_portal_login).toLocaleDateString() : 'Never'}</td>
                                         <td style={{ padding: '0.75rem 1rem' }}>
@@ -179,11 +179,11 @@ export default function SupplierAccessPage() {
                                                         if (reason === null) return
                                                         await erpFetch(`iam/portal-access/${r.id}/revoke/`, { method: 'POST', body: JSON.stringify({ reason }), headers: { 'Content-Type': 'application/json' } })
                                                         toast.success('Supplier access revoked'); load()
-                                                    }} title="Revoke" style={{ padding: '0.375rem', borderRadius: 6, border: 'none', background: 'color-mix(in srgb, #ef4444 12%, transparent)', color: '#ef4444', cursor: 'pointer' }}><Ban size={14} /></button>
+                                                    }} title="Revoke" style={{ padding: '0.375rem', borderRadius: 6, border: 'none', background: 'color-mix(in srgb, var(--app-error) 12%, transparent)', color: 'var(--app-error)', cursor: 'pointer' }}><Ban size={14} /></button>
                                                 )}
                                                 {r.status !== 'ACTIVE' && (
                                                     <button onClick={async () => { await erpFetch(`iam/portal-access/${r.id}/reactivate/`, { method: 'POST' }); toast.success('Supplier access reactivated'); load() }}
-                                                        title="Reactivate" style={{ padding: '0.375rem', borderRadius: 6, border: 'none', background: 'color-mix(in srgb, #10b981 12%, transparent)', color: '#10b981', cursor: 'pointer' }}><Unlock size={14} /></button>
+                                                        title="Reactivate" style={{ padding: '0.375rem', borderRadius: 6, border: 'none', background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)', cursor: 'pointer' }}><Unlock size={14} /></button>
                                                 )}
                                             </div>
                                         </td>
@@ -257,8 +257,8 @@ function GrantAccessModal({ onClose, onCreated }: { onClose: () => void; onCreat
                 <div style={{ width: '100%', maxWidth: 480, background: 'var(--app-card)', border: '1px solid var(--app-border)', borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
                     <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'color-mix(in srgb, #f59e0b 15%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <ShieldCheck size={18} color="#f59e0b" />
+                            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'color-mix(in srgb, var(--app-warning) 15%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <ShieldCheck size={18} color="var(--app-warning)" />
                             </div>
                             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--app-foreground)' }}>Grant Supplier Access</h3>
                         </div>
@@ -295,7 +295,7 @@ function GrantAccessModal({ onClose, onCreated }: { onClose: () => void; onCreat
                             </div>
                             <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--app-border)', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
                                 <button onClick={onClose} style={{ padding: '0.5rem 1.25rem', borderRadius: 8, border: '1px solid var(--app-border)', background: 'transparent', cursor: 'pointer', color: 'var(--app-muted-foreground)', fontSize: '0.875rem' }}>Cancel</button>
-                                <button onClick={handleGrant} disabled={saving} style={{ padding: '0.5rem 1.25rem', borderRadius: 8, border: 'none', background: '#f59e0b', color: 'white', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', opacity: saving ? 0.6 : 1 }}>
+                                <button onClick={handleGrant} disabled={saving} style={{ padding: '0.5rem 1.25rem', borderRadius: 8, border: 'none', background: 'var(--app-warning)', color: 'white', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', opacity: saving ? 0.6 : 1 }}>
                                     {saving ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />} Grant
                                 </button>
                             </div>
@@ -372,13 +372,13 @@ function DetailDrawer({ record, onClose, onRefresh }: { record: PortalAccess; on
                     <section>
                         <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--app-foreground)', display: 'flex', alignItems: 'center', gap: 6 }}><Lock size={14} /> Security</h4>
                         {!showPwReset ? (
-                            <button onClick={() => setShowPwReset(true)} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid var(--app-border)', background: 'transparent', cursor: 'pointer', color: '#f59e0b', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            <button onClick={() => setShowPwReset(true)} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid var(--app-border)', background: 'transparent', cursor: 'pointer', color: 'var(--app-warning)', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                                 <RotateCcw size={13} /> Reset Password
                             </button>
                         ) : (
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
                                 <div style={{ flex: 1 }}><label style={labelStyle}>New Password</label><input style={inputStyle} type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Min 4 characters" /></div>
-                                <button onClick={handleResetPassword} style={{ padding: '0.625rem 1rem', borderRadius: 8, border: 'none', background: '#f59e0b', color: 'white', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Reset</button>
+                                <button onClick={handleResetPassword} style={{ padding: '0.625rem 1rem', borderRadius: 8, border: 'none', background: 'var(--app-warning)', color: 'white', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Reset</button>
                                 <button onClick={() => { setShowPwReset(false); setNewPw('') }} style={{ padding: '0.625rem', borderRadius: 8, border: '1px solid var(--app-border)', background: 'transparent', cursor: 'pointer', color: 'var(--app-muted-foreground)' }}><X size={14} /></button>
                             </div>
                         )}
@@ -393,12 +393,12 @@ function DetailDrawer({ record, onClose, onRefresh }: { record: PortalAccess; on
                                     if (reason === null) return
                                     await erpFetch(`iam/portal-access/${record.id}/revoke/`, { method: 'POST', body: JSON.stringify({ reason }), headers: { 'Content-Type': 'application/json' } })
                                     toast.success('Access revoked'); onRefresh()
-                                }} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid color-mix(in srgb, #ef4444 30%, transparent)', background: 'color-mix(in srgb, #ef4444 8%, transparent)', cursor: 'pointer', color: '#ef4444', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                }} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--app-error) 30%, transparent)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', cursor: 'pointer', color: 'var(--app-error)', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                                     <Ban size={13} /> Revoke Access
                                 </button>
                             ) : (
                                 <button onClick={async () => { await erpFetch(`iam/portal-access/${record.id}/reactivate/`, { method: 'POST' }); toast.success('Access reactivated'); onRefresh() }}
-                                    style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid color-mix(in srgb, #10b981 30%, transparent)', background: 'color-mix(in srgb, #10b981 8%, transparent)', cursor: 'pointer', color: '#10b981', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)', background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)', cursor: 'pointer', color: 'var(--app-primary)', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                                     <Unlock size={13} /> Reactivate Access
                                 </button>
                             )}

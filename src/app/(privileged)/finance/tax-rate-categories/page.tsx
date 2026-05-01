@@ -384,7 +384,7 @@ export default function TaxRateCategoriesPage() {
                                     </div>
                                     <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${cat.is_active ? 'text-app-success' : 'text-app-error'}`}
                                         style={{
-                                            background: cat.is_active ? 'color-mix(in srgb, #22c55e 10%, transparent)' : 'color-mix(in srgb, #ef4444 10%, transparent)',
+                                            background: cat.is_active ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)',
                                         }}>
                                         {cat.is_active ? 'Active' : 'Inactive'}
                                     </div>

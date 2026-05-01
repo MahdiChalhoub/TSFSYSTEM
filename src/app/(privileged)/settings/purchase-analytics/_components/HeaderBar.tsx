@@ -61,7 +61,7 @@ export function HeaderBar(p: Props) {
     const isProfileMode = p.isProfileMode
 
     /* ── Score color helpers ── */
-    const scoreColor = p.configScore >= 80 ? 'var(--app-success, #22c55e)' : p.configScore >= 50 ? '#f59e0b' : 'var(--app-error, #ef4444)'
+    const scoreColor = p.configScore >= 80 ? 'var(--app-success, #22c55e)' : p.configScore >= 50 ? 'var(--app-warning)' : 'var(--app-error, #ef4444)'
 
     return (
         <>
@@ -120,7 +120,7 @@ export function HeaderBar(p: Props) {
                         </span>
                     )}
                     {p.hasChanges && (
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg" style={{ background: 'color-mix(in srgb, #f59e0b 10%, transparent)', color: '#f59e0b' }}>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
                             {p.diffEntriesCount} unsaved
                         </span>
                     )}
@@ -162,7 +162,7 @@ export function HeaderBar(p: Props) {
                 </button>
 
                 <KpiTile label="Completeness" value={`${p.completenessScore}%`}
-                    color={p.completenessScore === 100 ? 'var(--app-success, #22c55e)' : p.completenessScore >= 75 ? 'var(--app-primary)' : '#f59e0b'}
+                    color={p.completenessScore === 100 ? 'var(--app-success, #22c55e)' : p.completenessScore >= 75 ? 'var(--app-primary)' : 'var(--app-warning)'}
                     icon={<CheckCircle2 size={14} />} />
 
                 <KpiTile label="Profiles" value={String(p.profilesData?.profiles?.length || 0)}
@@ -170,7 +170,7 @@ export function HeaderBar(p: Props) {
 
                 {p.warnings.length > 0 && (
                     <KpiTile label="Warnings" value={String(p.warnings.length)}
-                        color="#f59e0b" icon={<AlertTriangle size={14} />} />
+                        color="var(--app-warning)" icon={<AlertTriangle size={14} />} />
                 )}
 
                 {isProfileMode && p.overrideCount > 0 && (
@@ -211,7 +211,7 @@ export function HeaderBar(p: Props) {
                 {p.suggestions.length > 0 && (
                     <button type="button" onClick={() => p.setShowSuggestions(!p.showSuggestions)}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black transition-all"
-                        style={{ background: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: '1px solid color-mix(in srgb, #f59e0b 20%, transparent)', color: '#f59e0b' }}>
+                        style={{ background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)', color: 'var(--app-warning)' }}>
                         <Zap size={10} /> {p.suggestions.length} Tip{p.suggestions.length !== 1 ? 's' : ''}
                     </button>
                 )}
@@ -277,9 +277,9 @@ export function HeaderBar(p: Props) {
 
             {c._user_role === 'viewer' && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-4"
-                    style={{ background: 'color-mix(in srgb, #f59e0b 5%, var(--app-surface))', border: '1px solid color-mix(in srgb, #f59e0b 15%, transparent)' }}>
-                    <AlertTriangle size={12} style={{ color: '#f59e0b' }} />
-                    <span className="text-[10px] font-bold" style={{ color: '#f59e0b' }}>Read-only mode — contact an admin to make changes</span>
+                    style={{ background: 'color-mix(in srgb, var(--app-warning) 5%, var(--app-surface))', border: '1px solid color-mix(in srgb, var(--app-warning) 15%, transparent)' }}>
+                    <AlertTriangle size={12} style={{ color: 'var(--app-warning)' }} />
+                    <span className="text-[10px] font-bold" style={{ color: 'var(--app-warning)' }}>Read-only mode — contact an admin to make changes</span>
                 </div>
             )}
 

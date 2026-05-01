@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   CLAIMED: { bg: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', fg: 'var(--app-info, #3b82f6)' },
   RECOVERED: { bg: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', fg: 'var(--app-success, #22c55e)' },
   REJECTED: { bg: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', fg: 'var(--app-error, #ef4444)' },
-  REVERSED: { bg: 'color-mix(in srgb, #8b5cf6 10%, transparent)', fg: '#8b5cf6' },
+  REVERSED: { bg: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', fg: 'var(--app-accent)' },
 }
 
 const inputCls = 'w-full text-[12px] font-bold bg-app-surface/60 border border-app-border/50 rounded-xl px-3 py-2 text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-primary/40 focus:ring-2 focus:ring-app-primary/10 outline-none transition-all'

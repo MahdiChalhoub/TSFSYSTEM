@@ -5,11 +5,11 @@ import { Search, UserPlus, CheckCircle, XCircle, RotateCcw, ChevronDown, Chevron
 import { assignTicket, resolveTicket, closeTicket, reopenTicket } from '@/app/actions/client-portal';
 
 const STATUS_COLORS: Record<string, string> = {
-    OPEN: '#ef4444', IN_PROGRESS: '#f59e0b', WAITING_CLIENT: '#8b5cf6',
-    RESOLVED: '#22c55e', CLOSED: '#64748b',
+    OPEN: 'var(--app-error)', IN_PROGRESS: 'var(--app-warning)', WAITING_CLIENT: 'var(--app-accent)',
+    RESOLVED: 'var(--app-success)', CLOSED: 'var(--app-muted-foreground)',
 };
 const PRIORITY_COLORS: Record<string, string> = {
-    LOW: '#64748b', NORMAL: '#06b6d4', HIGH: '#f59e0b', URGENT: '#ef4444',
+    LOW: 'var(--app-muted-foreground)', NORMAL: 'var(--app-accent-cyan)', HIGH: 'var(--app-warning)', URGENT: 'var(--app-error)',
 };
 const TYPE_EMOJI: Record<string, string> = {
     GENERAL: '💬', ORDER_ISSUE: '📦', DELIVERY_PROBLEM: '🚛', RETURN_REQUEST: '↩️',
@@ -43,7 +43,7 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
     }
 
     const cardStyle: React.CSSProperties = {
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        background: 'linear-gradient(135deg, var(--app-surface-2) 0%, var(--app-bg) 100%)',
         borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)',
     };
 
@@ -51,12 +51,12 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
         <div>
             <div style={{
                 display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem 1rem', marginBottom: '1.5rem',
-                background: '#0f172a', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--app-bg)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
             }}>
-                <Search size={16} color="#64748b" />
+                <Search size={16} color="var(--app-muted-foreground)" />
                 <input value={search} onChange={e => setSearch(e.target.value)}
                     placeholder="Search tickets..."
-                    style={{ flex: 1, background: 'none', border: 'none', color: '#e2e8f0', outline: 'none' }} />
+                    style={{ flex: 1, background: 'none', border: 'none', color: 'var(--app-border)', outline: 'none' }} />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -65,7 +65,7 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                 <button onClick={() => setExpanded(expanded === t.id ? null : t.id)}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-faint)' }}>
                                     {expanded === t.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                 </button>
                                 <span style={{ fontSize: '1.25rem' }}>{TYPE_EMOJI[t.ticket_type] || '💬'}</span>
@@ -73,7 +73,7 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
                                     <div style={{ fontWeight: 600 }}>
                                         {t.ticket_number} — {t.subject}
                                     </div>
-                                    <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                                    <div style={{ color: 'var(--app-faint)', fontSize: '0.85rem' }}>
                                         {t.contact_name} · {new Date(t.created_at).toLocaleDateString()}
                                     </div>
                                 </div>
@@ -90,7 +90,7 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
                                 {['OPEN', 'IN_PROGRESS'].includes(t.status) && (
                                     <button onClick={() => setExpanded(t.id)} title="Resolve" style={{
                                         display: 'flex', alignItems: 'center', gap: 4,
-                                        padding: '4px 10px', background: '#22c55e', border: 'none',
+                                        padding: '4px 10px', background: 'var(--app-success)', border: 'none',
                                         borderRadius: 6, color: '#fff', cursor: 'pointer', fontSize: '0.8rem',
                                     }}>
                                         <CheckCircle size={14} /> Resolve
@@ -99,7 +99,7 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
                                 {t.status === 'RESOLVED' && (
                                     <button onClick={() => handleClose(t.id)} title="Close" style={{
                                         display: 'flex', alignItems: 'center', gap: 4,
-                                        padding: '4px 10px', background: '#64748b', border: 'none',
+                                        padding: '4px 10px', background: 'var(--app-muted-foreground)', border: 'none',
                                         borderRadius: 6, color: '#fff', cursor: 'pointer', fontSize: '0.8rem',
                                     }}>
                                         <XCircle size={14} /> Close
@@ -108,7 +108,7 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
                                 {t.status === 'CLOSED' && (
                                     <button onClick={() => handleReopen(t.id)} title="Reopen" style={{
                                         display: 'flex', alignItems: 'center', gap: 4,
-                                        padding: '4px 10px', background: '#f59e0b', border: 'none',
+                                        padding: '4px 10px', background: 'var(--app-warning)', border: 'none',
                                         borderRadius: 6, color: '#fff', cursor: 'pointer', fontSize: '0.8rem',
                                     }}>
                                         <RotateCcw size={14} /> Reopen
@@ -119,17 +119,17 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
 
                         {expanded === t.id && (
                             <div style={{
-                                marginTop: 12, padding: 12, background: '#0f172a', borderRadius: 8,
-                                fontSize: '0.85rem', color: '#94a3b8',
+                                marginTop: 12, padding: 12, background: 'var(--app-bg)', borderRadius: 8,
+                                fontSize: '0.85rem', color: 'var(--app-faint)',
                             }}>
                                 <div style={{ marginBottom: 8 }}>
                                     <strong>Description:</strong>
-                                    <p style={{ marginTop: 4, color: '#e2e8f0' }}>{t.description}</p>
+                                    <p style={{ marginTop: 4, color: 'var(--app-border)' }}>{t.description}</p>
                                 </div>
                                 {t.resolution_notes && (
                                     <div style={{ marginBottom: 8 }}>
                                         <strong>Resolution:</strong>
-                                        <p style={{ marginTop: 4, color: '#22c55e' }}>{t.resolution_notes}</p>
+                                        <p style={{ marginTop: 4, color: 'var(--app-success)' }}>{t.resolution_notes}</p>
                                     </div>
                                 )}
                                 {t.satisfaction_rating && (
@@ -140,12 +140,12 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
                                         <textarea placeholder="Resolution notes..."
                                             value={resolveNotes} onChange={e => setResolveNotes(e.target.value)}
                                             style={{
-                                                width: '100%', padding: '0.5rem', background: '#1e293b',
+                                                width: '100%', padding: '0.5rem', background: 'var(--app-surface-2)',
                                                 border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6,
-                                                color: '#e2e8f0', resize: 'vertical', minHeight: 60,
+                                                color: 'var(--app-border)', resize: 'vertical', minHeight: 60,
                                             }} />
                                         <button onClick={() => handleResolve(t.id)} style={{
-                                            marginTop: 8, padding: '6px 16px', background: '#22c55e',
+                                            marginTop: 8, padding: '6px 16px', background: 'var(--app-success)',
                                             border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer',
                                             fontWeight: 600,
                                         }}>Submit Resolution</button>
@@ -156,7 +156,7 @@ export default function ClientTicketsClient({ tickets: init }: { tickets: any[] 
                     </div>
                 ))}
                 {filtered.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No tickets found</div>
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-muted-foreground)' }}>No tickets found</div>
                 )}
             </div>
         </div>

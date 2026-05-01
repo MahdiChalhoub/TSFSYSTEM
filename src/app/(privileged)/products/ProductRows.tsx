@@ -2,14 +2,14 @@ import Link from 'next/link';
 import { Edit2, Copy, Barcode, Globe, Layers, CheckCircle2, ShieldCheck, Tag } from 'lucide-react';
 
 const LEVEL_COLORS: Record<number, { bg: string; text: string; border: string }> = {
-    0: { bg: 'rgba(239,68,68,0.12)', text: '#ef4444', border: 'rgba(239,68,68,0.3)' },
-    1: { bg: 'rgba(249,115,22,0.12)', text: '#f97316', border: 'rgba(249,115,22,0.3)' },
+    0: { bg: 'rgba(239,68,68,0.12)', text: 'var(--app-error)', border: 'rgba(239,68,68,0.3)' },
+    1: { bg: 'rgba(249,115,22,0.12)', text: 'var(--app-warning)', border: 'rgba(249,115,22,0.3)' },
     2: { bg: 'rgba(234,179,8,0.12)', text: '#eab308', border: 'rgba(234,179,8,0.3)' },
-    3: { bg: 'rgba(59,130,246,0.12)', text: '#3b82f6', border: 'rgba(59,130,246,0.3)' },
-    4: { bg: 'rgba(99,102,241,0.12)', text: '#6366f1', border: 'rgba(99,102,241,0.3)' },
+    3: { bg: 'rgba(59,130,246,0.12)', text: 'var(--app-info)', border: 'rgba(59,130,246,0.3)' },
+    4: { bg: 'rgba(99,102,241,0.12)', text: 'var(--app-accent)', border: 'rgba(99,102,241,0.3)' },
     5: { bg: 'rgba(168,85,247,0.12)', text: '#a855f7', border: 'rgba(168,85,247,0.3)' },
-    6: { bg: 'rgba(6,182,212,0.12)', text: '#06b6d4', border: 'rgba(6,182,212,0.3)' },
-    7: { bg: 'rgba(34,197,94,0.12)', text: '#22c55e', border: 'rgba(34,197,94,0.3)' },
+    6: { bg: 'rgba(6,182,212,0.12)', text: 'var(--app-accent-cyan)', border: 'rgba(6,182,212,0.3)' },
+    7: { bg: 'rgba(34,197,94,0.12)', text: 'var(--app-success)', border: 'rgba(34,197,94,0.3)' },
 };
 
 export function ProductRow({ product }: { product: Record<string, any> }) {
@@ -43,19 +43,19 @@ export function ProductRow({ product }: { product: Record<string, any> }) {
                         {/* Badge 2: Sellable */}
                         {product.is_sellable ? (
                             <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1"
-                                style={{ background: 'rgba(34,197,94,0.12)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>
+                                style={{ background: 'rgba(34,197,94,0.12)', color: 'var(--app-success)', border: '1px solid rgba(34,197,94,0.3)' }}>
                                 <Tag size={8} /> Sellable
                             </span>
                         ) : (
                             <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1"
-                                style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+                                style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--app-error)', border: '1px solid rgba(239,68,68,0.2)' }}>
                                 Not Sellable
                             </span>
                         )}
                         {/* Badge 3: Verified (only when true) */}
                         {product.is_verified && (
                             <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1"
-                                style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}>
+                                style={{ background: 'rgba(59,130,246,0.12)', color: 'var(--app-info)', border: '1px solid rgba(59,130,246,0.3)' }}>
                                 <ShieldCheck size={8} /> Verified
                             </span>
                         )}

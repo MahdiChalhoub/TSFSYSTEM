@@ -14,7 +14,7 @@ export default async function EcommerceSettingsPage() {
         <div style={{ padding: '2rem' }}>
             <div style={{ marginBottom: '2rem' }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Storefront Settings</h1>
-                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Configure your eCommerce storefront behavior and appearance.</p>
+                <p style={{ color: 'var(--app-muted-foreground)', marginTop: '0.25rem' }}>Configure your eCommerce storefront behavior and appearance.</p>
             </div>
 
             <EcommerceSettingsClient config={config} />

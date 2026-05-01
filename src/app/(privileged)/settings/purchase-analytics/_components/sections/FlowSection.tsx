@@ -7,7 +7,7 @@ import { runTimed } from '@/lib/perf-timing'
 import { fieldLabel, fieldHint, toggleBtn } from '../../_lib/constants'
 import { usePASettings } from '../../_hooks/PASettingsContext'
 
-const C = '#06b6d4'
+const C = 'var(--app-accent-cyan)'
 
 export function FlowSection() {
     const s = usePASettings()

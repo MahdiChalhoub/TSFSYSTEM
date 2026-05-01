@@ -16,9 +16,9 @@ export const TYPES = [
   { key: 'BOTH', label: 'Client + Supplier', shortLabel: 'Both', icon: RefreshCw, color: '#D946EF', bg: 'rgba(217,70,239,0.08)' },
   { key: 'LEAD', label: 'Leads', shortLabel: 'Leads', icon: TrendingUp, color: 'var(--app-success)', bg: 'var(--app-success-bg)' },
   { key: 'CONTACT', label: 'Address Book', shortLabel: 'Contacts', icon: BookUser, color: 'var(--app-primary)', bg: 'var(--app-primary-light)' },
-  { key: 'SERVICE', label: 'Service Providers', shortLabel: 'Services', icon: Wrench, color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)' },
+  { key: 'SERVICE', label: 'Service Providers', shortLabel: 'Services', icon: Wrench, color: 'var(--app-accent)', bg: 'rgba(139,92,246,0.08)' },
   { key: 'CREDITOR', label: 'Creditors', shortLabel: 'Creditors', icon: TrendingDown, color: 'var(--app-error)', bg: 'rgba(239,68,68,0.08)' },
-  { key: 'DEBTOR', label: 'Debtors', shortLabel: 'Debtors', icon: TrendingUp, color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
+  { key: 'DEBTOR', label: 'Debtors', shortLabel: 'Debtors', icon: TrendingUp, color: 'var(--app-warning)', bg: 'rgba(245,158,11,0.08)' },
 ] as const
 
 export const TYPE_MAP = Object.fromEntries(TYPES.map(t => [t.key, t]))

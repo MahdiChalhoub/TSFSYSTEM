@@ -22,7 +22,7 @@ export default async function EcommerceThemesPage() {
         <div style={{ padding: '2rem' }}>
             <div style={{ marginBottom: '2rem' }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Theme Manager</h1>
-                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Choose the type of storefront and the visual theme for your customers.</p>
+                <p style={{ color: 'var(--app-muted-foreground)', marginTop: '0.25rem' }}>Choose the type of storefront and the visual theme for your customers.</p>
             </div>
 
             {/* Step 1: Store Type */}

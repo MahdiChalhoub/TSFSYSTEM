@@ -67,9 +67,9 @@ function BusinessRegisterContent() {
     if (state?.success && state?.login_url) {
         window.location.href = state.login_url;
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-app-primary/5 blur-[160px] rounded-full" />
-                <Card className="w-full max-w-md bg-[#0f172a]/60 border-app-success/20 backdrop-blur-[40px] rounded-[2.5rem] text-center p-12 relative z-10 transition-all duration-1000">
+                <Card className="w-full max-w-md bg-app-bg/60 border-app-success/20 backdrop-blur-[40px] rounded-[2.5rem] text-center p-12 relative z-10 transition-all duration-1000">
                     <Rocket className="mx-auto text-app-success mb-6 animate-bounce" size={48} />
                     <h2 className="text-3xl font-black text-white tracking-tighter italic mb-4 uppercase">Registration Complete</h2>
                     <p className="text-app-faint font-medium mb-8">Your workspace is being set up. You'll be redirected shortly.</p>
@@ -86,7 +86,7 @@ function BusinessRegisterContent() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 py-20 relative overflow-hidden">
+        <div className="min-h-screen bg-app-bg flex flex-col items-center justify-center p-6 py-20 relative overflow-hidden">
             {/* Ambient Background Elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-warning/5 blur-[160px] rounded-full" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-primary/5 blur-[160px] rounded-full" />
@@ -126,7 +126,7 @@ function BusinessRegisterContent() {
                 </div>
             </div>
 
-            <Card className="w-full max-w-4xl bg-[#0f172a]/80 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
+            <Card className="w-full max-w-4xl bg-app-bg/80 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-app-accent-cyan/40 to-transparent" />
 
                 <CardContent className="p-10 md:p-16">
@@ -403,7 +403,7 @@ function BusinessRegisterContent() {
 export default function BusinessRegisterPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center">
                 <Loader2 className="animate-spin text-app-warning h-12 w-12" />
             </div>
         }>

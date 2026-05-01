@@ -47,7 +47,7 @@ const COLUMNS = [
 export default function MasterListDemo() {
     const computeKpis = useMemo(() => (rows: Widget[]): KPIStat[] => [
         { label: 'Total',       value: rows.length, icon: <Package size={11} />, color: 'var(--app-primary)' },
-        { label: 'Combos',      value: rows.filter(r => r.type === 'COMBO').length, icon: <Layers size={11} />, color: '#8b5cf6' },
+        { label: 'Combos',      value: rows.filter(r => r.type === 'COMBO').length, icon: <Layers size={11} />, color: 'var(--app-accent)' },
         { label: 'Out of stock',value: rows.filter(r => r.stock <= 0).length, icon: <AlertTriangle size={11} />, color: 'var(--app-error)' },
         { label: 'Avg price',   value: rows.length ? Math.round(rows.reduce((s, r) => s + r.price, 0) / rows.length) : 0, icon: <DollarSign size={11} />, color: 'var(--app-success)' },
     ], [])
@@ -78,7 +78,7 @@ export default function MasterListDemo() {
                 },
 
                 renderRowIcon: (w) => {
-                    const c = w.type === 'COMBO' ? '#8b5cf6' : w.type === 'SERVICE' ? 'var(--app-warning)' : 'var(--app-primary)'
+                    const c = w.type === 'COMBO' ? 'var(--app-accent)' : w.type === 'SERVICE' ? 'var(--app-warning)' : 'var(--app-primary)'
                     const I = w.type === 'COMBO' ? Layers : w.type === 'SERVICE' ? Package : Box
                     return (
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"

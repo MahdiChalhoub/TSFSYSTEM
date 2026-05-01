@@ -86,7 +86,7 @@ export default function VatReturnListPage() {
         { label: 'Filings', value: stats.total, icon: <FileText size={11} />, color: 'var(--app-primary)' },
         { label: 'Filed', value: stats.filed, icon: <CheckCircle size={11} />, color: 'var(--app-success, #22c55e)' },
         { label: 'Draft', value: stats.draft, icon: <Calendar size={11} />, color: 'var(--app-warning, #f59e0b)' },
-        { label: 'Showing', value: stats.filtered, icon: <Layers size={11} />, color: '#8b5cf6' },
+        { label: 'Showing', value: stats.filtered, icon: <Layers size={11} />, color: 'var(--app-accent)' },
     ]
 
     return (

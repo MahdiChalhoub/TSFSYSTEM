@@ -28,8 +28,8 @@ const ICON_OPTIONS = [
 const ICON_MAP: Record<string, any> = Object.fromEntries(ICON_OPTIONS.map(o => [o.value, o.Icon]))
 
 const COLOR_OPTIONS = [
-    '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
-    '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#14b8a6',
+    'var(--app-primary)', 'var(--app-info)', 'var(--app-warning)', 'var(--app-error)', 'var(--app-accent)',
+    '#ec4899', 'var(--app-accent-cyan)', 'var(--app-warning)', '#84cc16', '#14b8a6',
 ]
 
 export default function PaymentMethodsPage() {
@@ -114,7 +114,7 @@ export default function PaymentMethodsPage() {
                     </div>
                 </div>
                 <button onClick={() => {
-                    setEditing({ id: 0, name: '', code: '', icon: 'banknote', color: '#10b981', is_system: false, is_active: true, sort_order: methods.length })
+                    setEditing({ id: 0, name: '', code: '', icon: 'banknote', color: 'var(--app-primary)', is_system: false, is_active: true, sort_order: methods.length })
                     setIsNew(true)
                 }}
                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-black text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -153,7 +153,7 @@ export default function PaymentMethodsPage() {
                                 {/* Name + color badge */}
                                 <div className="flex items-center gap-2.5 min-w-0">
                                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                        style={{ background: `color-mix(in srgb, ${m.color || '#10b981'} 12%, transparent)`, color: m.color || '#10b981' }}>
+                                        style={{ background: `color-mix(in srgb, ${m.color || 'var(--app-primary)'} 12%, transparent)`, color: m.color || 'var(--app-primary)' }}>
                                         <Icon size={14} />
                                     </div>
                                     <div className="min-w-0">
@@ -234,7 +234,7 @@ export default function PaymentMethodsPage() {
                                         <button key={opt.value} onClick={() => setEditing({ ...editing, icon: opt.value })}
                                             className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${editing.icon === opt.value
                                                 ? 'ring-2 ring-app-primary ring-offset-1 ring-offset-app-surface' : 'border border-app-border/50 hover:bg-app-surface'}`}
-                                            style={editing.icon === opt.value ? { background: `color-mix(in srgb, ${editing.color || '#10b981'} 12%, transparent)`, color: editing.color || '#10b981' } : {}}
+                                            style={editing.icon === opt.value ? { background: `color-mix(in srgb, ${editing.color || 'var(--app-primary)'} 12%, transparent)`, color: editing.color || 'var(--app-primary)' } : {}}
                                             title={opt.label}>
                                             <opt.Icon size={14} />
                                         </button>
@@ -256,7 +256,7 @@ export default function PaymentMethodsPage() {
                             <div className="p-3 rounded-xl border border-app-border/50 flex items-center gap-2.5"
                                 style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)' }}>
                                 <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                    style={{ background: `color-mix(in srgb, ${editing.color || '#10b981'} 12%, transparent)`, color: editing.color || '#10b981' }}>
+                                    style={{ background: `color-mix(in srgb, ${editing.color || 'var(--app-primary)'} 12%, transparent)`, color: editing.color || 'var(--app-primary)' }}>
                                     {(() => { const I = resolveIcon(editing.icon); return <I size={14} /> })()}
                                 </div>
                                 <div>

@@ -5,9 +5,9 @@ import { Check, X, MessageSquare, ArrowRight, Search, Filter } from 'lucide-reac
 import { approveProforma, rejectProforma, negotiateProforma, convertProformaToPO } from '@/app/actions/supplier-portal';
 
 const STATUS_COLORS: Record<string, string> = {
-    DRAFT: '#64748b', SUBMITTED: '#3b82f6', UNDER_REVIEW: '#f59e0b',
-    NEGOTIATING: '#a855f7', APPROVED: '#22c55e', REJECTED: '#ef4444',
-    CONVERTED: '#06b6d4', CANCELLED: '#6b7280',
+    DRAFT: 'var(--app-muted-foreground)', SUBMITTED: 'var(--app-info)', UNDER_REVIEW: 'var(--app-warning)',
+    NEGOTIATING: '#a855f7', APPROVED: 'var(--app-success)', REJECTED: 'var(--app-error)',
+    CONVERTED: 'var(--app-accent-cyan)', CANCELLED: '#6b7280',
 };
 
 export default function ProformaReviewClient({ proformas: init }: any) {
@@ -44,7 +44,7 @@ export default function ProformaReviewClient({ proformas: init }: any) {
     }
 
     const cardStyle: React.CSSProperties = {
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        background: 'linear-gradient(135deg, var(--app-surface-2) 0%, var(--app-bg) 100%)',
         borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)', padding: '1rem',
     };
 
@@ -53,15 +53,15 @@ export default function ProformaReviewClient({ proformas: init }: any) {
             <div style={{ display: 'flex', gap: 12, marginBottom: '1.5rem', alignItems: 'center' }}>
                 <div style={{
                     flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem 1rem',
-                    background: '#0f172a', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'var(--app-bg)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
                 }}>
-                    <Search size={16} color="#64748b" />
+                    <Search size={16} color="var(--app-muted-foreground)" />
                     <input value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder="Search proformas..." style={{ flex: 1, background: 'none', border: 'none', color: '#e2e8f0', outline: 'none' }} />
+                        placeholder="Search proformas..." style={{ flex: 1, background: 'none', border: 'none', color: 'var(--app-border)', outline: 'none' }} />
                 </div>
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{
-                    padding: '0.5rem 1rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 8, color: '#e2e8f0',
+                    padding: '0.5rem 1rem', background: 'var(--app-bg)', border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 8, color: 'var(--app-border)',
                 }}>
                     <option value="ALL">All Statuses</option>
                     {['SUBMITTED', 'UNDER_REVIEW', 'NEGOTIATING', 'APPROVED', 'REJECTED', 'CONVERTED'].map(s =>
@@ -76,7 +76,7 @@ export default function ProformaReviewClient({ proformas: init }: any) {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                                 <div style={{ fontWeight: 600 }}>{p.proforma_number || `PRO-${p.id}`}</div>
-                                <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                                <div style={{ color: 'var(--app-faint)', fontSize: '0.85rem' }}>
                                     {p.supplier_name} · {p.line_count || 0} items · {p.currency} {Number(p.total_amount || 0).toLocaleString()}
                                 </div>
                             </div>
@@ -90,11 +90,11 @@ export default function ProformaReviewClient({ proformas: init }: any) {
                                 {['SUBMITTED', 'UNDER_REVIEW'].includes(p.status) && (
                                     <>
                                         <button onClick={() => handleApprove(p.id)} title="Approve"
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#22c55e' }}>
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-success)' }}>
                                             <Check size={18} />
                                         </button>
                                         <button onClick={() => { setActionId(p.id); setActionType('reject'); }}
-                                            title="Reject" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
+                                            title="Reject" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-error)' }}>
                                             <X size={18} />
                                         </button>
                                         <button onClick={() => { setActionId(p.id); setActionType('negotiate'); }}
@@ -105,7 +105,7 @@ export default function ProformaReviewClient({ proformas: init }: any) {
                                 )}
                                 {p.status === 'APPROVED' && (
                                     <button onClick={() => handleConvert(p.id)} title="Convert to PO"
-                                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: '#06b6d4', border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
+                                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: 'var(--app-accent-cyan)', border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
                                         <ArrowRight size={14} /> Convert to PO
                                     </button>
                                 )}
@@ -117,28 +117,28 @@ export default function ProformaReviewClient({ proformas: init }: any) {
                             <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <input value={actionText} onChange={e => setActionText(e.target.value)}
                                     placeholder={actionType === 'reject' ? 'Rejection reason...' : 'Counter-proposal notes...'}
-                                    style={{ flex: 1, padding: '0.5rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#e2e8f0' }} />
+                                    style={{ flex: 1, padding: '0.5rem', background: 'var(--app-bg)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: 'var(--app-border)' }} />
                                 <button onClick={() => actionType === 'reject' ? handleReject(p.id) : handleNegotiate(p.id)}
                                     style={{
                                         padding: '0.5rem 1rem', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, color: '#fff',
-                                        background: actionType === 'reject' ? '#ef4444' : '#a855f7',
+                                        background: actionType === 'reject' ? 'var(--app-error)' : '#a855f7',
                                     }}>
                                     {actionType === 'reject' ? 'Reject' : 'Send Counter'}
                                 </button>
-                                <button onClick={() => setActionId(null)} style={{ padding: '0.5rem', background: '#334155', border: 'none', borderRadius: 6, color: '#e2e8f0', cursor: 'pointer' }}>
+                                <button onClick={() => setActionId(null)} style={{ padding: '0.5rem', background: '#334155', border: 'none', borderRadius: 6, color: 'var(--app-border)', cursor: 'pointer' }}>
                                     Cancel
                                 </button>
                             </div>
                         )}
 
-                        <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: 8 }}>
+                        <div style={{ color: 'var(--app-muted-foreground)', fontSize: '0.8rem', marginTop: 8 }}>
                             {p.submitted_at && `Submitted: ${new Date(p.submitted_at).toLocaleDateString()}`}
                             {p.valid_until && ` · Valid until: ${new Date(p.valid_until).toLocaleDateString()}`}
                         </div>
                     </div>
                 ))}
                 {filtered.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No proformas found</div>
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-muted-foreground)' }}>No proformas found</div>
                 )}
             </div>
         </div>

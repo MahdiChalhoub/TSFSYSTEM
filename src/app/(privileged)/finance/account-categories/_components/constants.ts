@@ -12,7 +12,7 @@ export const ICON_MAP: Record<string, any> = {
     'credit-card': CreditCard, zap: Zap, cloud: Cloud,
 }
 export const getIcon = (name: string) => ICON_MAP[name] || Wallet
-export const DEFAULT_COLOR = '#6366f1'
+export const DEFAULT_COLOR = 'var(--app-accent)'
 
 export const ICON_OPTIONS = [
     { value: 'banknote', label: '💵 Banknote' },
@@ -31,9 +31,9 @@ export const ICON_OPTIONS = [
 ]
 
 export const COLOR_PRESETS = [
-    '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#06b6d4',
-    '#ec4899', '#64748b', '#14b8a6', '#6366f1', '#ef4444',
-    '#84cc16', '#f97316',
+    'var(--app-primary)', 'var(--app-info)', 'var(--app-accent)', 'var(--app-warning)', 'var(--app-accent-cyan)',
+    '#ec4899', 'var(--app-muted-foreground)', '#14b8a6', 'var(--app-accent)', 'var(--app-error)',
+    '#84cc16', 'var(--app-warning)',
 ]
 
 /* ══════════════════════════════════════════════════

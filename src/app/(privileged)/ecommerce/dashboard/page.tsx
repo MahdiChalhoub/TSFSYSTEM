@@ -35,19 +35,19 @@ export default function EcommerceDashboardPage() {
     }, []);
 
     const cards = [
-        { title: 'Total Orders', value: stats?.total_orders ?? 0, icon: ShoppingCart, color: '#10b981' },
-        { title: 'Monthly Revenue', value: `$${stats?.monthly_revenue ?? '0.00'}`, icon: DollarSign, color: '#6366f1' },
-        { title: 'Pending', value: stats?.pending ?? 0, icon: Package, color: '#f59e0b' },
-        { title: 'Processing', value: stats?.processing ?? 0, icon: TrendingUp, color: '#3b82f6' },
-        { title: 'Shipped', value: stats?.shipped ?? 0, icon: Eye, color: '#8b5cf6' },
-        { title: 'Delivered', value: stats?.delivered ?? 0, icon: BarChart3, color: '#10b981' },
+        { title: 'Total Orders', value: stats?.total_orders ?? 0, icon: ShoppingCart, color: 'var(--app-primary)' },
+        { title: 'Monthly Revenue', value: `$${stats?.monthly_revenue ?? '0.00'}`, icon: DollarSign, color: 'var(--app-accent)' },
+        { title: 'Pending', value: stats?.pending ?? 0, icon: Package, color: 'var(--app-warning)' },
+        { title: 'Processing', value: stats?.processing ?? 0, icon: TrendingUp, color: 'var(--app-info)' },
+        { title: 'Shipped', value: stats?.shipped ?? 0, icon: Eye, color: 'var(--app-accent)' },
+        { title: 'Delivered', value: stats?.delivered ?? 0, icon: BarChart3, color: 'var(--app-primary)' },
     ];
 
     return (
         <div style={{ padding: '2rem' }}>
             <div style={{ marginBottom: '2rem' }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Storefront Overview</h1>
-                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Monitor your eCommerce performance and storefront activity.</p>
+                <p style={{ color: 'var(--app-muted-foreground)', marginTop: '0.25rem' }}>Monitor your eCommerce performance and storefront activity.</p>
             </div>
 
             <div style={{
@@ -58,7 +58,7 @@ export default function EcommerceDashboardPage() {
                 {cards.map((card) => (
                     <div key={card.title} style={{
                         background: '#fff',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid var(--app-border)',
                         borderRadius: '12px',
                         padding: '1.5rem',
                         display: 'flex',
@@ -66,7 +66,7 @@ export default function EcommerceDashboardPage() {
                         gap: '0.75rem',
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 500 }}>{card.title}</span>
+                            <span style={{ fontSize: '0.875rem', color: 'var(--app-muted-foreground)', fontWeight: 500 }}>{card.title}</span>
                             <card.icon size={20} color={card.color} />
                         </div>
                         <span style={{ fontSize: '1.75rem', fontWeight: 700 }}>{card.value}</span>
@@ -77,11 +77,11 @@ export default function EcommerceDashboardPage() {
             <div style={{
                 marginTop: '2rem',
                 background: '#fff',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--app-border)',
                 borderRadius: '12px',
                 padding: '2rem',
                 textAlign: 'center',
-                color: '#94a3b8',
+                color: 'var(--app-faint)',
             }}>
                 <BarChart3 size={48} style={{ margin: '0 auto 1rem' }} />
                 <p style={{ fontWeight: 600, fontSize: '1.1rem' }}>Analytics Coming Soon</p>

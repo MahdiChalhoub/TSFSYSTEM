@@ -102,15 +102,15 @@ export default async function WiseConsolePage() {
                                         const total = s.total_employees || 1;
                                         const pct = (cnt / total) * 100;
                                         const colors: Record<string, string> = {
-                                            STABLE: '#10b981',
-                                            AT_RISK: '#f59e0b',
-                                            HIGH_RISK: '#f97316',
-                                            CRITICAL: '#ef4444',
+                                            STABLE: 'var(--app-primary)',
+                                            AT_RISK: 'var(--app-warning)',
+                                            HIGH_RISK: 'var(--app-warning)',
+                                            CRITICAL: 'var(--app-error)',
                                         };
                                         return (
                                             <div key={level} className="flex flex-col items-center gap-1 flex-1">
                                                 <span className="text-[9px] font-black opacity-60">{cnt}</span>
-                                                <div className="w-full rounded-t-lg" style={{ height: `${Math.max(8, pct * 0.44)}px`, background: colors[level] ?? '#64748b', opacity: 0.7 }} />
+                                                <div className="w-full rounded-t-lg" style={{ height: `${Math.max(8, pct * 0.44)}px`, background: colors[level] ?? 'var(--app-muted-foreground)', opacity: 0.7 }} />
                                                 <span className="text-[8px] uppercase opacity-30">{level.replace('_', ' ')}</span>
                                             </div>
                                         );
@@ -130,7 +130,7 @@ export default async function WiseConsolePage() {
                                     { label: 'Lead', val: s.avg_leadership_score },
                                 ].map(({ label, val }) => {
                                     const score = val ?? 50;
-                                    const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+                                    const color = score >= 75 ? 'var(--app-primary)' : score >= 50 ? 'var(--app-warning)' : 'var(--app-error)';
                                     return (
                                         <div key={label} className="flex flex-col items-center gap-1.5">
                                             <div className="relative w-full h-1.5 rounded-full bg-app-surface/5 overflow-hidden">

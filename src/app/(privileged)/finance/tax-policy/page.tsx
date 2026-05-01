@@ -65,7 +65,7 @@ function buildKPIs(policy: TaxPolicy | null, profiles: CounterpartyProfile[]) {
         { label: 'VAT Output', value: vatRate, color: 'var(--app-success, #22c55e)', icon: <CheckCircle2 size={14} /> },
         { label: 'Purchase Tax', value: purchaseRate, color: 'var(--app-info, #3b82f6)', icon: <TrendingDown size={14} /> },
         { label: 'Sales Tax', value: salesRate, color: 'var(--app-warning, #f59e0b)', icon: <TrendingUp size={14} /> },
-        { label: 'Profiles', value: profileCount, color: '#8b5cf6', icon: <Users size={14} /> },
+        { label: 'Profiles', value: profileCount, color: 'var(--app-accent)', icon: <Users size={14} /> },
         { label: 'VAT Registered', value: vatRegCount, color: 'var(--app-primary)', icon: <Shield size={14} /> },
     ]
 }
@@ -77,7 +77,7 @@ const TAX_TYPES = [
         getValue: (p: TaxPolicy | null) => `Output: ${p?.vat_output_enabled ? 'YES' : 'NO'} · Input: ${(parseFloat(String(p?.vat_input_recoverability ?? 0)) * 100).toFixed(0)}%`
     },
     {
-        key: 'airsi', label: 'AIRSI', icon: Shield, color: '#8b5cf6',
+        key: 'airsi', label: 'AIRSI', icon: Shield, color: 'var(--app-accent)',
         getValue: (p: TaxPolicy | null) => p?.airsi_treatment || '—'
     },
     {
@@ -121,7 +121,7 @@ const MODULE_CARDS = [
     },
     {
         title: 'Custom Tax Rules', subtitle: 'Product/category-specific tax overrides',
-        icon: Settings, color: '#8b5cf6', url: '/finance/custom-tax-rules',
+        icon: Settings, color: 'var(--app-accent)', url: '/finance/custom-tax-rules',
         stats: () => [{ label: 'Module', value: 'Overrides' }],
     },
     {
@@ -139,10 +139,10 @@ const MODULE_CARDS = [
 // ── Tax Health Indicator ──
 type LucideIcon = typeof CheckCircle2;
 const STATUS_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string; border: string }> = {
-    ok: { icon: CheckCircle2, color: 'var(--app-success, #22c55e)', bg: 'color-mix(in srgb, #22c55e 8%, transparent)', border: 'color-mix(in srgb, #22c55e 18%, transparent)' },
-    warning: { icon: AlertTriangle, color: 'var(--app-warning, #f59e0b)', bg: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: 'color-mix(in srgb, #f59e0b 18%, transparent)' },
-    error: { icon: XCircle, color: 'var(--app-error, #ef4444)', bg: 'color-mix(in srgb, #ef4444 8%, transparent)', border: 'color-mix(in srgb, #ef4444 18%, transparent)' },
-    info: { icon: Info, color: 'var(--app-info, #3b82f6)', bg: 'color-mix(in srgb, #3b82f6 8%, transparent)', border: 'color-mix(in srgb, #3b82f6 18%, transparent)' },
+    ok: { icon: CheckCircle2, color: 'var(--app-success, #22c55e)', bg: 'color-mix(in srgb, var(--app-success) 8%, transparent)', border: 'color-mix(in srgb, var(--app-success) 18%, transparent)' },
+    warning: { icon: AlertTriangle, color: 'var(--app-warning, #f59e0b)', bg: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', border: 'color-mix(in srgb, var(--app-warning) 18%, transparent)' },
+    error: { icon: XCircle, color: 'var(--app-error, #ef4444)', bg: 'color-mix(in srgb, var(--app-error) 8%, transparent)', border: 'color-mix(in srgb, var(--app-error) 18%, transparent)' },
+    info: { icon: Info, color: 'var(--app-info, #3b82f6)', bg: 'color-mix(in srgb, var(--app-info) 8%, transparent)', border: 'color-mix(in srgb, var(--app-info) 18%, transparent)' },
 }
 
 function HealthBanner({ health, onApplyTemplate, applying }: {
@@ -159,22 +159,22 @@ function HealthBanner({ health, onApplyTemplate, applying }: {
     return (
         <div className="flex-shrink-0 mb-4 rounded-2xl overflow-hidden animate-in fade-in duration-300"
             style={{
-                border: `1px solid ${hasIssues ? 'color-mix(in srgb, #f59e0b 25%, transparent)' : 'color-mix(in srgb, #22c55e 25%, transparent)'}`,
+                border: `1px solid ${hasIssues ? 'color-mix(in srgb, var(--app-warning) 25%, transparent)' : 'color-mix(in srgb, var(--app-success) 25%, transparent)'}`,
                 background: hasIssues
-                    ? 'color-mix(in srgb, #f59e0b 4%, var(--app-surface))'
-                    : 'color-mix(in srgb, #22c55e 4%, var(--app-surface))',
+                    ? 'color-mix(in srgb, var(--app-warning) 4%, var(--app-surface))'
+                    : 'color-mix(in srgb, var(--app-success) 4%, var(--app-surface))',
             }}>
 
             {/* Header row */}
             <div className="flex items-center gap-3 px-4 py-3"
                 style={{
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
-                    borderLeft: `3px solid ${hasIssues ? '#f59e0b' : '#22c55e'}`,
+                    borderLeft: `3px solid ${hasIssues ? 'var(--app-warning)' : 'var(--app-success)'}`,
                 }}>
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
-                        background: hasIssues ? 'color-mix(in srgb, #f59e0b 12%, transparent)' : 'color-mix(in srgb, #22c55e 12%, transparent)',
-                        color: hasIssues ? '#f59e0b' : '#22c55e',
+                        background: hasIssues ? 'color-mix(in srgb, var(--app-warning) 12%, transparent)' : 'color-mix(in srgb, var(--app-success) 12%, transparent)',
+                        color: hasIssues ? 'var(--app-warning)' : 'var(--app-success)',
                     }}>
                     {hasIssues ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
                 </div>

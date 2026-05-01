@@ -28,7 +28,7 @@ export default function ContactTagsPage() {
     const [saving, setSaving] = useState(false)
     const [search, setSearch] = useState('')
     const [selected, setSelected] = useState<any>(null)
-    const [form, setForm] = useState({ name: '', color: '#6366F1', description: '', parent: '' as string, contact_type: '' })
+    const [form, setForm] = useState({ name: '', color: 'var(--app-accent)', description: '', parent: '' as string, contact_type: '' })
 
     useEffect(() => { load() }, [])
 
@@ -42,7 +42,7 @@ export default function ContactTagsPage() {
         setSelected(tag)
         setForm({
             name: tag?.name ?? '',
-            color: tag?.color ?? '#6366F1',
+            color: tag?.color ?? 'var(--app-accent)',
             description: tag?.description ?? '',
             parent: tag?.parent ? String(tag.parent) : '',
             contact_type: tag?.contact_type ?? '',

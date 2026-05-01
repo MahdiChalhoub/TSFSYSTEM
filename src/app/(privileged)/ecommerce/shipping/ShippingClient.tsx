@@ -65,7 +65,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
             {/* Header */}
             <div className="app-page-header">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#06b6d4' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--app-accent-cyan)' }}>
                         <Truck size={18} color="#fff" />
                     </div>
                     <div>
@@ -78,9 +78,9 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
             {/* KPI Strip */}
             <div className="grid grid-cols-3 gap-4 mb-6">
                 {[
-                    { label: 'Zones', value: initialZones.length, icon: MapPin, color: '#06b6d4' },
-                    { label: 'Tiers in Zone', value: zoneRates.length, icon: Truck, color: '#10b981' },
-                    { label: 'Total Tiers', value: rates.length, icon: Package, color: '#8b5cf6' },
+                    { label: 'Zones', value: initialZones.length, icon: MapPin, color: 'var(--app-accent-cyan)' },
+                    { label: 'Tiers in Zone', value: zoneRates.length, icon: Truck, color: 'var(--app-primary)' },
+                    { label: 'Total Tiers', value: rates.length, icon: Package, color: 'var(--app-accent)' },
                 ].map(({ label, value, icon: Icon, color }) => (
                     <div key={label} className="app-card flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18` }}>
@@ -155,7 +155,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                 <tr><td colSpan={7} className="py-14 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#06b6d418' }}>
-                                            <Truck size={20} style={{ color: '#06b6d4' }} />
+                                            <Truck size={20} style={{ color: 'var(--app-accent-cyan)' }} />
                                         </div>
                                         <p className="font-semibold text-[var(--app-text)] text-sm">
                                             {selectedZoneId ? 'No tiers yet' : 'Select a zone'}
@@ -201,7 +201,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="app-card w-full max-w-md space-y-5">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#06b6d4' }}>
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--app-accent-cyan)' }}>
                                 <Plus size={16} color="#fff" />
                             </div>
                             <div>

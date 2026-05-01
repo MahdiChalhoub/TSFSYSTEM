@@ -166,8 +166,8 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways 
                     { label: 'Total Gateways', value: allGateways.length, color: 'var(--app-primary)', icon: <Layers size={14} /> },
                     { label: 'Active', value: activeCount, color: 'var(--app-success, #22c55e)', icon: <Check size={14} /> },
                     { label: 'Global', value: globalCount, color: 'var(--app-info, #3b82f6)', icon: <Globe size={14} /> },
-                    { label: 'Regional', value: regionalCount, color: '#8b5cf6', icon: <MapPin size={14} /> },
-                    { label: 'Families', value: familyCount, color: '#f59e0b', icon: <Filter size={14} /> },
+                    { label: 'Regional', value: regionalCount, color: 'var(--app-accent)', icon: <MapPin size={14} /> },
+                    { label: 'Families', value: familyCount, color: 'var(--app-warning)', icon: <Filter size={14} /> },
                 ].map(s => (
                     <div key={s.label} className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
                         style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>

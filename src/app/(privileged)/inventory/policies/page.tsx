@@ -52,8 +52,8 @@ type AttributeNode = { id: number | string; name: string; parent?: number | stri
 // ═══════════════════════════════════════════════════════════════
 
 const POLICY_TABS = [
-    { key: 'naming', label: 'Naming', icon: Wand2, gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)', desc: 'Auto-name formula' },
-    { key: 'visibility', label: 'Visibility', icon: Eye, gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', desc: 'Stock scope & access' },
+    { key: 'naming', label: 'Naming', icon: Wand2, gradient: 'linear-gradient(135deg, var(--app-warning), var(--app-error))', desc: 'Auto-name formula' },
+    { key: 'visibility', label: 'Visibility', icon: Eye, gradient: 'linear-gradient(135deg, var(--app-accent), var(--app-accent))', desc: 'Stock scope & access' },
     { key: 'label', label: 'Labels', icon: Tag, gradient: 'linear-gradient(135deg, var(--app-primary), var(--app-warning))', desc: 'Print & automation' },
     { key: 'barcode', label: 'Barcodes', icon: Barcode, gradient: 'linear-gradient(135deg, var(--app-primary), var(--app-accent))', desc: 'Generation & validation' },
     { key: 'weight', label: 'Weight', icon: Scale, gradient: 'linear-gradient(135deg, var(--app-warning), var(--app-accent))', desc: 'Scale & tolerance' },
@@ -70,22 +70,22 @@ const VISIBILITY_SCOPES = [
     {
         key: 'LOCAL', label: 'Local Only', icon: MapPin,
         desc: 'Users see stock only in their assigned locations/zones within their warehouse',
-        color: '#ef4444',
+        color: 'var(--app-error)',
     },
     {
         key: 'BRANCH', label: 'Branch Total', icon: Building2,
         desc: 'Users see total stock across all warehouses in their branch',
-        color: '#f59e0b',
+        color: 'var(--app-warning)',
     },
     {
         key: 'COUNTRY', label: 'Country Total', icon: Globe,
         desc: 'Users see total stock for all branches in their country',
-        color: '#3b82f6',
+        color: 'var(--app-info)',
     },
     {
         key: 'ORGANIZATION', label: 'Organization Wide', icon: Network,
         desc: 'Users see total stock across the entire organization (all countries, all branches)',
-        color: '#22c55e',
+        color: 'var(--app-success)',
     },
 ]
 
@@ -371,9 +371,9 @@ export default function InventoryPoliciesPage() {
             <div className="space-y-5">
                 {/* ── Live Preview ── */}
                 <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--app-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    <div className="px-6 py-4" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, #f59e0b 8%, var(--app-surface)), color-mix(in srgb, #ef4444 5%, var(--app-surface)))' }}>
+                    <div className="px-6 py-4" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-warning) 8%, var(--app-surface)), color-mix(in srgb, var(--app-error) 5%, var(--app-surface)))' }}>
                         <div className="flex items-center gap-2 mb-3">
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--app-warning), var(--app-error))' }}>
                                 <Sparkles size={14} className="text-white" />
                             </div>
                             <div>
@@ -446,12 +446,12 @@ export default function InventoryPoliciesPage() {
                                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                                         style={{
                                             background: isStatic
-                                                ? 'color-mix(in srgb, #3b82f6 12%, transparent)'
-                                                : 'color-mix(in srgb, #f59e0b 12%, transparent)',
+                                                ? 'color-mix(in srgb, var(--app-info) 12%, transparent)'
+                                                : 'color-mix(in srgb, var(--app-warning) 12%, transparent)',
                                         }}>
                                         {isStatic
-                                            ? <Type size={14} style={{ color: '#3b82f6' }} />
-                                            : <Tags size={14} style={{ color: '#f59e0b' }} />
+                                            ? <Type size={14} style={{ color: 'var(--app-info)' }} />
+                                            : <Tags size={14} style={{ color: 'var(--app-warning)' }} />
                                         }
                                     </div>
 
@@ -459,7 +459,7 @@ export default function InventoryPoliciesPage() {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-bold text-app-foreground truncate">{slot.label}</p>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: isStatic ? '#3b82f6' : '#f59e0b' }}>
+                                            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: isStatic ? 'var(--app-info)' : 'var(--app-warning)' }}>
                                                 {isStatic ? 'Static' : 'Attribute'}
                                             </span>
                                             {!isStatic && childCount > 0 && (
@@ -475,10 +475,10 @@ export default function InventoryPoliciesPage() {
                                             className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
                                             style={{
                                                 background: slot.useShortName
-                                                    ? 'color-mix(in srgb, #3b82f6 15%, transparent)'
+                                                    ? 'color-mix(in srgb, var(--app-info) 15%, transparent)'
                                                     : 'var(--app-bg)',
-                                                color: slot.useShortName ? '#3b82f6' : 'var(--app-muted-foreground)',
-                                                border: `1px solid ${slot.useShortName ? '#3b82f6' : 'var(--app-border)'}`,
+                                                color: slot.useShortName ? 'var(--app-info)' : 'var(--app-muted-foreground)',
+                                                border: `1px solid ${slot.useShortName ? 'var(--app-info)' : 'var(--app-border)'}`,
                                             }}>
                                             {slot.useShortName ? 'Short' : 'Full'}
                                         </button>
@@ -491,10 +491,10 @@ export default function InventoryPoliciesPage() {
                                             className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
                                             style={{
                                                 background: slot.useShortLabel
-                                                    ? 'color-mix(in srgb, #f59e0b 15%, transparent)'
+                                                    ? 'color-mix(in srgb, var(--app-warning) 15%, transparent)'
                                                     : 'var(--app-bg)',
-                                                color: slot.useShortLabel ? '#f59e0b' : 'var(--app-muted-foreground)',
-                                                border: `1px solid ${slot.useShortLabel ? '#f59e0b' : 'var(--app-border)'}`,
+                                                color: slot.useShortLabel ? 'var(--app-warning)' : 'var(--app-muted-foreground)',
+                                                border: `1px solid ${slot.useShortLabel ? 'var(--app-warning)' : 'var(--app-border)'}`,
                                             }}>
                                             {slot.useShortLabel ? `+${attrGroup.short_label}` : 'No suffix'}
                                         </button>
@@ -535,9 +535,9 @@ export default function InventoryPoliciesPage() {
                                         onClick={() => addAttrSlot(group)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all hover:scale-105"
                                         style={{
-                                            background: 'color-mix(in srgb, #f59e0b 8%, transparent)',
-                                            border: '1px dashed color-mix(in srgb, #f59e0b 40%, transparent)',
-                                            color: '#f59e0b',
+                                            background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)',
+                                            border: '1px dashed color-mix(in srgb, var(--app-warning) 40%, transparent)',
+                                            color: 'var(--app-warning)',
                                         }}>
                                         <Plus size={12} />
                                         {group.name}
@@ -596,15 +596,15 @@ export default function InventoryPoliciesPage() {
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="p-3 rounded-xl" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2" style={{ background: 'color-mix(in srgb, #3b82f6 12%, transparent)' }}>
-                                    <Type size={13} style={{ color: '#3b82f6' }} />
+                                <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2" style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)' }}>
+                                    <Type size={13} style={{ color: 'var(--app-info)' }} />
                                 </div>
                                 <p className="text-[10px] font-bold text-app-foreground mb-1">Static Components</p>
                                 <p className="text-[10px] text-app-muted-foreground">Fixed identity fields like Brand, Base Name, Category, Country.</p>
                             </div>
                             <div className="p-3 rounded-xl" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2" style={{ background: 'color-mix(in srgb, #f59e0b 12%, transparent)' }}>
-                                    <Tags size={13} style={{ color: '#f59e0b' }} />
+                                <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2" style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)' }}>
+                                    <Tags size={13} style={{ color: 'var(--app-warning)' }} />
                                 </div>
                                 <p className="text-[10px] font-bold text-app-foreground mb-1">Attribute Components</p>
                                 <p className="text-[10px] text-app-muted-foreground">Dynamic values from your attribute tree — Size, Color, Scent, etc.</p>

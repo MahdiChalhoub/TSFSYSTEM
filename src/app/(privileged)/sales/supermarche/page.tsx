@@ -22,7 +22,7 @@ function SupermarcheSkeleton() {
  return (
  <div
  className="h-screen flex items-center justify-center"
- style={{ background: '#020617', fontFamily: "'Outfit', sans-serif" }}
+ style={{ background: 'var(--app-bg)', fontFamily: "'Outfit', sans-serif" }}
  >
   {/* V2 Header */}
   <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 fade-in-up">
@@ -42,7 +42,7 @@ function SupermarcheSkeleton() {
  className="w-16 h-16 rounded-2xl animate-pulse"
  style={{ background: 'var(--app-success)' }}
  />
- <p style={{ color: '#94A3B8', fontSize: 14 }}>Loading Supermarché...</p>
+ <p style={{ color: 'var(--app-faint)', fontSize: 14 }}>Loading Supermarché...</p>
  </div>
  </div>
  );

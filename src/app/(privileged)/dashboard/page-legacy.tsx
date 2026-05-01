@@ -277,8 +277,8 @@ export default function AdvancedIntelligenceDashboard() {
  <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 0 }}>
  <defs>
  <linearGradient id="colorLiq" x1="0" y1="0" x2="0" y2="1">
- <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
- <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+ <stop offset="5%" stopColor="var(--app-primary)" stopOpacity={0.15} />
+ <stop offset="95%" stopColor="var(--app-primary)" stopOpacity={0} />
  </linearGradient>
  <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1">
  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.15} />
@@ -291,7 +291,7 @@ export default function AdvancedIntelligenceDashboard() {
  contentStyle={{ borderRadius: '2rem', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.1)', padding: '20px', backgroundColor: 'var(--app-surface)', backdropFilter: 'blur(10px)' }}
  itemStyle={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
  />
- <Area type="monotone" dataKey="liquidity" stroke="#10b981" strokeWidth={5} fillOpacity={1} fill="url(#colorLiq)" />
+ <Area type="monotone" dataKey="liquidity" stroke="var(--app-primary)" strokeWidth={5} fillOpacity={1} fill="url(#colorLiq)" />
  <Area type="monotone" dataKey="exposure" stroke="#f43f5e" strokeWidth={5} fillOpacity={1} fill="url(#colorExp)" />
  </AreaChart>
  </ResponsiveContainer>

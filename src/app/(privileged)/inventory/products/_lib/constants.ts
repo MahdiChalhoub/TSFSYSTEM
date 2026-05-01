@@ -10,7 +10,7 @@ export { EMPTY_RANGE }
 
 export const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   STOCKABLE: { label: 'Stockable', color: 'var(--app-success, #22c55e)' },
-  COMBO: { label: 'Combo', color: '#8b5cf6' },
+  COMBO: { label: 'Combo', color: 'var(--app-accent)' },
   STANDARD: { label: 'Standard', color: 'var(--app-info, #3b82f6)' },
 }
 
@@ -26,7 +26,7 @@ export const PROCUREMENT_STATUS_CONFIG: Record<string, { label: string; color: s
   REQUESTED:   { label: 'Requested',  color: 'var(--app-warning, #f59e0b)' },
   PO_SENT:     { label: 'PO Sent',    color: 'var(--app-info, #3b82f6)' },
   PO_ACCEPTED: { label: 'PO Accepted', color: 'var(--app-info, #3b82f6)' },
-  IN_TRANSIT:  { label: 'In Transit', color: '#8b5cf6' },
+  IN_TRANSIT:  { label: 'In Transit', color: 'var(--app-accent)' },
   FAILED:      { label: 'Failed',     color: 'var(--app-error, #ef4444)' },
 }
 

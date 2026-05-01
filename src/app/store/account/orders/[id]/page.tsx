@@ -53,7 +53,7 @@ export default function OrderDetailPage() {
 
     const fmt = (v: string | number) => parseFloat(String(v)).toLocaleString(undefined, { minimumFractionDigits: 2 })
 
-    if (loading) return <div className="store-section store-container" style={{ textAlign: 'center', paddingTop: '4rem' }}><p style={{ color: '#94a3b8' }}>Loading…</p></div>
+    if (loading) return <div className="store-section store-container" style={{ textAlign: 'center', paddingTop: '4rem' }}><p style={{ color: 'var(--app-faint)' }}>Loading…</p></div>
     if (!order) return <div className="store-section store-container" style={{ textAlign: 'center', paddingTop: '4rem' }}><p style={{ color: '#dc2626' }}>Order not found.</p></div>
 
     const StatusIcon = STATUS_ICON[order.status] ?? Package
@@ -72,20 +72,20 @@ export default function OrderDetailPage() {
                         {/* Timeline */}
                         {tracking?.timeline?.length > 0 && (
                             <div className="store-card">
-                                <h3 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Tracking</h3>
+                                <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '1rem' }}>Tracking</h3>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                     {tracking.timeline.map((step: any, i: number) => {
                                         const Icon = STATUS_ICON[step.status] ?? Clock
                                         const isCurrent = i === tracking.timeline.length - 1
                                         return (
                                             <div key={i} style={{ display: 'flex', gap: '0.875rem', alignItems: 'flex-start' }}>
-                                                <div style={{ width: 32, height: 32, borderRadius: '50%', background: isCurrent ? 'var(--store-accent, #10b981)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                    <Icon size={14} style={{ color: isCurrent ? '#fff' : '#94a3b8' }} />
+                                                <div style={{ width: 32, height: 32, borderRadius: '50%', background: isCurrent ? 'var(--store-accent, #10b981)' : 'var(--app-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                    <Icon size={14} style={{ color: isCurrent ? '#fff' : 'var(--app-faint)' }} />
                                                 </div>
                                                 <div>
-                                                    <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.9375rem' }}>{step.status}</p>
-                                                    {step.note && <p style={{ color: '#64748b', fontSize: '0.8125rem' }}>{step.note}</p>}
-                                                    {step.timestamp && <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>{new Date(step.timestamp).toLocaleString()}</p>}
+                                                    <p style={{ fontWeight: 600, color: 'var(--app-surface-2)', fontSize: '0.9375rem' }}>{step.status}</p>
+                                                    {step.note && <p style={{ color: 'var(--app-muted-foreground)', fontSize: '0.8125rem' }}>{step.note}</p>}
+                                                    {step.timestamp && <p style={{ color: 'var(--app-faint)', fontSize: '0.75rem' }}>{new Date(step.timestamp).toLocaleString()}</p>}
                                                 </div>
                                             </div>
                                         )
@@ -97,13 +97,13 @@ export default function OrderDetailPage() {
                         {/* Line items */}
                         <div className="store-card" style={{ padding: 0, overflow: 'hidden' }}>
                             <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #f1f5f9' }}>
-                                <h3 style={{ fontWeight: 700, color: '#1e293b' }}>Items</h3>
+                                <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)' }}>Items</h3>
                             </div>
                             {(order.lines ?? []).map((line: any) => (
                                 <div key={line.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.875rem 1.25rem', borderBottom: '1px solid #f1f5f9' }}>
                                     <div style={{ flex: 1 }}>
-                                        <p style={{ fontWeight: 600, color: '#1e293b' }}>{line.product_name}</p>
-                                        <p style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>Qty: {line.quantity} × {fmt(line.unit_price)}</p>
+                                        <p style={{ fontWeight: 600, color: 'var(--app-surface-2)' }}>{line.product_name}</p>
+                                        <p style={{ color: 'var(--app-faint)', fontSize: '0.8125rem' }}>Qty: {line.quantity} × {fmt(line.unit_price)}</p>
                                     </div>
                                     <p style={{ fontWeight: 700, color: 'var(--store-accent, #10b981)' }}>{fmt(line.line_total)}</p>
                                 </div>
@@ -113,7 +113,7 @@ export default function OrderDetailPage() {
                         {/* Return request */}
                         {order.status === 'DELIVERED' && !returnMsg && (
                             <div className="store-card">
-                                <h3 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>
+                                <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '0.75rem' }}>
                                     <RotateCcw size={16} style={{ display: 'inline', marginRight: '0.375rem' }} />
                                     Request Return
                                 </h3>
@@ -137,7 +137,7 @@ export default function OrderDetailPage() {
 
                     {/* Summary */}
                     <div className="store-card" style={{ position: 'sticky', top: '80px' }}>
-                        <h3 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Summary</h3>
+                        <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '1rem' }}>Summary</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9375rem' }}>
                             {[
                                 ['Order Number', `#${order.order_number}`],
@@ -147,14 +147,14 @@ export default function OrderDetailPage() {
                                 ['Total', fmt(order.total_amount)],
                             ].map(([k, v]) => (
                                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span style={{ color: '#64748b' }}>{k}</span>
-                                    <span style={{ fontWeight: k === 'Total' ? 800 : 600, color: k === 'Total' ? 'var(--store-accent, #10b981)' : '#1e293b' }}>{v}</span>
+                                    <span style={{ color: 'var(--app-muted-foreground)' }}>{k}</span>
+                                    <span style={{ fontWeight: k === 'Total' ? 800 : 600, color: k === 'Total' ? 'var(--store-accent, #10b981)' : 'var(--app-surface-2)' }}>{v}</span>
                                 </div>
                             ))}
                         </div>
                         {order.delivery_address && (
                             <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.375rem' }}>Delivery Address</p>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--app-faint)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.375rem' }}>Delivery Address</p>
                                 <p style={{ fontSize: '0.9375rem', color: '#475569' }}>{order.delivery_address}</p>
                             </div>
                         )}

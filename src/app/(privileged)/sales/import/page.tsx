@@ -10,7 +10,7 @@ export default async function SalesImportPage() {
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-700">
             {/* Header Section */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-[#0f172a] p-8 rounded-[2.5rem] text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-app-bg p-8 rounded-[2.5rem] text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-12 opacity-5">
                     <Database size={200} />
                 </div>

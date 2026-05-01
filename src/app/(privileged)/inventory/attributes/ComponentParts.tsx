@@ -501,9 +501,9 @@ export function BrandLinkModal({ attributeId, attributeName, currentBrandIds, al
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-app-bg/60 backdrop-blur-md" onClick={e => e.target === e.currentTarget && onCancel()}>
             <div className="w-full max-w-md bg-app-surface border border-app-border rounded-3xl overflow-hidden flex flex-col max-h-[70vh] shadow-2xl animate-in zoom-in-95 duration-200">
-                <div className="px-5 py-3 flex items-center justify-between flex-shrink-0" style={{ background: 'color-mix(in srgb, #8b5cf6 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
+                <div className="px-5 py-3 flex items-center justify-between flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-accent) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#8b5cf6', boxShadow: '0 4px 12px color-mix(in srgb, #8b5cf6 30%, transparent)' }}>
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--app-accent)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-accent) 30%, transparent)' }}>
                             <Building2 size={15} className="text-white" />
                         </div>
                         <div>
@@ -530,7 +530,7 @@ export function BrandLinkModal({ attributeId, attributeName, currentBrandIds, al
                 <div className="p-4 border-t border-app-border flex justify-end gap-2">
                     <button onClick={onCancel} className="text-xs font-bold px-3 py-2 text-app-muted-foreground">Cancel</button>
                     <button onClick={async () => { setSaving(true); await onSave(Array.from(selected)); setSaving(false) }} disabled={saving}
-                        className="text-white px-4 py-2 rounded-xl text-xs font-bold" style={{ background: '#8b5cf6' }}>{saving ? 'Saving...' : 'Link Brands'}</button>
+                        className="text-white px-4 py-2 rounded-xl text-xs font-bold" style={{ background: 'var(--app-accent)' }}>{saving ? 'Saving...' : 'Link Brands'}</button>
                 </div>
             </div>
         </div>

@@ -75,7 +75,7 @@ const ANALYTICAL_REPORTS = [
         label: 'Account Statement',
         description: 'Detailed journal history for a single account',
         Icon: FileText,
-        color: '#8b5cf6',
+        color: 'var(--app-accent)',
     },
 ]
 

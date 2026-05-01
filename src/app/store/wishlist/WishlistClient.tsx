@@ -42,15 +42,15 @@ export default function WishlistClient({ initialItems }: Props) {
         <div className="store-section">
             <div className="store-container">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                    <Heart size={24} style={{ color: '#ef4444' }} fill="currentColor" />
+                    <Heart size={24} style={{ color: 'var(--app-error)' }} fill="currentColor" />
                     <h1 className="store-section-title" style={{ margin: 0 }}>My Wishlist</h1>
-                    <span style={{ color: '#94a3b8', fontSize: '0.9375rem' }}>({items.length} item{items.length !== 1 ? 's' : ''})</span>
+                    <span style={{ color: 'var(--app-faint)', fontSize: '0.9375rem' }}>({items.length} item{items.length !== 1 ? 's' : ''})</span>
                 </div>
 
                 {items.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '3rem 0' }}>
                         <HeartOff size={56} style={{ color: '#cbd5e1', margin: '0 auto 1rem' }} />
-                        <p style={{ color: '#94a3b8', marginBottom: '1.25rem' }}>Your wishlist is empty.</p>
+                        <p style={{ color: 'var(--app-faint)', marginBottom: '1.25rem' }}>Your wishlist is empty.</p>
                         <Link href="/store/catalog" className="store-btn store-btn-primary">Browse Products</Link>
                     </div>
                 )}
@@ -77,7 +77,7 @@ export default function WishlistClient({ initialItems }: Props) {
                                     </button>
                                     <button onClick={() => handleRemove(item.id)} disabled={isPending}
                                         className="store-btn store-btn-ghost"
-                                        style={{ padding: '0.5rem', color: '#ef4444' }}
+                                        style={{ padding: '0.5rem', color: 'var(--app-error)' }}
                                         id={`remove-wish-${item.id}`}>
                                         <Trash2 size={14} />
                                     </button>
@@ -91,7 +91,7 @@ export default function WishlistClient({ initialItems }: Props) {
             {toast && (
                 <div style={{
                     position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 50,
-                    background: '#1e293b', color: '#fff', padding: '0.75rem 1.25rem',
+                    background: 'var(--app-surface-2)', color: '#fff', padding: '0.75rem 1.25rem',
                     borderRadius: '0.75rem', fontSize: '0.875rem', fontWeight: 600,
                     boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
                 }}>

@@ -92,7 +92,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                 background: `
                                     radial-gradient(ellipse at 20% 50%, color-mix(in srgb, ${brandColor} 15%, transparent) 0%, transparent 60%),
                                     radial-gradient(ellipse at 80% 20%, color-mix(in srgb, ${brandColor} 8%, transparent) 0%, transparent 50%),
-                                    radial-gradient(ellipse at 60% 80%, color-mix(in srgb, #6366f1 6%, transparent) 0%, transparent 50%)
+                                    radial-gradient(ellipse at 60% 80%, color-mix(in srgb, var(--app-accent) 6%, transparent) 0%, transparent 50%)
                                 `,
                             }}
                         />
@@ -139,7 +139,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                     ) : (
                         <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black text-white shadow-xl"
                             style={{
-                                background: `linear-gradient(135deg, ${brandColor}, color-mix(in srgb, ${brandColor} 60%, #6366f1))`,
+                                background: `linear-gradient(135deg, ${brandColor}, color-mix(in srgb, ${brandColor} 60%, var(--app-accent)))`,
                                 boxShadow: `0 8px 32px color-mix(in srgb, ${brandColor} 25%, transparent)`,
                             }}
                         >
@@ -214,7 +214,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                             <img src={tenantLogo} className="w-14 h-14 mx-auto rounded-xl object-contain bg-white p-1.5" alt={displayTitle} />
                         ) : (
                             <div className="w-14 h-14 mx-auto rounded-xl flex items-center justify-center text-xl font-black text-white"
-                                style={{ background: `linear-gradient(135deg, ${brandColor}, color-mix(in srgb, ${brandColor} 60%, #6366f1))` }}
+                                style={{ background: `linear-gradient(135deg, ${brandColor}, color-mix(in srgb, ${brandColor} 60%, var(--app-accent)))` }}
                             >
                                 {displayTitle.charAt(0)}
                             </div>

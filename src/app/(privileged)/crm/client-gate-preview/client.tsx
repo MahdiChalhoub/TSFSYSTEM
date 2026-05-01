@@ -128,7 +128,7 @@ export default function ClientGatePreviewClient() {
             </div>
 
             {/* Preview Frame */}
-            <div className="bg-[#020617] rounded-2xl border border-gray-800 overflow-hidden shadow-2xl">
+            <div className="bg-app-bg rounded-2xl border border-gray-800 overflow-hidden shadow-2xl">
                 {/* Storefront Header */}
                 <div className="p-8 pb-4">
                     <div className="max-w-6xl mx-auto">

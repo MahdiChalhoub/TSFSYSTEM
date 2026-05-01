@@ -45,7 +45,7 @@ const TAX_TYPES = [
     { value: 'REDUCED', label: 'Reduced', color: 'var(--app-info, #3b82f6)' },
     { value: 'ZERO', label: 'Zero Rate', color: 'var(--app-muted-foreground)' },
     { value: 'EXEMPT', label: 'Exempt', color: 'var(--app-warning, #f59e0b)' },
-    { value: 'REVERSE_CHARGE', label: 'Reverse Charge', color: '#8b5cf6' },
+    { value: 'REVERSE_CHARGE', label: 'Reverse Charge', color: 'var(--app-accent)' },
 ]
 
 function getTypeColor(taxType?: string) {
@@ -378,7 +378,7 @@ export default function TaxGroupsPage() {
         { label: 'Total Groups', value: stats.total, color: 'var(--app-primary)', icon: <Percent size={11} /> },
         { label: 'Average Rate', value: `${stats.avg.toFixed(1)}%`, color: 'var(--app-info, #3b82f6)', icon: <Hash size={11} /> },
         { label: 'Default', value: stats.def, color: 'var(--app-warning, #f59e0b)', icon: <Star size={11} /> },
-        { label: 'Tax Types', value: stats.types, color: '#8b5cf6', icon: <Shield size={11} /> },
+        { label: 'Tax Types', value: stats.types, color: 'var(--app-accent)', icon: <Shield size={11} /> },
         { label: 'Showing', value: stats.filtered, color: 'var(--app-success, #22c55e)', icon: <Layers size={11} /> },
     ]
 

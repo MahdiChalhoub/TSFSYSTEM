@@ -9,11 +9,11 @@ interface Props { initialQuotes: QuoteRequest[] }
 const STATUS_OPTS: QuoteStatus[] = ['PENDING', 'QUOTED', 'ACCEPTED', 'REJECTED', 'CANCELLED']
 
 const STATUS_STYLE: Record<QuoteStatus, { bg: string; text: string; icon: React.ElementType }> = {
-    PENDING: { bg: '#f59e0b15', text: '#f59e0b', icon: Clock },
-    QUOTED: { bg: '#06b6d415', text: '#06b6d4', icon: MessageSquare },
-    ACCEPTED: { bg: '#10b98115', text: '#10b981', icon: CheckCircle },
+    PENDING: { bg: '#f59e0b15', text: 'var(--app-warning)', icon: Clock },
+    QUOTED: { bg: '#06b6d415', text: 'var(--app-accent-cyan)', icon: MessageSquare },
+    ACCEPTED: { bg: '#10b98115', text: 'var(--app-primary)', icon: CheckCircle },
     REJECTED: { bg: '#f4375115', text: '#f43751', icon: XCircle },
-    CANCELLED: { bg: '#64748b15', text: '#64748b', icon: XCircle },
+    CANCELLED: { bg: '#64748b15', text: 'var(--app-muted-foreground)', icon: XCircle },
 }
 
 export default function QuotesClient({ initialQuotes }: Props) {
@@ -54,7 +54,7 @@ export default function QuotesClient({ initialQuotes }: Props) {
             {/* Header */}
             <div className="app-page-header">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#06b6d4' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--app-accent-cyan)' }}>
                         <FileText size={18} color="#fff" />
                     </div>
                     <div>
@@ -67,9 +67,9 @@ export default function QuotesClient({ initialQuotes }: Props) {
             {/* KPI Strip */}
             <div className="grid grid-cols-3 gap-4 mb-6">
                 {[
-                    { label: 'Total Requests', value: quotes.length, icon: FileText, color: '#06b6d4' },
-                    { label: 'Needs Response', value: pending, icon: Clock, color: '#f59e0b' },
-                    { label: 'Accepted', value: accepted, icon: CheckCircle, color: '#10b981' },
+                    { label: 'Total Requests', value: quotes.length, icon: FileText, color: 'var(--app-accent-cyan)' },
+                    { label: 'Needs Response', value: pending, icon: Clock, color: 'var(--app-warning)' },
+                    { label: 'Accepted', value: accepted, icon: CheckCircle, color: 'var(--app-primary)' },
                 ].map(({ label, value, icon: Icon, color }) => (
                     <div key={label} className="app-card flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18` }}>
@@ -103,7 +103,7 @@ export default function QuotesClient({ initialQuotes }: Props) {
                 {visible.length === 0 ? (
                     <div className="py-16 flex flex-col items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#06b6d418' }}>
-                            <FileText size={22} style={{ color: '#06b6d4' }} />
+                            <FileText size={22} style={{ color: 'var(--app-accent-cyan)' }} />
                         </div>
                         <p className="font-semibold text-[var(--app-text)]">No quote requests</p>
                         <p className="text-xs text-[var(--app-text-muted)]">

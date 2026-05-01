@@ -60,7 +60,7 @@ function ResetPasswordContent() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
                 <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/5 text-center">
                         <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -81,7 +81,7 @@ function ResetPasswordContent() {
 
     if (!uid || !token) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
                 <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/5 text-center">
                         <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -101,7 +101,7 @@ function ResetPasswordContent() {
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
             <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/5">
                     <div className="mb-8 text-center">
@@ -163,7 +163,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-white" /></div>}>
+        <Suspense fallback={<div className="min-h-screen bg-app-bg flex items-center justify-center"><Loader2 className="animate-spin text-white" /></div>}>
             <ResetPasswordContent />
         </Suspense>
     );

@@ -152,7 +152,7 @@ export default function ProcurementRequestsPage() {
         { label: 'Approved',  value: counts.APPROVED,  color: 'var(--app-info, #3b82f6)',    icon: <CheckCircle2 size={14} />, filterKey: 'APPROVED' },
         { label: 'Executed',  value: counts.EXECUTED,  color: 'var(--app-success, #22c55e)', icon: <PlayCircle size={14} />,   filterKey: 'EXECUTED' },
         { label: 'Rejected',  value: counts.REJECTED,  color: 'var(--app-error, #ef4444)',   icon: <XCircle size={14} />,      filterKey: 'REJECTED' },
-        { label: 'Bumped',    value: counts.BUMPED,    color: '#8b5cf6',                     icon: <Bell size={14} />,         filterKey: 'BUMPED' },
+        { label: 'Bumped',    value: counts.BUMPED,    color: 'var(--app-accent)',                     icon: <Bell size={14} />,         filterKey: 'BUMPED' },
     ], [counts])
 
     const toggleSelect = (id: number | string) => {
@@ -227,7 +227,7 @@ export default function ProcurementRequestsPage() {
                         <div className="text-[10px] font-mono text-app-muted-foreground truncate">
                             {r.product_sku || '—'}
                             {r.bump_count > 0 && (
-                                <span className="ml-2" style={{ color: '#8b5cf6' }}>
+                                <span className="ml-2" style={{ color: 'var(--app-accent)' }}>
                                     🔔 ×{r.bump_count}
                                 </span>
                             )}
@@ -244,7 +244,7 @@ export default function ProcurementRequestsPage() {
                     <>
                         <button onClick={bulkBump} disabled={pending}
                             className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all disabled:opacity-50"
-                            style={{ borderColor: 'color-mix(in srgb, #8b5cf6 35%, transparent)', color: '#8b5cf6' }}>
+                            style={{ borderColor: 'color-mix(in srgb, var(--app-accent) 35%, transparent)', color: 'var(--app-accent)' }}>
                             <Bell size={11} /> Bump {selectedIds.size}
                         </button>
                         <button onClick={bulkCancel} disabled={pending}

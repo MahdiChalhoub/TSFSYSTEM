@@ -93,6 +93,7 @@ export default async function AdminLayout({
     // Per-call budget of 8s is generous enough for healthy backends, tight
     // enough that 5 parallel calls can't exceed the ~60s nginx default.
     const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T, label: string): Promise<T> => {
+        const start = performance.now();
         return new Promise<T>((resolve) => {
             let settled = false;
             const timer = setTimeout(() => {
@@ -105,18 +106,24 @@ export default async function AdminLayout({
                 if (settled) return;
                 settled = true;
                 clearTimeout(timer);
+                const dur = Math.round(performance.now() - start);
+                // Surface slow fetches in server logs so the bottleneck behind a
+                // high FCP is identifiable. Only log when slow to avoid noise.
+                if (dur > 500) console.warn(`[Layout] ${label} took ${dur}ms`);
                 resolve(v);
             }).catch((e) => {
                 if (settled) return;
                 settled = true;
                 clearTimeout(timer);
-                console.warn(`[Layout] ${label} failed:`, e?.message || e);
+                const dur = Math.round(performance.now() - start);
+                console.warn(`[Layout] ${label} failed after ${dur}ms:`, e?.message || e);
                 resolve(fallback);
             });
         });
     };
 
     const LAYOUT_FETCH_TIMEOUT_MS = 8000;
+    const layoutFetchStart = performance.now();
     const [sitesRes, orgsRes, finRes, modulesRes, dynamicRes] = await Promise.all([
         withTimeout(getSites(), LAYOUT_FETCH_TIMEOUT_MS, [] as any[], 'getSites'),
         withTimeout(getOrganizations(), LAYOUT_FETCH_TIMEOUT_MS, [] as any[], 'getOrganizations'),
@@ -124,6 +131,10 @@ export default async function AdminLayout({
         withTimeout(getSaaSModules(), LAYOUT_FETCH_TIMEOUT_MS, [] as any[], 'getSaaSModules'),
         withTimeout(getDynamicSidebar(), LAYOUT_FETCH_TIMEOUT_MS, [] as any[], 'getDynamicSidebar'),
     ]);
+    const layoutFetchDur = Math.round(performance.now() - layoutFetchStart);
+    if (layoutFetchDur > 1000) {
+        console.warn(`[Layout] all 5 parallel fetches finished in ${layoutFetchDur}ms — bottleneck = the slowest one above`);
+    }
 
     const sites: any[] = sitesRes || [];
     const organizations: any[] = orgsRes || [];

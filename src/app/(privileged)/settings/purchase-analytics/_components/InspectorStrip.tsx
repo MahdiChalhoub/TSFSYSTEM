@@ -33,7 +33,7 @@ export function InspectorStrip({ configScore, scoreBreakdown, isProfileMode }: P
         return { ...r, avgDaily: avgDaily.toFixed(1), proposed }
     })
 
-    const scoreColor = configScore >= 80 ? 'var(--app-success, #22c55e)' : configScore >= 50 ? '#f59e0b' : 'var(--app-error, #ef4444)'
+    const scoreColor = configScore >= 80 ? 'var(--app-success, #22c55e)' : configScore >= 50 ? 'var(--app-warning)' : 'var(--app-error, #ef4444)'
 
     return (
         <div className="mt-5 mb-2">

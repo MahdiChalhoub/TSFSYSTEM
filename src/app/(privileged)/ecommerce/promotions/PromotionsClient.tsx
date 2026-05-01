@@ -8,10 +8,10 @@ import { Zap, Plus, Trash2, ToggleLeft, ToggleRight, Star, Layers } from 'lucide
 interface Props { initialPromotions: CartPromotion[] }
 
 const RULE_COLORS: Record<RuleType, string> = {
-    SPEND_THRESHOLD: '#10b981',
-    BOGO: '#f59e0b',
-    BUNDLE: '#06b6d4',
-    MIN_QUANTITY: '#8b5cf6',
+    SPEND_THRESHOLD: 'var(--app-primary)',
+    BOGO: 'var(--app-warning)',
+    BUNDLE: 'var(--app-accent-cyan)',
+    MIN_QUANTITY: 'var(--app-accent)',
 }
 
 const defaultForm: PromotionPayload = {
@@ -76,7 +76,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
             <div className="app-page-header">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ background: '#f59e0b', opacity: 0.9 }}>
+                        style={{ background: 'var(--app-warning)', opacity: 0.9 }}>
                         <Zap size={18} color="#fff" />
                     </div>
                     <div>
@@ -92,9 +92,9 @@ export default function PromotionsClient({ initialPromotions }: Props) {
             {/* KPI Strip */}
             <div className="grid grid-cols-3 gap-4 mb-6">
                 {[
-                    { label: 'Total Rules', value: promos.length, icon: Layers, color: '#8b5cf6' },
-                    { label: 'Active', value: active, icon: ToggleRight, color: '#10b981' },
-                    { label: 'Paused', value: promos.length - active, icon: ToggleLeft, color: '#64748b' },
+                    { label: 'Total Rules', value: promos.length, icon: Layers, color: 'var(--app-accent)' },
+                    { label: 'Active', value: active, icon: ToggleRight, color: 'var(--app-primary)' },
+                    { label: 'Paused', value: promos.length - active, icon: ToggleLeft, color: 'var(--app-muted-foreground)' },
                 ].map(({ label, value, icon: Icon, color }) => (
                     <div key={label} className="app-card flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -119,7 +119,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                 {promos.length === 0 ? (
                     <div className="py-16 flex flex-col items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#f59e0b18' }}>
-                            <Zap size={22} style={{ color: '#f59e0b' }} />
+                            <Zap size={22} style={{ color: 'var(--app-warning)' }} />
                         </div>
                         <p className="font-semibold text-[var(--app-text)]">No promotions yet</p>
                         <p className="text-xs text-[var(--app-text-muted)]">Create automatic cart discount rules</p>
@@ -175,7 +175,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="app-card w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#f59e0b' }}>
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--app-warning)' }}>
                                 <Zap size={16} color="#fff" />
                             </div>
                             <div>

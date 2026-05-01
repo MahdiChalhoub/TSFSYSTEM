@@ -29,9 +29,9 @@ const regionColor = (r?: string | null) => `var(${regionVar(r)})`
 
 /* ─── Parfum dot colours (from the original) ─── */
 const PARFUM_COLORS: Record<string, string> = {
-    Rose: '#ff6b9d', Citron: '#fbbf24', Menthe: '#10b981',
-    Lavande: '#a78bfa', Original: '#3b82f6', Jasmin: '#f97316',
-    Vanille: '#fde047', Ocean: '#06b6d4',
+    Rose: '#ff6b9d', Citron: '#fbbf24', Menthe: 'var(--app-primary)',
+    Lavande: '#a78bfa', Original: 'var(--app-info)', Jasmin: 'var(--app-warning)',
+    Vanille: '#fde047', Ocean: 'var(--app-accent-cyan)',
 }
 const parfumColor = (name?: string) => (name && PARFUM_COLORS[name]) || '#6b7280'
 

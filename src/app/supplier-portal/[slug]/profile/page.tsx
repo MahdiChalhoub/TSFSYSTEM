@@ -116,7 +116,7 @@ export default function SupplierProfilePage() {
 
     if (!session) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
                     <h1 className="text-2xl font-bold text-white">Session expired</h1>
                     <Link href={`/supplier-portal/${slug}`} className="text-app-accent font-bold">Go to Login</Link>
@@ -126,7 +126,7 @@ export default function SupplierProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+        <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative">
             <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-accent/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-3xl mx-auto relative z-10 space-y-8">

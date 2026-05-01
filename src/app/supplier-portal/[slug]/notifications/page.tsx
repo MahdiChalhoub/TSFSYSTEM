@@ -104,7 +104,7 @@ export default function SupplierNotificationsPage() {
     const unreadCount = notifications.filter(n => !n.is_read).length
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+        <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative">
             <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-accent/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-3xl mx-auto relative z-10 space-y-8">

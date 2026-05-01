@@ -14,7 +14,7 @@ import {
 const BUCKET_STYLE: Record<string, { bg: string; color: string; label: string }> = {
     current:  { bg: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)',    color: 'var(--app-info, #3b82f6)',    label: '1-14 days' },
     '30_days':{ bg: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)', label: '15-44 days' },
-    '60_days':{ bg: 'color-mix(in srgb, #f97316 12%, transparent)',                     color: '#f97316',                     label: '45-89 days' },
+    '60_days':{ bg: 'color-mix(in srgb, var(--app-warning) 12%, transparent)',                     color: 'var(--app-warning)',                     label: '45-89 days' },
     '90_plus':{ bg: 'color-mix(in srgb, var(--app-error, #ef4444) 12%, transparent)',   color: 'var(--app-error, #ef4444)',   label: '90+ days' },
 }
 

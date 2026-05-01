@@ -200,7 +200,7 @@ function PolicyCard({ policy, expanded, onToggle, onEdit, onDelete }: {
                     flexShrink: 0,
                 }}>
                     {policy.organization
-                        ? <Building2 size={14} style={{ color: '#3b82f6' }} />
+                        ? <Building2 size={14} style={{ color: 'var(--app-info)' }} />
                         : <Globe size={14} style={{ color: '#eab308' }} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -211,7 +211,7 @@ function PolicyCard({ policy, expanded, onToggle, onEdit, onDelete }: {
                         <span style={{
                             fontSize: '0.65rem', padding: '0.1rem 0.5rem', borderRadius: '1rem', fontWeight: 700,
                             background: policy.organization ? 'rgba(59,130,246,0.1)' : 'rgba(234,179,8,0.1)',
-                            color: policy.organization ? '#3b82f6' : '#eab308',
+                            color: policy.organization ? 'var(--app-info)' : '#eab308',
                         }}>
                             {policy.organization_name || 'ALL ORGS'}
                         </span>
@@ -221,15 +221,15 @@ function PolicyCard({ policy, expanded, onToggle, onEdit, onDelete }: {
                     )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
-                    {hc > 0 && <StatBadge icon={<EyeOff size={11} />} label={`${hc} hidden`} color="#ef4444" />}
-                    {fc > 0 && <StatBadge icon={<Lock size={11} />} label={`${fc} forced`} color="#22c55e" />}
-                    {hf > 0 && <StatBadge icon={<Filter size={11} />} label={`${hf} filters`} color="#f59e0b" />}
+                    {hc > 0 && <StatBadge icon={<EyeOff size={11} />} label={`${hc} hidden`} color="var(--app-error)" />}
+                    {fc > 0 && <StatBadge icon={<Lock size={11} />} label={`${fc} forced`} color="var(--app-success)" />}
+                    {hf > 0 && <StatBadge icon={<Filter size={11} />} label={`${hf} filters`} color="var(--app-warning)" />}
                 </div>
                 <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
                     <button onClick={e => { e.stopPropagation(); onEdit() }}
                         title="Edit" style={iconBtnStyle}><Pencil size={14} /></button>
                     <button onClick={e => { e.stopPropagation(); onDelete() }}
-                        title="Delete" style={{ ...iconBtnStyle, color: '#ef4444' }}><Trash2 size={14} /></button>
+                        title="Delete" style={{ ...iconBtnStyle, color: 'var(--app-error)' }}><Trash2 size={14} /></button>
                 </div>
                 {expanded
                     ? <ChevronUp size={16} style={{ color: 'var(--app-text-muted)' }} />
@@ -241,9 +241,9 @@ function PolicyCard({ policy, expanded, onToggle, onEdit, onDelete }: {
                     background: 'var(--app-surface-2, rgba(0,0,0,0.02))',
                 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '0.75rem' }}>
-                        <TagGroup title="Hidden Columns" items={policy.config.hidden_columns} color="#ef4444" />
-                        <TagGroup title="Forced Columns" items={policy.config.forced_columns} color="#22c55e" />
-                        <TagGroup title="Hidden Filters" items={policy.config.hidden_filters} color="#f59e0b" />
+                        <TagGroup title="Hidden Columns" items={policy.config.hidden_columns} color="var(--app-error)" />
+                        <TagGroup title="Forced Columns" items={policy.config.forced_columns} color="var(--app-success)" />
+                        <TagGroup title="Hidden Filters" items={policy.config.hidden_filters} color="var(--app-warning)" />
                     </div>
                 </div>
             )}

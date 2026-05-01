@@ -45,7 +45,7 @@ export default async function StorefrontHome() {
 
             {/* Promo banner (if active promotions) */}
             {promotions.length > 0 && (
-                <div style={{ background: '#1e293b', color: '#fff', padding: '0.75rem 0' }}>
+                <div style={{ background: 'var(--app-surface-2)', color: '#fff', padding: '0.75rem 0' }}>
                     <div className="store-container" style={{ textAlign: 'center', fontSize: '0.875rem' }}>
                         🎉 {promotions[0].name}: {promotions[0].description ?? 'Special deal active!'}
                         {promotions.length > 1 && ` · +${promotions.length - 1} more promotions`}
@@ -64,7 +64,7 @@ export default async function StorefrontHome() {
                     </div>
                     <div className="store-product-grid">
                         {products.length === 0 && (
-                            <p style={{ color: '#94a3b8', gridColumn: '1/-1', textAlign: 'center', padding: '3rem 0' }}>
+                            <p style={{ color: 'var(--app-faint)', gridColumn: '1/-1', textAlign: 'center', padding: '3rem 0' }}>
                                 No products available yet.
                             </p>
                         )}

@@ -24,7 +24,7 @@ const TYPE_COLORS: Record<string, { bg: string; fg: string }> = {
   FULL: { bg: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', fg: 'var(--app-error, #ef4444)' },
   PARTIAL: { bg: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', fg: 'var(--app-warning, #f59e0b)' },
   CORRECTION: { bg: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', fg: 'var(--app-info, #3b82f6)' },
-  DISCOUNT: { bg: 'color-mix(in srgb, #8b5cf6 10%, transparent)', fg: '#8b5cf6' },
+  DISCOUNT: { bg: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', fg: 'var(--app-accent)' },
 }
 
 const inputCls = 'w-full text-[12px] font-bold bg-app-surface/60 border border-app-border/50 rounded-xl px-3 py-2 text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-primary/40 focus:ring-2 focus:ring-app-primary/10 outline-none transition-all'

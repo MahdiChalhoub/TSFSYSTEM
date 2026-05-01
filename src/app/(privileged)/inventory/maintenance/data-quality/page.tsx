@@ -278,7 +278,7 @@ export default function DataQualityPage() {
                             onClick={() => setIssueFilter(issueFilter === 'missing_brand' ? 'all' : 'missing_brand')}
                             healthyColor="var(--app-success)" />
                         <KpiTile label="Zero TVA" value={quality.zero_tva}
-                            icon={<Percent size={12} />} color="#8b5cf6"
+                            icon={<Percent size={12} />} color="var(--app-accent)"
                             filterKey="zero_tva" active={issueFilter === 'zero_tva'}
                             onClick={() => setIssueFilter(issueFilter === 'zero_tva' ? 'all' : 'zero_tva')}
                             healthyColor="var(--app-success)" />

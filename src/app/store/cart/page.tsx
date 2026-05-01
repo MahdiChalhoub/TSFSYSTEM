@@ -53,7 +53,7 @@ export default function CartPage() {
 
     if (loading) return (
         <div className="store-section store-container" style={{ textAlign: 'center', paddingTop: '4rem' }}>
-            <p style={{ color: '#94a3b8' }}>Loading cart…</p>
+            <p style={{ color: 'var(--app-faint)' }}>Loading cart…</p>
         </div>
     )
 
@@ -61,8 +61,8 @@ export default function CartPage() {
         <div className="store-section">
             <div className="store-container" style={{ textAlign: 'center', paddingTop: '3rem' }}>
                 <ShoppingCart size={64} style={{ color: '#cbd5e1', margin: '0 auto 1rem' }} />
-                <h2 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>Your cart is empty</h2>
-                <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Browse our catalog to find something you like.</p>
+                <h2 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '0.5rem' }}>Your cart is empty</h2>
+                <p style={{ color: 'var(--app-faint)', marginBottom: '1.5rem' }}>Browse our catalog to find something you like.</p>
                 <Link href="/store/catalog" className="store-btn store-btn-primary">Continue Shopping</Link>
             </div>
         </div>
@@ -82,15 +82,15 @@ export default function CartPage() {
                                 padding: '1rem 1.25rem', borderBottom: '1px solid #f1f5f9',
                             }}>
                                 {/* Image */}
-                                <div style={{ width: 56, height: 56, borderRadius: '0.5rem', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                                <div style={{ width: 56, height: 56, borderRadius: '0.5rem', background: 'var(--app-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                                     {line.product_image
                                         ? <img src={line.product_image} alt={line.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         : <ShoppingCart size={20} style={{ color: '#cbd5e1' }} />}
                                 </div>
                                 {/* Name + price */}
                                 <div>
-                                    <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.9375rem' }}>{line.product_name}</p>
-                                    <p style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>{fmt(line.unit_price)} each</p>
+                                    <p style={{ fontWeight: 600, color: 'var(--app-surface-2)', fontSize: '0.9375rem' }}>{line.product_name}</p>
+                                    <p style={{ color: 'var(--app-faint)', fontSize: '0.8125rem' }}>{fmt(line.unit_price)} each</p>
                                 </div>
                                 {/* Qty + remove */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -101,7 +101,7 @@ export default function CartPage() {
                                     </div>
                                     <p style={{ fontWeight: 700, color: 'var(--store-accent, #10b981)', minWidth: '4rem', textAlign: 'right' }}>{fmt(line.line_total)}</p>
                                     <button onClick={() => handleRemove(line.id)} disabled={isPending}
-                                        className="store-btn store-btn-ghost" style={{ padding: '0.375rem', color: '#ef4444', borderRadius: '0.375rem' }}
+                                        className="store-btn store-btn-ghost" style={{ padding: '0.375rem', color: 'var(--app-error)', borderRadius: '0.375rem' }}
                                         id={`remove-line-${line.id}`}>
                                         <Trash2 size={14} />
                                     </button>
@@ -113,10 +113,10 @@ export default function CartPage() {
                     {/* Order summary */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <div className="store-card">
-                            <h3 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Order Summary</h3>
+                            <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '1rem' }}>Order Summary</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9375rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span style={{ color: '#64748b' }}>Subtotal</span>
+                                    <span style={{ color: 'var(--app-muted-foreground)' }}>Subtotal</span>
                                     <span style={{ fontWeight: 600 }}>{fmt(cart.subtotal)}</span>
                                 </div>
                                 {parseFloat(cart.discount_amount) > 0 && (
@@ -134,7 +134,7 @@ export default function CartPage() {
 
                         {/* Coupon */}
                         <div className="store-card">
-                            <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.625rem', fontSize: '0.875rem' }}>
+                            <p style={{ fontWeight: 600, color: 'var(--app-surface-2)', marginBottom: '0.625rem', fontSize: '0.875rem' }}>
                                 <Tag size={14} style={{ display: 'inline', marginRight: '0.375rem' }} />Coupon Code
                             </p>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>

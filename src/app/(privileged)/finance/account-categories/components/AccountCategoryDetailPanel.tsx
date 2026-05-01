@@ -50,7 +50,7 @@ export function AccountCategoryDetailPanel({
                 {/* Icon tile */}
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
-                        background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 75%, #8b5cf6))`,
+                        background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 75%, var(--app-accent)))`,
                         color: 'white',
                         boxShadow: `0 3px 10px color-mix(in srgb, ${color} 30%, transparent)`,
                     }}>
@@ -249,12 +249,12 @@ function OverviewContent({
             {/* Digital Integration */}
             {node.is_digital && (
                 <div className="space-y-2">
-                    <SectionLabel icon={<Zap size={11} />} label="Digital Integration" color="#8b5cf6" />
+                    <SectionLabel icon={<Zap size={11} />} label="Digital Integration" color="var(--app-accent)" />
                     {gatewayInfo ? (
                         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
                             style={{
-                                background: `color-mix(in srgb, ${gatewayInfo.gateway_color || '#8b5cf6'} 6%, var(--app-surface))`,
-                                border: `1px solid color-mix(in srgb, ${gatewayInfo.gateway_color || '#8b5cf6'} 20%, transparent)`,
+                                background: `color-mix(in srgb, ${gatewayInfo.gateway_color || 'var(--app-accent)'} 6%, var(--app-surface))`,
+                                border: `1px solid color-mix(in srgb, ${gatewayInfo.gateway_color || 'var(--app-accent)'} 20%, transparent)`,
                             }}>
                             <span className="text-base shrink-0">{gatewayInfo.gateway_emoji || '💳'}</span>
                             <div className="min-w-0">
@@ -265,9 +265,9 @@ function OverviewContent({
                     ) : (
                         <div className="px-3 py-2 rounded-xl text-[10px] font-bold"
                             style={{
-                                background: 'color-mix(in srgb, #8b5cf6 6%, var(--app-surface))',
-                                color: '#8b5cf6',
-                                border: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)',
+                                background: 'color-mix(in srgb, var(--app-accent) 6%, var(--app-surface))',
+                                color: 'var(--app-accent)',
+                                border: '1px solid color-mix(in srgb, var(--app-accent) 15%, transparent)',
                             }}>
                             Digital account — no specific gateway selected
                         </div>

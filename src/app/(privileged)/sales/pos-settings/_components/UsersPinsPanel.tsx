@@ -46,7 +46,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                         <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-text-muted hover:text-app-text transition-all shrink-0" title="Return">
                             <ArrowLeft size={14} />
                         </button>
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, #3b82f6 12%, transparent)', color: '#3b82f6' }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>
                             <Key size={14} />
                         </div>
                         <div>
@@ -60,14 +60,14 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                 {/* Stats strip */}
                 <div className="flex gap-2 px-5 py-2.5 border-b border-app-border/30">
                     <div className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
-                        style={{ background: 'color-mix(in srgb, #10b981 5%, transparent)', border: '1px solid color-mix(in srgb, #10b981 15%, transparent)' }}>
-                        <Lock size={10} style={{ color: '#10b981' }} />
-                        <span className="text-[10px] font-black" style={{ color: '#10b981' }}>{withPin} PIN Set</span>
+                        style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
+                        <Lock size={10} style={{ color: 'var(--app-primary)' }} />
+                        <span className="text-[10px] font-black" style={{ color: 'var(--app-primary)' }}>{withPin} PIN Set</span>
                     </div>
                     <div className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
-                        style={{ background: 'color-mix(in srgb, #ef4444 5%, transparent)', border: '1px solid color-mix(in srgb, #ef4444 15%, transparent)' }}>
-                        <Key size={10} style={{ color: '#ef4444' }} />
-                        <span className="text-[10px] font-black" style={{ color: '#ef4444' }}>{withoutPin} No PIN</span>
+                        style={{ background: 'color-mix(in srgb, var(--app-error) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error) 15%, transparent)' }}>
+                        <Key size={10} style={{ color: 'var(--app-error)' }} />
+                        <span className="text-[10px] font-black" style={{ color: 'var(--app-error)' }}>{withoutPin} No PIN</span>
                     </div>
                 </div>
 
@@ -103,8 +103,8 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                                         style={{
                                             background: isSelf
                                                 ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
-                                                : 'color-mix(in srgb, #3b82f6 10%, transparent)',
-                                            color: isSelf ? 'var(--app-primary)' : '#3b82f6',
+                                                : 'color-mix(in srgb, var(--app-info) 10%, transparent)',
+                                            color: isSelf ? 'var(--app-primary)' : 'var(--app-info)',
                                         }}>
                                         {(u.first_name?.[0] || u.username?.[0] || '?').toUpperCase()}
                                     </div>
@@ -125,7 +125,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
 
                                     {/* PIN status */}
                                     <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-black ${u.pos_pin ? 'text-emerald-400' : 'text-red-400'}`}
-                                        style={{ background: u.pos_pin ? 'color-mix(in srgb, #10b981 10%, transparent)' : 'color-mix(in srgb, #ef4444 10%, transparent)' }}>
+                                        style={{ background: u.pos_pin ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)' }}>
                                         {u.pos_pin ? '● PIN SET' : '○ NO PIN'}
                                     </span>
 
@@ -146,7 +146,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                                             <button
                                                 onClick={() => setPinModal({ userId: u.id, userName: name, mode: 'admin' })}
                                                 className="flex items-center gap-1 text-[9px] font-bold px-2 py-1.5 rounded-lg transition-all"
-                                                style={{ background: 'color-mix(in srgb, #f59e0b 10%, transparent)', color: '#f59e0b' }}
+                                                style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}
                                                 title={`Reset ${name}'s PIN`}>
                                                 <Shield size={10} /> Reset
                                             </button>

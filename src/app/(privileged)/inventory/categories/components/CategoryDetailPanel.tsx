@@ -50,7 +50,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
                 {/* Icon — soft tile, gradient tint, subtle shadow */}
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
-                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 75%, #8b5cf6))',
+                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 75%, var(--app-accent)))',
                         color: 'white',
                         boxShadow: '0 3px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)',
                     }}>

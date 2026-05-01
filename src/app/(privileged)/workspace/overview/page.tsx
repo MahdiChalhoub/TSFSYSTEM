@@ -419,7 +419,7 @@ export default function RichOverviewPage() {
                                  style={{
                                      background: `linear-gradient(135deg,
                                          color-mix(in srgb, var(--app-primary) 14%, var(--app-surface)),
-                                         color-mix(in srgb, #8b5cf6 10%, var(--app-surface)) 60%,
+                                         color-mix(in srgb, var(--app-accent) 10%, var(--app-surface)) 60%,
                                          var(--app-surface))`,
                                      border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
                                  }}>
@@ -585,7 +585,7 @@ export default function RichOverviewPage() {
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
                                     {companyStats.overdue > 0 && <MiniKPI label="Overdue" value={companyStats.overdue} color="var(--app-error, #ef4444)" />}
                                     {companyStats.urgent > 0 && <MiniKPI label="Urgent" value={companyStats.urgent} color="var(--app-warning, #f59e0b)" />}
-                                    {companyStats.unassigned > 0 && <MiniKPI label="Unassigned" value={companyStats.unassigned} color="#8b5cf6" />}
+                                    {companyStats.unassigned > 0 && <MiniKPI label="Unassigned" value={companyStats.unassigned} color="var(--app-accent)" />}
                                 </div>
                             )}
 
@@ -624,7 +624,7 @@ export default function RichOverviewPage() {
                                                         <div className="h-1.5 rounded-full overflow-hidden ml-7"
                                                              style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                                                             <div className="h-full rounded-full"
-                                                                 style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #8b5cf6))' }} />
+                                                                 style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))' }} />
                                                         </div>
                                                     </div>
                                                 )
@@ -657,7 +657,7 @@ export default function RichOverviewPage() {
                                                         <div className="h-1.5 rounded-full overflow-hidden"
                                                              style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                                                             <div className="h-full rounded-full"
-                                                                 style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #8b5cf6))' }} />
+                                                                 style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))' }} />
                                                         </div>
                                                     </div>
                                                 )
@@ -744,7 +744,7 @@ function StatWithSpark({ label, value, color, Icon, series, sub, trend }: {
                 {trend && (
                     <span className="ml-auto flex items-center gap-0.5 text-tp-xxs font-bold px-1.5 py-0.5 rounded"
                           style={{
-                              background: `color-mix(in srgb, ${trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)'} 15%, transparent)`,
+                              background: `color-mix(in srgb, ${trend.diff > 0 ? 'var(--app-success)' : trend.diff < 0 ? 'var(--app-error)' : 'var(--app-muted-foreground)'} 15%, transparent)`,
                               color: trend.diff > 0 ? 'var(--app-success, #22c55e)' : trend.diff < 0 ? 'var(--app-error, #ef4444)' : 'var(--app-muted-foreground)',
                           }}>
                         {trend.diff > 0 ? <TrendingUp size={10} /> : trend.diff < 0 ? <TrendingDown size={10} /> : <Minus size={10} />}
@@ -885,7 +885,7 @@ function Heatmap30({ days }: { days: { iso: string; dow: number; count: number }
                 const intensity = d.count === 0 ? 0 : d.count / max
                 const bg = intensity === 0
                     ? 'color-mix(in srgb, var(--app-border) 60%, transparent)'
-                    : `color-mix(in srgb, var(--app-success, #22c55e) ${Math.round(20 + intensity * 70)}%, transparent)`
+                    : `color-mix(in srgb, var(--app-success) ${Math.round(20 + intensity * 70)}%, transparent)`
                 return (
                     <div key={d.iso}
                          title={`${d.iso}: ${d.count} completion${d.count === 1 ? '' : 's'}`}

@@ -67,7 +67,7 @@ export default function PriceGroupsListPage() {
       <div className="flex-shrink-0 space-y-4 pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="page-header-icon" style={{ background: '#6366f1', boxShadow: '0 4px 14px color-mix(in srgb, #6366f1 30%, transparent)' }}>
+            <div className="page-header-icon" style={{ background: 'var(--app-accent)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-accent) 30%, transparent)' }}>
               <Tag size={20} className="text-white" />
             </div>
             <div>
@@ -108,7 +108,7 @@ export default function PriceGroupsListPage() {
         moduleKey="crm.price_groups"
         renderRowIcon={() => (
           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'color-mix(in srgb, #6366f1 12%, transparent)', color: '#6366f1' }}>
+            style={{ background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)', color: 'var(--app-accent)' }}>
             <Tag size={13} />
           </div>
         )}

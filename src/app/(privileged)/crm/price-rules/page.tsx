@@ -69,7 +69,7 @@ export default function PriceRulesListPage() {
       <div className="flex-shrink-0 space-y-4 pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="page-header-icon" style={{ background: '#f59e0b', boxShadow: '0 4px 14px color-mix(in srgb, #f59e0b 30%, transparent)' }}>
+            <div className="page-header-icon" style={{ background: 'var(--app-warning)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-warning) 30%, transparent)' }}>
               <Percent size={20} className="text-white" />
             </div>
             <div>
@@ -110,7 +110,7 @@ export default function PriceRulesListPage() {
         moduleKey="crm.price_rules"
         renderRowIcon={() => (
           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'color-mix(in srgb, #f59e0b 12%, transparent)', color: '#f59e0b' }}>
+            style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>
             <Percent size={13} />
           </div>
         )}
@@ -127,7 +127,7 @@ export default function PriceRulesListPage() {
             case 'value': return <span className="text-[12px] font-mono font-bold tabular-nums text-app-foreground">{r.value ?? r.discount_value ?? '—'}</span>
             case 'active': return (
               <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${r.is_active !== false ? 'text-app-success' : 'text-app-muted-foreground'}`}
-                style={{ background: r.is_active !== false ? 'color-mix(in srgb, #22c55e 10%, transparent)' : 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)' }}>
+                style={{ background: r.is_active !== false ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)' }}>
                 {r.is_active !== false ? 'Active' : 'Inactive'}
               </span>
             )

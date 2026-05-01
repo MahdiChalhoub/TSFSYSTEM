@@ -16,7 +16,7 @@ const STEPS = [
   { key: 'identity', label: 'Identity', icon: <Globe size={14} />, color: 'var(--app-success, #22c55e)' },
   { key: 'taxes', label: 'Tax Catalog', icon: <Tag size={14} />, color: 'var(--app-warning, #f59e0b)' },
   { key: 'presets', label: 'Company Tax Policies', icon: <Shield size={14} />, color: 'var(--app-info, #3b82f6)' },
-  { key: 'profiles', label: 'Customer & Supplier Profiles', icon: <Sparkles size={14} />, color: '#8b5cf6' },
+  { key: 'profiles', label: 'Customer & Supplier Profiles', icon: <Sparkles size={14} />, color: 'var(--app-accent)' },
 ]
 
 const inputCls = "w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/10 focus:border-app-border transition-all"
@@ -265,7 +265,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                 </div>
               </div>
             </SectionCard>
-            <SectionCard title="E-Invoicing" icon={<Zap size={12} />} color="#8b5cf6">
+            <SectionCard title="E-Invoicing" icon={<Zap size={12} />} color="var(--app-accent)">
               <p className="text-[10px] text-app-muted-foreground mb-2">Country default e-invoicing standard. Tenants inherit this and just add their API credentials + branding.</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
                 <div>
@@ -290,7 +290,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                 return (
                   <div className="mt-2 pt-2 space-y-2" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                     <div className="flex items-center gap-2">
-                      <Zap size={12} style={{ color: '#8b5cf6' }} />
+                      <Zap size={12} style={{ color: 'var(--app-accent)' }} />
                       <span className="text-[10px] font-bold text-app-foreground">
                         Tenants will see <strong>{sel.name}</strong>. They fill in their credentials and activate.
                       </span>
@@ -842,7 +842,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                   <div key={i} className="group rounded-xl cursor-pointer transition-all hover:shadow-md" onClick={() => setEditingProfile(i)}
                     style={{ background: 'var(--app-background)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
                     <div className="px-3 py-2.5 flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}><Sparkles size={16} /></div>
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}><Sparkles size={16} /></div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-bold text-app-foreground truncate">{p.name || `Profile ${i + 1}`}</div>
                         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
@@ -880,7 +880,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
               <button onClick={() => setEditingProfile(null)} className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1 rounded-lg hover:bg-app-surface transition-all mb-2">
                 <ArrowLeft size={12} /> Back to list
               </button>
-              <SectionCard title="Profile Identity" icon={<Sparkles size={12} />} color="#8b5cf6">
+              <SectionCard title="Profile Identity" icon={<Sparkles size={12} />} color="var(--app-accent)">
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px' }}>
                   <div><label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Profile Name</label>
                     <input className={inputCls} value={p.name} placeholder="e.g. VAT Registered Supplier" onChange={e => updCP('name', e.target.value)} /></div>

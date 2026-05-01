@@ -196,8 +196,8 @@ export default function EInvoiceStandardsPage() {
             <button onClick={() => setEditing(null)} className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
               <ArrowLeft size={12} /> Back
             </button>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, #8b5cf6 12%, transparent)' }}>
-              <Zap size={14} style={{ color: '#8b5cf6' }} />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)' }}>
+              <Zap size={14} style={{ color: 'var(--app-accent)' }} />
             </div>
             <div>
               <div className="text-[14px] font-black text-app-foreground">{editing.id ? editing.name : 'New Standard'}</div>
@@ -215,7 +215,7 @@ export default function EInvoiceStandardsPage() {
           style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
           
           {/* Identity */}
-          <SectionCard title="Identity" icon={<Globe size={12} />} color="#8b5cf6">
+          <SectionCard title="Identity" icon={<Globe size={12} />} color="var(--app-accent)">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px' }}>
               <div>
                 <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Code</label>
@@ -299,7 +299,7 @@ export default function EInvoiceStandardsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', boxShadow: '0 4px 12px color-mix(in srgb, #8b5cf6 30%, transparent)' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--app-accent) 0%, #6d28d9 100%)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-accent) 30%, transparent)' }}>
             <Zap size={16} className="text-white" />
           </div>
           <div>
@@ -338,13 +338,13 @@ export default function EInvoiceStandardsPage() {
                 <div className="px-3.5 py-3">
                   <div className="flex items-center gap-2.5 mb-2">
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                      style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}>
                       <Zap size={16} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-black text-app-foreground truncate">{s.name}</div>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[9px] font-black px-1.5 py-px rounded-md" style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>{s.code}</span>
+                        <span className="text-[9px] font-black px-1.5 py-px rounded-md" style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}>{s.code}</span>
                         <span className="text-[9px] font-bold text-app-muted-foreground">{FORMAT_LABELS[s.invoice_format] || s.invoice_format}</span>
                       </div>
                     </div>

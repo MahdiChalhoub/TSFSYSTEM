@@ -148,8 +148,8 @@ export default function AttributesClientPage() {
         { label: 'Attribute Groups', value: tree.length, icon: <Layers size={14} />, color: 'var(--app-primary)' },
         { label: 'Total Values', value: totalValues, icon: <Tags size={14} />, color: 'var(--app-info, #3b82f6)' },
         { label: 'Variant Attrs', value: variantGroups, icon: <Package size={14} />, color: 'var(--app-success, #22c55e)' },
-        { label: 'In Product Name', value: nameVisibleGroups, icon: <Hash size={14} />, color: '#f59e0b' },
-        { label: 'Barcode Required', value: barcodeGroups, icon: <Barcode size={14} />, color: '#f97316' },
+        { label: 'In Product Name', value: nameVisibleGroups, icon: <Hash size={14} />, color: 'var(--app-warning)' },
+        { label: 'Barcode Required', value: barcodeGroups, icon: <Barcode size={14} />, color: 'var(--app-warning)' },
     ]
 
     return (

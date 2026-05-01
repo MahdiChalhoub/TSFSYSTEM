@@ -65,7 +65,7 @@ export function MobileOverviewTab({
                     style={{
                         fontSize: 'var(--tp-xs)',
                         background: isRoot
-                            ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))'
+                            ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))'
                             : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
                         color: isRoot ? '#fff' : 'var(--app-muted-foreground)',
                     }}>

@@ -5,11 +5,11 @@ import { updateQuoteRequest, deleteQuoteRequest } from '@/app/actions/client-por
 import { Mail, User, Building2, Phone, Package, Hash, Clock, Trash2, CheckCircle, XCircle, Send, Eye } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    PENDING: { label: 'Pending', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    REPLIED: { label: 'Replied', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-    CONVERTED: { label: 'Converted', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
-    DECLINED: { label: 'Declined', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-    EXPIRED: { label: 'Expired', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' },
+    PENDING: { label: 'Pending', color: 'var(--app-warning)', bg: 'rgba(245,158,11,0.1)' },
+    REPLIED: { label: 'Replied', color: 'var(--app-info)', bg: 'rgba(59,130,246,0.1)' },
+    CONVERTED: { label: 'Converted', color: 'var(--app-success)', bg: 'rgba(34,197,94,0.1)' },
+    DECLINED: { label: 'Declined', color: 'var(--app-error)', bg: 'rgba(239,68,68,0.1)' },
+    EXPIRED: { label: 'Expired', color: 'var(--app-faint)', bg: 'rgba(148,163,184,0.1)' },
 };
 
 export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] }) {
@@ -53,9 +53,9 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                     {['ALL', 'PENDING', 'REPLIED', 'CONVERTED', 'DECLINED'].map(s => (
                         <button key={s} onClick={() => setFilter(s)} style={{
                             padding: '0.4rem 0.85rem', borderRadius: 20,
-                            border: `1px solid ${filter === s ? '#6366f1' : '#334155'}`,
-                            background: filter === s ? '#6366f1' : 'transparent',
-                            color: filter === s ? '#fff' : '#94a3b8',
+                            border: `1px solid ${filter === s ? 'var(--app-accent)' : '#334155'}`,
+                            background: filter === s ? 'var(--app-accent)' : 'transparent',
+                            color: filter === s ? '#fff' : 'var(--app-faint)',
                             fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer',
                         }}>
                             {s === 'ALL' ? 'All' : STATUS_CONFIG[s]?.label || s}
@@ -66,7 +66,7 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                 {/* Quote List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {filtered.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+                        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-muted-foreground)' }}>
                             <Mail size={40} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
                             <p style={{ fontWeight: 600 }}>No quote requests found</p>
                         </div>
@@ -77,17 +77,17 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                             <div key={q.id}
                                 onClick={() => setSelected(q)}
                                 style={{
-                                    background: isActive ? 'rgba(99,102,241,0.08)' : '#1e293b',
-                                    border: `1px solid ${isActive ? '#6366f1' : 'rgba(255,255,255,0.06)'}`,
+                                    background: isActive ? 'rgba(99,102,241,0.08)' : 'var(--app-surface-2)',
+                                    border: `1px solid ${isActive ? 'var(--app-accent)' : 'rgba(255,255,255,0.06)'}`,
                                     borderRadius: 12, padding: '1rem 1.25rem', cursor: 'pointer',
                                     transition: 'all 0.15s',
                                 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div>
-                                        <div style={{ fontWeight: 600, color: '#f1f5f9', fontSize: '0.95rem' }}>
+                                        <div style={{ fontWeight: 600, color: 'var(--app-foreground)', fontSize: '0.95rem' }}>
                                             {q.full_name}
                                         </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2 }}>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--app-muted-foreground)', marginTop: 2 }}>
                                             {q.email} {q.company_name ? `• ${q.company_name}` : ''}
                                         </div>
                                     </div>
@@ -97,7 +97,7 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                                         background: sc.bg, color: sc.color,
                                     }}>{sc.label}</span>
                                 </div>
-                                <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--app-faint)', marginTop: '0.5rem' }}>
                                     {q.items && q.items.length > 0 ? (
                                         <span>{q.items[0].product_name} {q.items.length > 1 ? `+ ${q.items.length - 1} more` : ''}</span>
                                     ) : (
@@ -117,7 +117,7 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
             {/* ── Right Panel: Detail ──────────────────────────────── */}
             <div style={{
                 width: '420px', flexShrink: 0,
-                background: '#1e293b', borderRadius: 14,
+                background: 'var(--app-surface-2)', borderRadius: 14,
                 border: '1px solid rgba(255,255,255,0.06)',
                 padding: selected ? '1.5rem' : '3rem 1.5rem',
                 display: 'flex', flexDirection: 'column',
@@ -130,10 +130,10 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                     </div>
                 ) : (
                     <>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f1f5f9', margin: '0 0 0.25rem' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--app-foreground)', margin: '0 0 0.25rem' }}>
                             {selected.quote_number}
                         </h3>
-                        <p style={{ color: '#64748b', fontSize: '0.8rem', marginBottom: '1.25rem' }}>
+                        <p style={{ color: 'var(--app-muted-foreground)', fontSize: '0.8rem', marginBottom: '1.25rem' }}>
                             {new Date(selected.created_at).toLocaleString()}
                         </p>
 
@@ -149,20 +149,20 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
 
                         {/* Items Info */}
                         <div style={{ margin: '0.75rem 0' }}>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, marginBottom: '0.5rem' }}>REQUESTED ITEMS</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--app-muted-foreground)', fontWeight: 600, marginBottom: '0.5rem' }}>REQUESTED ITEMS</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 {selected.items && selected.items.length > 0 ? (
                                     selected.items.map((item: any, idx: number) => (
                                         <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '0.6rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
-                                            <div style={{ color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 500 }}>{item.product_name}</div>
-                                            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Qty: {item.quantity}</div>
-                                            {item.notes && <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
+                                            <div style={{ color: 'var(--app-border)', fontSize: '0.85rem', fontWeight: 500 }}>{item.product_name}</div>
+                                            <div style={{ color: 'var(--app-faint)', fontSize: '0.75rem' }}>Qty: {item.quantity}</div>
+                                            {item.notes && <div style={{ color: 'var(--app-muted-foreground)', fontSize: '0.75rem', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
                                         </div>
                                     ))
                                 ) : (
                                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.6rem', borderRadius: 8 }}>
-                                        <div style={{ color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 500 }}>{selected.product_name}</div>
-                                        <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Qty: {selected.quantity}</div>
+                                        <div style={{ color: 'var(--app-border)', fontSize: '0.85rem', fontWeight: 500 }}>{selected.product_name}</div>
+                                        <div style={{ color: 'var(--app-faint)', fontSize: '0.75rem' }}>Qty: {selected.quantity}</div>
                                     </div>
                                 )}
                             </div>
@@ -173,7 +173,7 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                             background: 'rgba(255,255,255,0.03)', borderRadius: 10,
                             padding: '0.875rem', marginTop: '0.5rem',
                         }}>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, marginBottom: '0.35rem' }}>MESSAGE</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--app-muted-foreground)', fontWeight: 600, marginBottom: '0.35rem' }}>MESSAGE</div>
                             <p style={{ color: '#cbd5e1', fontSize: '0.85rem', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
                                 {selected.message}
                             </p>
@@ -181,7 +181,7 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
 
                         {/* Internal Notes */}
                         <div style={{ marginTop: '1rem' }}>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, marginBottom: '0.35rem' }}>INTERNAL NOTES</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--app-muted-foreground)', fontWeight: 600, marginBottom: '0.35rem' }}>INTERNAL NOTES</div>
                             <textarea
                                 defaultValue={selected.internal_notes || ''}
                                 onBlur={e => {
@@ -194,7 +194,7 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                                 style={{
                                     width: '100%', padding: '0.5rem 0.75rem', borderRadius: 8,
                                     border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)',
-                                    color: '#e2e8f0', fontSize: '0.8rem', resize: 'vertical', outline: 'none',
+                                    color: 'var(--app-border)', fontSize: '0.8rem', resize: 'vertical', outline: 'none',
                                 }}
                             />
                         </div>
@@ -203,17 +203,17 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
                             {selected.status === 'PENDING' && (
                                 <>
-                                    <ActionBtn icon={<Send size={13} />} label="Mark Replied" color="#3b82f6"
+                                    <ActionBtn icon={<Send size={13} />} label="Mark Replied" color="var(--app-info)"
                                         onClick={() => handleStatusChange(selected.id, 'REPLIED')} />
-                                    <ActionBtn icon={<XCircle size={13} />} label="Decline" color="#ef4444"
+                                    <ActionBtn icon={<XCircle size={13} />} label="Decline" color="var(--app-error)"
                                         onClick={() => handleStatusChange(selected.id, 'DECLINED')} />
                                 </>
                             )}
                             {selected.status === 'REPLIED' && (
-                                <ActionBtn icon={<CheckCircle size={13} />} label="Convert to Order" color="#22c55e"
+                                <ActionBtn icon={<CheckCircle size={13} />} label="Convert to Order" color="var(--app-success)"
                                     onClick={() => handleStatusChange(selected.id, 'CONVERTED')} />
                             )}
-                            <ActionBtn icon={<Trash2 size={13} />} label="Delete" color="#ef4444"
+                            <ActionBtn icon={<Trash2 size={13} />} label="Delete" color="var(--app-error)"
                                 onClick={() => handleDelete(selected.id)} />
                         </div>
                     </>
@@ -226,9 +226,9 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
 function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ color: '#64748b' }}>{icon}</span>
-            <span style={{ color: '#64748b', fontSize: '0.8rem', minWidth: 65 }}>{label}</span>
-            <span style={{ color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 500 }}>{value}</span>
+            <span style={{ color: 'var(--app-muted-foreground)' }}>{icon}</span>
+            <span style={{ color: 'var(--app-muted-foreground)', fontSize: '0.8rem', minWidth: 65 }}>{label}</span>
+            <span style={{ color: 'var(--app-border)', fontSize: '0.85rem', fontWeight: 500 }}>{value}</span>
         </div>
     );
 }

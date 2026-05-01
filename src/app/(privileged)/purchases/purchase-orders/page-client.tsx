@@ -253,9 +253,9 @@ export default function PurchaseOrdersManager({
           const reissueId: number | null = po.caused_reissue_id || null
           // Tone the rejection-category chip: hard problems red, soft amber.
           const catColor =
-            rejCat === 'DAMAGED' ? '#ef4444'
-            : rejCat === 'NEEDS_REVISION' ? '#3b82f6'
-            : rejCat ? '#f59e0b'
+            rejCat === 'DAMAGED' ? 'var(--app-error)'
+            : rejCat === 'NEEDS_REVISION' ? 'var(--app-info)'
+            : rejCat ? 'var(--app-warning)'
             : null
           return (
             <div className="flex-1 min-w-0">
@@ -280,9 +280,9 @@ export default function PurchaseOrdersManager({
                     title={`Auto-reissued as procurement request #${reissueId}`}
                     className="inline-flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hover:underline"
                     style={{
-                      background: 'color-mix(in srgb, #f59e0b 12%, transparent)',
-                      color: '#f59e0b',
-                      border: '1px solid color-mix(in srgb, #f59e0b 25%, transparent)',
+                      background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)',
+                      color: 'var(--app-warning)',
+                      border: '1px solid color-mix(in srgb, var(--app-warning) 25%, transparent)',
                     }}>
                     → Reissue #{reissueId}
                   </a>

@@ -126,7 +126,7 @@ function ProductPickerModal({ allProducts, onClose, onSelect }: {
                                             {p.sku && <span className="font-mono">{p.sku}</span>}
                                             {p.unit_name && <span>· {p.unit_name}</span>}
                                             {p.packaging_levels?.length > 0 && (
-                                                <span className="font-bold" style={{ color: '#8b5cf6' }}>
+                                                <span className="font-bold" style={{ color: 'var(--app-accent)' }}>
                                                     · {p.packaging_levels.length} pkg
                                                 </span>
                                             )}
@@ -267,7 +267,7 @@ function PackagingLevelRow({ pkg, level }: { pkg: PackagingLevel; level: number 
         ? 'var(--app-success, #22c55e)'
         : pkg.is_default_purchase
             ? 'var(--app-info, #3b82f6)'
-            : '#8b5cf6'
+            : 'var(--app-accent)'
 
     return (
         <div
@@ -527,7 +527,7 @@ export default function PackagingPage() {
                                 { label: 'Products', value: stats.total, icon: <Box size={11} />, color: 'var(--app-primary)' },
                                 { label: 'Packages', value: stats.totalPkgs, icon: <Package size={11} />, color: 'var(--app-info, #3b82f6)' },
                                 { label: 'Sale Defaults', value: stats.saleDefaults, icon: <ShoppingCart size={11} />, color: 'var(--app-success, #22c55e)' },
-                                { label: 'Purchase Defaults', value: stats.purchaseDefaults, icon: <Truck size={11} />, color: '#8b5cf6' },
+                                { label: 'Purchase Defaults', value: stats.purchaseDefaults, icon: <Truck size={11} />, color: 'var(--app-accent)' },
                             ].map(s => (
                                 <div key={s.label}
                                     className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"

@@ -125,7 +125,7 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                 title: 'Brands',
                 subtitle: `${stats.total} brand${stats.total === 1 ? '' : 's'} · ${stats.totalProducts} products`,
                 icon: <Paintbrush size={20} />,
-                iconColor: '#8b5cf6',
+                iconColor: 'var(--app-accent)',
                 searchPlaceholder: 'Search brands…',
                 primaryAction: {
                     label: 'New Brand',
@@ -136,7 +136,7 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                     { label: 'Back to Inventory', icon: <Package size={14} />, href: '/inventory/categories' },
                 ],
                 kpis: [
-                    { label: 'Total', value: stats.total, icon: <Paintbrush size={13} />, color: '#8b5cf6' },
+                    { label: 'Total', value: stats.total, icon: <Paintbrush size={13} />, color: 'var(--app-accent)' },
                     { label: 'With Products', value: stats.withProducts, icon: <Package size={13} />, color: 'var(--app-success, #10b981)' },
                     { label: 'With Countries', value: stats.withCountries, icon: <Globe size={13} />, color: 'var(--app-info, #3b82f6)' },
                     { label: 'With Categories', value: stats.withCategories, icon: <Tag size={13} />, color: 'var(--app-warning, #f59e0b)' },
@@ -241,7 +241,7 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                                                 background: active
                                                     ? 'var(--app-warning, #f59e0b)'
                                                     : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                                border: `1px solid ${active ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 40%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
+                                                border: `1px solid ${active ? 'color-mix(in srgb, var(--app-warning) 40%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
                                             }}>
                                             {c.name}
                                             <span className="font-black tabular-nums rounded-full px-1.5 py-0.5"
@@ -292,8 +292,8 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                                                 fontSize: 'var(--tp-xl)',
                                                 background: brand.logo
                                                     ? 'var(--app-surface)'
-                                                    : 'linear-gradient(135deg, #8b5cf6, color-mix(in srgb, #8b5cf6 70%, #6366f1))',
-                                                boxShadow: '0 2px 10px color-mix(in srgb, #8b5cf6 25%, transparent)',
+                                                    : 'linear-gradient(135deg, var(--app-accent), color-mix(in srgb, var(--app-accent) 70%, var(--app-accent)))',
+                                                boxShadow: '0 2px 10px color-mix(in srgb, var(--app-accent) 25%, transparent)',
                                             }}>
                                             {brand.logo
                                                 ? <img src={brand.logo} alt="" className="w-full h-full object-cover" />
@@ -393,7 +393,7 @@ function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: 
         <div className="flex flex-col h-full">
             <div className="flex-shrink-0 px-3 pt-2 pb-3 flex items-center gap-2"
                 style={{
-                    background: 'linear-gradient(135deg, color-mix(in srgb, #8b5cf6 10%, var(--app-surface)), var(--app-surface))',
+                    background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-accent) 10%, var(--app-surface)), var(--app-surface))',
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 55%, transparent)',
                 }}>
                 <div className="flex items-center justify-center flex-shrink-0 rounded-xl overflow-hidden font-black text-white"
@@ -402,8 +402,8 @@ function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: 
                         fontSize: 'var(--tp-2xl)',
                         background: brand.logo
                             ? 'var(--app-surface)'
-                            : 'linear-gradient(135deg, #8b5cf6, color-mix(in srgb, #8b5cf6 70%, #6366f1))',
-                        boxShadow: '0 4px 14px color-mix(in srgb, #8b5cf6 30%, transparent)',
+                            : 'linear-gradient(135deg, var(--app-accent), color-mix(in srgb, var(--app-accent) 70%, var(--app-accent)))',
+                        boxShadow: '0 4px 14px color-mix(in srgb, var(--app-accent) 30%, transparent)',
                     }}>
                     {brand.logo
                         ? <img src={brand.logo} alt="" className="w-full h-full object-cover" />
@@ -556,8 +556,8 @@ function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: 
                     style={{
                         fontSize: 'var(--tp-md)', height: 46,
                         color: '#fff',
-                        background: '#8b5cf6',
-                        boxShadow: '0 2px 10px color-mix(in srgb, #8b5cf6 35%, transparent)',
+                        background: 'var(--app-accent)',
+                        boxShadow: '0 2px 10px color-mix(in srgb, var(--app-accent) 35%, transparent)',
                     }}>
                     <Pencil size={14} /> Edit brand
                 </button>

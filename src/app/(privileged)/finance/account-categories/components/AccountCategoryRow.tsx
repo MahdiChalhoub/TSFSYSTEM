@@ -100,8 +100,8 @@ export function AccountCategoryRow({
                             {node.is_digital && (
                                 <span className="inline-flex items-center gap-0.5 text-[8px] font-black px-1.5 py-0.5 rounded-full"
                                     style={{
-                                        background: 'color-mix(in srgb, #8b5cf6 10%, transparent)',
-                                        color: '#8b5cf6',
+                                        background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)',
+                                        color: 'var(--app-accent)',
                                     }}>
                                     <Zap size={8} /> DIGITAL
                                 </span>

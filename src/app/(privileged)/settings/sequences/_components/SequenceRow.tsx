@@ -19,7 +19,7 @@ interface TierRowProps {
 // Local override so Draft has presence (constants.ts maps it to muted-foreground = invisible)
 function effectiveTierColor(tier?: TierDef): string {
     if (!tier) return 'var(--app-primary)'
-    if (tier.key === 'DRAFT') return '#64748B' // slate-500
+    if (tier.key === 'DRAFT') return 'var(--app-muted-foreground)' // slate-500
     return tier.color
 }
 

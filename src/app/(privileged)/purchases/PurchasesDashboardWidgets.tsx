@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-const COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#f43f5e']
+const COLORS = ['var(--app-accent)', 'var(--app-accent)', '#a855f7', '#d946ef', '#f43f5e']
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /*  Procurement Pulse (Area Chart)                                             */
@@ -37,8 +37,8 @@ export function ProcurementPulse({ data }: { data: any[] }) {
                     <AreaChart data={data} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                <stop offset="5%" stopColor="var(--app-accent)" stopOpacity={0.25} />
+                                <stop offset="95%" stopColor="var(--app-accent)" stopOpacity={0} />
                             </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(99,102,241,0.06)" />
@@ -53,9 +53,9 @@ export function ProcurementPulse({ data }: { data: any[] }) {
                                 boxShadow: '0 20px 40px -12px rgba(0,0,0,0.25)',
                                 padding: '10px 16px',
                             }}
-                            cursor={{ stroke: '#6366f1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                            cursor={{ stroke: 'var(--app-accent)', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
-                        <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPulse)" dot={false} activeDot={{ r: 5, fill: '#6366f1', stroke: 'var(--app-surface)', strokeWidth: 3 }} animationDuration={1500} />
+                        <Area type="monotone" dataKey="value" stroke="var(--app-accent)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPulse)" dot={false} activeDot={{ r: 5, fill: 'var(--app-accent)', stroke: 'var(--app-surface)', strokeWidth: 3 }} animationDuration={1500} />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

@@ -40,7 +40,7 @@ export default function DynamicModulePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-primary/30 transition-all">
+                <Card className="bg-app-bg/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-primary/30 transition-all">
                     <CardHeader>
                         <div className="w-12 h-12 rounded-xl bg-app-primary/10 text-app-success flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Zap size={24} />
@@ -53,7 +53,7 @@ export default function DynamicModulePage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-accent/30 transition-all">
+                <Card className="bg-app-bg/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-accent/30 transition-all">
                     <CardHeader>
                         <div className="w-12 h-12 rounded-xl bg-app-accent/10 text-app-accent flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Layers size={24} />
@@ -66,7 +66,7 @@ export default function DynamicModulePage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-[#0F172A]/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-warning/30 transition-all">
+                <Card className="bg-app-bg/80 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl group hover:border-app-warning/30 transition-all">
                     <CardHeader>
                         <div className="w-12 h-12 rounded-xl bg-app-warning/10 text-app-warning flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Info size={24} />

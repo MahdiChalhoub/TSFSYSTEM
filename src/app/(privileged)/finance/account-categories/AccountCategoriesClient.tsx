@@ -18,7 +18,7 @@ import { AccountCategoryRow } from './components/AccountCategoryRow'
 import { AccountCategoryDetailPanel } from './components/AccountCategoryDetailPanel'
 
 const INITIAL_FORM: CategoryFormData = {
-    name: '', code: '', icon: 'wallet', color: '#6366f1',
+    name: '', code: '', icon: 'wallet', color: 'var(--app-accent)',
     description: '', coa_parent: '', sort_order: 0,
     default_pos_enabled: false, default_has_account_book: false,
     is_digital: false, digital_gateway: '',
@@ -78,7 +78,7 @@ export function AccountCategoriesClient({
             name: cat.name,
             code: cat.code,
             icon: cat.icon || 'wallet',
-            color: cat.color || '#6366f1',
+            color: cat.color || 'var(--app-accent)',
             description: cat.description || '',
             coa_parent: cat.coa_parent?.toString() || '',
             sort_order: cat.sort_order || 0,
@@ -200,7 +200,7 @@ export function AccountCategoriesClient({
                             value: (filtered) => filtered.reduce((sum: number, c: any) => sum + (c.account_count || 0), 0),
                         },
                         {
-                            label: 'Digital', icon: <Zap size={11} />, color: '#8b5cf6',
+                            label: 'Digital', icon: <Zap size={11} />, color: 'var(--app-accent)',
                             filterKey: 'digital', hint: 'Show only digital categories',
                             value: (filtered) => filtered.filter((c: any) => c.is_digital).length,
                         },

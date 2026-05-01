@@ -202,8 +202,8 @@ export function TemplateFormModal({
 
                     {/* Parent chain picker */}
                     <div className="rounded-xl p-3 space-y-2"
-                        style={{ background: 'color-mix(in srgb, #8b5cf6 5%, transparent)', border: '1px solid color-mix(in srgb, #8b5cf6 25%, transparent)' }}>
-                        <div className="flex items-center gap-1.5 text-tp-xxs font-bold uppercase tracking-wide" style={{ color: '#8b5cf6' }}>
+                        style={{ background: 'color-mix(in srgb, var(--app-accent) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-accent) 25%, transparent)' }}>
+                        <div className="flex items-center gap-1.5 text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-accent)' }}>
                             <ArrowRight size={11} /> Packaging Chain (pipeline step)
                         </div>
                         <p className="text-tp-sm leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -233,7 +233,7 @@ export function TemplateFormModal({
                             <div className="text-tp-sm font-mono px-2 py-1.5 rounded-lg tabular-nums"
                                 style={{ background: 'var(--app-background)', color: 'var(--app-foreground)' }}>
                                 <span style={{ color: 'var(--app-muted-foreground)' }}>This level =</span>{' '}
-                                <span style={{ color: '#8b5cf6' }}>{form.parent_ratio}</span> ×{' '}
+                                <span style={{ color: 'var(--app-accent)' }}>{form.parent_ratio}</span> ×{' '}
                                 <span>{parentTpl.name}</span>{' '}
                                 <span style={{ color: 'var(--app-muted-foreground)' }}>×</span>{' '}
                                 <span style={{ color: 'var(--app-info)' }}>{Number(parentTpl.ratio).toLocaleString()}</span>{' '}

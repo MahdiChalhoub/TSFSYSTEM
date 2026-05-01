@@ -150,7 +150,7 @@ export const STATUS_ICONS: Record<string, any> = {
 export const STATUS_COLOR: Record<string, string> = {
     PENDING: 'var(--app-warning, #f59e0b)',
     IN_PROGRESS: 'var(--app-info, #3b82f6)',
-    AWAITING_RESPONSE: '#8b5cf6',
+    AWAITING_RESPONSE: 'var(--app-accent)',
     COMPLETED: 'var(--app-success, #22c55e)',
     CANCELLED: 'var(--app-muted-foreground)',
     OVERDUE: 'var(--app-error, #ef4444)',

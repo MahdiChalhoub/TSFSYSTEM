@@ -156,9 +156,9 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
     ]
     const TABS = [
         { id: 'general' as const, label: 'General', icon: Settings2, color: 'var(--app-primary)' },
-        { id: 'payments' as const, label: 'Payments', icon: Banknote, color: '#10b981' },
-        { id: 'access' as const, label: 'Access', icon: Users, color: '#3b82f6' },
-        { id: 'rules' as const, label: 'Rules', icon: Shield, color: '#f59e0b' },
+        { id: 'payments' as const, label: 'Payments', icon: Banknote, color: 'var(--app-primary)' },
+        { id: 'access' as const, label: 'Access', icon: Users, color: 'var(--app-info)' },
+        { id: 'rules' as const, label: 'Rules', icon: Shield, color: 'var(--app-warning)' },
     ]
 
     return (
@@ -276,7 +276,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                     {tab === 'payments' && (
                         <div className="space-y-4 animate-in fade-in duration-150">
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
-                                <SectionLabel icon={Banknote} label="Methods" color="#10b981" count={form.registerMethods.length} />
+                                <SectionLabel icon={Banknote} label="Methods" color="var(--app-primary)" count={form.registerMethods.length} />
                                 {methodsLoading ? (
                                     <div className="flex items-center gap-2 py-4 text-app-text-muted">
                                         <Loader2 size={14} className="animate-spin" /> <span className="text-[11px]">Loading methods…</span>
@@ -294,7 +294,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                 <div key={gm.id}
                                                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all ${isActive
                                                         ? 'border-emerald-500/20' : 'border-app-border/30 hover:bg-app-surface/50'}`}
-                                                    style={isActive ? { background: 'color-mix(in srgb, #10b981 5%, transparent)' } : {}}>
+                                                    style={isActive ? { background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)' } : {}}>
                                                     {/* Toggle */}
                                                     <button
                                                         onClick={() => {
@@ -348,7 +348,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                 )}
                             </div>
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
-                                <SectionLabel icon={CreditCard} label="Allowed Accounts" color="#10b981" count={form.allowedAccountIds.length + (form.cashAccountId ? 1 : 0)} />
+                                <SectionLabel icon={CreditCard} label="Allowed Accounts" color="var(--app-primary)" count={form.allowedAccountIds.length + (form.cashAccountId ? 1 : 0)} />
                                 <div className="space-y-1.5 max-h-52 overflow-y-auto custom-scrollbar">
                                     {accounts.length === 0 && <p className="text-[10px] text-app-text-muted italic py-2">No financial accounts found</p>}
                                     {accounts.map(a => {
@@ -356,10 +356,10 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                         return (
                                             <button key={a.id} onClick={() => { if (isCash) return; set('allowedAccountIds', toggleId(form.allowedAccountIds, a.id)) }}
                                                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all text-[11px] ${isCash ? 'border-emerald-500/25 text-emerald-400 cursor-default' : on ? 'border-emerald-500/15 text-emerald-400' : 'border-app-border/30 text-app-text-muted hover:bg-app-surface'}`}
-                                                style={on ? { background: 'color-mix(in srgb, #10b981 4%, transparent)' } : {}}>
+                                                style={on ? { background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)' } : {}}>
                                                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${on ? 'bg-emerald-500 border-emerald-400' : 'border-app-border'}`}>{on && <Check size={10} className="text-white" />}</div>
                                                 <span className="flex-1 truncate font-medium">{a.name}</span>
-                                                {isCash && <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0" style={{ background: 'color-mix(in srgb, #10b981 10%, transparent)', color: '#10b981' }}>PRIMARY</span>}
+                                                {isCash && <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>PRIMARY</span>}
                                                 <span className="text-[9px] opacity-40">{a.type}</span>
                                             </button>
                                         )
@@ -373,7 +373,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                     {tab === 'access' && (
                         <div className="space-y-4 animate-in fade-in duration-150">
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
-                                <SectionLabel icon={Users} label="Authorized Cashiers" color="#3b82f6" count={form.authorizedUserIds.length} />
+                                <SectionLabel icon={Users} label="Authorized Cashiers" color="var(--app-info)" count={form.authorizedUserIds.length} />
                                 <p className="text-[9px] text-app-text-muted -mt-2 mb-3">Toggle access and manage PINs per register. Users without a PIN cannot log in.</p>
                                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto custom-scrollbar">
                                     {users.map(u => {
@@ -382,7 +382,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                         return (
                                             <div key={u.id}
                                                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all text-[11px] ${on ? 'border-blue-500/20' : 'border-app-border/30 hover:bg-app-surface/30'}`}
-                                                style={on ? { background: 'color-mix(in srgb, #3b82f6 5%, transparent)' } : {}}>
+                                                style={on ? { background: 'color-mix(in srgb, var(--app-info) 5%, transparent)' } : {}}>
                                                 {/* Toggle authorize */}
                                                 <button onClick={() => set('authorizedUserIds', toggleId(form.authorizedUserIds, u.id))}
                                                     className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${on ? 'bg-blue-500 border-blue-400' : 'border-app-border hover:border-blue-400/50'}`}>
@@ -390,7 +390,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                 </button>
                                                 {/* Avatar */}
                                                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0"
-                                                    style={on ? { background: 'color-mix(in srgb, #3b82f6 12%, transparent)', color: '#3b82f6' } : { background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)', opacity: 0.5 }}>
+                                                    style={on ? { background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' } : { background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)', opacity: 0.5 }}>
                                                     {(u.first_name?.[0] || u.username?.[0] || '?').toUpperCase()}
                                                 </div>
                                                 {/* Name + role */}
@@ -401,7 +401,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                 {/* PIN status + actions */}
                                                 <div className="flex items-center gap-1.5 shrink-0">
                                                     <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-black ${u.pos_pin ? 'text-emerald-400' : 'text-red-400'}`}
-                                                        style={{ background: u.pos_pin ? 'color-mix(in srgb, #10b981 10%, transparent)' : 'color-mix(in srgb, #ef4444 10%, transparent)' }}>
+                                                        style={{ background: u.pos_pin ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)' }}>
                                                         {u.pos_pin ? '● PIN' : '○ NO PIN'}
                                                     </span>
                                                     {on && (
@@ -418,7 +418,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                             }}
                                                             className="flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-1 rounded-lg transition-all"
                                                             style={u.pos_pin
-                                                                ? { background: 'color-mix(in srgb, #f59e0b 10%, transparent)', color: '#f59e0b' }
+                                                                ? { background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }
                                                                 : { background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }
                                                             }
                                                             title={u.pos_pin ? `Reset ${name}'s PIN` : `Set PIN for ${name}`}>
@@ -438,10 +438,10 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                 <p className="text-[9px] text-app-text-muted -mt-2 mb-3">Jump to related settings and features</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
-                                        { label: 'Users & PINs', desc: 'Global PIN manager', icon: Key, color: '#3b82f6', href: '__users_pins__' },
-                                        { label: 'Global Rules', desc: 'POS-wide defaults', icon: Shield, color: '#f59e0b', href: '__global_rules__' },
+                                        { label: 'Users & PINs', desc: 'Global PIN manager', icon: Key, color: 'var(--app-info)', href: '__users_pins__' },
+                                        { label: 'Global Rules', desc: 'POS-wide defaults', icon: Shield, color: 'var(--app-warning)', href: '__global_rules__' },
                                         { label: 'Access Users', desc: 'Identity management', icon: Users, color: 'var(--app-primary)', href: '/access/users' },
-                                        { label: 'Payment Methods', desc: 'Configure accounts', icon: CreditCard, color: '#10b981', href: '/finance/settings/payment-methods' },
+                                        { label: 'Payment Methods', desc: 'Configure accounts', icon: CreditCard, color: 'var(--app-primary)', href: '/finance/settings/payment-methods' },
                                     ].map(link => (
                                         <button key={link.label}
                                             onClick={() => {
@@ -474,7 +474,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                     {tab === 'rules' && (
                         <div className="space-y-4 animate-in fade-in duration-150">
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
-                                <SectionLabel icon={Shield} label="Rules Override" color="#f59e0b" />
+                                <SectionLabel icon={Shield} label="Rules Override" color="var(--app-warning)" />
                                 <p className="text-[10px] text-app-text-muted mb-3 -mt-1">Override global rules for this register. Unset rules inherit from Global Settings.</p>
                                 <div className="space-y-0.5">
                                     {OVERRIDE_RULES.map(rule => {
@@ -568,13 +568,13 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
     if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-app-text-muted" /></div>
 
     const SECTIONS = [
-        { id: 'security' as const, label: 'Security', icon: Shield, color: '#f59e0b' },
-        { id: 'delivery' as const, label: 'Delivery', icon: Truck, color: '#ef4444' },
+        { id: 'security' as const, label: 'Security', icon: Shield, color: 'var(--app-warning)' },
+        { id: 'delivery' as const, label: 'Delivery', icon: Truck, color: 'var(--app-error)' },
     ]
 
     const RULE_GROUPS = [
         {
-            title: 'Connectivity', color: '#06b6d4', icon: Zap, rows: [
+            title: 'Connectivity', color: 'var(--app-accent-cyan)', icon: Zap, rows: [
                 <TRow key="offline" label="POS Offline Mode" desc="Queue orders offline and sync later" k="pos_offline_enabled" />,
             ]
         },
@@ -586,7 +586,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
             ]
         },
         {
-            title: 'Manager Overrides', color: '#ef4444', icon: Shield, rows: [
+            title: 'Manager Overrides', color: 'var(--app-error)', icon: Shield, rows: [
                 <TRow key="a" label="Void Order" desc="Manager PIN to void" k="requireManagerForVoid" />,
                 <TRow key="b" label="Discount" desc="Manager PIN for discounts" k="requireManagerForDiscount" />,
                 <TRow key="c" label="Price Override" desc="Manager PIN to change price" k="requireManagerForPriceOverride" />,
@@ -595,14 +595,14 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
             ]
         },
         {
-            title: 'Register Close', color: '#f59e0b', icon: Monitor, rows: [
+            title: 'Register Close', color: 'var(--app-warning)', icon: Monitor, rows: [
                 <TRow key="a" label="Lock on Close" desc="Prevent access after closing" k="lockRegisterOnClose" />,
                 <TRow key="b" label="Z-Report" desc="Auto-print on close" k="printReceiptOnClose" />,
                 <TRow key="c" label="Cash Count" desc="Count cash on close" k="requireCountOnClose" />,
             ]
         },
         {
-            title: 'Reconciliation', color: '#3b82f6', icon: Zap, rows: [
+            title: 'Reconciliation', color: 'var(--app-info)', icon: Zap, rows: [
                 <TRow key="a" label="Enable" desc="Full reconciliation on close" k="enableReconciliation" />,
                 <TRow key="b" label="Controlled = Truth" desc="Wave/OM/Bank are always correct" k="controlledAccountsAreTruth" />,
                 <TRow key="c" label="Auto-Calibrate" desc="Mismatch adjusts cash" k="autoCalibrateToClose" />,
@@ -779,7 +779,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                         <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-text-muted hover:text-app-text transition-all shrink-0" title="Return">
                             <ArrowLeft size={14} />
                         </button>
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, #3b82f6 12%, transparent)', color: '#3b82f6' }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>
                             <Key size={14} />
                         </div>
                         <div>
@@ -793,14 +793,14 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                 {/* Stats strip */}
                 <div className="flex gap-2 px-5 py-2.5 border-b border-app-border/30">
                     <div className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
-                        style={{ background: 'color-mix(in srgb, #10b981 5%, transparent)', border: '1px solid color-mix(in srgb, #10b981 15%, transparent)' }}>
-                        <Lock size={10} style={{ color: '#10b981' }} />
-                        <span className="text-[10px] font-black" style={{ color: '#10b981' }}>{withPin} PIN Set</span>
+                        style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
+                        <Lock size={10} style={{ color: 'var(--app-primary)' }} />
+                        <span className="text-[10px] font-black" style={{ color: 'var(--app-primary)' }}>{withPin} PIN Set</span>
                     </div>
                     <div className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
-                        style={{ background: 'color-mix(in srgb, #ef4444 5%, transparent)', border: '1px solid color-mix(in srgb, #ef4444 15%, transparent)' }}>
-                        <Key size={10} style={{ color: '#ef4444' }} />
-                        <span className="text-[10px] font-black" style={{ color: '#ef4444' }}>{withoutPin} No PIN</span>
+                        style={{ background: 'color-mix(in srgb, var(--app-error) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-error) 15%, transparent)' }}>
+                        <Key size={10} style={{ color: 'var(--app-error)' }} />
+                        <span className="text-[10px] font-black" style={{ color: 'var(--app-error)' }}>{withoutPin} No PIN</span>
                     </div>
                 </div>
 
@@ -833,8 +833,8 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                         style={{
                                             background: isSelf
                                                 ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
-                                                : 'color-mix(in srgb, #3b82f6 10%, transparent)',
-                                            color: isSelf ? 'var(--app-primary)' : '#3b82f6',
+                                                : 'color-mix(in srgb, var(--app-info) 10%, transparent)',
+                                            color: isSelf ? 'var(--app-primary)' : 'var(--app-info)',
                                         }}>
                                         {(u.first_name?.[0] || u.username?.[0] || '?').toUpperCase()}
                                     </div>
@@ -855,7 +855,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
 
                                     {/* PIN status */}
                                     <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-black ${u.pos_pin ? 'text-emerald-400' : 'text-red-400'}`}
-                                        style={{ background: u.pos_pin ? 'color-mix(in srgb, #10b981 10%, transparent)' : 'color-mix(in srgb, #ef4444 10%, transparent)' }}>
+                                        style={{ background: u.pos_pin ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)' }}>
                                         {u.pos_pin ? '● PIN SET' : '○ NO PIN'}
                                     </span>
 
@@ -876,7 +876,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                             <button
                                                 onClick={() => setPinModal({ userId: u.id, userName: name, mode: 'admin' })}
                                                 className="flex items-center gap-1 text-[9px] font-bold px-2 py-1.5 rounded-lg transition-all"
-                                                style={{ background: 'color-mix(in srgb, #f59e0b 10%, transparent)', color: '#f59e0b' }}
+                                                style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}
                                                 title={`Reset ${name}'s PIN`}>
                                                 <Shield size={10} /> Reset
                                             </button>
@@ -903,8 +903,8 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                         style={{
                                             background: pinModal.mode === 'self'
                                                 ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
-                                                : 'color-mix(in srgb, #f59e0b 12%, transparent)',
-                                            color: pinModal.mode === 'self' ? 'var(--app-primary)' : '#f59e0b',
+                                                : 'color-mix(in srgb, var(--app-warning) 12%, transparent)',
+                                            color: pinModal.mode === 'self' ? 'var(--app-primary)' : 'var(--app-warning)',
                                         }}>
                                         {pinModal.mode === 'self' ? <Key size={18} /> : <Shield size={18} />}
                                     </div>
@@ -924,8 +924,8 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                             <div className="px-5 pb-5 space-y-3">
                                 {/* Identity verification notice */}
                                 <div className="flex items-start gap-2 p-2.5 rounded-xl"
-                                    style={{ background: 'color-mix(in srgb, #3b82f6 5%, transparent)', border: '1px solid color-mix(in srgb, #3b82f6 12%, transparent)' }}>
-                                    <Lock size={12} className="shrink-0 mt-0.5" style={{ color: '#3b82f6' }} />
+                                    style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 12%, transparent)' }}>
+                                    <Lock size={12} className="shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
                                     <p className="text-[10px] text-app-text-muted leading-relaxed">
                                         Enter your <strong>login password</strong> to verify your identity before changing the PIN.
                                     </p>
@@ -999,8 +999,8 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                         disabled={saving || !password || newPin.length < 4 || newPin !== confirmPin}
                                         className="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-2.5 rounded-xl text-white transition-all disabled:opacity-40"
                                         style={{
-                                            background: pinModal.mode === 'self' ? 'var(--app-primary)' : '#f59e0b',
-                                            boxShadow: `0 2px 12px color-mix(in srgb, ${pinModal.mode === 'self' ? 'var(--app-primary)' : '#f59e0b'} 25%, transparent)`,
+                                            background: pinModal.mode === 'self' ? 'var(--app-primary)' : 'var(--app-warning)',
+                                            boxShadow: `0 2px 12px color-mix(in srgb, ${pinModal.mode === 'self' ? 'var(--app-primary)' : 'var(--app-warning)'} 25%, transparent)`,
                                         }}>
                                         {saving ? <Loader2 size={13} className="animate-spin" /> : <Lock size={13} />}
                                         {pinModal.mode === 'self' ? 'Update PIN' : 'Reset PIN'}
@@ -1041,8 +1041,8 @@ function CashierRow({ user, name, authorized, onToggle, onRefresh }: {
     return (
         <div className="rounded-lg border transition-all"
             style={{
-                background: authorized ? 'color-mix(in srgb, #3b82f6 5%, transparent)' : 'transparent',
-                borderColor: authorized ? 'color-mix(in srgb, #3b82f6 18%, transparent)' : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                background: authorized ? 'color-mix(in srgb, var(--app-info) 5%, transparent)' : 'transparent',
+                borderColor: authorized ? 'color-mix(in srgb, var(--app-info) 18%, transparent)' : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
             }}>
             <div className="flex items-center gap-2 px-2.5 py-1.5">
                 {/* Authorize toggle */}
@@ -1051,19 +1051,19 @@ function CashierRow({ user, name, authorized, onToggle, onRefresh }: {
                     {authorized && <Check size={9} className="text-white" />}
                 </button>
                 <span className="flex-1 truncate text-[11px] font-medium"
-                    style={{ color: authorized ? '#3b82f6' : 'var(--app-text-muted)' }}>{name}</span>
+                    style={{ color: authorized ? 'var(--app-info)' : 'var(--app-text-muted)' }}>{name}</span>
                 {/* PIN status */}
                 <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-md`}
                     style={{
-                        background: user.pos_pin ? 'color-mix(in srgb, #10b981 10%, transparent)' : 'color-mix(in srgb, #ef4444 10%, transparent)',
-                        color: user.pos_pin ? '#10b981' : '#ef4444',
+                        background: user.pos_pin ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)',
+                        color: user.pos_pin ? 'var(--app-primary)' : 'var(--app-error)',
                     }}>
                     {user.pos_pin ? '✓ PIN' : '○ NO PIN'}
                 </span>
                 {/* Set PIN button */}
                 <button onClick={() => { setPinOpen(!pinOpen); setPinVal('') }}
                     className="p-1 rounded transition-all hover:bg-blue-500/10"
-                    style={{ color: pinOpen ? '#3b82f6' : 'color-mix(in srgb, var(--app-text-muted) 50%, transparent)' }}>
+                    style={{ color: pinOpen ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-text-muted) 50%, transparent)' }}>
                     <Key size={10} />
                 </button>
             </div>

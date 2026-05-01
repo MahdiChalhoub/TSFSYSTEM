@@ -87,7 +87,7 @@ export default function SupplierStatementPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+        <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative">
             <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-info/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-5xl mx-auto relative z-10 space-y-8">

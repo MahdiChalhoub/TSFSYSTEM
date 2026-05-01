@@ -69,7 +69,7 @@ const MODULE_COLORS: Record<string, string> = {
 
 function ScoreBar({ val, label }: { val: string; label: string }) {
     const pct = Math.max(4, parseFloat(val || '0'));
-    const color = pct >= 75 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
+    const color = pct >= 75 ? 'var(--app-primary)' : pct >= 50 ? 'var(--app-warning)' : 'var(--app-error)';
     return (
         <div className="flex flex-col items-center gap-1">
             <div className="w-3 rounded-t-sm" style={{ height: `${pct * 0.32}px`, background: color, opacity: 0.6 }} />

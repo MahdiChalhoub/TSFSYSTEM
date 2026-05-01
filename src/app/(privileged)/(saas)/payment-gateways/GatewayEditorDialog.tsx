@@ -24,7 +24,7 @@ const EMPTY: PaymentGatewayPayload = {
     name: '',
     provider_family: '',
     logo_emoji: '💳',
-    color: '#6366f1',
+    color: 'var(--app-accent)',
     description: '',
     is_global: false,
     country_codes: [],

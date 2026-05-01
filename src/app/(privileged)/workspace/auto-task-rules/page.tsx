@@ -1580,7 +1580,7 @@ export default function AutoTaskRulesPage() {
                                                             </div>
                                                             <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                                                                 style={{
-                                                                    background: `color-mix(in srgb, ${d.priority === 'URGENT' ? 'var(--app-error, #ef4444)' : d.priority === 'HIGH' ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)'} 12%, transparent)`,
+                                                                    background: `color-mix(in srgb, ${d.priority === 'URGENT' ? 'var(--app-error)' : d.priority === 'HIGH' ? 'var(--app-warning)' : 'var(--app-primary)'} 12%, transparent)`,
                                                                     color: d.priority === 'URGENT' ? 'var(--app-error, #ef4444)' : d.priority === 'HIGH' ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)',
                                                                 }}>
                                                                 {d.priority?.toLowerCase()}

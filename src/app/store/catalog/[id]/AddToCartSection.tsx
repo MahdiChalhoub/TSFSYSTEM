@@ -61,7 +61,7 @@ export default function AddToCartSection({ productId, productName }: { productId
             {toast && (
                 <div style={{
                     position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 50,
-                    background: '#1e293b', color: '#fff', padding: '0.75rem 1.25rem',
+                    background: 'var(--app-surface-2)', color: '#fff', padding: '0.75rem 1.25rem',
                     borderRadius: '0.75rem', fontSize: '0.875rem', fontWeight: 600,
                     boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
                 }}>

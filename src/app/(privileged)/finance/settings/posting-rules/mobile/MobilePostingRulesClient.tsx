@@ -26,18 +26,18 @@ import '@/lib/tours/definitions/finance-posting-rules-mobile'
 
 const MODULE_META: Record<string, { icon: any; color: string; label: string }> = {
     sales:       { icon: ShoppingCart,   color: 'var(--app-info, #3b82f6)',    label: 'Sales' },
-    purchases:   { icon: CreditCard,     color: '#8b5cf6',                     label: 'Purchases' },
+    purchases:   { icon: CreditCard,     color: 'var(--app-accent)',                     label: 'Purchases' },
     inventory:   { icon: Package,        color: 'var(--app-warning, #f59e0b)', label: 'Inventory' },
     payments:    { icon: Wallet,         color: 'var(--app-success, #22c55e)', label: 'Payments' },
     tax:         { icon: Shield,         color: 'var(--app-error, #ef4444)',   label: 'Tax' },
-    treasury:    { icon: Landmark,       color: '#06b6d4',                     label: 'Treasury' },
-    assets:      { icon: BarChart3,      color: '#64748b',                     label: 'Assets' },
-    equity:      { icon: Users,          color: '#8b5cf6',                     label: 'Equity' },
-    adjustment:  { icon: RefreshCcw,     color: '#f97316',                     label: 'Adjustments' },
+    treasury:    { icon: Landmark,       color: 'var(--app-accent-cyan)',                     label: 'Treasury' },
+    assets:      { icon: BarChart3,      color: 'var(--app-muted-foreground)',                     label: 'Assets' },
+    equity:      { icon: Users,          color: 'var(--app-accent)',                     label: 'Equity' },
+    adjustment:  { icon: RefreshCcw,     color: 'var(--app-warning)',                     label: 'Adjustments' },
     automation:  { icon: Zap,            color: 'var(--app-success, #22c55e)', label: 'Automation' },
     suspense:    { icon: ArrowRightLeft, color: 'var(--app-warning, #f59e0b)', label: 'Suspense' },
-    partners:    { icon: Users,          color: '#8b5cf6',                     label: 'Partners' },
-    fixedAssets: { icon: BarChart3,      color: '#64748b',                     label: 'Fixed Assets' },
+    partners:    { icon: Users,          color: 'var(--app-accent)',                     label: 'Partners' },
+    fixedAssets: { icon: BarChart3,      color: 'var(--app-muted-foreground)',                     label: 'Fixed Assets' },
     payroll:     { icon: Users,          color: '#ec4899',                     label: 'Payroll' },
 }
 const getMeta = (mod: string) => MODULE_META[mod] || { icon: Settings2, color: 'var(--app-muted-foreground)', label: mod }
@@ -565,7 +565,7 @@ function AccountPickerSheet({ event, accounts, currentAccountId, onPick, onClear
                 <div className="flex items-center justify-center flex-shrink-0 rounded-xl"
                     style={{
                         width: 40, height: 40,
-                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
+                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))',
                         boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 25%, transparent)',
                         color: '#fff',
                     }}>

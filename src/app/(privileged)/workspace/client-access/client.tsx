@@ -20,7 +20,7 @@ const ALL_PERMISSIONS = [
 ];
 
 const STATUS_COLORS: Record<string, string> = {
-    ACTIVE: '#22c55e', SUSPENDED: '#f59e0b', REVOKED: '#ef4444', PENDING: '#64748b',
+    ACTIVE: 'var(--app-success)', SUSPENDED: 'var(--app-warning)', REVOKED: 'var(--app-error)', PENDING: 'var(--app-muted-foreground)',
 };
 
 export default function ClientAccessClient({ accesses: init, customers }: any) {
@@ -70,7 +70,7 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
     }
 
     const cardStyle: React.CSSProperties = {
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        background: 'linear-gradient(135deg, var(--app-surface-2) 0%, var(--app-bg) 100%)',
         borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)',
     };
 
@@ -79,15 +79,15 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
             <div style={{ display: 'flex', gap: 12, marginBottom: '1.5rem', alignItems: 'center' }}>
                 <div style={{
                     flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem 1rem',
-                    background: '#0f172a', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'var(--app-bg)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
                 }}>
-                    <Search size={16} color="#64748b" />
+                    <Search size={16} color="var(--app-muted-foreground)" />
                     <input value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder="Search clients..." style={{ flex: 1, background: 'none', border: 'none', color: '#e2e8f0', outline: 'none' }} />
+                        placeholder="Search clients..." style={{ flex: 1, background: 'none', border: 'none', color: 'var(--app-border)', outline: 'none' }} />
                 </div>
                 <button onClick={() => setShowCreate(true)} style={{
                     display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 1rem',
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none',
+                    background: 'linear-gradient(135deg, var(--app-accent), var(--app-accent))', border: 'none',
                     borderRadius: 8, color: '#fff', cursor: 'pointer', fontWeight: 600,
                 }}>
                     <Plus size={16} /> Grant Access
@@ -99,15 +99,15 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                     <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>Grant New Client Access</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 12 }}>
                         <select value={newAccess.contact} onChange={e => setNewAccess(prev => ({ ...prev, contact: e.target.value }))}
-                            style={{ padding: '0.5rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#e2e8f0' }}>
+                            style={{ padding: '0.5rem', background: 'var(--app-bg)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: 'var(--app-border)' }}>
                             <option value="">Select Customer...</option>
                             {customers.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                         <input placeholder="User ID" value={newAccess.user}
                             onChange={e => setNewAccess(prev => ({ ...prev, user: e.target.value }))}
-                            style={{ padding: '0.5rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#e2e8f0' }} />
+                            style={{ padding: '0.5rem', background: 'var(--app-bg)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: 'var(--app-border)' }} />
                         <button onClick={handleCreate} style={{
-                            padding: '0.5rem 1rem', background: '#22c55e', border: 'none',
+                            padding: '0.5rem 1rem', background: 'var(--app-success)', border: 'none',
                             borderRadius: 6, color: '#fff', cursor: 'pointer', fontWeight: 600,
                         }}>Create</button>
                     </div>
@@ -120,9 +120,9 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                                 <div style={{ fontWeight: 600, fontSize: '1.05rem' }}>{a.contact_name}</div>
-                                <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                                <div style={{ color: 'var(--app-faint)', fontSize: '0.85rem' }}>
                                     {a.user_email}
-                                    {a.barcode && <span style={{ marginLeft: 8, color: '#06b6d4' }}>📱 {a.barcode}</span>}
+                                    {a.barcode && <span style={{ marginLeft: 8, color: 'var(--app-accent-cyan)' }}>📱 {a.barcode}</span>}
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -132,29 +132,29 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                                 }}>{a.status}</span>
                                 {a.status !== 'ACTIVE' && (
                                     <button onClick={() => handleActivate(a.id)} title="Activate"
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#22c55e' }}>
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-success)' }}>
                                         <ShieldCheck size={18} />
                                     </button>
                                 )}
                                 {a.status === 'ACTIVE' && (
                                     <button onClick={() => handleSuspend(a.id)} title="Suspend"
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b' }}>
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-warning)' }}>
                                         <Pause size={18} />
                                     </button>
                                 )}
                                 <button onClick={() => handleRevoke(a.id)} title="Revoke"
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-error)' }}>
                                     <ShieldOff size={18} />
                                 </button>
                                 {!a.barcode && (
                                     <button onClick={() => handleGenBarcode(a.id)} title="Generate Barcode"
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#06b6d4' }}>
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-accent-cyan)' }}>
                                         <QrCode size={18} />
                                     </button>
                                 )}
                                 <button onClick={() => { setEditPerms(a.id); setEditPermsValues(a.permissions || []); }}
                                     title="Edit Permissions"
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1' }}>
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-accent)' }}>
                                     <Eye size={18} />
                                 </button>
                             </div>
@@ -176,7 +176,7 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                         </div>
 
                         {editPerms === a.id && (
-                            <div style={{ marginTop: 12, padding: 12, background: '#0f172a', borderRadius: 8 }}>
+                            <div style={{ marginTop: 12, padding: 12, background: 'var(--app-bg)', borderRadius: 8 }}>
                                 <div style={{ fontWeight: 600, marginBottom: 8, fontSize: '0.85rem' }}>Edit Permissions</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                                     {ALL_PERMISSIONS.map(pm => (
@@ -184,7 +184,7 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                                             display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                                             padding: '4px 8px', borderRadius: 6, fontSize: '0.8rem',
                                             background: editPermsValues.includes(pm.code) ? 'rgba(99,102,241,0.2)' : 'transparent',
-                                            color: editPermsValues.includes(pm.code) ? '#818cf8' : '#94a3b8',
+                                            color: editPermsValues.includes(pm.code) ? '#818cf8' : 'var(--app-faint)',
                                         }}>
                                             <input type="checkbox" checked={editPermsValues.includes(pm.code)}
                                                 onChange={e => {
@@ -197,12 +197,12 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                                 </div>
                                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                                     <button onClick={() => handleSavePerms(a.id)} style={{
-                                        padding: '4px 12px', background: '#6366f1', border: 'none',
+                                        padding: '4px 12px', background: 'var(--app-accent)', border: 'none',
                                         borderRadius: 6, color: '#fff', cursor: 'pointer', fontSize: '0.8rem',
                                     }}>Save</button>
                                     <button onClick={() => setEditPerms(null)} style={{
                                         padding: '4px 12px', background: '#334155', border: 'none',
-                                        borderRadius: 6, color: '#e2e8f0', cursor: 'pointer', fontSize: '0.8rem',
+                                        borderRadius: 6, color: 'var(--app-border)', cursor: 'pointer', fontSize: '0.8rem',
                                     }}>Cancel</button>
                                 </div>
                             </div>
@@ -210,7 +210,7 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                     </div>
                 ))}
                 {filtered.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No client portal accesses found</div>
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-muted-foreground)' }}>No client portal accesses found</div>
                 )}
             </div>
         </div>

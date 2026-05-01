@@ -115,7 +115,7 @@ export function MobileUnitRow({
                         style={{
                             width: 28, height: 28,
                             background: isBase
-                                ? 'linear-gradient(135deg, var(--app-info, #3b82f6), color-mix(in srgb, var(--app-info, #3b82f6) 70%, #6366f1))'
+                                ? 'linear-gradient(135deg, var(--app-info, #3b82f6), color-mix(in srgb, var(--app-info, #3b82f6) 70%, var(--app-accent)))'
                                 : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
                             color: isBase ? '#fff' : 'var(--app-muted-foreground)',
                         }}>
@@ -172,7 +172,7 @@ export function MobileUnitRow({
                                 fontSize: 'var(--tp-xs)',
                                 color: productCount > 0 ? 'var(--app-success, #10b981)' : 'color-mix(in srgb, var(--app-muted-foreground) 45%, transparent)',
                                 background: productCount > 0 ? 'color-mix(in srgb, var(--app-success, #10b981) 10%, transparent)' : 'color-mix(in srgb, var(--app-border) 18%, transparent)',
-                                border: `1px solid ${productCount > 0 ? 'color-mix(in srgb, var(--app-success, #10b981) 20%, transparent)' : 'transparent'}`,
+                                border: `1px solid ${productCount > 0 ? 'color-mix(in srgb, var(--app-success, var(--app-primary)) 20%, transparent)' : 'transparent'}`,
                             }}
                             aria-label={`${productCount} products`}>
                             <Package size={10} /> {productCount}

@@ -83,13 +83,13 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
     if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-app-text-muted" /></div>
 
     const SECTIONS = [
-        { id: 'security' as const, label: 'Security', icon: Shield, color: '#f59e0b' },
-        { id: 'delivery' as const, label: 'Delivery', icon: Truck, color: '#ef4444' },
+        { id: 'security' as const, label: 'Security', icon: Shield, color: 'var(--app-warning)' },
+        { id: 'delivery' as const, label: 'Delivery', icon: Truck, color: 'var(--app-error)' },
     ]
 
     const RULE_GROUPS = [
         {
-            title: 'Connectivity', color: '#06b6d4', icon: Zap, rows: [
+            title: 'Connectivity', color: 'var(--app-accent-cyan)', icon: Zap, rows: [
                 <TRow key="offline" label="POS Offline Mode" desc="Queue orders offline and sync later" k="pos_offline_enabled" />,
             ]
         },
@@ -101,7 +101,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
             ]
         },
         {
-            title: 'Manager Overrides', color: '#ef4444', icon: Shield, rows: [
+            title: 'Manager Overrides', color: 'var(--app-error)', icon: Shield, rows: [
                 <TRow key="a" label="Void Order" desc="Manager PIN to void" k="requireManagerForVoid" />,
                 <TRow key="b" label="Discount" desc="Manager PIN for discounts" k="requireManagerForDiscount" />,
                 <TRow key="c" label="Price Override" desc="Manager PIN to change price" k="requireManagerForPriceOverride" />,
@@ -110,14 +110,14 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
             ]
         },
         {
-            title: 'Register Close', color: '#f59e0b', icon: Monitor, rows: [
+            title: 'Register Close', color: 'var(--app-warning)', icon: Monitor, rows: [
                 <TRow key="a" label="Lock on Close" desc="Prevent access after closing" k="lockRegisterOnClose" />,
                 <TRow key="b" label="Z-Report" desc="Auto-print on close" k="printReceiptOnClose" />,
                 <TRow key="c" label="Cash Count" desc="Count cash on close" k="requireCountOnClose" />,
             ]
         },
         {
-            title: 'Reconciliation', color: '#3b82f6', icon: Zap, rows: [
+            title: 'Reconciliation', color: 'var(--app-info)', icon: Zap, rows: [
                 <TRow key="a" label="Enable" desc="Full reconciliation on close" k="enableReconciliation" />,
                 <TRow key="b" label="Controlled = Truth" desc="Wave/OM/Bank are always correct" k="controlledAccountsAreTruth" />,
                 <TRow key="c" label="Auto-Calibrate" desc="Mismatch adjusts cash" k="autoCalibrateToClose" />,

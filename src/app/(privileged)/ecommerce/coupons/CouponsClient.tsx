@@ -70,8 +70,8 @@ export default function CouponsClient({ initialCoupons }: Props) {
             <div className="grid grid-cols-3 gap-4 mb-6">
                 {[
                     { label: 'Total Codes', value: coupons.length, icon: Tag, color: 'var(--app-accent)' },
-                    { label: 'Active', value: active, icon: ToggleRight, color: '#10b981' },
-                    { label: 'Expired', value: expired, icon: Clock, color: '#f59e0b' },
+                    { label: 'Active', value: active, icon: ToggleRight, color: 'var(--app-primary)' },
+                    { label: 'Expired', value: expired, icon: Clock, color: 'var(--app-warning)' },
                 ].map(({ label, value, icon: Icon, color }) => (
                     <div key={label} className="app-card flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"

@@ -12,7 +12,7 @@ export default function EcommerceCatalogPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Product Catalog</h1>
-                    <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Manage which products appear on your storefront.</p>
+                    <p style={{ color: 'var(--app-muted-foreground)', marginTop: '0.25rem' }}>Manage which products appear on your storefront.</p>
                 </div>
             </div>
 
@@ -23,10 +23,10 @@ export default function EcommerceCatalogPage() {
             }}>
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                    background: '#fff', border: '1px solid var(--app-border)', borderRadius: '8px',
                     padding: '0.5rem 1rem', flex: 1, maxWidth: '400px',
                 }}>
-                    <Search size={16} color="#94a3b8" />
+                    <Search size={16} color="var(--app-faint)" />
                     <input
                         type="text"
                         placeholder="Search products..."
@@ -44,11 +44,11 @@ export default function EcommerceCatalogPage() {
             {products.length === 0 ? (
                 <div style={{
                     background: '#fff',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid var(--app-border)',
                     borderRadius: '12px',
                     padding: '3rem',
                     textAlign: 'center',
-                    color: '#94a3b8',
+                    color: 'var(--app-faint)',
                 }}>
                     <Tag size={48} style={{ margin: '0 auto 1rem' }} />
                     <p style={{ fontWeight: 600, fontSize: '1.1rem' }}>Catalog is empty</p>
@@ -66,7 +66,7 @@ export default function EcommerceCatalogPage() {
                     {products.map((p: any) => (
                         <div key={p.id} style={{
                             background: '#fff',
-                            border: '1px solid #e2e8f0',
+                            border: '1px solid var(--app-border)',
                             borderRadius: '10px',
                             padding: '1rem',
                         }}>
@@ -83,8 +83,8 @@ export default function EcommerceCatalogPage() {
                                 <Grid size={32} />
                             </div>
                             <h3 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>{p.name}</h3>
-                            <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.25rem 0' }}>{p.category || 'Uncategorized'}</p>
-                            <p style={{ fontWeight: 700, color: '#1e293b' }}>${p.price}</p>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--app-muted-foreground)', margin: '0.25rem 0' }}>{p.category || 'Uncategorized'}</p>
+                            <p style={{ fontWeight: 700, color: 'var(--app-surface-2)' }}>${p.price}</p>
                         </div>
                     ))}
                 </div>

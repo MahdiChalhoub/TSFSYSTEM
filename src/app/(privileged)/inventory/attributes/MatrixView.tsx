@@ -182,7 +182,7 @@ export function DynamicProductMatrix({
     const dimColor = (key: string): string => {
         if (key === 'country') return 'var(--app-success, #22c55e)'
         if (key === 'category') return 'var(--app-primary)'
-        if (key === 'brand') return '#8b5cf6'
+        if (key === 'brand') return 'var(--app-accent)'
         return 'var(--app-info, #3b82f6)'
     }
 

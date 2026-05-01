@@ -9,7 +9,7 @@ import { getFieldStatus } from '../../_lib/validation'
 import { usePASettings } from '../../_hooks/PASettingsContext'
 import { FieldHelp, statusDot } from '../FieldHelp'
 
-const SECTION_COLOR = '#22c55e'
+const SECTION_COLOR = 'var(--app-success)'
 
 export function QuantitySection() {
     const s = usePASettings()
@@ -87,7 +87,7 @@ export function QuantitySection() {
                             )}
                         </p>
                         {s.getWarning('proposed_qty_lead_days') && (
-                            <p className="text-[9px] mt-1 flex items-center gap-1" style={{ color: s.getWarning('proposed_qty_lead_days')!.severity === 'danger' ? 'var(--app-error, #ef4444)' : '#f59e0b' }}>
+                            <p className="text-[9px] mt-1 flex items-center gap-1" style={{ color: s.getWarning('proposed_qty_lead_days')!.severity === 'danger' ? 'var(--app-error, #ef4444)' : 'var(--app-warning)' }}>
                                 <AlertTriangle size={9} /> {s.getWarning('proposed_qty_lead_days')!.message}
                             </p>
                         )}
@@ -118,7 +118,7 @@ export function QuantitySection() {
                             )}
                         </p>
                         {s.getWarning('proposed_qty_safety_multiplier') && (
-                            <p className="text-[9px] mt-1 flex items-center gap-1" style={{ color: s.getWarning('proposed_qty_safety_multiplier')!.severity === 'danger' ? 'var(--app-error, #ef4444)' : '#f59e0b' }}>
+                            <p className="text-[9px] mt-1 flex items-center gap-1" style={{ color: s.getWarning('proposed_qty_safety_multiplier')!.severity === 'danger' ? 'var(--app-error, #ef4444)' : 'var(--app-warning)' }}>
                                 <AlertTriangle size={9} /> {s.getWarning('proposed_qty_safety_multiplier')!.message}
                             </p>
                         )}

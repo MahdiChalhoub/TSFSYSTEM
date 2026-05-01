@@ -17,9 +17,9 @@ const CATEGORIES = [
     { key: 'RECONCILIATION', label: 'Reconciliation', fg: 'var(--app-info, #3b82f6)' },
     { key: 'ACCRUALS', label: 'Accruals', fg: 'var(--app-warning, #f59e0b)' },
     { key: 'INVENTORY', label: 'Inventory', fg: 'var(--app-primary)' },
-    { key: 'FX', label: 'FX', fg: '#8b5cf6' },
+    { key: 'FX', label: 'FX', fg: 'var(--app-accent)' },
     { key: 'TAX', label: 'Tax', fg: 'var(--app-error, #ef4444)' },
-    { key: 'DEPRECIATION', label: 'Depreciation', fg: '#06b6d4' },
+    { key: 'DEPRECIATION', label: 'Depreciation', fg: 'var(--app-accent-cyan)' },
     { key: 'REVIEW', label: 'Review', fg: 'var(--app-success, #22c55e)' },
     { key: 'OTHER', label: 'Other', fg: 'var(--app-muted-foreground)' },
 ] as const

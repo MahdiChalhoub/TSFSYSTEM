@@ -8,7 +8,7 @@ import {
 import { usePASettings } from '../../_hooks/PASettingsContext'
 import { FieldHelp } from '../FieldHelp'
 
-const C = '#f59e0b'
+const C = 'var(--app-warning)'
 
 export function PricingSection() {
     const s = usePASettings()

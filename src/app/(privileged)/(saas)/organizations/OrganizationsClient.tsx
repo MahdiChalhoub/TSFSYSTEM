@@ -229,14 +229,14 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                             onClick={() => router.push(`/organizations/${org.id}`)}>
                             {/* Top accent bar */}
                             <div className="h-1 w-full" style={isSaas
-                                ? { background: 'linear-gradient(90deg, #f59e0b, #d97706)' }
+                                ? { background: 'linear-gradient(90deg, var(--app-warning), #d97706)' }
                                 : { background: `linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 60%, transparent))` }} />
 
                             <div className="p-5">
                                 {/* Row 1: Icon + Name + Badges */}
                                 <div className="flex items-start gap-3.5 mb-4">
                                     <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 group-hover:rotate-[-3deg] transition-transform duration-300"
-                                        style={isSaas ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : gradBg('--app-primary')}>
+                                        style={isSaas ? { background: 'linear-gradient(135deg, var(--app-warning), #d97706)' } : gradBg('--app-primary')}>
                                         {isSaas ? <ShieldCheck size={20} className="text-white" /> : <Building2 size={18} className="text-white" />}
                                     </div>
                                     <div className="flex-1 min-w-0">

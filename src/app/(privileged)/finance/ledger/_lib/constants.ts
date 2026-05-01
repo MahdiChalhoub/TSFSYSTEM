@@ -13,7 +13,7 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 
 export const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   MANUAL: { label: 'Manual', color: 'var(--app-primary)' },
-  AUTO: { label: 'Auto', color: '#8b5cf6' },
+  AUTO: { label: 'Auto', color: 'var(--app-accent)' },
 }
 
 export const AUTO_SOURCE_CONFIG: Record<string, string> = {

@@ -19,21 +19,21 @@ export function OrderKpis({ totalHT, totalVAT, totalTTC, itemsCount }: Props) {
                 label="Total HT"
                 value={formatter.format(totalHT)}
                 suffix="FCFA"
-                color="#3b82f6"
+                color="var(--app-info)"
             />
             <KpiCard
                 icon={<Percent size={14} />}
                 label="Taxes (VAT)"
                 value={formatter.format(totalVAT)}
                 suffix="FCFA"
-                color="#f59e0b"
+                color="var(--app-warning)"
             />
             <KpiCard
                 icon={<Receipt size={14} />}
                 label="Total TTC"
                 value={formatter.format(totalTTC)}
                 suffix="FCFA"
-                color="#22c55e"
+                color="var(--app-success)"
                 highlight
             />
             <KpiCard
@@ -41,7 +41,7 @@ export function OrderKpis({ totalHT, totalVAT, totalTTC, itemsCount }: Props) {
                 label="Items Count"
                 value={itemsCount.toString()}
                 suffix="Lines"
-                color="#8b5cf6"
+                color="var(--app-accent)"
             />
         </div>
     )

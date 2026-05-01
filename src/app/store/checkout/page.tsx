@@ -71,14 +71,14 @@ export default function CheckoutPage() {
         })
     }
 
-    if (loading) return <div className="store-section store-container" style={{ textAlign: 'center', paddingTop: '4rem' }}><p style={{ color: '#94a3b8' }}>Loading…</p></div>
+    if (loading) return <div className="store-section store-container" style={{ textAlign: 'center', paddingTop: '4rem' }}><p style={{ color: 'var(--app-faint)' }}>Loading…</p></div>
 
     if (success) return (
         <div className="store-section">
             <div className="store-container" style={{ textAlign: 'center', paddingTop: '3rem' }}>
-                <CheckCircle size={64} style={{ color: '#10b981', margin: '0 auto 1rem' }} />
-                <h2 style={{ fontWeight: 800, color: '#1e293b', marginBottom: '0.5rem' }}>{success}</h2>
-                <p style={{ color: '#64748b' }}>Redirecting to your orders…</p>
+                <CheckCircle size={64} style={{ color: 'var(--app-primary)', margin: '0 auto 1rem' }} />
+                <h2 style={{ fontWeight: 800, color: 'var(--app-surface-2)', marginBottom: '0.5rem' }}>{success}</h2>
+                <p style={{ color: 'var(--app-muted-foreground)' }}>Redirecting to your orders…</p>
             </div>
         </div>
     )
@@ -93,7 +93,7 @@ export default function CheckoutPage() {
 
                         {/* Delivery Details */}
                         <div className="store-card">
-                            <h3 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Delivery Details</h3>
+                            <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '1rem' }}>Delivery Details</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                                 <div>
                                     <label className="store-label">Full Delivery Address *</label>
@@ -122,7 +122,7 @@ export default function CheckoutPage() {
                         {/* Delivery Zone */}
                         {zones.length > 0 && (
                             <div className="store-card">
-                                <h3 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Delivery Zone</h3>
+                                <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '1rem' }}>Delivery Zone</h3>
                                 <select id="checkout-zone" className="store-input"
                                     value={form.shipping_zone_id}
                                     onChange={e => setForm(p => ({ ...p, shipping_zone_id: e.target.value }))}>
@@ -149,7 +149,7 @@ export default function CheckoutPage() {
 
                         {/* Payment Method */}
                         <div className="store-card">
-                            <h3 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Payment Method</h3>
+                            <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '1rem' }}>Payment Method</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {PAYMENT_METHODS.map(m => {
                                     const Icon = m.icon
@@ -159,14 +159,14 @@ export default function CheckoutPage() {
                                             id={`pay-${m.value}`}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: '0.75rem',
-                                                padding: '0.875rem', borderRadius: '0.75rem', border: `2px solid ${selected ? 'var(--store-accent, #10b981)' : '#e2e8f0'}`,
+                                                padding: '0.875rem', borderRadius: '0.75rem', border: `2px solid ${selected ? 'var(--store-accent, #10b981)' : 'var(--app-border)'}`,
                                                 background: selected ? 'rgba(16,185,129,0.05)' : '#fff',
                                                 cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
                                             }}>
-                                            <Icon size={20} style={{ color: selected ? 'var(--store-accent, #10b981)' : '#94a3b8', flexShrink: 0 }} />
+                                            <Icon size={20} style={{ color: selected ? 'var(--store-accent, #10b981)' : 'var(--app-faint)', flexShrink: 0 }} />
                                             <div>
-                                                <p style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.9375rem' }}>{m.label}</p>
-                                                <p style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>{m.desc}</p>
+                                                <p style={{ fontWeight: 600, color: 'var(--app-surface-2)', fontSize: '0.9375rem' }}>{m.label}</p>
+                                                <p style={{ color: 'var(--app-faint)', fontSize: '0.8125rem' }}>{m.desc}</p>
                                             </div>
                                         </button>
                                     )
@@ -178,10 +178,10 @@ export default function CheckoutPage() {
                     {/* Summary sidebar */}
                     {cart && (
                         <div className="store-card" style={{ position: 'sticky', top: '80px' }}>
-                            <h3 style={{ fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>Order Summary</h3>
+                            <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', marginBottom: '1rem' }}>Order Summary</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9375rem' }}>
                                 {cart.lines?.map(l => (
-                                    <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
+                                    <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--app-muted-foreground)' }}>
                                         <span>{l.product_name} ×{l.quantity}</span>
                                         <span style={{ fontWeight: 600 }}>{fmt(l.line_total)}</span>
                                     </div>

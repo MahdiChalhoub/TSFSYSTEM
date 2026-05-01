@@ -66,12 +66,12 @@ export function FeaturesClient({ features: initialFeatures }: { features: Featur
             <div
                 className="flex items-start gap-3 px-4 py-3 rounded-xl text-[12px]"
                 style={{
-                    background: 'color-mix(in srgb, #8b5cf6 5%, var(--app-surface))',
-                    border: '1px solid color-mix(in srgb, #8b5cf6 15%, transparent)',
+                    background: 'color-mix(in srgb, var(--app-accent) 5%, var(--app-surface))',
+                    border: '1px solid color-mix(in srgb, var(--app-accent) 15%, transparent)',
                     color: 'var(--app-muted-foreground)',
                 }}
             >
-                <Sparkles size={16} style={{ color: '#8b5cf6', flexShrink: 0, marginTop: 1 }} />
+                <Sparkles size={16} style={{ color: 'var(--app-accent)', flexShrink: 0, marginTop: 1 }} />
                 <div>
                     <span className="font-bold text-app-foreground">Features are gated by your subscription plan.</span>{' '}
                     Some features require a plan upgrade to enable. Toggle switches are disabled when your plan doesn&apos;t include the feature.
@@ -92,10 +92,10 @@ export function FeaturesClient({ features: initialFeatures }: { features: Featur
                             className="relative flex items-start gap-4 p-4 rounded-2xl border transition-all duration-200"
                             style={{
                                 background: isEnabled
-                                    ? 'color-mix(in srgb, #8b5cf6 4%, var(--app-surface))'
+                                    ? 'color-mix(in srgb, var(--app-accent) 4%, var(--app-surface))'
                                     : 'var(--app-surface)',
                                 borderColor: isEnabled
-                                    ? 'color-mix(in srgb, #8b5cf6 25%, transparent)'
+                                    ? 'color-mix(in srgb, var(--app-accent) 25%, transparent)'
                                     : 'var(--app-border)',
                                 opacity: canToggle ? 1 : 0.7,
                             }}
@@ -105,9 +105,9 @@ export function FeaturesClient({ features: initialFeatures }: { features: Featur
                                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                                 style={{
                                     background: isEnabled
-                                        ? 'color-mix(in srgb, #8b5cf6 12%, transparent)'
+                                        ? 'color-mix(in srgb, var(--app-accent) 12%, transparent)'
                                         : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
-                                    color: isEnabled ? '#8b5cf6' : 'var(--app-muted-foreground)',
+                                    color: isEnabled ? 'var(--app-accent)' : 'var(--app-muted-foreground)',
                                 }}
                             >
                                 <FeatureIcon size={18} />
@@ -155,7 +155,7 @@ export function FeaturesClient({ features: initialFeatures }: { features: Featur
                                 className="relative flex-shrink-0 w-11 h-6 rounded-full transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
                                 style={{
                                     background: isEnabled
-                                        ? '#8b5cf6'
+                                        ? 'var(--app-accent)'
                                         : 'color-mix(in srgb, var(--app-border) 60%, transparent)',
                                 }}
                                 title={!canToggle ? 'Plan upgrade required' : (isEnabled ? 'Disable' : 'Enable')}
@@ -165,9 +165,9 @@ export function FeaturesClient({ features: initialFeatures }: { features: Featur
                                     style={{ left: isEnabled ? '22px' : '2px' }}
                                 >
                                     {isToggling ? (
-                                        <Loader2 size={10} className="animate-spin" style={{ color: '#8b5cf6' }} />
+                                        <Loader2 size={10} className="animate-spin" style={{ color: 'var(--app-accent)' }} />
                                     ) : isEnabled ? (
-                                        <Check size={10} style={{ color: '#8b5cf6' }} />
+                                        <Check size={10} style={{ color: 'var(--app-accent)' }} />
                                     ) : (
                                         <X size={10} style={{ color: 'var(--app-muted-foreground)' }} />
                                     )}
@@ -182,8 +182,8 @@ export function FeaturesClient({ features: initialFeatures }: { features: Featur
             {featureList.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                        style={{ background: 'color-mix(in srgb, #8b5cf6 8%, transparent)' }}>
-                        <Settings2 size={24} style={{ color: '#8b5cf6' }} />
+                        style={{ background: 'color-mix(in srgb, var(--app-accent) 8%, transparent)' }}>
+                        <Settings2 size={24} style={{ color: 'var(--app-accent)' }} />
                     </div>
                     <h3 className="text-base font-black text-app-foreground">No Features Available</h3>
                     <p className="text-sm text-app-muted-foreground max-w-md">

@@ -24,7 +24,7 @@ const REQUEST_TYPE_LABELS: Record<string, { label: string; color: string }> = {
     CLIENT_REGISTRATION: { label: 'Client Registration', color: 'var(--app-success)' },
     SUPPLIER_REGISTRATION: { label: 'Supplier Registration', color: 'var(--app-warning)' },
     PORTAL_LINK_CHANGE: { label: 'Link Change', color: 'var(--app-primary)' },
-    ACCESS_REACTIVATION: { label: 'Reactivation', color: 'var(--app-info, var(--app-primary))' },
+    ACCESS_REACTIVATION: { label: 'Reactivation', color: 'var(--app-info, #10b981)' },
 }
 
 const STATUS_STYLE: Record<string, { color: string; label: string; icon: any }> = {

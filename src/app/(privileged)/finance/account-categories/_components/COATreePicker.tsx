@@ -4,8 +4,8 @@ import { useEffect, useState, useMemo } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const TYPE_COLORS: Record<string, string> = {
-    ASSET: '#10b981', LIABILITY: '#f59e0b', EQUITY: '#8b5cf6',
-    INCOME: '#3b82f6', EXPENSE: '#ef4444',
+    ASSET: 'var(--app-primary)', LIABILITY: 'var(--app-warning)', EQUITY: 'var(--app-accent)',
+    INCOME: 'var(--app-info)', EXPENSE: 'var(--app-error)',
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -103,7 +103,7 @@ export function COATreePicker({ coaList, selectedId, onSelect }: {
                                     const children = childrenMap.get(item.id.toString()) || []
                                     const hasChildren = children.length > 0
                                     const valid = isValidParent(item)
-                                    const typeColor = TYPE_COLORS[item.type] || '#64748b'
+                                    const typeColor = TYPE_COLORS[item.type] || 'var(--app-muted-foreground)'
 
                                     return (
                                         <SelectItem

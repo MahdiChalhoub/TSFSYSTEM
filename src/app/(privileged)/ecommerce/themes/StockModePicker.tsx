@@ -13,7 +13,7 @@ const STOCK_MODES = [
  desc: 'Maximum safety. Prevents orders if items are not physically in stock. ZERO overselling.',
  icon: ShieldCheck,
  color: 'var(--app-success)',
- gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+ gradient: 'linear-gradient(135deg, var(--app-primary) 0%, #059669 100%)',
  },
  {
  value: 'ALLOW_OVERSALE',
@@ -21,7 +21,7 @@ const STOCK_MODES = [
  desc: 'Accept orders even if stock is low. Inventory goes negative, tracking what you owe.',
  icon: AlertTriangle,
  color: 'var(--app-warning)',
- gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+ gradient: 'linear-gradient(135deg, var(--app-warning) 0%, #d97706 100%)',
  },
  {
  value: 'DISABLED',
@@ -29,7 +29,7 @@ const STOCK_MODES = [
  desc: 'Ignore stock levels at checkout. Perfect for back-ordering or stock not yet entered.',
  icon: FastForward,
  color: 'var(--app-info)',
- gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+ gradient: 'linear-gradient(135deg, var(--app-info) 0%, #2563eb 100%)',
  },
 ]
 
@@ -63,7 +63,7 @@ export default function StockModePicker({ configId, currentMode }: StockModePick
 
  return (
  <div style={{
- background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
+ background: 'linear-gradient(135deg, var(--app-bg) 0%, var(--app-bg) 100%)',
  borderRadius: 24,
  border: '1px solid var(--app-surface)',
  padding: '2rem',
@@ -85,7 +85,7 @@ export default function StockModePicker({ configId, currentMode }: StockModePick
  background: 'var(--app-info)',
  display: 'flex', alignItems: 'center', justifyContent: 'center'
  }}>
- <PackageSearch size={22} color="#3b82f6" />
+ <PackageSearch size={22} color="var(--app-info)" />
  </div>
  <div>
  <h3 style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--app-foreground)', margin: 0, letterSpacing: '-0.02em' }}>

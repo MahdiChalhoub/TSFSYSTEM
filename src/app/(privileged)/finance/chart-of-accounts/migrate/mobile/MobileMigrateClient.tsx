@@ -282,7 +282,7 @@ export function MobileMigrateClient({
                             minHeight: 52,
                             color: targetKey ? '#fff' : 'var(--app-muted-foreground)',
                             background: targetKey
-                                ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))'
+                                ? 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))'
                                 : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
                             boxShadow: targetKey
                                 ? '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)'
@@ -378,7 +378,7 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                 <div className="flex items-center justify-center flex-shrink-0 rounded-xl"
                     style={{
                         width: 40, height: 40,
-                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
+                        background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))',
                         boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 25%, transparent)',
                         color: '#fff',
                     }}>

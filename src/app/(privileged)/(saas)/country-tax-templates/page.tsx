@@ -97,7 +97,7 @@ export default function CountryTaxTemplatesPage() {
     { label: 'Templates', value: templates.length, icon: <Globe size={13} />, color: 'var(--app-primary)' },
     { label: 'Active', value: templates.filter(t => t.is_active).length, icon: <Shield size={13} />, color: 'var(--app-success, #22c55e)' },
     { label: 'Policies', value: templates.reduce((s, t) => s + getPolicies(t).length, 0), icon: <FileText size={13} />, color: 'var(--app-info, #3b82f6)' },
-    { label: 'Profiles', value: templates.reduce((s, t) => s + (t.counterparty_presets?.length || 0), 0), icon: <Sparkles size={13} />, color: '#8b5cf6' },
+    { label: 'Profiles', value: templates.reduce((s, t) => s + (t.counterparty_presets?.length || 0), 0), icon: <Sparkles size={13} />, color: 'var(--app-accent)' },
   ]
 
   return (

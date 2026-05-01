@@ -34,14 +34,14 @@ type RoleUser = {
 const MODULE_COLORS: Record<string, string> = {
     pos: 'var(--app-success, #22c55e)',
     finance: 'var(--app-info, #3b82f6)',
-    inventory: '#8b5cf6',
+    inventory: 'var(--app-accent)',
     crm: 'var(--app-warning, #f59e0b)',
     hr: '#ec4899',
     purchases: '#14b8a6',
     sales: 'var(--app-success, #22c55e)',
     core: 'var(--app-primary)',
-    delivery: '#f97316',
-    ecommerce: '#06b6d4',
+    delivery: 'var(--app-warning)',
+    ecommerce: 'var(--app-accent-cyan)',
     mcp: '#a855f7',
 }
 
@@ -240,7 +240,7 @@ export default function AccessRolesPage() {
     // ── KPIs ──
     const kpis = [
         { label: 'Roles', value: roles.length, color: 'var(--app-primary)', icon: <Shield size={11} /> },
-        { label: 'Permissions', value: permissions.length, color: '#8b5cf6', icon: <Lock size={11} /> },
+        { label: 'Permissions', value: permissions.length, color: 'var(--app-accent)', icon: <Lock size={11} /> },
         { label: 'Modules', value: Object.keys(modules).length, color: 'var(--app-success, #22c55e)', icon: <Layers size={11} /> },
         { label: 'Assigned', value: activePermSet.size, color: 'var(--app-info, #3b82f6)', icon: <Check size={11} /> },
     ]

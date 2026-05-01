@@ -296,7 +296,7 @@ export default function TaskModalCard({ categories, users, defaultCategoryId, on
                                         className="w-10 h-10 rounded-xl text-tp-md font-black"
                                         style={{
                                             background: points === n ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 15%, transparent)' : 'var(--app-surface)',
-                                            border: `1px solid ${points === n ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 40%, transparent)' : 'var(--app-border)'}`,
+                                            border: `1px solid ${points === n ? 'color-mix(in srgb, var(--app-warning) 40%, transparent)' : 'var(--app-border)'}`,
                                             color: points === n ? 'var(--app-warning, #f59e0b)' : 'var(--app-foreground)',
                                         }}>
                                     {n}

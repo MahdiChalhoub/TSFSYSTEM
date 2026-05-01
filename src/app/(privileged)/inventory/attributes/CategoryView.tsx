@@ -41,9 +41,9 @@ type CategoryItem = {
 }
 
 const CAT_COLORS = [
-    'var(--app-primary)', '#8b5cf6', 'var(--app-success, #22c55e)',
-    '#f59e0b', 'var(--app-info, #3b82f6)', '#ec4899',
-    '#14b8a6', '#f97316', '#6366f1', '#10b981', '#a855f7', '#06b6d4',
+    'var(--app-primary)', 'var(--app-accent)', 'var(--app-success, #22c55e)',
+    'var(--app-warning)', 'var(--app-info, #3b82f6)', '#ec4899',
+    '#14b8a6', 'var(--app-warning)', 'var(--app-accent)', 'var(--app-primary)', '#a855f7', 'var(--app-accent-cyan)',
 ]
 
 export function CategoryView({ tree, allCategories, search, loading, onLink }: {
@@ -177,8 +177,8 @@ export function CategoryView({ tree, allCategories, search, loading, onLink }: {
                                                 style={{
                                                     background: g.is_variant
                                                         ? 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)'
-                                                        : 'color-mix(in srgb, #8b5cf6 10%, transparent)',
-                                                    color: g.is_variant ? 'var(--app-success, #22c55e)' : '#8b5cf6',
+                                                        : 'color-mix(in srgb, var(--app-accent) 10%, transparent)',
+                                                    color: g.is_variant ? 'var(--app-success, #22c55e)' : 'var(--app-accent)',
                                                 }}>
                                                 {g.name}
                                             </span>
@@ -249,7 +249,7 @@ export function CategoryView({ tree, allCategories, search, loading, onLink }: {
                                             {tagAttrs.length > 0 && (
                                                 <div>
                                                     <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
-                                                        style={{ color: '#8b5cf6' }}>
+                                                        style={{ color: 'var(--app-accent)' }}>
                                                         <Tags size={10} /> Tag Attributes ({tagAttrs.length})
                                                     </div>
                                                     <div className="space-y-0.5">
@@ -344,7 +344,7 @@ function AttrCheckRow({ group, isLinked, color, onToggle }: {
             <div className="flex items-center gap-1 flex-shrink-0">
                 {group.is_required && (
                     <span className="text-[7px] font-black uppercase px-1 py-0 rounded"
-                        style={{ color: '#ef4444', background: 'color-mix(in srgb, #ef4444 10%, transparent)' }}>
+                        style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 10%, transparent)' }}>
                         REQ
                     </span>
                 )}

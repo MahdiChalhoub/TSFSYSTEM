@@ -39,11 +39,11 @@ function getFlagEmoji(code: string): string {
 }
 
 const REGION_COLORS: Record<string, string> = {
-  'Africa': '#f59e0b',
-  'Americas': '#3b82f6',
-  'Asia': '#ef4444',
-  'Europe': '#22c55e',
-  'Oceania': '#8b5cf6',
+  'Africa': 'var(--app-warning)',
+  'Americas': 'var(--app-info)',
+  'Asia': 'var(--app-error)',
+  'Europe': 'var(--app-success)',
+  'Oceania': 'var(--app-accent)',
   '': 'var(--app-muted-foreground)',
 }
 
@@ -401,7 +401,7 @@ export default function SaaSCountriesPage() {
     { label: 'Countries', value: stats.total, icon: <Globe size={13} />, color: 'var(--app-primary)' },
     { label: 'Active', value: stats.active, icon: <Check size={13} />, color: 'var(--app-success, #22c55e)' },
     { label: 'Regions', value: stats.regions, icon: <MapPin size={13} />, color: 'var(--app-info, #3b82f6)' },
-    { label: 'With Currency', value: stats.withCurrency, icon: <DollarSign size={13} />, color: '#8b5cf6' },
+    { label: 'With Currency', value: stats.withCurrency, icon: <DollarSign size={13} />, color: 'var(--app-accent)' },
     { label: 'Tax Templates', value: stats.withTemplate, icon: <Shield size={13} />, color: 'var(--app-warning, #f59e0b)' },
   ]
 

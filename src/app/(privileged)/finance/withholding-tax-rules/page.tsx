@@ -209,7 +209,7 @@ export default function WithholdingTaxRulesPage() {
     { label: 'Rules', value: items.length, icon: <Shield size={11} />, color: 'var(--app-primary)' },
     { label: 'Active', value: items.filter(i => i.status === 'ACTIVE').length, icon: <FileCheck size={11} />, color: 'var(--app-success, #22c55e)' },
     { label: 'Countries', value: new Set(items.map(i => i.country_code).filter(Boolean)).size, icon: <Globe size={11} />, color: 'var(--app-info, #3b82f6)' },
-    { label: 'Avg Rate', value: items.length ? ((items.reduce((s, i) => s + parseFloat(i.rate || '0'), 0) / items.length) * 100).toFixed(1) + '%' : '—', icon: <Percent size={11} />, color: '#8b5cf6' },
+    { label: 'Avg Rate', value: items.length ? ((items.reduce((s, i) => s + parseFloat(i.rate || '0'), 0) / items.length) * 100).toFixed(1) + '%' : '—', icon: <Percent size={11} />, color: 'var(--app-accent)' },
   ]
 
   if (editing) {

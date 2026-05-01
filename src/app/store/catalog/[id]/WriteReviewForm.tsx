@@ -37,7 +37,7 @@ export default function WriteReviewForm({ productId, onSubmitted }: Props) {
 
     return (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-            <h3 style={{ fontWeight: 700, color: '#1e293b', fontSize: '1.0625rem' }}>Write a Review</h3>
+            <h3 style={{ fontWeight: 700, color: 'var(--app-surface-2)', fontSize: '1.0625rem' }}>Write a Review</h3>
 
             {/* Star picker */}
             <div>
@@ -51,11 +51,11 @@ export default function WriteReviewForm({ productId, onSubmitted }: Props) {
                             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', lineHeight: 1 }}
                             id={`star-${n}`}>
                             <Star size={28}
-                                fill={n <= (hovered || rating) ? '#f59e0b' : 'none'}
-                                style={{ color: '#f59e0b', transition: 'all 0.1s' }} />
+                                fill={n <= (hovered || rating) ? 'var(--app-warning)' : 'none'}
+                                style={{ color: 'var(--app-warning)', transition: 'all 0.1s' }} />
                         </button>
                     ))}
-                    <span style={{ alignSelf: 'center', fontSize: '0.875rem', color: '#94a3b8', marginLeft: '0.5rem' }}>
+                    <span style={{ alignSelf: 'center', fontSize: '0.875rem', color: 'var(--app-faint)', marginLeft: '0.5rem' }}>
                         {['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'][hovered || rating]}
                     </span>
                 </div>

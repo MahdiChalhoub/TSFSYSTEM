@@ -47,7 +47,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
     // No session and not on login page → redirect to login
     if (!session && !isLoginPage) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-6">
                     <Building2 size={48} className="mx-auto text-app-muted-foreground" />
                     <h2 className="text-xl font-bold text-white">Session Expired</h2>
@@ -82,7 +82,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
     const isActive = (href: string) => pathname === href
 
     return (
-        <div className="min-h-screen bg-[#020617] flex">
+        <div className="min-h-screen bg-app-bg flex">
             {/* Mobile Overlay */}
             {sidebarOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"

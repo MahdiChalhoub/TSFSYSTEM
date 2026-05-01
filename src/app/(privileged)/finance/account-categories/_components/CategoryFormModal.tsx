@@ -243,7 +243,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                     {/* ═══ SECTION 3: Digital Account ═══ */}
                     <div className="space-y-3">
                         <SectionHeader
-                            icon={Zap} title="Digital Integration" color="#8b5cf6"
+                            icon={Zap} title="Digital Integration" color="var(--app-accent)"
                             collapsed={!digitalExpanded}
                             onToggle={() => setDigitalExpanded(!digitalExpanded)}
                         />
@@ -256,7 +256,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                                 if (next) setDigitalExpanded(true)
                             }}
                             icon={Zap}
-                            color="#8b5cf6"
+                            color="var(--app-accent)"
                             title="Digital Account"
                             desc={form.is_digital ? 'Child accounts can connect to a payment gateway' : 'Standard physical/manual account'}
                         />
@@ -280,9 +280,9 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                                                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all"
                                                         style={{
                                                             background: form.digital_gateway === String(gw.id)
-                                                                ? `color-mix(in srgb, ${gw.gateway_color || '#6366f1'} 10%, var(--app-surface))`
+                                                                ? `color-mix(in srgb, ${gw.gateway_color || 'var(--app-accent)'} 10%, var(--app-surface))`
                                                                 : 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
-                                                            border: `1.5px solid ${form.digital_gateway === String(gw.id) ? (gw.gateway_color || '#6366f1') : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
+                                                            border: `1.5px solid ${form.digital_gateway === String(gw.id) ? (gw.gateway_color || 'var(--app-accent)') : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
                                                             transform: form.digital_gateway === String(gw.id) ? 'scale(1.02)' : 'scale(1)',
                                                         }}>
                                                         <span className="text-base">{gw.gateway_emoji || '💳'}</span>
@@ -298,7 +298,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                                         {/* Selected Provider Info */}
                                         {selectedGw && (
                                             <div className="rounded-xl px-3 py-2.5 flex items-start gap-2"
-                                                style={{ background: `color-mix(in srgb, ${selectedGw.gateway_color || '#6366f1'} 6%, var(--app-surface))`, border: `1px solid color-mix(in srgb, ${selectedGw.gateway_color || '#6366f1'} 20%, transparent)` }}>
+                                                style={{ background: `color-mix(in srgb, ${selectedGw.gateway_color || 'var(--app-accent)'} 6%, var(--app-surface))`, border: `1px solid color-mix(in srgb, ${selectedGw.gateway_color || 'var(--app-accent)'} 20%, transparent)` }}>
                                                 <span className="text-lg shrink-0">{selectedGw.gateway_emoji || '💳'}</span>
                                                 <div className="min-w-0">
                                                     <div className="text-[11px] font-black text-app-foreground">{selectedGw.gateway_name}</div>
@@ -307,7 +307,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                                                         <div className="flex flex-wrap gap-1 mt-1.5">
                                                             {selectedGw.config_schema.map((f) => (
                                                                 <span key={f.key} className="text-[8px] font-bold px-1.5 py-0.5 rounded"
-                                                                    style={{ background: `color-mix(in srgb, ${selectedGw.gateway_color || '#6366f1'} 10%, transparent)`, color: selectedGw.gateway_color || '#6366f1' }}>
+                                                                    style={{ background: `color-mix(in srgb, ${selectedGw.gateway_color || 'var(--app-accent)'} 10%, transparent)`, color: selectedGw.gateway_color || 'var(--app-accent)' }}>
                                                                     {f.label}{f.required ? ' *' : ''}
                                                                 </span>
                                                             ))}
@@ -373,7 +373,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                             <div className="flex items-center gap-1.5">
                                 <span className="text-[9px] text-app-muted-foreground font-mono font-bold">{form.code || 'CODE'}</span>
                                 {form.default_pos_enabled && <span className="text-[7px] font-bold px-1 py-px rounded" style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}>POS</span>}
-                                {form.is_digital && <span className="text-[7px] font-bold px-1 py-px rounded" style={{ background: 'color-mix(in srgb, #8b5cf6 12%, transparent)', color: '#8b5cf6' }}>⚡ DIGITAL</span>}
+                                {form.is_digital && <span className="text-[7px] font-bold px-1 py-px rounded" style={{ background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)', color: 'var(--app-accent)' }}>⚡ DIGITAL</span>}
                             </div>
                         </div>
                     </div>

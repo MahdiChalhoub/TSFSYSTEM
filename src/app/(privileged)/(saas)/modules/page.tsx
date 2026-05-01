@@ -357,7 +357,7 @@ export default function SaaSModulesPage() {
                                                     History & Rollback
                                                 </Button>
                                             </DialogTrigger>
-                                            <DialogContent className="bg-[#0F172A] border-gray-800 text-white sm:max-w-md">
+                                            <DialogContent className="bg-app-bg border-gray-800 text-white sm:max-w-md">
                                                 <DialogHeader>
                                                     <DialogTitle>Version History: {m.name}</DialogTitle>
                                                     <DialogDescription>

@@ -98,7 +98,7 @@ export default function FinancialAccountsPage() {
     const kpis = [
         { label: 'Total Accounts', value: totalAccounts, color: 'var(--app-primary)', icon: <Wallet size={14} /> },
         { label: 'Active', value: activeAccounts, color: 'var(--app-success, #22c55e)', icon: <Power size={14} /> },
-        { label: 'POS Enabled', value: posEnabled, color: '#8b5cf6', icon: <Monitor size={14} /> },
+        { label: 'POS Enabled', value: posEnabled, color: 'var(--app-accent)', icon: <Monitor size={14} /> },
         { label: 'COA Linked', value: withCOA, color: 'var(--app-info, #3b82f6)', icon: <LinkIcon size={14} /> },
         { label: 'Categories', value: totalCategories, color: 'var(--app-warning, #f59e0b)', icon: <FolderTree size={14} /> },
     ]

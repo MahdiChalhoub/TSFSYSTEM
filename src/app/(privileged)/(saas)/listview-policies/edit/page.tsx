@@ -282,14 +282,14 @@ export default function PolicyEditorPage() {
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <div>
-                            <label style={{ ...labelStyle, color: '#ef4444' }}>Hidden Columns (comma-separated)</label>
+                            <label style={{ ...labelStyle, color: 'var(--app-error)' }}>Hidden Columns (comma-separated)</label>
                             <textarea placeholder="balance, cost_price, margin, internal_notes"
                                 value={Array.from(hiddenColumns).join(', ')}
                                 onChange={e => setHiddenColumns(new Set(e.target.value.split(',').map(s => s.trim()).filter(Boolean)))}
                                 rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
                         </div>
                         <div>
-                            <label style={{ ...labelStyle, color: '#f59e0b' }}>Hidden Filters (comma-separated)</label>
+                            <label style={{ ...labelStyle, color: 'var(--app-warning)' }}>Hidden Filters (comma-separated)</label>
                             <textarea placeholder="profit_margin, cost_analysis"
                                 value={Array.from(hiddenFilters).join(', ')}
                                 onChange={e => setHiddenFilters(new Set(e.target.value.split(',').map(s => s.trim()).filter(Boolean)))}
@@ -320,19 +320,19 @@ export default function PolicyEditorPage() {
                         <span style={{ color: 'var(--app-text)', fontWeight: 700 }}>
                             {fields.length} fields
                         </span>
-                        <span style={{ color: '#22c55e', fontWeight: 700 }}>
+                        <span style={{ color: 'var(--app-success)', fontWeight: 700 }}>
                             <Eye size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.2rem' }} />
                             {fields.length - hiddenColumns.size} visible
                         </span>
-                        <span style={{ color: '#ef4444', fontWeight: 700 }}>
+                        <span style={{ color: 'var(--app-error)', fontWeight: 700 }}>
                             <EyeOff size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.2rem' }} />
                             {hiddenColumns.size} hidden
                         </span>
-                        <span style={{ color: '#22c55e', fontWeight: 700 }}>
+                        <span style={{ color: 'var(--app-success)', fontWeight: 700 }}>
                             <Lock size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.2rem' }} />
                             {forcedColumns.size} forced
                         </span>
-                        <span style={{ color: '#f59e0b', fontWeight: 700 }}>
+                        <span style={{ color: 'var(--app-warning)', fontWeight: 700 }}>
                             <Filter size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.2rem' }} />
                             {hiddenFilters.size} blocked filters
                         </span>
@@ -390,7 +390,7 @@ export default function PolicyEditorPage() {
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{
                                                     fontWeight: 600, fontSize: '0.8rem',
-                                                    color: isHidden ? '#ef4444' : 'var(--app-text)',
+                                                    color: isHidden ? 'var(--app-error)' : 'var(--app-text)',
                                                     textDecoration: isHidden ? 'line-through' : 'none',
                                                 }}>
                                                     {field.label}
@@ -406,14 +406,14 @@ export default function PolicyEditorPage() {
                                                 active={isHidden}
                                                 onClick={() => toggleHidden(field.key)}
                                                 activeLabel="Hidden" inactiveLabel="Visible"
-                                                activeColor="#ef4444" activeIcon={<EyeOff size={11} />}
+                                                activeColor="var(--app-error)" activeIcon={<EyeOff size={11} />}
                                                 inactiveIcon={<Eye size={11} />}
                                             />
                                             <ToggleBtn
                                                 active={isForced}
                                                 onClick={() => toggleForced(field.key)}
                                                 activeLabel="Forced" inactiveLabel="Normal"
-                                                activeColor="#22c55e" activeIcon={<Lock size={11} />}
+                                                activeColor="var(--app-success)" activeIcon={<Lock size={11} />}
                                                 inactiveIcon={<ToggleLeft size={11} />}
                                             />
                                         </div>
@@ -434,7 +434,7 @@ export default function PolicyEditorPage() {
                                 background: 'var(--app-surface-2, rgba(0,0,0,0.02))',
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <Filter size={16} style={{ color: '#f59e0b' }} />
+                                    <Filter size={16} style={{ color: 'var(--app-warning)' }} />
                                     <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--app-text)' }}>
                                         Filters
                                     </span>
@@ -471,7 +471,7 @@ export default function PolicyEditorPage() {
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{
                                                     fontWeight: 600, fontSize: '0.8rem',
-                                                    color: isBlocked ? '#ef4444' : 'var(--app-text)',
+                                                    color: isBlocked ? 'var(--app-error)' : 'var(--app-text)',
                                                     textDecoration: isBlocked ? 'line-through' : 'none',
                                                 }}>
                                                     {field.label}
@@ -487,7 +487,7 @@ export default function PolicyEditorPage() {
                                                 active={isBlocked}
                                                 onClick={() => toggleFilterHidden(field.key)}
                                                 activeLabel="Blocked" inactiveLabel="Allowed"
-                                                activeColor="#ef4444" activeIcon={<EyeOff size={11} />}
+                                                activeColor="var(--app-error)" activeIcon={<EyeOff size={11} />}
                                                 inactiveIcon={<CheckCircle size={11} />}
                                             />
                                         </div>
@@ -521,9 +521,9 @@ export default function PolicyEditorPage() {
                     <div style={{ fontSize: '0.8rem', color: 'var(--app-text-muted)' }}>
                         {hiddenColumns.size > 0 || hiddenFilters.size > 0 || forcedColumns.size > 0 ? (
                             <span>
-                                <strong style={{ color: '#ef4444' }}>{hiddenColumns.size}</strong> hidden columns,{' '}
-                                <strong style={{ color: '#22c55e' }}>{forcedColumns.size}</strong> forced,{' '}
-                                <strong style={{ color: '#f59e0b' }}>{hiddenFilters.size}</strong> blocked filters
+                                <strong style={{ color: 'var(--app-error)' }}>{hiddenColumns.size}</strong> hidden columns,{' '}
+                                <strong style={{ color: 'var(--app-success)' }}>{forcedColumns.size}</strong> forced,{' '}
+                                <strong style={{ color: 'var(--app-warning)' }}>{hiddenFilters.size}</strong> blocked filters
                             </span>
                         ) : (
                             <span>No restrictions set — all fields visible to org users</span>
@@ -582,7 +582,7 @@ function SmallBtn({ onClick, label, danger }: { onClick: () => void, label: stri
             padding: '0.2rem 0.5rem', borderRadius: '0.3rem',
             border: '1px solid var(--app-border)', fontSize: '0.65rem',
             fontWeight: 600, cursor: 'pointer', background: 'transparent',
-            color: danger ? '#ef4444' : 'var(--app-text-muted)',
+            color: danger ? 'var(--app-error)' : 'var(--app-text-muted)',
         }}>{label}</button>
     )
 }

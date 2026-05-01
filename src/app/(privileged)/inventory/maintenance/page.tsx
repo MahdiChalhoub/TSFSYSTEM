@@ -26,7 +26,7 @@ const TAB_CONFIG = [
     { key: 'brand', icon: Tag, label: 'Brands', color: 'var(--app-info)' },
     { key: 'attribute', icon: Package, label: 'Attributes', color: 'var(--app-warning)' },
     { key: 'unit', icon: Ruler, label: 'Units', color: 'var(--app-success)' },
-    { key: 'country', icon: Globe, label: 'Countries', color: '#8b5cf6' },
+    { key: 'country', icon: Globe, label: 'Countries', color: 'var(--app-accent)' },
 ] as const
 
 function countAll(list: MaintenanceEntity[]): number {

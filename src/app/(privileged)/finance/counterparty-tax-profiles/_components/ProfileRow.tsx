@@ -44,7 +44,7 @@ export function ProfileRow({ item, onView }: { item: Profile; onView: (id: numbe
             </div>
             <div className="hidden md:flex w-14 flex-shrink-0">
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1"
-                    style={item.airsi_subject ? { color: '#8b5cf6', background: 'color-mix(in srgb, #8b5cf6 8%, transparent)' } : { color: 'var(--app-muted-foreground)', opacity: 0.5 }}>
+                    style={item.airsi_subject ? { color: 'var(--app-accent)', background: 'color-mix(in srgb, var(--app-accent) 8%, transparent)' } : { color: 'var(--app-muted-foreground)', opacity: 0.5 }}>
                     {item.airsi_subject ? 'WHT' : '—'}
                 </span>
             </div>

@@ -146,7 +146,7 @@ export function MobileMoveDialog({ node, allCategories, onClose }: Props) {
                                 }}>
                                 <div style={{
                                     width: 36, height: 36, borderRadius: 10,
-                                    background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, #6366f1))',
+                                    background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, var(--app-accent)))',
                                     color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 22%, transparent)',
                                 }}>

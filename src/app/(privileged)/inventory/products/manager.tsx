@@ -194,7 +194,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
 
   const kpiStats: KPIStat[] = useMemo(() => [
     { label: 'Total Products', value: stats.total, icon: <Package size={11} />, color: 'var(--app-primary)' },
-    { label: 'Combos', value: stats.combos, icon: <Layers size={11} />, color: '#8b5cf6' },
+    { label: 'Combos', value: stats.combos, icon: <Layers size={11} />, color: 'var(--app-accent)' },
     { label: 'Out of Stock', value: stats.outOfStock, icon: <AlertTriangle size={11} />, color: 'var(--app-error, #ef4444)' },
     { label: 'Avg Price', value: fmt(Math.round(stats.avgPrice)), icon: <DollarSign size={11} />, color: 'var(--app-success, #22c55e)' },
   ], [stats])

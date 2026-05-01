@@ -47,7 +47,7 @@ const SETTINGS_GROUPS = [
                 desc: "Define which fields trigger an audit alert",
                 icon: ShieldCheck,
                 href: "/crm/settings/audit",
-                color: "#8B5CF6",
+                color: "var(--app-accent)",
             },
             {
                 title: "Merge Rules",

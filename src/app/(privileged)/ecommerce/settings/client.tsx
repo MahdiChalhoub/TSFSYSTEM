@@ -52,7 +52,7 @@ export default function EcommerceSettingsClient({ config }: Props) {
     const fieldStyle = {
         width: '100%',
         padding: '0.625rem 0.875rem',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--app-border)',
         borderRadius: '8px',
         fontSize: '0.9rem',
         outline: 'none',
@@ -63,7 +63,7 @@ export default function EcommerceSettingsClient({ config }: Props) {
             {/* ... (keeping store mode) */}
 
             {/* Branding & Theme */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.5rem' }}>
+            <div style={{ background: '#fff', border: '1px solid var(--app-border)', borderRadius: '12px', padding: '1.5rem' }}>
                 <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>Branding & Visuals</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -124,7 +124,7 @@ export default function EcommerceSettingsClient({ config }: Props) {
             </div>
 
             {/* SEO Settings */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.5rem' }}>
+            <div style={{ background: '#fff', border: '1px solid var(--app-border)', borderRadius: '12px', padding: '1.5rem' }}>
                 <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>SEO & Social</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
@@ -158,7 +158,7 @@ export default function EcommerceSettingsClient({ config }: Props) {
             </div>
 
             {/* Toggles */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.5rem' }}>
+            <div style={{ background: '#fff', border: '1px solid var(--app-border)', borderRadius: '12px', padding: '1.5rem' }}>
                 <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>Feature Toggles</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {[
@@ -173,13 +173,13 @@ export default function EcommerceSettingsClient({ config }: Props) {
                         }}>
                             <div>
                                 <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>{toggle.label}</div>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{toggle.desc}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>{toggle.desc}</div>
                             </div>
                             <button
                                 onClick={() => setForm(f => ({ ...f, [toggle.key]: !(f as any)[toggle.key] }))}
                                 style={{
                                     width: '44px', height: '24px', borderRadius: '12px', border: 'none',
-                                    background: (form as any)[toggle.key] ? '#6366f1' : '#cbd5e1',
+                                    background: (form as any)[toggle.key] ? 'var(--app-accent)' : '#cbd5e1',
                                     cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
                                 }}
                             >
@@ -202,7 +202,7 @@ export default function EcommerceSettingsClient({ config }: Props) {
                 style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                     padding: '0.75rem 2rem', border: 'none', borderRadius: '10px',
-                    background: saved ? '#10b981' : '#6366f1',
+                    background: saved ? 'var(--app-primary)' : 'var(--app-accent)',
                     color: '#fff', fontWeight: 600, fontSize: '0.95rem',
                     cursor: saving ? 'not-allowed' : 'pointer',
                     transition: 'background 0.2s',

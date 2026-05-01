@@ -19,10 +19,10 @@ export default async function ClientAccessPage() {
     const [accesses, customers] = await Promise.all([getAccesses(), getCustomerContacts()]);
 
     const stats = [
-        { label: 'Total Clients', value: accesses.length, icon: Users, color: '#6366f1' },
-        { label: 'Active', value: accesses.filter((a: any) => a.status === 'ACTIVE').length, icon: ShieldCheck, color: '#22c55e' },
-        { label: 'With Barcode', value: accesses.filter((a: any) => a.barcode).length, icon: QrCode, color: '#06b6d4' },
-        { label: 'Pending', value: accesses.filter((a: any) => a.status === 'PENDING').length, icon: KeyRound, color: '#f59e0b' },
+        { label: 'Total Clients', value: accesses.length, icon: Users, color: 'var(--app-accent)' },
+        { label: 'Active', value: accesses.filter((a: any) => a.status === 'ACTIVE').length, icon: ShieldCheck, color: 'var(--app-success)' },
+        { label: 'With Barcode', value: accesses.filter((a: any) => a.barcode).length, icon: QrCode, color: 'var(--app-accent-cyan)' },
+        { label: 'Pending', value: accesses.filter((a: any) => a.status === 'PENDING').length, icon: KeyRound, color: 'var(--app-warning)' },
     ];
 
     return (
@@ -30,18 +30,18 @@ export default async function ClientAccessPage() {
             <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
                 👥 Client Portal Access
             </h1>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>
+            <p style={{ color: 'var(--app-faint)', marginBottom: '1.5rem' }}>
                 Grant clients access to the self-service portal with barcode identification and granular permissions
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
                 {stats.map(s => (
                     <div key={s.label} style={{
-                        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                        background: 'linear-gradient(135deg, var(--app-surface-2) 0%, var(--app-bg) 100%)',
                         borderRadius: 12, padding: '1.25rem', border: '1px solid rgba(255,255,255,0.06)',
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                             <s.icon size={18} color={s.color} />
-                            <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{s.label}</span>
+                            <span style={{ color: 'var(--app-faint)', fontSize: '0.85rem' }}>{s.label}</span>
                         </div>
                         <div style={{ fontSize: '1.75rem', fontWeight: 700, color: s.color }}>{s.value}</div>
                     </div>

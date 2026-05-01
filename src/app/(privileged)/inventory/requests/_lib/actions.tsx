@@ -81,7 +81,7 @@ export function buildMenuActions(
     }
     if ((r.status === 'PENDING' || r.status === 'APPROVED') && r.priority !== 'URGENT') {
         items.push({
-            label: 'Bump priority', icon: <Bell size={12} style={{ color: '#8b5cf6' }} />,
+            label: 'Bump priority', icon: <Bell size={12} style={{ color: 'var(--app-accent)' }} />,
             onClick: () => startTransition(async () => {
                 const out = await runTimed(
                     'inventory.requests:bump',

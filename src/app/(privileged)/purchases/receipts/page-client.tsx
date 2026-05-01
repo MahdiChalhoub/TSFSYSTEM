@@ -114,7 +114,7 @@ export default function ReceiptsPage() {
    <div className="flex flex-col h-[calc(100vh-8rem)] animate-in fade-in duration-300">
      <div className="flex-shrink-0 space-y-4 pb-4">
        <div className="flex items-center gap-3">
-         <div className="page-header-icon" style={{ background: '#22c55e', boxShadow: '0 4px 14px color-mix(in srgb, #22c55e 30%, transparent)' }}>
+         <div className="page-header-icon" style={{ background: 'var(--app-success)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-success) 30%, transparent)' }}>
            <PackageCheck size={20} className="text-white" />
          </div>
          <div>
@@ -126,8 +126,8 @@ export default function ReceiptsPage() {
        </div>
        <KPIStrip stats={[
          { label: 'Total Orders', value: orders.length, icon: <Package size={11} />, color: 'var(--app-primary)' },
-         { label: 'Awaiting', value: pending, icon: <Clock size={11} />, color: '#f59e0b' },
-         { label: 'Received', value: received, icon: <CheckCircle size={11} />, color: '#22c55e' },
+         { label: 'Awaiting', value: pending, icon: <Clock size={11} />, color: 'var(--app-warning)' },
+         { label: 'Received', value: received, icon: <CheckCircle size={11} />, color: 'var(--app-success)' },
        ]} />
      </div>
 

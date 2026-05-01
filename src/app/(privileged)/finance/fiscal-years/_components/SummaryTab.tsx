@@ -110,12 +110,12 @@ export function SummaryTab({ summary, fiscalYearId }: SummaryTabProps) {
                                 <span className="text-[9px] font-bold uppercase opacity-50">Total JEs</span>
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-[14px] font-bold text-(--app-success, #22c55e)">{s.journal_entries.posted}</span>
+                                <span className="text-[14px] font-bold text-(--app-success, var(--app-success))">{s.journal_entries.posted}</span>
                                 <span className="text-[9px] font-bold uppercase opacity-50">Posted</span>
                             </div>
                             {s.journal_entries.draft > 0 && (
                                 <div className="flex flex-col">
-                                    <span className="text-[14px] font-bold text-(--app-warning, #f59e0b)">{s.journal_entries.draft}</span>
+                                    <span className="text-[14px] font-bold text-(--app-warning, var(--app-warning))">{s.journal_entries.draft}</span>
                                     <span className="text-[9px] font-bold uppercase opacity-50">Draft</span>
                                 </div>
                             )}
@@ -157,7 +157,7 @@ export function SummaryTab({ summary, fiscalYearId }: SummaryTabProps) {
                             {s.opening_balances_received?.length > 0 && (
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
-                                        <div className="text-[10px] font-black uppercase tracking-[0.1em] text-(--app-success, #22c55e)">Opening (Carried In)</div>
+                                        <div className="text-[10px] font-black uppercase tracking-[0.1em] text-(--app-success, var(--app-success))">Opening (Carried In)</div>
                                         <div className="flex gap-1">
                                             {(s.opening_entries_received || []).map(je => (
                                                 <a key={je.id} href={`/finance/ledger/${je.id}`}

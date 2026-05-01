@@ -51,7 +51,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         {product.category?.name && (
                             <span className="store-product-category">{product.category.name}</span>
                         )}
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1e293b', lineHeight: 1.2 }}>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--app-surface-2)', lineHeight: 1.2 }}>
                             {product.name}
                         </h1>
 
@@ -59,9 +59,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                                 {[1, 2, 3, 4, 5].map(n => (
                                     <Star key={n} size={16} fill={n <= Math.round(avgRating) ? 'currentColor' : 'none'}
-                                        style={{ color: '#f59e0b' }} />
+                                        style={{ color: 'var(--app-warning)' }} />
                                 ))}
-                                <span style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                                <span style={{ fontSize: '0.875rem', color: 'var(--app-muted-foreground)' }}>
                                     {avgRating.toFixed(1)} ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
                                 </span>
                             </div>
@@ -78,8 +78,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         )}
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Package size={14} style={{ color: '#94a3b8' }} />
-                            <span style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                            <Package size={14} style={{ color: 'var(--app-faint)' }} />
+                            <span style={{ fontSize: '0.875rem', color: 'var(--app-muted-foreground)' }}>
                                 {product.stock_quantity > 0
                                     ? <span style={{ color: '#059669', fontWeight: 600 }}>In stock</span>
                                     : <span style={{ color: '#dc2626', fontWeight: 600 }}>Out of stock</span>}
@@ -92,14 +92,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
                         {/* SKU */}
                         {product.sku && (
-                            <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>SKU: {product.sku}</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--app-faint)' }}>SKU: {product.sku}</p>
                         )}
                     </div>
                 </div>
 
                 {/* Reviews */}
                 <div style={{ marginTop: '3rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', color: '#1e293b' }}>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--app-surface-2)' }}>
                         Customer Reviews
                     </h2>
                     {reviews.length > 0 ? (
@@ -109,12 +109,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                                         {[1, 2, 3, 4, 5].map(n => (
                                             <Star key={n} size={14} fill={n <= (r.rating ?? 0) ? 'currentColor' : 'none'}
-                                                style={{ color: '#f59e0b' }} />
+                                                style={{ color: 'var(--app-warning)' }} />
                                         ))}
                                         <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>
                                             {r.contact_name ?? 'Customer'}
                                         </span>
-                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: 'auto' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--app-faint)', marginLeft: 'auto' }}>
                                             {new Date(r.created_at).toLocaleDateString()}
                                         </span>
                                     </div>
@@ -123,7 +123,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             ))}
                         </div>
                     ) : (
-                        <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>No reviews yet — be the first!</p>
+                        <p style={{ color: 'var(--app-faint)', marginBottom: '1.5rem' }}>No reviews yet — be the first!</p>
                     )}
 
                     {/* Write a review */}
@@ -131,7 +131,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         {user
                             ? <WriteReviewForm productId={product.id} />
                             : (
-                                <p style={{ color: '#64748b', fontSize: '0.9375rem' }}>
+                                <p style={{ color: 'var(--app-muted-foreground)', fontSize: '0.9375rem' }}>
                                     <a href="/store/login" style={{ color: 'var(--store-accent, #10b981)', fontWeight: 600 }}>Sign in</a>
                                     {' '}to write a review.
                                 </p>

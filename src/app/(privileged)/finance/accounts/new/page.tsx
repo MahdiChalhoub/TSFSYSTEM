@@ -139,7 +139,7 @@ export default function NewFinancialAccountPage() {
     const infoTiles = [
         { label: 'Category', value: selectedCat?.name ?? 'Select one', color: selectedCat?.color || 'var(--app-primary)', icon: <CatIcon size={14} /> },
         { label: 'Currency', value: currency, color: 'var(--app-info, #3b82f6)', icon: <DollarSign size={14} /> },
-        { label: 'Account Code', value: previewCode, color: '#8b5cf6', icon: <LinkIcon size={14} /> },
+        { label: 'Account Code', value: previewCode, color: 'var(--app-accent)', icon: <LinkIcon size={14} /> },
     ]
 
     if (loading) return (
@@ -243,7 +243,7 @@ export default function NewFinancialAccountPage() {
                     <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="flex items-center gap-2">
                             <div className="w-5 h-5 rounded flex items-center justify-center"
-                                style={{ background: 'color-mix(in srgb, #8b5cf6 12%, transparent)', color: '#8b5cf6' }}>
+                                style={{ background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)', color: 'var(--app-accent)' }}>
                                 <Zap size={11} />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Digital Integration</span>
@@ -265,9 +265,9 @@ export default function NewFinancialAccountPage() {
                                             className="flex items-center gap-2 px-2.5 py-2 rounded-xl text-left transition-all"
                                             style={{
                                                 background: digitalGatewayId === String(gw.id)
-                                                    ? `color-mix(in srgb, ${gw.gateway_color || '#6366f1'} 10%, var(--app-surface))`
+                                                    ? `color-mix(in srgb, ${gw.gateway_color || 'var(--app-accent)'} 10%, var(--app-surface))`
                                                     : 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
-                                                border: `1.5px solid ${digitalGatewayId === String(gw.id) ? (gw.gateway_color || '#6366f1') : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
+                                                border: `1.5px solid ${digitalGatewayId === String(gw.id) ? (gw.gateway_color || 'var(--app-accent)') : 'color-mix(in srgb, var(--app-border) 40%, transparent)'}`,
                                             }}>
                                             <span className="text-sm">{gw.gateway_emoji || '💳'}</span>
                                             <div className="min-w-0">
@@ -282,7 +282,7 @@ export default function NewFinancialAccountPage() {
                         {/* Provider-specific config fields — schema from API */}
                         {selectedGw && configSchema.length > 0 && (
                             <div className="rounded-xl p-3 space-y-2.5 animate-in fade-in duration-200"
-                                style={{ background: `color-mix(in srgb, ${selectedGw.gateway_color || '#6366f1'} 4%, var(--app-surface))`, border: `1px solid color-mix(in srgb, ${selectedGw.gateway_color || '#6366f1'} 15%, transparent)` }}>
+                                style={{ background: `color-mix(in srgb, ${selectedGw.gateway_color || 'var(--app-accent)'} 4%, var(--app-surface))`, border: `1px solid color-mix(in srgb, ${selectedGw.gateway_color || 'var(--app-accent)'} 15%, transparent)` }}>
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className="text-base">{selectedGw.gateway_emoji || '💳'}</span>
                                     <div>

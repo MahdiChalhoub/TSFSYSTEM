@@ -173,7 +173,7 @@ export default function PurchaseInvoicesPage({ fromPo }: { fromPo?: string } = {
      <div className="flex-shrink-0 space-y-4 pb-4">
        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
          <div className="flex items-center gap-3">
-           <div className="page-header-icon" style={{ background: '#8b5cf6', boxShadow: '0 4px 14px color-mix(in srgb, #8b5cf6 30%, transparent)' }}>
+           <div className="page-header-icon" style={{ background: 'var(--app-accent)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-accent) 30%, transparent)' }}>
              <Receipt size={20} className="text-white" />
            </div>
            <div>
@@ -192,9 +192,9 @@ export default function PurchaseInvoicesPage({ fromPo }: { fromPo?: string } = {
          </div>
        </div>
        <KPIStrip stats={[
-         { label: 'Total Invoiced', value: fmt(totalValue), icon: <DollarSign size={11} />, color: '#8b5cf6' },
-         { label: 'Pending Invoice', value: pendingCount, icon: <Clock size={11} />, color: '#f59e0b' },
-         { label: 'Settled', value: settledCount, icon: <CheckCircle size={11} />, color: '#22c55e' },
+         { label: 'Total Invoiced', value: fmt(totalValue), icon: <DollarSign size={11} />, color: 'var(--app-accent)' },
+         { label: 'Pending Invoice', value: pendingCount, icon: <Clock size={11} />, color: 'var(--app-warning)' },
+         { label: 'Settled', value: settledCount, icon: <CheckCircle size={11} />, color: 'var(--app-success)' },
        ]} />
        {/* PO-scoped banner. Appears when the operator landed here from
          * a PO list "→ Invoice" action (`?from_po=<id>`). Resolves the

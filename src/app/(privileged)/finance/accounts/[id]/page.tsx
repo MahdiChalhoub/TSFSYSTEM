@@ -87,7 +87,7 @@ export default function AccountDetailPage() {
     const kpis = [
         { label: 'Balance', value: `${Number(item.balance || 0).toLocaleString('en', { minimumFractionDigits: 2 })} ${item.currency || ''}`, color: 'var(--app-success, #22c55e)', icon: <TrendingUp size={14} /> },
         { label: 'Currency', value: item.currency || 'USD', color: 'var(--app-info, #3b82f6)', icon: <DollarSign size={14} /> },
-        { label: 'COA Code', value: coa?.code || '—', color: '#8b5cf6', icon: <LinkIcon size={14} /> },
+        { label: 'COA Code', value: coa?.code || '—', color: 'var(--app-accent)', icon: <LinkIcon size={14} /> },
         { label: 'Status', value: isActive ? 'Active' : 'Inactive', color: isActive ? 'var(--app-success, #22c55e)' : 'var(--app-error, #ef4444)', icon: <Power size={14} /> },
         { label: 'POS', value: isPOS ? 'Enabled' : 'Disabled', color: isPOS ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)', icon: <Monitor size={14} /> },
     ]
@@ -172,7 +172,7 @@ export default function AccountDetailPage() {
                         style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
                         <div className="flex items-center gap-2 px-4 py-2.5 border-b" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                             <div className="w-6 h-6 rounded-md flex items-center justify-center"
-                                style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                                style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}>
                                 <FolderTree size={13} />
                             </div>
                             <span className="text-[11px] font-black text-app-foreground uppercase tracking-wider">Chart of Accounts</span>

@@ -55,8 +55,8 @@ export default function StoreRegisterPage() {
                     }}>
                         <Store size={28} style={{ color: '#fff' }} />
                     </div>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>Create Account</h1>
-                    <p style={{ color: '#64748b', fontSize: '0.9375rem' }}>Shop, track orders, and earn rewards</p>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--app-surface-2)' }}>Create Account</h1>
+                    <p style={{ color: 'var(--app-muted-foreground)', fontSize: '0.9375rem' }}>Shop, track orders, and earn rewards</p>
                 </div>
 
                 <div className="store-card" style={{ padding: '2rem' }}>
@@ -70,7 +70,7 @@ export default function StoreRegisterPage() {
                             <div key={key}>
                                 <label className="store-label">{label}</label>
                                 <div style={{ position: 'relative' }}>
-                                    <Icon size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                    <Icon size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--app-faint)' }} />
                                     <input id={`register-${key}`} type={type} className="store-input"
                                         required={key !== 'phone'}
                                         value={form[key]} onChange={set(key)}
@@ -86,14 +86,14 @@ export default function StoreRegisterPage() {
                     </form>
                 </div>
 
-                <p style={{ textAlign: 'center', marginTop: '1.25rem', color: '#64748b', fontSize: '0.9375rem' }}>
+                <p style={{ textAlign: 'center', marginTop: '1.25rem', color: 'var(--app-muted-foreground)', fontSize: '0.9375rem' }}>
                     Already have an account?{' '}
                     <Link href="/store/login" style={{ color: 'var(--store-accent, #10b981)', fontWeight: 600, textDecoration: 'none' }}>
                         Sign in
                     </Link>
                 </p>
                 <p style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-                    <Link href="/store" style={{ color: '#94a3b8', fontSize: '0.875rem', textDecoration: 'none' }}>
+                    <Link href="/store" style={{ color: 'var(--app-faint)', fontSize: '0.875rem', textDecoration: 'none' }}>
                         ← Back to store
                     </Link>
                 </p>

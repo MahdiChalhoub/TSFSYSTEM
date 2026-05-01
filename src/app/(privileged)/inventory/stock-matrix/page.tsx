@@ -43,7 +43,7 @@ import {
 const DIM_COLORS = {
     country: 'var(--app-primary)',
     group: 'var(--app-info, #3b82f6)',
-    parfum: '#8b5cf6',
+    parfum: 'var(--app-accent)',
     product: 'var(--app-success, #22c55e)',
     stock: 'var(--app-warning, #f59e0b)',
 }
@@ -396,8 +396,8 @@ function ParfumRow({
                 <div
                     className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
-                        background: 'color-mix(in srgb, #8b5cf6 12%, transparent)',
-                        color: '#8b5cf6',
+                        background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)',
+                        color: 'var(--app-accent)',
                     }}
                 >
                     <Droplets size={14} />
@@ -704,17 +704,17 @@ function CountryBrandRow({
                 className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer border-b border-app-border/30 hover:bg-app-surface/40 py-1.5 md:py-2"
                 style={{
                     paddingLeft: `${12 + level * 20}px`, paddingRight: '12px',
-                    borderLeft: '1px solid color-mix(in srgb, #8b5cf6 25%, transparent)',
+                    borderLeft: '1px solid color-mix(in srgb, var(--app-accent) 25%, transparent)',
                     marginLeft: `${12 + (level - 1) * 20 + 10}px`,
                 }}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <button className={`w-5 h-5 flex items-center justify-center rounded-md transition-all flex-shrink-0 ${hasChildren ? 'hover:bg-app-border/50 text-app-muted-foreground' : 'text-app-border'}`}>
-                    {hasChildren ? (isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />) : <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
+                    {hasChildren ? (isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />) : <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-accent)' }} />}
                 </button>
 
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'color-mix(in srgb, #8b5cf6 10%, transparent)', color: '#8b5cf6' }}>
+                    style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}>
                     <Building2 size={14} />
                 </div>
 
