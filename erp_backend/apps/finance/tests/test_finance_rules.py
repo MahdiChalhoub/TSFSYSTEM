@@ -115,8 +115,13 @@ class FinanceRulesTests(TestCase):
     def test_tax_report_generation(self):
         """Verify TaxService report generation for MICRO and REGULAR companies."""
         from apps.finance.services import TaxService
-        from apps.pos.models import Order, OrderLine
-        from apps.inventory.models import Product, Category
+        from erp.connector_registry import connector
+        Order = connector.require('pos.orders.get_model', org_id=self.org.id)
+        OrderLine = connector.require('pos.order_lines.get_model', org_id=self.org.id)
+        Product = connector.require('inventory.products.get_model', org_id=self.org.id)
+        Category = connector.require('inventory.categories.get_model', org_id=self.org.id)
+        if any(x is None for x in (Order, OrderLine, Product, Category)):
+            self.skipTest("POS or Inventory module unavailable")
         from erp.services import ConfigurationService
         
         start_date = datetime.date(2026, 1, 1)

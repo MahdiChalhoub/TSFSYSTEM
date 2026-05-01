@@ -30,7 +30,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
             <div className="flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-gray-200" />
                 <h1 className="text-2xl font-black text-app-foreground tracking-tighter">Sale Not Found</h1>
-                <Link href="/sales/history" className="text-emerald-500 font-bold hover:underline">Return to History</Link>
+                <Link href="/sales/history" className="text-app-success font-bold hover:underline">Return to History</Link>
             </div>
         );
     }
@@ -42,18 +42,18 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
             {/* Header & Breadcrumbs */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <Link href="/sales/history" className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-emerald-500 transition-all mb-4">
+                    <Link href="/sales/history" className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-success transition-all mb-4">
                         <ArrowLeft size={14} /> Back to Sales History
                     </Link>
                     <div className="flex items-center gap-4">
                         <h1 className="text-3xl lg:text-5xl font-black text-app-foreground tracking-tighter">
-                            Sale Record <span className="text-emerald-500">{order.invoice_number || order.ref_code || `#${order.id}`}</span>
+                            Sale Record <span className="text-app-success">{order.invoice_number || order.ref_code || `#${order.id}`}</span>
                         </h1>
                     </div>
                 </div>
 
                 <div className="flex gap-3">
-                    <button className="p-3.5 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm flex items-center gap-2">
+                    <button className="p-3.5 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-app-success hover:border-emerald-100 transition-all shadow-sm flex items-center gap-2">
                         <Printer size={20} />
                         <span className="text-xs font-bold uppercase tracking-wider">Print Invoice</span>
                     </button>
@@ -84,9 +84,9 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                     <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Customer</div>
                     <div className="text-xl font-black text-app-foreground truncate">{order.contact_name || 'Walking Customer'}</div>
                 </div>
-                <div className="bg-app-surface p-6 rounded-[2rem] border border-emerald-100 bg-emerald-50/30 shadow-sm">
-                    <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Amount</div>
-                    <div className="text-xl font-black text-emerald-700">{fmt(parseFloat(order.total_amount))}</div>
+                <div className="bg-app-surface p-6 rounded-[2rem] border border-emerald-100 bg-app-success-bg/30 shadow-sm">
+                    <div className="text-[10px] font-black text-app-success uppercase tracking-widest mb-1">Total Amount</div>
+                    <div className="text-xl font-black text-app-success">{fmt(parseFloat(order.total_amount))}</div>
                 </div>
             </div>
 
@@ -159,7 +159,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                 <div className="space-y-6">
                     <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm space-y-6">
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                            <div className="p-3 bg-app-info-bg text-app-info rounded-2xl">
                                 <Receipt size={20} />
                             </div>
                             <div>
@@ -168,7 +168,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                            <div className="p-3 bg-app-info-bg text-app-info rounded-2xl">
                                 <Clock size={20} />
                             </div>
                             <div>
@@ -177,7 +177,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                            <div className="p-3 bg-app-warning-bg text-app-warning rounded-2xl">
                                 <MapPin size={20} />
                             </div>
                             <div>
@@ -189,12 +189,12 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
 
                     {/* Warning for Returns */}
                     {isReturnable && (
-                        <div className="bg-rose-50 p-6 rounded-[2rem] border border-rose-100">
-                            <div className="flex items-center gap-3 text-rose-600 mb-2">
+                        <div className="bg-app-error-bg p-6 rounded-[2rem] border border-rose-100">
+                            <div className="flex items-center gap-3 text-app-error mb-2">
                                 <RotateCcw size={20} />
                                 <span className="font-black text-xs uppercase tracking-widest">Return Policy</span>
                             </div>
-                            <p className="text-xs text-rose-700 leading-relaxed font-medium">
+                            <p className="text-xs text-app-error leading-relaxed font-medium">
                                 This sale is eligible for return. Initiating a return will create a pending request for supervisor approval. Once approved, inventory will be restocked and a credit note issued.
                             </p>
                         </div>

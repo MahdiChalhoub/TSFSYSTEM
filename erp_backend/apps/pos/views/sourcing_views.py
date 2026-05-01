@@ -5,7 +5,7 @@ from apps.pos.models import ProductSupplier, SupplierPriceHistory
 from apps.pos.serializers import (
     ProductSupplierSerializer, SupplierPriceHistorySerializer
 )
-from apps.inventory.services.product_completeness import ProductCompletenessService
+from erp.connector_registry import connector
 
 
 class ProductSupplierViewSet(viewsets.ModelViewSet):
@@ -16,7 +16,12 @@ class ProductSupplierViewSet(viewsets.ModelViewSet):
         """Refresh the linked product's completeness level."""
         if instance and instance.product_id:
             try:
-                ProductCompletenessService.refresh(instance.product, save=True)
+                ProductCompletenessService = connector.require(
+                    'inventory.services.get_product_completeness_service',
+                    org_id=getattr(instance, 'organization_id', 0) or 0,
+                )
+                if ProductCompletenessService is not None:
+                    ProductCompletenessService.refresh(instance.product, save=True)
             except Exception:
                 pass  # Non-critical — don't fail supplier ops
 
@@ -30,10 +35,16 @@ class ProductSupplierViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         product = instance.product  # Capture before delete
+        org_id = getattr(instance, 'organization_id', 0) or 0
         instance.delete()
         if product:
             try:
-                ProductCompletenessService.refresh(product, save=True)
+                ProductCompletenessService = connector.require(
+                    'inventory.services.get_product_completeness_service',
+                    org_id=org_id,
+                )
+                if ProductCompletenessService is not None:
+                    ProductCompletenessService.refresh(product, save=True)
             except Exception:
                 pass
 

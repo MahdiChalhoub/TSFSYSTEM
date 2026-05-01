@@ -15,7 +15,8 @@ from django.utils import timezone
 
 from erp.models import Organization, User
 from apps.pos.models import Order, OrderLine
-from apps.inventory.models import (
+# Pattern D: test-fixture imports at module-collection time pre-empt the connector.
+from apps.inventory.models import (  # noqa: E402  (Pattern D: test fixture)
     Product, Unit, Category, Warehouse, Inventory,
 )
 

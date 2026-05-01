@@ -90,9 +90,9 @@ export default function CustomerInsightsPage() {
 
     const TIER_STYLE: Record<string, string> = {
         Diamond: 'bg-violet-100 text-violet-700',
-        Gold: 'bg-amber-100 text-amber-700',
+        Gold: 'bg-app-warning-bg text-app-warning',
         Silver: 'bg-app-surface-2 text-app-foreground',
-        Bronze: 'bg-orange-100 text-orange-700',
+        Bronze: 'bg-app-warning-bg text-app-warning',
     }
 
     if (loading) {
@@ -138,10 +138,10 @@ export default function CustomerInsightsPage() {
                 <Card className="border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <TrendingUp size={24} className="text-green-500" />
+                            <TrendingUp size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Active (30d)</p>
-                                <p className="text-2xl font-bold text-green-700">{activeCustomers}</p>
+                                <p className="text-2xl font-bold text-app-success">{activeCustomers}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -149,10 +149,10 @@ export default function CustomerInsightsPage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <DollarSign size={24} className="text-emerald-500" />
+                            <DollarSign size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Revenue</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(totalRevenue)}</p>
+                                <p className="text-xl font-bold text-app-success">{fmt(totalRevenue)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -160,10 +160,10 @@ export default function CustomerInsightsPage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <ShoppingCart size={24} className="text-blue-500" />
+                            <ShoppingCart size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Avg Order Value</p>
-                                <p className="text-xl font-bold text-blue-700">{fmt(avgOrderVal)}</p>
+                                <p className="text-xl font-bold text-app-info">{fmt(avgOrderVal)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -237,14 +237,14 @@ export default function CustomerInsightsPage() {
                                             <Badge className={TIER_STYLE[c.tier]}>{c.tier}</Badge>
                                         </TableCell>
                                         <TableCell className="text-right font-medium">{c.orderCount}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-600">{fmt(c.totalSpent)}</TableCell>
+                                        <TableCell className="text-right font-bold text-app-success">{fmt(c.totalSpent)}</TableCell>
                                         <TableCell className="text-right text-sm">{fmt(c.avgOrderValue)}</TableCell>
                                         <TableCell>
                                             <Badge className={
-                                                c.daysSinceLast < 7 ? 'bg-green-100 text-green-700' :
-                                                    c.daysSinceLast < 30 ? 'bg-yellow-100 text-yellow-700' :
-                                                        c.daysSinceLast < 90 ? 'bg-orange-100 text-orange-700' :
-                                                            'bg-red-100 text-red-700'
+                                                c.daysSinceLast < 7 ? 'bg-app-success-bg text-app-success' :
+                                                    c.daysSinceLast < 30 ? 'bg-app-warning-bg text-app-warning' :
+                                                        c.daysSinceLast < 90 ? 'bg-app-warning-bg text-app-warning' :
+                                                            'bg-app-error-bg text-app-error'
                                             }>
                                                 {c.daysSinceLast < 999 ? `${c.daysSinceLast}d` : 'Never'}
                                             </Badge>

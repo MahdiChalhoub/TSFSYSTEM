@@ -67,21 +67,47 @@
   - Workforce (2) + client_portal (6): mop-up.
 - **Risk**: LOW per module (capability swap is behavior-preserving)
 
-### [OPEN] Maintainability Phase 4 — Models Without Tenant Isolation
+### [DONE 2026-04-30] Maintainability Phase 4 — Models Without Tenant Isolation
 - **Discovered**: 2026-04-30
-- **Impact**: 10 models use bare `models.Model` instead of TenantModel. Potential cross-org data leaks.
-- **Files**: `PackageUpload`, `GeneratedDocument`, `POSAuditRule`, `POSAuditEvent`, `SalesAuditLog`, `StorageProvider`, `UploadSession`, `MigrationMapping`, `Currency`
-- **Notes**: Some may be intentionally system-level (Currency). Each needs case-by-case review.
+- **Impact**: Audited 10 models flagged in the original WORKMAP. 4 migrated to `TenantModel`, 5 confirmed system-level (intentional KEEP), 1 deferred (`UploadSession` needs split-by-type design).
+- **Plan**: `task and plan/maintainability/maintainability_phase4_tenant_isolation_001.md`
+- **Migrated** (now inherit `TenantModel`):
+  - `GeneratedDocument` (apps.pos)
+  - `POSAuditRule` (apps.pos)
+  - `POSAuditEvent` (apps.pos)
+  - `SalesAuditLog` (apps.pos)
+  - **Migration**: `apps/pos/migrations/0080_tenant_isolation_audit_models.py` — 4 `AlterField` ops adding `db_column='organization_id'` (the columns already had that name; this aligns Django state with the DB). **Zero data changes, zero column renames, no backfill required.**
+- **Confirmed system-level (KEEP)**: `Currency` (ISO 4217 catalog), `PackageUpload` (platform deployment artifact), `StorageProvider` (null-org = platform default with tenant fallback), `MigrationMapping` (apps.migration), `MigrationMapping` (apps.migration_v2 — both are child tables tenanted via parent FK).
+- **Deferred**: `UploadSession` — handles two flows (file upload vs package upload); needs split-by-type refactor before tenancy decision.
+- **Verification**: `manage.py check` passes (1 baseline warning); `manage.py migrate --plan` correctly shows the new migration as pending.
+- **Note**: A pre-existing finance migration conflict (`0076_backfill_monetary_classification` vs `0078_payment_gateway_catalog`) is unrelated to Phase 4; needs `makemigrations --merge` from finance owner.
 
-### [OPEN] Maintainability Phase 5 — Frontend Type Safety
+### [PARTIAL DONE 2026-04-30] Maintainability Phase 5 — Frontend Type Safety
 - **Discovered**: 2026-04-30
-- **Impact**: 2,527 `any` type usages in frontend. Compiler can't catch bugs, runtime errors likely.
-- **Notes**: Module-by-module cleanup sprint. Start with `src/types/erp.ts` (1,296 lines of shared types).
+- **Impact**: Starter slice complete — `src/types/erp.ts` (the central shared-types module) is now `any`-free. 94 `any`s removed. Repo-wide count: 2,812 → 2,719 (−93 net).
+- **Plan**: `task and plan/maintainability/maintainability_phase5_type_safety_001.md`
+- **Strategy**: replaced `[key: string]: any` and `Record<string, any>` with `unknown` variants (forces consumers to narrow); enriched 13 SaaS interfaces with previously-undeclared fields; added 7 new helper interfaces (`SaasUsageMetric`, `SaasUsagePlan`, `SaasUsageClient`, `SaasUsageWarning`, `SaasBillingClient`, `SaasModuleFeature`, `SaasPlanLimits`). Bug-mask suspicion: removing `[key: string]: any` from `JournalEntry`, `Voucher`, `FiscalYear`, `Payment`, etc. surfaced ZERO consumer errors — those interfaces really were complete.
+- **Consumer files touched**: 8 (all `(saas)/...` pages — narrowed `parseFloat` casts, nullish-coalesce defaults, made `UsageMeter` props optional).
+- **Verification**: `npx tsc --noEmit` exit 0. Zero `// @ts-ignore`, zero `// TODO(phase5)`, zero new `as any` introduced.
+- **Remaining**: ~2,719 `any`s across the rest of the frontend. Next slice should target high-density files (per-file hotspot ranking in the plan).
 
-### [OPEN] Maintainability Phase 6 — Hardcoded Color Sweep
+### [PARTIAL DONE 2026-04-30] Maintainability Phase 6 — Hardcoded Color Sweep
 - **Discovered**: 2026-04-30
-- **Impact**: 3,499 hardcoded color references remain in `src/app/`. Theme switching and dark mode break on those pages.
-- **Notes**: Use mass migration scripts from `implementation/mass_migration_strategies.md` KI.
+- **Impact**: 7 subdirs migrated across 3 sessions. Session 1: `(privileged)/finance/` (756 → 347, −409, 87 files). Session 2: `(privileged)/inventory/` (720 → 220 text/bg/border, −500, 73 files) + `(privileged)/sales/` (414 → 156, −258, 24 files). Session 3: `(privileged)/workspace/` (395 → 92, −303, 28 files) + `(privileged)/hr/` (306 → 64, −242, 19 files) + `(privileged)/crm/` (293 → 104, −189, 13 files) + `(privileged)/purchases/` (469 → 113, −356, 18 files). **Combined: 262 files migrated, 2,257 hardcoded colors removed.**
+- **Plan**: `task and plan/maintainability/maintainability_phase6_color_sweep_001.md`
+- **Theme system mapped**: Tailwind v4 `@theme` block in `src/app/globals.css` defines `app-*` semantic tokens (`bg-app-{bg,surface,surface-2}`, `text-app-{foreground,muted-foreground,faint}`, `border-app-{border,border-strong}`, status families `app-{success,warning,error,info}-bg`, brand `app-primary{,-dark,-light}`).
+- **Migration mapping** (representative): `bg-emerald-100 text-emerald-700 border-emerald-200` → `bg-app-success-bg text-app-success border-app-success`; `text-blue-800` → `text-app-info`; `text-rose-700` → `text-app-error`; status configs (`POSTED`/`CANCELLED`/`OPEN`/`LOCKED`) mapped to semantic tokens. Brand emerald solids on CTAs (`bg-emerald-500/600/700`) map to `bg-app-primary{,-dark}`.
+- **Per-subdir per-pattern (this 2026-04-30 session)**:
+  - inventory: text −282, bg −147, border −71 (720 → 220 across the three patterns)
+  - sales: text −168, bg −79, border −11 (414 → 156)
+  - workspace: text −130, bg −98, border −75 (395 → 92, −77%)
+  - hr: text −91, bg −90, border −58 (306 → 64, −79%)
+  - crm: text −108, bg −76, border −19 (293 → 104, −65%)
+  - purchases: text −172, bg −135, border −50 (469 → 113, −76%)
+- **Verification**: `npx tsc --noEmit` clean baseline before sweep, 0 new errors after Session 3 (full sweep clean — earlier mid-edit JSX imbalance in `purchases/new/_components/AdminSidebar.tsx` resolved by parallel agent's auto-backup). Sweep itself is byte-symmetric: pure class-name swaps.
+- **Skipped**: 5 finance files in Session 1 (parallel agents). Sessions 2 and 3 had no scope conflicts.
+- **Precursors documented**: missing `ring-app-error`, missing `--app-accent` for non-brand purple/indigo (workspace/crm/purchases all have meaningful purple/violet usage), missing gradient tokens (442 `from-/to-` occurrences across all subdirs), 2,901 hex/rgb literals in inline styles need a separate phase.
+- **Remaining**: ~1,600 hardcoded colors in subdirs `(privileged)/(saas)` (412), `tenant/[slug]` (363), `supplier-portal/[slug]` (221), `(privileged)/settings` (132), `(privileged)/migration_v2` (98), `(auth)/register` (106), and others. Estimated 7–9 hours.
 
 ---
 

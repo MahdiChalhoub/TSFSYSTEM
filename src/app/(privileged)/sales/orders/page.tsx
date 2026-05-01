@@ -21,8 +21,8 @@ export default function SalesOrdersPage() {
       <div className="max-w-4xl mx-auto">
         <Card className="border-app-border/30">
           <CardContent className="p-12 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-blue-50 flex items-center justify-center">
-              <ShoppingCart size={40} className="text-blue-600" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-app-info-bg flex items-center justify-center">
+              <ShoppingCart size={40} className="text-app-info" />
             </div>
             <h1 className="text-lg font-bold text-app-text mb-2">Redirecting to Sales Console...</h1>
             <p className="text-sm text-app-text-muted">

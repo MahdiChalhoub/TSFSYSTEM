@@ -485,7 +485,23 @@ class SiteViewSet(TenantModelViewSet):
         return Warehouse.objects.filter(
             organization_id=organization_id,
             location_type='BRANCH'
-        )
+        ).prefetch_related('children')
+
+    def list(self, request, *args, **kwargs):
+        """If ?include_warehouses=true, nest children under each site."""
+        include_warehouses = request.query_params.get('include_warehouses', '').lower() in ('true', '1', 'yes')
+        qs = list(self.get_queryset())  # evaluate once
+        serializer = self.get_serializer(qs, many=True)
+        data = [dict(item) for item in serializer.data]  # mutable copy
+
+        if include_warehouses:
+            # Inject children (WAREHOUSE/STORE/VIRTUAL) into each site
+            for i, site in enumerate(qs):
+                children = list(site.children.filter(is_active=True).values('id', 'name', 'code', 'location_type'))
+                data[i]['warehouses'] = children
+
+        return Response(data)
+
 
 
 class CountryViewSet(viewsets.ModelViewSet):

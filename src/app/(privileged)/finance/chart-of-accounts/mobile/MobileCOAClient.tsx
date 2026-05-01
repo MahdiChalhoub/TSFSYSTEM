@@ -19,18 +19,32 @@ import { PageTour } from '@/components/ui/PageTour'
 import '@/lib/tours/definitions/finance-chart-of-accounts-mobile'
 import { RecalculateBalancesDialog } from '../_components/RecalculateBalancesDialog'
 
-export function MobileCOAClient({ accounts }: { accounts: any[] }) {
+// Loose COA-account shape — backend sends a denormalized DRF tree.
+type COAAccount = {
+    id: number;
+    name?: string;
+    code?: string;
+    syscohadaCode?: string;
+    type?: string;
+    isActive?: boolean;
+    parentId?: number | null;
+    parent?: number | null;
+    [key: string]: unknown;
+};
+type COATreeNode = COAAccount & { children: COATreeNode[] };
+
+export function MobileCOAClient({ accounts }: { accounts: COAAccount[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [sheetNode, setSheetNode] = useState<any | null>(null)
-    const [actionNode, setActionNode] = useState<any | null>(null)
+    const [sheetNode, setSheetNode] = useState<COATreeNode | COAAccount | null>(null)
+    const [actionNode, setActionNode] = useState<COATreeNode | COAAccount | null>(null)
     const [showInactive, setShowInactive] = useState(false)
     const [typeFilter, setTypeFilter] = useState<string | null>(null)
     const [recalcOpen, setRecalcOpen] = useState(false)
 
     const stats = useMemo(() => {
-        const byType = (t: string) => accounts.filter((a: any) => a.type === t)
-        const active = accounts.filter((a: any) => a.isActive !== false)
+        const byType = (t: string) => accounts.filter((a) => a.type === t)
+        const active = accounts.filter((a) => a.isActive !== false)
         return {
             total: accounts.length,
             active: active.length,
@@ -45,10 +59,10 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
         }
     }, [accounts])
 
-    const openSheet = useCallback((n: any) => setSheetNode(n), [])
-    const openActionMenu = useCallback((n: any) => setActionNode(n), [])
+    const openSheet = useCallback((n: COATreeNode | COAAccount) => setSheetNode(n), [])
+    const openActionMenu = useCallback((n: COATreeNode | COAAccount) => setActionNode(n), [])
 
-    const handleEdit = useCallback((n: any) => {
+    const handleEdit = useCallback((n: COATreeNode | COAAccount) => {
         router.push(`/finance/chart-of-accounts/${n.id}?edit=1`)
     }, [router])
 
@@ -56,14 +70,15 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
         router.push(`/finance/chart-of-accounts?add=1&parent=${parentId}`)
     }, [router])
 
-    const handleReactivate = useCallback((n: any) => {
+    const handleReactivate = useCallback((n: COATreeNode | COAAccount) => {
         startTransition(async () => {
             try {
                 await reactivateChartOfAccount(n.id)
                 toast.success(`"${n.name}" reactivated`)
                 router.refresh()
-            } catch (e: any) {
-                toast.error(e?.message || 'Failed to reactivate')
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : null
+                toast.error(msg || 'Failed to reactivate')
             }
         })
     }, [router])
@@ -71,7 +86,7 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
     // Open the structured warning dialog instead of running the recalc silently.
     // The dialog explains that closed periods are protected and that the action
     // is global (journal-wide). Mobile users now see the same safeguards as desktop.
-    const handleRecalc = useCallback((_n: any) => {
+    const handleRecalc = useCallback((_n: COATreeNode | COAAccount) => {
         setRecalcOpen(true)
         setActionNode(null)   // dismiss the per-account action sheet behind the dialog
     }, [])
@@ -82,8 +97,9 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
             setRecalcOpen(false)
             toast.success('Balances recalculated')
             router.refresh()
-        } catch (e: any) {
-            toast.error(e?.message || 'Recalc failed — closed periods protect themselves; nothing changed.')
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : null
+            toast.error(msg || 'Recalc failed — closed periods protect themselves; nothing changed.')
         }
     }, [router])
 
@@ -101,21 +117,21 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                 : []),
             { key: 'copy', label: 'Copy code', hint: actionNode.code, icon: <Copy size={16} />, onClick: () => {
                 try {
-                    navigator.clipboard?.writeText(actionNode.code)
+                    navigator.clipboard?.writeText(String(actionNode.code ?? ''))
                     toast.success('Code copied')
                 } catch { toast.error('Copy failed') }
             } },
-        ] as any
+        ]
     }, [actionNode, openSheet, handleAddChild, handleRecalc, handleEdit, handleReactivate, router])
 
     // Build tree with filters
     const tree = useMemo(() => {
-        let filtered = showInactive ? accounts : accounts.filter((a: any) => a.isActive !== false)
-        if (typeFilter) filtered = filtered.filter((a: any) => a.type === typeFilter)
+        let filtered = showInactive ? accounts : accounts.filter((a) => a.isActive !== false)
+        if (typeFilter) filtered = filtered.filter((a) => a.type === typeFilter)
 
-        const map: Record<string, any> = {}
+        const map: Record<string, COATreeNode> = {}
         filtered.forEach(a => { map[a.id] = { ...a, children: [] } })
-        const roots: any[] = []
+        const roots: COATreeNode[] = []
         filtered.forEach(a => {
             const pid = a.parentId ?? a.parent
             if (pid && map[pid]) map[pid].children.push(map[a.id])
@@ -212,16 +228,16 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                 const q = searchQuery.trim().toLowerCase()
                 const treeFiltered = q
                     ? (() => {
-                        const filtered = accounts.filter((a: any) => {
+                        const filtered = accounts.filter((a) => {
                             if (!showInactive && a.isActive === false) return false
                             if (typeFilter && a.type !== typeFilter) return false
                             return a.name?.toLowerCase().includes(q)
                                 || a.code?.toLowerCase().includes(q)
                                 || a.syscohadaCode?.toLowerCase().includes(q)
                         })
-                        const map: Record<string, any> = {}
+                        const map: Record<string, COATreeNode> = {}
                         filtered.forEach(a => { map[a.id] = { ...a, children: [] } })
-                        const roots: any[] = []
+                        const roots: COATreeNode[] = []
                         filtered.forEach(a => {
                             const pid = a.parentId ?? a.parent
                             if (pid && map[pid]) map[pid].children.push(map[a.id])
@@ -279,7 +295,7 @@ export function MobileCOAClient({ accounts }: { accounts: any[] }) {
                             })}
                         </div>
 
-                        {treeFiltered.map((node: any) => (
+                        {treeFiltered.map((node) => (
                             <MobileAccountRow
                                 key={`${node.id}-${expandKey}`}
                                 node={node}

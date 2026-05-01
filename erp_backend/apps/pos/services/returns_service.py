@@ -227,9 +227,11 @@ class ReturnsService:
                 fne_config = getattr(_ctx, 'einvoice_config', None)
                 
                 if fne_config and sales_return.status == 'APPROVED':
-                    from apps.finance.services.fne_service import (
-                        FNEService, FNELineItem, FNEInvoiceRequest
-                    )
+                    FNEService = connector.require('finance.fne.get_service', org_id=organization.id)
+                    FNELineItem = connector.require('finance.fne.get_line_item_class', org_id=organization.id)
+                    FNEInvoiceRequest = connector.require('finance.fne.get_request_class', org_id=organization.id)
+                    if FNEService is None or FNELineItem is None or FNEInvoiceRequest is None:
+                        raise RuntimeError("FNE service unavailable")
                     
                     # 1. Map items
                     fne_items = []

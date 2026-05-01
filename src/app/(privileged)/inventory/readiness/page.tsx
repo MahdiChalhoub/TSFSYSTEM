@@ -19,9 +19,9 @@ const DIMENSIONS = [
 ]
 
 function StatusBadge({ status }: { status: string }) {
-    if (status === 'READY') return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700"><CheckCircle2 size={10} />Ready</span>
-    if (status === 'PARTIAL') return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-700"><AlertTriangle size={10} />Partial</span>
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-100 text-red-700"><XCircle size={10} />Not Ready</span>
+    if (status === 'READY') return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-app-success-bg text-app-success"><CheckCircle2 size={10} />Ready</span>
+    if (status === 'PARTIAL') return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-app-warning-bg text-app-warning"><AlertTriangle size={10} />Partial</span>
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-app-error-bg text-app-error"><XCircle size={10} />Not Ready</span>
 }
 
 export default function ProductReadinessPage() {

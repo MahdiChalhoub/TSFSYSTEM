@@ -592,14 +592,14 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
 
  {/* ── Section 2: Manager Override PINs ── */}
  <div>
- <h3 className="text-xs font-black text-rose-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+ <h3 className="text-xs font-black text-app-error uppercase tracking-widest mb-2 flex items-center gap-2">
  <Shield size={12} /> Manager Override PINs — Security Authorization
  </h3>
  <p className="text-[10px] text-app-muted-foreground mb-2">
  Managers use this PIN to authorize: <b>void, refund, clear cart, delete item, decrease qty, discount, price override</b>
  </p>
  <div className="bg-app-surface rounded-2xl border border-rose-100 overflow-hidden shadow-sm">
- <div className="grid grid-cols-[1fr_120px_200px] gap-3 px-4 py-3 bg-rose-50/50 border-b border-rose-100">
+ <div className="grid grid-cols-[1fr_120px_200px] gap-3 px-4 py-3 bg-app-error-bg/50 border-b border-rose-100">
  <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">User</span>
  <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Override PIN Status</span>
  <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Set / Change Override PIN</span>
@@ -609,7 +609,7 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
  return (
  <div key={user.id} className="grid grid-cols-[1fr_120px_200px] gap-3 px-4 py-2.5 border-b border-app-border items-center hover:bg-app-surface-2/50">
  <div className="flex items-center gap-2.5">
- <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-black text-[10px] shrink-0">
+ <div className="w-8 h-8 rounded-lg bg-app-error-bg text-app-error flex items-center justify-center font-black text-[10px] shrink-0">
  <Shield size={14} />
  </div>
  <div className="min-w-0">
@@ -637,7 +637,7 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
  value={overridePinInputs[user.id] || ''}
  onChange={(e) => setOverridePinInputs(p => ({ ...p, [user.id]: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
  placeholder="Override PIN" maxLength={6}
- className="w-full px-2 py-1 border border-rose-200 rounded-lg text-xs font-mono font-bold outline-none focus:ring-2 focus:ring-rose-200 text-center"
+ className="w-full px-2 py-1 border border-app-error rounded-lg text-xs font-mono font-bold outline-none focus:ring-2 focus:ring-rose-200 text-center"
  />
  <button onClick={() => setShowOverrideFor(showOverrideFor === user.id ? null : user.id)}
  className="absolute right-1 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-muted-foreground">
@@ -749,7 +749,7 @@ function PaymentsTab({ methods, setMethods, accounts }: {
  {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.type || 'N/A'})</option>)}
  </select>
  <button onClick={() => setMethods(methods.filter(m => m.key !== method.key))}
- className="w-8 h-8 rounded-lg bg-rose-50 text-rose-400 hover:bg-app-error hover:text-app-foreground flex items-center justify-center transition-all">
+ className="w-8 h-8 rounded-lg bg-app-error-bg text-app-error hover:bg-app-error hover:text-app-foreground flex items-center justify-center transition-all">
  <Trash2 size={14} />
  </button>
  </div>
@@ -881,7 +881,7 @@ function SecurityTab() {
 
  {/* Manager Overrides */}
  <div className="bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm">
- <h3 className="text-xs font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+ <h3 className="text-xs font-black text-app-error uppercase tracking-widest mb-3 flex items-center gap-2">
  <Shield size={12} /> Manager Overrides Required
  </h3>
  <ToggleRow label="Void / Cancel Order" desc="Require manager PIN to void a completed order" field="requireManagerForVoid" />

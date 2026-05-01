@@ -15,9 +15,13 @@ from apps.finance.models.tax_engine_ext import (
     ReverseChargeSelfAssessment, VATRateChangeHistory,
 )
 # ── Cross-cutting business events (moved to proper modules) ──────
-from apps.inventory.models.gift_sample_models import GiftSampleEvent as GiftSampleVAT
-from apps.inventory.models.internal_consumption_models import InternalConsumptionEvent as SelfSupplyVATEvent
-from apps.pos.models.import_declaration_models import ImportDeclaration
+# Pattern D: feed `queryset = Model.objects.all()` and `Meta.model = ...` at
+# class-creation time. Connector isn't hydrated at app-load; direct imports are
+# required. ImportError here is the correct fail-loud signal if the source
+# module is missing — the dependent ViewSets register routes anyway.
+from apps.inventory.models.gift_sample_models import GiftSampleEvent as GiftSampleVAT  # noqa: E402  (Pattern D)
+from apps.inventory.models.internal_consumption_models import InternalConsumptionEvent as SelfSupplyVATEvent  # noqa: E402  (Pattern D)
+from apps.pos.models.import_declaration_models import ImportDeclaration  # noqa: E402  (Pattern D)
 
 from apps.finance.serializers.tax_engine_ext_serializers import (
     WithholdingTaxRuleSerializer, BadDebtVATClaimSerializer, ImportDeclarationSerializer,

@@ -34,7 +34,11 @@ def _resolve_org_country_code(org):
       3. Organization.country string → reference.Country name/iso2/iso3 lookup
       4. Organization.settings.countryCode fallback
     """
-    from apps.reference.models import Country as RefCountry, OrgCountry
+    from erp.connector_registry import connector
+    RefCountry = connector.require('reference.country.get_model', org_id=org.id)
+    OrgCountry = connector.require('reference.org_country.get_model', org_id=org.id)
+    if RefCountry is None or OrgCountry is None:
+        return None
 
     # Priority 1: OrgCountry default (the /settings/regional canonical source)
     try:

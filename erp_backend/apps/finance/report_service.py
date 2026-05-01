@@ -24,13 +24,16 @@ def _build_registry():
     if MODEL_REGISTRY:
         return
 
+    from erp.connector_registry import connector
+
     # POS
-    try:
-        from apps.pos.models import Order as POSOrder, OrderLine as POSOrderLine
+    POSOrder = connector.require('pos.orders.get_model', org_id=0, source='finance.report')
+    POSOrderLine = connector.require('pos.order_lines.get_model', org_id=0, source='finance.report')
+    if POSOrder is not None:
         MODEL_REGISTRY['POSOrder'] = POSOrder
         MODEL_REGISTRY['Order'] = POSOrder  # Alias
+    if POSOrderLine is not None:
         MODEL_REGISTRY['OrderLine'] = POSOrderLine
-    except ImportError: pass
 
     # Finance - Invoices
     try:
@@ -39,7 +42,7 @@ def _build_registry():
         MODEL_REGISTRY['InvoiceLine'] = InvoiceLine
     except ImportError: pass
 
-    # Finance - Models
+    # Finance - Models (same module, direct import OK)
     try:
         from apps.finance.models import Voucher, Asset, DeferredExpense, FinancialAccount, ChartOfAccount
         MODEL_REGISTRY['Voucher'] = Voucher
@@ -49,40 +52,51 @@ def _build_registry():
         MODEL_REGISTRY['ChartOfAccount'] = ChartOfAccount
     except ImportError: pass
 
-    # Finance - Payments
+    # Finance - Payments (same module, direct import OK)
     try:
         from apps.finance.payment_models import Payment
         MODEL_REGISTRY['Payment'] = Payment
     except ImportError: pass
 
     # Inventory
-    try:
-        from apps.inventory.models import Product, Category, Warehouse, Unit
+    Product = connector.require('inventory.products.get_model', org_id=0, source='finance.report')
+    Category = connector.require('inventory.categories.get_model', org_id=0, source='finance.report')
+    Warehouse = connector.require('inventory.warehouses.get_model', org_id=0, source='finance.report')
+    if Product is not None:
         MODEL_REGISTRY['Product'] = Product
+    if Category is not None:
         MODEL_REGISTRY['Category'] = Category
+    if Warehouse is not None:
         MODEL_REGISTRY['Warehouse'] = Warehouse
+    # Unit + StockAlert have no connector capability yet — fall back to direct
+    # import inside try/except (Pattern D for legacy models with no connector entry).
+    try:
+        from apps.inventory.models import Unit  # noqa: E402  (Pattern D: no capability yet)
         MODEL_REGISTRY['Unit'] = Unit
-        from apps.inventory.alert_models import StockAlert
+    except ImportError: pass
+    try:
+        from apps.inventory.alert_models import StockAlert  # noqa: E402  (Pattern D: no capability yet)
         MODEL_REGISTRY['StockAlert'] = StockAlert
     except ImportError: pass
 
     # CRM
-    try:
-        from apps.crm.models import Contact
+    Contact = connector.require('crm.contacts.get_model', org_id=0, source='finance.report')
+    if Contact is not None:
         MODEL_REGISTRY['Contact'] = Contact
-    except ImportError: pass
 
-    # HR
-    try:
-        from apps.hr.models import Employee, Attendance, Leave
+    # HR — Employee has a connector capability; Attendance/Leave do not yet.
+    Employee = connector.require('hr.employees.get_model', org_id=0, source='finance.report')
+    if Employee is not None:
         MODEL_REGISTRY['Employee'] = Employee
+    try:
+        from apps.hr.models import Attendance, Leave  # noqa: E402  (Pattern D: no capability yet)
         MODEL_REGISTRY['Attendance'] = Attendance
         MODEL_REGISTRY['Leave'] = Leave
     except ImportError: pass
 
-    # Integrations
+    # Integrations — no connector_service.py for integrations yet
     try:
-        from apps.integrations.models import ExternalOrderMapping, ExternalProductMapping
+        from apps.integrations.models import ExternalOrderMapping, ExternalProductMapping  # noqa: E402  (Pattern D: no capability yet)
         MODEL_REGISTRY['ExternalOrderMapping'] = ExternalOrderMapping
         MODEL_REGISTRY['ExternalProductMapping'] = ExternalProductMapping
     except ImportError: pass

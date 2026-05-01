@@ -79,7 +79,7 @@ export default function ProductAuditTrailPage() {
                             {(entry.old_value || entry.new_value) && (
                                 <div className="mt-1 text-xs">
                                     {entry.old_value && <span className="text-red-400 line-through mr-2">{String(entry.old_value).substring(0, 50)}</span>}
-                                    {entry.new_value && <span className="text-green-500">{String(entry.new_value).substring(0, 50)}</span>}
+                                    {entry.new_value && <span className="text-app-success">{String(entry.new_value).substring(0, 50)}</span>}
                                 </div>
                             )}
                             <div className="flex items-center gap-3 mt-1">

@@ -27,8 +27,12 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         from erp.models import Organization, User
-        from apps.inventory.models import Warehouse
+        from erp.connector_registry import connector
+        Warehouse = connector.require('inventory.warehouses.get_model', org_id=0)
         from apps.pos.models import POSRegister
+        if Warehouse is None:
+            self.stdout.write("Inventory module unavailable.")
+            return
 
         register_name = options['name']
 
@@ -89,7 +93,11 @@ class Command(BaseCommand):
         # ── 4. Find cash account (optional) ──
         cash_account = None
         try:
-            from apps.finance.models import FinancialAccount
+            FinancialAccount = connector.require(
+                'finance.accounts.get_financial_account_model', org_id=org.id
+            )
+            if FinancialAccount is None:
+                raise RuntimeError("Finance module unavailable")
             cash_account = FinancialAccount.objects.filter(
                 organization=org,
                 account_type='CASH',

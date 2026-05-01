@@ -24,10 +24,10 @@ import {
 } from "lucide-react"
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
-    OPEN: { label: 'Open', color: 'bg-blue-100 text-blue-700', icon: Clock },
-    LOCKED: { label: 'Locked', color: 'bg-amber-100 text-amber-700', icon: Lock },
+    OPEN: { label: 'Open', color: 'bg-app-info-bg text-app-info', icon: Clock },
+    LOCKED: { label: 'Locked', color: 'bg-app-warning-bg text-app-warning', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'bg-purple-100 text-purple-700', icon: ShieldCheck },
-    CONFIRMED: { label: 'Confirmed', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
+    CONFIRMED: { label: 'Confirmed', color: 'bg-app-success-bg text-app-success', icon: CheckCircle2 },
 }
 
 export default function TransferOrdersPage() {
@@ -198,7 +198,7 @@ export default function TransferOrdersPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-serif font-bold tracking-tight flex items-center gap-2">
-                        <ArrowLeftRight className="h-6 w-6 text-indigo-600" /> Stock Transfer Orders
+                        <ArrowLeftRight className="h-6 w-6 text-app-info" /> Stock Transfer Orders
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">Move stock between warehouses with verification pipeline</p>
                 </div>
@@ -209,36 +209,36 @@ export default function TransferOrdersPage() {
 
             {/* ─── Summary Cards ──────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 border-indigo-200/60">
+                <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 border-app-info/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-indigo-600/80 uppercase tracking-wider">Total Transfers</p>
+                                <p className="text-xs font-medium text-app-info/80 uppercase tracking-wider">Total Transfers</p>
                                 <p className="text-2xl font-bold text-indigo-900 mt-1">{totalOrders}</p>
                             </div>
-                            <div className="bg-indigo-200/60 rounded-lg p-2.5"><Truck className="h-5 w-5 text-indigo-700" /></div>
+                            <div className="bg-indigo-200/60 rounded-lg p-2.5"><Truck className="h-5 w-5 text-app-info" /></div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200/60">
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-app-info/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-blue-600/80 uppercase tracking-wider">Open</p>
-                                <p className="text-2xl font-bold text-blue-900 mt-1">{openCount}</p>
+                                <p className="text-xs font-medium text-app-info/80 uppercase tracking-wider">Open</p>
+                                <p className="text-2xl font-bold text-app-info mt-1">{openCount}</p>
                             </div>
-                            <div className="bg-blue-200/60 rounded-lg p-2.5"><Clock className="h-5 w-5 text-blue-700" /></div>
+                            <div className="bg-blue-200/60 rounded-lg p-2.5"><Clock className="h-5 w-5 text-app-info" /></div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-200/60">
+                <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-app-success/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-emerald-600/80 uppercase tracking-wider">Posted</p>
+                                <p className="text-xs font-medium text-app-success/80 uppercase tracking-wider">Posted</p>
                                 <p className="text-2xl font-bold text-emerald-900 mt-1">{postedCount}</p>
                             </div>
-                            <div className="bg-emerald-200/60 rounded-lg p-2.5"><CheckCircle2 className="h-5 w-5 text-emerald-700" /></div>
+                            <div className="bg-emerald-200/60 rounded-lg p-2.5"><CheckCircle2 className="h-5 w-5 text-app-success" /></div>
                         </div>
                     </CardContent>
                 </Card>
@@ -311,7 +311,7 @@ export default function TransferOrdersPage() {
                                                         <Warehouse className="h-3.5 w-3.5 text-orange-500" />
                                                         <span>{order.from_warehouse_name || `WH #${order.from_warehouse}`}</span>
                                                         <span className="text-muted-foreground">→</span>
-                                                        <Warehouse className="h-3.5 w-3.5 text-emerald-500" />
+                                                        <Warehouse className="h-3.5 w-3.5 text-app-success" />
                                                         <span>{order.to_warehouse_name || `WH #${order.to_warehouse}`}</span>
                                                     </div>
                                                 </TableCell>
@@ -379,7 +379,7 @@ export default function TransferOrdersPage() {
                                                                                         {line.product_name || `Product #${line.product}`}
                                                                                     </div>
                                                                                 </TableCell>
-                                                                                <TableCell className="text-sm text-right font-semibold text-indigo-600">{line.qty_transferred}</TableCell>
+                                                                                <TableCell className="text-sm text-right font-semibold text-app-info">{line.qty_transferred}</TableCell>
                                                                                 <TableCell className="text-sm text-muted-foreground">{line.reason || '—'}</TableCell>
                                                                                 {order.lifecycle_status === 'OPEN' && (
                                                                                     <TableCell>
@@ -395,7 +395,7 @@ export default function TransferOrdersPage() {
                                                             </div>
                                                         ) : (
                                                             <div className="text-center py-6 text-sm text-muted-foreground">
-                                                                <AlertTriangle className="h-5 w-5 mx-auto mb-2 text-amber-500" /> No lines added yet
+                                                                <AlertTriangle className="h-5 w-5 mx-auto mb-2 text-app-warning" /> No lines added yet
                                                             </div>
                                                         )}
                                                     </TableCell>

@@ -176,7 +176,7 @@ export default function ConsignmentManager({
                     <Card className="border-none shadow-xl">
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
-                                <Box className="text-indigo-500" />
+                                <Box className="text-app-info" />
                                 Available Consignment Stock
                             </CardTitle>
                         </CardHeader>
@@ -209,7 +209,7 @@ export default function ConsignmentManager({
                                                 </td>
                                                 <td className="px-6 py-4 text-app-muted-foreground">{inv.warehouse_name}</td>
                                                 <td className="px-6 py-4">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-app-info-bg text-app-info">
                                                         <Users size={12} className="mr-1" />
                                                         {inv.supplier_name}
                                                     </span>
@@ -234,7 +234,7 @@ export default function ConsignmentManager({
                         {Object.values(pendingBySupplier).length === 0 && (
                             <Card className="border-none shadow-xl">
                                 <CardContent className="py-20 text-center">
-                                    <div className="bg-amber-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500">
+                                    <div className="bg-app-warning-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-app-warning">
                                         <CheckCircle2 size={32} />
                                     </div>
                                     <h3 className="text-lg font-bold text-app-foreground">All Clear!</h3>
@@ -281,7 +281,7 @@ export default function ConsignmentManager({
                                                             type="checkbox"
                                                             checked={selectedItems.includes(line.id)}
                                                             onChange={() => handleToggleItem(line.id)}
-                                                            className="w-4 h-4 rounded border-app-border text-amber-500 focus:ring-amber-500"
+                                                            className="w-4 h-4 rounded border-app-border text-app-warning focus:ring-amber-500"
                                                         />
                                                     </td>
                                                     <td className="px-6 py-4 text-app-muted-foreground">
@@ -293,7 +293,7 @@ export default function ConsignmentManager({
                                                     </td>
                                                     <td className="px-6 py-4 text-right font-medium">{line.quantity}</td>
                                                     <td className="px-6 py-4 text-right text-app-muted-foreground">{Number(Number(line.payout_amount) / (Number(line.quantity) || 1)).toLocaleString()}</td>
-                                                    <td className="px-6 py-4 text-right font-bold text-emerald-600">{Number(line.payout_amount).toLocaleString()}</td>
+                                                    <td className="px-6 py-4 text-right font-bold text-app-success">{Number(line.payout_amount).toLocaleString()}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -309,7 +309,7 @@ export default function ConsignmentManager({
                     <Card className="border-none shadow-xl">
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
-                                <History className="text-emerald-500" />
+                                <History className="text-app-success" />
                                 Settlement Archive
                             </CardTitle>
                         </CardHeader>
@@ -321,12 +321,12 @@ export default function ConsignmentManager({
                                     </div>
                                 )}
                                 {settlements.map((settle) => (
-                                    <div key={settle.id} className="bg-app-surface/50 border border-app-border rounded-2xl p-5 hover:border-emerald-200 hover:bg-emerald-50/10 transition-all group">
+                                    <div key={settle.id} className="bg-app-surface/50 border border-app-border rounded-2xl p-5 hover:border-app-success hover:bg-app-success-bg/10 transition-all group">
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="bg-app-surface p-2.5 rounded-xl shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-colors">
                                                 <FileText size={20} />
                                             </div>
-                                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${settle.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${settle.status === 'PAID' ? 'bg-app-success-bg text-app-success' : 'bg-app-warning-bg text-app-warning'
                                                 }`}>
                                                 {settle.status}
                                             </span>

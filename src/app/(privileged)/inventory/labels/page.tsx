@@ -171,10 +171,10 @@ export default function LabelPrintingPage() {
                 <Card className="border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Barcode size={24} className="text-green-500" />
+                            <Barcode size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">With Barcode</p>
-                                <p className="text-2xl font-bold text-green-700">{withBarcode}</p>
+                                <p className="text-2xl font-bold text-app-success">{withBarcode}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -182,10 +182,10 @@ export default function LabelPrintingPage() {
                 <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Tag size={24} className="text-amber-500" />
+                            <Tag size={24} className="text-app-warning" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Without Barcode</p>
-                                <p className="text-2xl font-bold text-amber-700">{withoutBarcode}</p>
+                                <p className="text-2xl font-bold text-app-warning">{withoutBarcode}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -193,10 +193,10 @@ export default function LabelPrintingPage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <CheckSquare size={24} className="text-blue-500" />
+                            <CheckSquare size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Selected</p>
-                                <p className="text-2xl font-bold text-blue-700">{selected.size}</p>
+                                <p className="text-2xl font-bold text-app-info">{selected.size}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -263,7 +263,7 @@ export default function LabelPrintingPage() {
                                 {filtered.slice(0, 100).map((p: Record<string, any>) => (
                                     <TableRow
                                         key={p.id}
-                                        className={`cursor-pointer transition-all ${selected.has(p.id) ? 'bg-orange-50' : 'hover:bg-app-surface/50'}`}
+                                        className={`cursor-pointer transition-all ${selected.has(p.id) ? 'bg-app-warning-bg' : 'hover:bg-app-surface/50'}`}
                                         onClick={() => toggleSelect(p.id)}
                                     >
                                         <TableCell>
@@ -275,8 +275,8 @@ export default function LabelPrintingPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
-                                                    <span className="text-xs font-bold text-orange-600">
+                                                <div className="w-7 h-7 rounded-lg bg-app-warning-bg flex items-center justify-center">
+                                                    <span className="text-xs font-bold text-app-warning">
                                                         {(p.name || '?').charAt(0)}
                                                     </span>
                                                 </div>
@@ -288,7 +288,7 @@ export default function LabelPrintingPage() {
                                             {p.barcode ? (
                                                 <span className="font-mono text-xs">{p.barcode}</span>
                                             ) : (
-                                                <Badge className="bg-amber-100 text-amber-600 text-[10px]">No barcode</Badge>
+                                                <Badge className="bg-app-warning-bg text-app-warning text-[10px]">No barcode</Badge>
                                             )}
                                         </TableCell>
                                         <TableCell className="text-xs text-app-muted-foreground">{p.category_name || '\u2014'}</TableCell>

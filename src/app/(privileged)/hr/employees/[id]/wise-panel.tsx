@@ -62,9 +62,9 @@ interface Props {
 }
 
 const SEVERITY_DOT: Record<string, string> = {
-    CRITICAL: 'bg-rose-500',
-    MAJOR: 'bg-orange-400',
-    MEDIUM: 'bg-amber-400',
+    CRITICAL: 'bg-app-error',
+    MAJOR: 'bg-app-warning',
+    MEDIUM: 'bg-app-warning',
     MINOR: 'bg-app-surface/20',
 };
 
@@ -191,7 +191,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                 {/* Direction pill */}
                                 <div className={clsx(
                                     "w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm shrink-0",
-                                    isPos ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                                    isPos ? "bg-app-primary/10 text-app-success" : "bg-app-error/10 text-app-error"
                                 )}>{isPos ? '+' : '−'}</div>
 
                                 <div className="flex-1 min-w-0">
@@ -201,7 +201,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                     <div className="text-[10px] opacity-30 uppercase font-bold">{ev.module}</div>
                                 </div>
 
-                                <div className={clsx("font-black text-base tabular-nums", isPos ? "text-emerald-400" : "text-rose-400")}>
+                                <div className={clsx("font-black text-base tabular-nums", isPos ? "text-app-success" : "text-app-error")}>
                                     {isPos ? '+' : ''}{ev.signed_points ?? parseFloat(ev.final_points)}
                                 </div>
                                 <div className="text-[10px] opacity-20 w-20 text-right shrink-0">
@@ -278,7 +278,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                             <div className="text-lg font-black">{p.score.toFixed(0)}</div>
                                             {delta !== 0 && (
                                                 <div className={clsx("text-[9px] font-black flex items-center justify-center gap-0.5",
-                                                    delta > 0 ? "text-emerald-400" : "text-rose-400"
+                                                    delta > 0 ? "text-app-success" : "text-app-error"
                                                 )}>
                                                     {delta > 0 ? <ChevronUp size={10} strokeWidth={4} /> : <ChevronDown size={10} strokeWidth={4} />}
                                                     {Math.abs(delta).toFixed(1)}
@@ -313,9 +313,9 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                             className={clsx(
                                                 "flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
                                                 adjustForm.type === t
-                                                    ? t === 'BONUS' ? "bg-emerald-500 text-white border-emerald-500"
-                                                        : t === 'PENALTY' ? "bg-rose-500 text-white border-rose-500"
-                                                            : "bg-amber-500 text-white border-amber-500"
+                                                    ? t === 'BONUS' ? "bg-app-primary text-white border-app-success"
+                                                        : t === 'PENALTY' ? "bg-app-error text-white border-app-error"
+                                                            : "bg-app-warning text-white border-app-warning"
                                                     : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                                             )}>{t}</button>
                                     ))}
@@ -370,8 +370,8 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                 <div className={clsx(
                                     "rounded-2xl p-4 text-sm font-bold border",
                                     adjustResult.startsWith('✅')
-                                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                                        : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                                        ? "bg-app-primary/10 border-app-success/20 text-app-success"
+                                        : "bg-app-error/10 border-app-error/20 text-app-error"
                                 )}>{adjustResult}</div>
                             )}
 

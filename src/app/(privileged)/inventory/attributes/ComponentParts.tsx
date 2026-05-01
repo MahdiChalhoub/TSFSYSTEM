@@ -160,7 +160,7 @@ export function AddGroupForm({ onSave, onCancel, groups }: {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                             {/* Nomenclature Section */}
                             <div className="space-y-3">
-                                <div className="text-[9px] font-black text-amber-600 uppercase tracking-widest">📝 Nomenclature</div>
+                                <div className="text-[9px] font-black text-app-warning uppercase tracking-widest">📝 Nomenclature</div>
 
                                 <ToggleRow
                                     label="Show in Name"
@@ -370,7 +370,7 @@ export function EditModal({ item, tree, onSave, onCancel }: {
 
                             {/* ── Nomenclature Section ── */}
                             <div className="pt-2 mt-2 border-t border-app-border/30">
-                                <div className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-3">📝 Nomenclature Rules</div>
+                                <div className="text-[9px] font-black text-app-warning uppercase tracking-widest mb-3">📝 Nomenclature Rules</div>
 
                                 <ToggleRow label="Show in Product Name" description="Values appear in auto-generated display name"
                                     checked={showInName} onChange={setShowInName} color="bg-amber-500" />

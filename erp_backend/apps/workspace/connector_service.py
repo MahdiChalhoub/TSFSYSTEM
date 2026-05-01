@@ -39,6 +39,13 @@ def register_capabilities(registry):
         from apps.workspace.models import TaskCategory
         return TaskCategory
 
+    @_cap(registry, 'workspace.task_comment.get_model',
+          description='Get TaskComment model class',
+          cacheable=False, critical=False)
+    def get_task_comment_model(org_id=0, **kw):
+        from apps.workspace.models import TaskComment
+        return TaskComment
+
     # ─── EVENT TRIGGERS ──────────────────────────────────────────────
 
     @_cap(registry, 'workspace.events.trigger_inventory',

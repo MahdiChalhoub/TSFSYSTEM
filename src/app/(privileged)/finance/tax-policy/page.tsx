@@ -17,12 +17,47 @@ import {
     AlertTriangle, XCircle, Info, Wand2, RefreshCw, Globe,
 } from 'lucide-react'
 
+// ── Loose payloads from getOrgTaxPolicy / getCounterpartyTaxProfiles / getTaxHealth ──
+type TaxPolicy = {
+    name?: string;
+    country_code?: string;
+    vat_output_enabled?: boolean;
+    vat_input_recoverability?: number | string;
+    airsi_treatment?: string;
+    purchase_tax_rate?: number | string;
+    purchase_tax_mode?: string;
+    sales_tax_rate?: number | string;
+    sales_tax_trigger?: string;
+    periodic_amount?: number | string;
+    periodic_interval?: string;
+    profit_tax_mode?: string;
+    [key: string]: unknown;
+};
+type CounterpartyProfile = {
+    vat_registered?: boolean;
+    airsi_subject?: boolean;
+    [key: string]: unknown;
+};
+type HealthIndicator = {
+    key: string;
+    label?: string;
+    status: 'ok' | 'warning' | 'error' | 'info' | string;
+    description?: string;
+    [key: string]: unknown;
+};
+type TaxHealth = {
+    overall_ok?: boolean;
+    country_code?: string;
+    indicators?: HealthIndicator[];
+    [key: string]: unknown;
+} | null;
+
 // ── KPI helpers ──
-function buildKPIs(policy: any, profiles: any[]) {
+function buildKPIs(policy: TaxPolicy | null, profiles: CounterpartyProfile[]) {
     if (!policy) return []
     const vatRate = policy.vat_output_enabled ? 'Active' : 'Off'
-    const purchaseRate = `${(parseFloat(policy.purchase_tax_rate || 0) * 100).toFixed(1)}%`
-    const salesRate = `${(parseFloat(policy.sales_tax_rate || 0) * 100).toFixed(1)}%`
+    const purchaseRate = `${(parseFloat(String(policy.purchase_tax_rate ?? 0)) * 100).toFixed(1)}%`
+    const salesRate = `${(parseFloat(String(policy.sales_tax_rate ?? 0)) * 100).toFixed(1)}%`
     const profileCount = profiles.length
     const vatRegCount = profiles.filter(p => p.vat_registered).length
 
@@ -39,27 +74,27 @@ function buildKPIs(policy: any, profiles: any[]) {
 const TAX_TYPES = [
     {
         key: 'vat', label: 'VAT (TVA)', icon: CheckCircle2, color: 'var(--app-success, #22c55e)',
-        getValue: (p: any) => `Output: ${p.vat_output_enabled ? 'YES' : 'NO'} · Input: ${(parseFloat(p.vat_input_recoverability || 0) * 100).toFixed(0)}%`
+        getValue: (p: TaxPolicy | null) => `Output: ${p?.vat_output_enabled ? 'YES' : 'NO'} · Input: ${(parseFloat(String(p?.vat_input_recoverability ?? 0)) * 100).toFixed(0)}%`
     },
     {
         key: 'airsi', label: 'AIRSI', icon: Shield, color: '#8b5cf6',
-        getValue: (p: any) => p.airsi_treatment || '—'
+        getValue: (p: TaxPolicy | null) => p?.airsi_treatment || '—'
     },
     {
         key: 'purchase', label: 'Purchase Tax', icon: TrendingDown, color: 'var(--app-info, #3b82f6)',
-        getValue: (p: any) => `${(parseFloat(p.purchase_tax_rate || 0) * 100).toFixed(2)}% · ${p.purchase_tax_mode || '—'}`
+        getValue: (p: TaxPolicy | null) => `${(parseFloat(String(p?.purchase_tax_rate ?? 0)) * 100).toFixed(2)}% · ${p?.purchase_tax_mode || '—'}`
     },
     {
         key: 'sales', label: 'Sales/Turnover', icon: TrendingUp, color: 'var(--app-warning, #f59e0b)',
-        getValue: (p: any) => `${(parseFloat(p.sales_tax_rate || 0) * 100).toFixed(2)}% · ${p.sales_tax_trigger || '—'}`
+        getValue: (p: TaxPolicy | null) => `${(parseFloat(String(p?.sales_tax_rate ?? 0)) * 100).toFixed(2)}% · ${p?.sales_tax_trigger || '—'}`
     },
     {
         key: 'periodic', label: 'Periodic/Forfait', icon: Calculator, color: 'var(--app-error, #ef4444)',
-        getValue: (p: any) => `${p.periodic_amount || '0'} ${p.periodic_interval || ''}`.trim() || '—'
+        getValue: (p: TaxPolicy | null) => `${p?.periodic_amount || '0'} ${p?.periodic_interval || ''}`.trim() || '—'
     },
     {
         key: 'profit', label: 'Profit Tax', icon: DollarSign, color: 'var(--app-primary)',
-        getValue: (p: any) => p.profit_tax_mode || '—'
+        getValue: (p: TaxPolicy | null) => p?.profit_tax_mode || '—'
     },
 ]
 
@@ -68,12 +103,12 @@ const MODULE_CARDS = [
     {
         title: 'Organization Tax Policies', subtitle: 'Configure how your organization handles all 6 tax types',
         icon: Building2, color: 'var(--app-primary)', url: '/finance/org-tax-policies',
-        stats: (p: any) => [{ label: 'Active Policy', value: p?.name || 'None' }, { label: 'Country', value: p?.country_code || '—' }],
+        stats: (p: TaxPolicy | null) => [{ label: 'Active Policy', value: p?.name || 'None' }, { label: 'Country', value: p?.country_code || '—' }],
     },
     {
         title: 'Counterparty Profiles', subtitle: 'Tax treatment presets for suppliers and customers',
         icon: Users, color: 'var(--app-success, #22c55e)', url: '/finance/counterparty-tax-profiles',
-        stats: (_: any, profiles: any[]) => [
+        stats: (_: TaxPolicy | null, profiles: CounterpartyProfile[]) => [
             { label: 'Total', value: profiles.length },
             { label: 'VAT Reg', value: profiles.filter(p => p.vat_registered).length },
             { label: 'AIRSI', value: profiles.filter(p => p.airsi_subject).length },
@@ -102,7 +137,8 @@ const MODULE_CARDS = [
 ]
 
 // ── Tax Health Indicator ──
-const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; border: string }> = {
+type LucideIcon = typeof CheckCircle2;
+const STATUS_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string; border: string }> = {
     ok: { icon: CheckCircle2, color: 'var(--app-success, #22c55e)', bg: 'color-mix(in srgb, #22c55e 8%, transparent)', border: 'color-mix(in srgb, #22c55e 18%, transparent)' },
     warning: { icon: AlertTriangle, color: 'var(--app-warning, #f59e0b)', bg: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: 'color-mix(in srgb, #f59e0b 18%, transparent)' },
     error: { icon: XCircle, color: 'var(--app-error, #ef4444)', bg: 'color-mix(in srgb, #ef4444 8%, transparent)', border: 'color-mix(in srgb, #ef4444 18%, transparent)' },
@@ -110,15 +146,15 @@ const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; bord
 }
 
 function HealthBanner({ health, onApplyTemplate, applying }: {
-    health: any
+    health: TaxHealth
     onApplyTemplate: () => void
     applying: boolean
 }) {
     if (!health) return null
     const { overall_ok, country_code, indicators } = health
     const hasIssues = !overall_ok
-    const errCount = indicators?.filter((i: any) => i.status === 'error').length || 0
-    const warnCount = indicators?.filter((i: any) => i.status === 'warning').length || 0
+    const errCount = indicators?.filter((i) => i.status === 'error').length || 0
+    const warnCount = indicators?.filter((i) => i.status === 'warning').length || 0
 
     return (
         <div className="flex-shrink-0 mb-4 rounded-2xl overflow-hidden animate-in fade-in duration-300"
@@ -169,7 +205,7 @@ function HealthBanner({ health, onApplyTemplate, applying }: {
             {/* Indicators grid */}
             <div className="px-4 py-3"
                 style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '6px' }}>
-                {(indicators || []).map((ind: any) => {
+                {(indicators || []).map((ind) => {
                     const cfg = STATUS_CONFIG[ind.status] || STATUS_CONFIG.info
                     const Ico = cfg.icon
                     return (
@@ -198,9 +234,9 @@ export default function TaxPolicyDashboard() {
     const [searchQuery, setSearchQuery] = useState('')
     const searchRef = useRef<HTMLInputElement>(null)
 
-    const [policy, setPolicy] = useState<any>(null)
-    const [profiles, setProfiles] = useState<any[]>([])
-    const [health, setHealth] = useState<any>(null)
+    const [policy, setPolicy] = useState<TaxPolicy | null>(null)
+    const [profiles, setProfiles] = useState<CounterpartyProfile[]>([])
+    const [health, setHealth] = useState<TaxHealth>(null)
     const [loading, setLoading] = useState(true)
     const [applying, setApplying] = useState(false)
 
@@ -392,7 +428,7 @@ export default function TaxPolicyDashboard() {
                                 {/* Checklist Card */}
                                 <div className="p-8 rounded-[2rem] border border-app-border bg-app-surface/30 flex flex-col gap-4">
                                     <h4 className="font-black text-app-foreground uppercase tracking-widest text-[10px]">Setup Checklist</h4>
-                                    {(health?.indicators || []).map((ind: any) => {
+                                    {(health?.indicators || []).map((ind) => {
                                         const isOk = ind.status === 'ok'
                                         return (
                                             <div key={ind.key} className="flex items-center gap-3">

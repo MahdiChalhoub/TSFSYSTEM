@@ -178,10 +178,10 @@ class ProductSerializer(serializers.ModelSerializer):
             'SENT': 'PO_SENT', 'CONFIRMED': 'PO_SENT',
             'IN_TRANSIT': 'IN_TRANSIT', 'PARTIALLY_RECEIVED': 'IN_TRANSIT',
         }
-        try:
-            from apps.pos.models.procurement_request_models import ProcurementRequest
-        except ImportError:
-            ProcurementRequest = None
+        from erp.connector_registry import connector
+        ProcurementRequest = connector.require(
+            'pos.procurement_requests.get_model', org_id=getattr(obj, 'organization_id', 0) or 0
+        )
 
         if ProcurementRequest is not None:
             latest = ProcurementRequest.objects.filter(
@@ -205,9 +205,10 @@ class ProductSerializer(serializers.ModelSerializer):
                     return 'FAILED'
 
         # Direct-PO fallback: open PO line not driven by a ProcurementRequest.
-        try:
-            from apps.pos.models.purchase_order_models import PurchaseOrderLine
-        except ImportError:
+        PurchaseOrderLine = connector.require(
+            'pos.purchase_order_lines.get_model', org_id=getattr(obj, 'organization_id', 0) or 0
+        )
+        if PurchaseOrderLine is None:
             return 'NONE'
         open_line = (PurchaseOrderLine.objects
                      .filter(product=obj, organization=obj.organization,

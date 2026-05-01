@@ -22,14 +22,14 @@ export function ProcurementPulse({ data }: { data: any[] }) {
             <div className="flex items-center justify-between mb-5">
                 <div>
                     <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
-                        <Zap size={12} className="text-indigo-500" />
+                        <Zap size={12} className="text-app-info" />
                         Procurement Pulse
                     </h3>
                     <p className="text-[9px] font-bold text-app-muted-foreground/50 mt-0.5 uppercase tracking-wider">Volume & Velocity Matrix</p>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                    <TrendingUp size={11} className="text-emerald-500" />
-                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">+12.4%</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-app-primary/10 border border-app-success/20">
+                    <TrendingUp size={11} className="text-app-success" />
+                    <span className="text-[9px] font-black text-app-success uppercase tracking-tighter">+12.4%</span>
                 </div>
             </div>
             <div className="flex-1 w-full min-h-0">
@@ -71,7 +71,7 @@ export function UrgentActionCenter({ issues }: { issues: any[] }) {
         <div className="bg-app-surface/80 backdrop-blur-md rounded-[2rem] border border-app-border/50 p-6 h-[360px] flex flex-col">
             <div className="mb-5">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
-                    <AlertTriangle size={12} className="text-rose-500" />
+                    <AlertTriangle size={12} className="text-app-error" />
                     Critical Operations
                 </h3>
                 <p className="text-[9px] font-bold text-app-muted-foreground/50 mt-0.5 uppercase tracking-wider">High-priority interventions needed</p>
@@ -79,8 +79,8 @@ export function UrgentActionCenter({ issues }: { issues: any[] }) {
 
             <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1">
                 {issues.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-emerald-500/5 rounded-2xl border border-dashed border-emerald-500/20">
-                        <CheckCircle2 size={28} className="text-emerald-500/40 mb-3" />
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-app-primary/5 rounded-2xl border border-dashed border-app-success/20">
+                        <CheckCircle2 size={28} className="text-app-success/40 mb-3" />
                         <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">All Clear</p>
                         <p className="text-[9px] text-app-muted-foreground/40 mt-1">No critical bottlenecks detected</p>
                     </div>
@@ -89,15 +89,15 @@ export function UrgentActionCenter({ issues }: { issues: any[] }) {
                         <div
                             key={i}
                             className={`group flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer ${issue.type === 'overdue'
-                                    ? 'bg-rose-500/5 border-rose-500/15 hover:bg-rose-500/10'
-                                    : 'bg-amber-500/5 border-amber-500/15 hover:bg-amber-500/10'
+                                    ? 'bg-app-error/5 border-app-error/15 hover:bg-app-error/10'
+                                    : 'bg-app-warning/5 border-app-warning/15 hover:bg-app-warning/10'
                                 }`}
                         >
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${issue.type === 'overdue' ? 'bg-rose-500/10' : 'bg-amber-500/10'
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${issue.type === 'overdue' ? 'bg-app-error/10' : 'bg-app-warning/10'
                                 }`}>
                                 {issue.type === 'overdue'
-                                    ? <ShieldAlert size={14} className="text-rose-500" />
-                                    : <Clock size={14} className="text-amber-500" />
+                                    ? <ShieldAlert size={14} className="text-app-error" />
+                                    : <Clock size={14} className="text-app-warning" />
                                 }
                             </div>
                             <div className="min-w-0 flex-1">
@@ -169,7 +169,7 @@ export function SupplierPerformance({ data }: { data: any[] }) {
         <div className="bg-app-surface/80 backdrop-blur-md rounded-[2rem] border border-app-border/50 p-6 h-[360px] flex flex-col">
             <div className="mb-5">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
-                    <Truck size={12} className="text-indigo-500" />
+                    <Truck size={12} className="text-app-info" />
                     Top Suppliers
                 </h3>
                 <p className="text-[9px] font-bold text-app-muted-foreground/50 mt-0.5 uppercase tracking-wider">By procurement volume</p>
@@ -208,7 +208,7 @@ export function SupplierPerformance({ data }: { data: any[] }) {
 
             <Link
                 href="/purchases/dashboard"
-                className="mt-5 flex items-center justify-center gap-2 py-3 rounded-2xl bg-app-background/60 hover:bg-indigo-500/8 border border-app-border/50 hover:border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.18em] text-app-muted-foreground hover:text-indigo-500 transition-all"
+                className="mt-5 flex items-center justify-center gap-2 py-3 rounded-2xl bg-app-background/60 hover:bg-indigo-500/8 border border-app-border/50 hover:border-app-info/20 text-[10px] font-black uppercase tracking-[0.18em] text-app-muted-foreground hover:text-app-info transition-all"
             >
                 Full Analytics <ArrowRight size={11} />
             </Link>
@@ -224,7 +224,7 @@ export function ProcurementActivityFeed({ orders }: { orders: any[] }) {
         <div className="bg-app-surface/80 backdrop-blur-md rounded-[2rem] border border-app-border/50 p-6 h-[360px] flex flex-col hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-500">
             <div className="mb-5">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
-                    <HistoryIcon size={12} className="text-indigo-500" />
+                    <HistoryIcon size={12} className="text-app-info" />
                     Recent Activity
                 </h3>
                 <p className="text-[9px] font-bold text-app-muted-foreground/50 mt-0.5 uppercase tracking-wider">Live transaction stream</p>
@@ -248,7 +248,7 @@ export function ProcurementActivityFeed({ orders }: { orders: any[] }) {
                                             <span className="text-[11px] font-black text-app-foreground uppercase tracking-tight">
                                                 {order.po_number || `PO-${order.id}`}
                                             </span>
-                                            <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-500 text-[8px] font-black uppercase tracking-wider">
+                                            <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-app-info text-[8px] font-black uppercase tracking-wider">
                                                 {order.status}
                                             </span>
                                         </div>

@@ -8,11 +8,7 @@ from rest_framework.decorators import action
 from erp.middleware import get_current_tenant_id
 from erp.models import Organization
 
-# Gated cross-module imports
-try:
-    from apps.inventory.models import Warehouse
-except ImportError:
-    Warehouse = None
+# Cross-module: routed via connector at call-site (Pattern A).
 
 from apps.pos.models import Order
 from apps.pos.services import POSService, PurchaseService
@@ -49,6 +45,10 @@ class POSViewSet(viewsets.ViewSet):
             if user.is_anonymous:
                 from erp.models import User
                 user = User.objects.filter(organization=organization, is_staff=True).first()
+            from erp.connector_registry import connector
+            Warehouse = connector.require('inventory.warehouses.get_model', org_id=organization.id)
+            if Warehouse is None:
+                return Response({"error": "Inventory module unavailable"}, status=503)
             warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
             order = POSService.checkout(
                 organization=organization, user=user, warehouse=warehouse,
@@ -552,7 +552,10 @@ class QuotationViewSet(TenantModelViewSet):
         if quotation.status not in ('DRAFT', 'SENT'):
             return Response({'error': 'Cannot modify quotation in this status'}, status=400)
 
-        from apps.inventory.models import Product
+        from erp.connector_registry import connector
+        Product = connector.require('inventory.products.get_model', org_id=quotation.organization_id)
+        if Product is None:
+            return Response({'error': 'Inventory module unavailable'}, status=503)
         product_id = request.data.get('product_id')
         quantity = Decimal(str(request.data.get('quantity', 1)))
         unit_price_ttc = request.data.get('unit_price_ttc')
@@ -633,7 +636,10 @@ class QuotationViewSet(TenantModelViewSet):
             return Response({'error': 'Already converted', 'order_id': quotation.converted_order_id}, status=400)
 
         from apps.pos.models import Order, OrderLine
-        from apps.finance.models import TransactionSequence
+        from erp.connector_registry import connector
+        TransactionSequence = connector.require('finance.sequences.get_model', org_id=quotation.organization_id)
+        if TransactionSequence is None:
+            return Response({'error': 'Finance module unavailable; cannot allocate sequence.'}, status=503)
 
         with transaction.atomic():
             ref = TransactionSequence.next_value(quotation.organization, 'SALE')

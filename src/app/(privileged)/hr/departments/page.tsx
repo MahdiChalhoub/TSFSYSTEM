@@ -37,7 +37,7 @@ export default async function DepartmentsPage() {
                     </p>
                 </div>
 
-                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-violet-900/5 border border-gray-50">
+                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-violet-900/5 border border-app-border">
                     <div className="text-center px-8 border-r border-app-border">
                         <div className="text-5xl font-black text-app-foreground tracking-tighter mb-1">{departments.length}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Total</div>
@@ -47,7 +47,7 @@ export default async function DepartmentsPage() {
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Active</div>
                     </div>
                     <div className="text-center px-8">
-                        <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{roots}</div>
+                        <div className="text-5xl font-black text-app-success tracking-tighter mb-1">{roots}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Root Depts</div>
                     </div>
                 </div>

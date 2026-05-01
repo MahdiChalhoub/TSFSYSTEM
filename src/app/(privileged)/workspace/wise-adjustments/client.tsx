@@ -20,10 +20,10 @@ interface Props {
 }
 
 const RISK_COLORS: Record<string, string> = {
-    STABLE: 'text-emerald-400',
-    AT_RISK: 'text-amber-400',
-    HIGH_RISK: 'text-orange-400',
-    CRITICAL: 'text-rose-400',
+    STABLE: 'text-app-success',
+    AT_RISK: 'text-app-warning',
+    HIGH_RISK: 'text-app-warning',
+    CRITICAL: 'text-app-error',
 };
 
 export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
@@ -136,9 +136,9 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                                         className={clsx(
                                             "py-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest border transition-all duration-300",
                                             form.type === t
-                                                ? t === 'BONUS' ? "bg-emerald-500 text-white border-emerald-500 shadow-xl shadow-emerald-500/40 scale-105"
-                                                    : t === 'PENALTY' ? "bg-rose-500 text-white border-rose-500 shadow-xl shadow-rose-500/40 scale-105"
-                                                        : "bg-amber-500 text-white border-amber-500 shadow-xl shadow-amber-500/40 scale-105"
+                                                ? t === 'BONUS' ? "bg-app-primary text-white border-app-success shadow-xl shadow-emerald-500/40 scale-105"
+                                                    : t === 'PENALTY' ? "bg-app-error text-white border-app-error shadow-xl shadow-rose-500/40 scale-105"
+                                                        : "bg-app-warning text-white border-app-warning shadow-xl shadow-amber-500/40 scale-105"
                                                 : "bg-app-surface/[0.03] text-white/30 border-app-border hover:text-white hover:bg-app-surface/10"
                                         )}>{t}</button>
                                 ))}
@@ -171,7 +171,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
 
                         <div>
                             <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">
-                                Rationale & Justification <span className="text-rose-400">*</span>
+                                Rationale & Justification <span className="text-app-error">*</span>
                             </label>
                             <textarea value={form.reason}
                                 onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
@@ -185,8 +185,8 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                         {result && (
                             <div className={clsx("rounded-2xl p-5 text-sm font-bold border animate-in slide-in-from-top-2",
                                 result.startsWith('✅')
-                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                                    : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                                    ? "bg-app-primary/10 border-app-success/20 text-app-success"
+                                    : "bg-app-error/10 border-app-error/20 text-app-error"
                             )}>
                                 <div className="flex items-center gap-3">
                                     {result.startsWith('✅') ? <Send size={16} /> : <X size={16} />}

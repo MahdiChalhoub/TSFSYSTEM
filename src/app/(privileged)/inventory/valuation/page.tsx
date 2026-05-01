@@ -23,8 +23,8 @@ function fmtQty(n: number) {
 }
 
 const METHOD_BADGES: Record<string, string> = {
-    WEIGHTED_AVG: 'bg-blue-100 text-blue-700',
-    FIFO: 'bg-emerald-100 text-emerald-700',
+    WEIGHTED_AVG: 'bg-app-info-bg text-app-info',
+    FIFO: 'bg-app-success-bg text-app-success',
     LIFO: 'bg-purple-100 text-purple-700',
     COST_PRICE: 'bg-app-surface-2 text-app-foreground',
 }
@@ -139,8 +139,8 @@ export default function InventoryValuationPage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                                <DollarSign size={20} className="text-emerald-600" />
+                            <div className="w-10 h-10 rounded-full bg-app-success-bg flex items-center justify-center">
+                                <DollarSign size={20} className="text-app-success" />
                             </div>
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Stock Value</p>
@@ -152,8 +152,8 @@ export default function InventoryValuationPage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <Package size={20} className="text-blue-600" />
+                            <div className="w-10 h-10 rounded-full bg-app-info-bg flex items-center justify-center">
+                                <Package size={20} className="text-app-info" />
                             </div>
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Products with Stock</p>
@@ -267,7 +267,7 @@ export default function InventoryValuationPage() {
                                         </TableCell>
                                         <TableCell className="text-right font-semibold">{fmtQty(p.quantity)}</TableCell>
                                         <TableCell className="text-right text-sm">{fmt(p.avg_cost)}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-700">{fmt(p.total_value)}</TableCell>
+                                        <TableCell className="text-right font-bold text-app-success">{fmt(p.total_value)}</TableCell>
                                         <TableCell>
                                             <Badge className={METHOD_BADGES[p.method] || 'bg-app-surface-2'}>
                                                 {p.method?.replace('_', ' ')}

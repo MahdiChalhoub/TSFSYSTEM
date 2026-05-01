@@ -53,11 +53,11 @@ interface FilterOptions {
 
 // ─── Status Helpers ──────────────────────────────────────────────
 const STATUS_MAP: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-    IN_PROGRESS: { label: 'In Progress', color: 'bg-blue-100 text-blue-700', icon: <Clock className="w-4 h-4" /> },
-    WAITING_VERIFICATION: { label: 'Pending Review', color: 'bg-yellow-100 text-yellow-700', icon: <AlertTriangle className="w-4 h-4" /> },
-    VERIFIED: { label: 'Verified', color: 'bg-green-100 text-green-700', icon: <CheckCircle2 className="w-4 h-4" /> },
+    IN_PROGRESS: { label: 'In Progress', color: 'bg-app-info-bg text-app-info', icon: <Clock className="w-4 h-4" /> },
+    WAITING_VERIFICATION: { label: 'Pending Review', color: 'bg-app-warning-bg text-app-warning', icon: <AlertTriangle className="w-4 h-4" /> },
+    VERIFIED: { label: 'Verified', color: 'bg-app-success-bg text-app-success', icon: <CheckCircle2 className="w-4 h-4" /> },
     ADJUSTED: { label: 'Adjusted', color: 'bg-purple-100 text-purple-700', icon: <Sparkles className="w-4 h-4" /> },
-    CANCELLED: { label: 'Cancelled', color: 'bg-red-100 text-red-700', icon: <Trash2 className="w-4 h-4" /> },
+    CANCELLED: { label: 'Cancelled', color: 'bg-app-error-bg text-app-error', icon: <Trash2 className="w-4 h-4" /> },
 }
 
 // ─── Page ────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ export default function StockCountPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card>
                     <CardContent className="flex items-center gap-4 p-5">
-                        <div className="p-3 bg-blue-100 rounded-xl"><Clock className="w-5 h-5 text-blue-600" /></div>
+                        <div className="p-3 bg-app-info-bg rounded-xl"><Clock className="w-5 h-5 text-app-info" /></div>
                         <div>
                             <p className="text-xs text-muted-foreground">In Progress</p>
                             <p className="text-2xl font-bold">{inProgress}</p>
@@ -144,7 +144,7 @@ export default function StockCountPage() {
                 </Card>
                 <Card>
                     <CardContent className="flex items-center gap-4 p-5">
-                        <div className="p-3 bg-yellow-100 rounded-xl"><AlertTriangle className="w-5 h-5 text-yellow-600" /></div>
+                        <div className="p-3 bg-app-warning-bg rounded-xl"><AlertTriangle className="w-5 h-5 text-app-warning" /></div>
                         <div>
                             <p className="text-xs text-muted-foreground">Pending Verification</p>
                             <p className="text-2xl font-bold">{pending}</p>
@@ -153,7 +153,7 @@ export default function StockCountPage() {
                 </Card>
                 <Card>
                     <CardContent className="flex items-center gap-4 p-5">
-                        <div className="p-3 bg-green-100 rounded-xl"><CheckCircle2 className="w-5 h-5 text-green-600" /></div>
+                        <div className="p-3 bg-app-success-bg rounded-xl"><CheckCircle2 className="w-5 h-5 text-app-success" /></div>
                         <div>
                             <p className="text-xs text-muted-foreground">Completed</p>
                             <p className="text-2xl font-bold">{completed}</p>
@@ -411,11 +411,11 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
 
                     {/* Product Count Preview */}
                     {productPreview !== null && (
-                        <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center gap-3 p-4 bg-app-info-bg dark:bg-blue-950/30 rounded-lg border border-app-info dark:border-blue-800">
                             <div className="p-2 bg-blue-600 rounded-lg"><Package className="w-5 h-5 text-white" /></div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Products to count</p>
-                                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{productPreview.toLocaleString()}</p>
+                                <p className="text-2xl font-bold text-app-info dark:text-blue-300">{productPreview.toLocaleString()}</p>
                             </div>
                         </div>
                     )}

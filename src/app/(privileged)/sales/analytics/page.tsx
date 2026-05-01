@@ -96,10 +96,10 @@ export default function SalesAnalyticsPage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <ShoppingCart size={22} className="text-blue-500" />
+                            <ShoppingCart size={22} className="text-app-info" />
                             <div>
                                 <p className="text-[10px] text-app-muted-foreground uppercase">Orders</p>
-                                <p className="text-lg font-bold text-blue-700">{overall.orders}</p>
+                                <p className="text-lg font-bold text-app-info">{overall.orders}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -107,10 +107,10 @@ export default function SalesAnalyticsPage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <TrendingUp size={22} className="text-emerald-500" />
+                            <TrendingUp size={22} className="text-app-success" />
                             <div>
                                 <p className="text-[10px] text-app-muted-foreground uppercase">Avg Order</p>
-                                <p className="text-lg font-bold text-emerald-700">{fmt(overall.avg_order)}</p>
+                                <p className="text-lg font-bold text-app-success">{fmt(overall.avg_order)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -118,10 +118,10 @@ export default function SalesAnalyticsPage() {
                 <Card className="border-l-4 border-l-rose-500 bg-gradient-to-r from-rose-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <DollarSign size={22} className="text-rose-500" />
+                            <DollarSign size={22} className="text-app-error" />
                             <div>
                                 <p className="text-[10px] text-app-muted-foreground uppercase">Tax</p>
-                                <p className="text-lg font-bold text-rose-700">{fmt(overall.tax)}</p>
+                                <p className="text-lg font-bold text-app-error">{fmt(overall.tax)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -132,7 +132,7 @@ export default function SalesAnalyticsPage() {
                             <DollarSign size={22} className="text-orange-500" />
                             <div>
                                 <p className="text-[10px] text-app-muted-foreground uppercase">Discounts</p>
-                                <p className="text-lg font-bold text-orange-700">{fmt(overall.discount)}</p>
+                                <p className="text-lg font-bold text-app-warning">{fmt(overall.discount)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -232,7 +232,7 @@ export default function SalesAnalyticsPage() {
                                         <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell className="font-medium">{c.name || 'Walk-in'}</TableCell>
                                         <TableCell className="text-right text-sm">{c.orders}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-600">{fmt(c.spent)}</TableCell>
+                                        <TableCell className="text-right font-bold text-app-success">{fmt(c.spent)}</TableCell>
                                     </TableRow>
                                 ))}
                                 {(!top_customers?.length) && (
@@ -296,8 +296,8 @@ export default function SalesAnalyticsPage() {
                                 const pct = (s.total / totalRev * 100)
                                 return (
                                     <div key={i} className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <Building2 size={14} className="text-blue-600" />
+                                        <div className="w-8 h-8 rounded-lg bg-app-info-bg flex items-center justify-center">
+                                            <Building2 size={14} className="text-app-info" />
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex justify-between text-sm mb-1">

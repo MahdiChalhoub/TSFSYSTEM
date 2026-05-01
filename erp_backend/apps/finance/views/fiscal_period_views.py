@@ -108,14 +108,16 @@ class FiscalPeriodViewSet(TenantModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            from apps.workspace.auto_task_service import fire_auto_tasks
+            from erp.connector_registry import connector
             requester_name = (
                 user.get_full_name() or user.username if user else 'Anonymous'
             )
-            created = fire_auto_tasks(
-                period.organization,
-                'PERIOD_REOPEN_REQUEST',
-                {
+            created = connector.execute(
+                'workspace.auto_tasks.fire',
+                org_id=period.organization_id,
+                organization=period.organization,
+                event='PERIOD_REOPEN_REQUEST',
+                context={
                     'user': user,
                     'reference': f'Period {period.name}',
                     'extra': {
@@ -130,7 +132,7 @@ class FiscalPeriodViewSet(TenantModelViewSet):
             )
             return Response({
                 "status": "Request sent",
-                "tasks_created": len(created),
+                "tasks_created": len(created or []),
             })
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

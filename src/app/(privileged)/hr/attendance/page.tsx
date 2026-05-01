@@ -35,24 +35,24 @@ export default async function AttendancePage() {
                         <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Tracking</span>
                     </div>
                     <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
-                        Atten<span className="text-emerald-600">dance</span>
+                        Atten<span className="text-app-success">dance</span>
                     </h1>
                     <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">
                         Real-time employee check-in/check-out tracking. Monitor presence across shifts and calculate working hours automatically.
                     </p>
                 </div>
 
-                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-emerald-900/5 border border-gray-50">
+                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-emerald-900/5 border border-app-border">
                     <div className="text-center px-8 border-r border-app-border">
                         <div className="text-5xl font-black text-app-foreground tracking-tighter mb-1">{attendance.length}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Total Records</div>
                     </div>
                     <div className="text-center px-8 border-r border-app-border">
-                        <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{todayRecords.length}</div>
+                        <div className="text-5xl font-black text-app-success tracking-tighter mb-1">{todayRecords.length}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Today</div>
                     </div>
                     <div className="text-center px-8">
-                        <div className="text-5xl font-black text-amber-600 tracking-tighter mb-1">{checkedIn}</div>
+                        <div className="text-5xl font-black text-app-warning tracking-tighter mb-1">{checkedIn}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">On-site Now</div>
                     </div>
                 </div>

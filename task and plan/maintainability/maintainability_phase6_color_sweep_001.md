@@ -409,6 +409,250 @@ Top residual patterns:
 
 ---
 
+## Session 2 results — `(privileged)/inventory/` and `(privileged)/sales/` (2026-04-30)
+
+### Counts (inventory subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 350 | 68 | −282 |
+| `bg-…-NNN` | 249 | 102 | −147 |
+| `border-…-NNN` | 121 | 50 | −71 |
+| `ring-…-NNN` | 44 | 44 | 0 |
+| `from-…-NNN` | 34 | 34 | 0 |
+| `to-…-NNN` | 25 | 25 | 0 |
+| **Total (text/bg/border)** | **720** | **220** | **−500 (−69%)** |
+
+### Counts (sales subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 210 | 42 | −168 |
+| `bg-…-NNN` | 151 | 72 | −79 |
+| `border-…-NNN` | 53 | 42 | −11 |
+| `ring-…-NNN` | 17 | 17 | 0 |
+| `from-…-NNN` | 20 | 20 | 0 |
+| `to-…-NNN` | 8 | 8 | 0 |
+| **Total (text/bg/border)** | **414** | **156** | **−258 (−62%)** |
+
+### Files modified
+
+- 73 files in `src/app/(privileged)/inventory/` modified.
+- 24 files in `src/app/(privileged)/sales/` modified.
+- 97 files total. Net change: 499 insertions, 499 deletions (1:1 in-place class swaps via perl).
+
+### TSC
+
+- Baseline before sweep (this session, after parallel Phase-5 fixes): 0 errors.
+- After sweep: 0 new errors from this phase. 9 lines of pre-existing errors observed:
+  - `(privileged)/settings/regional/client.tsx` (Phase 5 in progress on `LanguageCatalogueItem` typing) — outside scope
+  - `(privileged)/purchases/new/_components/AdminSidebar.tsx` (mid-edit JSX imbalance from a parallel agent) — outside scope
+- **Zero new TSC errors introduced by this Phase 6 session.** ✓
+
+### Sample diffs (representative)
+
+`src/app/(privileged)/inventory/analytics/page.tsx` (status badge color maps):
+```diff
+- if (score >= 80) return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+- if (score >= 60) return 'bg-yellow-50 text-yellow-700 ring-yellow-200'
+- return 'bg-red-50 text-red-700 ring-red-200'
++ if (score >= 80) return 'bg-app-success-bg text-app-success ring-emerald-200'
++ if (score >= 60) return 'bg-app-warning-bg text-app-warning ring-yellow-200'
++ return 'bg-app-error-bg text-app-error ring-red-200'
+- PENDING: { label: 'Requested', cls: 'bg-blue-50 text-blue-700 ring-blue-200', icon: Clock },
+- CONVERTED: { label: 'Order Created', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200', icon: FileText },
+- REJECTED: { label: 'Failed', cls: 'bg-red-50 text-red-700 ring-red-200', icon: XCircle },
++ PENDING: { label: 'Requested', cls: 'bg-app-info-bg text-app-info ring-blue-200', icon: Clock },
++ CONVERTED: { label: 'Order Created', cls: 'bg-app-success-bg text-app-success ring-emerald-200', icon: FileText },
++ REJECTED: { label: 'Failed', cls: 'bg-app-error-bg text-app-error ring-red-200', icon: XCircle },
+```
+
+`src/app/(privileged)/sales/[id]/page.tsx`:
+```diff
+- <Link href="/sales/history" className="text-emerald-500 font-bold hover:underline">Return to History</Link>
++ <Link href="/sales/history" className="text-app-success font-bold hover:underline">Return to History</Link>
+- <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Amount</div>
+- <div className="text-xl font-black text-emerald-700">{fmt(parseFloat(order.total_amount))}</div>
++ <div className="text-[10px] font-black text-app-success uppercase tracking-widest mb-1">Total Amount</div>
++ <div className="text-xl font-black text-app-success">{fmt(parseFloat(order.total_amount))}</div>
+```
+
+`src/app/(privileged)/sales/audit/AuditTable.tsx` (representative status pills swept by perl):
+```diff
+- <span className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded-full font-bold">Failed</span>
++ <span className="text-xs bg-app-error-bg text-app-error px-2 py-1 rounded-full font-bold">Failed</span>
+```
+
+### What remains (376 tokens across both subdirs after sweep)
+
+- `ring-…-NNN` (61 total, untouched) — no `ring-app-*` aliases for emerald/red/yellow shade pairs.
+- `from-…-NNN` / `to-…-NNN` (54+33 = 87, untouched) — gradient tokens not defined; leave for gradient-token phase.
+- Decorative `purple/cyan/pink/violet` (used in `inventory/analytics`, `inventory/intelligence`, etc. for category accents) — needs `--app-accent` precursor.
+- `bg-emerald-500/600` (brand action solids on CTAs) — context-sensitive; deferred.
+- `text-emerald-900/950`, `text-amber-900` — out-of-range shade variants, niche use inside gradient bands.
+
+### Updated subdir scope (for next session)
+
+| Subdir | Tokens (orig) | Tokens (after this session) | Status |
+|---|---:|---:|---|
+| `(privileged)/finance` | 756 | 347 | DONE (Session 1) |
+| `(privileged)/inventory` | 500+ | ~220 | DONE (this session) |
+| `(privileged)/sales` | 322+ | ~156 | DONE (this session) |
+| `(privileged)/(saas)` | 412 | 412 | TODO |
+| `tenant/[slug]` | 363 | 363 | TODO |
+| `(privileged)/purchases` | 249 | 249 | TODO |
+| `supplier-portal/[slug]` | 221 | 221 | TODO |
+| `(privileged)/workspace` | 217 | 217 | TODO |
+| `(privileged)/crm` | 200 | 200 | TODO |
+| `(privileged)/hr` | 189 | 189 | TODO |
+| Others | ~836 | ~836 | TODO |
+
+---
+
+## Session 3 results — `(privileged)/workspace/`, `(privileged)/hr/`, `(privileged)/crm/`, `(privileged)/purchases/` (2026-04-30)
+
+Smaller-density sibling subdirs swept in parallel with Session 2 (inventory + sales).
+
+### Counts (workspace subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 161 | 31 | −130 |
+| `bg-…-NNN` | 126 | 28 | −98 |
+| `border-…-NNN` | 91 | 16 | −75 |
+| `ring-…-NNN` | 0 | 0 | 0 |
+| `from-…-NNN` | 9 | 9 | 0 |
+| `to-…-NNN` | 8 | 8 | 0 |
+| **Total** | **395** | **92** | **−303 (−77%)** |
+
+### Counts (hr subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 103 | 12 | −91 |
+| `bg-…-NNN` | 104 | 14 | −90 |
+| `border-…-NNN` | 66 | 8 | −58 |
+| `ring-…-NNN` | 11 | 11 | 0 |
+| `from-…-NNN` | 15 | 13 | −2 |
+| `to-…-NNN` | 7 | 6 | −1 |
+| **Total** | **306** | **64** | **−242 (−79%)** |
+
+### Counts (crm subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 136 | 28 | −108 |
+| `bg-…-NNN` | 105 | 29 | −76 |
+| `border-…-NNN` | 24 | 5 | −19 |
+| `ring-…-NNN` | 20 | 20 | 0 |
+| `from-…-NNN` | 8 | 14 | +6 (auto-backup pulled in upstream additions) |
+| `to-…-NNN` | 0 | 8 | +8 (same) |
+| **Total** | **293** | **104** | **−189 (−65%)** |
+
+### Counts (purchases subdir, before → after)
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 195 | 23 | −172 |
+| `bg-…-NNN` | 191 | 56 | −135 |
+| `border-…-NNN` | 65 | 15 | −50 |
+| `ring-…-NNN` | 12 | 13 | +1 |
+| `from-…-NNN` | 5 | 5 | 0 |
+| `to-…-NNN` | 1 | 1 | 0 |
+| **Total** | **469** | **113** | **−356 (−76%)** |
+
+### Files modified
+
+- 28 files in `src/app/(privileged)/workspace/`
+- 19 files in `src/app/(privileged)/hr/`
+- 13 files in `src/app/(privileged)/crm/`
+- 18 files in `src/app/(privileged)/purchases/` (3 of those — `purchases/new/{form.tsx, _components/AdminSidebar.tsx, _components/ProductSearch.tsx}` — also have parallel-agent structural rewrites; my color edits compose with theirs cleanly)
+- **78 files total**. Net change in this session is purely class-name swaps; auto-backup at session start brought in unrelated upstream changes for some files.
+
+### Two-pass approach
+
+1. **Pass 1 (`/tmp/phase6_migrate.sh`)** — neutral surfaces, text shades, borders, status `-50/100/200/300` swaps for emerald/green/rose/red/amber/yellow/orange/blue/sky/indigo. Also includes `text-emerald-400`, `text-rose-400`, `text-amber-400` (often used for dark-context badges). All idempotent (safe to re-run).
+2. **Pass 2 (`/tmp/phase6_pass2.sh`)** — brand emerald solids (`bg-emerald-500/600/700` → `bg-app-primary{,-dark}`), solid status borders/backgrounds at `-500/600/700` shade for non-emerald palettes, `border-gray-50/-slate-50/-zinc-50` (subtle) → `border-app-border`. Run after Pass 1.
+
+### TSC
+
+- Baseline before this session: 0 errors.
+- After this session: 0 errors. **Zero new TSC errors introduced.** ✓
+
+### Sample diffs (representative)
+
+`src/app/(privileged)/workspace/wise-rules/page.tsx` (module color map):
+```diff
+- crm: 'bg-blue-500/10 text-blue-400',
+- finance: 'bg-emerald-500/10 text-emerald-400',
+- sales: 'bg-amber-500/10 text-amber-400',
+- manual: 'bg-rose-500/10 text-rose-400',
++ crm: 'bg-app-info/10 text-app-info',
++ finance: 'bg-app-primary/10 text-app-success',
++ sales: 'bg-app-warning/10 text-app-warning',
++ manual: 'bg-app-error/10 text-app-error',
+```
+
+`src/app/(privileged)/hr/payroll/page.tsx` (header CTA + badge):
+```diff
+- EMPLOYEE: 'bg-blue-100 text-blue-700',
++ EMPLOYEE: 'bg-app-info-bg text-app-info',
+- <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center">
++ <div className="w-10 h-10 rounded-xl bg-app-primary flex items-center justify-center">
+```
+
+`src/app/(privileged)/crm/insights/page.tsx` (tier styles):
+```diff
+- Gold: 'bg-amber-100 text-amber-700',
+- Bronze: 'bg-orange-100 text-orange-700',
++ Gold: 'bg-app-warning-bg text-app-warning',
++ Bronze: 'bg-app-warning-bg text-app-warning',
+- <TrendingUp size={24} className="text-green-500" />
+- <p className="text-2xl font-bold text-green-700">{activeCustomers}</p>
++ <TrendingUp size={24} className="text-app-success" />
++ <p className="text-2xl font-bold text-app-success">{activeCustomers}</p>
+```
+
+`src/app/(privileged)/purchases/receiving/ReceivingScreen.tsx` (status risk colors retained `dark:` overlay):
+```diff
+- SAFE_TO_RECEIVE: { label: 'Safe to Receive', color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', icon: Check },
++ SAFE_TO_RECEIVE: { label: 'Safe to Receive', color: 'bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success', icon: Check },
+```
+
+`src/app/(privileged)/crm/client-gate-preview/client.tsx` (preview chrome):
+```diff
+- <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+-     <Eye size={22} className="text-emerald-600" />
++ <div className="w-12 h-12 rounded-2xl bg-app-success-bg border border-app-success flex items-center justify-center">
++     <Eye size={22} className="text-app-success" />
+```
+
+### What remains in these 4 subdirs (373 tokens total)
+
+- **Decorative `violet/purple/fuchsia/cyan/teal/indigo`** — no `--app-accent` token defined. workspace has 14 `border-violet-500`, hr has scattered violet/purple, crm has many `bg-violet-100/600/700` for category cards, purchases has `text-purple-500/600/700` series. Document as **precursor**: needs `--app-accent` + `--app-accent-bg` + `--app-accent-fg` + border/text variants in `globals.css`.
+- **`bg-{red,emerald,blue,rose}-900/XX` with `dark:` prefix** in `purchases/receiving/ReceivingScreen.tsx` and `purchases/new-order-v2/form.tsx` — explicit dark-mode overlays paired with `app-*` tokens. Redundant (the `app-*` tokens already adapt to dark mode) but not wrong; left in place to match existing idiom.
+- **`bg-[#020617] border-gray-800/700/600` in preview clients** (`crm/client-gate-preview/client.tsx`, `crm/supplier-gate-preview/client.tsx`) — intentional dark-on-dark UI showing what the public gate page looks like. Hardcoded by design.
+- **Ring colors** (workspace=0, hr=11, crm=20, purchases=13) — no `ring-app-success/error/info` aliases for shade pairs in some uses. Out of scope until a precursor sweep adds `--color-app-*-ring`.
+- **Gradient `from-/to-`** (workspace=17, hr=19, crm=22, purchases=6) — gradient tokens not defined; leave for gradient-token phase.
+
+### Updated subdir scope (after Session 3)
+
+| Subdir | Tokens (orig) | Tokens (after) | Status |
+|---|---:|---:|---|
+| `(privileged)/finance` | 756 | 347 | DONE (Session 1) |
+| `(privileged)/inventory` | 500+ | ~220 | DONE (Session 2) |
+| `(privileged)/sales` | 322+ | ~156 | DONE (Session 2) |
+| `(privileged)/workspace` | 395 | 92 | DONE (Session 3) |
+| `(privileged)/hr` | 306 | 64 | DONE (Session 3) |
+| `(privileged)/crm` | 293 | 104 | DONE (Session 3) |
+| `(privileged)/purchases` | 469 | 113 | DONE (Session 3) |
+| `(privileged)/(saas)` | 412 | 412 | TODO |
+| `tenant/[slug]` | 363 | 363 | TODO |
+| `supplier-portal/[slug]` | 221 | 221 | TODO |
+| Others | ~836 | ~836 | TODO |
+
+---
+
 ## Critical rules for the executing agent
 
 1. **PRESERVE VISUAL OUTPUT in light mode.** Don't replace `text-blue-600` with `text-app-error`. Match meaning.

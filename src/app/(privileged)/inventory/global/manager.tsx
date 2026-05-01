@@ -50,7 +50,7 @@ export default function GlobalInventoryManager({
             {/* Header Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-gray-50 flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-3xl bg-app-info-bg text-app-info flex items-center justify-center">
                         <Package size={32} />
                     </div>
                     <div>
@@ -59,7 +59,7 @@ export default function GlobalInventoryManager({
                     </div>
                 </div>
                 <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-gray-50 flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-3xl bg-app-success-bg text-app-success flex items-center justify-center">
                         <TrendingUp size={32} />
                     </div>
                     <div>
@@ -68,7 +68,7 @@ export default function GlobalInventoryManager({
                     </div>
                 </div>
                 <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-gray-50 flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-3xl bg-app-warning-bg text-app-warning flex items-center justify-center">
                         <DollarSign size={32} />
                     </div>
                     <div>
@@ -104,12 +104,12 @@ export default function GlobalInventoryManager({
                                 <th className="px-8 py-6 text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em] border-b border-app-border">Product Info</th>
                                 <th className="px-6 py-6 text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em] border-b border-app-border">Category / Brand</th>
                                 {data.sites.map((site: Record<string, any>) => (
-                                    <th key={site.id} className="px-6 py-6 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] border-b border-app-border text-center bg-indigo-50/20">
+                                    <th key={site.id} className="px-6 py-6 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] border-b border-app-border text-center bg-app-info-bg/20">
                                         {site.name}
                                     </th>
                                 ))}
-                                <th className="px-8 py-6 text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] border-b border-app-border text-right">Total Stock</th>
-                                <th className="px-8 py-6 text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] border-b border-app-border text-right">Value (Cost)</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-app-success uppercase tracking-[0.2em] border-b border-app-border text-right">Total Stock</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-app-warning uppercase tracking-[0.2em] border-b border-app-border text-right">Value (Cost)</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -121,7 +121,7 @@ export default function GlobalInventoryManager({
                                                 <Package size={20} />
                                             </div>
                                             <div>
-                                                <div className="font-black text-app-foreground group-hover:text-indigo-600 transition-colors">{product.name}</div>
+                                                <div className="font-black text-app-foreground group-hover:text-app-info transition-colors">{product.name}</div>
                                                 <div className="text-[10px] font-mono text-app-muted-foreground flex items-center gap-2 mt-1">
                                                     <span className="bg-app-surface-2 px-1.5 py-0.5 rounded uppercase">{product.sku}</span>
                                                     {product.barcode && <span>ΓÇó {product.barcode}</span>}
@@ -139,7 +139,7 @@ export default function GlobalInventoryManager({
                                         <td key={site.id} className="px-6 py-6 text-center border-l border-gray-50/50">
                                             <div className={clsx(
                                                 "inline-block px-3 py-1.5 rounded-xl font-black text-sm",
-                                                product.siteStock[site.id] > 0 ? "bg-indigo-50 text-indigo-600" : "bg-app-surface text-app-faint"
+                                                product.siteStock[site.id] > 0 ? "bg-app-info-bg text-app-info" : "bg-app-surface text-app-faint"
                                             )}>
                                                 {product.siteStock[site.id]}
                                             </div>
@@ -152,7 +152,7 @@ export default function GlobalInventoryManager({
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-right">
-                                        <div className="text-sm font-black text-emerald-600">
+                                        <div className="text-sm font-black text-app-success">
                                             ${(product.totalQty * product.costPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </div>
                                         <div className="text-[9px] font-bold text-app-muted-foreground mt-1">
@@ -174,17 +174,17 @@ export default function GlobalInventoryManager({
                         <button
                             onClick={() => loadData(page - 1, search)}
                             disabled={page === 1 || isPending}
-                            className="p-3 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-indigo-600 disabled:opacity-50 transition-all"
+                            className="p-3 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-app-info disabled:opacity-50 transition-all"
                         >
                             <ChevronLeft size={20} />
                         </button>
-                        <div className="px-6 py-3 bg-app-surface border border-app-border rounded-2xl font-black text-indigo-600 text-sm">
+                        <div className="px-6 py-3 bg-app-surface border border-app-border rounded-2xl font-black text-app-info text-sm">
                             Page {page} of {data.totalPages}
                         </div>
                         <button
                             onClick={() => loadData(page + 1, search)}
                             disabled={page === data.totalPages || isPending}
-                            className="p-3 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-indigo-600 disabled:opacity-50 transition-all"
+                            className="p-3 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-app-info disabled:opacity-50 transition-all"
                         >
                             <ChevronRight size={20} />
                         </button>

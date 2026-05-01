@@ -33,8 +33,11 @@ def handle_order_status_change(sender, instance, **kwargs):
         # ── Gap 8 Fix: Update CRM Customer Analytics ─────────────────────
         if instance.contact_id:
             try:
-                from apps.crm.models import Contact
+                from erp.connector_registry import connector
                 from django.utils import timezone
+                Contact = connector.require('crm.contacts.get_model', org_id=instance.organization_id)
+                if Contact is None:
+                    raise RuntimeError("CRM module unavailable")
                 contact = Contact.objects.get(pk=instance.contact_id)
 
                 # Update analytics fields
@@ -63,7 +66,12 @@ def handle_order_status_change(sender, instance, **kwargs):
 
     elif instance.type == 'PURCHASE' and instance.status == 'COMPLETED':
         try:
-            from apps.finance.payment_models import SupplierBalance
+            from erp.connector_registry import connector
+            SupplierBalance = connector.require(
+                'finance.payments.get_supplier_balance_model', org_id=instance.organization_id
+            )
+            if SupplierBalance is None:
+                raise RuntimeError("Finance module unavailable")
             if instance.contact_id:
                 balance, _ = SupplierBalance.objects.get_or_create(
                     organization=instance.organization,
@@ -103,7 +111,12 @@ def handle_purchase_return_status_change(sender, instance, **kwargs):
     """
     if instance.status == 'COMPLETED':
         try:
-            from apps.finance.payment_models import SupplierBalance
+            from erp.connector_registry import connector
+            SupplierBalance = connector.require(
+                'finance.payments.get_supplier_balance_model', org_id=instance.organization_id
+            )
+            if SupplierBalance is None:
+                raise RuntimeError("Finance module unavailable")
             if instance.supplier_id:
                 total_return = sum(
                     line.total_amount for line in instance.lines.all()
@@ -139,8 +152,16 @@ def handle_po_receipt(sender, instance, **kwargs):
     # ── Stock Receipt: Create inventory movements for received lines ──
     if instance.status in ('RECEIVED', 'PARTIALLY_RECEIVED'):
         try:
-            from apps.inventory.models import InventoryMovement, Inventory
+            from erp.connector_registry import connector
             from django.utils import timezone
+            InventoryMovement = connector.require(
+                'inventory.movements.get_model', org_id=instance.organization_id
+            )
+            Inventory = connector.require(
+                'inventory.inventory.get_model', org_id=instance.organization_id
+            )
+            if InventoryMovement is None or Inventory is None:
+                raise RuntimeError("Inventory module unavailable")
 
             for line in instance.lines.all():
                 if line.qty_received <= 0:
@@ -175,7 +196,10 @@ def handle_po_receipt(sender, instance, **kwargs):
     # ── Supplier Performance: Update metrics on PO completion ──
     if instance.status == 'COMPLETED' and instance.supplier_id:
         try:
-            from apps.crm.models import Contact
+            from erp.connector_registry import connector
+            Contact = connector.require('crm.contacts.get_model', org_id=instance.organization_id)
+            if Contact is None:
+                raise RuntimeError("CRM module unavailable")
             supplier = Contact.objects.get(pk=instance.supplier_id)
 
             supplier.supplier_total_orders += 1

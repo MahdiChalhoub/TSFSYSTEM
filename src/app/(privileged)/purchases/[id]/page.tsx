@@ -61,7 +61,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
             <div className="flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-gray-200" />
                 <h1 className="text-2xl font-black text-app-foreground tracking-tighter">Order Not Found</h1>
-                <Link href="/purchases" className="text-emerald-500 font-bold hover:underline">Return to Registry</Link>
+                <Link href="/purchases" className="text-app-success font-bold hover:underline">Return to Registry</Link>
             </div>
         );
     }
@@ -86,13 +86,13 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
             {/* Header & Breadcrumbs */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <Link href="/purchases" className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-emerald-500 transition-all mb-4">
+                    <Link href="/purchases" className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-success transition-all mb-4">
                         <ArrowLeft size={14} /> Back to Procurement
                     </Link>
                     <div className="flex items-center gap-4">
                         <h1 className="text-3xl lg:text-5xl font-black text-app-foreground tracking-tighter">
                             {order.status === 'DRAFT' ? 'RFQ' : 'Purchase Order'}{" "}
-                            <span className="text-emerald-500">{order.ref_code || `#${order.id}`}</span>
+                            <span className="text-app-success">{order.ref_code || `#${order.id}`}</span>
                         </h1>
                     </div>
                 </div>
@@ -101,7 +101,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                     <a
                         href={printUrl}
                         target="_blank"
-                        className="p-3.5 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm flex items-center gap-2"
+                        className="p-3.5 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-app-success hover:border-app-success transition-all shadow-sm flex items-center gap-2"
                     >
                         <Printer size={20} />
                         <span className="text-xs font-bold uppercase tracking-wider">Print {order.status === 'DRAFT' ? 'RFQ' : 'PO'}</span>
@@ -120,7 +120,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                 <option value="">Target WH...</option>
                                 {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
                             </select>
-                            <button className="bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2">
+                            <button className="bg-app-primary text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-app-primary-dark transition-all flex items-center gap-2">
                                 <Truck size={20} />
                                 <span>Receive Stock</span>
                             </button>
@@ -138,7 +138,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                     {(order.status === 'RECEIVED' || order.status === 'INVOICED' || order.status === 'PARTIAL_RECEIVED' || order.status === 'PARTIALLY_RECEIVED') && (
                         <Link
                             href={`/purchases/returns/new?order_id=${id}`}
-                            className="bg-rose-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all flex items-center gap-2"
+                            className="bg-app-error text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-rose-200 hover:bg-app-error transition-all flex items-center gap-2"
                         >
                             <RotateCcw size={20} />
                             <span>Return Items</span>
@@ -172,7 +172,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                 <span className={`text-[10px] font-black uppercase tracking-widest ${isCompleted ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>
                                     {step.label}
                                 </span>
-                                {isCurrent && <div className="absolute -bottom-6 w-1 h-1 bg-emerald-500 rounded-full animate-ping" />}
+                                {isCurrent && <div className="absolute -bottom-6 w-1 h-1 bg-app-primary rounded-full animate-ping" />}
                             </div>
                         );
                     })}
@@ -207,7 +207,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                             </td>
                                             <td className="p-6 text-center font-bold text-app-foreground">{line.quantity}</td>
                                             <td className="p-6 text-center">
-                                                <span className={`px-2 py-1 rounded-lg font-bold text-xs ${parseFloat(line.qty_received) >= parseFloat(line.quantity) ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                                                <span className={`px-2 py-1 rounded-lg font-bold text-xs ${parseFloat(line.qty_received) >= parseFloat(line.quantity) ? 'bg-app-success-bg text-app-success' : 'bg-app-warning-bg text-app-warning'}`}>
                                                     {line.qty_received}
                                                 </span>
                                             </td>
@@ -231,7 +231,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                         </div>
                         <div className="text-right">
                             <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Estimated Grand Total</div>
-                            <div className="text-5xl font-black text-emerald-400 tracking-tighter">${parseFloat(order.total_amount || 0).toLocaleString()}</div>
+                            <div className="text-5xl font-black text-app-success tracking-tighter">${parseFloat(order.total_amount || 0).toLocaleString()}</div>
                         </div>
                     </div>
                 </div>
@@ -239,21 +239,21 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                 <div className="space-y-6">
                     <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm space-y-6">
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl"><User size={20} /></div>
+                            <div className="p-3 bg-app-success-bg text-app-success rounded-2xl"><User size={20} /></div>
                             <div>
                                 <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Vendor / Supplier</div>
                                 <div className="text-sm font-black text-app-foreground">{order.contact_name || 'N/A'}</div>
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><MapPin size={20} /></div>
+                            <div className="p-3 bg-app-info-bg text-app-info rounded-2xl"><MapPin size={20} /></div>
                             <div>
                                 <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Delivery Site</div>
                                 <div className="text-sm font-black text-app-foreground">{order.site_name || 'N/A'}</div>
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><Calendar size={20} /></div>
+                            <div className="p-3 bg-app-warning-bg text-app-warning rounded-2xl"><Calendar size={20} /></div>
                             <div>
                                 <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Expected Date</div>
                                 <div className="text-sm font-black text-app-foreground">{order.expected_delivery || 'Immediate / Net 30'}</div>
@@ -266,7 +266,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                         <div className="p-6 space-y-6">
                             <div className="flex gap-4">
                                 <div className="flex flex-col items-center">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                    <div className="w-2 h-2 rounded-full bg-app-primary" />
                                     <div className="w-px flex-1 bg-app-surface-2 my-1" />
                                 </div>
                                 <div className="pb-4">
@@ -277,7 +277,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                             {order.status !== 'DRAFT' && (
                                 <div className="flex gap-4">
                                     <div className="flex flex-col items-center">
-                                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                        <div className="w-2 h-2 rounded-full bg-app-info" />
                                         <div className="w-px flex-1 bg-app-surface-2 my-1" />
                                     </div>
                                     <div className="pb-4">

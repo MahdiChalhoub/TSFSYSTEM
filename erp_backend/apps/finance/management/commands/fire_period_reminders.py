@@ -25,9 +25,24 @@ from apps.finance.models import (
     FiscalPeriod,
     FiscalYear,
 )
-from apps.workspace.auto_task_service import fire_auto_tasks
-from apps.workspace.models import AutoTaskRule
+from erp.connector_registry import connector
 from erp.models import Organization
+
+# Pattern D: management-command-time imports — eager resolution is fine here.
+# AutoTaskRule has no connector capability yet; direct import keeps lookup
+# semantics intact for the lead-day rule resolution helper below.
+from apps.workspace.models import AutoTaskRule  # noqa: E402  (Pattern D: management cmd)
+
+
+def fire_auto_tasks(organization, event, context):
+    """Thin wrapper that routes through the connector capability."""
+    return connector.execute(
+        'workspace.auto_tasks.fire',
+        org_id=organization.id,
+        organization=organization,
+        event=event,
+        context=context,
+    ) or []
 
 DEFAULT_LEAD_DAYS = 7
 

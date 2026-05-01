@@ -30,7 +30,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                 </Link>
                 <div>
                     <h1 className="text-3xl font-bold text-app-foreground flex items-center gap-3">
-                        <span className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-lg font-bold text-indigo-700">{country.code}</span>
+                        <span className="w-10 h-10 rounded-lg bg-app-info-bg border border-indigo-100 flex items-center justify-center text-lg font-bold text-app-info">{country.code}</span>
                         {country.name}
                     </h1>
                     <p className="text-app-muted-foreground mt-1">Inventory breakdown by Brand.</p>
@@ -53,7 +53,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                         if (!hasProducts) return null;
 
                         return (
-                            <div key={brand.id} className="bg-app-surface border border-app-border rounded-xl overflow-hidden shadow-sm hover:border-emerald-200 transition-colors">
+                            <div key={brand.id} className="bg-app-surface border border-app-border rounded-xl overflow-hidden shadow-sm hover:border-app-success transition-colors">
                                 {/* Brand Header */}
                                 <div className="px-5 py-3 bg-gradient-to-r from-gray-50 via-white to-white border-b border-app-border flex justify-between items-center">
                                     <div className="flex items-center gap-3">
@@ -69,7 +69,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                                     </div>
                                     <div className="text-right">
                                         <span className="block text-[10px] text-app-muted-foreground uppercase font-bold tracking-wider">Total Stock</span>
-                                        <span className="font-mono font-bold text-emerald-700 text-lg">{totalStock}</span>
+                                        <span className="font-mono font-bold text-app-success text-lg">{totalStock}</span>
                                     </div>
                                 </div>
 
@@ -101,7 +101,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                                                         </div>
                                                     </div>
 
-                                                    <div className={`px-3 py-1 rounded-full text-xs font-bold border ${stock > 10 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : stock > 0 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
+                                                    <div className={`px-3 py-1 rounded-full text-xs font-bold border ${stock > 10 ? 'bg-app-success-bg text-app-success border-emerald-100' : stock > 0 ? 'bg-app-warning-bg text-app-warning border-amber-100' : 'bg-app-error-bg text-app-error border-red-100'}`}>
                                                         {stock} <span className="font-normal opacity-70">qty</span>
                                                     </div>
                                                 </div>

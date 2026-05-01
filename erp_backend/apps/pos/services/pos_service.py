@@ -301,7 +301,7 @@ class POSService:
             if discount_dec > 0:
                 # ── Security Alert: Discount Policy Violation ──
                 try:
-                    from apps.inventory.services import ConfigurationService
+                    from erp.services import ConfigurationService
                     max_discount_pct = ConfigurationService.get_setting(organization, 'maxDiscountPercent', 20)
                     total_before_discount = total_amount + discount_dec
                     discount_pct = (discount_dec / total_before_discount * 100) if total_before_discount > 0 else 0
@@ -634,9 +634,11 @@ class POSService:
                 # Use context-aware einvoice config
                 fne_config = getattr(_ctx, 'einvoice_config', None)
                 if fne_config:
-                    from apps.finance.services.fne_service import (
-                        FNEService, FNELineItem, FNEInvoiceRequest
-                    )
+                    FNEService = connector.require('finance.fne.get_service', org_id=organization.id)
+                    FNELineItem = connector.require('finance.fne.get_line_item_class', org_id=organization.id)
+                    FNEInvoiceRequest = connector.require('finance.fne.get_request_class', org_id=organization.id)
+                    if FNEService is None or FNELineItem is None or FNEInvoiceRequest is None:
+                        raise RuntimeError("FNE service unavailable")
                     
                     # 1. Resolve Template (B2C/B2B/B2G/B2F)
                     fne_template = 'B2C'

@@ -113,12 +113,12 @@ function CreateReturnForm() {
         <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <header className="flex items-center justify-between">
                 <div>
-                    <Link href={`/sales/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-rose-500 mb-4 transition-all">
+                    <Link href={`/sales/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-error mb-4 transition-all">
                         <ArrowLeft size={14} /> Back to Sale Detail
                     </Link>
                     <h1 className="text-4xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
-                        <RotateCcw size={32} className="text-rose-500" />
-                        Return Items from <span className="text-rose-500">{order.ref_code || `#${orderId}`}</span>
+                        <RotateCcw size={32} className="text-app-error" />
+                        Return Items from <span className="text-app-error">{order.ref_code || `#${orderId}`}</span>
                     </h1>
                 </div>
             </header>
@@ -190,7 +190,7 @@ function CreateReturnForm() {
                             </div>
 
                             <div className="pt-4">
-                                <div className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1 text-right">Refund Total</div>
+                                <div className="text-[10px] font-black text-app-error uppercase tracking-widest mb-1 text-right">Refund Total</div>
                                 <div className="text-5xl font-black text-white text-right tracking-tighter">
                                     {fmt(calculateTotals())}
                                 </div>
@@ -211,11 +211,11 @@ function CreateReturnForm() {
                         </div>
                     </Card>
 
-                    <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100">
-                        <div className="flex items-center gap-2 text-amber-600 mb-2 font-black text-[10px] uppercase tracking-widest">
+                    <div className="p-6 bg-app-warning-bg rounded-[2rem] border border-amber-100">
+                        <div className="flex items-center gap-2 text-app-warning mb-2 font-black text-[10px] uppercase tracking-widest">
                             <AlertCircle size={16} /> Attention
                         </div>
-                        <p className="text-xs text-amber-700 leading-relaxed font-medium">
+                        <p className="text-xs text-app-warning leading-relaxed font-medium">
                             Confirmed returns will be moved to **Pending Review**. Stock will only be restored once the return is approved.
                         </p>
                     </div>

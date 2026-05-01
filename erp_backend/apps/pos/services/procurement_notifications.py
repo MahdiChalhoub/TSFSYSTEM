@@ -123,13 +123,13 @@ def create_review_task(req, *, event='created'):
     """Create a workspace.Task asking someone to review/action a procurement request.
     Prefers role-based assignment when a procurement-shaped role exists in the org;
     otherwise assigns the first matching admin user. Non-fatal."""
-    try:
-        from apps.workspace.models import Task as WorkspaceTask
-    except ImportError:
+    from erp.connector_registry import connector
+    org = req.organization
+    WorkspaceTask = connector.require('workspace.tasks.get_model', org_id=org.id)
+    if WorkspaceTask is None:
         logger.warning("workspace.Task not available — skipping task creation")
         return None
 
-    org = req.organization
     procurement_role = get_procurement_role(org)
     assignees = get_assignees(org)
     primary_user = assignees[0] if assignees else None
@@ -182,9 +182,9 @@ def update_review_task(req, *, event: str, actor=None, note: str = None):
 
     Non-fatal: any failure is logged and swallowed.
     """
-    try:
-        from apps.workspace.models import Task as WorkspaceTask
-    except ImportError:
+    from erp.connector_registry import connector
+    WorkspaceTask = connector.require('workspace.tasks.get_model', org_id=req.organization_id)
+    if WorkspaceTask is None:
         return None
 
     try:
@@ -226,13 +226,16 @@ def update_review_task(req, *, event: str, actor=None, note: str = None):
         # Drop a comment so the audit trail is visible on the task.
         if note:
             try:
-                from apps.workspace.models import TaskComment
-                TaskComment.objects.create(
-                    organization=req.organization,
-                    task=task,
-                    author=actor,
-                    content=note,
+                TaskComment = connector.require(
+                    'workspace.task_comment.get_model', org_id=req.organization_id
                 )
+                if TaskComment is not None:
+                    TaskComment.objects.create(
+                        organization=req.organization,
+                        task=task,
+                        author=actor,
+                        content=note,
+                    )
             except Exception as e:
                 logger.debug(f"TaskComment write failed for task {task.id}: {e}")
 

@@ -79,11 +79,11 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
                             <div>
                                 <span className="text-[11px] font-mono font-bold text-app-foreground">{s.session_code}</span>
                                 <span className="text-[10px] text-app-muted-foreground ml-2">{s.total_labels} labels</span>
-                                {s.failure_reason && <p className="text-[9px] text-rose-500 mt-0.5 max-w-[200px] truncate">{s.failure_reason}</p>}
+                                {s.failure_reason && <p className="text-[9px] text-app-error mt-0.5 max-w-[200px] truncate">{s.failure_reason}</p>}
                             </div>
                             <div className="flex items-center gap-1">
                                 <button onClick={() => handleRetry(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-app-primary/10" style={{ color: v('--app-primary') }}><RotateCcw size={11} /> Retry</button>
-                                <button onClick={() => handleForceCancel(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-rose-500/10 text-rose-500"><Trash2 size={11} /> Discard</button>
+                                <button onClick={() => handleForceCancel(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-rose-500/10 text-app-error"><Trash2 size={11} /> Discard</button>
                             </div>
                         </div>
                     ))}
@@ -106,7 +106,7 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
                             </div>
                             <div className="flex items-center gap-1">
                                 <button onClick={() => handleRetry(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-app-warning/10" style={{ color: v('--app-warning') }}><RefreshCw size={11} /> Requeue</button>
-                                <button onClick={() => handleForceCancel(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-rose-500/10 text-rose-500"><XCircle size={11} /> Force Cancel</button>
+                                <button onClick={() => handleForceCancel(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-rose-500/10 text-app-error"><XCircle size={11} /> Force Cancel</button>
                             </div>
                         </div>
                     ))}

@@ -54,6 +54,13 @@ def register_capabilities(registry):
         from apps.hr.models import Employee
         return Employee
 
+    @_cap(registry, 'hr.departments.get_model',
+          description='Get Department model class',
+          cacheable=False, critical=False)
+    def get_department_model(org_id=0, **kw):
+        from apps.hr.models import Department
+        return Department
+
 
 def _cap(registry, name, **kwargs):
     """Decorator helper to register a capability."""

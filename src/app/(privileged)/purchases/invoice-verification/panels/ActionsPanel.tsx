@@ -88,17 +88,17 @@ export function ActionsPanel({
 
       <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Verification Score */}
-        <Card className={`${verificationScore === 100 ? 'bg-emerald-50 border-emerald-200' : 'bg-blue-50 border-blue-200'}`}>
+        <Card className={`${verificationScore === 100 ? 'bg-app-success-bg border-app-success' : 'bg-app-info-bg border-app-info'}`}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-black text-app-text-muted uppercase tracking-wider">Verification Score</p>
-              <Badge className={verificationScore === 100 ? 'bg-emerald-600 text-white' : 'bg-blue-600 text-white'}>
+              <Badge className={verificationScore === 100 ? 'bg-app-primary text-white' : 'bg-app-info text-white'}>
                 {verificationScore}%
               </Badge>
             </div>
             <div className="w-full bg-app-surface-2 rounded-full h-2 overflow-hidden">
               <div
-                className={`h-full transition-all ${verificationScore === 100 ? 'bg-emerald-600' : 'bg-blue-600'}`}
+                className={`h-full transition-all ${verificationScore === 100 ? 'bg-app-primary' : 'bg-app-info'}`}
                 style={{ width: `${verificationScore}%` }}
               />
             </div>
@@ -112,10 +112,10 @@ export function ActionsPanel({
         <div className="space-y-2">
           <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">Current Status</p>
           <Badge className={
-            invoice.status === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-            invoice.status === 'DISCREPANCY' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-            invoice.status === 'REJECTED' ? 'bg-rose-100 text-rose-700 border-rose-200' :
-            'bg-blue-100 text-blue-700 border-blue-200'
+            invoice.status === 'VERIFIED' ? 'bg-app-success-bg text-app-success border-app-success' :
+            invoice.status === 'DISCREPANCY' ? 'bg-app-warning-bg text-app-warning border-app-warning' :
+            invoice.status === 'REJECTED' ? 'bg-app-error-bg text-app-error border-app-error' :
+            'bg-app-info-bg text-app-info border-app-info'
           }>
             {invoice.status}
           </Badge>
@@ -123,22 +123,22 @@ export function ActionsPanel({
 
         {/* Mismatch Summary */}
         {mismatches.length > 0 && (
-          <Card className="bg-amber-50 border-amber-200">
+          <Card className="bg-app-warning-bg border-app-warning">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold flex items-center gap-2 text-amber-900">
+              <CardTitle className="text-xs font-bold flex items-center gap-2 text-app-warning">
                 <AlertTriangle size={12} />
                 {mismatches.length} Active Mismatches
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {mismatches.slice(0, 3).map((m, i) => (
-                <div key={i} className="text-xs text-amber-700 border-b border-amber-200 pb-2 last:border-0 last:pb-0">
+                <div key={i} className="text-xs text-app-warning border-b border-app-warning pb-2 last:border-0 last:pb-0">
                   <div className="font-bold">{m.fieldKey}</div>
                   <div className="text-[10px]">{m.reason}</div>
                 </div>
               ))}
               {mismatches.length > 3 && (
-                <p className="text-[10px] text-amber-600 font-bold">
+                <p className="text-[10px] text-app-warning font-bold">
                   +{mismatches.length - 3} more
                 </p>
               )}
@@ -153,7 +153,7 @@ export function ActionsPanel({
             <Button
               onClick={() => onApprove?.(invoice.id)}
               disabled={hasDiscrepancy}
-              className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white gap-2 text-sm"
+              className="w-full h-10 bg-app-primary hover:bg-app-primary-dark text-white gap-2 text-sm"
             >
               <CheckCircle2 size={14} />
               Approve for Payment
@@ -161,7 +161,7 @@ export function ActionsPanel({
             <Button
               onClick={() => onReject?.(invoice.id)}
               variant="outline"
-              className="w-full h-10 border-rose-200 text-rose-600 hover:bg-rose-50 gap-2 text-sm"
+              className="w-full h-10 border-app-error text-app-error hover:bg-app-error-bg gap-2 text-sm"
             >
               <XCircle size={14} />
               Reject Invoice
@@ -250,9 +250,9 @@ export function ActionsPanel({
               {auditTrail.slice(0, 5).map((entry) => (
                 <div key={entry.id} className="audit-entry flex items-start gap-2 text-xs">
                   <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                    entry.action === 'field_validated' ? 'bg-emerald-500' :
-                    entry.action === 'mismatch_detected' ? 'bg-amber-500' :
-                    entry.action === 'mismatch_resolved' ? 'bg-blue-500' :
+                    entry.action === 'field_validated' ? 'bg-app-primary' :
+                    entry.action === 'mismatch_detected' ? 'bg-app-warning' :
+                    entry.action === 'mismatch_resolved' ? 'bg-app-info' :
                     entry.action === 'field_edited' ? 'bg-purple-500' :
                     'bg-gray-400'
                   }`} />
@@ -289,14 +289,14 @@ export function ActionsPanel({
           <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">Document Timeline</p>
           <div className="space-y-2 text-xs">
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5" />
+              <div className="w-2 h-2 rounded-full bg-app-info mt-1.5" />
               <div>
                 <p className="font-bold text-app-text">Invoice Received</p>
                 <p className="text-app-text-faint">{new Date(invoice.invoice_date).toLocaleDateString()}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5" />
+              <div className="w-2 h-2 rounded-full bg-app-primary mt-1.5" />
               <div>
                 <p className="font-bold text-app-text">PO Created</p>
                 <p className="text-app-text-faint">2 days ago</p>

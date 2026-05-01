@@ -50,21 +50,21 @@ interface Props {
 }
 
 const RISK_COLORS: Record<string, string> = {
-    STABLE: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    AT_RISK: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    HIGH_RISK: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
-    CRITICAL: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+    STABLE: 'text-app-success bg-app-primary/10 border-app-success/20',
+    AT_RISK: 'text-app-warning bg-app-warning/10 border-app-warning/20',
+    HIGH_RISK: 'text-app-warning bg-app-warning/10 border-app-warning/20',
+    CRITICAL: 'text-app-error bg-app-error/10 border-app-error/20',
 };
 
 const MODULE_COLORS: Record<string, string> = {
-    crm: 'bg-blue-500/10 text-blue-400',
-    finance: 'bg-emerald-500/10 text-emerald-400',
+    crm: 'bg-app-info/10 text-app-info',
+    finance: 'bg-app-primary/10 text-app-success',
     hr: 'bg-purple-500/10 text-purple-400',
-    sales: 'bg-amber-500/10 text-amber-400',
+    sales: 'bg-app-warning/10 text-app-warning',
     inventory: 'bg-cyan-500/10 text-cyan-400',
-    workspace: 'bg-indigo-500/10 text-indigo-400',
+    workspace: 'bg-indigo-500/10 text-app-info',
     procurement: 'bg-teal-500/10 text-teal-400',
-    manual: 'bg-rose-500/10 text-rose-400',
+    manual: 'bg-app-error/10 text-app-error',
 };
 
 function ScoreBar({ val, label }: { val: string; label: string }) {
@@ -138,7 +138,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                             "px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2",
                             tab === key
                                 ? danger
-                                    ? "bg-rose-500 text-white shadow-lg shadow-rose-500/40 scale-105"
+                                    ? "bg-app-error text-white shadow-lg shadow-rose-500/40 scale-105"
                                     : key === 'adjust'
                                         ? "bg-violet-500 text-white shadow-lg shadow-violet-500/40 scale-105"
                                         : "bg-app-primary text-white shadow-lg shadow-app-primary/40 scale-105"
@@ -160,7 +160,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-400">
                     {atRisk.length === 0 ? (
                         <div className="py-24 text-center bg-app-surface border border-app-border rounded-[2.5rem] border-dashed">
-                            <CheckCircle2 size={56} className="mx-auto text-emerald-400 opacity-40 mb-4" />
+                            <CheckCircle2 size={56} className="mx-auto text-app-success opacity-40 mb-4" />
                             <p className="text-xl font-black italic opacity-50">All employees are operating at stable risk levels.</p>
                         </div>
                     ) : (
@@ -187,14 +187,14 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-bold">{emp.employee_name}</div>
                                                         <div className="flex gap-2 mt-1 flex-wrap">
-                                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-rose-500/10 text-rose-400">
+                                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-app-error/10 text-app-error">
                                                                 {emp.critical_negative_count} criticals
                                                             </span>
                                                             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-app-surface/5 text-white/40">
                                                                 Rank #{emp.current_rank_company || '?'}
                                                             </span>
                                                             {emp.trend_indicator === 'DOWN' && (
-                                                                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 flex items-center gap-1">
+                                                                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-app-error/10 text-app-error flex items-center gap-1">
                                                                     <TrendingDown size={8} /> Declining
                                                                 </span>
                                                             )}
@@ -212,7 +212,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                                     </div>
 
                                                     <div className="text-right shrink-0 space-y-1">
-                                                        <div className={clsx("text-sm font-black", parseFloat(emp.net_points) >= 0 ? 'text-emerald-400' : 'text-rose-400')}>
+                                                        <div className={clsx("text-sm font-black", parseFloat(emp.net_points) >= 0 ? 'text-app-success' : 'text-app-error')}>
                                                             {parseFloat(emp.net_points) >= 0 ? '+' : ''}{Math.round(parseFloat(emp.net_points))} pts
                                                         </div>
                                                         <button
@@ -238,7 +238,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                 <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-400">
                     <div className="p-8 border-b border-app-border bg-app-surface/5 flex justify-between items-center">
                         <h2 className="text-xl font-black italic flex items-center gap-3">
-                            <Trophy className="text-amber-400" /> Full Organization Leaderboard
+                            <Trophy className="text-app-warning" /> Full Organization Leaderboard
                         </h2>
                         <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">Top {leaderboard.length}</div>
                     </div>
@@ -246,13 +246,13 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                         {leaderboard.map((emp, idx) => (
                             <div key={emp.id} className={clsx(
                                 "p-5 flex items-center gap-5 hover:bg-app-surface/[0.01] transition-colors",
-                                idx === 0 && "bg-amber-500/5"
+                                idx === 0 && "bg-app-warning/5"
                             )}>
                                 <div className={clsx(
                                     "w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0",
-                                    idx === 0 ? "bg-amber-400/20 text-amber-400" :
+                                    idx === 0 ? "bg-app-warning/20 text-app-warning" :
                                         idx === 1 ? "bg-slate-400/20 text-app-muted-foreground" :
-                                            idx === 2 ? "bg-orange-600/20 text-orange-500" :
+                                            idx === 2 ? "bg-app-warning/20 text-app-warning" :
                                                 "bg-app-surface/5 text-white/30"
                                 )}>#{idx + 1}</div>
 
@@ -269,7 +269,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                 {emp.trend_indicator !== 'NEUTRAL' && (
                                     <div className={clsx(
                                         "flex items-center gap-1 text-[10px] font-black",
-                                        emp.trend_indicator === 'UP' ? "text-emerald-400" : "text-rose-400"
+                                        emp.trend_indicator === 'UP' ? "text-app-success" : "text-app-error"
                                     )}>
                                         {emp.trend_indicator === 'UP'
                                             ? <ChevronUp size={12} strokeWidth={4} />
@@ -318,7 +318,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                             {filteredRules.map(rule => (
                                 <div key={rule.id} className={clsx("p-5 flex items-center gap-5 hover:bg-app-surface/[0.02] transition-colors", !rule.is_active && "opacity-30")}>
                                     <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black shrink-0",
-                                        rule.direction === 'POSITIVE' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                                        rule.direction === 'POSITIVE' ? "bg-app-primary/10 text-app-success" : "bg-app-error/10 text-app-error"
                                     )}>
                                         {rule.direction === 'POSITIVE' ? '+' : '−'}
                                     </div>
@@ -337,11 +337,11 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
 
                                     <div className="text-right shrink-0">
                                         <div className={clsx("text-lg font-black tabular-nums",
-                                            rule.direction === 'POSITIVE' ? "text-emerald-400" : "text-rose-400"
+                                            rule.direction === 'POSITIVE' ? "text-app-success" : "text-app-error"
                                         )}>
                                             {rule.direction === 'POSITIVE' ? '+' : '−'}{rule.base_points}pts
                                         </div>
-                                        <div className={clsx("text-[9px] font-bold uppercase", rule.is_active ? "text-emerald-400/60" : "text-white/20")}>
+                                        <div className={clsx("text-[9px] font-bold uppercase", rule.is_active ? "text-app-success/60" : "text-white/20")}>
                                             {rule.is_active ? 'Active' : 'Paused'}
                                         </div>
                                     </div>
@@ -416,9 +416,9 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                                     className={clsx(
                                                         "py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all",
                                                         form.type === t
-                                                            ? t === 'BONUS' ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/30"
-                                                                : t === 'PENALTY' ? "bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/30"
-                                                                    : "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/30"
+                                                            ? t === 'BONUS' ? "bg-app-primary text-white border-app-success shadow-lg shadow-emerald-500/30"
+                                                                : t === 'PENALTY' ? "bg-app-error text-white border-app-error shadow-lg shadow-rose-500/30"
+                                                                    : "bg-app-warning text-white border-app-warning shadow-lg shadow-amber-500/30"
                                                             : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                                                     )}>{t}</button>
                                             ))}
@@ -453,7 +453,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                     {/* Reason */}
                                     <div>
                                         <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">
-                                            Reason <span className="text-rose-400">*</span> (required for audit trail)
+                                            Reason <span className="text-app-error">*</span> (required for audit trail)
                                         </label>
                                         <textarea value={form.reason}
                                             onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
@@ -467,8 +467,8 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                     {result && (
                                         <div className={clsx("rounded-2xl p-4 text-sm font-bold border",
                                             result.startsWith('✅')
-                                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                                                : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                                                ? "bg-app-primary/10 border-app-success/20 text-app-success"
+                                                : "bg-app-error/10 border-app-error/20 text-app-error"
                                         )}>{result}</div>
                                     )}
 

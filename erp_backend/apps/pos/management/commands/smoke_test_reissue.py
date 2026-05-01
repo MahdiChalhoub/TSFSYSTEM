@@ -28,8 +28,10 @@ from django.db import transaction
 from django.utils import timezone
 
 from erp.models import Organization, User
-from apps.inventory.models import Product
-from apps.crm.models import Contact
+# Pattern D: management-command-time imports — eager resolution is fine here
+# (no auto-discover races, this command runs after Django setup).
+from apps.inventory.models import Product  # noqa: E402  (Pattern D: management cmd)
+from apps.crm.models import Contact  # noqa: E402  (Pattern D: management cmd)
 from apps.pos.models.purchase_order_models import PurchaseOrder, PurchaseOrderLine
 from apps.pos.models.procurement_request_models import ProcurementRequest
 
@@ -210,9 +212,9 @@ class Command(BaseCommand):
             transaction.savepoint_rollback(inner)
 
     def _check_taskboard(self, org, original, reissue):
-        try:
-            from apps.workspace.models import Task as WorkspaceTask
-        except ImportError:
+        from erp.connector_registry import connector
+        WorkspaceTask = connector.require('workspace.tasks.get_model', org_id=org.id)
+        if WorkspaceTask is None:
             return  # workspace app not installed — skip silently
 
         # Original task should have been moved out of PENDING.

@@ -102,7 +102,7 @@ export function GenericCsvImportDialog({
         }
     };
 
-    const downloadTemplate = () => {
+    const downloadTemplateCsv = () => {
         const blob = new Blob(['﻿' + sampleCsv], { type: 'text/csv;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -110,7 +110,26 @@ export function GenericCsvImportDialog({
         a.download = `${plural}-template.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        toast.success('Template downloaded');
+        toast.success('CSV template downloaded');
+    };
+
+    const downloadTemplateXlsx = async () => {
+        // Lazy-load SheetJS so CSV-only users don't pay the bundle cost.
+        try {
+            const XLSX = await import('xlsx');
+            // Parse the sample CSV into a 2-D array — same shape `parseSpreadsheet`
+            // expects on import, so the user can edit and re-upload without
+            // worrying about column reordering breaking anything.
+            const lines = sampleCsv.replace(/\r\n?/g, '\n').split('\n').filter(l => l.trim());
+            const matrix = lines.map(line => line.split(',').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"')));
+            const ws = XLSX.utils.aoa_to_sheet(matrix);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, plural.slice(0, 31)); // sheet name capped at 31 chars
+            XLSX.writeFile(wb, `${plural}-template.xlsx`);
+            toast.success('Excel template downloaded');
+        } catch (e: any) {
+            toast.error(`Could not generate Excel template: ${e?.message || 'unknown error'}`);
+        }
     };
 
     const copySample = async () => {
@@ -148,7 +167,7 @@ export function GenericCsvImportDialog({
 
     const steps: { key: Step; label: string; hint: string }[] = [
         { key: 'prepare', label: 'Prepare', hint: 'Format your file' },
-        { key: 'upload', label: 'Upload', hint: 'Drop CSV file' },
+        { key: 'upload', label: 'Upload', hint: 'Drop CSV / XLSX' },
         { key: 'preview', label: 'Preview', hint: 'Check rows' },
         { key: 'import', label: 'Import', hint: 'Save to system' },
     ];
@@ -179,7 +198,7 @@ export function GenericCsvImportDialog({
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-app-foreground capitalize">Import {plural}</h3>
-                            <p className="text-tp-xs font-bold text-app-muted-foreground">Bulk create from a CSV file</p>
+                            <p className="text-tp-xs font-bold text-app-muted-foreground">Bulk create from CSV / XLS / XLSX</p>
                         </div>
                     </div>
                     <button onClick={onClose}
@@ -312,19 +331,36 @@ export function GenericCsvImportDialog({
                                             <span>{tip}</span>
                                         </div>
                                     )}
-                                    <button
-                                        type="button"
-                                        onClick={downloadTemplate}
-                                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-tp-xs font-bold transition-all hover:brightness-110 flex-shrink-0"
-                                        style={{
-                                            background: 'var(--app-primary)',
-                                            color: 'white',
-                                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
-                                        }}
-                                    >
-                                        <Download size={12} />
-                                        Download template
-                                    </button>
+                                    <div className="flex items-stretch gap-1.5 flex-shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={downloadTemplateCsv}
+                                            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-tp-xs font-bold transition-all hover:brightness-110"
+                                            style={{
+                                                background: 'var(--app-primary)',
+                                                color: 'white',
+                                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                                            }}
+                                            title="Plain-text template — opens in any editor"
+                                        >
+                                            <Download size={12} />
+                                            CSV
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={downloadTemplateXlsx}
+                                            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-tp-xs font-bold transition-all"
+                                            style={{
+                                                background: 'transparent',
+                                                color: 'var(--app-primary)',
+                                                border: '1px solid color-mix(in srgb, var(--app-primary) 35%, transparent)',
+                                            }}
+                                            title="Excel-formatted template — opens in Excel/Numbers/Sheets"
+                                        >
+                                            <Download size={12} />
+                                            XLSX
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -363,14 +399,14 @@ export function GenericCsvImportDialog({
                             <>
                                 <FileText size={28} className="mx-auto mb-2" style={{ color: 'var(--app-primary)' }} />
                                 <p className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
-                                    Drop your .csv file here
+                                    Drop your file here
                                 </p>
                                 <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
-                                    or click to browse
+                                    .csv · .xls · .xlsx — or click to browse
                                 </p>
                             </>
                         )}
-                        <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden"
+                        <input ref={fileRef} type="file" accept={SPREADSHEET_ACCEPT} className="hidden"
                                onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); }} />
                     </div>
 

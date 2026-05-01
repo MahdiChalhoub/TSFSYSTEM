@@ -39,24 +39,24 @@ export default async function ChecklistsPage() {
                         <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Workspace</span>
                     </div>
                     <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
-                        Check<span className="text-emerald-600">lists</span>
+                        Check<span className="text-app-success">lists</span>
                     </h1>
                     <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">
                         Shift checklists, daily tasks, and compliance checks. Complete items to earn points and track performance.
                     </p>
                 </div>
 
-                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-emerald-900/5 border border-gray-50">
+                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-emerald-900/5 border border-app-border">
                     <div className="text-center px-8 border-r border-app-border">
-                        <div className="text-5xl font-black text-amber-500 tracking-tighter mb-1">{pending}</div>
+                        <div className="text-5xl font-black text-app-warning tracking-tighter mb-1">{pending}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Active</div>
                     </div>
                     <div className="text-center px-8 border-r border-app-border">
-                        <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{completed}</div>
+                        <div className="text-5xl font-black text-app-success tracking-tighter mb-1">{completed}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Done</div>
                     </div>
                     <div className="text-center px-8">
-                        <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{totalPoints}</div>
+                        <div className="text-5xl font-black text-app-info tracking-tighter mb-1">{totalPoints}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Points</div>
                     </div>
                 </div>

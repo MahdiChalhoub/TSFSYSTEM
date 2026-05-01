@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronRight, ChevronDown, FolderOpen, Folder, FileText, Pencil, Plus, Power, Lock } from 'lucide-react'
 import { TYPE_CONFIG } from './types'
+import { useTranslation } from '@/hooks/use-translation'
 
 interface AccountNodeProps {
     node: Record<string, any>
@@ -16,6 +17,7 @@ interface AccountNodeProps {
 export const AccountNode = ({
     node, level, accounts, onEdit, onAddChild, onReactivate
 }: AccountNodeProps) => {
+    const { t } = useTranslation()
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(level < 1)
     const typeConf = TYPE_CONFIG[node.type] ?? TYPE_CONFIG.ASSET
@@ -94,17 +96,17 @@ export const AccountNode = ({
                     {!node.isActive && (
                         <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded flex-shrink-0"
                             style={{ background: 'var(--app-error-bg, rgba(239,68,68,0.12))', color: 'var(--app-error, #EF4444)' }}>
-                            Inactive
+                            {t('finance.coa.inactive')}
                         </span>
                     )}
                     {node.isInternal && (
                         <span
-                            title="Internal-only — hidden from the Official view"
+                            title={t('finance.coa.tooltip_internal')}
                             className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
                             style={{ background: 'color-mix(in srgb, var(--app-warning, #F59E0B) 15%, transparent)', color: 'var(--app-warning, #F59E0B)' }}
                         >
                             <Lock size={9} />
-                            Internal
+                            {t('finance.coa.badge_internal')}
                         </span>
                     )}
                 </div>

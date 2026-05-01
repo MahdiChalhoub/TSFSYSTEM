@@ -154,12 +154,12 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                             <div>
-                                <label className="text-[10px] font-black text-orange-500 uppercase tracking-widest block mb-1">⚠️ Damaged</label>
+                                <label className="text-[10px] font-black text-app-warning uppercase tracking-widest block mb-1">⚠️ Damaged</label>
                                 <input
                                     type="number" min={0} step={1}
                                     value={qtyDamaged}
                                     onChange={e => setQtyDamaged(Math.max(0, Number(e.target.value)))}
-                                    className="w-full px-3 h-10 bg-app-surface rounded-lg border border-orange-200 focus:border-orange-400 outline-none font-black text-app-foreground text-sm"
+                                    className="w-full px-3 h-10 bg-app-surface rounded-lg border border-app-warning focus:border-app-warning outline-none font-black text-app-foreground text-sm"
                                     placeholder="0"
                                 />
                             </div>
@@ -174,12 +174,12 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] font-black text-rose-500 uppercase tracking-widest block mb-1">✕ Rejected</label>
+                                <label className="text-[10px] font-black text-app-error uppercase tracking-widest block mb-1">✕ Rejected</label>
                                 <input
                                     type="number" min={0} step={1}
                                     value={qtyRejected}
                                     onChange={e => setQtyRejected(Math.max(0, Number(e.target.value)))}
-                                    className="w-full px-3 h-10 bg-app-surface rounded-lg border border-rose-200 focus:border-rose-400 outline-none font-black text-app-foreground text-sm"
+                                    className="w-full px-3 h-10 bg-app-surface rounded-lg border border-app-error focus:border-app-error outline-none font-black text-app-foreground text-sm"
                                     placeholder="0"
                                 />
                             </div>

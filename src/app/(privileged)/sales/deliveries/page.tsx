@@ -19,10 +19,10 @@ function fmt(n: number) {
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: any }> = {
     PENDING: { label: 'Pending', bg: 'bg-app-surface-2 text-app-foreground', icon: Clock },
-    PREPARING: { label: 'Preparing', bg: 'bg-blue-100 text-blue-700', icon: Package },
-    IN_TRANSIT: { label: 'In Transit', bg: 'bg-amber-100 text-amber-700', icon: Truck },
-    DELIVERED: { label: 'Delivered', bg: 'bg-green-100 text-green-700', icon: CheckCircle2 },
-    FAILED: { label: 'Failed', bg: 'bg-red-100 text-red-700', icon: XCircle },
+    PREPARING: { label: 'Preparing', bg: 'bg-app-info-bg text-app-info', icon: Package },
+    IN_TRANSIT: { label: 'In Transit', bg: 'bg-app-warning-bg text-app-warning', icon: Truck },
+    DELIVERED: { label: 'Delivered', bg: 'bg-app-success-bg text-app-success', icon: CheckCircle2 },
+    FAILED: { label: 'Failed', bg: 'bg-app-error-bg text-app-error', icon: XCircle },
     CANCELLED: { label: 'Cancelled', bg: 'bg-app-surface-2 text-app-muted-foreground', icon: Ban },
 }
 
@@ -117,7 +117,7 @@ export default function DeliveryOrdersPage() {
                 <Card className="border-l-4 border-l-indigo-500 bg-gradient-to-r from-indigo-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Truck size={24} className="text-indigo-500" />
+                            <Truck size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Deliveries</p>
                                 <p className="text-2xl font-bold">{deliveries.length}</p>
@@ -128,10 +128,10 @@ export default function DeliveryOrdersPage() {
                 <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Clock size={24} className="text-amber-500" />
+                            <Clock size={24} className="text-app-warning" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Pending / Preparing</p>
-                                <p className="text-2xl font-bold text-amber-700">{pending}</p>
+                                <p className="text-2xl font-bold text-app-warning">{pending}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -139,10 +139,10 @@ export default function DeliveryOrdersPage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Navigation size={24} className="text-blue-500" />
+                            <Navigation size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">In Transit</p>
-                                <p className="text-2xl font-bold text-blue-700">{inTransit}</p>
+                                <p className="text-2xl font-bold text-app-info">{inTransit}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -150,10 +150,10 @@ export default function DeliveryOrdersPage() {
                 <Card className="border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <CheckCircle2 size={24} className="text-green-500" />
+                            <CheckCircle2 size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Delivered</p>
-                                <p className="text-2xl font-bold text-green-700">{delivered}</p>
+                                <p className="text-2xl font-bold text-app-success">{delivered}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -247,7 +247,7 @@ export default function DeliveryOrdersPage() {
                                                         <button
                                                             onClick={() => doAction(d.id, 'dispatch')}
                                                             disabled={isLoading}
-                                                            className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-[10px] font-bold hover:bg-blue-200 transition-all disabled:opacity-50"
+                                                            className="px-2 py-1 bg-app-info-bg text-app-info rounded text-[10px] font-bold hover:bg-blue-200 transition-all disabled:opacity-50"
                                                         >
                                                             Dispatch
                                                         </button>
@@ -256,7 +256,7 @@ export default function DeliveryOrdersPage() {
                                                         <button
                                                             onClick={() => doAction(d.id, 'deliver')}
                                                             disabled={isLoading}
-                                                            className="px-2 py-1 bg-green-100 text-green-700 rounded text-[10px] font-bold hover:bg-green-200 transition-all disabled:opacity-50"
+                                                            className="px-2 py-1 bg-app-success-bg text-app-success rounded text-[10px] font-bold hover:bg-green-200 transition-all disabled:opacity-50"
                                                         >
                                                             Deliver
                                                         </button>
@@ -266,7 +266,7 @@ export default function DeliveryOrdersPage() {
                                                             <button
                                                                 onClick={() => doAction(d.id, 'fail', { reason: 'Marked as failed' })}
                                                                 disabled={isLoading}
-                                                                className="px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] font-bold hover:bg-red-200 transition-all disabled:opacity-50"
+                                                                className="px-2 py-1 bg-app-error-bg text-app-error rounded text-[10px] font-bold hover:bg-red-200 transition-all disabled:opacity-50"
                                                             >
                                                                 Fail
                                                             </button>

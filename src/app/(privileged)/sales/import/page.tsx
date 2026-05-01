@@ -53,7 +53,7 @@ export default async function SalesImportPage() {
                 <div className="space-y-8">
                     <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-6">
-                            <HelpCircle className="text-emerald-500" size={20} />
+                            <HelpCircle className="text-app-success" size={20} />
                             <h3 className="text-sm font-black uppercase tracking-tight text-app-foreground">Format Guide</h3>
                         </div>
                         <ul className="space-y-4">
@@ -71,12 +71,12 @@ export default async function SalesImportPage() {
                         </ul>
                     </div>
 
-                    <div className="bg-emerald-50 p-8 rounded-[2rem] border border-emerald-100/50">
+                    <div className="bg-app-success-bg p-8 rounded-[2rem] border border-emerald-100/50">
                         <div className="flex items-center gap-3 mb-4">
-                            <TrendingUp className="text-emerald-600" size={20} />
+                            <TrendingUp className="text-app-success" size={20} />
                             <h3 className="text-sm font-black uppercase tracking-tight text-emerald-900">Performance</h3>
                         </div>
-                        <p className="text-[11px] text-emerald-700 font-medium leading-relaxed">
+                        <p className="text-[11px] text-app-success font-medium leading-relaxed">
                             Engine optimized for batches up to 5,000 rows. Larger files should be split for granular auditing.
                         </p>
                     </div>

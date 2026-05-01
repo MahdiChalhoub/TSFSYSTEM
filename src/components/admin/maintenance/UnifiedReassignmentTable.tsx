@@ -16,9 +16,20 @@ import { CategoryTreeSelector } from '../CategoryTreeSelector'
  *  theme and feels native alongside Categories / Attributes.
  * ═══════════════════════════════════════════════════════════ */
 
+type ReassignProduct = {
+    id: number;
+    name?: string;
+    sku?: string;
+    productGroup?: { id: number; name: string } | null;
+    inventory?: Array<{ quantity: number | string;[key: string]: unknown }>;
+    country?: { name?: string;[key: string]: unknown } | null;
+    [key: string]: unknown;
+}
+type ReassignEntity = { id: number; name?: string; code?: string; parent?: number | null;[key: string]: unknown };
+
 type Props = {
-    products: any[]
-    targetEntities: any[]
+    products: ReassignProduct[]
+    targetEntities: ReassignEntity[]
     type: 'category' | 'brand' | 'unit' | 'country' | 'attribute'
     currentEntityId: number
 }
@@ -80,7 +91,12 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
                 <div className="h-64 rounded-xl overflow-hidden"
                     style={{ border: '1px solid var(--app-border)' }}>
                     <CategoryTreeSelector
-                        categories={targetEntities}
+                        categories={targetEntities.map((e) => ({
+                            id: e.id,
+                            name: e.name ?? '',
+                            parent: e.parent ?? null,
+                            code: e.code,
+                        }))}
                         selectedIds={targetId ? [targetId] : []}
                         onChange={(ids) => setTargetId(ids[0] || null)}
                         maxHeight="h-full"
@@ -296,7 +312,13 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
     )
 }
 
-function GroupModal({ isOpen, onClose, productIds, onSuccess, color }: any) {
+function GroupModal({ isOpen, onClose, productIds, onSuccess, color }: {
+    isOpen: boolean;
+    onClose: () => void;
+    productIds: number[];
+    onSuccess: () => void;
+    color: string;
+}) {
     const [groupName, setGroupName] = useState('')
     const [isPending, startTransition] = useTransition()
     if (!isOpen) return null
@@ -378,11 +400,17 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess, color }: any) {
 }
 
 /* ─── Product list (optionally grouped by productGroup) ─── */
-function ProductList({ products, selectedProductIds, toggleProduct, color }: any) {
+type ProductGroup = { id: number; name: string; items: ReassignProduct[] };
+function ProductList({ products, selectedProductIds, toggleProduct, color }: {
+    products: ReassignProduct[];
+    selectedProductIds: number[];
+    toggleProduct: (id: number) => void;
+    color: string;
+}) {
     const grouped = useMemo(() => {
-        const groups: Record<string, any> = {}
-        const loose: any[] = []
-        products.forEach((p: any) => {
+        const groups: Record<string, ProductGroup> = {}
+        const loose: ReassignProduct[] = []
+        products.forEach((p) => {
             if (p.productGroup) {
                 const gName = p.productGroup.name
                 if (!groups[gName]) groups[gName] = { id: p.productGroup.id, name: gName, items: [] }
@@ -396,7 +424,7 @@ function ProductList({ products, selectedProductIds, toggleProduct, color }: any
 
     return (
         <div className="space-y-2">
-            {Object.values(grouped.groups).map((group: any) => (
+            {Object.values(grouped.groups).map((group) => (
                 <div key={group.name} className="rounded-xl overflow-hidden"
                     style={{
                         background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
@@ -422,7 +450,7 @@ function ProductList({ products, selectedProductIds, toggleProduct, color }: any
                         </div>
                     </div>
                     <div>
-                        {group.items.map((product: any) => (
+                        {group.items.map((product) => (
                             <ProductRow key={product.id} product={product} color={color}
                                 isSelected={selectedProductIds.includes(product.id)}
                                 toggle={() => toggleProduct(product.id)} />
@@ -438,7 +466,7 @@ function ProductList({ products, selectedProductIds, toggleProduct, color }: any
                             Ungrouped products
                         </div>
                     )}
-                    {grouped.loose.map((product: any) => (
+                    {grouped.loose.map((product) => (
                         <div key={product.id} className="rounded-xl overflow-hidden"
                             style={{
                                 background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
@@ -455,9 +483,14 @@ function ProductList({ products, selectedProductIds, toggleProduct, color }: any
     )
 }
 
-function ProductRow({ product, isSelected, toggle, color }: any) {
+function ProductRow({ product, isSelected, toggle, color }: {
+    product: ReassignProduct;
+    isSelected: boolean;
+    toggle: () => void;
+    color: string;
+}) {
     const stock = product.inventory?.reduce(
-        (acc: number, item: any) => acc + Number(item.quantity), 0
+        (acc: number, item) => acc + Number(item.quantity), 0
     ) || 0
     return (
         <div onClick={toggle}

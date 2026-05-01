@@ -31,7 +31,7 @@ interface ReconciliationSummary {
 const STATUS_COLORS: Record<string, string> = {
  POSTED: 'text-app-warning bg-app-warning-bg border-app-warning',
  RECONCILED: 'text-app-primary bg-app-primary-light border-app-success',
- WRITTEN_OFF: 'text-rose-500 bg-rose-50 border-rose-200',
+ WRITTEN_OFF: 'text-app-error bg-app-error-bg border-app-error',
  REFUNDED: 'text-app-primary bg-app-primary/5 border-app-primary/30',
 };
 
@@ -128,9 +128,9 @@ export function PaymentReconciliationPanel({ orderId }: { orderId: string | numb
  <div className="text-[10px] uppercase font-bold text-app-primary mb-1">Reconciled</div>
  <div className="text-sm font-black text-app-success">{fmtAmount(summary.total_reconciled)}</div>
  </div>
- <div className="p-3 rounded-xl border border-rose-100 bg-rose-50/50 shadow-sm">
- <div className="text-[10px] uppercase font-bold text-rose-600 mb-1">Written Off</div>
- <div className="text-sm font-black text-rose-700">{fmtAmount(summary.total_written_off)}</div>
+ <div className="p-3 rounded-xl border border-rose-100 bg-app-error-bg/50 shadow-sm">
+ <div className="text-[10px] uppercase font-bold text-app-error mb-1">Written Off</div>
+ <div className="text-sm font-black text-app-error">{fmtAmount(summary.total_written_off)}</div>
  </div>
  <div className="p-3 rounded-xl border border-app-warning/30 bg-app-warning-bg/50 shadow-sm">
  <div className="text-[10px] uppercase font-bold text-app-warning mb-1">Unreconciled</div>
@@ -160,7 +160,7 @@ export function PaymentReconciliationPanel({ orderId }: { orderId: string | numb
  {leg.reference && <span>Ref: <strong className="text-app-foreground">{leg.reference}</strong> • </span>}
  <span>Posted: {new Date(leg.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
  {leg.reconciled_at && <span> • Reconciled: {new Date(leg.reconciled_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>}
- {leg.write_off !== '0.00' && <span className="text-rose-500 font-bold block mt-0.5">Written Off: {fmtAmount(leg.write_off)} ({leg.write_off_reason})</span>}
+ {leg.write_off !== '0.00' && <span className="text-app-error font-bold block mt-0.5">Written Off: {fmtAmount(leg.write_off)} ({leg.write_off_reason})</span>}
  </div>
  </div>
  </div>
@@ -178,7 +178,7 @@ export function PaymentReconciliationPanel({ orderId }: { orderId: string | numb
  <button
  onClick={() => handleAction(leg.id, 'write_off')}
  disabled={isProcessing}
- className="px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+ className="px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg border border-app-error bg-app-error-bg text-app-error hover:bg-app-error-bg transition-colors flex items-center gap-1.5 disabled:opacity-50"
  >
  <AlertCircle size={12} /> Write Off
  </button>

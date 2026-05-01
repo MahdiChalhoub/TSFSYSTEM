@@ -227,16 +227,24 @@ class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         instance = self.get_object()
 
         # ── Safeguard 1: Block if linked to an active POS register ──
-        from apps.pos.models import POSRegister
-        linked_registers = POSRegister.objects.filter(
-            models.Q(cash_account=instance) |
-            models.Q(reserve_account=instance) |
-            models.Q(allowed_accounts=instance),
-            is_active=True,
-        ).distinct()
+        from erp.connector_registry import connector
+        POSRegister = connector.require('pos.registers.get_model', org_id=instance.organization_id)
+        if POSRegister is None:
+            # POS module unavailable — no registers can possibly be linked.
+            has_linked_registers = False
+            linked_register_names = []
+        else:
+            linked_registers = POSRegister.objects.filter(
+                models.Q(cash_account=instance) |
+                models.Q(reserve_account=instance) |
+                models.Q(allowed_accounts=instance),
+                is_active=True,
+            ).distinct()
+            has_linked_registers = linked_registers.exists()
+            linked_register_names = [r.name for r in linked_registers[:5]]
 
-        if linked_registers.exists():
-            names = ', '.join(r.name for r in linked_registers[:5])
+        if has_linked_registers:
+            names = ', '.join(linked_register_names)
             return Response(
                 {"error": f'Cannot delete "{instance.name}" — it is linked to active register(s): {names}. Unlink or deactivate the register(s) first.'},
                 status=status.HTTP_400_BAD_REQUEST

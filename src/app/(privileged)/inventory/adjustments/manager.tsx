@@ -129,7 +129,7 @@ export default function StockAdjustmentManager({
                             className="w-full px-5 py-4 bg-app-surface rounded-2xl border-none focus:ring-4 focus:ring-indigo-50 font-medium text-app-foreground outline-none transition-all"
                         />
                         {loadingProducts && (
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-500 text-xs font-bold animate-pulse">
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-app-info text-xs font-bold animate-pulse">
                                 Searching...
                             </div>
                         )}
@@ -144,12 +144,12 @@ export default function StockAdjustmentManager({
                                     className={clsx(
                                         "w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between group",
                                         selectedProduct?.id === product.id
-                                            ? "bg-indigo-50 border-indigo-200 ring-2 ring-indigo-100"
+                                            ? "bg-app-info-bg border-app-info ring-2 ring-indigo-100"
                                             : "bg-app-surface border-gray-50 hover:border-app-border hover:bg-app-surface/50"
                                     )}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-app-surface-2 flex items-center justify-center text-app-muted-foreground group-hover:text-indigo-500 transition-colors">
+                                        <div className="w-10 h-10 rounded-xl bg-app-surface-2 flex items-center justify-center text-app-muted-foreground group-hover:text-app-info transition-colors">
                                             <Package size={18} />
                                         </div>
                                         <div>
@@ -170,17 +170,17 @@ export default function StockAdjustmentManager({
                         ) : search.length > 1 && !loadingProducts ? (
                             <div className="text-center py-8 text-app-muted-foreground text-sm">No products found</div>
                         ) : selectedProduct ? (
-                            <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-app-surface text-indigo-600 flex items-center justify-center shadow-sm">
+                            <div className="p-4 bg-app-info-bg border border-indigo-100 rounded-2xl flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-app-surface text-app-info flex items-center justify-center shadow-sm">
                                     <Package size={24} />
                                 </div>
                                 <div>
                                     <div className="text-sm font-black text-app-foreground">{selectedProduct.name}</div>
-                                    <div className="text-[10px] text-indigo-600 font-bold uppercase tracking-wide">Selected Product</div>
+                                    <div className="text-[10px] text-app-info font-bold uppercase tracking-wide">Selected Product</div>
                                 </div>
                                 <button
                                     onClick={() => setSelectedProduct(null)}
-                                    className="ml-auto text-xs text-indigo-400 hover:text-indigo-700 underline"
+                                    className="ml-auto text-xs text-indigo-400 hover:text-app-info underline"
                                 >
                                     Change
                                 </button>
@@ -311,7 +311,7 @@ export default function StockAdjustmentManager({
                         {message && (
                             <div className={clsx(
                                 "p-4 rounded-2xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom duration-500",
-                                message.type === 'success' ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                                message.type === 'success' ? "bg-app-success-bg text-app-success" : "bg-app-error-bg text-app-error"
                             )}>
                                 {message.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
                                 {message.text}

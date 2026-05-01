@@ -136,7 +136,7 @@ export default function TransferAnalysis() {
           </Button>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 text-red-800 rounded-lg">
+            <div className="flex items-center gap-2 p-3 bg-app-error-bg text-app-error rounded-lg">
               <AlertCircle className="h-4 w-4" />
               <span className="text-sm">{error}</span>
             </div>
@@ -149,19 +149,19 @@ export default function TransferAnalysis() {
         <div className="space-y-6">
           {/* Executive Summary */}
           <Card className={`border-2 ${
-            analysis.approval_recommendation.decision === 'approve' ? 'border-green-500 bg-green-50' :
-            analysis.approval_recommendation.decision === 'reject' ? 'border-red-500 bg-red-50' :
-            'border-yellow-500 bg-yellow-50'
+            analysis.approval_recommendation.decision === 'approve' ? 'border-green-500 bg-app-success-bg' :
+            analysis.approval_recommendation.decision === 'reject' ? 'border-red-500 bg-app-error-bg' :
+            'border-yellow-500 bg-app-warning-bg'
           }`}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   {analysis.approval_recommendation.decision === 'approve' ? (
-                    <CheckCircle className="h-6 w-6 text-green-600" />
+                    <CheckCircle className="h-6 w-6 text-app-success" />
                   ) : analysis.approval_recommendation.decision === 'reject' ? (
-                    <XCircle className="h-6 w-6 text-red-600" />
+                    <XCircle className="h-6 w-6 text-app-error" />
                   ) : (
-                    <Info className="h-6 w-6 text-yellow-600" />
+                    <Info className="h-6 w-6 text-app-warning" />
                   )}
                   {analysis.executive_summary}
                 </CardTitle>

@@ -47,9 +47,24 @@ from .tax_engine_ext import (
     IntraBranchVATTransfer,  # deprecated — VAT fields now on StockTransferOrder
 )
 # ── Cross-cutting business events (moved to proper modules) ─────
-from apps.inventory.models.gift_sample_models import GiftSampleEvent
-from apps.inventory.models.internal_consumption_models import InternalConsumptionEvent
-from apps.pos.models.import_declaration_models import ImportDeclaration
+# Pattern D: these re-exports run at finance.models app-load time, well before
+# the connector registry is hydrated. Direct gated imports are required so that
+# downstream `Meta.model = <ClassRef>` resolutions (in tax_engine_ext_serializers
+# and tax_engine_ext_views) can resolve at load time. Disabling either source
+# module → re-exports become None and the dependent serializer/view raises
+# ImportError at registration; that is the intended fail-loud behavior.
+try:
+    from apps.inventory.models.gift_sample_models import GiftSampleEvent  # noqa: E402  (Pattern D)
+except ImportError:  # pragma: no cover
+    GiftSampleEvent = None  # type: ignore[assignment]
+try:
+    from apps.inventory.models.internal_consumption_models import InternalConsumptionEvent  # noqa: E402  (Pattern D)
+except ImportError:  # pragma: no cover
+    InternalConsumptionEvent = None  # type: ignore[assignment]
+try:
+    from apps.pos.models.import_declaration_models import ImportDeclaration  # noqa: E402  (Pattern D)
+except ImportError:  # pragma: no cover
+    ImportDeclaration = None  # type: ignore[assignment]
 # Backward-compat aliases
 GiftSampleVAT = GiftSampleEvent
 SelfSupplyVATEvent = InternalConsumptionEvent

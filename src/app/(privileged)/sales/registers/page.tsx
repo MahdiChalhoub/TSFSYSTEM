@@ -199,7 +199,7 @@ export default function RegistersPage() {
                   onClick={() => handleToggleActive(reg)}
                   className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                     reg.is_active
-                      ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400'
+                      ? 'bg-rose-500/10 hover:bg-rose-500/20 text-app-error'
                       : 'bg-green-500/10 hover:bg-green-500/20 text-green-400'
                   }`}
                 >

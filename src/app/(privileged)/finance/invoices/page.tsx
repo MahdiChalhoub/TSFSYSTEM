@@ -21,7 +21,36 @@ type ActiveTab = 'ALL' | 'DRAFT' | 'SENT' | 'OVERDUE' | 'PAID'
 type SortKey = 'issue_date' | 'due_date' | 'total_amount' | 'status'
 type SortDir = 'asc' | 'desc'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+type InvoiceRow = {
+    id: number;
+    invoice_number?: string;
+    contact_display?: string;
+    contact_name?: string;
+    type?: string;
+    sub_type?: string;
+    status?: string;
+    issue_date?: string;
+    due_date?: string;
+    total_amount?: number | string;
+    amount_paid?: number | string;
+    balance_due?: number | string;
+    [key: string]: unknown;
+}
+type InvoiceDashboard = {
+    draft?: number;
+    sent?: number;
+    overdue?: number;
+    paid?: number;
+    total_invoices?: number;
+    total_amount?: number | string;
+    total_overdue?: number | string;
+    total_received?: number | string;
+    [key: string]: unknown;
+} | null
+
+type LucideIcon = typeof Clock;
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: LucideIcon }> = {
     DRAFT: { label: 'Draft', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: Clock },
     SENT: { label: 'Sent', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info', icon: Send },
     PARTIAL_PAID: { label: 'Partial', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Percent },
@@ -44,12 +73,12 @@ const SUB_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string
 }
 
 export default function InvoicesPage() {
-    const [invoices, setInvoices] = useState<any[]>([])
-    const [dashboard, setDashboard] = useState<any>(null)
+    const [invoices, setInvoices] = useState<InvoiceRow[]>([])
+    const [dashboard, setDashboard] = useState<InvoiceDashboard>(null)
     const [loading, setLoading] = useState(true)
     const [createOpen, setCreateOpen] = useState(false)
     const [paymentOpen, setPaymentOpen] = useState(false)
-    const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
+    const [selectedInvoice, setSelectedInvoice] = useState<InvoiceRow | null>(null)
     const [activeTab, setActiveTab] = useState<ActiveTab>('ALL')
     const [subTypeFilter, setSubTypeFilter] = useState('')
     const [tradeSubTypesEnabled, setTradeSubTypesEnabled] = useState(false)
@@ -103,23 +132,23 @@ export default function InvoicesPage() {
     }, [invoices, activeTab, subTypeFilter, searchQuery, sortKey, sortDir])
 
     // ── Actions ──────────────────────────────────────────────────
-    async function handleSend(inv: any) {
+    async function handleSend(inv: InvoiceRow) {
         startTransition(async () => {
             try {
                 await sendInvoice(inv.id)
                 toast.success("Invoice sent")
                 loadData()
-            } catch (err: any) { toast.error(err.message || "Failed to send") }
+            } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || "Failed to send") }
         })
     }
 
-    async function handleCancel(inv: any) {
+    async function handleCancel(inv: InvoiceRow) {
         startTransition(async () => {
             try {
                 await cancelInvoice(inv.id)
                 toast.success("Invoice cancelled")
                 loadData()
-            } catch (err: any) { toast.error(err.message || "Failed to cancel") }
+            } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || "Failed to cancel") }
         })
     }
 
@@ -134,7 +163,7 @@ export default function InvoicesPage() {
                 setPaymentOpen(false)
                 setSelectedInvoice(null)
                 loadData()
-            } catch (err: any) { toast.error(err.message || "Failed to record payment") }
+            } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || "Failed to record payment") }
         })
     }
 
@@ -155,7 +184,7 @@ export default function InvoicesPage() {
                 toast.success("Invoice created")
                 setCreateOpen(false)
                 loadData()
-            } catch (err: any) { toast.error(err.message || "Failed to create invoice") }
+            } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || "Failed to create invoice") }
         })
     }
 
@@ -342,8 +371,8 @@ export default function InvoicesPage() {
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-app-muted-foreground uppercase">Amount *</label>
                             <Input name="amount" type="number" step="0.01" min="0.01"
-                                max={selectedInvoice?.balance_due}
-                                defaultValue={selectedInvoice?.balance_due}
+                                max={Number(selectedInvoice?.balance_due ?? 0)}
+                                defaultValue={Number(selectedInvoice?.balance_due ?? 0)}
                                 required className="rounded-xl" />
                         </div>
                         <div className="flex justify-end gap-2 pt-3 border-t">
@@ -415,8 +444,8 @@ export default function InvoicesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filtered.map((inv: any) => {
-                            const sc = STATUS_CONFIG[inv.status] || STATUS_CONFIG.DRAFT
+                        {filtered.map((inv) => {
+                            const sc = STATUS_CONFIG[inv.status ?? 'DRAFT'] || STATUS_CONFIG.DRAFT
                             const StatusIcon = sc.icon
                             return (
                                 <TableRow key={inv.id} className="hover:bg-app-surface/50 transition-colors">
@@ -424,7 +453,7 @@ export default function InvoicesPage() {
                                         {inv.invoice_number || `DRAFT-${inv.id}`}
                                     </TableCell>
                                     <TableCell>
-                                        <span className="text-xs font-medium text-app-muted-foreground">{TYPE_LABELS[inv.type] || inv.type}</span>
+                                        <span className="text-xs font-medium text-app-muted-foreground">{(inv.type && TYPE_LABELS[inv.type]) || inv.type}</span>
                                     </TableCell>
                                     {tradeSubTypesEnabled && (
                                         <TableCell>
@@ -469,7 +498,7 @@ export default function InvoicesPage() {
                                                     </Button>
                                                 </>
                                             )}
-                                            {['SENT', 'PARTIAL_PAID', 'OVERDUE'].includes(inv.status) && (
+                                            {['SENT', 'PARTIAL_PAID', 'OVERDUE'].includes(inv.status ?? '') && (
                                                 <Button size="sm" variant="ghost" className="h-7 px-2 text-app-success hover:bg-app-success-bg"
                                                     onClick={() => { setSelectedInvoice(inv); setPaymentOpen(true) }} disabled={isPending}>
                                                     <CreditCard size={13} />
@@ -499,7 +528,7 @@ export default function InvoicesPage() {
                     <div className="px-5 py-3 border-t bg-app-surface/30 flex items-center justify-between text-sm text-app-muted-foreground">
                         <span>{filtered.length} invoice{filtered.length !== 1 ? 's' : ''} shown</span>
                         <span className="font-semibold text-app-foreground">
-                            Total: {filtered.reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0).toLocaleString()}
+                            Total: {filtered.reduce((s: number, i) => s + Number(i.total_amount || 0), 0).toLocaleString()}
                         </span>
                     </div>
                 )}

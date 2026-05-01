@@ -59,7 +59,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
             <div className="flex flex-wrap gap-2">
                 <span className="text-sm font-medium text-app-muted-foreground py-1">Operating In:</span>
                 {brand.countries.length > 0 ? brand.countries.map(c => (
-                    <span key={c.id} className="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full flex items-center gap-1">
+                    <span key={c.id} className="text-sm bg-app-info-bg text-app-info px-3 py-1 rounded-full flex items-center gap-1">
                         <Globe size={12} /> {c.name}
                     </span>
                 )) : <span className="text-sm text-app-muted-foreground italic py-1">Global / Unspecified</span>}
@@ -69,7 +69,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
 
             {/* Content: Groups */}
             <h2 className="text-xl font-bold text-app-foreground flex items-center gap-2 mb-4">
-                <Layers className="text-emerald-600" /> Parfums / Families
+                <Layers className="text-app-success" /> Parfums / Families
             </h2>
 
             <div className="grid gap-6">
@@ -88,14 +88,14 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                                 <div className="bg-app-surface/80 px-4 py-3 border-b border-app-border flex justify-between items-center">
                                     <div className="flex items-center gap-3">
                                         <div className="p-1.5 bg-app-surface border rounded">
-                                            <Layers className="text-emerald-600" size={18} />
+                                            <Layers className="text-app-success" size={18} />
                                         </div>
                                         <div>
                                             <h3 className="text-lg font-bold text-app-foreground leading-none">{group.name}</h3>
                                             <p className="text-xs text-app-muted-foreground mt-1">{group.products.length} Variants ΓÇó Total Stock: {totalGroupStock}</p>
                                         </div>
                                     </div>
-                                    <Link href={`/products/groups/${group.id}/edit`} className="p-2 text-app-muted-foreground hover:text-emerald-600 hover:bg-app-surface rounded-lg transition-all">
+                                    <Link href={`/products/groups/${group.id}/edit`} className="p-2 text-app-muted-foreground hover:text-app-success hover:bg-app-surface rounded-lg transition-all">
                                         <Edit2 size={16} />
                                     </Link>
                                 </div>
@@ -115,7 +115,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-6 border-l-2 border-b-2 border-app-border h-4 -mt-4 rounded-bl-none text-transparent">.</div>
                                                         <div className="flex items-center gap-2 min-w-[120px]">
-                                                            <Globe size={14} className="text-blue-500" />
+                                                            <Globe size={14} className="text-app-info" />
                                                             <span className="font-medium text-app-foreground text-sm">{variant.country?.name || 'Unknown'}</span>
                                                         </div>
                                                         <div className="flex flex-col">
@@ -127,7 +127,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                                                         </div>
                                                     </div>
                                                     <div className="pr-4 text-right">
-                                                        <span className={`font-bold ${stock > 0 ? 'text-emerald-600' : 'text-red-400'}`}>
+                                                        <span className={`font-bold ${stock > 0 ? 'text-app-success' : 'text-red-400'}`}>
                                                             {stock}
                                                         </span>
                                                         <span className="text-xs text-app-muted-foreground ml-1">qty</span>

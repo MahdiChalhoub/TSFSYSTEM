@@ -217,7 +217,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                 key={p.id}
                                 onClick={() => addProduct(p)}
                                 className={`w-full text-left flex items-center gap-3 p-2.5 rounded-xl transition-all ${isAdded
-                                        ? 'bg-emerald-50 border border-emerald-200'
+                                        ? 'bg-app-success-bg border border-app-success'
                                         : 'hover:bg-app-surface border border-transparent'
                                     }`}
                             >
@@ -257,7 +257,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                         key={size}
                                         onClick={() => setLabelSize(size)}
                                         className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${labelSize === size
-                                                ? 'bg-emerald-100 text-emerald-700'
+                                                ? 'bg-app-success-bg text-app-success'
                                                 : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-surface-2'
                                             }`}
                                     >
@@ -274,7 +274,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                     type="checkbox"
                                     checked={showPrice}
                                     onChange={e => setShowPrice(e.target.checked)}
-                                    className="w-3.5 h-3.5 rounded text-emerald-600"
+                                    className="w-3.5 h-3.5 rounded text-app-success"
                                 />
                                 Price
                             </label>
@@ -283,7 +283,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                     type="checkbox"
                                     checked={showBarcode}
                                     onChange={e => setShowBarcode(e.target.checked)}
-                                    className="w-3.5 h-3.5 rounded text-emerald-600"
+                                    className="w-3.5 h-3.5 rounded text-app-success"
                                 />
                                 Barcode
                             </label>
@@ -292,7 +292,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                     type="checkbox"
                                     checked={showSku}
                                     onChange={e => setShowSku(e.target.checked)}
-                                    className="w-3.5 h-3.5 rounded text-emerald-600"
+                                    className="w-3.5 h-3.5 rounded text-app-success"
                                 />
                                 SKU
                             </label>
@@ -301,7 +301,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                     type="checkbox"
                                     checked={showBrand}
                                     onChange={e => setShowBrand(e.target.checked)}
-                                    className="w-3.5 h-3.5 rounded text-emerald-600"
+                                    className="w-3.5 h-3.5 rounded text-app-success"
                                 />
                                 Brand
                             </label>
@@ -327,7 +327,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                         <CardTitle className="text-base">
                             Print Queue
                             {totalLabels > 0 && (
-                                <Badge className="ml-2 bg-emerald-100 text-emerald-700">{totalLabels} labels</Badge>
+                                <Badge className="ml-2 bg-app-success-bg text-app-success">{totalLabels} labels</Badge>
                             )}
                         </CardTitle>
                     </CardHeader>
@@ -365,7 +365,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                             <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
                                             <button
                                                 onClick={() => updateQty(item.product.id, 1)}
-                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors"
+                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-app-success-bg hover:bg-emerald-200 text-app-success transition-colors"
                                             >
                                                 <Plus size={12} />
                                             </button>
@@ -373,7 +373,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
 
                                         <button
                                             onClick={() => removeItem(item.product.id)}
-                                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                                            className="p-1.5 text-red-400 hover:text-app-error hover:bg-app-error-bg rounded-lg transition-colors shrink-0"
                                         >
                                             <Trash2 size={14} />
                                         </button>

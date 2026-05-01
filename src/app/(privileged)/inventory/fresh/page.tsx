@@ -105,7 +105,7 @@ export default function FreshProductsPage() {
                                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                                 <div className="flex items-center justify-between mb-3">
                                     <p className="text-sm font-bold text-app-foreground">{p.product_name || `Product #${p.product}`}</p>
-                                    {p.plu_code && <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">PLU: {p.plu_code}</span>}
+                                    {p.plu_code && <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-app-success-bg text-app-success">PLU: {p.plu_code}</span>}
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                                     <div className="flex items-center gap-1.5">
@@ -131,8 +131,8 @@ export default function FreshProductsPage() {
                                     <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--app-border)' }}>
                                         {p.allergens && (
                                             <div className="flex items-center gap-1 text-[10px]">
-                                                <AlertTriangle size={10} className="text-amber-500" />
-                                                <span className="text-amber-600 font-bold">Allergens:</span>
+                                                <AlertTriangle size={10} className="text-app-warning" />
+                                                <span className="text-app-warning font-bold">Allergens:</span>
                                                 <span className="text-app-muted-foreground truncate">{p.allergens}</span>
                                             </div>
                                         )}

@@ -392,12 +392,13 @@ class ProcurementRequestViewSet(TenantModelViewSet):
         except (TypeError, ValueError):
             return Response({'error': 'product_id must be an integer'}, status=drf_status.HTTP_400_BAD_REQUEST)
 
-        try:
-            from apps.inventory.models import Product, InventoryMovement
-        except ImportError:
+        from erp.connector_registry import connector
+        org = request.user.organization
+        Product = connector.require('inventory.products.get_model', org_id=org.id)
+        InventoryMovement = connector.require('inventory.movements.get_model', org_id=org.id)
+        if Product is None or InventoryMovement is None:
             return Response({'suggested_qty': 1, 'source': 'fallback', 'reason': 'inventory module unavailable'})
 
-        org = request.user.organization
         try:
             product = Product.objects.get(id=product_id, organization=org)
         except Product.DoesNotExist:

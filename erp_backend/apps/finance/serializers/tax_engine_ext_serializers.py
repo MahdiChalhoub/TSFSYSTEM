@@ -12,9 +12,14 @@ from apps.finance.models.tax_engine_ext import (
     ReverseChargeSelfAssessment, VATRateChangeHistory,
 )
 # ── Cross-cutting business events (moved to proper modules) ──────
-from apps.inventory.models.gift_sample_models import GiftSampleEvent
-from apps.inventory.models.internal_consumption_models import InternalConsumptionEvent
-from apps.pos.models.import_declaration_models import ImportDeclaration
+# Pattern D: these classes feed `Meta.model = ...` below, which DRF resolves at
+# class-creation time (i.e. at app load). The connector registry isn't hydrated
+# yet, so direct imports are the only viable path. If the source module is
+# uninstalled, ImportError here is the correct fail-loud signal — these
+# serializers register URL routes that would 500 anyway.
+from apps.inventory.models.gift_sample_models import GiftSampleEvent  # noqa: E402  (Pattern D)
+from apps.inventory.models.internal_consumption_models import InternalConsumptionEvent  # noqa: E402  (Pattern D)
+from apps.pos.models.import_declaration_models import ImportDeclaration  # noqa: E402  (Pattern D)
 # Backward-compat aliases
 GiftSampleVAT = GiftSampleEvent
 SelfSupplyVATEvent = InternalConsumptionEvent

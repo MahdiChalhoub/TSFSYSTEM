@@ -5,14 +5,14 @@ import { revalidatePath } from "next/cache";
 export const dynamic = 'force-dynamic';
 
 const MODULE_COLORS: Record<string, string> = {
-    crm: 'bg-blue-500/10 text-blue-400',
-    finance: 'bg-emerald-500/10 text-emerald-400',
+    crm: 'bg-app-info/10 text-app-info',
+    finance: 'bg-app-primary/10 text-app-success',
     hr: 'bg-purple-500/10 text-purple-400',
-    sales: 'bg-amber-500/10 text-amber-400',
+    sales: 'bg-app-warning/10 text-app-warning',
     inventory: 'bg-cyan-500/10 text-cyan-400',
-    workspace: 'bg-indigo-500/10 text-indigo-400',
+    workspace: 'bg-indigo-500/10 text-app-info',
     procurement: 'bg-teal-500/10 text-teal-400',
-    manual: 'bg-rose-500/10 text-rose-400',
+    manual: 'bg-app-error/10 text-app-error',
 };
 
 export default async function WiseRulesPage() {
@@ -73,11 +73,11 @@ export default async function WiseRulesPage() {
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs opacity-50 font-bold">Active</span>
-                                    <span className="text-sm font-black italic text-emerald-400">{ruleList.filter((r: any) => r.is_active).length}</span>
+                                    <span className="text-sm font-black italic text-app-success">{ruleList.filter((r: any) => r.is_active).length}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs opacity-50 font-bold">Inactive</span>
-                                    <span className="text-sm font-black italic text-rose-400">{ruleList.filter((r: any) => !r.is_active).length}</span>
+                                    <span className="text-sm font-black italic text-app-error">{ruleList.filter((r: any) => !r.is_active).length}</span>
                                 </div>
                             </div>
                         </div>
@@ -114,7 +114,7 @@ export default async function WiseRulesPage() {
                         <div className="divide-y divide-app-border">
                             {ruleList.map((rule: any) => (
                                 <div key={rule.id} className={`p-6 flex items-center gap-6 hover:bg-app-surface/[0.02] transition-colors ${!rule.is_active && 'opacity-30'}`}>
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 ${rule.direction === 'POSITIVE' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 ${rule.direction === 'POSITIVE' ? "bg-app-primary/10 text-app-success" : "bg-app-error/10 text-app-error"
                                         }`}>
                                         {rule.direction === 'POSITIVE' ? '+' : '−'}
                                     </div>
@@ -130,12 +130,12 @@ export default async function WiseRulesPage() {
                                             </span>
                                             <span className="text-[9px] font-bold opacity-30 uppercase tracking-widest">{rule.dimension?.replace(/_/g, ' ')}</span>
                                             {rule.daily_cap && <span className="text-[9px] font-bold opacity-30 uppercase bg-app-surface/5 px-2 py-0.5 rounded">Cap: {rule.daily_cap}/day</span>}
-                                            {rule.is_critical_rule && <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-rose-500 text-white animate-pulse">Critical</span>}
+                                            {rule.is_critical_rule && <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-app-error text-white animate-pulse">Critical</span>}
                                         </div>
                                     </div>
 
                                     <div className="text-right shrink-0">
-                                        <div className={`text-2xl font-black tabular-nums tracking-tighter ${rule.direction === 'POSITIVE' ? "text-emerald-400" : "text-rose-400"
+                                        <div className={`text-2xl font-black tabular-nums tracking-tighter ${rule.direction === 'POSITIVE' ? "text-app-success" : "text-app-error"
                                             }`}>
                                             {rule.direction === 'POSITIVE' ? '+' : '−'}{parseFloat(rule.base_points).toFixed(0)}<span className="text-[10px] ml-0.5">PTS</span>
                                         </div>

@@ -33,10 +33,10 @@ interface Quotation {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     DRAFT: { label: 'Draft', color: 'bg-app-surface-2 text-app-foreground' },
-    SENT: { label: 'Sent', color: 'bg-blue-100 text-blue-700' },
-    ACCEPTED: { label: 'Accepted', color: 'bg-emerald-100 text-emerald-700' },
-    REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700' },
-    EXPIRED: { label: 'Expired', color: 'bg-amber-100 text-amber-700' },
+    SENT: { label: 'Sent', color: 'bg-app-info-bg text-app-info' },
+    ACCEPTED: { label: 'Accepted', color: 'bg-app-success-bg text-app-success' },
+    REJECTED: { label: 'Rejected', color: 'bg-app-error-bg text-app-error' },
+    EXPIRED: { label: 'Expired', color: 'bg-app-warning-bg text-app-warning' },
     CONVERTED: { label: 'Converted', color: 'bg-purple-100 text-purple-700' },
 }
 
@@ -203,7 +203,7 @@ export default function QuotationManager({
                             <button
                                 key={q.id}
                                 onClick={() => setSelected(q)}
-                                className={`w-full text-left p-3 rounded-xl transition-all ${isActive ? 'bg-emerald-50 border border-emerald-200' : 'hover:bg-app-surface border border-transparent'
+                                className={`w-full text-left p-3 rounded-xl transition-all ${isActive ? 'bg-app-success-bg border border-app-success' : 'hover:bg-app-surface border border-transparent'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
@@ -283,7 +283,7 @@ export default function QuotationManager({
                                     )}
                                     {selected.status === 'DRAFT' && (
                                         <button onClick={() => setDeleteTarget(selected.id)} disabled={loading}
-                                            className="flex items-center gap-1.5 px-4 py-2 bg-app-surface-2 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 disabled:opacity-40 ml-auto">
+                                            className="flex items-center gap-1.5 px-4 py-2 bg-app-surface-2 text-app-error text-xs font-bold rounded-lg hover:bg-app-error-bg disabled:opacity-40 ml-auto">
                                             <Trash2 size={14} /> Delete
                                         </button>
                                     )}
@@ -315,7 +315,7 @@ export default function QuotationManager({
                             <Card>
                                 <CardContent className="py-4 text-center">
                                     <p className="text-xs text-app-muted-foreground mb-1">Total TTC</p>
-                                    <p className="text-lg font-bold text-emerald-600">{fmt(selected.total_ttc)}</p>
+                                    <p className="text-lg font-bold text-app-success">{fmt(selected.total_ttc)}</p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -350,7 +350,7 @@ export default function QuotationManager({
                                                 {['DRAFT', 'SENT'].includes(selected.status) && (
                                                     <button
                                                         onClick={() => handleRemoveLine(line.id)}
-                                                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                                                        className="p-1.5 text-red-400 hover:text-app-error hover:bg-app-error-bg rounded-lg"
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
@@ -421,7 +421,7 @@ export default function QuotationManager({
                                 <div className="max-h-40 overflow-y-auto border rounded-lg">
                                     {filteredProducts.map(p => (
                                         <button key={p.id} onClick={() => { setLineProductId(p.id); setProductSearch(p.name) }}
-                                            className={`w-full text-left p-2 text-sm hover:bg-app-surface border-b last:border-0 ${lineProductId === p.id ? 'bg-emerald-50' : ''}`}>
+                                            className={`w-full text-left p-2 text-sm hover:bg-app-surface border-b last:border-0 ${lineProductId === p.id ? 'bg-app-success-bg' : ''}`}>
                                             <span className="font-medium">{p.name}</span>
                                             <span className="text-app-muted-foreground ml-2">{p.sku}</span>
                                             <span className="float-right text-app-muted-foreground">{fmt(p.selling_price_ttc)}</span>

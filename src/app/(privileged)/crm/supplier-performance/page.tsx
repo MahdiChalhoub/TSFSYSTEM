@@ -123,10 +123,10 @@ export default function SupplierPerformancePage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Package size={24} className="text-blue-500" />
+                            <Package size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Active Suppliers</p>
-                                <p className="text-2xl font-bold text-blue-700">{activeSuppliers}</p>
+                                <p className="text-2xl font-bold text-app-info">{activeSuppliers}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -134,10 +134,10 @@ export default function SupplierPerformancePage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <DollarSign size={24} className="text-emerald-500" />
+                            <DollarSign size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Spend</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(totalPurchaseValue)}</p>
+                                <p className="text-xl font-bold text-app-success">{fmt(totalPurchaseValue)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -145,10 +145,10 @@ export default function SupplierPerformancePage() {
                 <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Star size={24} className="text-amber-500" />
+                            <Star size={24} className="text-app-warning" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Avg Completion</p>
-                                <p className="text-2xl font-bold text-amber-700">{avgCompletionRate.toFixed(0)}%</p>
+                                <p className="text-2xl font-bold text-app-warning">{avgCompletionRate.toFixed(0)}%</p>
                             </div>
                         </div>
                     </CardContent>
@@ -193,7 +193,7 @@ export default function SupplierPerformancePage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right font-medium">{s.orderCount}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-600">{fmt(s.totalSpent)}</TableCell>
+                                        <TableCell className="text-right font-bold text-app-success">{fmt(s.totalSpent)}</TableCell>
                                         <TableCell className="text-right text-sm">{fmt(s.avgOrderValue)}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">

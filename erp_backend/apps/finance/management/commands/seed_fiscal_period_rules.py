@@ -6,7 +6,10 @@ trigger if it doesn't already exist. Admins can then edit the rules
 """
 from django.core.management.base import BaseCommand
 
-from apps.workspace.models import AutoTaskRule, TaskTemplate
+# Pattern D: management-command-time imports — eager resolution is fine here.
+# AutoTaskRule and TaskTemplate have no connector capabilities yet; direct
+# imports keep the seeder simple. The command is admin-run, post-Django-setup.
+from apps.workspace.models import AutoTaskRule, TaskTemplate  # noqa: E402  (Pattern D: management cmd)
 from erp.models import Organization
 
 

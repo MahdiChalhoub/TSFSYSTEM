@@ -184,11 +184,11 @@ export default function ReceiptsPage() {
                const pct = ordered > 0 ? Math.min((recv / ordered) * 100, 100) : 0
                return (
                  <div key={line.id} className="flex items-center gap-3 p-2.5 rounded-xl mb-1.5" style={{ border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
-                   <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0"><Package size={13} className="text-blue-500" /></div>
+                   <div className="w-7 h-7 rounded-lg bg-app-info/10 flex items-center justify-center shrink-0"><Package size={13} className="text-app-info" /></div>
                    <div className="flex-1 min-w-0">
                      <div className="text-[12px] font-bold text-app-foreground truncate">{line.product?.name || line.product_name || '—'}</div>
                      <div className="flex items-center gap-2 mt-1">
-                       <div className="flex-1 h-1.5 rounded-full bg-app-muted/20 overflow-hidden"><div className={`h-full rounded-full ${pct >= 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-amber-500' : 'bg-app-muted/20'}`} style={{ width: `${pct}%` }} /></div>
+                       <div className="flex-1 h-1.5 rounded-full bg-app-muted/20 overflow-hidden"><div className={`h-full rounded-full ${pct >= 100 ? 'bg-app-primary' : pct > 0 ? 'bg-app-warning' : 'bg-app-muted/20'}`} style={{ width: `${pct}%` }} /></div>
                        <span className="text-[10px] font-bold text-app-muted-foreground">{recv}/{ordered}</span>
                      </div>
                    </div>

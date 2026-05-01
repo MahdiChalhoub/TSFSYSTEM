@@ -13,7 +13,9 @@ from apps.workforce.models import (
     ScoreRule, EmployeeScoreEvent, EmployeeScoreSummary
 )
 from apps.workforce.services import WorkforceScoreEngine
-from apps.hr.models import Employee
+# Pattern D: test-fixture import at module-collection time pre-empts the connector
+# (no org context yet, OrganizationModule check would mark hr DISABLED).
+from apps.hr.models import Employee  # noqa: E402  (Pattern D: test fixture)
 from erp.models import Organization, Site, User
 
 

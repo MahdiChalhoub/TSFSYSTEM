@@ -243,7 +243,7 @@ const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
 
             {/* Errors */}
             {state.message && (
-                <div className={`mb-5 px-4 py-3 rounded-xl border text-[13px] font-medium ${state.errors && Object.keys(state.errors).length > 0 ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'}`}>
+                <div className={`mb-5 px-4 py-3 rounded-xl border text-[13px] font-medium ${state.errors && Object.keys(state.errors).length > 0 ? 'bg-app-error-bg text-app-error border-app-error dark:bg-red-900/20 dark:text-app-error dark:border-red-800' : 'bg-app-success-bg text-app-success border-app-success dark:bg-emerald-900/20 dark:text-app-success dark:border-emerald-800'}`}>
                     <p className="font-bold flex items-center gap-2">
                         {state.errors ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
                         {state.message}
@@ -364,7 +364,7 @@ const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
                         <div className={cardHead('border-l-emerald-500')}>
                             <h3 className={cardTitle}>Product Lines</h3>
                             {lines.length > 0 && (
-                                <span className="text-[9px] font-bold bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full">
+                                <span className="text-[9px] font-bold bg-app-primary/10 text-app-success px-2 py-0.5 rounded-full">
                                     {lines.length} item{lines.length !== 1 ? 's' : ''}
                                 </span>
                             )}
@@ -484,7 +484,7 @@ const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
 
                                                 {/* Delete */}
                                                 <button type="button" onClick={e => { e.stopPropagation(); removeLine(idx); }}
-                                                    className="p-1.5 text-app-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+                                                    className="p-1.5 text-app-muted-foreground hover:text-app-error opacity-0 group-hover:opacity-100 hover:bg-app-error-bg dark:hover:bg-red-900/20 rounded-lg transition-all">
                                                     <Trash2 size={12} />
                                                 </button>
                                                 <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
@@ -540,7 +540,7 @@ const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
                                                             <span className="font-bold text-app-primary">Proposed Qty: {line.proposedQty}</span>
                                                         )}
                                                         {supplierPriceHints[line.productId] && (
-                                                            <span className="font-bold text-emerald-500">Price Hint: {supplierPriceHints[line.productId].toLocaleString()}</span>
+                                                            <span className="font-bold text-app-success">Price Hint: {supplierPriceHints[line.productId].toLocaleString()}</span>
                                                         )}
                                                     </div>
                                                 </div>

@@ -77,7 +77,7 @@ export default function PriceChangeRequestsPage() {
                                         <DollarSign size={11} />
                                         <span className="text-red-400 line-through">{req.old_price ?? '—'}</span>
                                         <span className="mx-1">→</span>
-                                        <span className="text-green-500 font-bold">{req.new_price ?? '—'}</span>
+                                        <span className="text-app-success font-bold">{req.new_price ?? '—'}</span>
                                     </span>
                                     <span className="inline-flex items-center gap-1 text-[10px] text-app-muted-foreground"><User size={9} />{req.requested_by_name || req.requested_by || 'System'}</span>
                                     <span className="inline-flex items-center gap-1 text-[10px] text-app-muted-foreground"><Calendar size={9} />{req.created_at ? new Date(req.created_at).toLocaleDateString() : '—'}</span>

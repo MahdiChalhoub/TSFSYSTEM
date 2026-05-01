@@ -302,11 +302,13 @@ def _on_subscription_payment(payload: dict, organization_id: int):
         if target_org_id:
             target_org = Organization.objects.filter(id=target_org_id).select_related('client').first()
             if target_org and target_org.client:
-                from apps.crm.models import Contact
-                crm_contact = Contact.objects.filter(
-                    organization=saas_org, email=target_org.client.email
-                ).values_list('id', flat=True).first()
-                contact_id = crm_contact
+                from erp.connector_registry import connector
+                Contact = connector.require('crm.contacts.get_model', org_id=saas_org.id)
+                if Contact is not None:
+                    crm_contact = Contact.objects.filter(
+                        organization=saas_org, email=target_org.client.email
+                    ).values_list('id', flat=True).first()
+                    contact_id = crm_contact
     except Exception as e:
         logger.debug(f"Finance: Could not resolve CRM contact for subscription: {e}")
 

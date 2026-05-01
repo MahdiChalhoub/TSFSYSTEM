@@ -342,7 +342,10 @@ class PaymentService:
         Customer aging report: 0-30, 31-60, 61-90, 90+ days.
         Based on posted SALE orders that are not fully paid.
         """
-        from apps.pos.models import Order
+        from erp.connector_registry import connector
+        Order = connector.require('pos.orders.get_model', org_id=organization.id)
+        if Order is None:
+            return {}
         from django.db.models import Sum, Q, F
 
         today = timezone.now().date()
@@ -390,7 +393,10 @@ class PaymentService:
         Supplier aging report: 0-30, 31-60, 61-90, 90+ days.
         Based on posted PURCHASE orders that are not fully paid.
         """
-        from apps.pos.models import Order
+        from erp.connector_registry import connector
+        Order = connector.require('pos.orders.get_model', org_id=organization.id)
+        if Order is None:
+            return {}
         from django.db.models import Sum
 
         today = timezone.now().date()

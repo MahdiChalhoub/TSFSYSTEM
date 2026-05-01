@@ -113,7 +113,7 @@ export default function PriceRulesListPage() {
             case 'type': return <span className="text-[10px] font-bold text-app-muted-foreground uppercase">{r.type || r.rule_type || '—'}</span>
             case 'value': return <span className="text-[12px] font-mono font-bold tabular-nums text-app-foreground">{r.value ?? r.discount_value ?? '—'}</span>
             case 'active': return (
-              <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${r.is_active !== false ? 'text-emerald-600' : 'text-app-muted-foreground'}`}
+              <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${r.is_active !== false ? 'text-app-success' : 'text-app-muted-foreground'}`}
                 style={{ background: r.is_active !== false ? 'color-mix(in srgb, #22c55e 10%, transparent)' : 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)' }}>
                 {r.is_active !== false ? 'Active' : 'Inactive'}
               </span>

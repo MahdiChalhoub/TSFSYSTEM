@@ -1125,17 +1125,20 @@ class TransactionSequenceViewSet(TenantModelViewSet):
             default_prefix = TransactionSequence.get_prefix(seq_type)
             next_num = 1
             try:
+                from erp.connector_registry import connector
                 if 'PURCHASE_ORDER' in seq_type:
-                    from apps.pos.models import PurchaseOrder
-                    if seq_type == 'PURCHASE_ORDER_DRAFT':
-                        next_num = PurchaseOrder.objects.filter(organization_id=org_id, status='DRAFT').count() + 1
-                    elif seq_type == 'PURCHASE_ORDER_INTERNAL':
-                        next_num = PurchaseOrder.objects.filter(organization_id=org_id, po_number__startswith='IPO-').count() + 1
-                    else:
-                        next_num = PurchaseOrder.objects.filter(organization_id=org_id, po_number__startswith='PO-').count() + 1
+                    PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=org_id)
+                    if PurchaseOrder is not None:
+                        if seq_type == 'PURCHASE_ORDER_DRAFT':
+                            next_num = PurchaseOrder.objects.filter(organization_id=org_id, status='DRAFT').count() + 1
+                        elif seq_type == 'PURCHASE_ORDER_INTERNAL':
+                            next_num = PurchaseOrder.objects.filter(organization_id=org_id, po_number__startswith='IPO-').count() + 1
+                        else:
+                            next_num = PurchaseOrder.objects.filter(organization_id=org_id, po_number__startswith='PO-').count() + 1
                 elif 'QUOTATION' in seq_type:
-                    from apps.pos.models import Order
-                    next_num = Order.objects.filter(organization_id=org_id, type='QUOTATION').count() + 1
+                    Order = connector.require('pos.orders.get_model', org_id=org_id)
+                    if Order is not None:
+                        next_num = Order.objects.filter(organization_id=org_id, type='QUOTATION').count() + 1
                 elif 'INVOICE' in seq_type:
                     from apps.finance.models import JournalEntry
                     next_num = JournalEntry.objects.filter(organization_id=org_id, reference__startswith='INV-').count() + 1

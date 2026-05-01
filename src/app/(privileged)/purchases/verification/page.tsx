@@ -263,10 +263,10 @@ function OldPurchaseVerificationPage() {
   }
 
   const statusColors = {
-    PENDING: 'bg-blue-100 text-blue-700 border-blue-200',
-    VERIFIED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    DISCREPANCY: 'bg-amber-100 text-amber-700 border-amber-200',
-    REJECTED: 'bg-rose-100 text-rose-700 border-rose-200'
+    PENDING: 'bg-app-info-bg text-app-info border-app-info',
+    VERIFIED: 'bg-app-success-bg text-app-success border-app-success',
+    DISCREPANCY: 'bg-app-warning-bg text-app-warning border-app-warning',
+    REJECTED: 'bg-app-error-bg text-app-error border-app-error'
   }
 
   return (
@@ -303,8 +303,8 @@ function OldPurchaseVerificationPage() {
           <Card className="border-app-border/30">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <Clock size={20} className="text-blue-500" />
-                <Badge className="bg-blue-100 text-blue-700">PENDING</Badge>
+                <Clock size={20} className="text-app-info" />
+                <Badge className="bg-app-info-bg text-app-info">PENDING</Badge>
               </div>
               <p className="text-3xl font-black text-app-text">{stats.pending}</p>
               <p className="text-xs text-app-text-muted mt-1">Awaiting Review</p>
@@ -314,8 +314,8 @@ function OldPurchaseVerificationPage() {
           <Card className="border-app-border/30">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <AlertTriangle size={20} className="text-amber-500" />
-                <Badge className="bg-amber-100 text-amber-700">ISSUES</Badge>
+                <AlertTriangle size={20} className="text-app-warning" />
+                <Badge className="bg-app-warning-bg text-app-warning">ISSUES</Badge>
               </div>
               <p className="text-3xl font-black text-app-text">{stats.discrepancies}</p>
               <p className="text-xs text-app-text-muted mt-1">Discrepancies Found</p>
@@ -325,8 +325,8 @@ function OldPurchaseVerificationPage() {
           <Card className="border-app-border/30">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <CheckCircle2 size={20} className="text-emerald-500" />
-                <Badge className="bg-emerald-100 text-emerald-700">VERIFIED</Badge>
+                <CheckCircle2 size={20} className="text-app-success" />
+                <Badge className="bg-app-success-bg text-app-success">VERIFIED</Badge>
               </div>
               <p className="text-3xl font-black text-app-text">{stats.verified}</p>
               <p className="text-xs text-app-text-muted mt-1">Approved</p>
@@ -418,7 +418,7 @@ function OldPurchaseVerificationPage() {
                       <span className="font-bold text-app-text">{fmt(invoice.total_amount)}</span>
                     </div>
                     {invoice.status === 'DISCREPANCY' && (
-                      <div className="mt-2 flex items-center gap-1 text-xs text-amber-600">
+                      <div className="mt-2 flex items-center gap-1 text-xs text-app-warning">
                         <AlertTriangle size={12} />
                         Price difference detected
                       </div>
@@ -473,11 +473,11 @@ function OldPurchaseVerificationPage() {
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-app-text-muted">Issues</span>
-                  <span className="font-bold text-amber-600">{stats.discrepancies}</span>
+                  <span className="font-bold text-app-warning">{stats.discrepancies}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-app-text-muted">Verified</span>
-                  <span className="font-bold text-emerald-600">{stats.verified}</span>
+                  <span className="font-bold text-app-success">{stats.verified}</span>
                 </div>
                 <div className="flex justify-between text-xs pt-2 border-t border-app-border/30">
                   <span className="text-app-text-muted">Total Value</span>

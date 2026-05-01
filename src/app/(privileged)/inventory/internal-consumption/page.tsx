@@ -73,7 +73,7 @@ function EvtRow({ item, onEdit, onAssess }: { item: Evt; onEdit: () => void; onA
       <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         {item.status === 'PENDING' && (
           <button onClick={e => { e.stopPropagation(); onAssess() }}
-            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-info hover:text-blue-600 transition-colors" title="Assess VAT">
+            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-info hover:text-app-info transition-colors" title="Assess VAT">
             <CheckCircle2 size={12} />
           </button>
         )}

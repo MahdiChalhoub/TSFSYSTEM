@@ -30,19 +30,19 @@ interface Props {
 }
 
 const MODULE_COLORS: Record<string, string> = {
-    crm: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    finance: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    crm: 'bg-app-info/10 text-app-info border-app-info/20',
+    finance: 'bg-app-primary/10 text-app-success border-app-success/20',
     hr: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    sales: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    sales: 'bg-app-warning/10 text-app-warning border-app-warning/20',
     inventory: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-    workspace: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-    manual: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    workspace: 'bg-indigo-500/10 text-app-info border-app-info/20',
+    manual: 'bg-app-error/10 text-app-error border-app-error/20',
 };
 
 const SEV_COLORS: Record<string, string> = {
-    CRITICAL: 'text-rose-400',
-    MAJOR: 'text-orange-400',
-    MEDIUM: 'text-amber-400',
+    CRITICAL: 'text-app-error',
+    MAJOR: 'text-app-warning',
+    MEDIUM: 'text-app-warning',
     MINOR: 'text-white/30',
 };
 
@@ -135,7 +135,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                         <button key={dir} onClick={() => setDirFilter(p => p === dir ? '' : dir)}
                             className={clsx("px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
                                 dirFilter === dir
-                                    ? dir === 'POSITIVE' ? "bg-emerald-500 text-white border-emerald-500" : "bg-rose-500 text-white border-rose-500"
+                                    ? dir === 'POSITIVE' ? "bg-app-primary text-white border-app-success" : "bg-app-error text-white border-app-error"
                                     : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                             )}>
                             {dir === 'POSITIVE' ? '+' : '−'} {dir}
@@ -143,7 +143,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                     ))}
                     <button onClick={() => setShowCapped(p => !p)}
                         className={clsx("px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
-                            showCapped ? "bg-amber-500 text-white border-amber-500" : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
+                            showCapped ? "bg-app-warning text-white border-app-warning" : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                         )}>Capped only</button>
                 </div>
 
@@ -153,7 +153,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                         onClick={handleSnapshot}
                         disabled={isPending}
                         title="Save a period snapshot of all current scores"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-app-border bg-app-surface/5 text-white/40 hover:text-sky-400 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all disabled:opacity-40"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-app-border bg-app-surface/5 text-white/40 hover:text-app-info hover:border-app-info/30 hover:bg-app-info/5 transition-all disabled:opacity-40"
                     >
                         <Camera size={11} /> Snapshot
                     </button>
@@ -191,7 +191,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                                 {/* Direction */}
                                 <div className={clsx(
                                     "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-lg shrink-0",
-                                    rule.direction === 'POSITIVE' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                                    rule.direction === 'POSITIVE' ? "bg-app-primary/10 text-app-success" : "bg-app-error/10 text-app-error"
                                 )}>
                                     {rule.direction === 'POSITIVE' ? '+' : '−'}
                                 </div>
@@ -201,13 +201,13 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-bold">{rule.name}</span>
                                         {rule.is_critical_rule && (
-                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">Critical</span>
+                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-app-error/10 text-app-error border border-app-error/20">Critical</span>
                                         )}
                                         {rule.can_be_manual && (
-                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Manual</span>
+                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-app-warning/10 text-app-warning border border-app-warning/20">Manual</span>
                                         )}
                                         {rule.requires_review && (
-                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">Review Required</span>
+                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-app-info/10 text-app-info border border-app-info/20">Review Required</span>
                                         )}
                                     </div>
                                     <div className="flex gap-3 mt-1 text-[10px] opacity-40 flex-wrap">
@@ -233,7 +233,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                                 {/* Points */}
                                 <div className={clsx(
                                     "font-black text-xl tabular-nums w-24 text-right shrink-0",
-                                    rule.direction === 'POSITIVE' ? "text-emerald-400" : "text-rose-400"
+                                    rule.direction === 'POSITIVE' ? "text-app-success" : "text-app-error"
                                 )}>
                                     {rule.direction === 'POSITIVE' ? '+' : '−'}{rule.base_points}
                                     <div className="text-[9px] opacity-40 font-normal">base pts</div>
@@ -241,7 +241,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
 
                                 {/* Active */}
                                 <div className={clsx("w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
-                                    rule.is_active ? "text-emerald-400" : "text-white/20"
+                                    rule.is_active ? "text-app-success" : "text-white/20"
                                 )}>
                                     {rule.is_active ? <CheckCircle2 size={16} /> : <Info size={16} />}
                                 </div>

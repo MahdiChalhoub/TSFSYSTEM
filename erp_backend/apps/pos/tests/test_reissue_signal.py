@@ -17,8 +17,10 @@ from django.test import TestCase
 from django.utils import timezone
 
 from erp.models import Organization, User
-from apps.crm.models import Contact
-from apps.inventory.models import Product, Unit, Category
+# Pattern D: test-fixture imports at module-collection time pre-empt the connector
+# (no org context yet, OrganizationModule check would mark these DISABLED).
+from apps.crm.models import Contact  # noqa: E402  (Pattern D: test fixture)
+from apps.inventory.models import Product, Unit, Category  # noqa: E402  (Pattern D: test fixture)
 from apps.pos.models.purchase_order_models import PurchaseOrder, PurchaseOrderLine
 from apps.pos.models.procurement_request_models import ProcurementRequest
 
@@ -205,9 +207,9 @@ class TestTaskBoardIntegration(ReissueTestBase):
     """Reissue should close the original task and open a fresh one."""
 
     def test_taskboard_reflects_reissue_lifecycle(self):
-        try:
-            from apps.workspace.models import Task as WorkspaceTask
-        except ImportError:
+        from erp.connector_registry import connector
+        WorkspaceTask = connector.require('workspace.tasks.get_model', org_id=self.org.id)
+        if WorkspaceTask is None:
             self.skipTest("workspace app not installed")
 
         original, po, _ = self._make_request_and_po()

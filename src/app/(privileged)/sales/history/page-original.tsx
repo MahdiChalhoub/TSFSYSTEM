@@ -173,7 +173,7 @@ export default function OrderHistoryPage() {
  align: 'center',
  render: (order) => (
  <div className="flex items-center justify-center gap-2">
- <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg text-indigo-600 hover:bg-indigo-50" asChild title="View in Ledger (DR/CR)">
+ <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg text-app-info hover:bg-app-info-bg" asChild title="View in Ledger (DR/CR)">
  <Link href={`/finance/ledger?q=${order.invoice_number || order.ref_code || order.id}`}>
  <BookOpen size={16} />
  </Link>
@@ -188,7 +188,7 @@ export default function OrderHistoryPage() {
  <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-text-faint px-3 py-2">
  Management de Vente
  </DropdownMenuLabel>
- <DropdownMenuItem asChild className="focus:bg-indigo-50 focus:text-indigo-600 cursor-pointer py-2.5">
+ <DropdownMenuItem asChild className="focus:bg-app-info-bg focus:text-app-info cursor-pointer py-2.5">
  <Link href={`/sales/${order.id}`} className="flex items-center gap-2 w-full">
  <Eye size={14} /> Voir
  </Link>
@@ -196,7 +196,7 @@ export default function OrderHistoryPage() {
  <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
  <Edit3 size={14} className="mr-2" /> Modifier
  </DropdownMenuItem>
- <DropdownMenuItem onClick={() => setConfirmDeleteId(order.id)} className="focus:bg-rose-50 focus:text-rose-600 cursor-pointer py-2.5">
+ <DropdownMenuItem onClick={() => setConfirmDeleteId(order.id)} className="focus:bg-app-error-bg focus:text-app-error cursor-pointer py-2.5">
  <Trash2 size={14} className="mr-2" /> Effacer
  </DropdownMenuItem>
 
@@ -210,7 +210,7 @@ export default function OrderHistoryPage() {
  {(!order.order_status || order.order_status === 'DRAFT') && (
  <DropdownMenuItem
  onClick={() => handleOpenConfirmOrder(order.id)}
- className="focus:bg-indigo-50 focus:text-indigo-600 cursor-pointer py-2.5"
+ className="focus:bg-app-info-bg focus:text-app-info cursor-pointer py-2.5"
  >
  <Package size={14} className="mr-2" /> Confirm Order
  </DropdownMenuItem>
@@ -219,7 +219,7 @@ export default function OrderHistoryPage() {
  {order.delivery_status === 'PENDING' && (
  <DropdownMenuItem
  onClick={() => handleWorkflow(order.id, 'deliver', 'Marking as delivered')}
- className="focus:bg-emerald-50 focus:text-emerald-600 cursor-pointer py-2.5"
+ className="focus:bg-app-success-bg focus:text-app-success cursor-pointer py-2.5"
  >
  <Truck size={14} className="mr-2" /> Mark Delivered
  </DropdownMenuItem>
@@ -228,7 +228,7 @@ export default function OrderHistoryPage() {
  {order.payment_status === 'UNPAID' && (
  <DropdownMenuItem
  onClick={() => handleWorkflow(order.id, 'pay', 'Recording payment')}
- className="focus:bg-emerald-50 focus:text-emerald-600 cursor-pointer py-2.5"
+ className="focus:bg-app-success-bg focus:text-app-success cursor-pointer py-2.5"
  >
  <CreditCard size={14} className="mr-2" /> Mark Paid
  </DropdownMenuItem>
@@ -237,7 +237,7 @@ export default function OrderHistoryPage() {
  {order.invoice_status === 'NOT_GENERATED' && (
  <DropdownMenuItem
  onClick={() => handleWorkflow(order.id, 'generate_invoice', 'Generating invoice')}
- className="focus:bg-blue-50 focus:text-blue-600 cursor-pointer py-2.5"
+ className="focus:bg-app-info-bg focus:text-app-info cursor-pointer py-2.5"
  >
  <Clipboard size={14} className="mr-2" /> Generate Invoice
  </DropdownMenuItem>
@@ -246,7 +246,7 @@ export default function OrderHistoryPage() {
  {!['CANCELLED', 'CLOSED'].includes(order.order_status) && (
  <DropdownMenuItem
  onClick={() => handleWorkflow(order.id, 'cancel', 'Cancelling order')}
- className="focus:bg-rose-50 focus:text-rose-600 cursor-pointer py-2.5 text-rose-600"
+ className="focus:bg-app-error-bg focus:text-app-error cursor-pointer py-2.5 text-app-error"
  >
  <AlertCircle size={14} className="mr-2" /> Cancel Order
  </DropdownMenuItem>
@@ -254,7 +254,7 @@ export default function OrderHistoryPage() {
 
  <DropdownMenuSeparator />
 
- <DropdownMenuItem onClick={() => downloadInvoice(order.id, order.ref_code || order.id)} className="focus:bg-app-bg cursor-pointer py-2.5 text-indigo-600 font-semibold">
+ <DropdownMenuItem onClick={() => downloadInvoice(order.id, order.ref_code || order.id)} className="focus:bg-app-bg cursor-pointer py-2.5 text-app-info font-semibold">
  <Printer size={14} className="mr-2" /> La facture d'impression
  </DropdownMenuItem>
  <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
@@ -283,7 +283,7 @@ export default function OrderHistoryPage() {
  Notifications
  </DropdownMenuLabel>
  <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
- <MessageSquare size={14} className="mr-2 text-emerald-500" /> WhatsApp Notification
+ <MessageSquare size={14} className="mr-2 text-app-success" /> WhatsApp Notification
  </DropdownMenuItem>
  <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
  <Mail size={14} className="mr-2 text-indigo-400" /> Email Notification
@@ -299,7 +299,7 @@ export default function OrderHistoryPage() {
  sortable: true,
  render: (order) => (
  <div className="flex flex-col">
- <span className="text-xs font-bold text-gray-700">
+ <span className="text-xs font-bold text-app-foreground">
  {order.created_at ? new Date(order.created_at).toLocaleDateString('fr-FR') : '—'}
  </span>
  <span className="text-[10px] text-app-text-faint font-medium tracking-tight">
@@ -322,7 +322,7 @@ export default function OrderHistoryPage() {
  sortable: true,
  render: (order) => (
  <div className="flex flex-col">
- <span className="text-sm font-semibold text-gray-700 tracking-tight">{order.contact_name || 'Walking Customer'}</span>
+ <span className="text-sm font-semibold text-app-foreground tracking-tight">{order.contact_name || 'Walking Customer'}</span>
  <span className="text-[10px] text-app-text-faint font-bold uppercase tracking-tighter">
  {order.contact_phone || ''}
  </span>
@@ -374,9 +374,9 @@ export default function OrderHistoryPage() {
  // Legacy fallback: derive from total_paid
  const paid = parseFloat(String(order.total_paid || 0))
  const total = parseFloat(String(order.total_amount || 0))
- if (paid >= total && total > 0) return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[9px] font-black uppercase tracking-widest">Payé</Badge>
- if (paid > 0) return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-100 text-[9px] font-black uppercase tracking-widest">Partiel</Badge>
- return <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-100 text-[9px] font-black uppercase tracking-widest">Dû</Badge>
+ if (paid >= total && total > 0) return <Badge variant="outline" className="bg-app-success-bg text-app-success border-emerald-100 text-[9px] font-black uppercase tracking-widest">Payé</Badge>
+ if (paid > 0) return <Badge variant="outline" className="bg-app-warning-bg text-app-warning border-amber-100 text-[9px] font-black uppercase tracking-widest">Partiel</Badge>
+ return <Badge variant="outline" className="bg-app-error-bg text-app-error border-rose-100 text-[9px] font-black uppercase tracking-widest">Dû</Badge>
  }
  },
  {
@@ -411,7 +411,7 @@ export default function OrderHistoryPage() {
  label: 'Total payé',
  align: 'right',
  render: (order) => (
- <span className="font-bold text-emerald-600 tracking-tighter">{fmt(parseFloat(String(order.total_paid ?? 0)))}</span>
+ <span className="font-bold text-app-success tracking-tighter">{fmt(parseFloat(String(order.total_paid ?? 0)))}</span>
  )
  },
  {
@@ -420,7 +420,7 @@ export default function OrderHistoryPage() {
  align: 'right',
  render: (order) => {
  const due = parseFloat(String(order.total_amount ?? 0)) - parseFloat(String(order.total_paid ?? 0))
- return <span className={`font-black tracking-tighter ${due > 0 ? 'text-rose-600' : 'text-stone-300'}`}>{fmt(due)}</span>
+ return <span className={`font-black tracking-tighter ${due > 0 ? 'text-app-error' : 'text-stone-300'}`}>{fmt(due)}</span>
  }
  },
  {
@@ -452,7 +452,7 @@ export default function OrderHistoryPage() {
  key: 'type',
  label: 'Types de services',
  render: (order) => (
- <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{order.type}</span>
+ <span className="text-[10px] font-black text-app-info uppercase tracking-widest">{order.type}</span>
  )
  },
  {
@@ -478,7 +478,7 @@ export default function OrderHistoryPage() {
  key: 'staff_notes',
  label: 'Note du personnel',
  render: (order) => (
- <p className="text-[10px] text-amber-600/60 truncate max-w-[120px]">
+ <p className="text-[10px] text-app-warning/60 truncate max-w-[120px]">
  {order.staff_notes || '—'}
  </p>
  )
@@ -528,10 +528,10 @@ export default function OrderHistoryPage() {
  <header className="flex justify-between items-end mb-10">
  <div>
  <div className="flex items-center gap-3 mb-2">
- <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+ <Badge className="bg-app-info-bg text-app-info border-indigo-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
  Node: POS Registry
  </Badge>
- <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+ <span className="text-[10px] font-bold text-app-faint uppercase tracking-widest flex items-center gap-1">
  <Activity size={12} /> Transaction Stream
  </span>
  </div>
@@ -539,11 +539,11 @@ export default function OrderHistoryPage() {
  <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
  <History size={32} className="text-app-text" />
  </div>
- Transaction <span className="text-indigo-600">History</span>
+ Transaction <span className="text-app-info">History</span>
  </h1>
  </div>
  <div className="flex items-center gap-3">
- <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-text-faint hover:text-indigo-600 hover:bg-app-bg transition-all">
+ <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-text-faint hover:text-app-info hover:bg-app-bg transition-all">
  <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
  </Button>
  <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-app-text font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">

@@ -1,6 +1,8 @@
 from django.test import TestCase
 from erp.models import Organization
-from apps.reference.models import Country
+# Pattern D: test-fixture import at module-collection time pre-empts the connector
+# (no org context yet, OrganizationModule check would mark reference DISABLED).
+from apps.reference.models import Country  # noqa: E402  (Pattern D: test fixture)
 from apps.inventory.models import Product, Brand, Category, ProductAttribute
 
 class TestProductAutoLinkage(TestCase):

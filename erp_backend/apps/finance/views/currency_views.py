@@ -134,8 +134,11 @@ class CurrencyViewSet(TenantModelViewSet):
         if org_id:
             try:
                 from erp.models import Organization
-                from apps.reference.models import OrgCurrency
+                from erp.connector_registry import connector
+                OrgCurrency = connector.require('reference.org_currency.get_model', org_id=org_id)
                 from apps.finance.signals import _mirror_org_currency_to_finance
+                if OrgCurrency is None:
+                    raise RuntimeError("reference module unavailable")
                 org = Organization.objects.get(id=org_id)
 
                 # Pass 1: mirror every OrgCurrency row (handles legacy data
@@ -782,13 +785,16 @@ class CurrencyRatePolicyViewSet(TenantModelViewSet):
         Returns: { "created": [policy, …], "skipped": [{from_code, reason}, …] }
         """
         from apps.finance.models.currency_models import Currency
-        from apps.reference.models import OrgCurrency
+        from erp.connector_registry import connector
         from apps.finance.signals import _mirror_org_currency_to_finance
         import logging
         _logger = logging.getLogger(__name__)
         org_id = get_current_tenant_id()
         if not org_id:
             return Response({'error': 'tenant context missing'}, status=400)
+        OrgCurrency = connector.require('reference.org_currency.get_model', org_id=org_id)
+        if OrgCurrency is None:
+            return Response({'error': 'reference module unavailable'}, status=503)
 
         provider = request.data.get('provider', 'ECB')
         if provider not in ('ECB', 'MANUAL'):

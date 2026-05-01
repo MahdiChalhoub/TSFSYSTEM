@@ -274,9 +274,11 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
         else:
             return Response({"error": "Provide product_ids or set all_missing=true"}, status=400)
 
-        try:
-            from apps.finance.services import BarcodeService
-        except ImportError:
+        from erp.connector_registry import connector
+        BarcodeService = connector.require(
+            'finance.services.get_barcode_service', org_id=organization.id
+        )
+        if BarcodeService is None:
             return Response({"error": "Barcode service not available"}, status=500)
 
         generated = 0
@@ -1588,7 +1590,11 @@ class StockAdjustmentOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        from apps.finance.models import TransactionSequence
+        from erp.connector_registry import connector
+        TransactionSequence = connector.require('finance.sequences.get_model', org_id=get_current_tenant_id() or 0)
+        if TransactionSequence is None:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("Finance module unavailable; cannot allocate sequence.")
         org_id = get_current_tenant_id()
         org = Organization.objects.get(id=org_id)
         ref = TransactionSequence.next_value(org, 'STOCK_ADJ')
@@ -1694,7 +1700,11 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        from apps.finance.models import TransactionSequence
+        from erp.connector_registry import connector
+        TransactionSequence = connector.require('finance.sequences.get_model', org_id=get_current_tenant_id() or 0)
+        if TransactionSequence is None:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("Finance module unavailable; cannot allocate sequence.")
         org_id = get_current_tenant_id()
         org = Organization.objects.get(id=org_id)
         ref = TransactionSequence.next_value(org, 'STOCK_TRF')
@@ -1794,7 +1804,11 @@ class OperationalRequestViewSet(TenantModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        from apps.finance.models import TransactionSequence
+        from erp.connector_registry import connector
+        TransactionSequence = connector.require('finance.sequences.get_model', org_id=get_current_tenant_id() or 0)
+        if TransactionSequence is None:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("Finance module unavailable; cannot allocate sequence.")
         org_id = get_current_tenant_id()
         org = Organization.objects.get(id=org_id)
         ref = TransactionSequence.next_value(org, 'OP_REQ')
@@ -1849,7 +1863,10 @@ class OperationalRequestViewSet(TenantModelViewSet):
         if req.status != 'APPROVED':
             return Response({'error': 'Only APPROVED requests can be converted'}, status=400)
 
-        from apps.finance.models import TransactionSequence
+        from erp.connector_registry import connector
+        TransactionSequence = connector.require('finance.sequences.get_model', org_id=get_current_tenant_id() or 0)
+        if TransactionSequence is None:
+            return Response({'error': 'Finance module unavailable; cannot allocate sequence.'}, status=503)
         organization = req.organization
         lines = req.lines.all()
 

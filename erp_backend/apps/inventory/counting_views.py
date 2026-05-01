@@ -217,11 +217,15 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
             .distinct()
         )
 
-        from apps.crm.models import Contact
-        suppliers = list(
-            Contact.objects.filter(organization=org, is_supplier=True)
-            .values('id', 'company_name')
-        )
+        from erp.connector_registry import connector
+        Contact = connector.require('crm.contacts.get_model', org_id=org.id if org else 0)
+        if Contact is not None:
+            suppliers = list(
+                Contact.objects.filter(organization=org, is_supplier=True)
+                .values('id', 'company_name')
+            )
+        else:
+            suppliers = []
 
         warehouses = list(
             Warehouse.objects.filter(organization=org, is_active=True)

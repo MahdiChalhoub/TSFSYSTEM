@@ -108,24 +108,24 @@ export default async function EmployeesPage() {
                         <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Resource Master</span>
                     </div>
                     <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
-                        HR <span className="text-indigo-600">Command</span>
+                        HR <span className="text-app-info">Command</span>
                     </h1>
                     <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">
                         Unified management of your company's human capital. Linking physical employees to system security and financial payroll dimensions.
                     </p>
                 </div>
 
-                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
+                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-indigo-900/5 border border-app-border">
                     <div className="text-center px-8 border-r border-app-border">
                         <div className="text-5xl font-black text-app-foreground tracking-tighter mb-1">{allPeople.length}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Total Staff</div>
                     </div>
                     <div className="text-center px-8 border-r border-app-border">
-                        <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{allPeople.filter((e: Record<string, any>) => e.user).length}</div>
+                        <div className="text-5xl font-black text-app-info tracking-tighter mb-1">{allPeople.filter((e: Record<string, any>) => e.user).length}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">System Access</div>
                     </div>
                     <div className="text-center px-8">
-                        <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{sites.length}</div>
+                        <div className="text-5xl font-black text-app-success tracking-tighter mb-1">{sites.length}</div>
                         <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Active Branches</div>
                     </div>
                 </div>

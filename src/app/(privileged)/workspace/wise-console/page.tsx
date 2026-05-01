@@ -12,10 +12,10 @@ export const dynamic = 'force-dynamic';
 
 const BADGE_COLORS: Record<string, string> = {
     PLATINUM: 'text-violet-400',
-    GOLD: 'text-amber-400',
+    GOLD: 'text-app-warning',
     SILVER: 'text-app-muted-foreground',
-    BRONZE: 'text-orange-500',
-    WATCHLIST: 'text-rose-400',
+    BRONZE: 'text-app-warning',
+    WATCHLIST: 'text-app-error',
 };
 
 const BADGE_ICONS: Record<string, string> = {
@@ -61,12 +61,12 @@ export default async function WiseConsolePage() {
                             className="w-16 h-16 rounded-3xl flex items-center justify-center shrink-0"
                             style={{ background: 'linear-gradient(135deg,rgba(239,68,68,0.15),rgba(139,92,246,0.1))', border: '1px solid rgba(239,68,68,0.3)' }}
                         >
-                            <Gauge size={32} className="text-rose-400" />
+                            <Gauge size={32} className="text-app-error" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Manager View</p>
                             <h1 className="text-4xl font-black tracking-tighter italic">
-                                WISE <span className="text-rose-400">Command Console</span>
+                                WISE <span className="text-app-error">Command Console</span>
                             </h1>
                             {s && (
                                 <p className="text-sm opacity-40 mt-0.5 font-medium">
@@ -80,8 +80,8 @@ export default async function WiseConsolePage() {
 
                     {/* Primary KPI pills */}
                     <div className="flex gap-3 flex-wrap">
-                        <StatPill label="At Risk" value={atRisk.length} accent="text-rose-400" />
-                        <StatPill label="Tracked" value={leaders.length} accent="text-amber-400" />
+                        <StatPill label="At Risk" value={atRisk.length} accent="text-app-error" />
+                        <StatPill label="Tracked" value={leaders.length} accent="text-app-warning" />
                         <StatPill label="Active Rules" value={ruleList.length} />
                         {s?.avg_global_score != null && (
                             <StatPill label="Org Avg Score" value={s.avg_global_score.toFixed(1)} accent="text-app-primary" />

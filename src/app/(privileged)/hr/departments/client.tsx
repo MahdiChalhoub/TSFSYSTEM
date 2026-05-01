@@ -67,9 +67,9 @@ export default function DepartmentsClient({ departments, employees }: Props) {
                         <div className="text-xs text-app-muted-foreground font-mono">{dept.code}</div>
                     </div>
                     {dept.manager_name && (
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full">
-                            <User size={12} className="text-emerald-600" />
-                            <span className="text-xs font-semibold text-emerald-700">{dept.manager_name}</span>
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-app-success-bg rounded-full">
+                            <User size={12} className="text-app-success" />
+                            <span className="text-xs font-semibold text-app-success">{dept.manager_name}</span>
                         </div>
                     )}
                     {dept.parent_name && (
@@ -83,8 +83,8 @@ export default function DepartmentsClient({ departments, employees }: Props) {
                     <button onClick={() => { setEditing(dept); setShowForm(true) }} className="p-2 hover:bg-violet-50 rounded-xl transition-colors">
                         <Edit2 size={14} className="text-violet-600" />
                     </button>
-                    <button onClick={() => handleDelete(dept.id)} className="p-2 hover:bg-red-50 rounded-xl transition-colors">
-                        <Trash2 size={14} className="text-red-500" />
+                    <button onClick={() => handleDelete(dept.id)} className="p-2 hover:bg-app-error-bg rounded-xl transition-colors">
+                        <Trash2 size={14} className="text-app-error" />
                     </button>
                 </div>
             </div>

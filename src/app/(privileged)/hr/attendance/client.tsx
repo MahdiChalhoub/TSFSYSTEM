@@ -59,24 +59,24 @@ export default function AttendanceClient({ attendance, employees, shifts }: Prop
                     {(['today', 'all'] as const).map(f => (
                         <button key={f} onClick={() => setFilter(f)}
                             className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === f
-                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200'
+                                ? 'bg-app-primary text-white shadow-lg shadow-emerald-200'
                                 : 'bg-app-surface text-app-muted-foreground border border-app-border hover:bg-app-surface'}`}>
                             {f === 'today' ? 'Today' : 'All Records'}
                         </button>
                     ))}
                 </div>
                 <button onClick={() => setShowForm(!showForm)}
-                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
+                    className="flex items-center gap-2 px-6 py-3 bg-app-primary text-white rounded-2xl font-bold hover:bg-app-primary-dark transition-all shadow-lg shadow-emerald-200">
                     <Plus size={18} /> New Record
                 </button>
             </div>
 
             {showForm && (
-                <form onSubmit={handleCreate} className="bg-app-surface p-8 rounded-3xl border border-emerald-100 shadow-xl space-y-4">
+                <form onSubmit={handleCreate} className="bg-app-surface p-8 rounded-3xl border border-app-success shadow-xl space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Employee</label>
-                            <select name="employee" required className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-400 outline-none">
+                            <select name="employee" required className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-success outline-none">
                                 <option value="">Select...</option>
                                 {employees.map((e: any) => (
                                     <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>
@@ -85,7 +85,7 @@ export default function AttendanceClient({ attendance, employees, shifts }: Prop
                         </div>
                         <div>
                             <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Shift</label>
-                            <select name="shift" className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-400 outline-none">
+                            <select name="shift" className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-success outline-none">
                                 <option value="">— None —</option>
                                 {shifts.map((s: any) => (
                                     <option key={s.id} value={s.id}>{s.name}</option>
@@ -95,14 +95,14 @@ export default function AttendanceClient({ attendance, employees, shifts }: Prop
                         <div>
                             <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Date</label>
                             <input name="date" type="date" defaultValue={today} required
-                                className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-400 outline-none" />
+                                className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-success outline-none" />
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <button type="button" onClick={() => setShowForm(false)}
                             className="px-6 py-3 rounded-xl border border-app-border font-bold text-app-muted-foreground hover:bg-app-surface">Cancel</button>
                         <button type="submit" disabled={isPending}
-                            className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50">
+                            className="px-8 py-3 bg-app-primary text-white rounded-xl font-bold hover:bg-app-primary-dark disabled:opacity-50">
                             {isPending ? 'Creating...' : 'Create'}
                         </button>
                     </div>
@@ -131,11 +131,11 @@ export default function AttendanceClient({ attendance, employees, shifts }: Prop
                         {displayed.map((a: any) => {
                             const hasIn = !!a.check_in
                             const hasOut = !!a.check_out
-                            const statusColor = !hasIn ? 'text-app-muted-foreground' : hasOut ? 'text-emerald-600' : 'text-amber-600'
+                            const statusColor = !hasIn ? 'text-app-muted-foreground' : hasOut ? 'text-app-success' : 'text-app-warning'
                             const statusText = !hasIn ? 'Pending' : hasOut ? 'Completed' : 'On-site'
 
                             return (
-                                <tr key={a.id} className="border-b border-gray-50 hover:bg-app-surface/50 transition-colors">
+                                <tr key={a.id} className="border-b border-app-border hover:bg-app-surface/50 transition-colors">
                                     <td className="px-6 py-4 font-bold text-app-foreground">{a.employee_name || getEmpName(a.employee)}</td>
                                     <td className="px-6 py-4 text-app-muted-foreground font-mono text-sm">{a.date || a.created_at?.split('T')[0]}</td>
                                     <td className="px-6 py-4 text-sm font-semibold text-app-foreground">{a.check_in ? new Date(a.check_in).toLocaleTimeString() : '—'}</td>
@@ -147,13 +147,13 @@ export default function AttendanceClient({ attendance, employees, shifts }: Prop
                                         <div className="flex justify-end gap-2">
                                             {!hasIn && (
                                                 <button onClick={() => handleCheckIn(a.id)} disabled={isPending}
-                                                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors">
+                                                    className="flex items-center gap-1.5 px-4 py-2 bg-app-success-bg text-app-success rounded-lg text-xs font-bold hover:bg-app-success-bg transition-colors">
                                                     <LogIn size={14} /> Check In
                                                 </button>
                                             )}
                                             {hasIn && !hasOut && (
                                                 <button onClick={() => handleCheckOut(a.id)} disabled={isPending}
-                                                    className="flex items-center gap-1.5 px-4 py-2 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold hover:bg-amber-100 transition-colors">
+                                                    className="flex items-center gap-1.5 px-4 py-2 bg-app-warning-bg text-app-warning rounded-lg text-xs font-bold hover:bg-app-warning-bg transition-colors">
                                                     <LogOut size={14} /> Check Out
                                                 </button>
                                             )}

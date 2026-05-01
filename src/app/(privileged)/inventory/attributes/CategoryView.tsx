@@ -294,7 +294,7 @@ export function CategoryView({ tree, allCategories, search, loading, onLink }: {
                                                         e.stopPropagation()
                                                         await onLink(cat.id, [])
                                                     }}
-                                                    className="text-[10px] font-bold text-app-muted-foreground hover:text-red-500 transition-colors">
+                                                    className="text-[10px] font-bold text-app-muted-foreground hover:text-app-error transition-colors">
                                                     Clear All
                                                 </button>
                                             </div>
@@ -349,7 +349,7 @@ function AttrCheckRow({ group, isLinked, color, onToggle }: {
                     </span>
                 )}
                 {group.requires_barcode && <Barcode size={10} className="text-orange-500" />}
-                {group.show_in_name && <Hash size={10} className="text-amber-500" />}
+                {group.show_in_name && <Hash size={10} className="text-app-warning" />}
             </div>
         </button>
     )

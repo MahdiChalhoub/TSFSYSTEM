@@ -278,7 +278,7 @@ export default function InvoicingScreen() {
                                                     <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest bg-app-surface px-2 py-0.5 rounded-full border border-app-border">
                                                         {line.product?.sku || 'NO-SKU'}
                                                     </span>
-                                                    <span className={`text-[10px] font-black uppercase ${line.qty_received >= line.quantity ? 'text-emerald-600' : 'text-amber-500'}`}>
+                                                    <span className={`text-[10px] font-black uppercase ${line.qty_received >= line.quantity ? 'text-app-success' : 'text-app-warning'}`}>
                                                         Ordered: {line.quantity} | Received: {line.qty_received}
                                                     </span>
                                                     <span className="text-[10px] font-black text-purple-600 uppercase">Already Inv: {line.qty_invoiced || 0}</span>
@@ -357,11 +357,11 @@ export default function InvoicingScreen() {
                                     </div>
                                 )}
 
-                                <div className="p-6 rounded-3xl bg-amber-50 border border-amber-200 space-y-2">
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                                <div className="p-6 rounded-3xl bg-app-warning-bg border border-app-warning space-y-2">
+                                    <div className="flex items-center gap-2 text-[10px] font-black text-app-warning uppercase tracking-widest">
                                         <Info size={14} /> Matching Protocol
                                     </div>
-                                    <p className="text-xs font-bold text-amber-700 leading-relaxed">
+                                    <p className="text-xs font-bold text-app-warning leading-relaxed">
                                         This invoice will be validated against received quantities (3-way match). Discrepancies will be highlighted in the audit dashboard.
                                     </p>
                                 </div>

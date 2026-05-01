@@ -254,7 +254,7 @@ export default function NewTransferPage() {
  onClick={() => removeLine(line.id)}
  disabled={lines.length === 1}
  variant="ghost"
- className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg h-10 w-10 p-0 shrink-0"
+ className="text-app-error hover:text-app-error hover:bg-app-error-bg rounded-lg h-10 w-10 p-0 shrink-0"
  >
  <Trash2 size={16} />
  </Button>

@@ -8,7 +8,8 @@ from django.test import TestCase
 from django.utils import timezone
 from apps.finance.models import TransactionSequence, Invoice, Payment, ChartOfAccount, OrgTaxPolicy, JournalEntry, FinancialAccount, FiscalYear, FiscalPeriod
 from apps.finance.services.accounting_engine import AccountingEngine
-from apps.crm.models import Contact
+# Pattern D: test-fixture import at module-collection time pre-empts the connector.
+from apps.crm.models import Contact  # noqa: E402  (Pattern D: test fixture)
 
 class FinanceGoldenPipeTests(TestCase):
 

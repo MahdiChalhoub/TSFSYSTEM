@@ -204,12 +204,14 @@ class TaxTemplateService:
     def _resolve_country_code(cls, org) -> str | None:
         """Resolve the org's country code using the same chain as tax_policy_views.py."""
         try:
-            from apps.reference.models import Country as RefCountry, OrgCountry
-            oc = OrgCountry.all_objects.filter(
-                organization=org, is_default=True, is_enabled=True
-            ).select_related('country').first()
-            if oc and oc.country:
-                return oc.country.iso2.upper()
+            from erp.connector_registry import connector
+            OrgCountry = connector.require('reference.org_country.get_model', org_id=org.id)
+            if OrgCountry is not None:
+                oc = OrgCountry.all_objects.filter(
+                    organization=org, is_default=True, is_enabled=True
+                ).select_related('country').first()
+                if oc and oc.country:
+                    return oc.country.iso2.upper()
         except Exception:
             pass
 

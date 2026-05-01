@@ -159,7 +159,10 @@ class StorefrontPublicConfigView(APIView):
         })
 
     def _get_stripe_key(self, org):
-        from apps.finance.gateway_models import GatewayConfig
+        from erp.connector_registry import connector
+        GatewayConfig = connector.require('finance.gateways.get_config_model', org_id=org.id)
+        if GatewayConfig is None:
+            return None
         stripe_cfg = GatewayConfig.objects.filter(
             organization=org, gateway_type='STRIPE', is_active=True
         ).first()
@@ -477,7 +480,12 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         # If order is created as PLACED with CARD payment, trigger Stripe
         if order.status == 'PLACED' and order.payment_method == 'CARD':
             try:
-                from apps.finance.stripe_gateway import StripeGatewayService
+                from erp.connector_registry import connector
+                StripeGatewayService = connector.require(
+                    'finance.gateways.get_stripe_service', org_id=order.organization_id
+                )
+                if StripeGatewayService is None:
+                    return
                 service = StripeGatewayService(order.organization_id)
                 
                 amount_to_charge = order.total_amount - order.wallet_amount
@@ -511,11 +519,15 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         line_data['organization'] = order.organization_id
         if 'product' in line_data and not line_data.get('product_name'):
             try:
-                from apps.inventory.models import Product
-                product = Product.objects.get(id=line_data['product'])
-                line_data['product_name'] = product.name
-                line_data['unit_price'] = str(product.selling_price_ttc)
-                line_data['tax_rate'] = str(product.tva_rate)
+                from erp.connector_registry import connector
+                Product = connector.require(
+                    'inventory.products.get_model', org_id=order.organization_id
+                )
+                if Product is not None:
+                    product = Product.objects.get(id=line_data['product'])
+                    line_data['product_name'] = product.name
+                    line_data['unit_price'] = str(product.selling_price_ttc)
+                    line_data['tax_rate'] = str(product.tva_rate)
             except Exception:
                 pass
         serializer = ClientOrderLineSerializer(data=line_data)
@@ -575,7 +587,12 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         # Handle Stripe Card Payment
         if order.payment_method == 'CARD':
             try:
-                from apps.finance.stripe_gateway import StripeGatewayService
+                from erp.connector_registry import connector
+                StripeGatewayService = connector.require(
+                    'finance.gateways.get_stripe_service', org_id=order.organization_id
+                )
+                if StripeGatewayService is None:
+                    return Response({'error': 'Stripe gateway unavailable'}, status=503)
                 service = StripeGatewayService(order.organization_id)
                 
                 amount_to_charge = order.total_amount - order.wallet_amount

@@ -16,6 +16,7 @@ import { logoutAction } from "@/app/actions/auth";
 import { PLATFORM_CONFIG } from '@/lib/saas_config';
 
 import { MENU_ITEMS } from './_lib/menu';
+import type { MenuItem as MenuItemType } from './_lib/menu/types';
 import { MenuItem } from './_components/MenuItem';
 import { FavoritesPanel } from './_components/FavoritesPanel';
 import { useSidebar } from './_hooks/useSidebar';
@@ -47,10 +48,17 @@ export function Sidebar({
     // In topnav mode the sidebar is hidden — navigation lives in the header
     if (navLayout === 'topnav') return null;
 
-    // Merge hardcoded core with dynamic
-    const allItems = [...MENU_ITEMS, ...dynamicItems];
+    // Merge hardcoded core with dynamic. The two sources have slightly different
+    // field shapes (MenuItem.title vs SidebarDynamicItem.label, etc.) — describe
+    // both fields on the union so consumers can read either.
+    type SidebarNode = MenuItemType & {
+        label?: string;
+        href?: string;
+        children?: SidebarNode[];
+    };
+    const allItems: SidebarNode[] = [...MENU_ITEMS, ...(dynamicItems as unknown as SidebarNode[])];
 
-    const processedItems = allItems.filter((item: any) => {
+    const processedItems = allItems.filter((item) => {
         // Superusers ALWAYS see SaaS Control; non-SaaS non-superuser hides saas-visibility items.
         if (!isSaas && !isSuperuser && item.visibility === 'saas') return false;
         // Hide items whose module isn't installed (null installedModules = not loaded yet → show all)
@@ -63,8 +71,8 @@ export function Sidebar({
     // Pin SaaS Control to top if in SaaS or superuser context
     const filteredItems = (isSaas || isSuperuser)
         ? [
-            ...processedItems.filter((i: any) => i.title === 'SaaS Control'),
-            ...processedItems.filter((i: any) => i.title !== 'SaaS Control')
+            ...processedItems.filter((i) => i.title === 'SaaS Control'),
+            ...processedItems.filter((i) => i.title !== 'SaaS Control')
         ]
         : processedItems;
 
@@ -76,21 +84,21 @@ export function Sidebar({
         if (targetStage === 'in-progress') return stage === 'in-progress';
         return stage !== 'production' && stage !== 'in-progress';
     }
-    function pruneByStage(node: any, parentStage: string | undefined, targetStage: 'production' | 'in-progress' | 'development'): any | null {
+    function pruneByStage(node: SidebarNode, parentStage: string | undefined, targetStage: 'production' | 'in-progress' | 'development'): SidebarNode | null {
         const effectiveStage = node.stage || parentStage || undefined;
         if (!node.children || node.children.length === 0) {
             return matchesStage(effectiveStage, targetStage) ? node : null;
         }
         const prunedChildren = node.children
-            .map((c: any) => pruneByStage(c, effectiveStage, targetStage))
-            .filter((c: any) => c !== null);
+            .map((c) => pruneByStage(c, effectiveStage, targetStage))
+            .filter((c): c is SidebarNode => c !== null);
         if (prunedChildren.length === 0) return null;
         return { ...node, children: prunedChildren };
     }
-    function splitByStage(items: any[], targetStage: 'production' | 'in-progress' | 'development'): any[] {
+    function splitByStage(items: SidebarNode[], targetStage: 'production' | 'in-progress' | 'development'): SidebarNode[] {
         return items
-            .map((item: any) => pruneByStage(item, undefined, targetStage))
-            .filter((item: any) => item !== null);
+            .map((item) => pruneByStage(item, undefined, targetStage))
+            .filter((item): item is SidebarNode => item !== null);
     }
     const productionItems = splitByStage(filteredItems, 'production');
     const inProgressItems = splitByStage(filteredItems, 'in-progress');
@@ -190,7 +198,7 @@ export function Sidebar({
                                 <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }} />
                                 <span className="text-[9px] font-bold tabular-nums" style={{ color: 'var(--app-success, #22c55e)', opacity: 0.6 }}>{productionItems.length}</span>
                             </div>
-                            {productionItems.map((item: any, idx: number) => (
+                            {productionItems.map((item, idx: number) => (
                                 <React.Fragment key={`prod-${idx}`}>
                                     {idx > 0 && item.visibility === 'saas' && (
                                         <div className="my-2 mx-2 flex items-center gap-2">
@@ -222,7 +230,7 @@ export function Sidebar({
                                     style={{ color: 'var(--app-info, #3b82f6)', opacity: 0.6 }}
                                 />
                             </div>
-                            {inProgressSectionOpen && inProgressItems.map((item: any, idx: number) => (
+                            {inProgressSectionOpen && inProgressItems.map((item, idx: number) => (
                                 <React.Fragment key={`inprog-${idx}`}>
                                     {idx > 0 && item.visibility === 'saas' && (
                                         <div className="my-2 mx-2 flex items-center gap-2">
@@ -254,7 +262,7 @@ export function Sidebar({
                                     style={{ color: 'var(--app-warning, #f59e0b)', opacity: 0.6 }}
                                 />
                             </div>
-                            {devSectionOpen && developmentItems.map((item: any, idx: number) => (
+                            {devSectionOpen && developmentItems.map((item, idx: number) => (
                                 <React.Fragment key={`dev-${idx}`}>
                                     {idx > 0 && item.visibility === 'saas' && (
                                         <div className="my-2 mx-2 flex items-center gap-2">

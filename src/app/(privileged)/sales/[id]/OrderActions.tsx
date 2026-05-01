@@ -116,7 +116,7 @@ export function OrderActions({ orderId, isLocked: initialLocked, isVerified: ini
 
  {/* FNE Certified Badge */}
  {fneStatus === 'CERTIFIED' && (
- <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-50 border-2 border-emerald-200 text-emerald-700 font-black text-sm">
+ <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-app-success-bg border-2 border-app-success text-app-success font-black text-sm">
  <Shield size={16} />
  <span>FNE Certifié</span>
  </div>

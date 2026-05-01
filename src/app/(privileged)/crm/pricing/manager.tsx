@@ -125,7 +125,7 @@ export default function PricingManager({
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             {/* Tab Bar + Actions */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-app-surface p-6 rounded-[40px] shadow-2xl shadow-violet-900/5 border border-gray-50">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-app-surface p-6 rounded-[40px] shadow-2xl shadow-violet-900/5 border border-app-border">
                 <div className="flex gap-2 bg-app-surface p-1.5 rounded-2xl">
                     {(['groups', 'rules'] as const).map((t) => (
                         <button
@@ -162,7 +162,7 @@ export default function PricingManager({
             </div>
 
             {message && (
-                <div className="p-4 bg-rose-50 rounded-2xl text-rose-600 text-sm font-bold flex items-center gap-2">
+                <div className="p-4 bg-app-error-bg rounded-2xl text-app-error text-sm font-bold flex items-center gap-2">
                     <AlertCircle size={16} /> {message}
                 </div>
             )}
@@ -193,7 +193,7 @@ export default function PricingManager({
                                     </div>
                                     <button
                                         onClick={() => handleDeleteGroup(group.id)}
-                                        className="p-2 text-app-faint hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
+                                        className="p-2 text-app-faint hover:text-app-error rounded-xl hover:bg-app-error-bg transition-all opacity-0 group-hover:opacity-100"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -235,8 +235,8 @@ export default function PricingManager({
                             <div key={rule.id} className="group bg-app-surface p-6 rounded-[32px] border border-app-border hover:shadow-xl hover:shadow-violet-900/5 transition-all flex items-center gap-6">
                                 <div className={clsx(
                                     "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0",
-                                    rule.discount_type === 'FIXED_PRICE' ? "bg-emerald-100 text-emerald-600" :
-                                        rule.discount_type === 'PERCENTAGE' ? "bg-blue-100 text-blue-600" : "bg-amber-100 text-amber-600"
+                                    rule.discount_type === 'FIXED_PRICE' ? "bg-app-success-bg text-app-success" :
+                                        rule.discount_type === 'PERCENTAGE' ? "bg-app-info-bg text-app-info" : "bg-app-warning-bg text-app-warning"
                                 )}>
                                     {rule.discount_type === 'PERCENTAGE' ? <Percent size={24} /> :
                                         rule.discount_type === 'AMOUNT_OFF' ? <Hash size={24} /> : <DollarSign size={24} />}
@@ -246,8 +246,8 @@ export default function PricingManager({
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className={clsx(
                                             "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase",
-                                            rule.discount_type === 'FIXED_PRICE' ? "bg-emerald-100 text-emerald-700" :
-                                                rule.discount_type === 'PERCENTAGE' ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                                            rule.discount_type === 'FIXED_PRICE' ? "bg-app-success-bg text-app-success" :
+                                                rule.discount_type === 'PERCENTAGE' ? "bg-app-info-bg text-app-info" : "bg-app-warning-bg text-app-warning"
                                         )}>
                                             {discountLabel(rule.discount_type)}
                                         </span>
@@ -269,7 +269,7 @@ export default function PricingManager({
 
                                 <button
                                     onClick={() => handleDeleteRule(rule.id)}
-                                    className="p-2 text-app-faint hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
+                                    className="p-2 text-app-faint hover:text-app-error rounded-xl hover:bg-app-error-bg transition-all opacity-0 group-hover:opacity-100"
                                 >
                                     <Trash2 size={16} />
                                 </button>

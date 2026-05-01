@@ -144,10 +144,10 @@ export default function DeliveryZonesPage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <DollarSign size={24} className="text-emerald-500" />
+                            <DollarSign size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Avg Base Fee</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(avgFee)}</p>
+                                <p className="text-xl font-bold text-app-success">{fmt(avgFee)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -155,10 +155,10 @@ export default function DeliveryZonesPage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Clock size={24} className="text-blue-500" />
+                            <Clock size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Avg Transit</p>
-                                <p className="text-2xl font-bold text-blue-700">
+                                <p className="text-2xl font-bold text-app-info">
                                     {zones.length > 0 ? (zones.reduce((s, z) => s + (z.estimated_days || 0), 0) / zones.length).toFixed(1) : '0'} days
                                 </p>
                             </div>
@@ -243,7 +243,7 @@ export default function DeliveryZonesPage() {
                                             <Edit2 size={14} />
                                         </button>
                                         <button onClick={() => setDeleteTarget(z.id)}
-                                            className="p-1 rounded hover:bg-red-50 text-app-muted-foreground hover:text-red-500">
+                                            className="p-1 rounded hover:bg-app-error-bg text-app-muted-foreground hover:text-app-error">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -251,15 +251,15 @@ export default function DeliveryZonesPage() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-app-surface rounded-lg p-2 text-center">
                                         <p className="text-xs text-app-muted-foreground">Base Fee</p>
-                                        <p className="font-bold text-sm text-emerald-600">{fmt(parseFloat(String(z.base_fee || 0)))}</p>
+                                        <p className="font-bold text-sm text-app-success">{fmt(parseFloat(String(z.base_fee || 0)))}</p>
                                     </div>
                                     <div className="bg-app-surface rounded-lg p-2 text-center">
                                         <p className="text-xs text-app-muted-foreground">Est. Transit</p>
-                                        <p className="font-bold text-sm text-blue-600">{z.estimated_days || 1} day(s)</p>
+                                        <p className="font-bold text-sm text-app-info">{z.estimated_days || 1} day(s)</p>
                                     </div>
                                 </div>
                                 <div className="mt-2 flex items-center justify-between">
-                                    <Badge className={z.is_active !== false ? 'bg-green-100 text-green-700' : 'bg-app-surface-2 text-app-muted-foreground'}>
+                                    <Badge className={z.is_active !== false ? 'bg-app-success-bg text-app-success' : 'bg-app-surface-2 text-app-muted-foreground'}>
                                         {z.is_active !== false ? 'Active' : 'Inactive'}
                                     </Badge>
                                 </div>

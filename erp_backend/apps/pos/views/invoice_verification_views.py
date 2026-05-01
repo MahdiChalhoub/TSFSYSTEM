@@ -18,12 +18,24 @@ from django.db import transaction
 from django.utils import timezone
 from decimal import Decimal
 
-from apps.finance.models import Invoice, InvoiceLine
 from apps.pos.models import PurchaseOrder, PurchaseOrderLine
-from apps.inventory.models import GoodsReceipt, GoodsReceiptLine
 from apps.pos.services.three_way_match_service import ThreeWayMatchService
 from erp.middleware import get_current_tenant_id
 from erp.models import Organization, User
+
+# Pattern D: this viewset's entire purpose is invoice<->PO<->GRN verification.
+# If finance or inventory are missing the viewset itself is meaningless. Keeping
+# direct imports gated lets the file load even if either module is uninstalled.
+try:
+    from apps.finance.models import Invoice, InvoiceLine  # noqa: F401  (Pattern D)
+except ImportError:  # pragma: no cover
+    Invoice = None  # type: ignore[assignment]
+    InvoiceLine = None  # type: ignore[assignment]
+try:
+    from apps.inventory.models import GoodsReceipt, GoodsReceiptLine  # noqa: F401  (Pattern D)
+except ImportError:  # pragma: no cover
+    GoodsReceipt = None  # type: ignore[assignment]
+    GoodsReceiptLine = None  # type: ignore[assignment]
 
 
 class InvoiceVerificationViewSet(viewsets.ViewSet):

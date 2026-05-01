@@ -23,12 +23,12 @@ function fmt(n: number) {
 
 const STATUS_COLORS: Record<string, string> = {
     DRAFT: 'bg-app-surface-2 text-app-foreground',
-    PENDING: 'bg-yellow-100 text-yellow-700',
-    AUTHORIZED: 'bg-blue-100 text-blue-700',
-    COMPLETED: 'bg-emerald-100 text-emerald-700',
+    PENDING: 'bg-app-warning-bg text-app-warning',
+    AUTHORIZED: 'bg-app-info-bg text-app-info',
+    COMPLETED: 'bg-app-success-bg text-app-success',
     INVOICED: 'bg-purple-100 text-purple-700',
-    CANCELLED: 'bg-red-100 text-red-700',
-    POSTED: 'bg-emerald-100 text-emerald-700',
+    CANCELLED: 'bg-app-error-bg text-app-error',
+    POSTED: 'bg-app-success-bg text-app-success',
 }
 
 export default function ContactDetailPage() {
@@ -90,23 +90,23 @@ export default function ContactDetailPage() {
                     </Button>
                     <div>
                         <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg ${isCustomer ? 'bg-emerald-600 shadow-emerald-100' : 'bg-blue-600 shadow-blue-100'
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg ${isCustomer ? 'bg-app-primary shadow-emerald-100' : 'bg-app-info shadow-blue-100'
                                 }`}>
                                 <User size={24} />
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-app-foreground">{contact.name}</h1>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <Badge className={isCustomer ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}>
+                                    <Badge className={isCustomer ? 'bg-app-success-bg text-app-success' : 'bg-app-info-bg text-app-info'}>
                                         {contact.type}
                                     </Badge>
                                     {contact.supplier_category && contact.supplier_category !== 'REGULAR' && (
-                                        <Badge className={contact.supplier_category === 'DEPOT_VENTE' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}>
+                                        <Badge className={contact.supplier_category === 'DEPOT_VENTE' ? 'bg-purple-100 text-purple-700' : 'bg-app-warning-bg text-app-warning'}>
                                             {contact.supplier_category === 'DEPOT_VENTE' ? 'Consignment' : 'Mixed'}
                                         </Badge>
                                     )}
                                     {contact.customer_tier && contact.customer_tier !== 'STANDARD' && (
-                                        <Badge className={contact.customer_tier === 'VIP' ? 'bg-yellow-100 text-yellow-700' : 'bg-cyan-100 text-cyan-700'}>
+                                        <Badge className={contact.customer_tier === 'VIP' ? 'bg-app-warning-bg text-app-warning' : 'bg-cyan-100 text-cyan-700'}>
                                             {contact.customer_tier === 'VIP' && '⭐ '}{contact.customer_tier}
                                         </Badge>
                                     )}
@@ -158,8 +158,8 @@ export default function ContactDetailPage() {
                         )}
                         {(contact.loyalty_points ?? 0) > 0 && (
                             <div className="flex items-center gap-2 text-sm">
-                                <Star size={14} className="text-yellow-500" />
-                                <span className="font-semibold text-yellow-600">{contact.loyalty_points} loyalty points</span>
+                                <Star size={14} className="text-app-warning" />
+                                <span className="font-semibold text-app-warning">{contact.loyalty_points} loyalty points</span>
                             </div>
                         )}
                     </CardContent>
@@ -171,7 +171,7 @@ export default function ContactDetailPage() {
                         <h3 className="text-sm font-semibold text-app-muted-foreground uppercase tracking-wide mb-2">
                             {isCustomer ? 'Amount Owed to You' : 'Amount You Owe'}
                         </h3>
-                        <p className={`text-3xl font-bold ${balance.current_balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        <p className={`text-3xl font-bold ${balance.current_balance > 0 ? 'text-app-error' : 'text-app-success'}`}>
                             {fmt(Math.abs(balance.current_balance))}
                         </p>
                         {balance.last_payment_date && (
@@ -197,11 +197,11 @@ export default function ContactDetailPage() {
                         </div>
                         <div>
                             <p className="text-xs text-app-muted-foreground uppercase">Completed</p>
-                            <p className="text-lg font-semibold text-emerald-600">{orders.stats.completed}</p>
+                            <p className="text-lg font-semibold text-app-success">{orders.stats.completed}</p>
                         </div>
                         <div>
                             <p className="text-xs text-app-muted-foreground uppercase">Draft</p>
-                            <p className="text-lg font-semibold text-yellow-600">{orders.stats.draft}</p>
+                            <p className="text-lg font-semibold text-app-warning">{orders.stats.draft}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -220,7 +220,7 @@ export default function ContactDetailPage() {
                         key={key}
                         onClick={() => setActiveTab(key)}
                         className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === key
-                            ? 'border-blue-600 text-blue-600'
+                            ? 'border-blue-600 text-app-info'
                             : 'border-transparent text-app-muted-foreground hover:text-app-foreground'
                             }`}
                     >
@@ -357,10 +357,10 @@ export default function ContactDetailPage() {
                                             <TableCell className="text-sm text-app-muted-foreground max-w-[200px] truncate">
                                                 {j.description || '—'}
                                             </TableCell>
-                                            <TableCell className="text-right font-semibold text-red-600">
+                                            <TableCell className="text-right font-semibold text-app-error">
                                                 {j.debit > 0 ? fmt(j.debit) : '—'}
                                             </TableCell>
-                                            <TableCell className="text-right font-semibold text-emerald-600">
+                                            <TableCell className="text-right font-semibold text-app-success">
                                                 {j.credit > 0 ? fmt(j.credit) : '—'}
                                             </TableCell>
                                             <TableCell className="text-sm text-app-muted-foreground">{j.date || '—'}</TableCell>
@@ -375,13 +375,13 @@ export default function ContactDetailPage() {
                     {activeTab === 'analytics' && (
                         <div className="p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-blue-50 rounded-xl p-4">
-                                    <p className="text-xs font-bold text-blue-600 uppercase">Avg Order Value</p>
-                                    <p className="text-2xl font-bold text-blue-900">{fmt(analytics?.avg_order_value || 0)}</p>
+                                <div className="bg-app-info-bg rounded-xl p-4">
+                                    <p className="text-xs font-bold text-app-info uppercase">Avg Order Value</p>
+                                    <p className="text-2xl font-bold text-app-info">{fmt(analytics?.avg_order_value || 0)}</p>
                                 </div>
-                                <div className="bg-emerald-50 rounded-xl p-4">
-                                    <p className="text-xs font-bold text-emerald-600 uppercase">Monthly Frequency</p>
-                                    <p className="text-2xl font-bold text-emerald-900">{analytics?.monthly_frequency || 0} orders/mo</p>
+                                <div className="bg-app-success-bg rounded-xl p-4">
+                                    <p className="text-xs font-bold text-app-success uppercase">Monthly Frequency</p>
+                                    <p className="text-2xl font-bold text-app-success">{analytics?.monthly_frequency || 0} orders/mo</p>
                                 </div>
                                 <div className="bg-purple-50 rounded-xl p-4">
                                     <p className="text-xs font-bold text-purple-600 uppercase">Total Revenue</p>
@@ -422,8 +422,8 @@ export default function ContactDetailPage() {
                                 <div className="space-y-3">
                                     {(pricing_rules ?? []).map((rule: Record<string, any>) => (
                                         <div key={rule.id} className="flex items-center gap-4 bg-app-surface rounded-xl p-4">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${rule.discount_type === 'FIXED_PRICE' ? 'bg-emerald-100 text-emerald-600' :
-                                                rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${rule.discount_type === 'FIXED_PRICE' ? 'bg-app-success-bg text-app-success' :
+                                                rule.discount_type === 'PERCENTAGE' ? 'bg-app-info-bg text-app-info' : 'bg-app-warning-bg text-app-warning'
                                                 }`}>
                                                 {rule.discount_type === 'PERCENTAGE' ? <Percent size={18} /> :
                                                     rule.discount_type === 'AMOUNT_OFF' ? <Hash size={18} /> : <DollarSign size={18} />}
@@ -431,8 +431,8 @@ export default function ContactDetailPage() {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
                                                     <Badge className={
-                                                        rule.discount_type === 'FIXED_PRICE' ? 'bg-emerald-100 text-emerald-700' :
-                                                            rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                                                        rule.discount_type === 'FIXED_PRICE' ? 'bg-app-success-bg text-app-success' :
+                                                            rule.discount_type === 'PERCENTAGE' ? 'bg-app-info-bg text-app-info' : 'bg-app-warning-bg text-app-warning'
                                                     }>
                                                         {rule.discount_type === 'FIXED_PRICE' ? 'Fixed Price' :
                                                             rule.discount_type === 'PERCENTAGE' ? '% Discount' : 'Amount Off'}

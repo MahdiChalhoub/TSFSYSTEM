@@ -25,10 +25,10 @@ async function getDashboard() {
 }
 
 const SEVERITY_MAP: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-    INFO: { label: 'Info', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200', icon: Bell },
-    WARNING: { label: 'Warning', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', icon: AlertTriangle },
-    CRITICAL: { label: 'Critical', color: 'text-red-600', bg: 'bg-red-50 border-red-200', icon: ShieldAlert },
-    EMERGENCY: { label: 'Emergency', color: 'text-red-800', bg: 'bg-red-100 border-red-400', icon: XCircle },
+    INFO: { label: 'Info', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info', icon: Bell },
+    WARNING: { label: 'Warning', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: AlertTriangle },
+    CRITICAL: { label: 'Critical', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: ShieldAlert },
+    EMERGENCY: { label: 'Emergency', color: 'text-app-error', bg: 'bg-app-error-bg border-red-400', icon: XCircle },
 };
 
 const ALERT_TYPE_MAP: Record<string, { label: string; icon: any }> = {
@@ -40,9 +40,9 @@ const ALERT_TYPE_MAP: Record<string, { label: string; icon: any }> = {
 };
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
-    ACTIVE: { label: 'Active', color: 'bg-red-100 text-red-700' },
-    ACKNOWLEDGED: { label: 'Acknowledged', color: 'bg-amber-100 text-amber-700' },
-    RESOLVED: { label: 'Resolved', color: 'bg-emerald-100 text-emerald-700' },
+    ACTIVE: { label: 'Active', color: 'bg-app-error-bg text-app-error' },
+    ACKNOWLEDGED: { label: 'Acknowledged', color: 'bg-app-warning-bg text-app-warning' },
+    RESOLVED: { label: 'Resolved', color: 'bg-app-success-bg text-app-success' },
     SNOOZED: { label: 'Snoozed', color: 'bg-app-surface-2 text-app-muted-foreground' },
 };
 
@@ -63,14 +63,14 @@ export default async function StockAlertsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-app-foreground tracking-tighter">
-                        Stock <span className="text-red-500">Alerts</span>
+                        Stock <span className="text-app-error">Alerts</span>
                     </h1>
                     <p className="text-sm text-app-muted-foreground mt-1">Real-time inventory health monitoring and reorder alerts</p>
                 </div>
                 <div className="flex gap-3">
                     <Link
                         href="/inventory/low-stock"
-                        className="bg-app-surface border-2 border-app-border text-app-muted-foreground px-6 py-3.5 rounded-2xl font-bold hover:text-red-600 hover:border-red-100 transition-all flex items-center gap-2"
+                        className="bg-app-surface border-2 border-app-border text-app-muted-foreground px-6 py-3.5 rounded-2xl font-bold hover:text-app-error hover:border-red-100 transition-all flex items-center gap-2"
                     >
                         <BarChart3 size={18} />
                         <span>Low Stock Report</span>
@@ -97,22 +97,22 @@ export default async function StockAlertsPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div className="bg-app-surface p-6 rounded-3xl border border-red-100 shadow-sm">
                     <div className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-1">Active Alerts</div>
-                    <div className="text-4xl font-black text-red-600">{activeCount}</div>
+                    <div className="text-4xl font-black text-app-error">{activeCount}</div>
                     <div className="mt-2 text-[10px] text-app-muted-foreground font-bold uppercase tracking-tighter">Require attention</div>
                 </div>
-                <div className="bg-app-surface p-6 rounded-3xl border border-red-200 shadow-sm">
+                <div className="bg-app-surface p-6 rounded-3xl border border-app-error shadow-sm">
                     <div className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-1">Critical</div>
-                    <div className="text-4xl font-black text-red-800">{criticalCount}</div>
+                    <div className="text-4xl font-black text-app-error">{criticalCount}</div>
                     <div className="mt-2 text-[10px] text-app-muted-foreground font-bold uppercase tracking-tighter">Urgent stock issues</div>
                 </div>
                 <div className="bg-app-surface p-6 rounded-3xl border border-amber-100 shadow-sm">
                     <div className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-1">Acknowledged</div>
-                    <div className="text-4xl font-black text-amber-600">{acknowledgedCount}</div>
+                    <div className="text-4xl font-black text-app-warning">{acknowledgedCount}</div>
                     <div className="mt-2 text-[10px] text-app-muted-foreground font-bold uppercase tracking-tighter">Being handled</div>
                 </div>
                 <div className="bg-app-surface p-6 rounded-3xl border border-emerald-100 shadow-sm">
                     <div className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-1">Resolved Today</div>
-                    <div className="text-4xl font-black text-emerald-600">{resolvedToday}</div>
+                    <div className="text-4xl font-black text-app-success">{resolvedToday}</div>
                     <div className="mt-2 text-[10px] text-app-muted-foreground font-bold uppercase tracking-tighter">Issues cleared</div>
                 </div>
             </div>

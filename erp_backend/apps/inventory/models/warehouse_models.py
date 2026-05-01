@@ -146,14 +146,18 @@ class Warehouse(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
         # ── Auto-default country from org's default OrgCountry (BRANCH only) ──
         if self.location_type == 'BRANCH' and not self.country_id and self.organization_id:
             try:
-                from apps.reference.models import OrgCountry
-                default_oc = OrgCountry.objects.filter(
-                    organization_id=self.organization_id,
-                    is_default=True,
-                    is_enabled=True,
-                ).select_related('country').first()
-                if default_oc and default_oc.country_id:
-                    self.country_id = default_oc.country_id
+                from erp.connector_registry import connector
+                OrgCountry = connector.require(
+                    'reference.org_country.get_model', org_id=self.organization_id
+                )
+                if OrgCountry is not None:
+                    default_oc = OrgCountry.objects.filter(
+                        organization_id=self.organization_id,
+                        is_default=True,
+                        is_enabled=True,
+                    ).select_related('country').first()
+                    if default_oc and default_oc.country_id:
+                        self.country_id = default_oc.country_id
             except Exception:
                 pass
         # ── Children ALWAYS inherit country from parent branch ──

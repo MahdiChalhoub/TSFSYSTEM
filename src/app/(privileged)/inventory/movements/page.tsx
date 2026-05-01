@@ -30,7 +30,7 @@ export default function InventoryMovementsPage() {
                         <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                             <History size={28} className="text-white" />
                         </div>
-                        Inventory <span className="text-indigo-600">Movements</span>
+                        Inventory <span className="text-app-info">Movements</span>
                     </h1>
                     <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Universal Dynamic List Engine Active</p>
                 </div>

@@ -218,7 +218,10 @@ class StripeGatewayService:
         if metadata.get('type') == 'CLIENT_ORDER' and metadata.get('order_id'):
             order_id = metadata.get('order_id')
             try:
-                from apps.client_portal.models import ClientOrder
+                from erp.connector_registry import connector
+                ClientOrder = connector.require('client_portal.orders.get_model', org_id=0)
+                if ClientOrder is None:
+                    raise RuntimeError("client_portal unavailable")
                 order = ClientOrder.objects.filter(id=order_id).first()
                 if order:
                     order.payment_status = 'PAID'

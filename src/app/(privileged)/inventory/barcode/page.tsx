@@ -65,7 +65,7 @@ export default function BarcodeSettingsPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex items-center gap-3 mb-8">
-                <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
+                <div className="bg-app-success-bg p-2 rounded-xl text-app-success">
                     <Barcode size={32} />
                 </div>
                 <div>
@@ -93,7 +93,7 @@ export default function BarcodeSettingsPage() {
                             <input
                                 type="checkbox"
                                 {...register('isEnabled')}
-                                className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 border-app-border"
+                                className="w-5 h-5 rounded text-app-success focus:ring-emerald-500 border-app-border"
                             />
                             <span className="font-medium text-app-foreground">Enable Automatic Generation</span>
                         </label>
@@ -124,7 +124,7 @@ export default function BarcodeSettingsPage() {
                 </div>
 
                 {message && (
-                    <div className={`p-4 rounded-xl flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    <div className={`p-4 rounded-xl flex items-center gap-2 ${message.type === 'success' ? 'bg-app-success-bg text-app-success border border-green-100' : 'bg-app-error-bg text-app-error border border-red-100'}`}>
                         {message.text}
                     </div>
                 )}

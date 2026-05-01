@@ -74,6 +74,26 @@ type ConfirmAction = {
     onConfirm: () => void;
 } | null;
 
+/** Shape used by the synthetic Languages OrgItem and the local language Cataloguelist. */
+type OrgLanguageItem = {
+    id: string;
+    code: string;
+    native_name: string;
+    country_ids: number[];
+    is_default: boolean;
+};
+
+/** Synthetic catalogue language entry rendered in the Languages tab. */
+type LanguageCatalogueItem = {
+    id: string;
+    code: string;
+    name: string;
+};
+
+/** Disjoint of every kind handled by TwoPanePicker / ActiveRow / CatalogueCard. */
+type CatalogueItem = RefCountry | RefCurrency | LanguageCatalogueItem;
+type OrgItem = OrgCountry | OrgCurrency | OrgLanguageItem;
+
 /* ═══════════════════════════════════════════════════════════════════
  *  COMPONENT
  * ═══════════════════════════════════════════════════════════════════ */
@@ -81,14 +101,14 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
     /* ─── State ─────────────────────────────────────────────────── */
     const searchParams = useSearchParams();
     const initialTab = (searchParams?.get('tab') as Tab | null) ?? 'countries';
-    const validTab: Tab = (['countries', 'currencies', 'languages'] as const).includes(initialTab as any) ? initialTab : 'countries';
+    const validTab: Tab = (['countries', 'currencies', 'languages'] as const).includes(initialTab as Tab) ? initialTab : 'countries';
     const [tab, setTab] = useState<Tab>(validTab);
     // Sub-tab state for the Currencies top-tab. Backwards-compat:
     // ?tab=fx redirects here onto the Rate History sub-tab so old links keep working.
     const initialSub = (searchParams?.get('sub') as CurrencySubTab | null);
     const fxLegacy = searchParams?.get('tab') === 'fx';
     const [currencySubTab, setCurrencySubTab] = useState<CurrencySubTab>(
-        fxLegacy ? 'history' : (['select', 'rules', 'history', 'revaluations'] as const).includes(initialSub as any) ? (initialSub as CurrencySubTab) : 'select'
+        fxLegacy ? 'history' : (['select', 'rules', 'history', 'revaluations'] as const).includes(initialSub as CurrencySubTab) ? (initialSub as CurrencySubTab) : 'select'
     );
     useEffect(() => {
         if (fxLegacy) setTab('currencies');
@@ -127,9 +147,10 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
         try {
             const saved = await setCatalogueLanguageEntries(next);
             setLangEntries(saved);
-        } catch (e: any) {
+        } catch (e: unknown) {
             setLangEntries(prev);
-            toast.error(e?.message || 'Failed to save languages');
+            const msg = e instanceof Error ? e.message : null;
+            toast.error(msg || 'Failed to save languages');
         }
     };
 
@@ -558,9 +579,9 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                             isPending={isPending}
                             enabledIds={enabledCountryIds}
                             defaultId={defaultCountryId}
-                            onEnable={handleEnableCountry as any}
+                            onEnable={handleEnableCountry}
                             onSetDefault={handleSetDefaultCountry}
-                            onDisable={handleDisableCountry as any}
+                            onDisable={handleDisableCountry}
                             enabledCurrencyCodes={new Set(orgCurrencies.map(oc => oc.currency_code).filter((c): c is string => Boolean(c)))}
                             // Tree expansion (Country → enabled currencies + languages):
                             orgCurrencies={orgCurrencies}
@@ -626,9 +647,9 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                 isPending={isPending}
                                 enabledIds={enabledCurrencyIds}
                                 defaultId={defaultCurrencyId}
-                                onEnable={handleEnableCurrency as any}
+                                onEnable={handleEnableCurrency}
                                 onSetDefault={handleSetDefaultCurrency}
-                                onDisable={handleDisableCurrency as any}
+                                onDisable={handleDisableCurrency}
                                 // Tree expansion (Currency → activation per country):
                                 orgCountries={orgCountries}
                                 allCountries={allCountries}
@@ -659,8 +680,8 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                         const filteredLanguages = ql
                             ? allLanguages.filter(l => l.code.includes(ql) || l.name.toLowerCase().includes(ql))
                             : allLanguages;
-                        const enabledLangIds = new Set<any>(langCodes);
-                        const defaultLangId: any = langCodes[0] ?? null;
+                        const enabledLangIds = new Set<string>(langCodes);
+                        const defaultLangId: string | null = langCodes[0] ?? null;
 
                         return (
                             <TwoPanePicker
@@ -676,9 +697,9 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                 isPending={langLoading}
                                 enabledIds={enabledLangIds}
                                 defaultId={defaultLangId}
-                                onEnable={(item: any) => toggleLang(item.code)}
-                                onSetDefault={(code: any) => setDefaultLang(String(code))}
-                                onDisable={(oc: any) => toggleLang(oc.code)}
+                                onEnable={(item) => toggleLang((item as LanguageCatalogueItem).code)}
+                                onSetDefault={(code: number | string) => setDefaultLang(String(code))}
+                                onDisable={(oc) => toggleLang((oc as OrgLanguageItem).code)}
                                 // Cross-axis (Language → activated countries):
                                 orgCountries={orgCountries}
                                 allCountries={allCountries}
@@ -779,11 +800,15 @@ function TwoPanePicker({
     rightPaneHeaderLeft, rightPaneBody, hideRightPaneSearch, rightPaneFooter,
 }: {
     kind: 'country' | 'currency' | 'language';
+    // The picker is polymorphic across country/currency/language axes; the items
+    // are read with typeof-checks at the leaves (ActiveRow / CatalogueCard).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     allItems: any[]; filteredItems: any[]; orgItems: any[];
     search: string; setSearch: (s: string) => void;
     regions: string[]; regionFilter: string; setRegionFilter: (r: string) => void;
     isPending: boolean;
-    enabledIds: Set<number>; defaultId: number | null;
+    enabledIds: Set<number | string>; defaultId: number | string | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onEnable: (item: any) => void; onSetDefault: (id: number) => void; onDisable: (oc: any) => void;
     enabledCurrencyCodes?: Set<string>;
     /** Cross-axis data — used when an active row expands into the inverse list. */
@@ -939,6 +964,9 @@ function TwoPanePicker({
 }
 
 /* ─── Active row in left pane (tree node — expands into inverse axis) ── */
+// Polymorphic across country/currency/language axes; properties are read with
+// typeof checks at the leaves. Keeping `any` here is the pragmatic call.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisable, orgCountries, allCountries, orgCurrencies, allCurrencies, orgLanguages, onToggleCurrencyCountry, onToggleLangCountry }: any) {
     const [expanded, setExpanded] = useState(false);
     // Country expansion has TWO sub-sections (Currencies + Languages) that can
@@ -950,13 +978,13 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
     const isLanguage = kind === 'language';
 
     const ref = isCountry
-        ? (allItems as any[]).find((x: any) => x.id === oc.country)
+        ? (allItems as RefCountry[]).find((x) => x.id === oc.country)
         : isLanguage
-            ? (allItems as any[]).find((x: any) => x.code === oc.code)
-            : (allItems as any[]).find((x: any) => x.id === oc.currency);
+            ? (allItems as LanguageCatalogueItem[]).find((x) => x.code === oc.code)
+            : (allItems as RefCurrency[]).find((x) => x.id === oc.currency);
     const code = isCountry
-        ? (ref?.iso2 || oc.country_iso2 || '')
-        : isLanguage ? oc.code : (ref?.code || oc.currency_code);
+        ? ((ref as RefCountry | undefined)?.iso2 || oc.country_iso2 || '')
+        : isLanguage ? oc.code : ((ref as RefCurrency | undefined)?.code || oc.currency_code);
     const name = isCountry
         ? (ref?.name || oc.country_name)
         : isLanguage ? (oc.native_name || ref?.name || oc.code) : (ref?.name || oc.currency_name);
@@ -1003,7 +1031,7 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                             }}>
                         {isLanguage
                             ? <span className="font-black uppercase" style={{ fontSize: 11 }}>{code.slice(0, 2)}</span>
-                            : <span className="font-black" style={{ fontSize: 14 }}>{ref?.symbol || oc.currency_symbol || code?.charAt(0) || '$'}</span>}
+                            : <span className="font-black" style={{ fontSize: 14 }}>{(ref as RefCurrency | undefined)?.symbol || oc.currency_symbol || code?.charAt(0) || '$'}</span>}
                     </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -1105,6 +1133,8 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
 }
 
 /* ─── Catalogue card in right pane ─────────────────────────────── */
+// Polymorphic — see ActiveRow note.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CatalogueCard({ kind, item, accent, isEnabled, isDefault, isPending, onAdd, willAutoEnableCurrency }: any) {
     const isCountry = kind === 'country';
     const isLanguage = kind === 'language';

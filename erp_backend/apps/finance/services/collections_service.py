@@ -109,7 +109,10 @@ class CollectionsService:
 
         # Pull contact metadata once
         try:
-            from apps.crm.models import Contact
+            from erp.connector_registry import connector
+            Contact = connector.require('crm.contacts.get_model', org_id=organization.id)
+            if Contact is None:
+                raise RuntimeError("CRM unavailable")
             contacts = {
                 c.id: c for c in Contact.objects.filter(
                     organization=organization,
@@ -188,9 +191,11 @@ class CollectionsService:
 
         contact_name = ''
         try:
-            from apps.crm.models import Contact
-            c = Contact.objects.get(organization=organization, id=contact_id)
-            contact_name = c.name or ''
+            from erp.connector_registry import connector
+            Contact = connector.require('crm.contacts.get_model', org_id=organization.id)
+            if Contact is not None:
+                c = Contact.objects.get(organization=organization, id=contact_id)
+                contact_name = c.name or ''
         except Exception:
             pass
 

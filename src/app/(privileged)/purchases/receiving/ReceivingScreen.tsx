@@ -27,26 +27,26 @@ import SmartDatePicker from '@/components/ui/SmartDatePicker'
 // ═══════════════════════════════════════════════════════════════════════════
 
 const BADGE_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-    SAFE_TO_RECEIVE: { label: 'Safe to Receive', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', icon: Check },
-    OVERSTOCK_RISK: { label: 'Overstock Risk', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', icon: AlertTriangle },
-    EXCESS_RECEIPT: { label: 'Excess Receipt', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', icon: AlertTriangle },
-    EXPIRY_RISK: { label: 'Expiry Risk', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', icon: Clock },
+    SAFE_TO_RECEIVE: { label: 'Safe to Receive', color: 'bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success', icon: Check },
+    OVERSTOCK_RISK: { label: 'Overstock Risk', color: 'bg-app-warning-bg text-app-warning dark:bg-amber-900/30 dark:text-app-warning', icon: AlertTriangle },
+    EXCESS_RECEIPT: { label: 'Excess Receipt', color: 'bg-app-warning-bg text-app-warning dark:bg-orange-900/30 dark:text-app-warning', icon: AlertTriangle },
+    EXPIRY_RISK: { label: 'Expiry Risk', color: 'bg-app-error-bg text-app-error dark:bg-red-900/30 dark:text-app-error', icon: Clock },
     SHELF_ROTATION_NEEDED: { label: 'Shelf Rotation', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', icon: RefreshCw },
-    TRANSFER_TO_WAREHOUSE: { label: 'Transfer → Warehouse', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', icon: WarehouseIcon },
-    TRANSFER_TO_STORE: { label: 'Transfer → Store', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400', icon: Store },
-    UNEXPECTED_ITEM: { label: 'Unexpected Item', color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400', icon: AlertTriangle },
-    APPROVAL_REQUIRED: { label: 'Approval Required', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: ShieldCheck },
-    HIGH_ADJUSTMENT_RISK: { label: 'High Risk Item', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', icon: TrendingDown },
+    TRANSFER_TO_WAREHOUSE: { label: 'Transfer → Warehouse', color: 'bg-app-info-bg text-app-info dark:bg-blue-900/30 dark:text-app-info', icon: WarehouseIcon },
+    TRANSFER_TO_STORE: { label: 'Transfer → Store', color: 'bg-app-info-bg text-app-info dark:bg-indigo-900/30 dark:text-app-info', icon: Store },
+    UNEXPECTED_ITEM: { label: 'Unexpected Item', color: 'bg-app-error-bg text-app-error dark:bg-rose-900/30 dark:text-app-error', icon: AlertTriangle },
+    APPROVAL_REQUIRED: { label: 'Approval Required', color: 'bg-app-warning-bg text-app-warning dark:bg-yellow-900/30 dark:text-app-warning', icon: ShieldCheck },
+    HIGH_ADJUSTMENT_RISK: { label: 'High Risk Item', color: 'bg-app-error-bg text-app-error dark:bg-red-900/30 dark:text-app-error', icon: TrendingDown },
 }
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
     PENDING: { label: 'Pending', color: 'bg-app-surface-2 text-app-muted-foreground dark:bg-app-surface dark:text-app-muted-foreground' },
-    SCANNED: { label: 'Scanned', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
-    RECEIVED: { label: 'Received', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
-    PARTIALLY_RECEIVED: { label: 'Partial', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-    REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-    UNDER_REVIEW: { label: 'Under Review', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
-    APPROVAL_REQUIRED: { label: 'Needs Approval', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
+    SCANNED: { label: 'Scanned', color: 'bg-app-info-bg text-app-info dark:bg-blue-900/30 dark:text-app-info' },
+    RECEIVED: { label: 'Received', color: 'bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success' },
+    PARTIALLY_RECEIVED: { label: 'Partial', color: 'bg-app-warning-bg text-app-warning dark:bg-amber-900/30 dark:text-app-warning' },
+    REJECTED: { label: 'Rejected', color: 'bg-app-error-bg text-app-error dark:bg-red-900/30 dark:text-app-error' },
+    UNDER_REVIEW: { label: 'Under Review', color: 'bg-app-warning-bg text-app-warning dark:bg-yellow-900/30 dark:text-app-warning' },
+    APPROVAL_REQUIRED: { label: 'Needs Approval', color: 'bg-app-warning-bg text-app-warning dark:bg-orange-900/30 dark:text-app-warning' },
     CLOSED: { label: 'Closed', color: 'bg-app-surface-2 text-app-muted-foreground dark:bg-app-surface dark:text-app-muted-foreground' },
 }
 
@@ -394,12 +394,12 @@ export default function ReceivingScreen() {
 
                     {/* Header */}
                     <header className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shadow-sm">
-                            <PackageCheck size={28} className="text-emerald-500" />
+                        <div className="w-14 h-14 rounded-2xl bg-app-success-bg dark:bg-emerald-900/30 flex items-center justify-center shadow-sm">
+                            <PackageCheck size={28} className="text-app-success" />
                         </div>
                         <div>
                             <h1 className="text-3xl md:text-4xl font-black tracking-tight text-app-foreground">
-                                Goods <span className="text-emerald-500">Receipt</span>
+                                Goods <span className="text-app-success">Receipt</span>
                             </h1>
                             <p className="text-sm font-medium text-app-muted-foreground mt-0.5">
                                 Start a new receiving session
@@ -414,17 +414,17 @@ export default function ReceivingScreen() {
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => setMode('DIRECT')}
-                                    className={`p-4 rounded-xl border-2 transition-all text-left ${mode === 'DIRECT' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : 'border-app-border hover:border-app-muted-foreground/30'}`}
+                                    className={`p-4 rounded-xl border-2 transition-all text-left ${mode === 'DIRECT' ? 'border-app-success bg-app-success-bg/50 dark:bg-emerald-900/20' : 'border-app-border hover:border-app-muted-foreground/30'}`}
                                 >
-                                    <ScanBarcode size={24} className={mode === 'DIRECT' ? 'text-emerald-500' : 'text-app-muted-foreground'} />
+                                    <ScanBarcode size={24} className={mode === 'DIRECT' ? 'text-app-success' : 'text-app-muted-foreground'} />
                                     <p className="font-bold text-app-foreground mt-2">Direct Receiving</p>
                                     <p className="text-xs text-app-muted-foreground mt-0.5">Search, scan, or browse — no PO needed</p>
                                 </button>
                                 <button
                                     onClick={() => setMode('PO_BASED')}
-                                    className={`p-4 rounded-xl border-2 transition-all text-left ${mode === 'PO_BASED' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : 'border-app-border hover:border-app-muted-foreground/30'}`}
+                                    className={`p-4 rounded-xl border-2 transition-all text-left ${mode === 'PO_BASED' ? 'border-app-success bg-app-success-bg/50 dark:bg-emerald-900/20' : 'border-app-border hover:border-app-muted-foreground/30'}`}
                                 >
-                                    <BookOpen size={24} className={mode === 'PO_BASED' ? 'text-emerald-500' : 'text-app-muted-foreground'} />
+                                    <BookOpen size={24} className={mode === 'PO_BASED' ? 'text-app-success' : 'text-app-muted-foreground'} />
                                     <p className="font-bold text-app-foreground mt-2">Against Purchase Order</p>
                                     <p className="text-xs text-app-muted-foreground mt-0.5">Load PO items as pending checklist</p>
                                 </button>
@@ -482,7 +482,7 @@ export default function ReceivingScreen() {
                                         ))}
                                     </select>
                                     {selectedSupplier && filteredPurchaseOrders.length === 0 && (
-                                        <p className="text-xs text-amber-600 mt-1.5 font-medium">No open purchase orders for this supplier</p>
+                                        <p className="text-xs text-app-warning mt-1.5 font-medium">No open purchase orders for this supplier</p>
                                     )}
                                 </div>
                             </>
@@ -492,7 +492,7 @@ export default function ReceivingScreen() {
                         <button
                             onClick={handleStartSession}
                             disabled={loading}
-                            className="w-full py-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg shadow-lg shadow-emerald-200 dark:shadow-emerald-900/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-4 rounded-xl bg-app-primary hover:bg-app-primary text-white font-bold text-lg shadow-lg shadow-emerald-200 dark:shadow-emerald-900/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading ? <Loader2 size={20} className="animate-spin" /> : <PackageCheck size={20} />}
                             Start Receiving Session
@@ -517,13 +517,13 @@ export default function ReceivingScreen() {
                         <Link href="/purchases/receipts" className="text-app-muted-foreground hover:text-app-foreground transition-colors">
                             <ChevronLeft size={20} />
                         </Link>
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shadow-sm">
-                            <PackageCheck size={24} className="text-emerald-500" />
+                        <div className="w-12 h-12 rounded-2xl bg-app-success-bg dark:bg-emerald-900/30 flex items-center justify-center shadow-sm">
+                            <PackageCheck size={24} className="text-app-success" />
                         </div>
                         <div>
                             <h1 className="text-xl md:text-2xl font-black tracking-tight text-app-foreground flex items-center gap-2">
                                 {session.receipt_number}
-                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${mode === 'DIRECT' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30'}`}>
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${mode === 'DIRECT' ? 'bg-app-info-bg text-app-info dark:bg-blue-900/30' : 'bg-app-info-bg text-app-info dark:bg-indigo-900/30'}`}>
                                     {mode === 'DIRECT' ? 'Direct' : 'PO-Based'}
                                 </span>
                             </h1>
@@ -540,7 +540,7 @@ export default function ReceivingScreen() {
                             <button
                                 onClick={handleFinalize}
                                 disabled={actionLoading || receivedLines.length === 0}
-                                className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 flex items-center gap-2 min-h-[44px]"
+                                className="px-5 py-2.5 rounded-xl bg-app-primary hover:bg-app-primary text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 flex items-center gap-2 min-h-[44px]"
                             >
                                 {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                                 Finalize & Post to Stock
@@ -553,8 +553,8 @@ export default function ReceivingScreen() {
                 <section className="grid grid-cols-3 gap-3">
                     {[
                         { label: 'Pending', value: pendingLines.length, color: 'text-app-muted-foreground', bg: 'bg-app-surface-2 dark:bg-app-surface', icon: Clock },
-                        { label: 'Received', value: receivedLines.length, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30', icon: PackageCheck },
-                        { label: 'Rejected', value: rejectedLines.length, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/30', icon: PackageX },
+                        { label: 'Received', value: receivedLines.length, color: 'text-app-success', bg: 'bg-app-success-bg dark:bg-emerald-900/30', icon: PackageCheck },
+                        { label: 'Rejected', value: rejectedLines.length, color: 'text-app-error', bg: 'bg-app-error-bg dark:bg-red-900/30', icon: PackageX },
                     ].map(kpi => (
                         <div key={kpi.label} className="bg-app-surface border border-app-border rounded-xl p-3 md:p-4 flex items-center gap-3 shadow-sm">
                             <div className={`w-10 h-10 rounded-lg ${kpi.bg} flex items-center justify-center shrink-0`}>
@@ -620,13 +620,13 @@ export default function ReceivingScreen() {
                                 key={tab}
                                 onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-3 text-sm font-bold capitalize transition-colors border-b-2 flex items-center gap-2 ${isActive
-                                    ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                    ? 'border-app-success text-app-success dark:text-app-success'
                                     : 'border-transparent text-app-muted-foreground hover:text-app-foreground'
                                     }`}
                             >
                                 {tab}
                                 {count > 0 && (
-                                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30' : 'bg-app-surface-2 text-app-muted-foreground dark:bg-app-surface'
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${isActive ? 'bg-app-success-bg text-app-success dark:bg-emerald-900/30' : 'bg-app-surface-2 text-app-muted-foreground dark:bg-app-surface'
                                         }`}>
                                         {count}
                                     </span>
@@ -674,8 +674,8 @@ export default function ReceivingScreen() {
                             {/* Block 1: Product Identity */}
                             <div className="p-5 border-b border-app-border">
                                 <div className="flex items-start gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                                        <Package size={20} className="text-emerald-500" />
+                                    <div className="w-12 h-12 rounded-xl bg-app-success-bg dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                                        <Package size={20} className="text-app-success" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-black text-lg text-app-foreground truncate">
@@ -690,7 +690,7 @@ export default function ReceivingScreen() {
                                             )}
                                         </div>
                                         {popup.line?.is_unexpected && (
-                                            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
+                                            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-app-error-bg text-app-error dark:bg-rose-900/30 dark:text-app-error">
                                                 ⚠ Unexpected Item
                                             </span>
                                         )}
@@ -786,7 +786,7 @@ export default function ReceivingScreen() {
                                         ].map(m => (
                                             <div key={m.label} className="bg-app-background rounded-lg p-2.5 text-center">
                                                 <p className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground">{m.label}</p>
-                                                <p className={`text-sm font-black ${m.highlight ? 'text-emerald-500' : 'text-app-foreground'} mt-0.5`}>{m.value}</p>
+                                                <p className={`text-sm font-black ${m.highlight ? 'text-app-success' : 'text-app-foreground'} mt-0.5`}>{m.value}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -822,7 +822,7 @@ export default function ReceivingScreen() {
                                 <button
                                     onClick={handlePopupSubmit}
                                     disabled={!popupQty || actionLoading}
-                                    className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 rounded-xl bg-app-error hover:bg-app-error text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center gap-2"
                                 >
                                     {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <PackageX size={14} />}
                                     Reject
@@ -831,14 +831,14 @@ export default function ReceivingScreen() {
                                 <>
                                     <button
                                         onClick={() => { setPopup({ ...popup, action: 'reject' }); setPopupQty('') }}
-                                        className="py-3 px-4 rounded-xl border border-red-300 text-red-600 font-bold text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[48px]"
+                                        className="py-3 px-4 rounded-xl border border-app-error text-app-error font-bold text-sm hover:bg-app-error-bg dark:hover:bg-red-900/20 transition-colors min-h-[48px]"
                                     >
                                         Reject
                                     </button>
                                     <button
                                         onClick={handlePopupSubmit}
                                         disabled={!popupQty || actionLoading}
-                                        className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center gap-2"
+                                        className="flex-1 py-3 rounded-xl bg-app-primary hover:bg-app-primary text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center gap-2"
                                     >
                                         {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <PackageCheck size={14} />}
                                         Receive
@@ -895,7 +895,7 @@ function LineCard({
                             {statusCfg.label}
                         </span>
                         {line.is_unexpected && (
-                            <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
+                            <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black bg-app-error-bg text-app-error dark:bg-rose-900/30 dark:text-app-error">
                                 Unexpected
                             </span>
                         )}
@@ -903,8 +903,8 @@ function LineCard({
                     <div className="flex items-center gap-4 text-xs text-app-muted-foreground mt-1 flex-wrap">
                         <span>Stock: <b className="text-app-foreground">{Number(line.stock_on_location).toFixed(0)}</b></span>
                         {line.qty_ordered > 0 && <span>Ordered: <b className="text-app-foreground">{Number(line.qty_ordered).toFixed(0)}</b></span>}
-                        {line.qty_received > 0 && <span className="text-emerald-600">Rcvd: <b>{Number(line.qty_received).toFixed(0)}</b></span>}
-                        {line.qty_rejected > 0 && <span className="text-red-600">Rej: <b>{Number(line.qty_rejected).toFixed(0)}</b></span>}
+                        {line.qty_received > 0 && <span className="text-app-success">Rcvd: <b>{Number(line.qty_received).toFixed(0)}</b></span>}
+                        {line.qty_rejected > 0 && <span className="text-app-error">Rej: <b>{Number(line.qty_rejected).toFixed(0)}</b></span>}
                         {line.expiry_date && <span className="flex items-center gap-0.5"><Calendar size={10} />{line.expiry_date}</span>}
                     </div>
                 </div>
@@ -929,7 +929,7 @@ function LineCard({
                         {isPending && onReceive && (
                             <button
                                 onClick={() => onReceive(line)}
-                                className="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors min-h-[40px] flex items-center gap-1"
+                                className="px-3 py-2 rounded-lg bg-app-primary hover:bg-app-primary text-white text-xs font-bold transition-colors min-h-[40px] flex items-center gap-1"
                             >
                                 <PackageCheck size={12} /> Receive
                             </button>
@@ -937,7 +937,7 @@ function LineCard({
                         {isPending && onReject && (
                             <button
                                 onClick={() => onReject(line)}
-                                className="px-3 py-2 rounded-lg border border-red-300 text-red-600 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[40px] flex items-center gap-1"
+                                className="px-3 py-2 rounded-lg border border-app-error text-app-error text-xs font-bold hover:bg-app-error-bg dark:hover:bg-red-900/20 transition-colors min-h-[40px] flex items-center gap-1"
                             >
                                 <PackageX size={12} /> Reject
                             </button>
@@ -955,7 +955,7 @@ function LineCard({
                         {isReceived && onReject && (
                             <button
                                 onClick={() => onReject(line)}
-                                className="px-3 py-2 rounded-lg border border-red-300 text-red-600 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[40px] flex items-center gap-1"
+                                className="px-3 py-2 rounded-lg border border-app-error text-app-error text-xs font-bold hover:bg-app-error-bg dark:hover:bg-red-900/20 transition-colors min-h-[40px] flex items-center gap-1"
                             >
                                 <PackageX size={12} /> Reject
                             </button>
@@ -973,7 +973,7 @@ function LineCard({
                         {isRejected && onReceive && (
                             <button
                                 onClick={() => onReceive(line)}
-                                className="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors min-h-[40px] flex items-center gap-1"
+                                className="px-3 py-2 rounded-lg bg-app-primary hover:bg-app-primary text-white text-xs font-bold transition-colors min-h-[40px] flex items-center gap-1"
                             >
                                 <PackageCheck size={12} /> Receive
                             </button>
@@ -1018,13 +1018,13 @@ function LineCard({
                     )}
 
                     {line.recommended_action && (
-                        <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-xs font-medium text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                        <div className="mt-2 p-2 rounded-lg bg-app-info-bg dark:bg-blue-900/20 text-xs font-medium text-app-info dark:text-app-info flex items-center gap-1.5">
                             <Info size={12} /> {line.recommended_action}
                         </div>
                     )}
 
                     {line.rejection_reason && line.rejection_reason !== 'NOT_REJECTED' && (
-                        <div className="mt-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-xs font-medium text-red-700 dark:text-red-400">
+                        <div className="mt-2 p-2 rounded-lg bg-app-error-bg dark:bg-red-900/20 text-xs font-medium text-app-error dark:text-app-error">
                             Rejected: {line.rejection_reason} {line.rejection_notes && `— ${line.rejection_notes}`}
                         </div>
                     )}

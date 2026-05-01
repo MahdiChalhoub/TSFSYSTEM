@@ -52,15 +52,15 @@ export default function HROverviewPage() {
  const STATUS_BADGE: Record<string, string> = {
  PENDING: 'bg-app-warning-bg text-app-warning border-app-warning',
  APPROVED: 'bg-app-primary-light text-app-success border-app-success',
- REJECTED: 'bg-rose-100 text-rose-700 border-rose-200',
+ REJECTED: 'bg-app-error-bg text-app-error border-app-error',
  PRESENT: 'bg-app-primary-light text-app-success border-app-success',
- ABSENT: 'bg-rose-100 text-rose-700 border-rose-200',
+ ABSENT: 'bg-app-error-bg text-app-error border-app-error',
  LATE: 'bg-app-warning-bg text-app-warning border-app-warning',
  }
  return (
  <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
  {toast && (
- <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 text-sm font-bold border ${toast.type === 'ok' ? 'bg-app-surface border-app-success/30 text-app-primary' : 'bg-app-surface border-rose-100 text-rose-600 animate-bounce'}`}>
+ <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 text-sm font-bold border ${toast.type === 'ok' ? 'bg-app-surface border-app-success/30 text-app-primary' : 'bg-app-surface border-app-error text-app-error animate-bounce'}`}>
  {toast.type === 'ok' ? <CheckCircle size={20} /> : <XCircle size={20} />}
  {toast.msg}
  </div>
@@ -209,7 +209,7 @@ export default function HROverviewPage() {
  <button onClick={() => handleLeave(leave.id, 'approve')} className="h-10 px-6 rounded-xl bg-app-primary text-app-foreground font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-app-success transition-all">
  Approve
  </button>
- <button onClick={() => handleLeave(leave.id, 'reject')} className="h-10 px-6 rounded-xl bg-rose-50 text-rose-600 font-black text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all">
+ <button onClick={() => handleLeave(leave.id, 'reject')} className="h-10 px-6 rounded-xl bg-app-error-bg text-app-error font-black text-[10px] uppercase tracking-widest hover:bg-app-error-bg transition-all">
  Reject
  </button>
  </div>
@@ -223,7 +223,7 @@ export default function HROverviewPage() {
  const name = att.employee ? `${att.employee.first_name} ${att.employee.last_name}` : (att.employee_name || '—')
  return (
  <div key={att.id} className="flex items-center gap-6 p-5 rounded-[1.5rem] bg-app-surface border border-app-border group hover:border-app-success/30 transition-all">
- <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${att.status === 'PRESENT' ? 'bg-app-primary-light text-app-primary' : 'bg-rose-50 text-rose-600'}`}>
+ <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${att.status === 'PRESENT' ? 'bg-app-primary-light text-app-primary' : 'bg-app-error-bg text-app-error'}`}>
  <UserCheck size={20} />
  </div>
  <div className="flex-1">

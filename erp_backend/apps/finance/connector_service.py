@@ -273,6 +273,20 @@ def register_capabilities(registry):
         from apps.finance.payment_models import SupplierBalance
         return SupplierBalance
 
+    @_cap(registry, 'finance.payments.get_payment_method_model',
+          description='Get PaymentMethod model class',
+          cacheable=False, critical=False)
+    def get_payment_method_model(org_id=0, **kw):
+        from apps.finance.models import PaymentMethod
+        return PaymentMethod
+
+    @_cap(registry, 'finance.tax_rules.get_custom_model',
+          description='Get CustomTaxRule model class',
+          cacheable=False, critical=False)
+    def get_custom_tax_rule_model(org_id=0, **kw):
+        from apps.finance.models.custom_tax_rule import CustomTaxRule
+        return CustomTaxRule
+
     # ─── FINANCIAL ACCOUNT SERVICE ───────────────────────────────────
 
     @_cap(registry, 'finance.services.get_financial_account_service',
@@ -315,6 +329,52 @@ def register_capabilities(registry):
     def get_forensic_audit_service(org_id=0, **kw):
         from apps.finance.services.audit_service import ForensicAuditService
         return ForensicAuditService
+
+    # ─── BARCODE SERVICE ─────────────────────────────────────────────
+
+    @_cap(registry, 'finance.services.get_barcode_service',
+          description='Get BarcodeService class',
+          cacheable=False, critical=False)
+    def get_barcode_service(org_id=0, **kw):
+        from apps.finance.services import BarcodeService
+        return BarcodeService
+
+    # ─── FNE (Fiscal Normalisation Endpoint) SERVICE ─────────────────
+
+    @_cap(registry, 'finance.fne.get_service',
+          description='Get FNEService class',
+          cacheable=False, critical=False)
+    def get_fne_service(org_id=0, **kw):
+        from apps.finance.services.fne_service import FNEService
+        return FNEService
+
+    @_cap(registry, 'finance.fne.get_config_func',
+          description='Get the get_fne_config(organization) function',
+          cacheable=False, critical=False)
+    def get_fne_config_func(org_id=0, **kw):
+        from apps.finance.services.fne_service import get_fne_config
+        return get_fne_config
+
+    @_cap(registry, 'finance.fne.get_request_class',
+          description='Get FNEInvoiceRequest class',
+          cacheable=False, critical=False)
+    def get_fne_request_class(org_id=0, **kw):
+        from apps.finance.services.fne_service import FNEInvoiceRequest
+        return FNEInvoiceRequest
+
+    @_cap(registry, 'finance.fne.get_line_item_class',
+          description='Get FNELineItem class',
+          cacheable=False, critical=False)
+    def get_fne_line_item_class(org_id=0, **kw):
+        from apps.finance.services.fne_service import FNELineItem
+        return FNELineItem
+
+    @_cap(registry, 'finance.fne.get_build_request_func',
+          description='Get build_fne_request_from_sale(sale_order, org_settings) function',
+          cacheable=False, critical=False)
+    def get_fne_build_request_func(org_id=0, **kw):
+        from apps.finance.services.fne_service import build_fne_request_from_sale
+        return build_fne_request_from_sale
 
     # ─── INVOICE MODELS ──────────────────────────────────────────────
 

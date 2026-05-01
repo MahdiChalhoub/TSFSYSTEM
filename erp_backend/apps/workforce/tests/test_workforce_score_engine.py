@@ -15,7 +15,9 @@ from apps.workforce.models import (
     BadgeLevel, RiskLevel, ScoreFamily, ScoreDimension
 )
 from apps.workforce.services import WorkforceScoreEngine
-from apps.hr.models import Employee, Department
+# Pattern D: test-fixture import at module-collection time pre-empts the connector
+# (no org context yet, OrganizationModule check would mark hr DISABLED).
+from apps.hr.models import Employee, Department  # noqa: E402  (Pattern D: test fixture)
 from erp.models import Organization, Site, User
 
 

@@ -111,12 +111,12 @@ function CreatePurchaseReturnForm() {
         <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <header className="flex items-center justify-between">
                 <div>
-                    <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-blue-500 mb-4 transition-all">
+                    <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-info mb-4 transition-all">
                         <ArrowLeft size={14} /> Back to Purchase Detail
                     </Link>
                     <h1 className="text-4xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
-                        <Truck size={32} className="text-blue-500" />
-                        Supplier Return for <span className="text-blue-500">{order.ref_code || `#${orderId}`}</span>
+                        <Truck size={32} className="text-app-info" />
+                        Supplier Return for <span className="text-app-info">{order.ref_code || `#${orderId}`}</span>
                     </h1>
                 </div>
             </header>
@@ -164,7 +164,7 @@ function CreatePurchaseReturnForm() {
                     <Card className="border-none shadow-xl rounded-[2rem] p-6 space-y-4">
                         <h3 className="font-bold text-xs uppercase tracking-widest text-app-muted-foreground">Return Instructions / Reason</h3>
                         <textarea
-                            className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface/50 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all outline-none text-sm"
+                            className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface/50 focus:ring-2 focus:ring-blue-200 focus:border-app-info transition-all outline-none text-sm"
                             placeholder="Reason for return, RMN number, or special instructions for the supplier..."
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
@@ -188,14 +188,14 @@ function CreatePurchaseReturnForm() {
                             </div>
 
                             <div className="pt-4">
-                                <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 text-right">Estimated Debit</div>
+                                <div className="text-[10px] font-black text-app-info uppercase tracking-widest mb-1 text-right">Estimated Debit</div>
                                 <div className="text-5xl font-black text-white text-right tracking-tighter">
                                     {fmt(calculateTotals())}
                                 </div>
                             </div>
 
                             <Button
-                                className="w-full h-16 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
+                                className="w-full h-16 rounded-2xl bg-app-info hover:bg-blue-700 text-white font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
                                 onClick={handleSubmit}
                                 disabled={submitting || calculateTotals() === 0}
                             >
@@ -209,11 +209,11 @@ function CreatePurchaseReturnForm() {
                         </div>
                     </Card>
 
-                    <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100">
-                        <div className="flex items-center gap-2 text-blue-600 mb-2 font-black text-[10px] uppercase tracking-widest">
+                    <div className="p-6 bg-app-info-bg rounded-[2rem] border border-app-info">
+                        <div className="flex items-center gap-2 text-app-info mb-2 font-black text-[10px] uppercase tracking-widest">
                             <AlertCircle size={16} /> Destination
                         </div>
-                        <p className="text-xs text-blue-700 leading-relaxed font-medium">
+                        <p className="text-xs text-app-info leading-relaxed font-medium">
                             Starting a return will mark items as **Pending Ship-out**. Stock will be removed from your warehouse once you click **Complete** in the Return Registry.
                         </p>
                     </div>

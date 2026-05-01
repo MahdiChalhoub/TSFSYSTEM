@@ -36,10 +36,10 @@ export default async function AdjustmentPage() {
                         <div className="p-2 bg-rose-500 rounded-lg text-white">
                             <Sliders size={16} />
                         </div>
-                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em]">Stock Operations</span>
+                        <span className="text-[10px] font-black text-app-error uppercase tracking-[0.3em]">Stock Operations</span>
                     </div>
                     <h1 className="text-4xl lg:text-5xl font-black text-app-foreground tracking-tighter">
-                        Stock <span className="text-rose-500">Adjustment</span>
+                        Stock <span className="text-app-error">Adjustment</span>
                     </h1>
                     <p className="mt-4 text-app-muted-foreground font-medium max-w-xl">
                         Correct inventory discrepancies, report damages, or log found items manually.

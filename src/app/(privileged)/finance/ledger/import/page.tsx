@@ -98,13 +98,43 @@ function DropZone({ file, onFile }: { file: File | null; onFile: (f: File) => vo
 
 // ── Tab 1: Journal Entry Import ───────────────────────────────────────────────
 
+// Loose preview/result shapes from previewImport / importJournalEntries.
+type ImportPreviewRow = {
+    row: number;
+    valid: boolean;
+    date?: string;
+    description?: string;
+    debit_code?: string;
+    credit_code?: string;
+    debit_account?: { name?: string;[key: string]: unknown };
+    credit_account?: { name?: string;[key: string]: unknown };
+    amount?: number;
+    errors?: string[];
+    [key: string]: unknown;
+};
+type ImportPreview = {
+    total: number;
+    valid: number;
+    invalid: number;
+    rows: ImportPreviewRow[];
+    [key: string]: unknown;
+} | null;
+type ImportResultError = { row?: number; message?: string;[key: string]: unknown };
+type ImportResult = {
+    success?: boolean;
+    created?: number;
+    skipped?: number;
+    errors?: ImportResultError[];
+    [key: string]: unknown;
+} | null;
+
 function JournalImport() {
     const router = useRouter()
     const [step, setStep] = useState<Step>('upload')
     const [file, setFile] = useState<File | null>(null)
     const [targetStatus, setTargetStatus] = useState<'DRAFT' | 'POSTED'>('DRAFT')
-    const [preview, setPreview] = useState<any>(null)
-    const [result, setResult] = useState<any>(null)
+    const [preview, setPreview] = useState<ImportPreview>(null)
+    const [result, setResult] = useState<ImportResult>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -115,9 +145,9 @@ function JournalImport() {
         setLoading(true); setError(null)
         try {
             const fd = new FormData(); fd.append('file', file)
-            setPreview(await previewImport(fd))
+            setPreview(await previewImport(fd) as ImportPreview)
             setStep('preview')
-        } catch (e: any) { setError(e?.message || 'Failed to parse file.') }
+        } catch (e: unknown) { const m = e instanceof Error ? e.message : null; setError(m || 'Failed to parse file.') }
         finally { setLoading(false) }
     }
 
@@ -126,9 +156,9 @@ function JournalImport() {
         setLoading(true); setError(null)
         try {
             const fd = new FormData(); fd.append('file', file); fd.append('status', targetStatus)
-            setResult(await importJournalEntries(fd))
+            setResult(await importJournalEntries(fd) as ImportResult)
             setStep('done')
-        } catch (e: any) { setError(e?.message || 'Import failed.') }
+        } catch (e: unknown) { const m = e instanceof Error ? e.message : null; setError(m || 'Import failed.') }
         finally { setLoading(false) }
     }
 
@@ -227,7 +257,7 @@ function JournalImport() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-app-border">
-                                    {preview.rows.map((row: any) => (
+                                    {preview.rows.map((row) => (
                                         <tr key={row.row} className={row.valid ? '' : 'bg-app-error-bg'}>
                                             <td className="px-3 py-2 text-app-muted-foreground font-mono">{row.row}</td>
                                             <td className="px-3 py-2 font-mono text-app-foreground">{row.date || <span className="text-app-error italic">missing</span>}</td>
@@ -243,14 +273,14 @@ function JournalImport() {
                                                 {!row.credit_account && row.credit_code && <div className="text-app-error text-tp-xs italic">not found</div>}
                                             </td>
                                             <td className="px-3 py-2 text-right font-mono font-bold text-app-foreground">
-                                                {row.amount > 0 ? row.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) : <span className="text-app-error">—</span>}
+                                                {(row.amount ?? 0) > 0 ? (row.amount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) : <span className="text-app-error">—</span>}
                                             </td>
                                             <td className="px-3 py-2 text-center">
                                                 {row.valid ? <CheckCircle className="h-3.5 w-3.5 text-app-success mx-auto" /> : (
                                                     <div className="group relative inline-block">
                                                         <XCircle className="h-3.5 w-3.5 text-app-error mx-auto cursor-help" />
                                                         <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-app-bg text-white text-tp-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
-                                                            {row.errors.join('; ')}
+                                                            {(row.errors || []).join('; ')}
                                                         </div>
                                                     </div>
                                                 )}
@@ -307,21 +337,21 @@ function JournalImport() {
 
             {step === 'done' && result && (
                 <div className="space-y-6 max-w-lg mx-auto text-center">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${result.created > 0 ? 'bg-app-success-bg' : 'bg-app-error-bg'}`}>
-                        {result.created > 0 ? <CheckCircle className="h-8 w-8 text-app-success" /> : <XCircle className="h-8 w-8 text-app-error" />}
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${(result.created ?? 0) > 0 ? 'bg-app-success-bg' : 'bg-app-error-bg'}`}>
+                        {(result.created ?? 0) > 0 ? <CheckCircle className="h-8 w-8 text-app-success" /> : <XCircle className="h-8 w-8 text-app-error" />}
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-app-foreground mb-2">{result.created > 0 ? 'Import Complete' : 'Import Failed'}</h2>
+                        <h2 className="text-xl font-bold text-app-foreground mb-2">{(result.created ?? 0) > 0 ? 'Import Complete' : 'Import Failed'}</h2>
                         <p className="text-app-muted-foreground text-sm">
-                            <strong className="text-app-success">{result.created}</strong> of <strong>{result.total}</strong> entries created.
-                            {result.errors?.length > 0 && <> <strong className="text-app-error">{result.errors.length}</strong> failed.</>}
+                            <strong className="text-app-success">{result.created ?? 0}</strong> of <strong>{String((result as { total?: unknown }).total ?? '')}</strong> entries created.
+                            {(result.errors?.length ?? 0) > 0 && <> <strong className="text-app-error">{result.errors!.length}</strong> failed.</>}
                         </p>
                     </div>
-                    {result.errors?.length > 0 && (
+                    {(result.errors?.length ?? 0) > 0 && (
                         <div className="text-left border border-app-error rounded-xl overflow-hidden">
                             <div className="bg-app-error-bg border-b border-app-error px-4 py-2 text-xs font-bold text-app-error uppercase tracking-wider">Failed Rows</div>
                             <div className="divide-y divide-rose-100 max-h-48 overflow-y-auto">
-                                {result.errors.map((err: any) => (
+                                {result.errors!.map((err) => (
                                     <div key={err.row} className="px-4 py-2.5 flex items-start gap-3 text-sm">
                                         <span className="font-mono text-app-error font-bold text-xs mt-0.5">Row {err.row}</span>
                                         <span className="text-app-error">{err.message}</span>
@@ -347,14 +377,44 @@ function JournalImport() {
 
 // ── Tab 2: Opening Balance Import ─────────────────────────────────────────────
 
+type OBPreviewRow = {
+    row: number;
+    valid: boolean;
+    account_code?: string;
+    account?: { name?: string; type?: string;[key: string]: unknown };
+    balance?: number;
+    side?: string;
+    debit?: number;
+    credit?: number;
+    errors?: string[];
+    [key: string]: unknown;
+};
+type OBPreview = {
+    valid: number;
+    invalid: number;
+    rows: OBPreviewRow[];
+    total_debit: number;
+    total_credit: number;
+    difference: number;
+    [key: string]: unknown;
+} | null;
+type OBResult = {
+    created_entry_id?: number;
+    lines_ok?: number;
+    auto_balance_amount?: number | string;
+    skipped?: number;
+    errors?: ImportResultError[];
+    [key: string]: unknown;
+} | null;
+
 function OpeningBalanceImport() {
     const router = useRouter()
     const [step, setStep] = useState<Step>('upload')
     const [file, setFile] = useState<File | null>(null)
     const [date, setDate] = useState(new Date().toISOString().split('T')[0])
     const [targetStatus, setTargetStatus] = useState<'DRAFT' | 'POSTED'>('DRAFT')
-    const [preview, setPreview] = useState<any>(null)
-    const [result, setResult] = useState<any>(null)
+    const [preview, setPreview] = useState<OBPreview>(null)
+    const [result, setResult] = useState<OBResult>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -365,9 +425,9 @@ function OpeningBalanceImport() {
         setLoading(true); setError(null)
         try {
             const fd = new FormData(); fd.append('file', file)
-            setPreview(await previewOpeningBalances(fd))
+            setPreview(await previewOpeningBalances(fd) as OBPreview)
             setStep('preview')
-        } catch (e: any) { setError(e?.message || 'Failed to parse file.') }
+        } catch (e: unknown) { const m = e instanceof Error ? e.message : null; setError(m || 'Failed to parse file.') }
         finally { setLoading(false) }
     }
 
@@ -380,9 +440,9 @@ function OpeningBalanceImport() {
             fd.append('date', date)
             fd.append('status', targetStatus)
             fd.append('auto_balance', 'true')
-            setResult(await importOpeningBalances(fd))
+            setResult(await importOpeningBalances(fd) as OBResult)
             setStep('done')
-        } catch (e: any) { setError(e?.message || 'Import failed.') }
+        } catch (e: unknown) { const m = e instanceof Error ? e.message : null; setError(m || 'Import failed.') }
         finally { setLoading(false) }
     }
 
@@ -509,7 +569,7 @@ function OpeningBalanceImport() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-app-border">
-                                    {preview.rows.map((row: any) => (
+                                    {preview.rows.map((row) => (
                                         <tr key={row.row} className={row.valid ? '' : 'bg-app-error-bg'}>
                                             <td className="px-3 py-2 text-app-muted-foreground font-mono">{row.row}</td>
                                             <td className="px-3 py-2 font-mono text-app-foreground font-bold">{row.account_code || <span className="text-app-error italic">missing</span>}</td>
@@ -521,20 +581,20 @@ function OpeningBalanceImport() {
                                                     <span className="px-1.5 py-0.5 rounded text-tp-xs font-bold bg-app-surface-2 text-app-muted-foreground">{row.account.type}</span>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{row.balance !== 0 ? row.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'}</td>
+                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{(row.balance ?? 0) !== 0 ? (row.balance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'}</td>
                                             <td className="px-3 py-2 text-center">
                                                 {row.side && (
                                                     <span className={`px-1.5 py-0.5 rounded text-tp-xs font-bold ${row.side === 'Dr' ? 'bg-app-info-bg text-app-info' : 'bg-purple-100 text-purple-700'}`}>{row.side}</span>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{row.debit > 0 ? row.debit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
-                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{row.credit > 0 ? row.credit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
+                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{(row.debit ?? 0) > 0 ? (row.debit ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
+                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{(row.credit ?? 0) > 0 ? (row.credit ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
                                             <td className="px-3 py-2 text-center">
                                                 {row.valid ? <CheckCircle className="h-3.5 w-3.5 text-app-success mx-auto" /> : (
                                                     <div className="group relative inline-block">
                                                         <XCircle className="h-3.5 w-3.5 text-app-error mx-auto cursor-help" />
                                                         <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-app-bg text-white text-tp-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
-                                                            {row.errors.join('; ')}
+                                                            {(row.errors || []).join('; ')}
                                                         </div>
                                                     </div>
                                                 )}
@@ -604,19 +664,19 @@ function OpeningBalanceImport() {
                             {result.created_entry_id && <>
                                 Journal Entry <strong className="text-app-foreground">#{result.created_entry_id}</strong> created with{' '}
                                 <strong className="text-app-success">{result.lines_ok} lines</strong>.
-                                {parseFloat(result.auto_balance_amount) > 0 && (
-                                    <> Auto-balance adjustment of <strong className="text-app-warning">{parseFloat(result.auto_balance_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> posted to Opening Balance Equity.</>
+                                {parseFloat(String(result.auto_balance_amount ?? 0)) > 0 && (
+                                    <> Auto-balance adjustment of <strong className="text-app-warning">{parseFloat(String(result.auto_balance_amount)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> posted to Opening Balance Equity.</>
                                 )}
                             </>}
                         </p>
                     </div>
-                    {result.errors?.length > 0 && (
+                    {(result.errors?.length ?? 0) > 0 && (
                         <div className="text-left border border-app-error rounded-xl overflow-hidden">
                             <div className="bg-app-error-bg border-b border-app-error px-4 py-2 text-xs font-bold text-app-error uppercase tracking-wider">
                                 {result.skipped} Row{result.skipped !== 1 ? 's' : ''} Skipped
                             </div>
                             <div className="divide-y divide-rose-100 max-h-48 overflow-y-auto">
-                                {result.errors.map((err: any) => (
+                                {result.errors!.map((err) => (
                                     <div key={err.row} className="px-4 py-2.5 flex items-start gap-3 text-sm">
                                         <span className="font-mono text-app-error font-bold text-xs mt-0.5">Row {err.row}</span>
                                         <span className="text-app-error">{err.message}</span>
@@ -642,7 +702,7 @@ function OpeningBalanceImport() {
 
 // ── Page shell ────────────────────────────────────────────────────────────────
 
-const TABS = [
+const TABS: ReadonlyArray<{ id: 'journal' | 'opening'; label: string; icon: typeof FileSpreadsheet; desc: string }> = [
     { id: 'journal', label: 'Journal Entries', icon: FileSpreadsheet, desc: 'Import double-entry journal entries — one entry per CSV row' },
     { id: 'opening', label: 'Opening Balances', icon: BookOpen, desc: 'Set initial account balances — all rows combine into one opening entry' },
 ]
@@ -667,7 +727,7 @@ export default function LedgerImportPage() {
                     const Icon = t.icon
                     const active = tab === t.id
                     return (
-                        <button key={t.id} onClick={() => setTab(t.id as any)}
+                        <button key={t.id} onClick={() => setTab(t.id)}
                             className={`flex-1 flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
                                 active ? 'border-stone-900 bg-app-surface' : 'border-app-border hover:border-stone-400'
                             }`}

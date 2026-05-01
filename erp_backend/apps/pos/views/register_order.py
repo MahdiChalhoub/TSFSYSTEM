@@ -128,7 +128,11 @@ class RegisterOrderMixin:
             # Requires: original FNE invoice ID + FNE line item IDs from raw response
             fne_result_data = {}
             try:
-                from apps.finance.services.fne_service import FNEService, get_fne_config
+                from erp.connector_registry import connector
+                FNEService = connector.require('finance.fne.get_service', org_id=organization.id)
+                get_fne_config = connector.require('finance.fne.get_config_func', org_id=organization.id)
+                if FNEService is None or get_fne_config is None:
+                    raise RuntimeError("FNE service unavailable")
 
                 fne_config = get_fne_config(organization)
                 if fne_config and original.fne_status == 'CERTIFIED' and original.fne_invoice_id:

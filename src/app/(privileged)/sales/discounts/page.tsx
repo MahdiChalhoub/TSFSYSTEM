@@ -20,8 +20,8 @@ function fmt(n: number) {
 }
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
-    PERCENTAGE: { label: 'Percentage Off', icon: Percent, color: 'text-blue-600 bg-blue-50' },
-    FIXED: { label: 'Fixed Amount', icon: DollarSign, color: 'text-green-600 bg-green-50' },
+    PERCENTAGE: { label: 'Percentage Off', icon: Percent, color: 'text-app-info bg-app-info-bg' },
+    FIXED: { label: 'Fixed Amount', icon: DollarSign, color: 'text-app-success bg-app-success-bg' },
     BUY_X_GET_Y: { label: 'Buy X Get Y', icon: Plus, color: 'text-purple-600 bg-purple-50' },
 }
 
@@ -238,7 +238,7 @@ export default function DiscountRulesPage() {
 
             {/* Form */}
             {showForm && (
-                <Card className="border-2 border-indigo-200">
+                <Card className="border-2 border-app-info">
                     <CardHeader className="py-3 flex flex-row items-center justify-between border-b">
                         <CardTitle className="text-base">{editId ? 'Edit Discount Rule' : 'New Discount Rule'}</CardTitle>
                         <button onClick={() => setShowForm(false)} className="text-app-muted-foreground hover:text-app-muted-foreground"><X size={18} /></button>
@@ -398,17 +398,17 @@ export default function DiscountRulesPage() {
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-sm text-app-foreground leading-tight">{rule.name}</h3>
-                                            <p className="font-mono text-[10px] text-indigo-500 font-bold uppercase">{rule.code || 'NO CODE'}</p>
+                                            <p className="font-mono text-[10px] text-app-info font-bold uppercase">{rule.code || 'NO CODE'}</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-1">
-                                        <button onClick={() => toggleRule(rule.id)} className="p-1.5 rounded hover:bg-app-surface-2 text-app-muted-foreground hover:text-indigo-600">
+                                        <button onClick={() => toggleRule(rule.id)} className="p-1.5 rounded hover:bg-app-surface-2 text-app-muted-foreground hover:text-app-info">
                                             <Power size={14} />
                                         </button>
-                                        <button onClick={() => startEdit(rule)} className="p-1.5 rounded hover:bg-app-surface-2 text-app-muted-foreground hover:text-blue-600">
+                                        <button onClick={() => startEdit(rule)} className="p-1.5 rounded hover:bg-app-surface-2 text-app-muted-foreground hover:text-app-info">
                                             <Edit2 size={14} />
                                         </button>
-                                        <button onClick={() => setDeleteTarget(rule.id)} className="p-1.5 rounded hover:bg-red-50 text-app-muted-foreground hover:text-red-500">
+                                        <button onClick={() => setDeleteTarget(rule.id)} className="p-1.5 rounded hover:bg-app-error-bg text-app-muted-foreground hover:text-app-error">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -434,24 +434,24 @@ export default function DiscountRulesPage() {
                                     </div>
                                     <div className="flex justify-between text-xs">
                                         <span className="text-app-muted-foreground">Usage</span>
-                                        <span className="font-medium text-indigo-600">{String(rule.times_used ?? 0)} / {rule.usage_limit ? String(rule.usage_limit) : '\u221E'}</span>
+                                        <span className="font-medium text-app-info">{String(rule.times_used ?? 0)} / {rule.usage_limit ? String(rule.usage_limit) : '\u221E'}</span>
                                     </div>
                                 </div>
 
                                 <div className="pt-2 border-t flex items-center justify-between">
                                     <div className="flex gap-2">
                                         {rule.auto_apply && (
-                                            <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-600 border-amber-200">Auto</Badge>
+                                            <Badge variant="outline" className="text-[9px] bg-app-warning-bg text-app-warning border-app-warning">Auto</Badge>
                                         )}
                                         {rule.is_active ? (
-                                            <Badge className="bg-green-100 text-green-700 text-[9px]">Active</Badge>
+                                            <Badge className="bg-app-success-bg text-app-success text-[9px]">Active</Badge>
                                         ) : (
                                             <Badge className="bg-app-surface-2 text-app-muted-foreground text-[9px]">Paused</Badge>
                                         )}
                                     </div>
                                     <button
                                         onClick={() => viewUsage(rule.id)}
-                                        className="text-[10px] text-app-muted-foreground hover:text-indigo-600 flex items-center gap-1 font-bold">
+                                        className="text-[10px] text-app-muted-foreground hover:text-app-info flex items-center gap-1 font-bold">
                                         <History size={10} /> View Logs
                                     </button>
                                 </div>
@@ -467,7 +467,7 @@ export default function DiscountRulesPage() {
                     <div className="w-[500px] bg-app-surface h-full shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-lg font-bold flex items-center gap-2">
-                                <History className="text-indigo-600" /> Redemption Logs
+                                <History className="text-app-info" /> Redemption Logs
                             </h2>
                             <button onClick={() => setUsageRuleId(null)} className="p-2 hover:bg-app-surface-2 rounded-full"><X size={20} /></button>
                         </div>
@@ -487,7 +487,7 @@ export default function DiscountRulesPage() {
                                             <p className="text-[10px] text-app-muted-foreground">{new Date(String(log.applied_at || '')).toLocaleString('fr-FR')}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm font-bold text-red-600">-{fmt(parseFloat(String(log.discount_amount ?? 0)))}</p>
+                                            <p className="text-sm font-bold text-app-error">-{fmt(parseFloat(String(log.discount_amount ?? 0)))}</p>
                                             <p className="text-[9px] text-app-muted-foreground">Applied by: {String(log.applied_by_name || 'System')}</p>
                                         </div>
                                     </div>

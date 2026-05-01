@@ -26,13 +26,13 @@ interface PurchaseOrder {
 // ─── Status styling ─────────────────────────────────────────
 const PO_STATUS_STYLES: Record<string, { bg: string; text: string; icon: any }> = {
     DRAFT: { bg: 'bg-app-surface-2/10', text: 'text-app-muted-foreground', icon: FileText },
-    SUBMITTED: { bg: 'bg-blue-500/10', text: 'text-blue-400', icon: Clock },
-    APPROVED: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', icon: CheckCircle2 },
-    SENT: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', icon: Truck },
-    PARTIALLY_RECEIVED: { bg: 'bg-amber-500/10', text: 'text-amber-400', icon: Package },
-    RECEIVED: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', icon: CheckCircle2 },
-    REJECTED: { bg: 'bg-red-500/10', text: 'text-red-400', icon: XCircle },
-    CANCELLED: { bg: 'bg-red-500/10', text: 'text-red-400', icon: AlertCircle },
+    SUBMITTED: { bg: 'bg-app-info/10', text: 'text-app-info', icon: Clock },
+    APPROVED: { bg: 'bg-app-primary/10', text: 'text-app-success', icon: CheckCircle2 },
+    SENT: { bg: 'bg-indigo-500/10', text: 'text-app-info', icon: Truck },
+    PARTIALLY_RECEIVED: { bg: 'bg-app-warning/10', text: 'text-app-warning', icon: Package },
+    RECEIVED: { bg: 'bg-app-primary/10', text: 'text-app-success', icon: CheckCircle2 },
+    REJECTED: { bg: 'bg-app-error/10', text: 'text-app-error', icon: XCircle },
+    CANCELLED: { bg: 'bg-app-error/10', text: 'text-app-error', icon: AlertCircle },
 }
 
 // ─── Data fetchers ──────────────────────────────────────────
@@ -101,8 +101,8 @@ export default function SupplierGatePreviewClient() {
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center">
-                    <Eye size={22} className="text-indigo-600" />
+                <div className="w-12 h-12 rounded-2xl bg-app-info-bg border border-app-info flex items-center justify-center">
+                    <Eye size={22} className="text-app-info" />
                 </div>
                 <div>
                     <h1 className="text-2xl font-black text-app-foreground tracking-tight">Supplier Gate Preview</h1>
@@ -135,7 +135,7 @@ export default function SupplierGatePreviewClient() {
                                         value={supplierSearch}
                                         onChange={e => setSupplierSearch(e.target.value)}
                                         placeholder="Search suppliers..."
-                                        className="w-full pl-9 pr-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:border-indigo-300"
+                                        className="w-full pl-9 pr-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:border-app-info"
                                         autoFocus
                                     />
                                 </div>
@@ -147,7 +147,7 @@ export default function SupplierGatePreviewClient() {
                                     <button
                                         key={s.id}
                                         onClick={() => selectSupplier(s)}
-                                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 transition-colors flex items-center justify-between ${selectedSupplier?.id === s.id ? 'bg-indigo-50 font-bold text-indigo-700' : 'text-app-foreground'
+                                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-app-info-bg transition-colors flex items-center justify-between ${selectedSupplier?.id === s.id ? 'bg-app-info-bg font-bold text-app-info' : 'text-app-foreground'
                                             }`}
                                     >
                                         <span>{s.name}</span>
@@ -167,12 +167,12 @@ export default function SupplierGatePreviewClient() {
                     <div className="p-8 pb-4">
                         <div className="max-w-6xl mx-auto">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
-                                    <Briefcase size={18} className="text-indigo-400" />
+                                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-app-info/30 flex items-center justify-center">
+                                    <Briefcase size={18} className="text-app-info" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-black text-white">Supplier Portal</h2>
-                                    <p className="text-xs text-app-muted-foreground">Welcome, <span className="text-indigo-400 font-bold">{selectedSupplier.name}</span></p>
+                                    <p className="text-xs text-app-muted-foreground">Welcome, <span className="text-app-info font-bold">{selectedSupplier.name}</span></p>
                                 </div>
                             </div>
 
@@ -181,19 +181,19 @@ export default function SupplierGatePreviewClient() {
                                 <div className="px-5 py-3 bg-app-surface/5 border border-white/5 rounded-2xl">
                                     <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Active Orders</span>
                                     <div className="text-2xl font-black text-white flex items-center gap-2">
-                                        <TrendingUp size={14} className="text-emerald-400" />{activeCount}
+                                        <TrendingUp size={14} className="text-app-success" />{activeCount}
                                     </div>
                                 </div>
                                 <div className="px-5 py-3 bg-app-surface/5 border border-white/5 rounded-2xl">
                                     <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Fulfilled</span>
                                     <div className="text-2xl font-black text-white flex items-center gap-2">
-                                        <CheckCircle2 size={14} className="text-indigo-400" />{receivedCount}
+                                        <CheckCircle2 size={14} className="text-app-info" />{receivedCount}
                                     </div>
                                 </div>
                                 <div className="px-5 py-3 bg-app-surface/5 border border-white/5 rounded-2xl">
                                     <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Total Value</span>
                                     <div className="text-2xl font-black text-white flex items-center gap-2">
-                                        <DollarSign size={14} className="text-amber-400" />{totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                        <DollarSign size={14} className="text-app-warning" />{totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                     </div>
                                 </div>
                             </div>
@@ -219,7 +219,7 @@ export default function SupplierGatePreviewClient() {
                                         const style = PO_STATUS_STYLES[po.status] || PO_STATUS_STYLES.DRAFT
                                         const Icon = style.icon
                                         return (
-                                            <div key={po.id} className="flex items-center gap-4 p-4 bg-app-surface/5 border border-white/5 rounded-xl hover:border-indigo-500/20 transition-all">
+                                            <div key={po.id} className="flex items-center gap-4 p-4 bg-app-surface/5 border border-white/5 rounded-xl hover:border-app-info/20 transition-all">
                                                 <div className={`w-9 h-9 rounded-lg ${style.bg} flex items-center justify-center flex-shrink-0`}>
                                                     <Icon size={16} className={style.text} />
                                                 </div>

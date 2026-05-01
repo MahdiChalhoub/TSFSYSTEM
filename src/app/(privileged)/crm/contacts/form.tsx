@@ -22,9 +22,9 @@ export default function ContactModal({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div className="bg-app-surface rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-500 border border-app-border max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-app-surface/50 sticky top-0 z-10">
+                <div className="px-8 py-6 border-b border-app-border flex justify-between items-center bg-app-surface/50 sticky top-0 z-10">
                     <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${type === 'CUSTOMER' ? 'bg-blue-600 shadow-blue-200' : 'bg-amber-600 shadow-amber-200'} text-white`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${type === 'CUSTOMER' ? 'bg-app-info shadow-blue-200' : 'bg-app-warning shadow-amber-200'} text-white`}>
                             {type === 'CUSTOMER' ? <User size={24} /> : <Briefcase size={24} />}
                         </div>
                         <div>
@@ -183,24 +183,24 @@ export default function ContactModal({
                         </div>
                     </div>
 
-                    <div className="p-6 bg-indigo-50/50 rounded-[32px] border-2 border-dashed border-indigo-100/50">
+                    <div className="p-6 bg-app-info-bg/50 rounded-[32px] border-2 border-dashed border-app-info/50">
                         <div className="flex items-center gap-3 mb-4">
-                            <CreditCard size={18} className="text-indigo-600" />
+                            <CreditCard size={18} className="text-app-info" />
                             <span className="text-sm font-black text-indigo-900 uppercase tracking-widest">Autonomous Ledger Automation</span>
                         </div>
-                        <p className="text-xs text-indigo-600/70 font-medium leading-relaxed">
+                        <p className="text-xs text-app-info/70 font-medium leading-relaxed">
                             Establishing this contact will automatically propagate a sub-account in the General Ledger.
                             All transactions (Invoices, Receipts, Payables) will be accurately linked for real-time balance sheet maturity.
                         </p>
                     </div>
 
                     {state?.message && !state.success && (
-                        <div className="p-4 bg-rose-50 rounded-2xl text-rose-600 text-sm font-bold">
+                        <div className="p-4 bg-app-error-bg rounded-2xl text-app-error text-sm font-bold">
                             {state.message}
                         </div>
                     )}
 
-                    <div className="pt-6 border-t border-gray-50 flex gap-4">
+                    <div className="pt-6 border-t border-app-border flex gap-4">
                         <button
                             type="button"
                             onClick={onClose}
@@ -211,7 +211,7 @@ export default function ContactModal({
                         <button
                             type="submit"
                             disabled={isPending}
-                            className={`flex-[2] text-white px-6 py-4 rounded-2xl font-black shadow-xl transition-all text-sm uppercase tracking-widest disabled:opacity-50 ${type === 'CUSTOMER' ? 'bg-blue-600 shadow-blue-200 hover:bg-blue-700' : 'bg-amber-600 shadow-amber-200 hover:bg-amber-700'} hover:-translate-y-1 active:translate-y-0`}
+                            className={`flex-[2] text-white px-6 py-4 rounded-2xl font-black shadow-xl transition-all text-sm uppercase tracking-widest disabled:opacity-50 ${type === 'CUSTOMER' ? 'bg-app-info shadow-blue-200 hover:bg-blue-700' : 'bg-app-warning shadow-amber-200 hover:bg-app-warning'} hover:-translate-y-1 active:translate-y-0`}
                         >
                             {isPending ? 'Establishing Sub-Ledger...' : `Establish ${type}`}
                         </button>

@@ -77,7 +77,7 @@ export default function ProductBarcodesPage() {
                                     <button onClick={() => { navigator.clipboard.writeText(b.barcode); toast.success('Copied!') }} className="p-1 rounded hover:bg-app-surface-hover"><Copy size={10} /></button>
                                 </td>
                                 <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: 'color-mix(in srgb, var(--app-info) 15%, transparent)', color: 'var(--app-info)' }}>{b.barcode_type || 'EAN-13'}</span></td>
-                                <td className="px-4 py-3">{b.is_primary ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-700">PRIMARY</span> : <span className="text-[10px] text-app-muted-foreground">Alt</span>}</td>
+                                <td className="px-4 py-3">{b.is_primary ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-app-success-bg text-app-success">PRIMARY</span> : <span className="text-[10px] text-app-muted-foreground">Alt</span>}</td>
                             </tr>
                         ))}
                         {filtered.length === 0 && (

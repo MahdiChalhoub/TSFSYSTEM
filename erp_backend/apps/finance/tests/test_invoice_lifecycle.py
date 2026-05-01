@@ -74,7 +74,10 @@ class InvoiceLifecycleTests(APITestCase):
     def test_full_sales_lifecycle(self):
         with tenant_context(self.organization):
             # 1. Create Invoice
-            from apps.crm.models import Contact
+            from erp.connector_registry import connector
+            Contact = connector.require('crm.contacts.get_model', org_id=self.organization.id)
+            if Contact is None:
+                self.skipTest("CRM module unavailable")
             contact = Contact.objects.create(organization=self.organization, name="Customer", type="CUSTOMER")
             
             invoice = Invoice.objects.create(

@@ -36,7 +36,7 @@ export default async function PerformancePage() {
                         <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Workspace</span>
                     </div>
                     <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
-                        Perfor<span className="text-amber-600">mance</span>
+                        Perfor<span className="text-app-warning">mance</span>
                     </h1>
                     <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">
                         Employee KPIs, leaderboard, and performance tracking. Monitor task completion, checklists, and evaluation scores.

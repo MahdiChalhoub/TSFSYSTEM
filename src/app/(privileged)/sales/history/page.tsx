@@ -22,16 +22,16 @@ function fmt(n: number) {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     DRAFT: { label: 'Draft', color: 'bg-app-surface-2 text-app-muted-foreground' },
-    PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-700' },
-    COMPLETED: { label: 'Completed', color: 'bg-green-100 text-green-700' },
-    INVOICED: { label: 'Invoiced', color: 'bg-blue-100 text-blue-700' },
-    CANCELLED: { label: 'Cancelled', color: 'bg-red-100 text-red-700' },
+    PENDING: { label: 'Pending', color: 'bg-app-warning-bg text-app-warning' },
+    COMPLETED: { label: 'Completed', color: 'bg-app-success-bg text-app-success' },
+    INVOICED: { label: 'Invoiced', color: 'bg-app-info-bg text-app-info' },
+    CANCELLED: { label: 'Cancelled', color: 'bg-app-error-bg text-app-error' },
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-    SALE: { label: 'Sale', color: 'text-emerald-600' },
-    PURCHASE: { label: 'Purchase', color: 'text-blue-600' },
-    RETURN: { label: 'Return', color: 'text-rose-600' },
+    SALE: { label: 'Sale', color: 'text-app-success' },
+    PURCHASE: { label: 'Purchase', color: 'text-app-info' },
+    RETURN: { label: 'Return', color: 'text-app-error' },
 }
 
 export default function OrderHistoryPage() {
@@ -152,7 +152,7 @@ export default function OrderHistoryPage() {
                         </SelectContent>
                     </Select>
 
-                    <button className="h-11 px-6 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-indigo-100 transition-colors">
+                    <button className="h-11 px-6 bg-app-info-bg text-app-info rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-app-info-bg transition-colors">
                         <Calendar size={18} /> Date Range
                     </button>
                 </CardContent>
@@ -182,7 +182,7 @@ export default function OrderHistoryPage() {
                                 <TableRow key={order.id} className="group hover:bg-app-surface/50 transition-colors">
                                     <TableCell>
                                         <div className="font-bold text-app-foreground">#{order.ref_code || order.id}</div>
-                                        <div className="text-[10px] font-mono text-indigo-500 uppercase font-bold tracking-tighter">
+                                        <div className="text-[10px] font-mono text-app-info uppercase font-bold tracking-tighter">
                                             {order.invoice_number || 'No Invoice #'}
                                         </div>
                                     </TableCell>
@@ -201,7 +201,7 @@ export default function OrderHistoryPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-app-surface-2 flex items-center justify-center text-app-muted-foreground group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                                            <div className="w-8 h-8 rounded-full bg-app-surface-2 flex items-center justify-center text-app-muted-foreground group-hover:bg-app-info-bg group-hover:text-app-info transition-colors">
                                                 <User size={14} />
                                             </div>
                                             <span className="text-sm font-medium text-app-foreground">{order.contact_name || 'Walking Customer'}</span>
@@ -219,12 +219,12 @@ export default function OrderHistoryPage() {
                                         <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => downloadInvoice(order.id, String(order.ref_code || order.id))}
-                                                className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                                className="p-2 bg-app-info-bg text-app-info rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
                                                 title="Download Invoice PDF"
                                             >
                                                 <FileText size={18} />
                                             </button>
-                                            <button className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                            <button className="p-2 bg-app-success-bg text-app-success rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
                                                 <Printer size={18} />
                                             </button>
                                             <Link

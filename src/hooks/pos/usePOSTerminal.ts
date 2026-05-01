@@ -13,6 +13,77 @@ import { useBarcodeScanner } from '@/hooks/pos/useBarcodeScanner'; // Fixed impo
 
 export type POSLayoutVariant = 'classic' | 'modern' | 'compact';
 
+// Loose POS-side shapes; the backend response is documented in apps.pos but
+// these hooks read fields permissively across multiple endpoints. Index sigs
+// are unknown so consumers must narrow.
+type POSClient = {
+    id: number;
+    name?: string;
+    phone?: string;
+    balance?: number;
+    [key: string]: unknown;
+};
+type POSSession = {
+    id: string;
+    clientId?: number;
+    cart?: POSCartItem[];
+    name?: string;
+    [key: string]: unknown;
+};
+type POSCategory = { id: number; name: string;[key: string]: unknown };
+type POSCartItem = {
+    productId: number;
+    name: string;
+    price: number;
+    quantity: number;
+    taxRate: number;
+    sku?: string;
+    stock?: number;
+    discountRate?: number;
+    note?: string;
+    [key: string]: unknown;
+};
+type PaymentMethodEntry = string | { key: string; label?: string; accountId?: number; [key: string]: unknown };
+type PaymentLeg = { method: string; amount: number; accountId?: number;[key: string]: unknown };
+type DeliveryZone = { id: number; name: string;[key: string]: unknown };
+type RegisterConfig = {
+    payment_methods?: PaymentMethodEntry[];
+    warehouseId?: number;
+    warehouse_id?: number;
+    sessionId?: number;
+    cashierId?: number;
+    isManager?: boolean;
+    registerName?: string;
+    allowedAccounts?: unknown[];
+    [key: string]: unknown;
+} | null;
+type LastOrder = { id?: number | string | null; ref?: string | null;[key: string]: unknown } | null;
+type PendingOverrideAction = { label: string; execute: () => void } | null;
+type FidelityData = { analytics?: Record<string, unknown>;[key: string]: unknown } | null;
+type SaleResult = {
+    success?: boolean;
+    orderId?: number | string;
+    ref?: string;
+    message?: string;
+    [key: string]: unknown;
+};
+type RegisterSessionResult = {
+    success?: boolean;
+    error?: string;
+    data?: { session_id?: number;[key: string]: unknown };
+    [key: string]: unknown;
+};
+type CloseSessionResult = { success?: boolean; error?: string;[key: string]: unknown };
+type SessionUpdate = { clientId?: number | null;[key: string]: unknown };
+type ProductLike = { id: number; name?: string; price?: number; tax_rate?: number; sku?: string; stock?: number; barcode?: string;[key: string]: unknown };
+type RegisterAdvancedData = {
+    opening_mode: 'advanced';
+    account_reconciliations: Array<{ account_id: number; software_amount: number; statement_amount: number }>;
+    cash_counted: number;
+    cash_software: number;
+    account_book_balance: number;
+} | undefined;
+
 /**
  * 🛠️ usePOSTerminal — The Core POS Engine
  * Centralizes all business logic, cart management, and session state.
@@ -25,16 +96,16 @@ export function usePOSTerminal() {
     // ─── Core State ───
     const [currentLayout, setCurrentLayout] = useState<POSLayoutVariant>('classic');
     const [isLayoutSelectorOpen, setIsLayoutSelectorOpen] = useState(false);
-    const [clients, setClients] = useState<any[]>([]);
-    const [sessions, setSessions] = useState<any[]>([]);
+    const [clients, setClients] = useState<POSClient[]>([]);
+    const [sessions, setSessions] = useState<POSSession[]>([]);
     const [activeRegisterSessionId, setActiveRegisterSessionId] = useState<number | null>(null);
     const [activeTicketId, setActiveTicketId] = useState<string | null>(null);
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
     // Catalog & Indexing
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<POSCategory[]>([]);
     const [categoriesLoading, setCategoriesLoading] = useState(false);
-    const productIndexRef = useRef<Map<string, any>>(new Map());
+    const productIndexRef = useRef<Map<string, ProductLike>>(new Map());
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
     const [isCartVisible, setIsCartVisible] = useState(true);
@@ -45,13 +116,13 @@ export function usePOSTerminal() {
     const [showReturn, setShowReturn] = useState(false);
     const [showCreditWarning, setShowCreditWarning] = useState(false);
     const [isOverrideOpen, setIsOverrideOpen] = useState(false);
-    const [pendingOverrideAction, setPendingOverrideAction] = useState<any>(null);
+    const [pendingOverrideAction, setPendingOverrideAction] = useState<PendingOverrideAction>(null);
     const [isVaultOpen, setIsVaultOpen] = useState(false);
-    const [paymentMethods, setPaymentMethods] = useState<any[]>(['CASH', 'CARD', 'WALLET', 'MOBILE_MONEY', 'CREDIT', 'MULTI']);
-    const [lastOrder, setLastOrder] = useState<any>(null);
+    const [paymentMethods, setPaymentMethods] = useState<PaymentMethodEntry[]>(['CASH', 'CARD', 'WALLET', 'MOBILE_MONEY', 'CREDIT', 'MULTI']);
+    const [lastOrder, setLastOrder] = useState<LastOrder>(null);
 
     // Cart State
-    const [cart, setCart] = useState<any[]>([]);
+    const [cart, setCart] = useState<POSCartItem[]>([]);
     const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
     const [discount, setDiscount] = useState(0);
     const [discountType, setDiscountType] = useState<'percent' | 'flat'>('percent');
@@ -60,19 +131,19 @@ export function usePOSTerminal() {
     const [storeChangeInWallet, setStoreChangeInWallet] = useState(false);
     const [pointsRedeemed, setPointsRedeemed] = useState(0);
     const [notes, setNotes] = useState('');
-    const [paymentLegs, setPaymentLegs] = useState<any[]>([]);
+    const [paymentLegs, setPaymentLegs] = useState<PaymentLeg[]>([]);
 
     // NEW: Client Search & Delivery
     const [clientSearchQuery, setClientSearchQuery] = useState('');
     const [deliveryZone, setDeliveryZone] = useState<string | null>(null);
-    const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
+    const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
 
     // Fidelity & Config
-    const [clientFidelity, setClientFidelity] = useState<any>(null);
+    const [clientFidelity, setClientFidelity] = useState<FidelityData>(null);
     const [fidelityLoading, setFidelityLoading] = useState(false);
     const [loyaltyPointValue, setLoyaltyPointValue] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [registerConfig, setRegisterConfig] = useState<any>(null);
+    const [registerConfig, setRegisterConfig] = useState<RegisterConfig>(null);
     const allowNegativeStockRef = useRef<boolean>(false);
 
     // Performance UI
@@ -115,18 +186,18 @@ export function usePOSTerminal() {
         });
     }, [isOnline]);
 
-    const updateActiveSession = useCallback((updates: any) => {
+    const updateActiveSession = useCallback((updates: SessionUpdate) => {
         if (updates.clientId !== undefined) setSelectedClientId(updates.clientId);
     }, []);
 
-    const onProductsLoaded = useCallback((products: any[]) => {
+    const onProductsLoaded = useCallback((products: ProductLike[]) => {
         products.forEach(p => {
             if (p.sku) productIndexRef.current.set(p.sku, p);
             if (p.barcode) productIndexRef.current.set(p.barcode, p);
         });
     }, []);
 
-    const addToCart = useCallback((product: any) => {
+    const addToCart = useCallback((product: ProductLike) => {
         setCart(prev => {
             const existing = prev.find(item => item.productId === product.id);
             if (existing) {
@@ -137,13 +208,13 @@ export function usePOSTerminal() {
             }
             return [...prev, {
                 productId: product.id,
-                name: product.name,
-                price: product.price,
+                name: String(product.name ?? ''),
+                price: Number(product.price ?? 0),
                 quantity: 1,
-                taxRate: product.tax_rate || 0,
+                taxRate: Number(product.tax_rate ?? 0),
                 sku: product.sku,
-                stock: product.stock
-            }];
+                stock: product.stock,
+            } satisfies POSCartItem];
         });
         setHighlightedItemId(product.id);
         setTimeout(() => setHighlightedItemId(null), 1000);
@@ -194,7 +265,7 @@ export function usePOSTerminal() {
         skipWarning = false,
         overrides?: {
             paymentMethod?: string;
-            paymentLegs?: any[];
+            paymentLegs?: PaymentLeg[];
             notes?: string;
             cashReceived?: string;
         }
@@ -213,19 +284,19 @@ export function usePOSTerminal() {
         setIsProcessing(true);
         try {
             // Find accountId from string or configured methods
-            let accId = undefined;
+            let accId: number | undefined = undefined;
             if (registerConfig?.payment_methods) {
-                const methodConfig = registerConfig.payment_methods.find((m: any) => typeof m === 'object' && m.key === currentMethod);
-                if (methodConfig) {
+                const methodConfig = registerConfig.payment_methods.find((m) => typeof m === 'object' && m.key === currentMethod);
+                if (methodConfig && typeof methodConfig === 'object') {
                     accId = methodConfig.accountId;
                 }
             }
             if (!accId && currentLegs && currentLegs.length > 0 && registerConfig?.payment_methods) {
-                const multiConfig = registerConfig.payment_methods.find((m: any) => typeof m === 'object' && m.key === currentLegs[0].method);
-                if (multiConfig) accId = multiConfig.accountId;
+                const multiConfig = registerConfig.payment_methods.find((m) => typeof m === 'object' && m.key === currentLegs[0].method);
+                if (multiConfig && typeof multiConfig === 'object') accId = multiConfig.accountId;
             }
 
-            const result: any = await processSale({
+            const result = await processSale({
                 cart: cart, // Restored field name logic
                 clientId: selectedClientId || undefined,
                 paymentMethod: currentMethod,
@@ -241,20 +312,22 @@ export function usePOSTerminal() {
             });
 
 
-            if (result.success) {
-                const orderData = { id: result.orderId, ref: result.ref };
+            const r = result as SaleResult;
+            if (r.success) {
+                const orderData = { id: r.orderId ?? null, ref: r.ref ?? null };
                 setLastOrder(orderData);
                 setIsReceiptOpen(true);
                 clearCart();
                 toast.success("Transaction localized and archived.");
                 return { success: true, data: orderData };
             } else {
-                toast.error(result.message || "Terminal Fault");
-                return { success: false, error: result.message };
+                toast.error(r.message || "Terminal Fault");
+                return { success: false, error: r.message };
             }
-        } catch (err: any) {
-            toast.error("Forensic Engine Fault: " + err.message);
-            return { success: false, error: err.message };
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            toast.error("Forensic Engine Fault: " + msg);
+            return { success: false, error: msg };
         } finally {
             setIsProcessing(false);
         }
@@ -263,7 +336,7 @@ export function usePOSTerminal() {
     const getClientFidelityData = useCallback(async (clientId: number) => {
         setFidelityLoading(true);
         try {
-            const result: any = await getClientFidelity(clientId);
+            const result = await getClientFidelity(clientId) as FidelityData;
             if (result && result.analytics) {
                 setClientFidelity(result);
             }
@@ -280,14 +353,14 @@ export function usePOSTerminal() {
         toast.success("New ticket created");
     }, [sessions.length]);
 
-    const onOpenRegisterSession = useCallback(async (registerId: number, openingBalanceValue: number, advancedData?: any, forceClose?: boolean, overridePin?: string) => {
+    const onOpenRegisterSession = useCallback(async (registerId: number, openingBalanceValue: number, advancedData?: RegisterAdvancedData, forceClose?: boolean, overridePin?: string) => {
         if (!user) {
             toast.error("Cashier identity not found. Please re-login.");
             return { success: false, error: "Authentication required" };
         }
 
         try {
-            const result: any = await openRegisterSession(
+            const result = await openRegisterSession(
                 registerId,
                 user.id,
                 openingBalanceValue,
@@ -295,16 +368,19 @@ export function usePOSTerminal() {
                 advancedData,
                 forceClose,
                 overridePin
-            );
+            ) as RegisterSessionResult;
 
             if (result.success && result.data) {
-                setActiveRegisterSessionId(result.data.session_id);
+                if (result.data.session_id !== undefined) {
+                    setActiveRegisterSessionId(result.data.session_id);
+                }
                 return result;
             } else {
                 return result;
             }
-        } catch (err: any) {
-            return { success: false, error: err.message || "Cloud Sync Engine Fault" };
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : null;
+            return { success: false, error: msg || "Cloud Sync Engine Fault" };
         }
     }, [user]);
 
@@ -312,11 +388,11 @@ export function usePOSTerminal() {
         if (!activeRegisterSessionId) return { success: false, error: "No active session" };
 
         try {
-            const result: any = await closeRegisterSession(
+            const result = await closeRegisterSession(
                 activeRegisterSessionId,
                 closingBalance,
                 closeNotes
-            );
+            ) as CloseSessionResult;
 
             if (result.success) {
                 setActiveRegisterSessionId(null);
@@ -326,8 +402,9 @@ export function usePOSTerminal() {
             } else {
                 return result;
             }
-        } catch (err: any) {
-            return { success: false, error: err.message || "Cloud Reconciliation Engine Fault" };
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : null;
+            return { success: false, error: msg || "Cloud Reconciliation Engine Fault" };
         }
     }, [activeRegisterSessionId]);
 

@@ -9,10 +9,14 @@ class Command(BaseCommand):
         from decimal import Decimal
         from apps.pos.models import PurchaseOrder, PurchaseOrderLine
         from erp.models import Organization
-        from apps.crm.models import Contact
-        from apps.inventory.models import Product
+        from erp.connector_registry import connector
 
         org = Organization.objects.first()
+        Contact = connector.require('crm.contacts.get_model', org_id=org.id if org else 0)
+        Product = connector.require('inventory.products.get_model', org_id=org.id if org else 0)
+        if Contact is None or Product is None:
+            self.stdout.write("CRM or Inventory module unavailable.")
+            return
         if not org:
             self.stdout.write("No orgs!")
             return

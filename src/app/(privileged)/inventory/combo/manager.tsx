@@ -193,7 +193,7 @@ export default function ComboManager({
                                         key={c.id}
                                         className="flex items-center gap-4 p-3 bg-app-surface rounded-xl hover:bg-app-surface-2 transition-colors"
                                     >
-                                        <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                                        <div className="w-9 h-9 bg-app-info-bg rounded-lg flex items-center justify-center text-app-info shrink-0">
                                             <Package size={16} />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -214,7 +214,7 @@ export default function ComboManager({
                                         </div>
                                         <button
                                             onClick={() => handleRemove(c.id)}
-                                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                                            className="p-1.5 text-red-400 hover:text-app-error hover:bg-app-error-bg rounded-lg transition-colors shrink-0"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -230,11 +230,11 @@ export default function ComboManager({
                                 </div>
                                 <div className="text-sm">
                                     <span className="text-app-muted-foreground">Combo price: </span>
-                                    <span className={`font-bold ${selectedCombo.selling_price_ttc < totalComponentValue ? 'text-emerald-600' : 'text-orange-600'}`}>
+                                    <span className={`font-bold ${selectedCombo.selling_price_ttc < totalComponentValue ? 'text-app-success' : 'text-app-warning'}`}>
                                         {fmt(selectedCombo.selling_price_ttc)}
                                     </span>
                                     {selectedCombo.selling_price_ttc < totalComponentValue && (
-                                        <span className="text-xs text-emerald-500 ml-1">
+                                        <span className="text-xs text-app-success ml-1">
                                             (saves {fmt(totalComponentValue - selectedCombo.selling_price_ttc)})
                                         </span>
                                     )}

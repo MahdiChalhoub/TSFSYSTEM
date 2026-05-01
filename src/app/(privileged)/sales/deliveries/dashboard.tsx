@@ -25,10 +25,10 @@ interface Zone { id: number; name: string; base_fee: number; estimated_days: num
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
     PENDING: { label: 'Pending', color: 'bg-app-surface-2 text-app-foreground', icon: Clock },
-    PREPARING: { label: 'Preparing', color: 'bg-blue-100 text-blue-700', icon: Package },
-    IN_TRANSIT: { label: 'In Transit', color: 'bg-amber-100 text-amber-700', icon: Truck },
-    DELIVERED: { label: 'Delivered', color: 'bg-emerald-100 text-emerald-700', icon: Check },
-    FAILED: { label: 'Failed', color: 'bg-red-100 text-red-700', icon: AlertTriangle },
+    PREPARING: { label: 'Preparing', color: 'bg-app-info-bg text-app-info', icon: Package },
+    IN_TRANSIT: { label: 'In Transit', color: 'bg-app-warning-bg text-app-warning', icon: Truck },
+    DELIVERED: { label: 'Delivered', color: 'bg-app-success-bg text-app-success', icon: Check },
+    FAILED: { label: 'Failed', color: 'bg-app-error-bg text-app-error', icon: AlertTriangle },
     CANCELLED: { label: 'Cancelled', color: 'bg-app-surface-2 text-app-muted-foreground', icon: X },
 }
 
@@ -77,7 +77,7 @@ export default function DeliveryDashboard({
                         <button
                             key={key}
                             onClick={() => setFilter(filter === key ? 'ALL' : key)}
-                            className={`p-3 rounded-xl border transition-all ${filter === key ? 'ring-2 ring-emerald-500 border-emerald-300' : 'border-app-border hover:border-app-border'
+                            className={`p-3 rounded-xl border transition-all ${filter === key ? 'ring-2 ring-emerald-500 border-app-success' : 'border-app-border hover:border-app-border'
                                 }`}
                         >
                             <div className="flex items-center gap-2 mb-1">
@@ -128,18 +128,18 @@ export default function DeliveryDashboard({
                                         <div className="flex gap-1 shrink-0">
                                             {['PENDING', 'PREPARING'].includes(d.status) && (
                                                 <button onClick={() => handleAction(d.id, 'dispatch')} disabled={loading}
-                                                    className="px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-200 disabled:opacity-40">
+                                                    className="px-3 py-1.5 bg-app-warning-bg text-app-warning text-xs font-bold rounded-lg hover:bg-amber-200 disabled:opacity-40">
                                                     <Send size={12} className="inline mr-1" />Dispatch
                                                 </button>
                                             )}
                                             {d.status === 'IN_TRANSIT' && (
                                                 <>
                                                     <button onClick={() => handleAction(d.id, 'deliver')} disabled={loading}
-                                                        className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-200 disabled:opacity-40">
+                                                        className="px-3 py-1.5 bg-app-success-bg text-app-success text-xs font-bold rounded-lg hover:bg-emerald-200 disabled:opacity-40">
                                                         <Check size={12} className="inline mr-1" />Delivered
                                                     </button>
                                                     <button onClick={() => handleAction(d.id, 'fail')} disabled={loading}
-                                                        className="px-3 py-1.5 bg-red-100 text-red-600 text-xs font-bold rounded-lg hover:bg-red-200 disabled:opacity-40">
+                                                        className="px-3 py-1.5 bg-app-error-bg text-app-error text-xs font-bold rounded-lg hover:bg-red-200 disabled:opacity-40">
                                                         <AlertTriangle size={12} className="inline mr-1" />Failed
                                                     </button>
                                                 </>

@@ -316,7 +316,7 @@ function TaskProfileManager({
                     <Copy size={10} /> Copy
                 </button>
                 <button onClick={deleteProfile} disabled={profiles.length <= 1}
-                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-app-surface border border-app-border text-app-muted-foreground text-tp-xs font-bold hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-all disabled:opacity-40"
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-app-surface border border-app-border text-app-muted-foreground text-tp-xs font-bold hover:bg-app-error/10 hover:text-app-error hover:border-app-error/30 transition-all disabled:opacity-40"
                     title="Delete profile">
                     <Trash2 size={10} /> Delete
                 </button>

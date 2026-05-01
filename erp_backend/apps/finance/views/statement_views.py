@@ -66,7 +66,10 @@ class StatementViewSet(viewsets.ViewSet):
         # Contact metadata
         contact_data = {'id': contact_id, 'name': '', 'email': ''}
         try:
-            from apps.crm.models import Contact
+            from erp.connector_registry import connector
+            Contact = connector.require('crm.contacts.get_model', org_id=org_id)
+            if Contact is None:
+                raise RuntimeError("CRM unavailable")
             c = Contact.objects.filter(organization_id=org_id, id=contact_id).first()
             if c:
                 contact_data = {

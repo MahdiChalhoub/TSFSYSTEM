@@ -163,9 +163,9 @@ export default function CountingPage() {
                     </div>
                     <Progress value={progress} className="h-3" />
                     <div className="flex gap-6 mt-3 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> {countedCount} counted</span>
+                        <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-app-success" /> {countedCount} counted</span>
                         <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5 text-app-muted-foreground" /> {totalCount - countedCount} remaining</span>
-                        {diffCount > 0 && <span className="flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-yellow-500" /> {diffCount} differences</span>}
+                        {diffCount > 0 && <span className="flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-app-warning" /> {diffCount} differences</span>}
                     </div>
                 </CardContent>
             </Card>
@@ -208,7 +208,7 @@ export default function CountingPage() {
                                 const diff = line.difference_person1
                                 const hasDiff = diff !== null && diff !== 0
                                 return (
-                                    <TableRow key={line.id} className={hasDiff ? "bg-yellow-50/50 dark:bg-yellow-950/10" : ""}>
+                                    <TableRow key={line.id} className={hasDiff ? "bg-app-warning-bg/50 dark:bg-yellow-950/10" : ""}>
                                         <TableCell className="font-medium max-w-[200px] truncate">{line.product_name}</TableCell>
                                         <TableCell className="text-xs text-muted-foreground">{line.product_sku || '—'}</TableCell>
                                         <TableCell className="text-xs text-muted-foreground">{line.category_name || '—'}</TableCell>
@@ -237,7 +237,7 @@ export default function CountingPage() {
                                         </TableCell>
                                         <TableCell className="text-center">
                                             {diff !== null ? (
-                                                <Badge className={diff === 0 ? "bg-green-100 text-green-700" : diff > 0 ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"}>
+                                                <Badge className={diff === 0 ? "bg-app-success-bg text-app-success" : diff > 0 ? "bg-app-info-bg text-app-info" : "bg-app-error-bg text-app-error"}>
                                                     {diff > 0 ? '+' : ''}{Number(diff)}
                                                 </Badge>
                                             ) : (
@@ -246,7 +246,7 @@ export default function CountingPage() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {line.physical_qty_person1 !== null && (
-                                                <Badge variant="outline" className="text-green-600"><CheckCircle2 className="w-3 h-3 mr-1" />Done</Badge>
+                                                <Badge variant="outline" className="text-app-success"><CheckCircle2 className="w-3 h-3 mr-1" />Done</Badge>
                                             )}
                                         </TableCell>
                                     </TableRow>

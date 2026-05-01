@@ -133,12 +133,16 @@ class StockMatrixViewSet(BranchScopedMixin, TenantModelViewSet):
         Calculate sales trend for products by comparing last 30 days vs previous 30 days.
         Returns dict: product_id -> 'UP' | 'DOWN' | 'STABLE'
         """
-        from apps.pos.models.pos_models import OrderLine, Order
+        from erp.connector_registry import connector
+        org = self.request.organization
+        OrderLine = connector.require('pos.order_lines.get_model', org_id=org.id)
+        Order = connector.require('pos.orders.get_model', org_id=org.id)
+        if OrderLine is None or Order is None:
+            return {pid: 'STABLE' for pid in product_ids}
 
         now = timezone.now()
         last_30 = now - timedelta(days=30)
         prev_30 = now - timedelta(days=60)
-        org = self.request.organization
 
         # Sales in last 30 days
         recent = OrderLine.objects.filter(
@@ -646,7 +650,14 @@ class StockMatrixViewSet(BranchScopedMixin, TenantModelViewSet):
             avg_daily_sales, total_sold, needed_qty
         }
         """
-        from apps.pos.models.pos_models import OrderLine
+        from erp.connector_registry import connector
+        org = request.organization
+        OrderLine = connector.require('pos.order_lines.get_model', org_id=org.id)
+        if OrderLine is None:
+            return Response(
+                {'error': 'POS module unavailable'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
 
         product_id = request.query_params.get('product_id')
         if not product_id:

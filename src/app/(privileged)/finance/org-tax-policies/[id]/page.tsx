@@ -171,7 +171,7 @@ export default function OrgTaxPolicyFormPage() {
   useEffect(() => {
     erpFetch('finance/accounts/?limit=500').then(data => {
       const list = Array.isArray(data) ? data : data?.results || []
-      setAccounts(list.map((a: any) => ({ id: a.id, code: a.code || '', name: a.name || '' })))
+      setAccounts(list.map((a: { id: number; code?: string; name?: string }) => ({ id: a.id, code: a.code || '', name: a.name || '' })))
     }).catch(() => {})
     erpFetch('finance/custom-tax-rules/?limit=200').then(data => {
       setCustomRules(Array.isArray(data) ? data : data?.results || [])
@@ -181,7 +181,7 @@ export default function OrgTaxPolicyFormPage() {
     erpFetch('finance/posting-rules/').then(data => {
       const list = Array.isArray(data) ? data : data?.results || []
       const ruleMap: Record<string, { account_code: string; account_name: string; id: number }> = {}
-      list.forEach((r: any) => {
+      list.forEach((r: { event_code?: string; account?: number; account_code?: string; account_name?: string }) => {
         if (r.event_code && r.account) {
           ruleMap[r.event_code] = { account_code: r.account_code || '', account_name: r.account_name || '', id: r.account }
         }
@@ -192,13 +192,17 @@ export default function OrgTaxPolicyFormPage() {
     // Fetch org countries & currencies from regional settings
     erpFetch('reference/org-countries/').then(data => {
       const list = Array.isArray(data) ? data : data?.results || []
-      const mapped = list
-        .filter((c: any) => c.is_enabled)
-        .map((c: any) => ({ iso2: c.country_iso2 || c.country_iso3 || '', name: c.country_name || '', isDefault: !!c.is_default }))
+      const mapped = (list as Array<Record<string, unknown>>)
+        .filter((c) => c.is_enabled)
+        .map((c) => ({
+          iso2: String(c.country_iso2 ?? c.country_iso3 ?? ''),
+          name: String(c.country_name ?? ''),
+          isDefault: !!c.is_default,
+        }))
       setOrgCountries(mapped)
       // Auto-select: if creating new and no country set yet
       if (!isEdit) {
-        const def = mapped.find((c: any) => c.isDefault) || (mapped.length === 1 ? mapped[0] : null)
+        const def = mapped.find((c) => c.isDefault) || (mapped.length === 1 ? mapped[0] : null)
         if (def) {
           setForm(f => ({ ...f, country_code: def.iso2 }))
           // Auto-apply country template for new policies
@@ -209,13 +213,17 @@ export default function OrgTaxPolicyFormPage() {
 
     erpFetch('reference/org-currencies/').then(data => {
       const list = Array.isArray(data) ? data : data?.results || []
-      const mapped = list
-        .filter((c: any) => c.is_enabled)
-        .map((c: any) => ({ code: c.currency_code || '', name: c.currency_name || '', isDefault: !!c.is_default }))
+      const mapped = (list as Array<Record<string, unknown>>)
+        .filter((c) => c.is_enabled)
+        .map((c) => ({
+          code: String(c.currency_code ?? ''),
+          name: String(c.currency_name ?? ''),
+          isDefault: !!c.is_default,
+        }))
       setOrgCurrencies(mapped)
       // Auto-select: if creating new and no currency set yet
       if (!isEdit) {
-        const def = mapped.find((c: any) => c.isDefault) || (mapped.length === 1 ? mapped[0] : null)
+        const def = mapped.find((c) => c.isDefault) || (mapped.length === 1 ? mapped[0] : null)
         if (def) setForm(f => ({ ...f, currency_code: def.code }))
       }
     }).catch(() => {})
@@ -227,10 +235,10 @@ export default function OrgTaxPolicyFormPage() {
     }
   }, [id, isEdit])
 
-  const upd = (key: string, value: any) => setForm(f => ({ ...f, [key]: value }))
+  const upd = (key: string, value: unknown) => setForm(f => ({ ...f, [key]: value }))
 
   // ── Policy presets from country template ──
-  const [policyPresets, setPolicyPresets] = useState<Record<string, any>[]>([])
+  const [policyPresets, setPolicyPresets] = useState<Record<string, unknown>[]>([])
   const [selectedPreset, setSelectedPreset] = useState<number>(0)
 
   // ── Auto-populate from country template (NEW mode only) ──
@@ -294,7 +302,7 @@ export default function OrgTaxPolicyFormPage() {
         await erpFetch(`finance/custom-tax-rules/${rule.id}/`, { method: 'PUT', body: JSON.stringify(payload) })
         toast.success(`Rule "${payload.name}" updated`)
       }
-    } catch (err: any) { toast.error(err?.message || 'Save failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Save failed') }
   }
 
   async function deleteCustomRule(idx: number) {
@@ -304,10 +312,10 @@ export default function OrgTaxPolicyFormPage() {
       await erpFetch(`finance/custom-tax-rules/${rule.id}/`, { method: 'DELETE' })
       setCustomRules(prev => prev.filter((_, i) => i !== idx))
       toast.success('Rule deleted')
-    } catch (err: any) { toast.error(err?.message || 'Delete failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Delete failed') }
   }
 
-  function updRule(idx: number, key: string, val: any) {
+  function updRule(idx: number, key: string, val: unknown) {
     setCustomRules(prev => { const c = [...prev]; c[idx] = { ...c[idx], [key]: val }; return c })
   }
 
@@ -319,7 +327,7 @@ export default function OrgTaxPolicyFormPage() {
       await erpFetch(url, { method, body: JSON.stringify(form) })
       toast.success(isEdit ? 'Tax policy updated' : 'Tax policy created')
       router.push('/finance/org-tax-policies')
-    } catch (err: any) { toast.error(err?.message || 'Save failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Save failed') }
     finally { setSaving(false) }
   }
 
@@ -389,7 +397,7 @@ export default function OrgTaxPolicyFormPage() {
                       cursor: 'pointer',
                     }}>
                     {selectedPreset === i && <Sparkles size={10} className="inline mr-1" />}
-                    {p.name}
+                    {String(p.name ?? '')}
                   </button>
                 ))}
               </div>

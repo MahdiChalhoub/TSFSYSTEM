@@ -156,6 +156,31 @@ def register_capabilities(registry):
         from apps.pos.models import OrderLineTaxEntry
         return OrderLineTaxEntry
 
+    # ─── REGISTERS ───────────────────────────────────────────────────
+
+    @_cap(registry, 'pos.registers.get_model',
+          description='Get POSRegister model class (aka Register)',
+          cacheable=False, critical=False)
+    def get_register_model(org_id=0, **kw):
+        from apps.pos.models import POSRegister
+        return POSRegister
+
+    # ─── PROCUREMENT REQUESTS ────────────────────────────────────────
+
+    @_cap(registry, 'pos.procurement_requests.get_model',
+          description='Get ProcurementRequest model class',
+          cacheable=False, critical=False)
+    def get_procurement_request_model(org_id=0, **kw):
+        from apps.pos.models.procurement_request_models import ProcurementRequest
+        return ProcurementRequest
+
+    @_cap(registry, 'pos.purchase_orders.get_line_model',
+          description='Get PurchaseOrderLine model class (alias for pos.purchase_order_lines.get_model)',
+          cacheable=False, critical=False)
+    def get_purchase_order_line_model_alias(org_id=0, **kw):
+        from apps.pos.models import PurchaseOrderLine
+        return PurchaseOrderLine
+
 
 def _cap(registry, name, **kwargs):
     """Decorator helper to register a capability."""

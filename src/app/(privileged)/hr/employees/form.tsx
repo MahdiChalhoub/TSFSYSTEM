@@ -25,7 +25,7 @@ export default function EmployeeModal({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div className="bg-app-surface rounded-[40px] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-500 border border-app-border">
                 {/* Header */}
-                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-app-surface/80 backdrop-blur-md z-10">
+                <div className="px-8 py-6 border-b border-app-border flex justify-between items-center sticky top-0 bg-app-surface/80 backdrop-blur-md z-10">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-indigo-600 shadow-lg shadow-indigo-100 text-white">
                             <Users size={24} />
@@ -48,7 +48,7 @@ export default function EmployeeModal({
                     {/* PERSONAL INFO */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <User size={18} className="text-indigo-600" />
+                            <User size={18} className="text-app-info" />
                             <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Personal Identification</h3>
                         </div>
 
@@ -84,7 +84,7 @@ export default function EmployeeModal({
                     {/* ASSIGNMENT */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <Building2 size={18} className="text-indigo-600" />
+                            <Building2 size={18} className="text-app-info" />
                             <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Branch & Role Assignment</h3>
                         </div>
 
@@ -107,7 +107,7 @@ export default function EmployeeModal({
                     <div className="p-8 bg-app-surface rounded-[40px] space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <Key size={18} className="text-indigo-600" />
+                                <Key size={18} className="text-app-info" />
                                 <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">System Login Access</h3>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
@@ -126,7 +126,7 @@ export default function EmployeeModal({
                                     </select>
                                 </div>
                                 <p className="text-xs text-app-muted-foreground font-medium bg-app-surface p-4 rounded-2xl border border-app-border italic">
-                                    Login will be created with username: <span className="text-indigo-600 font-bold">Email Address</span>.
+                                    Login will be created with username: <span className="text-app-info font-bold">Email Address</span>.
                                     Temporary password will be generated automatically.
                                 </p>
                             </div>
@@ -136,14 +136,14 @@ export default function EmployeeModal({
                     {/* PERSON TYPE & LEDGER */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <CreditCard size={18} className="text-indigo-600" />
+                            <CreditCard size={18} className="text-app-info" />
                             <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Person Category & Ledger</h3>
                         </div>
 
                         <div className="grid grid-cols-3 gap-4">
                             <label className="relative cursor-pointer">
                                 <input type="radio" name="employeeType" value="EMPLOYEE" defaultChecked className="peer sr-only" />
-                                <div className="p-4 rounded-2xl bg-app-surface border-2 border-transparent peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center">
+                                <div className="p-4 rounded-2xl bg-app-surface border-2 border-transparent peer-checked:border-app-info peer-checked:bg-app-info-bg transition-all text-center">
                                     <span className="text-xs font-black text-app-foreground uppercase tracking-widest">Employee</span>
                                     <p className="text-[9px] text-app-muted-foreground mt-1">Payroll & Salaries</p>
                                 </div>
@@ -157,15 +157,15 @@ export default function EmployeeModal({
                             </label>
                             <label className="relative cursor-pointer">
                                 <input type="radio" name="employeeType" value="BOTH" className="peer sr-only" />
-                                <div className="p-4 rounded-2xl bg-app-surface border-2 border-transparent peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all text-center">
+                                <div className="p-4 rounded-2xl bg-app-surface border-2 border-transparent peer-checked:border-app-warning peer-checked:bg-app-warning-bg transition-all text-center">
                                     <span className="text-xs font-black text-app-foreground uppercase tracking-widest">Both</span>
                                     <p className="text-[9px] text-app-muted-foreground mt-1">All Accounts</p>
                                 </div>
                             </label>
                         </div>
 
-                        <div className="p-4 bg-emerald-50 rounded-2xl">
-                            <p className="text-[10px] text-emerald-700 font-bold">
+                        <div className="p-4 bg-app-success-bg rounded-2xl">
+                            <p className="text-[10px] text-app-success font-bold">
                                 GL sub-accounts will be auto-created based on the selected category:
                                 <br />• <strong>Employee</strong> → Salaries Payable (2121-XXXX)
                                 <br />• <strong>Partner</strong> → Capital (3001-XXXX) + Dividends (3200-XXXX)
@@ -174,7 +174,7 @@ export default function EmployeeModal({
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-gray-50 flex gap-4">
+                    <div className="pt-6 border-t border-app-border flex gap-4">
                         <button type="button" onClick={onClose} className="flex-1 px-6 py-5 rounded-2xl font-black text-app-muted-foreground hover:text-app-muted-foreground hover:bg-app-surface transition-all text-xs uppercase tracking-[0.2em]">Abort</button>
                         <button
                             type="submit"

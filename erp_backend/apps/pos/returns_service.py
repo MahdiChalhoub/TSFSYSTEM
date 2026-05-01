@@ -128,7 +128,10 @@ class ReturnsService:
             # 1. Restock items
             for line in sales_return.lines.all():
                 if InventoryService and order.site:
-                    from apps.inventory.models import Warehouse
+                    from erp.connector_registry import connector
+                    Warehouse = connector.require('inventory.warehouses.get_model', org_id=organization.id)
+                    if Warehouse is None:
+                        continue
                     warehouse = Warehouse.objects.filter(
                         site=order.site, organization=organization, is_active=True
                     ).first()
@@ -338,7 +341,10 @@ class ReturnsService:
             # 1. Remove from inventory
             for line in purchase_return.lines.all():
                 if InventoryService:
-                    from apps.inventory.models import Warehouse
+                    from erp.connector_registry import connector
+                    Warehouse = connector.require('inventory.warehouses.get_model', org_id=organization.id)
+                    if Warehouse is None:
+                        continue
                     warehouse = None
                     if warehouse_id:
                         warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)

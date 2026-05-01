@@ -81,7 +81,7 @@ export default function InventoryGroupMembersPage() {
                                 <td className="px-4 py-3 text-app-foreground flex items-center gap-2"><Package size={12} className="text-app-muted-foreground" />{m.warehouse_name || m.warehouse || '—'}</td>
                                 <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', color: 'var(--app-primary)' }}>{m.role || 'MEMBER'}</span></td>
                                 <td className="px-4 py-3 text-right">
-                                    <button onClick={() => handleRemove(m.id)} className="p-1.5 rounded-lg hover:bg-red-50"><Trash2 size={13} className="text-red-400" /></button>
+                                    <button onClick={() => handleRemove(m.id)} className="p-1.5 rounded-lg hover:bg-app-error-bg"><Trash2 size={13} className="text-red-400" /></button>
                                 </td>
                             </tr>
                         ))}

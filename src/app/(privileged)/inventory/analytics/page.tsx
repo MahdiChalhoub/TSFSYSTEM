@@ -30,19 +30,19 @@ function healthColor(score: number) {
 }
 
 function healthBg(score: number) {
-    if (score >= 80) return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
-    if (score >= 60) return 'bg-yellow-50 text-yellow-700 ring-yellow-200'
-    if (score >= 40) return 'bg-orange-50 text-orange-700 ring-orange-200'
-    return 'bg-red-50 text-red-700 ring-red-200'
+    if (score >= 80) return 'bg-app-success-bg text-app-success ring-emerald-200'
+    if (score >= 60) return 'bg-app-warning-bg text-app-warning ring-yellow-200'
+    if (score >= 40) return 'bg-app-warning-bg text-app-warning ring-orange-200'
+    return 'bg-app-error-bg text-app-error ring-red-200'
 }
 
 function statusBadge(status: string | null) {
     if (!status) return { label: 'Available', cls: 'bg-app-surface-2 text-app-muted-foreground ring-slate-200', icon: CheckCircle2 }
     const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
-        PENDING: { label: 'Requested', cls: 'bg-blue-50 text-blue-700 ring-blue-200', icon: Clock },
-        APPROVED: { label: 'Approved', cls: 'bg-indigo-50 text-indigo-700 ring-indigo-200', icon: CheckCircle2 },
-        CONVERTED: { label: 'Order Created', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200', icon: FileText },
-        REJECTED: { label: 'Failed', cls: 'bg-red-50 text-red-700 ring-red-200', icon: XCircle },
+        PENDING: { label: 'Requested', cls: 'bg-app-info-bg text-app-info ring-blue-200', icon: Clock },
+        APPROVED: { label: 'Approved', cls: 'bg-app-info-bg text-app-info ring-indigo-200', icon: CheckCircle2 },
+        CONVERTED: { label: 'Order Created', cls: 'bg-app-success-bg text-app-success ring-emerald-200', icon: FileText },
+        REJECTED: { label: 'Failed', cls: 'bg-app-error-bg text-app-error ring-red-200', icon: XCircle },
         CANCELLED: { label: 'Cancelled', cls: 'bg-app-surface-2 text-app-muted-foreground ring-app-border', icon: XCircle },
     }
     return map[status] || { label: status, cls: 'bg-app-surface-2 text-app-muted-foreground ring-app-border', icon: Box }
@@ -53,7 +53,7 @@ function orderTypeBadge(type: string | null) {
     const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
         stock_adjustment: { label: 'Adjustment', cls: 'bg-purple-50 text-purple-700', icon: BarChart3 },
         stock_transfer: { label: 'Transfer', cls: 'bg-cyan-50 text-cyan-700', icon: Truck },
-        purchase_order: { label: 'Purchase', cls: 'bg-amber-50 text-amber-700', icon: ShoppingCart },
+        purchase_order: { label: 'Purchase', cls: 'bg-app-warning-bg text-app-warning', icon: ShoppingCart },
     }
     return map[type] || { label: type, cls: 'bg-app-surface text-app-muted-foreground', icon: FileText }
 }
@@ -468,8 +468,8 @@ export default function ProductAnalyticsPage() {
                                         {/* Stock */}
                                         <td className="p-4">
                                             <div className="flex flex-col">
-                                                <span className={`font-bold tabular-nums ${p.total_stock <= 0 ? 'text-red-600' :
-                                                    p.total_stock < p.min_stock_level ? 'text-orange-600' :
+                                                <span className={`font-bold tabular-nums ${p.total_stock <= 0 ? 'text-app-error' :
+                                                    p.total_stock < p.min_stock_level ? 'text-app-warning' :
                                                         'text-app-foreground'
                                                     }`}>
                                                     {p.total_stock.toLocaleString()}
@@ -499,7 +499,7 @@ export default function ProductAnalyticsPage() {
                                             </span>
                                             {p.rejection_reason && (
                                                 <div className="mt-1 flex items-center gap-1">
-                                                    <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-md font-medium truncate max-w-[160px]" title={p.rejection_reason}>
+                                                    <span className="text-xs bg-app-error-bg text-app-error px-2 py-0.5 rounded-md font-medium truncate max-w-[160px]" title={p.rejection_reason}>
                                                         {p.rejection_reason}
                                                     </span>
                                                 </div>

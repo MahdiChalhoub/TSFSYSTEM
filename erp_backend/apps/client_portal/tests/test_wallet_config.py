@@ -7,7 +7,9 @@ delivery fee calculation, and loyalty integration.
 from decimal import Decimal
 from django.test import TestCase
 from erp.models import Organization, User, Site
-from apps.crm.models import Contact
+# Pattern D: test-fixture import at module-collection time pre-empts the connector
+# (no org context yet, OrganizationModule check would mark crm DISABLED).
+from apps.crm.models import Contact  # noqa: E402  (Pattern D: test fixture)
 from apps.client_portal.models import (
     ClientPortalConfig, ClientPortalAccess,
     ClientWallet, WalletTransaction,

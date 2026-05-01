@@ -80,10 +80,10 @@ export default function SupplierPortalAdminPage() {
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <div className="bg-app-surface p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
  <div className="flex justify-between items-start mb-4">
- <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+ <div className="w-12 h-12 rounded-2xl bg-app-error-bg text-app-error flex items-center justify-center">
  <DollarSign size={24} />
  </div>
- <Badge variant="outline" className="text-rose-500 bg-rose-50 border-0 font-black text-[10px]">
+ <Badge variant="outline" className="text-app-error bg-app-error-bg border-0 font-black text-[10px]">
  PROFORMA
  </Badge>
  </div>
@@ -118,7 +118,7 @@ export default function SupplierPortalAdminPage() {
  {/* Tabs */}
  <div className="flex gap-1 bg-[#0F1729] rounded-2xl border border-app-border p-1.5 w-fit">
  {([['pricing', 'Price Change Requests', Tag], ['proformas', 'Proformas', FileText]] as const).map(([key, label, Icon]) => (
- <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === key ? 'bg-rose-600 text-app-foreground shadow-lg shadow-rose-900/40' : 'text-app-muted-foreground hover:text-app-foreground'}`}>
+ <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === key ? 'bg-app-error text-app-foreground shadow-lg shadow-rose-900/40' : 'text-app-muted-foreground hover:text-app-foreground'}`}>
  <Icon size={14} />
  {label}
  {key === 'pricing' && pendingPrice.length > 0 && <span className="bg-app-warning text-app-foreground text-[10px] font-bold px-1.5 rounded-full">{pendingPrice.length}</span>}
@@ -135,7 +135,7 @@ export default function SupplierPortalAdminPage() {
  const isIncrease = pct > 0
  return (
  <div key={r.id} className="flex items-start gap-6 p-6 rounded-[2.5rem] bg-app-surface shadow-sm border border-app-border transition-all hover:shadow-md group">
- <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+ <div className="w-12 h-12 rounded-2xl bg-app-error-bg text-app-error flex items-center justify-center shrink-0">
  <Package size={24} />
  </div>
  <div className="flex-1">
@@ -158,7 +158,7 @@ export default function SupplierPortalAdminPage() {
  <span className="text-[9px] font-black text-app-warning uppercase tracking-widest mb-1">Requested</span>
  <span className="text-xl font-black text-app-foreground">${Number(r.requested_price).toFixed(2)}</span>
  </div>
- <div className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black ${isIncrease ? 'bg-rose-50 text-rose-600' : 'bg-app-primary-light text-app-primary'}`}>
+ <div className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black ${isIncrease ? 'bg-app-error-bg text-app-error' : 'bg-app-primary-light text-app-primary'}`}>
  {isIncrease ? <TrendingUp size={12} /> : <TrendingUp size={12} className="rotate-180" />}
  {Math.abs(pct).toFixed(1)}%
  </div>
@@ -176,7 +176,7 @@ export default function SupplierPortalAdminPage() {
  proformas.length === 0 ? <div className="text-sm text-app-muted-foreground py-8 text-center">No proformas received.</div> :
  proformas.map(p => (
  <div key={p.id} className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-[#0F1729] border border-app-border">
- <FileText size={16} className="text-orange-400 shrink-0" />
+ <FileText size={16} className="text-app-warning shrink-0" />
  <div className="flex-1">
  <div className="flex items-center gap-2">
  <span className="font-mono font-semibold text-sm text-app-foreground">{p.proforma_number || `#${p.id}`}</span>

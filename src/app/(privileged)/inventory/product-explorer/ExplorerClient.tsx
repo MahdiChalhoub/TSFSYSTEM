@@ -118,7 +118,7 @@ function TreeRow({ node, depth, expanded, toggle }: {
 }) {
     const isOpen = expanded.has(node.key)
     const hasChildren = node.children.length > 0 || (node.products && node.products.length > 0)
-    const depthColors = ['text-app-primary', 'text-emerald-500', 'text-amber-500', 'text-rose-500']
+    const depthColors = ['text-app-primary', 'text-app-success', 'text-app-warning', 'text-app-error']
     const depthBg = ['bg-app-primary/5', 'bg-emerald-500/5', 'bg-amber-500/5', 'bg-rose-500/5']
 
     return (
@@ -359,9 +359,9 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                         {data.groups.slice(0, 20).map(g => (
                             <div key={g.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-app-primary/3 transition-colors">
                                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded
-                                    ${g.group_type === 'EXACT' ? 'bg-emerald-500/10 text-emerald-600' :
-                                        g.group_type === 'SIMILAR' ? 'bg-amber-500/10 text-amber-600' :
-                                            'bg-blue-500/10 text-blue-600'}`}>
+                                    ${g.group_type === 'EXACT' ? 'bg-emerald-500/10 text-app-success' :
+                                        g.group_type === 'SIMILAR' ? 'bg-amber-500/10 text-app-warning' :
+                                            'bg-blue-500/10 text-app-info'}`}>
                                     {g.group_type}
                                 </span>
                                 <span className="flex-1 text-sm font-medium text-app-text truncate">{g.name}</span>
@@ -369,9 +369,9 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                                     <span className="text-xs text-app-text-muted">{g.brand_name}</span>
                                 )}
                                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded
-                                    ${g.approval_status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-600' :
-                                        g.approval_status === 'PENDING' ? 'bg-amber-500/10 text-amber-600' :
-                                            'bg-red-500/10 text-red-600'}`}>
+                                    ${g.approval_status === 'APPROVED' ? 'bg-emerald-500/10 text-app-success' :
+                                        g.approval_status === 'PENDING' ? 'bg-amber-500/10 text-app-warning' :
+                                            'bg-red-500/10 text-app-error'}`}>
                                     {g.approval_status}
                                 </span>
                                 <span className="text-[10px] text-app-text-muted font-mono">{g.member_count} members</span>

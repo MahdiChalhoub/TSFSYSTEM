@@ -19,8 +19,8 @@ import { createTransferOrder } from '@/app/actions/inventory/transfer-orders'
 const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
     INFO: { label: 'Info', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info/30', icon: Bell },
     WARNING: { label: 'Warning', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning/30', icon: AlertTriangle },
-    CRITICAL: { label: 'Critical', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-100', icon: ShieldAlert },
-    EMERGENCY: { label: 'Emergency', color: 'text-rose-800', bg: 'bg-rose-100 border-rose-200', icon: XCircle },
+    CRITICAL: { label: 'Critical', color: 'text-app-error', bg: 'bg-app-error-bg border-rose-100', icon: ShieldAlert },
+    EMERGENCY: { label: 'Emergency', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: XCircle },
 }
 
 export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
@@ -100,7 +100,7 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
                     <div className="w-px h-6 bg-app-surface-2" />
                     <div className="text-center">
                         <div className="text-[9px] font-black text-app-muted-foreground uppercase tracking-tighter">Threshold</div>
-                        <div className="text-sm font-black text-rose-500">{row.threshold ?? 0}</div>
+                        <div className="text-sm font-black text-app-error">{row.threshold ?? 0}</div>
                     </div>
                 </div>
             )
@@ -135,7 +135,7 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
             onAdd={() => toast.promise(loadData(), { loading: 'Scanning...', success: 'Scan complete', error: 'Scan failed' })}
             headerExtras={
                 <div className="flex gap-2">
-                    <Badge variant="outline" className="bg-rose-50 text-rose-600 border-rose-100 font-black text-[10px]">
+                    <Badge variant="outline" className="bg-app-error-bg text-app-error border-rose-100 font-black text-[10px]">
                         {data.filter(a => a.severity === 'CRITICAL').length} CRITICAL
                     </Badge>
                 </div>

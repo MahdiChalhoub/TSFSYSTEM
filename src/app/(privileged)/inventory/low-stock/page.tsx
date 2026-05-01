@@ -19,9 +19,9 @@ function fmt(n: number) {
 }
 
 const SEVERITY_CONFIG: Record<string, { color: string, bg: string, label: string }> = {
-    OUT: { color: 'text-red-700', bg: 'bg-red-100 border-red-200', label: 'Out of Stock' },
-    CRITICAL: { color: 'text-orange-700', bg: 'bg-orange-100 border-orange-200', label: 'Critical' },
-    LOW: { color: 'text-yellow-700', bg: 'bg-yellow-100 border-yellow-200', label: 'Low' },
+    OUT: { color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', label: 'Out of Stock' },
+    CRITICAL: { color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', label: 'Critical' },
+    LOW: { color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', label: 'Low' },
 }
 
 type SortKey = 'product_name' | 'current_stock' | 'shortage' | 'restock_value'
@@ -112,9 +112,9 @@ export default function LowStockPage() {
                     onClick={() => setActiveFilter(activeFilter === 'OUT' ? null : 'OUT')}
                 >
                     <CardContent className="py-4 text-center">
-                        <PackageX size={24} className="mx-auto mb-2 text-red-500" />
-                        <p className="text-3xl font-bold text-red-600">{stats.out_of_stock}</p>
-                        <p className="text-xs text-red-500 uppercase font-medium">Out of Stock</p>
+                        <PackageX size={24} className="mx-auto mb-2 text-app-error" />
+                        <p className="text-3xl font-bold text-app-error">{stats.out_of_stock}</p>
+                        <p className="text-xs text-app-error uppercase font-medium">Out of Stock</p>
                     </CardContent>
                 </Card>
                 <Card
@@ -123,7 +123,7 @@ export default function LowStockPage() {
                 >
                     <CardContent className="py-4 text-center">
                         <AlertTriangle size={24} className="mx-auto mb-2 text-orange-500" />
-                        <p className="text-3xl font-bold text-orange-600">{stats.critical}</p>
+                        <p className="text-3xl font-bold text-app-warning">{stats.critical}</p>
                         <p className="text-xs text-orange-500 uppercase font-medium">Critical</p>
                     </CardContent>
                 </Card>
@@ -132,15 +132,15 @@ export default function LowStockPage() {
                     onClick={() => setActiveFilter(activeFilter === 'LOW' ? null : 'LOW')}
                 >
                     <CardContent className="py-4 text-center">
-                        <ShoppingCart size={24} className="mx-auto mb-2 text-yellow-500" />
-                        <p className="text-3xl font-bold text-yellow-600">{stats.low}</p>
-                        <p className="text-xs text-yellow-500 uppercase font-medium">Low Stock</p>
+                        <ShoppingCart size={24} className="mx-auto mb-2 text-app-warning" />
+                        <p className="text-3xl font-bold text-app-warning">{stats.low}</p>
+                        <p className="text-xs text-app-warning uppercase font-medium">Low Stock</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-gradient-to-br from-indigo-50 to-blue-50">
                     <CardContent className="py-4 text-center">
                         <DollarSign size={24} className="mx-auto mb-2 text-indigo-400" />
-                        <p className="text-xl font-bold text-indigo-700">{fmt(stats.total_restock_value)}</p>
+                        <p className="text-xl font-bold text-app-info">{fmt(stats.total_restock_value)}</p>
                         <p className="text-xs text-indigo-400 uppercase font-medium">Restock Cost</p>
                     </CardContent>
                 </Card>
@@ -162,7 +162,7 @@ export default function LowStockPage() {
                     {products.length === 0 ? (
                         <div className="text-center py-16 text-app-muted-foreground">
                             <Package size={48} className="mx-auto mb-3 opacity-30" />
-                            <p className="text-lg font-medium text-emerald-500">All stocked up!</p>
+                            <p className="text-lg font-medium text-app-success">All stocked up!</p>
                             <p className="text-sm">No products below minimum stock level.</p>
                         </div>
                     ) : (
@@ -212,9 +212,9 @@ export default function LowStockPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right text-app-muted-foreground">{p.min_stock_level}</TableCell>
-                                            <TableCell className="text-right font-bold text-red-600">-{p.shortage}</TableCell>
+                                            <TableCell className="text-right font-bold text-app-error">-{p.shortage}</TableCell>
                                             <TableCell className="text-right text-sm">{fmt(p.cost_price)}</TableCell>
-                                            <TableCell className="text-right font-bold text-indigo-700">{fmt(p.restock_value)}</TableCell>
+                                            <TableCell className="text-right font-bold text-app-info">{fmt(p.restock_value)}</TableCell>
                                         </TableRow>
                                     )
                                 })}

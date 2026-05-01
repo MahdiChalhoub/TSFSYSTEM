@@ -29,8 +29,8 @@ class RegisterLobbyMixin:
 
         from erp.connector_registry import connector
         Warehouse = connector.require('inventory.warehouses.get_model', org_id=org_id, source='pos.lobby')
-        if not Warehouse:
-            from apps.inventory.models import Warehouse
+        if Warehouse is None:
+            return Response({"error": "Inventory module unavailable"}, status=503)
         sites = Warehouse.objects.filter(organization=organization, location_type='BRANCH', is_active=True)
 
         data = []
@@ -163,8 +163,8 @@ class RegisterLobbyMixin:
 
         from erp.connector_registry import connector
         Warehouse = connector.require('inventory.warehouses.get_model', org_id=org_id, source='pos.lobby')
-        if not Warehouse:
-            from apps.inventory.models import Warehouse
+        if Warehouse is None:
+            return Response({"error": "Inventory module unavailable"}, status=503)
         from apps.pos.models.register_models import POSSettings
         name = request.data.get('name')
         site_id = request.data.get('site_id')
@@ -206,10 +206,9 @@ class RegisterLobbyMixin:
                         # Auto-create a dedicated FinancialAccount + COA sub-account
                         from erp.connector_registry import connector as _conn
                         FinancialAccount = _conn.require('finance.accounts.get_financial_account_model', org_id=org_id, source='pos.lobby')
-                        if not FinancialAccount:
-                            from apps.finance.models.coa_models import FinancialAccount
-
-                        from apps.finance.models.coa_models import ChartOfAccount
+                        ChartOfAccount = _conn.require('finance.accounts.get_model', org_id=org_id, source='pos.lobby')
+                        if FinancialAccount is None or ChartOfAccount is None:
+                            return Response({"error": "Finance module unavailable"}, status=503)
 
                         acct_name = f'{name} Cash'
 
@@ -357,7 +356,10 @@ class RegisterLobbyMixin:
         # ── Sync RegisterPaymentMethod records ──
         if 'register_methods' in request.data:
             from apps.pos.models.register_models import RegisterPaymentMethod as RPM
-            from apps.finance.models import PaymentMethod
+            from erp.connector_registry import connector as _conn
+            PaymentMethod = _conn.require('finance.payments.get_payment_method_model', org_id=org_id)
+            if PaymentMethod is None:
+                return Response({"error": "Finance module unavailable"}, status=503)
             incoming = request.data['register_methods']  # [{ methodId, accountId?, isActive?, sortOrder? }]
             incoming_method_ids = set()
             for idx, item in enumerate(incoming):

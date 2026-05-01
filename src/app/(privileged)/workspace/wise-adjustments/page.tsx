@@ -59,7 +59,7 @@ export default async function WiseAdjustmentsPage() {
                                 <div key={ev.id} className="p-4 space-y-2 hover:bg-app-surface/[0.02] transition-colors">
                                     <div className="flex justify-between items-start">
                                         <div className="font-bold text-xs">{ev.employee_name}</div>
-                                        <div className="text-[10px] font-black text-rose-400 tabular-nums">-{parseFloat(ev.final_points).toFixed(0)} pts</div>
+                                        <div className="text-[10px] font-black text-app-error tabular-nums">-{parseFloat(ev.final_points).toFixed(0)} pts</div>
                                     </div>
                                     <div className="text-[10px] opacity-40 italic line-clamp-1">{ev.event_type}</div>
                                     <div className="flex justify-between items-center">
@@ -75,8 +75,8 @@ export default async function WiseAdjustmentsPage() {
                     </div>
 
                     {/* Audit Warning */}
-                    <div className="p-6 rounded-[2rem] bg-rose-500/5 border border-rose-500/20 space-y-3">
-                        <div className="flex items-center gap-2 text-rose-400">
+                    <div className="p-6 rounded-[2rem] bg-app-error/5 border border-app-error/20 space-y-3">
+                        <div className="flex items-center gap-2 text-app-error">
                             <ShieldAlert size={16} />
                             <span className="text-[10px] font-black uppercase tracking-widest">Audit Governance</span>
                         </div>

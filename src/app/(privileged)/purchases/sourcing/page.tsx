@@ -32,7 +32,7 @@ export default async function SourcingDashboardPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-4xl lg:text-6xl font-black text-app-foreground tracking-tighter">
-                        Sourcing <span className="text-emerald-500">Intelligence</span>
+                        Sourcing <span className="text-app-success">Intelligence</span>
                     </h1>
                     <p className="text-app-muted-foreground font-bold mt-2">Evaluate vendor performance and optimization opportunities.</p>
                 </div>
@@ -87,7 +87,7 @@ export default async function SourcingDashboardPage() {
                                 return (
                                     <tr key={item.product_id} className="hover:bg-app-surface/50 transition-colors group">
                                         <td className="p-8">
-                                            <div className="text-sm font-black text-app-foreground group-hover:text-emerald-600 transition-colors">{item.product__name}</div>
+                                            <div className="text-sm font-black text-app-foreground group-hover:text-app-success transition-colors">{item.product__name}</div>
                                             <div className="text-[10px] text-app-muted-foreground font-mono mt-1">{item.product__sku}</div>
                                         </td>
                                         <td className="p-8">
@@ -96,20 +96,20 @@ export default async function SourcingDashboardPage() {
                                             </span>
                                         </td>
                                         <td className="p-8 text-center">
-                                            <div className="inline-flex items-center justify-center w-8 h-8 bg-blue-50 text-blue-600 rounded-lg text-xs font-black shadow-sm border border-blue-100">
+                                            <div className="inline-flex items-center justify-center w-8 h-8 bg-app-info-bg text-app-info rounded-lg text-xs font-black shadow-sm border border-app-info">
                                                 {item.supplier_count}
                                             </div>
                                         </td>
-                                        <td className="p-8 text-right font-black text-emerald-600">
+                                        <td className="p-8 text-right font-black text-app-success">
                                             {parseFloat(item.min_price).toLocaleString()} XOF
                                         </td>
-                                        <td className="p-8 text-right font-black text-rose-600">
+                                        <td className="p-8 text-right font-black text-app-error">
                                             {parseFloat(item.max_price).toLocaleString()} XOF
                                         </td>
                                         <td className="p-8 text-right">
                                             {delta > 0 ? (
                                                 <div className="flex flex-col items-end">
-                                                    <span className="text-xs font-black text-emerald-500">-{pct}% Potential</span>
+                                                    <span className="text-xs font-black text-app-success">-{pct}% Potential</span>
                                                     <span className="text-[10px] text-app-muted-foreground">Save {delta.toLocaleString()} XOF/unit</span>
                                                 </div>
                                             ) : (
@@ -118,7 +118,7 @@ export default async function SourcingDashboardPage() {
                                         </td>
                                         <td className="p-8 text-right">
                                             <div className="flex items-center justify-end gap-2 font-black text-app-foreground">
-                                                <Clock size={14} className="text-amber-500" />
+                                                <Clock size={14} className="text-app-warning" />
                                                 <span>{item.best_lead_time} Days</span>
                                             </div>
                                         </td>

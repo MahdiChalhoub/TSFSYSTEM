@@ -98,13 +98,18 @@ class ClientOrderSerializer(serializers.ModelSerializer):
             tax_rate = Decimal('0.00')
 
             if product_id:
-                from apps.inventory.models import Product
-                try:
-                    product = Product.objects.get(id=product_id)
-                    product_name = product.name
-                    tax_rate = product.tva_rate
-                except Product.DoesNotExist:
-                    pass
+                from erp.connector_registry import connector
+                Product = connector.require(
+                    'inventory.products.get_model',
+                    org_id=getattr(order, 'organization_id', 0) or 0,
+                )
+                if Product is not None:
+                    try:
+                        product = Product.objects.get(id=product_id)
+                        product_name = product.name
+                        tax_rate = product.tva_rate
+                    except Product.DoesNotExist:
+                        pass
 
             ClientOrderLine.objects.create(
                 organization=order.organization,

@@ -175,10 +175,14 @@ class WarehouseViewSet(TenantModelViewSet):
 
         # 6. POS register linked
         try:
-            from apps.pos.models import Register
-            reg_count = Register.objects.filter(warehouse=warehouse).count()
-            if reg_count:
-                blockers.append(f'{reg_count} POS register(s) on "{warehouse.name}"')
+            from erp.connector_registry import connector
+            Register = connector.require(
+                'pos.registers.get_model', org_id=getattr(warehouse, 'organization_id', 0) or 0
+            )
+            if Register is not None:
+                reg_count = Register.objects.filter(warehouse=warehouse).count()
+                if reg_count:
+                    blockers.append(f'{reg_count} POS register(s) on "{warehouse.name}"')
         except Exception:
             pass
 

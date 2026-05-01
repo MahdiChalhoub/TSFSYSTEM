@@ -18,10 +18,10 @@ function fmt(n: number) {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-    PENDING: 'bg-yellow-100 text-yellow-700',
-    CONFIRMED: 'bg-blue-100 text-blue-700',
-    COMPLETED: 'bg-green-100 text-green-700',
-    CANCELLED: 'bg-red-100 text-red-700',
+    PENDING: 'bg-app-warning-bg text-app-warning',
+    CONFIRMED: 'bg-app-info-bg text-app-info',
+    COMPLETED: 'bg-app-success-bg text-app-success',
+    CANCELLED: 'bg-app-error-bg text-app-error',
     DRAFT: 'bg-app-surface-2 text-app-muted-foreground',
 }
 
@@ -83,7 +83,7 @@ export default function PurchaseDashboardPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-warning flex items-center justify-center">
                             <Truck size={20} className="text-white" />
                         </div>
                         Purchase Orders
@@ -101,7 +101,7 @@ export default function PurchaseDashboardPage() {
                 <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Package size={24} className="text-orange-500" />
+                            <Package size={24} className="text-app-warning" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Orders</p>
                                 <p className="text-2xl font-bold">{orders.length}</p>
@@ -113,10 +113,10 @@ export default function PurchaseDashboardPage() {
                 <Card className="border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <CheckCircle size={24} className="text-green-500" />
+                            <CheckCircle size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Completed</p>
-                                <p className="text-2xl font-bold text-green-700">{completedOrders.length}</p>
+                                <p className="text-2xl font-bold text-app-success">{completedOrders.length}</p>
                                 <p className="text-xs text-app-muted-foreground">{fmt(completedValue)}</p>
                             </div>
                         </div>
@@ -125,10 +125,10 @@ export default function PurchaseDashboardPage() {
                 <Card className="border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Clock size={24} className="text-yellow-600" />
+                            <Clock size={24} className="text-app-warning" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">In Progress</p>
-                                <p className="text-2xl font-bold text-yellow-700">{pendingOrders.length}</p>
+                                <p className="text-2xl font-bold text-app-warning">{pendingOrders.length}</p>
                                 <p className="text-xs text-app-muted-foreground">{fmt(pendingValue)}</p>
                             </div>
                         </div>
@@ -137,10 +137,10 @@ export default function PurchaseDashboardPage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <TrendingUp size={24} className="text-blue-500" />
+                            <TrendingUp size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Avg Order</p>
-                                <p className="text-xl font-bold text-blue-700">
+                                <p className="text-xl font-bold text-app-info">
                                     {orders.length > 0 ? fmt(totalValue / orders.length) : fmt(0)}
                                 </p>
                             </div>
@@ -193,7 +193,7 @@ export default function PurchaseDashboardPage() {
                             <TableBody>
                                 {filtered.map((o: Record<string, any>) => (
                                     <TableRow key={o.id} className="hover:bg-app-surface/50">
-                                        <TableCell className="font-mono text-xs text-blue-600">
+                                        <TableCell className="font-mono text-xs text-app-info">
                                             {o.ref_code || `PO-${o.id}`}
                                         </TableCell>
                                         <TableCell className="text-sm">

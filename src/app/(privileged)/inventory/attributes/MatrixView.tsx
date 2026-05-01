@@ -234,7 +234,7 @@ export function DynamicProductMatrix({
                                         {p.name}
                                     </button>
                                     <button onClick={() => handleDeletePreset(i)}
-                                        className="p-0.5 text-app-muted-foreground hover:text-red-500 transition-colors">
+                                        className="p-0.5 text-app-muted-foreground hover:text-app-error transition-colors">
                                         <X size={10} />
                                     </button>
                                 </div>
@@ -288,7 +288,7 @@ export function DynamicProductMatrix({
                                 <ChevronDown size={10} className="-rotate-90" />
                             </button>
                             <button onClick={() => removeDimension(key)}
-                                className="p-1.5 text-app-muted-foreground hover:text-red-500 border-l transition-colors"
+                                className="p-1.5 text-app-muted-foreground hover:text-app-error border-l transition-colors"
                                 style={{ borderColor: `color-mix(in srgb, ${dimColor(key)} 20%, transparent)` }}>
                                 <Minus size={10} />
                             </button>

@@ -22,9 +22,9 @@ function fmt(n: number) {
 }
 
 const SEVERITY_CONFIG: Record<string, { color: string, bg: string, icon: Record<string, any>, label: string }> = {
-    EXPIRED: { color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: Skull, label: 'Expired' },
-    CRITICAL: { color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200', icon: AlertTriangle, label: 'Critical (0-30 days)' },
-    WARNING: { color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200', icon: Clock, label: 'Warning (30-60 days)' },
+    EXPIRED: { color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: Skull, label: 'Expired' },
+    CRITICAL: { color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: AlertTriangle, label: 'Critical (0-30 days)' },
+    WARNING: { color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Clock, label: 'Warning (30-60 days)' },
 }
 
 export default function ExpiryAlertsPage() {
@@ -182,9 +182,9 @@ export default function ExpiryAlertsPage() {
                     onClick={() => handleFilter('EXPIRED')}
                 >
                     <CardContent className="py-4 text-center">
-                        <Skull size={24} className="mx-auto mb-2 text-red-500" />
-                        <p className="text-3xl font-bold text-red-600">{stats.expired}</p>
-                        <p className="text-xs text-red-500 uppercase font-medium">Expired</p>
+                        <Skull size={24} className="mx-auto mb-2 text-app-error" />
+                        <p className="text-3xl font-bold text-app-error">{stats.expired}</p>
+                        <p className="text-xs text-app-error uppercase font-medium">Expired</p>
                     </CardContent>
                 </Card>
 
@@ -195,7 +195,7 @@ export default function ExpiryAlertsPage() {
                 >
                     <CardContent className="py-4 text-center">
                         <AlertTriangle size={24} className="mx-auto mb-2 text-orange-500" />
-                        <p className="text-3xl font-bold text-orange-600">{stats.critical}</p>
+                        <p className="text-3xl font-bold text-app-warning">{stats.critical}</p>
                         <p className="text-xs text-orange-500 uppercase font-medium">Critical</p>
                     </CardContent>
                 </Card>
@@ -206,9 +206,9 @@ export default function ExpiryAlertsPage() {
                     onClick={() => handleFilter('WARNING')}
                 >
                     <CardContent className="py-4 text-center">
-                        <Clock size={24} className="mx-auto mb-2 text-yellow-500" />
-                        <p className="text-3xl font-bold text-yellow-600">{stats.warning}</p>
-                        <p className="text-xs text-yellow-500 uppercase font-medium">Warning</p>
+                        <Clock size={24} className="mx-auto mb-2 text-app-warning" />
+                        <p className="text-3xl font-bold text-app-warning">{stats.warning}</p>
+                        <p className="text-xs text-app-warning uppercase font-medium">Warning</p>
                     </CardContent>
                 </Card>
 
@@ -216,7 +216,7 @@ export default function ExpiryAlertsPage() {
                 <Card className="bg-gradient-to-br from-red-50 to-orange-50">
                     <CardContent className="py-4 text-center">
                         <DollarSign size={24} className="mx-auto mb-2 text-red-400" />
-                        <p className="text-xl font-bold text-red-700">{fmt(stats.total_value)}</p>
+                        <p className="text-xl font-bold text-app-error">{fmt(stats.total_value)}</p>
                         <p className="text-xs text-red-400 uppercase font-medium">Value at Risk</p>
                         <p className="text-[10px] text-red-300 mt-1">{stats.total_quantity} units</p>
                     </CardContent>
@@ -236,7 +236,7 @@ export default function ExpiryAlertsPage() {
                     {alerts.length === 0 ? (
                         <div className="text-center py-16 text-app-muted-foreground">
                             <CheckCircle2 size={48} className="mx-auto mb-3 text-emerald-300" />
-                            <p className="text-lg font-medium text-emerald-500">All Clear!</p>
+                            <p className="text-lg font-medium text-app-success">All Clear!</p>
                             <p className="text-sm">No expiry alerts found. Click "Scan Now" to check for new alerts.</p>
                         </div>
                     ) : (
@@ -271,15 +271,15 @@ export default function ExpiryAlertsPage() {
                                             <TableCell className="text-sm text-app-muted-foreground">
                                                 {a.expiry_date || '—'}
                                             </TableCell>
-                                            <TableCell className={`text-right font-bold ${a.days_until_expiry <= 0 ? 'text-red-600' :
-                                                a.days_until_expiry <= 30 ? 'text-orange-600' : 'text-yellow-600'
+                                            <TableCell className={`text-right font-bold ${a.days_until_expiry <= 0 ? 'text-app-error' :
+                                                a.days_until_expiry <= 30 ? 'text-app-warning' : 'text-app-warning'
                                                 }`}>
                                                 {a.days_until_expiry <= 0 ? `${Math.abs(a.days_until_expiry)} overdue` : `${a.days_until_expiry}d`}
                                             </TableCell>
                                             <TableCell className="text-right font-semibold">
                                                 {new Intl.NumberFormat('fr-FR').format(a.quantity_at_risk)}
                                             </TableCell>
-                                            <TableCell className="text-right font-bold text-red-600">
+                                            <TableCell className="text-right font-bold text-app-error">
                                                 {fmt(a.value_at_risk)}
                                             </TableCell>
                                             <TableCell className="text-sm text-app-muted-foreground">{a.warehouse || '—'}</TableCell>
@@ -289,13 +289,13 @@ export default function ExpiryAlertsPage() {
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleAcknowledge(a.id)}
-                                                        className="text-xs gap-1 hover:bg-emerald-50 hover:text-emerald-700"
+                                                        className="text-xs gap-1 hover:bg-app-success-bg hover:text-app-success"
                                                     >
                                                         <CheckCircle2 size={14} />
                                                         Ack
                                                     </Button>
                                                 ) : (
-                                                    <span className="text-xs text-emerald-500">✓ Acknowledged</span>
+                                                    <span className="text-xs text-app-success">✓ Acknowledged</span>
                                                 )}
                                             </TableCell>
                                         </TableRow>

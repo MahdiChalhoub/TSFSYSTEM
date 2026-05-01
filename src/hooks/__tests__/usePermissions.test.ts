@@ -27,7 +27,7 @@ describe('usePermissions Hook', () => {
       is_superuser: false,
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -50,7 +50,7 @@ describe('usePermissions Hook', () => {
       is_superuser: true,
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -71,7 +71,7 @@ describe('usePermissions Hook', () => {
       is_superuser: false,
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -93,7 +93,7 @@ describe('usePermissions Hook', () => {
       is_superuser: true,
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -114,7 +114,7 @@ describe('usePermissions Hook', () => {
       is_superuser: false,
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -136,7 +136,7 @@ describe('usePermissions Hook', () => {
       is_superuser: false,
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -152,7 +152,7 @@ describe('usePermissions Hook', () => {
   });
 
   it('handles fetch errors gracefully', async () => {
-    (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'));
 
     const { result } = renderHook(() => usePermissions());
 
@@ -171,7 +171,7 @@ describe('usePermissions Hook', () => {
       is_superuser: false,
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -197,7 +197,7 @@ describe('usePermissions Hook', () => {
       is_superuser: false,
     };
 
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => mockResponse,
     });

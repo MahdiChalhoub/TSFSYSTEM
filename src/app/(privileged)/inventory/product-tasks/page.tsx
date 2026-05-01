@@ -24,9 +24,9 @@ export default function ProductTasksPage() {
     const filtered = filter === 'all' ? tasks : tasks.filter(t => t.status === filter)
 
     const statusIcon = (s: string) => {
-        if (s === 'COMPLETED' || s === 'DONE') return <CheckCircle size={14} className="text-green-500" />
-        if (s === 'PENDING' || s === 'TODO') return <Clock size={14} className="text-yellow-500" />
-        return <AlertCircle size={14} className="text-red-500" />
+        if (s === 'COMPLETED' || s === 'DONE') return <CheckCircle size={14} className="text-app-success" />
+        if (s === 'PENDING' || s === 'TODO') return <Clock size={14} className="text-app-warning" />
+        return <AlertCircle size={14} className="text-app-error" />
     }
 
     if (loading) return (

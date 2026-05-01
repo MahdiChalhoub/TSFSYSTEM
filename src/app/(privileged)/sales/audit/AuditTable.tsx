@@ -19,14 +19,14 @@ const EVENT_CONFIG: Record<string, {
 }> = {
  PRICE_OVERRIDE: {
  label: 'Price Override',
- icon: <AlertOctagon size={15} className="text-rose-500" />,
- badge: 'bg-rose-50 text-rose-700 border-rose-200',
+ icon: <AlertOctagon size={15} className="text-app-error" />,
+ badge: 'bg-app-error-bg text-app-error border-app-error',
  row: 'border-l-2 border-l-rose-400',
  },
  GLOBAL_DISCOUNT: {
  label: 'Global Discount',
  icon: <AlertOctagon size={15} className="text-orange-500" />,
- badge: 'bg-orange-50 text-orange-700 border-orange-200',
+ badge: 'bg-app-warning-bg text-app-warning border-app-warning',
  row: 'border-l-2 border-l-orange-400',
  },
  CLEAR_CART: {

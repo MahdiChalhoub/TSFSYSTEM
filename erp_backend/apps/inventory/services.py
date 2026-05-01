@@ -24,8 +24,11 @@ class InventoryService:
     @staticmethod
     def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None, user=None, scope='OFFICIAL', serials=None):
         from apps.inventory.models import Inventory, InventoryMovement
-        from apps.finance.services import ForensicAuditService
-        
+        from erp.connector_registry import connector
+        ForensicAuditService = connector.require(
+            'finance.services.get_forensic_audit_service', org_id=organization.id
+        )
+
         if not reference: reference = f"REC-{uuid.uuid4().hex[:8].upper()}"
         inbound_qty = Decimal(str(quantity))
         effective_cost = InventoryService.calculate_effective_cost(cost_price_ht, product.tva_rate, is_tax_recoverable)
@@ -73,23 +76,26 @@ class InventoryService:
             susp_acc = rules.get('suspense', {}).get('reception')
             
             if inv_acc and susp_acc:
-                try:
-                    from apps.finance.services import LedgerService
+                LedgerService = connector.require(
+                    'finance.services.get_ledger_service', org_id=organization.id
+                )
+                if LedgerService is not None:
                     LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', scope=scope, site_id=warehouse.site_id, user=user, lines=[
                         {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
                         {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
                     ])
-                except ImportError:
+                else:
                     logger.warning(f"Finance module unavailable — journal entry skipped for {reference}")
 
-            ForensicAuditService.log_mutation(
-                organization=organization,
-                user=user,
-                model_name="StockReception",
-                object_id=product.id,
-                change_type="CREATE",
-                payload={"qty": str(inbound_qty), "cost": str(effective_cost), "ref": reference}
-            )
+            if ForensicAuditService is not None:
+                ForensicAuditService.log_mutation(
+                    organization=organization,
+                    user=user,
+                    model_name="StockReception",
+                    object_id=product.id,
+                    change_type="CREATE",
+                    payload={"qty": str(inbound_qty), "cost": str(effective_cost), "ref": reference}
+                )
             return inventory
 
     @staticmethod
@@ -166,7 +172,10 @@ class InventoryService:
     @staticmethod
     def adjust_stock(organization, product, warehouse, quantity, reason=None, reference=None, user=None, scope='OFFICIAL'):
         from apps.inventory.models import Inventory, InventoryMovement
-        from apps.finance.services import ForensicAuditService
+        from erp.connector_registry import connector
+        ForensicAuditService = connector.require(
+            'finance.services.get_forensic_audit_service', org_id=organization.id
+        )
 
         adj_qty = Decimal(str(quantity))
         if adj_qty == Decimal('0'):
@@ -219,8 +228,10 @@ class InventoryService:
             adj_acc = rules.get('inventory', {}).get('adjustment')
             
             if inv_acc and adj_acc:
-                try:
-                    from apps.finance.services import LedgerService
+                LedgerService = connector.require(
+                    'finance.services.get_ledger_service', org_id=organization.id
+                )
+                if LedgerService is not None:
                     desc = f"Stock Adjustment ({'Gain' if adj_qty > 0 else 'Loss'}): {product.name}"
                     if adj_qty > 0:
                         lines = [
@@ -232,23 +243,22 @@ class InventoryService:
                             {"account_id": adj_acc, "debit": adj_value, "credit": Decimal('0')},
                             {"account_id": inv_acc, "debit": Decimal('0'), "credit": adj_value}
                         ]
-                    
+
                     LedgerService.create_journal_entry(
                         organization=organization, transaction_date=timezone.now(),
                         description=desc, reference=reference, status='POSTED',
                         scope=scope, site_id=warehouse.site_id, user=user, lines=lines
                     )
-                except ImportError:
-                    pass
 
-            ForensicAuditService.log_mutation(
-                organization=organization,
-                user=user,
-                model_name="StockAdjustment",
-                object_id=product.id,
-                change_type="UPDATE",
-                payload={"qty": str(adj_qty), "reason": reason, "ref": reference}
-            )
+            if ForensicAuditService is not None:
+                ForensicAuditService.log_mutation(
+                    organization=organization,
+                    user=user,
+                    model_name="StockAdjustment",
+                    object_id=product.id,
+                    change_type="UPDATE",
+                    payload={"qty": str(adj_qty), "reason": reason, "ref": reference}
+                )
 
             return inventory
 
@@ -256,7 +266,10 @@ class InventoryService:
     def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None, scope='OFFICIAL', serials=None):
         """Reduces stock and captures AMC for COGS booking."""
         from apps.inventory.models import Inventory, InventoryMovement
-        from apps.finance.services import ForensicAuditService
+        from erp.connector_registry import connector
+        ForensicAuditService = connector.require(
+            'finance.services.get_forensic_audit_service', org_id=organization.id
+        )
 
         qty_to_reduce = Decimal(str(quantity))
         
@@ -299,14 +312,15 @@ class InventoryService:
                         user_name=user.username if user else None
                     )
 
-            ForensicAuditService.log_mutation(
-                organization=organization,
-                user=user,
-                model_name="StockReduction",
-                object_id=product.id,
-                change_type="UPDATE",
-                payload={"qty": str(qty_to_reduce), "ref": reference}
-            )
+            if ForensicAuditService is not None:
+                ForensicAuditService.log_mutation(
+                    organization=organization,
+                    user=user,
+                    model_name="StockReduction",
+                    object_id=product.id,
+                    change_type="UPDATE",
+                    payload={"qty": str(qty_to_reduce), "ref": reference}
+                )
 
             return current_amc
 
@@ -317,7 +331,10 @@ class InventoryService:
         Creates paired TRANSFER movements for full audit trail.
         """
         from apps.inventory.models import Inventory, InventoryMovement
-        from apps.finance.services import ForensicAuditService
+        from erp.connector_registry import connector
+        ForensicAuditService = connector.require(
+            'finance.services.get_forensic_audit_service', org_id=organization.id
+        )
 
         qty = Decimal(str(quantity))
         if qty <= Decimal('0'):
@@ -384,14 +401,15 @@ class InventoryService:
                 reason=f"Transfer IN from {source_warehouse.name}",
             )
 
-            ForensicAuditService.log_mutation(
-                organization=organization,
-                user=user,
-                model_name="StockTransfer",
-                object_id=product.id,
-                change_type="UPDATE",
-                payload={"qty": str(qty), "from": source_warehouse.name, "to": destination_warehouse.name, "ref": reference}
-            )
+            if ForensicAuditService is not None:
+                ForensicAuditService.log_mutation(
+                    organization=organization,
+                    user=user,
+                    model_name="StockTransfer",
+                    object_id=product.id,
+                    change_type="UPDATE",
+                    payload={"qty": str(qty), "from": source_warehouse.name, "to": destination_warehouse.name, "ref": reference}
+                )
 
             return {
                 "source_remaining": float(source_inv.quantity),
@@ -405,9 +423,9 @@ class InventoryService:
         """
         from apps.inventory.models import Inventory
         from erp.services import ConfigurationService
-        try:
-            from apps.finance.models import ChartOfAccount
-        except ImportError:
+        from erp.connector_registry import connector
+        ChartOfAccount = connector.require('finance.accounts.get_model', org_id=organization.id)
+        if ChartOfAccount is None:
             return {"status": "ERROR", "message": "Finance module required for reconciliation."}
 
         # 1. Calculate Physical Valuation (Qty x AMC)

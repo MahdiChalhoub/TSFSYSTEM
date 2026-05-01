@@ -481,7 +481,7 @@ export default function InventoryPoliciesPage() {
                                     {/* Remove (attributes only) */}
                                     {!isStatic && (
                                         <button onClick={() => removeSlot(index)}
-                                            className="p-1.5 rounded-lg text-app-muted-foreground hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                            className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors opacity-0 group-hover:opacity-100"
                                             title="Remove from formula">
                                             <Trash2 size={14} />
                                         </button>

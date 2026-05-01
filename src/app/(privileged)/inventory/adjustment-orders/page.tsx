@@ -24,10 +24,10 @@ import {
 } from "lucide-react"
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
-    OPEN: { label: 'Open', color: 'bg-blue-100 text-blue-700', icon: Clock },
-    LOCKED: { label: 'Locked', color: 'bg-amber-100 text-amber-700', icon: Lock },
+    OPEN: { label: 'Open', color: 'bg-app-info-bg text-app-info', icon: Clock },
+    LOCKED: { label: 'Locked', color: 'bg-app-warning-bg text-app-warning', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'bg-purple-100 text-purple-700', icon: ShieldCheck },
-    CONFIRMED: { label: 'Confirmed', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
+    CONFIRMED: { label: 'Confirmed', color: 'bg-app-success-bg text-app-success', icon: CheckCircle2 },
 }
 
 export default function AdjustmentOrdersPage() {
@@ -198,7 +198,7 @@ export default function AdjustmentOrdersPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-serif font-bold tracking-tight flex items-center gap-2">
-                        <ArrowDownUp className="h-6 w-6 text-blue-600" /> Stock Adjustment Orders
+                        <ArrowDownUp className="h-6 w-6 text-app-info" /> Stock Adjustment Orders
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">Create and manage stock adjustment orders with verification pipeline</p>
                 </div>
@@ -209,47 +209,47 @@ export default function AdjustmentOrdersPage() {
 
             {/* ─── Summary Cards ──────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200/60">
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-app-info/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-blue-600/80 uppercase tracking-wider">Total Orders</p>
-                                <p className="text-2xl font-bold text-blue-900 mt-1">{totalOrders}</p>
+                                <p className="text-xs font-medium text-app-info/80 uppercase tracking-wider">Total Orders</p>
+                                <p className="text-2xl font-bold text-app-info mt-1">{totalOrders}</p>
                             </div>
-                            <div className="bg-blue-200/60 rounded-lg p-2.5"><ClipboardList className="h-5 w-5 text-blue-700" /></div>
+                            <div className="bg-blue-200/60 rounded-lg p-2.5"><ClipboardList className="h-5 w-5 text-app-info" /></div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-amber-50 to-amber-100/50 border-amber-200/60">
+                <Card className="bg-gradient-to-br from-amber-50 to-amber-100/50 border-app-warning/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-amber-600/80 uppercase tracking-wider">Open</p>
+                                <p className="text-xs font-medium text-app-warning/80 uppercase tracking-wider">Open</p>
                                 <p className="text-2xl font-bold text-amber-900 mt-1">{openCount}</p>
                             </div>
-                            <div className="bg-amber-200/60 rounded-lg p-2.5"><Clock className="h-5 w-5 text-amber-700" /></div>
+                            <div className="bg-amber-200/60 rounded-lg p-2.5"><Clock className="h-5 w-5 text-app-warning" /></div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200/60">
+                <Card className="bg-gradient-to-br from-orange-50 to-orange-100/50 border-app-warning/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-orange-600/80 uppercase tracking-wider">Locked</p>
+                                <p className="text-xs font-medium text-app-warning/80 uppercase tracking-wider">Locked</p>
                                 <p className="text-2xl font-bold text-orange-900 mt-1">{lockedCount}</p>
                             </div>
-                            <div className="bg-orange-200/60 rounded-lg p-2.5"><Lock className="h-5 w-5 text-orange-700" /></div>
+                            <div className="bg-orange-200/60 rounded-lg p-2.5"><Lock className="h-5 w-5 text-app-warning" /></div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-200/60">
+                <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-app-success/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-emerald-600/80 uppercase tracking-wider">Posted</p>
+                                <p className="text-xs font-medium text-app-success/80 uppercase tracking-wider">Posted</p>
                                 <p className="text-2xl font-bold text-emerald-900 mt-1">{postedCount}</p>
                             </div>
-                            <div className="bg-emerald-200/60 rounded-lg p-2.5"><CheckCircle2 className="h-5 w-5 text-emerald-700" /></div>
+                            <div className="bg-emerald-200/60 rounded-lg p-2.5"><CheckCircle2 className="h-5 w-5 text-app-success" /></div>
                         </div>
                     </CardContent>
                 </Card>
@@ -377,7 +377,7 @@ export default function AdjustmentOrdersPage() {
                                                                                         {line.product_name || `Product #${line.product}`}
                                                                                     </div>
                                                                                 </TableCell>
-                                                                                <TableCell className={`text-sm text-right font-semibold ${line.qty_adjustment >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                                                <TableCell className={`text-sm text-right font-semibold ${line.qty_adjustment >= 0 ? 'text-app-success' : 'text-app-error'}`}>
                                                                                     {line.qty_adjustment > 0 ? '+' : ''}{line.qty_adjustment}
                                                                                 </TableCell>
                                                                                 <TableCell className="text-sm text-right">
@@ -398,7 +398,7 @@ export default function AdjustmentOrdersPage() {
                                                             </div>
                                                         ) : (
                                                             <div className="text-center py-6 text-sm text-muted-foreground">
-                                                                <AlertTriangle className="h-5 w-5 mx-auto mb-2 text-amber-500" />
+                                                                <AlertTriangle className="h-5 w-5 mx-auto mb-2 text-app-warning" />
                                                                 No lines added yet. Add products to adjust.
                                                             </div>
                                                         )}

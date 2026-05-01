@@ -53,7 +53,7 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  const [expanded, setExpanded] = useState(false);
  const diff = session.difference;
 
- const diffColor = Math.abs(diff) < 1 ? 'text-app-primary' : diff > 0 ? 'text-app-info' : 'text-rose-400';
+ const diffColor = Math.abs(diff) < 1 ? 'text-app-primary' : diff > 0 ? 'text-app-info' : 'text-app-error';
  const diffLabel = Math.abs(diff) < 1 ? 'Balanced ✓' : diff > 0 ? `+${currency} ${fmt(diff)}` : `−${currency} ${fmt(Math.abs(diff))}`;
 
  const handlePrint = () => {
@@ -103,7 +103,7 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  <div className="flex items-center gap-2">
  <span className="text-app-foreground font-bold text-sm truncate">{session.registerName}</span>
  {session.status === 'FORCE_CLOSED' && (
- <span className="text-[9px] font-black uppercase bg-app-error/20 text-rose-400 px-1.5 py-0.5 rounded-md">Force</span>
+ <span className="text-[9px] font-black uppercase bg-app-error/20 text-app-error px-1.5 py-0.5 rounded-md">Force</span>
  )}
  </div>
  <div className="text-app-foreground/40 text-xs mt-0.5">{session.cashierName} · {fmtDate(session.openedAt)}</div>

@@ -86,7 +86,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  }
 
  if (!transfer) {
- return <div className="p-10 text-center font-bold text-rose-500">Transfer document not found.</div>;
+ return <div className="p-10 text-center font-bold text-app-error">Transfer document not found.</div>;
  }
 
  const { status } = transfer;
@@ -103,7 +103,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  PENDING: 'bg-app-warning-bg text-app-warning border-app-warning',
  IN_TRANSIT: 'bg-app-info-bg text-app-info border-app-info',
  DONE: 'bg-app-primary-light text-app-success border-app-success',
- CANCELLED: 'bg-rose-100 text-rose-700 border-rose-200',
+ CANCELLED: 'bg-app-error-bg text-app-error border-app-error',
  };
  const active = variants[status] || variants.DRAFT;
  return <span className={`px-3 py-1 text-xs font-black uppercase rounded-full border ${active}`}>{status}</span>;
@@ -140,7 +140,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  </>
  )}
  {(isDraft || isPending) && (
- <Button onClick={() => handleAction('cancel')} disabled={!!actionLoading} variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl font-bold">
+ <Button onClick={() => handleAction('cancel')} disabled={!!actionLoading} variant="outline" className="border-app-error text-app-error hover:bg-app-error-bg rounded-xl font-bold">
  <XCircle size={16} className="mr-2" /> Cancel
  </Button>
  )}
@@ -199,7 +199,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  onChange={e => setReceiveQuantities({ ...receiveQuantities, [line.id]: e.target.value })}
  />
  ) : (
- <span className={`px-2.5 py-1 rounded-md text-xs font-black ${(line.quantity_done || 0) < line.quantity ? 'bg-rose-50 text-rose-700' : 'bg-app-background text-app-muted-foreground border border-app-border'}`}>
+ <span className={`px-2.5 py-1 rounded-md text-xs font-black ${(line.quantity_done || 0) < line.quantity ? 'bg-app-error-bg text-app-error' : 'bg-app-background text-app-muted-foreground border border-app-border'}`}>
  {status === 'DRAFT' || status === 'PENDING' ? '—' : (line.quantity_done || '0.00')}
  </span>
  )}

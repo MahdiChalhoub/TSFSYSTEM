@@ -208,9 +208,9 @@ class Command(BaseCommand):
     # ── Helpers ─────────────────────────────────────────────
     def _orphan_partner_ids(self, org, control_ids):
         from apps.finance.models import JournalEntryLine
-        try:
-            from apps.crm.models import Contact
-        except Exception:
+        from erp.connector_registry import connector
+        Contact = connector.require('crm.contacts.get_model', org_id=org.id)
+        if Contact is None:
             return set()
 
         referenced = set(
@@ -239,12 +239,10 @@ class Command(BaseCommand):
 
         Idempotent: look up by name; create only if missing.
         """
-        try:
-            from apps.crm.models import Contact
-        except Exception as exc:
-            raise RuntimeError(
-                f"CRM Contact model not importable: {exc}"
-            )
+        from erp.connector_registry import connector
+        Contact = connector.require('crm.contacts.get_model', org_id=org.id)
+        if Contact is None:
+            raise RuntimeError("CRM Contact model not available via connector")
 
         label = f"Unidentified {partner_type.title()} (Legacy Cleanup)"
         contact, created = Contact.objects.get_or_create(

@@ -117,7 +117,13 @@ class POSViewSet(viewsets.ViewSet):
             if order.fne_status == 'CERTIFIED':
                 return Response({"error": "Order already certified", "fne_reference": order.fne_reference}, status=400)
 
-            from apps.finance.services.fne_service import get_fne_config, FNEService, FNEInvoiceRequest, FNELineItem
+            from erp.connector_registry import connector
+            get_fne_config = connector.require('finance.fne.get_config_func', org_id=organization.id)
+            FNEService = connector.require('finance.fne.get_service', org_id=organization.id)
+            FNEInvoiceRequest = connector.require('finance.fne.get_request_class', org_id=organization.id)
+            FNELineItem = connector.require('finance.fne.get_line_item_class', org_id=organization.id)
+            if any(x is None for x in (get_fne_config, FNEService, FNEInvoiceRequest, FNELineItem)):
+                return Response({"error": "FNE service unavailable"}, status=503)
             config = get_fne_config(organization)
             if not config:
                 return Response({"error": "FNE not configured. Go to Settings → E-Invoicing."}, status=400)

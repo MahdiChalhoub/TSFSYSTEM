@@ -17,8 +17,8 @@ import { Button } from '@/components/ui/button'
 import { useCurrency } from '@/lib/utils/currency'
 
 const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
- EXPIRED: { label: 'Expired', color: 'text-rose-700', bg: 'bg-rose-50 border-rose-200', icon: Skull },
- CRITICAL: { label: 'Critical (0-30d)', color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200', icon: AlertTriangle },
+ EXPIRED: { label: 'Expired', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: Skull },
+ CRITICAL: { label: 'Critical (0-30d)', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: AlertTriangle },
  WARNING: { label: 'Warning (30-60d)', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Clock },
 }
 
@@ -89,8 +89,8 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  <Calendar size={12} className="text-app-muted-foreground" />
  <span className="text-xs font-bold text-app-muted-foreground">{row.expiry_date}</span>
  </div>
- <Badge variant="outline" className={`text-[9px] uppercase font-black px-1.5 py-0 border-0 ${row.days_until_expiry <= 0 ? 'text-rose-600' :
- row.days_until_expiry <= 30 ? 'text-orange-600' : 'text-app-warning'
+ <Badge variant="outline" className={`text-[9px] uppercase font-black px-1.5 py-0 border-0 ${row.days_until_expiry <= 0 ? 'text-app-error' :
+ row.days_until_expiry <= 30 ? 'text-app-warning' : 'text-app-warning'
  }`}>
  {row.days_until_expiry <= 0 ? 'OVERDUE' : `${row.days_until_expiry} DAYS REMAINING`}
  </Badge>
@@ -103,7 +103,7 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  align: 'right' as const,
  render: (row: any) => (
  <div className="text-right">
- <div className="text-sm font-black text-rose-600">{fmt(row.value_at_risk)}</div>
+ <div className="text-sm font-black text-app-error">{fmt(row.value_at_risk)}</div>
  <div className="text-[9px] text-app-muted-foreground font-bold uppercase">{row.quantity_at_risk} Units</div>
  </div>
  )
@@ -138,7 +138,7 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
  <Button
  size="sm"
  variant="outline"
- className="h-8 border-rose-100 text-rose-600 hover:bg-rose-50 font-black text-[10px] gap-2"
+ className="h-8 border-rose-100 text-app-error hover:bg-app-error-bg font-black text-[10px] gap-2"
  onClick={() => toast.info("Linked to Strategy: Disposal Manifest")}
  >
  <Trash2 size={14} /> DISPOSAL STRATEGY

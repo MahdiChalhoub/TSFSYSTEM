@@ -27,7 +27,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from erp.models import Organization, Country as LegacyCountry
-        from apps.reference.models import Country as RefCountry
+        from erp.connector_registry import connector
+        RefCountry = connector.require('reference.country.get_model', org_id=0)
         from apps.inventory.models.product_models import (
             Product, Brand, Category, Unit, Parfum, ProductGroup,
             ProductAttribute, ComboComponent, ProductPackaging,
@@ -604,12 +605,13 @@ class Command(BaseCommand):
             # Resolve default country for branches
             default_country = None
             try:
-                from apps.reference.models import OrgCountry
-                oc = OrgCountry.objects.filter(
-                    organization=org, is_default=True, is_enabled=True
-                ).select_related('country').first()
-                if oc:
-                    default_country = oc.country
+                OrgCountry = connector.require('reference.org_country.get_model', org_id=org.id)
+                if OrgCountry is not None:
+                    oc = OrgCountry.objects.filter(
+                        organization=org, is_default=True, is_enabled=True
+                    ).select_related('country').first()
+                    if oc:
+                        default_country = oc.country
             except Exception:
                 pass
             if not default_country:

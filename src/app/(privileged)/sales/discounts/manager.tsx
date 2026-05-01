@@ -24,8 +24,8 @@ interface DiscountRule {
 }
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
-    PERCENTAGE: { label: 'Percentage', icon: Percent, color: 'bg-blue-100 text-blue-700' },
-    FIXED: { label: 'Fixed Amount', icon: Tag, color: 'bg-emerald-100 text-emerald-700' },
+    PERCENTAGE: { label: 'Percentage', icon: Percent, color: 'bg-app-info-bg text-app-info' },
+    FIXED: { label: 'Fixed Amount', icon: Tag, color: 'bg-app-success-bg text-app-success' },
     BUY_X_GET_Y: { label: 'Buy X Get Y', icon: Gift, color: 'bg-purple-100 text-purple-700' },
 }
 
@@ -120,11 +120,11 @@ export default function DiscountManager({
                 </CardContent></Card>
                 <Card><CardContent className="py-4 text-center">
                     <p className="text-xs text-app-muted-foreground">Active</p>
-                    <p className="text-2xl font-bold text-emerald-600">{activeCount}</p>
+                    <p className="text-2xl font-bold text-app-success">{activeCount}</p>
                 </CardContent></Card>
                 <Card><CardContent className="py-4 text-center">
                     <p className="text-xs text-app-muted-foreground">Auto-Apply</p>
-                    <p className="text-2xl font-bold text-blue-600">{autoCount}</p>
+                    <p className="text-2xl font-bold text-app-info">{autoCount}</p>
                 </CardContent></Card>
                 <Card><CardContent className="py-4 text-center">
                     <p className="text-xs text-app-muted-foreground">Total Uses</p>
@@ -161,7 +161,7 @@ export default function DiscountManager({
                                         <span className="text-sm font-medium">{rule.name}</span>
                                         {rule.code && <Badge className="bg-app-surface-2 text-app-muted-foreground text-[10px]">{rule.code}</Badge>}
                                         <Badge className={`text-[10px] ${tcfg.color}`}>{tcfg.label}</Badge>
-                                        {rule.auto_apply && <Badge className="bg-blue-100 text-blue-600 text-[10px]">Auto</Badge>}
+                                        {rule.auto_apply && <Badge className="bg-app-info-bg text-app-info text-[10px]">Auto</Badge>}
                                     </div>
                                     <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
                                         <span>{SCOPE_CONFIG[rule.scope] || rule.scope}</span>
@@ -180,11 +180,11 @@ export default function DiscountManager({
                                         <Clock size={14} />
                                     </button>
                                     <button onClick={() => handleToggle(rule.id)}
-                                        className={`p-2 rounded-lg ${rule.is_active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-app-muted-foreground hover:bg-app-surface-2'}`}>
+                                        className={`p-2 rounded-lg ${rule.is_active ? 'text-app-success hover:bg-app-success-bg' : 'text-app-muted-foreground hover:bg-app-surface-2'}`}>
                                         {rule.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                                     </button>
                                     <button onClick={() => setDeleteTarget(rule.id)}
-                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                                        className="p-2 text-red-400 hover:text-app-error hover:bg-app-error-bg rounded-lg">
                                         <Trash2 size={14} />
                                     </button>
                                 </div>
@@ -328,7 +328,7 @@ export default function DiscountManager({
                                             <p className="text-sm font-medium">{log.order_ref || `Order #${log.order}`}</p>
                                             <p className="text-xs text-app-muted-foreground">{new Date(log.applied_at).toLocaleDateString()}</p>
                                         </div>
-                                        <span className="text-sm font-semibold text-red-500">-{fmt(log.discount_amount)}</span>
+                                        <span className="text-sm font-semibold text-app-error">-{fmt(log.discount_amount)}</span>
                                     </div>
                                 ))}
                             </div>

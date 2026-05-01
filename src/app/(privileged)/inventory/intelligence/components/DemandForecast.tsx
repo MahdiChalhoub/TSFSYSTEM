@@ -99,7 +99,7 @@ export default function DemandForecast() {
           </Button>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 text-red-800 rounded-lg">
+            <div className="flex items-center gap-2 p-3 bg-app-error-bg text-app-error rounded-lg">
               <AlertCircle className="h-4 w-4" />
               <span className="text-sm">{error}</span>
             </div>
@@ -155,9 +155,9 @@ export default function DemandForecast() {
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {forecast.current_stock < forecast.total_predicted_demand ? (
-                  <span className="text-red-600">⚠️ Below forecast</span>
+                  <span className="text-app-error">⚠️ Below forecast</span>
                 ) : (
-                  <span className="text-green-600">✓ Sufficient</span>
+                  <span className="text-app-success">✓ Sufficient</span>
                 )}
               </p>
             </CardContent>
@@ -193,9 +193,9 @@ export default function DemandForecast() {
                         </td>
                         <td className="text-right p-2">
                           <span className={`px-2 py-1 rounded text-xs ${
-                            item.confidence > 0.8 ? 'bg-green-100 text-green-800' :
-                            item.confidence > 0.6 ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
+                            item.confidence > 0.8 ? 'bg-app-success-bg text-app-success' :
+                            item.confidence > 0.6 ? 'bg-app-warning-bg text-app-warning' :
+                            'bg-app-error-bg text-app-error'
                           }`}>
                             {(item.confidence * 100).toFixed(0)}%
                           </span>
@@ -210,12 +210,12 @@ export default function DemandForecast() {
 
           {/* Recommendation */}
           {forecast.recommendation && (
-            <Card className="lg:col-span-3 border-blue-200 bg-blue-50">
+            <Card className="lg:col-span-3 border-app-info bg-app-info-bg">
               <CardHeader>
-                <CardTitle className="text-blue-900">AI Recommendation</CardTitle>
+                <CardTitle className="text-app-info">AI Recommendation</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-blue-800">{forecast.recommendation}</p>
+                <p className="text-app-info">{forecast.recommendation}</p>
               </CardContent>
             </Card>
           )}

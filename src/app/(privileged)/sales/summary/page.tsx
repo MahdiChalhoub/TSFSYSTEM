@@ -107,7 +107,7 @@ export default function DailySummaryPage() {
 
         <Card className="layout-card-radius border-0 shadow-sm theme-surface">
           <CardContent className="layout-card-padding">
-            <Receipt size={24} className="text-rose-500 mb-3" />
+            <Receipt size={24} className="text-app-error mb-3" />
             <div className="text-[10px] font-black theme-text-muted uppercase tracking-widest mb-1">Tax Collected</div>
             <div className="text-3xl font-black theme-text tracking-tight">{fmt(overall?.tax || 0)}</div>
           </CardContent>
@@ -129,7 +129,7 @@ export default function DailySummaryPage() {
               </div>
               <div>
                 <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Tax</div>
-                <div className="text-2xl font-bold text-rose-400">{fmt(overall?.tax || 0)}</div>
+                <div className="text-2xl font-bold text-app-error">{fmt(overall?.tax || 0)}</div>
               </div>
             </div>
             <div className="text-right">

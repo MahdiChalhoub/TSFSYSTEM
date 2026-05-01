@@ -146,7 +146,7 @@ export function ComparisonPanel({
             3-Way Match Comparison
           </CardTitle>
           {hasDiscrepancy && (
-            <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+            <Badge className="bg-app-warning-bg text-app-warning border-app-warning">
               {fields.filter(f => f.po != f.invoice).length} Discrepancies
             </Badge>
           )}
@@ -162,7 +162,7 @@ export function ComparisonPanel({
               <p className="text-lg font-black text-app-text">{invoice.invoice_number}</p>
               <p className="text-sm text-app-text-muted mt-1">{invoice.supplier_name}</p>
             </div>
-            <Badge className={invoice.status === 'DISCREPANCY' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}>
+            <Badge className={invoice.status === 'DISCREPANCY' ? 'bg-app-warning-bg text-app-warning' : 'bg-app-info-bg text-app-info'}>
               {invoice.status}
             </Badge>
           </div>
@@ -198,7 +198,7 @@ export function ComparisonPanel({
               <div
                 key={field.key}
                 className={`grid grid-cols-3 gap-4 py-3 border-b border-app-border/10 transition-all ${
-                  mismatch ? 'bg-amber-50/30 border-amber-200' : ''
+                  mismatch ? 'bg-app-warning-bg/30 border-app-warning' : ''
                 } ${isActive ? 'field-linked-active ring-2 ring-app-primary/30 rounded-lg px-3 -mx-3' : ''}`}
               >
                 {/* PO Value */}
@@ -234,7 +234,7 @@ export function ComparisonPanel({
                 {/* Receipt Value */}
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-app-text-muted uppercase opacity-0">{field.label}</p>
-                  <p className="text-sm font-semibold text-blue-600">
+                  <p className="text-sm font-semibold text-app-info">
                     {invoice.receipt_number
                       ? (field.type === 'currency' ? fmt(Number(poValue) * 0.95) : '—')
                       : '—'
@@ -246,14 +246,14 @@ export function ComparisonPanel({
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-app-text-muted uppercase opacity-0">{field.label}</p>
                   <div className="flex items-center gap-2">
-                    <p className={`text-sm font-bold ${mismatch ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    <p className={`text-sm font-bold ${mismatch ? 'text-app-warning' : 'text-app-success'}`}>
                       {field.type === 'currency' ? fmt(Number(invValue)) : invValue as string}
                     </p>
-                    {mismatch && <AlertCircle size={14} className="text-amber-500" />}
-                    {!mismatch && invValue && <CheckCircle2 size={14} className="text-emerald-500" />}
+                    {mismatch && <AlertCircle size={14} className="text-app-warning" />}
+                    {!mismatch && invValue && <CheckCircle2 size={14} className="text-app-success" />}
                   </div>
                   {mismatch && field.type === 'currency' && (
-                    <p className="text-xs text-amber-600 font-semibold">
+                    <p className="text-xs text-app-warning font-semibold">
                       Diff: {fmt(Math.abs(Number(invValue) - Number(poValue)))}
                     </p>
                   )}
@@ -263,10 +263,10 @@ export function ComparisonPanel({
               {/* Mismatch Suggestion Box (if field has mismatch) */}
               {fieldMismatch && (
                 <div className="mismatch-suggestion col-span-3 -mt-2 mb-2 mx-3">
-                  <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3 p-3 bg-app-warning-bg border border-app-warning rounded-lg">
+                    <AlertCircle size={16} className="text-app-warning shrink-0 mt-0.5" />
                     <div className="flex-1 space-y-2">
-                      <p className="text-xs font-bold text-amber-900">
+                      <p className="text-xs font-bold text-app-warning">
                         {fieldMismatch.reason}
                       </p>
                       <div className="flex gap-2">
@@ -274,7 +274,7 @@ export function ComparisonPanel({
                           size="sm"
                           variant="outline"
                           onClick={() => resolveMismatch(field.key, 'accept_system')}
-                          className="h-7 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                          className="h-7 text-xs border-app-success text-app-success hover:bg-app-success-bg"
                         >
                           Accept System
                         </Button>
@@ -282,7 +282,7 @@ export function ComparisonPanel({
                           size="sm"
                           variant="outline"
                           onClick={() => resolveMismatch(field.key, 'accept_document')}
-                          className="h-7 text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                          className="h-7 text-xs border-app-info text-app-info hover:bg-app-info-bg"
                         >
                           Accept Document
                         </Button>
@@ -330,7 +330,7 @@ export function ComparisonPanel({
               </Button>
               <Button
                 onClick={handleVerify}
-                className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                className="flex-1 h-11 bg-app-primary hover:bg-app-primary-dark text-white gap-2"
                 disabled={hasDiscrepancy}
               >
                 <CheckCircle2 size={16} />
@@ -340,7 +340,7 @@ export function ComparisonPanel({
                 <Button
                   onClick={() => onReject(invoice.id)}
                   variant="outline"
-                  className="h-11 px-4 border-rose-200 text-rose-600 hover:bg-rose-50"
+                  className="h-11 px-4 border-app-error text-app-error hover:bg-app-error-bg"
                 >
                   <X size={16} />
                 </Button>
@@ -368,24 +368,24 @@ export function ComparisonPanel({
 
         {/* Status Message */}
         {hasDiscrepancy ? (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="bg-app-warning-bg border border-app-warning rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+              <AlertCircle size={20} className="text-app-warning shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-bold text-amber-900 mb-1">Discrepancies Detected</p>
-                <p className="text-xs text-amber-700">
+                <p className="text-sm font-bold text-app-warning mb-1">Discrepancies Detected</p>
+                <p className="text-xs text-app-warning">
                   PO and Invoice don't match. Edit values or reject the invoice.
                 </p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+          <div className="bg-app-success-bg border border-app-success rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <CheckCircle2 size={20} className="text-emerald-600 shrink-0 mt-0.5" />
+              <CheckCircle2 size={20} className="text-app-success shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-bold text-emerald-900 mb-1">All Fields Match ✓</p>
-                <p className="text-xs text-emerald-700">
+                <p className="text-sm font-bold text-app-success mb-1">All Fields Match ✓</p>
+                <p className="text-xs text-app-success">
                   Ready to verify and approve for payment.
                 </p>
               </div>

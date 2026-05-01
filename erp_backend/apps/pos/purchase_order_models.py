@@ -154,7 +154,12 @@ class PurchaseOrder(TenantModel):
     def save(self, *args, **kwargs):
         # Auto-generate PO number on first transition out of DRAFT
         if not self.po_number and self.status != 'DRAFT':
-            from apps.finance.models import TransactionSequence
+            from erp.connector_registry import connector
+            TransactionSequence = connector.require(
+                'finance.sequences.get_model', org_id=self.organization_id
+            )
+            if TransactionSequence is None:
+                raise RuntimeError("Finance module unavailable; cannot allocate PO sequence.")
             self.po_number = TransactionSequence.next_value(self.organization, 'PURCHASE_ORDER')
 
         # Snapshot supplier name

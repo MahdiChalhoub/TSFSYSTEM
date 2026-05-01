@@ -77,7 +77,7 @@ export default async function PricingPage() {
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-6 bg-app-surface p-8 rounded-[40px] shadow-2xl shadow-violet-900/5 border border-gray-50">
+                    <div className="flex flex-col sm:flex-row gap-6 bg-app-surface p-8 rounded-[40px] shadow-2xl shadow-violet-900/5 border border-app-border">
                         <div className="text-center px-6 border-r border-app-border last:border-0">
                             <div className="text-4xl font-black text-app-foreground tracking-tighter mb-1">{priceGroups.length}</div>
                             <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Price Groups</div>

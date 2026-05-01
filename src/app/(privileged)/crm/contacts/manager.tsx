@@ -29,10 +29,10 @@ export default function ContactManager({
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             {/* Action Bar */}
-            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-app-surface p-6 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-app-surface p-6 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-app-border">
                 <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
                     <div className="relative group w-full md:w-96">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-app-faint group-focus-within:text-indigo-500 transition-colors" size={20} />
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-app-faint group-focus-within:text-app-info transition-colors" size={20} />
                         <input
                             className="w-full bg-app-surface pl-14 pr-6 py-4 rounded-2xl border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-app-foreground placeholder:text-app-faint"
                             placeholder="Universal Master Data Search..."
@@ -72,7 +72,7 @@ export default function ContactManager({
                 <div className="flex gap-4 w-full xl:w-auto border-t xl:border-t-0 pt-6 xl:pt-0">
                     <button
                         onClick={() => { setModalType('SUPPLIER'); setIsModalOpen(true); }}
-                        className="flex-1 xl:flex-none px-6 py-4 bg-amber-50 text-amber-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-600 hover:text-white transition-all flex items-center justify-center gap-2 group"
+                        className="flex-1 xl:flex-none px-6 py-4 bg-app-warning-bg text-app-warning rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-app-warning hover:text-white transition-all flex items-center justify-center gap-2 group"
                     >
                         <Briefcase size={18} className="group-hover:rotate-12 transition-transform" />
                         New Supplier
@@ -99,8 +99,8 @@ export default function ContactManager({
                         {/* Avatar / Icon */}
                         <div className={clsx(
                             "w-24 h-24 rounded-[32px] shrink-0 flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-500",
-                            contact.type === 'CUSTOMER' ? "bg-blue-50 text-blue-600" :
-                                contact.type === 'LEAD' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                            contact.type === 'CUSTOMER' ? "bg-app-info-bg text-app-info" :
+                                contact.type === 'LEAD' ? "bg-app-success-bg text-app-success" : "bg-app-warning-bg text-app-warning"
                         )}>
                             {contact.type === 'CUSTOMER' ? <User size={40} /> :
                                 contact.type === 'LEAD' ? <Users size={40} /> : <Briefcase size={40} />}
@@ -112,8 +112,8 @@ export default function ContactManager({
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1 flex-wrap">
                                     <span className={clsx(
                                         "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter",
-                                        contact.type === 'CUSTOMER' ? "bg-blue-100 text-blue-700" :
-                                            contact.type === 'LEAD' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                                        contact.type === 'CUSTOMER' ? "bg-app-info-bg text-app-info" :
+                                            contact.type === 'LEAD' ? "bg-app-success-bg text-app-success" : "bg-app-warning-bg text-app-warning"
                                     )}>
                                         {contact.type}
                                     </span>
@@ -121,7 +121,7 @@ export default function ContactManager({
                                     {contact.type === 'SUPPLIER' && contact.supplier_category && contact.supplier_category !== 'REGULAR' && (
                                         <span className={clsx(
                                             "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter",
-                                            contact.supplier_category === 'DEPOT_VENTE' ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"
+                                            contact.supplier_category === 'DEPOT_VENTE' ? "bg-purple-100 text-purple-700" : "bg-app-warning-bg text-app-warning"
                                         )}>
                                             {contact.supplier_category === 'DEPOT_VENTE' ? 'Consignment' : 'Mixed'}
                                         </span>
@@ -130,7 +130,7 @@ export default function ContactManager({
                                     {contact.type === 'CUSTOMER' && contact.customer_tier && contact.customer_tier !== 'STANDARD' && (
                                         <span className={clsx(
                                             "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter flex items-center gap-0.5",
-                                            contact.customer_tier === 'VIP' ? "bg-yellow-100 text-yellow-700" :
+                                            contact.customer_tier === 'VIP' ? "bg-app-warning-bg text-app-warning" :
                                                 contact.customer_tier === 'WHOLESALE' ? "bg-cyan-100 text-cyan-700" : "bg-teal-100 text-teal-700"
                                         )}>
                                             {contact.customer_tier === 'VIP' && <Star size={10} />}
@@ -143,18 +143,18 @@ export default function ContactManager({
                                         </span>
                                     )}
                                 </div>
-                                <h3 className="text-2xl font-black text-app-foreground group-hover:text-indigo-600 transition-colors truncate max-w-[280px]">
+                                <h3 className="text-2xl font-black text-app-foreground group-hover:text-app-info transition-colors truncate max-w-[280px]">
                                     {contact.name}
                                 </h3>
                             </div>
 
                             <div className="flex flex-wrap justify-center sm:justify-start gap-4">
                                 <div className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground bg-app-surface px-3 py-1.5 rounded-xl border border-app-border/50">
-                                    <Mail size={14} className="text-indigo-500" />
+                                    <Mail size={14} className="text-app-info" />
                                     {contact.email || 'No Email'}
                                 </div>
                                 <div className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground bg-app-surface px-3 py-1.5 rounded-xl border border-app-border/50">
-                                    <Phone size={14} className="text-indigo-500" />
+                                    <Phone size={14} className="text-app-info" />
                                     {contact.phone || 'No Phone'}
                                 </div>
                             </div>
@@ -165,7 +165,7 @@ export default function ContactManager({
                             <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Current Balance</div>
                             <div className={clsx(
                                 "text-xl font-black flex items-center gap-1",
-                                Number(contact.balance) > 0 ? "text-emerald-600" : Number(contact.balance) < 0 ? "text-rose-600" : "text-app-muted-foreground"
+                                Number(contact.balance) > 0 ? "text-app-success" : Number(contact.balance) < 0 ? "text-app-error" : "text-app-muted-foreground"
                             )}>
                                 {Number(contact.balance) > 0 ? <TrendingUp size={16} /> : Number(contact.balance) < 0 ? <TrendingDown size={16} /> : null}
                                 ${Math.abs(Number(contact.balance)).toFixed(2)}

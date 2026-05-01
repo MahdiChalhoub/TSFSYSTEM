@@ -71,7 +71,7 @@ export default function FreshProfilesPage() {
                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-app-muted-foreground">
                                         <Thermometer size={10} /> {p.storage_temp_min ?? '—'}°C – {p.storage_temp_max ?? '—'}°C
                                     </span>
-                                    {p.requires_lot_tracking && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700">LOT</span>}
+                                    {p.requires_lot_tracking && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-app-success-bg text-app-success">LOT</span>}
                                 </div>
                             </div>
                             <button onClick={() => setEditing({ ...p })} className="p-2 rounded-lg hover:bg-app-surface-hover"><Pencil size={14} className="text-app-muted-foreground" /></button>

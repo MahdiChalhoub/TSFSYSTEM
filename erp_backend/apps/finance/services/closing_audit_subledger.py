@@ -70,7 +70,10 @@ def check_subledger_integrity(organization):
     # JE lines that don't map to an existing Contact. One query,
     # reused across scopes.
     try:
-        from apps.crm.models import Contact
+        from erp.connector_registry import connector
+        Contact = connector.require('crm.contacts.get_model', org_id=organization.id)
+        if Contact is None:
+            raise RuntimeError("CRM unavailable")
         referenced_ids = set(
             JournalEntryLine.objects
             .filter(

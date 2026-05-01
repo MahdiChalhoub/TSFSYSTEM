@@ -57,18 +57,18 @@ export default async function ContactsPage() {
                             <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100">
                                 <Users size={20} />
                             </div>
-                            <span className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Master Entity Management</span>
+                            <span className="text-xs font-black text-app-info uppercase tracking-[0.3em]">Master Entity Management</span>
                         </div>
                         <h1 className="text-5xl lg:text-7xl font-black text-app-foreground tracking-tighter leading-none">
-                            Contact <span className="text-indigo-600">Center</span>
+                            Contact <span className="text-app-info">Center</span>
                         </h1>
                         <p className="mt-6 text-app-muted-foreground font-medium max-w-2xl text-lg leading-relaxed">
                             A unified registry for all Clients and Suppliers. Every contact is cryptographically linked to a
-                            <span className="text-indigo-600 font-bold ml-1">unique sub-ledger account</span> for precision accounting and multi-site attribution.
+                            <span className="text-app-info font-bold ml-1">unique sub-ledger account</span> for precision accounting and multi-site attribution.
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-6 bg-app-surface p-8 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
+                    <div className="flex flex-col sm:flex-row gap-6 bg-app-surface p-8 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-app-border">
                         <div className="text-center px-6 border-r border-app-border last:border-0">
                             <div className="text-4xl font-black text-app-foreground tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length}</div>
                             <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Active Clients</div>

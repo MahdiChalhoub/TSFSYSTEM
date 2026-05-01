@@ -66,18 +66,32 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Only fetch if not pre-loaded
-  const [einvoiceStds, setEinvoiceStds] = useState<{ id: number; code: string; name: string; required_credentials: any[]; branding_fields: any[]; region: string }[]>([])
+  const [einvoiceStds, setEinvoiceStds] = useState<{
+    id: number;
+    code: string;
+    name: string;
+    required_credentials: Array<Record<string, unknown>>;
+    branding_fields: Array<Record<string, unknown>>;
+    region: string;
+  }[]>([])
   useEffect(() => {
     if (refCountries.length === 0) {
       erpFetch('reference/countries/?limit=300').then(data => {
-        const list = Array.isArray(data) ? data : data?.results || []
-        setRefCountries(list.map((c: any) => ({ iso2: c.iso2 || c.code || '', name: c.name || c.country_name || '', default_currency_code: c.default_currency_code || c.currency_code || '' })))
+        const list = (Array.isArray(data) ? data : data?.results || []) as Array<Record<string, unknown>>
+        setRefCountries(list.map((c) => ({
+          iso2: String(c.iso2 ?? c.code ?? ''),
+          name: String(c.name ?? c.country_name ?? ''),
+          default_currency_code: String(c.default_currency_code ?? c.currency_code ?? ''),
+        })))
       }).catch(() => {})
     }
     if (refCurrencies.length === 0) {
       erpFetch('reference/currencies/?limit=200').then(data => {
-        const list = Array.isArray(data) ? data : data?.results || []
-        setRefCurrencies(list.map((c: any) => ({ code: c.code || c.currency_code || '', name: c.name || c.currency_name || '' })))
+        const list = (Array.isArray(data) ? data : data?.results || []) as Array<Record<string, unknown>>
+        setRefCurrencies(list.map((c) => ({
+          code: String(c.code ?? c.currency_code ?? ''),
+          name: String(c.name ?? c.currency_name ?? ''),
+        })))
       }).catch(() => {})
     }
     // Fetch e-invoice standards
@@ -87,7 +101,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
     }).catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const upd = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }))
+  const upd = (key: string, val: unknown) => setForm(f => ({ ...f, [key]: val }))
 
   async function handleSave() {
     if (!form.country_code || !form.country_name) { toast.error('Country code and name are required'); return }
@@ -107,7 +121,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
       toast.success(isNew ? 'Template created — you can continue editing' : 'Template saved')
       // If it was a new template, update the form with the server-assigned ID so subsequent saves use PUT
       if (isNew && result?.id) { upd('id', result.id) }
-    } catch (err: any) { toast.error(err?.message || 'Save failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Save failed') }
     finally { setSaving(false) }
   }
 
@@ -284,9 +298,9 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                     {sel.required_credentials.length > 0 && (
                       <div className="flex items-center gap-1 flex-wrap">
                         <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-wider">Credentials:</span>
-                        {sel.required_credentials.map((c: any, i: number) => (
+                        {sel.required_credentials.map((c, i: number) => (
                           <span key={i} className="text-[8px] font-bold px-1.5 py-px rounded" style={{ background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning) 15%, transparent)', color: 'var(--app-foreground)' }}>
-                            {c.label || c.key}{c.required ? ' *' : ''}
+                            {String(c.label ?? c.key ?? '')}{c.required ? ' *' : ''}
                           </span>
                         ))}
                       </div>
@@ -294,9 +308,9 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                     {sel.branding_fields.length > 0 && (
                       <div className="flex items-center gap-1 flex-wrap">
                         <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-wider">Branding:</span>
-                        {sel.branding_fields.map((b: any, i: number) => (
+                        {sel.branding_fields.map((b, i: number) => (
                           <span key={i} className="text-[8px] font-bold px-1.5 py-px rounded" style={{ background: 'color-mix(in srgb, var(--app-info) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 15%, transparent)', color: 'var(--app-foreground)' }}>
-                            {b.label || b.key}
+                            {String(b.label ?? b.key ?? '')}
                           </span>
                         ))}
                       </div>
@@ -368,7 +382,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
         {step === 1 && editingTax !== null && (() => {
           const tax = catalog[editingTax]
           if (!tax) { setEditingTax(null); return null }
-          const updT = (key: keyof TaxDef, val: any) => {
+          const updT = <K extends keyof TaxDef>(key: K, val: TaxDef[K]) => {
             const scrollTop = scrollRef.current?.scrollTop || 0
             setCatalog(c => { const nc = [...c]; nc[editingTax] = { ...nc[editingTax], [key]: val }; return nc })
             requestAnimationFrame(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollTop })
@@ -449,7 +463,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                   <div><label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Tax Name</label>
                     <input className={inputCls} value={tax.name} placeholder="e.g. TVA 18%, AIRSI 7.5%" onChange={e => updT('name', e.target.value)} /></div>
                   <div><label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Category</label>
-                    <select className={inputCls} value={tax.category} onChange={e => updT('category', e.target.value as any)}>
+                    <select className={inputCls} value={tax.category} onChange={e => updT('category', e.target.value as TaxDef['category'])}>
                       <option value="ESSENTIAL">ESSENTIAL — Core tax (VAT, Purchase, Profit)</option>
                       <option value="CUSTOM">CUSTOM — Country-specific (AIRSI, Zakat, etc.)</option>
                     </select></div>
@@ -568,7 +582,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
         {step === 2 && editingPreset !== null && (() => {
           const p = orgPresets[editingPreset]
           if (!p) { setEditingPreset(null); return null }
-          const updP = (key: keyof OrgPreset, val: any) => {
+          const updP = <K extends keyof OrgPreset>(key: K, val: OrgPreset[K]) => {
             saveScroll()
             setOrgPresets(ps => { const np = [...ps]; np[editingPreset] = { ...np[editingPreset], [key]: val }; return np })
           }
@@ -857,7 +871,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
         {step === 3 && editingProfile !== null && (() => {
           const p = cpPresets[editingProfile]
           if (!p) { setEditingProfile(null); return null }
-          const updCP = (key: keyof CounterpartyPreset, val: any) => {
+          const updCP = <K extends keyof CounterpartyPreset>(key: K, val: CounterpartyPreset[K]) => {
             saveScroll()
             setCpPresets(ps => { const np = [...ps]; np[editingProfile] = { ...np[editingProfile], [key]: val }; return np })
           }

@@ -19,10 +19,10 @@ function fmt(n: number) {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-    PENDING: { label: 'Pending Review', color: 'bg-amber-100 text-amber-700' },
-    APPROVED: { label: 'Approved & Restocked', color: 'bg-emerald-100 text-emerald-700' },
-    COMPLETED: { label: 'Completed', color: 'bg-blue-100 text-blue-700' },
-    CANCELLED: { label: 'Cancelled', color: 'bg-red-100 text-red-700' },
+    PENDING: { label: 'Pending Review', color: 'bg-app-warning-bg text-app-warning' },
+    APPROVED: { label: 'Approved & Restocked', color: 'bg-app-success-bg text-app-success' },
+    COMPLETED: { label: 'Completed', color: 'bg-app-info-bg text-app-info' },
+    CANCELLED: { label: 'Cancelled', color: 'bg-app-error-bg text-app-error' },
 }
 
 export default function SalesReturnsPage() {
@@ -90,7 +90,7 @@ export default function SalesReturnsPage() {
                             returns.map(ret => (
                                 <TableRow key={ret.id} className="group hover:bg-app-surface/50 transition-colors">
                                     <TableCell className="font-bold font-mono">RET-{ret.id}</TableCell>
-                                    <TableCell className="font-medium text-indigo-600">
+                                    <TableCell className="font-medium text-app-info">
                                         <Link href={`/sales/${ret.original_order}`} className="hover:underline">
                                             {ret.original_order_ref || `#${ret.original_order}`}
                                         </Link>
@@ -109,7 +109,7 @@ export default function SalesReturnsPage() {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="h-8 bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all font-bold text-[10px] uppercase"
+                                                        className="h-8 bg-app-success-bg text-app-success border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all font-bold text-[10px] uppercase"
                                                         onClick={() => approveReturn(ret.id)}
                                                     >
                                                         <CheckCircle2 size={14} className="mr-1" /> Approve

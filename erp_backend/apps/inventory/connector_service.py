@@ -258,6 +258,13 @@ def register_capabilities(registry):
             organization = Organization.objects.get(id=org_id)
         return get_procurement_status_batch(organization, product_ids or [])
 
+    @_cap(registry, 'inventory.services.get_product_completeness_service',
+          description='Get ProductCompletenessService class',
+          cacheable=False, critical=False)
+    def get_product_completeness_service(org_id=0, **kw):
+        from apps.inventory.services.product_completeness import ProductCompletenessService
+        return ProductCompletenessService
+
 
 def _cap(registry, name, **kwargs):
     """Decorator helper to register a capability."""

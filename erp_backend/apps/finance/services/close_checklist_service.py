@@ -248,20 +248,26 @@ class CloseChecklistService:
             # Fire auto-task event so operators get notified the moment
             # the gate clears — they often won't refresh the checklist UI.
             try:
-                from apps.workspace.auto_task_service import fire_auto_tasks
+                from erp.connector_registry import connector
                 target_label = (
                     f'Fiscal Year {run.fiscal_year.name}' if run.fiscal_year_id
                     else f'Period {run.fiscal_period.name}'
                 )
-                fire_auto_tasks(run.organization, 'CHECKLIST_READY_TO_CLOSE', {
-                    'reference': target_label,
-                    'extra': {
-                        'object_type': 'CloseChecklistRun',
-                        'object_id': run.id,
-                        'Target': target_label,
-                        'Template': run.template.name,
+                connector.execute(
+                    'workspace.auto_tasks.fire',
+                    org_id=run.organization_id,
+                    organization=run.organization,
+                    event='CHECKLIST_READY_TO_CLOSE',
+                    context={
+                        'reference': target_label,
+                        'extra': {
+                            'object_type': 'CloseChecklistRun',
+                            'object_id': run.id,
+                            'Target': target_label,
+                            'Template': run.template.name,
+                        },
                     },
-                })
+                )
             except Exception:
                 logger.exception("CHECKLIST_READY_TO_CLOSE fire failed")
 

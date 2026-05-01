@@ -19,9 +19,9 @@ function fmt(n: number) {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-    PENDING: { label: 'Pending Processing', color: 'bg-amber-100 text-amber-700' },
-    COMPLETED: { label: 'Completed (Destocked)', color: 'bg-emerald-100 text-emerald-700' },
-    CANCELLED: { label: 'Cancelled', color: 'bg-red-100 text-red-700' },
+    PENDING: { label: 'Pending Processing', color: 'bg-app-warning-bg text-app-warning' },
+    COMPLETED: { label: 'Completed (Destocked)', color: 'bg-app-success-bg text-app-success' },
+    CANCELLED: { label: 'Cancelled', color: 'bg-app-error-bg text-app-error' },
 }
 
 export default function PurchaseReturnsPage() {
@@ -61,7 +61,7 @@ export default function PurchaseReturnsPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-100">
+                        <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center shadow-lg shadow-blue-100">
                             <Truck size={20} className="text-white" />
                         </div>
                         Supplier Returns
@@ -89,7 +89,7 @@ export default function PurchaseReturnsPage() {
                             returns.map(ret => (
                                 <TableRow key={ret.id} className="group hover:bg-app-surface/50 transition-colors">
                                     <TableCell className="font-bold font-mono">PRET-{ret.id}</TableCell>
-                                    <TableCell className="font-medium text-indigo-600">
+                                    <TableCell className="font-medium text-app-info">
                                         <Link href={`/purchases/${ret.original_order}`} className="hover:underline">
                                             PO #{ret.original_order}
                                         </Link>
@@ -108,7 +108,7 @@ export default function PurchaseReturnsPage() {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="h-8 bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-600 hover:text-white transition-all font-bold text-[10px] uppercase"
+                                                        className="h-8 bg-app-info-bg text-app-info border-app-info hover:bg-app-info hover:text-white transition-all font-bold text-[10px] uppercase"
                                                         onClick={() => completeReturn(ret.id)}
                                                     >
                                                         <CheckCircle2 size={14} className="mr-1" /> Ship Out

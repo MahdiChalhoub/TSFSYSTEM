@@ -97,7 +97,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
             {/* Step 1: Upload */}
             <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm">
                 <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-app-info-bg text-app-info rounded-2xl flex items-center justify-center">
                         <Upload size={24} />
                     </div>
                     <div>
@@ -113,7 +113,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                         onChange={onFileChange}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
-                    <div className={`p-12 border-2 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center gap-4 ${file ? 'border-emerald-200 bg-emerald-50/30' : 'border-app-border bg-app-surface/50 group-hover:border-blue-300 group-hover:bg-blue-50/30'}`}>
+                    <div className={`p-12 border-2 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center gap-4 ${file ? 'border-app-success bg-app-success-bg/30' : 'border-app-border bg-app-surface/50 group-hover:border-app-info group-hover:bg-app-info-bg/30'}`}>
                         {file ? (
                             <>
                                 <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20">
@@ -121,12 +121,12 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                                 </div>
                                 <div className="text-center">
                                     <p className="text-lg font-black text-app-foreground tracking-tight">{file.name}</p>
-                                    <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">File Loaded Successfully</p>
+                                    <p className="text-[10px] text-app-success font-black uppercase tracking-widest">File Loaded Successfully</p>
                                 </div>
                             </>
                         ) : (
                             <>
-                                <div className="p-4 bg-blue-100 text-blue-600 rounded-2xl">
+                                <div className="p-4 bg-app-info-bg text-app-info rounded-2xl">
                                     <TableIcon size={40} />
                                 </div>
                                 <div className="text-center">
@@ -268,7 +268,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                 <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm animate-in zoom-in-95 duration-500">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                            <div className="w-12 h-12 bg-app-success-bg text-app-success rounded-2xl flex items-center justify-center">
                                 <CheckCircle2 size={24} />
                             </div>
                             <div>
@@ -279,11 +279,11 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
 
                         <div className="flex gap-4">
                             <div className="text-center">
-                                <p className="text-2xl font-black text-emerald-600 tracking-tighter">{results.success_count}</p>
+                                <p className="text-2xl font-black text-app-success tracking-tighter">{results.success_count}</p>
                                 <p className="text-[9px] font-black uppercase text-emerald-400">Success</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-2xl font-black text-red-600 tracking-tighter">{results.error_count}</p>
+                                <p className="text-2xl font-black text-app-error tracking-tighter">{results.error_count}</p>
                                 <p className="text-[9px] font-black uppercase text-red-400">Errors</p>
                             </div>
                         </div>
@@ -291,14 +291,14 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
 
                     {results.errors.length > 0 && (
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-200">
-                            <h3 className="text-xs font-black uppercase text-red-500 tracking-tighter">Error Diagnostic Log</h3>
+                            <h3 className="text-xs font-black uppercase text-app-error tracking-tighter">Error Diagnostic Log</h3>
                             <div className="space-y-2">
                                 {results.errors.map((err: Record<string, any>, i: number) => (
-                                    <div key={i} className="p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 items-start">
-                                        <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
+                                    <div key={i} className="p-4 bg-app-error-bg border border-red-100 rounded-xl flex gap-3 items-start">
+                                        <AlertCircle size={14} className="text-app-error mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-[10px] font-black text-red-800 uppercase tracking-widest">Row {err.row}</p>
-                                            <p className="text-xs text-red-600 font-medium leading-tight mt-1">{err.error}</p>
+                                            <p className="text-[10px] font-black text-app-error uppercase tracking-widest">Row {err.row}</p>
+                                            <p className="text-xs text-app-error font-medium leading-tight mt-1">{err.error}</p>
                                         </div>
                                     </div>
                                 ))}

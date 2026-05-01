@@ -159,13 +159,17 @@ export default function CounterpartyTaxProfileFormPage() {
 
     // Fetch org countries from regional settings
     erpFetch('reference/org-countries/').then(data => {
-      const list = Array.isArray(data) ? data : data?.results || []
+      const list = (Array.isArray(data) ? data : data?.results || []) as Array<Record<string, unknown>>
       const mapped = list
-        .filter((c: any) => c.is_enabled)
-        .map((c: any) => ({ iso2: c.country_iso2 || c.country_iso3 || '', name: c.country_name || '', isDefault: !!c.is_default }))
+        .filter((c) => c.is_enabled)
+        .map((c) => ({
+          iso2: String(c.country_iso2 ?? c.country_iso3 ?? ''),
+          name: String(c.country_name ?? ''),
+          isDefault: !!c.is_default,
+        }))
       setOrgCountries(mapped)
       if (!isEdit) {
-        const def = mapped.find((c: any) => c.isDefault) || (mapped.length === 1 ? mapped[0] : null)
+        const def = mapped.find((c) => c.isDefault) || (mapped.length === 1 ? mapped[0] : null)
         if (def) {
           setForm(f => ({ ...f, country_code: def.iso2 }))
           setTimeout(() => applyCountryTemplate(def.iso2), 100)
@@ -174,7 +178,7 @@ export default function CounterpartyTaxProfileFormPage() {
     }).catch(() => {})
   }, [id, isEdit])
 
-  const upd = (key: string, value: any) => setForm(f => ({ ...f, [key]: value }))
+  const upd = (key: string, value: unknown) => setForm(f => ({ ...f, [key]: value }))
 
   // ── Auto-populate documents from country template (NEW mode only) ──
   async function applyCountryTemplate(countryCode: string) {
@@ -219,7 +223,7 @@ export default function CounterpartyTaxProfileFormPage() {
         await erpFetch(`finance/tax-jurisdiction-rules/${rule.id}/`, { method: 'PUT', body: JSON.stringify(payload) })
         toast.success(`Rule "${payload.name}" updated`)
       }
-    } catch (err: any) { toast.error(err?.message || 'Save failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Save failed') }
   }
 
   async function deleteJurisRule(idx: number) {
@@ -229,7 +233,7 @@ export default function CounterpartyTaxProfileFormPage() {
       await erpFetch(`finance/tax-jurisdiction-rules/${rule.id}/`, { method: 'DELETE' })
       setJurisRules(prev => prev.filter((_, i) => i !== idx))
       toast.success('Rule deleted')
-    } catch (err: any) { toast.error(err?.message || 'Delete failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Delete failed') }
   }
 
   // ── Custom Tax Rules inline CRUD ──
@@ -255,7 +259,7 @@ export default function CounterpartyTaxProfileFormPage() {
         await erpFetch(`finance/custom-tax-rules/${rule.id}/`, { method: 'PUT', body: JSON.stringify(payload) })
         toast.success(`Rule "${payload.name}" updated`)
       }
-    } catch (err: any) { toast.error(err?.message || 'Save failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Save failed') }
   }
 
   async function deleteCustomRule(idx: number) {
@@ -265,14 +269,14 @@ export default function CounterpartyTaxProfileFormPage() {
       await erpFetch(`finance/custom-tax-rules/${rule.id}/`, { method: 'DELETE' })
       setCustomRules(prev => prev.filter((_, i) => i !== idx))
       toast.success('Rule deleted')
-    } catch (err: any) { toast.error(err?.message || 'Delete failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Delete failed') }
   }
 
-  function updCustomRule(idx: number, key: string, val: any) {
+  function updCustomRule(idx: number, key: string, val: unknown) {
     setCustomRules(prev => { const c = [...prev]; c[idx] = { ...c[idx], [key]: val }; return c })
   }
 
-  function updJuris(idx: number, key: string, val: any) {
+  function updJuris(idx: number, key: string, val: unknown) {
     setJurisRules(prev => { const c = [...prev]; c[idx] = { ...c[idx], [key]: val }; return c })
   }
 
@@ -299,7 +303,7 @@ export default function CounterpartyTaxProfileFormPage() {
       await erpFetch(url, { method, body: JSON.stringify(form) })
       toast.success(isEdit ? 'Profile updated' : 'Profile created')
       router.push('/finance/counterparty-tax-profiles')
-    } catch (err: any) { toast.error(err?.message || 'Save failed') }
+    } catch (err: unknown) { const m = err instanceof Error ? err.message : null; toast.error(m || 'Save failed') }
     finally { setSaving(false) }
   }
 

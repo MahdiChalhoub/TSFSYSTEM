@@ -45,9 +45,9 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
         <div className="space-y-6">
             {/* My Score Summary */}
             {latest && (
-                <div className="bg-app-surface rounded-3xl border border-gray-50 p-8 shadow-lg shadow-gray-100">
+                <div className="bg-app-surface rounded-3xl border border-app-border p-8 shadow-lg shadow-gray-100">
                     <div className="flex items-center gap-3 mb-6">
-                        <Star size={20} className="text-amber-500" />
+                        <Star size={20} className="text-app-warning" />
                         <h2 className="text-lg font-bold text-app-foreground">Your Performance — {latest.period_label}</h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
@@ -56,15 +56,15 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                             <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Score</div>
                         </div>
                         <div className="bg-app-surface rounded-2xl p-4 text-center">
-                            <div className="text-3xl font-black text-indigo-600">{latest.tier ? TIER_STYLES[latest.tier]?.icon : '—'}</div>
+                            <div className="text-3xl font-black text-app-info">{latest.tier ? TIER_STYLES[latest.tier]?.icon : '—'}</div>
                             <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">{latest.tier || 'No Tier'}</div>
                         </div>
                         <div className="bg-app-surface rounded-2xl p-4 text-center">
-                            <div className="text-3xl font-black text-emerald-600">{latest.tasks_completed}</div>
+                            <div className="text-3xl font-black text-app-success">{latest.tasks_completed}</div>
                             <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Completed</div>
                         </div>
                         <div className="bg-app-surface rounded-2xl p-4 text-center">
-                            <div className="text-3xl font-black text-sky-600">{latest.completion_rate}%</div>
+                            <div className="text-3xl font-black text-app-info">{latest.completion_rate}%</div>
                             <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Completion</div>
                         </div>
                         <div className="bg-app-surface rounded-2xl p-4 text-center">
@@ -72,11 +72,11 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                             <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">On Time</div>
                         </div>
                         <div className="bg-app-surface rounded-2xl p-4 text-center">
-                            <div className="text-3xl font-black text-amber-500">{latest.task_points}</div>
+                            <div className="text-3xl font-black text-app-warning">{latest.task_points}</div>
                             <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Points</div>
                         </div>
                         <div className="bg-app-surface rounded-2xl p-4 text-center">
-                            <div className="text-3xl font-black text-red-500">{latest.tasks_overdue}</div>
+                            <div className="text-3xl font-black text-app-error">{latest.tasks_overdue}</div>
                             <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Overdue</div>
                         </div>
                     </div>
@@ -84,9 +84,9 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
             )}
 
             {/* Tab Switch */}
-            <div className="flex gap-2 bg-app-surface p-1.5 rounded-2xl shadow-lg shadow-gray-100 border border-gray-50 w-fit">
+            <div className="flex gap-2 bg-app-surface p-1.5 rounded-2xl shadow-lg shadow-gray-100 border border-app-border w-fit">
                 <button onClick={() => setTab('leaderboard')}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-amber-500 text-white shadow-lg shadow-amber-200' : 'text-app-muted-foreground hover:text-app-foreground'}`}>
+                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-app-warning text-white shadow-lg shadow-amber-200' : 'text-app-muted-foreground hover:text-app-foreground'}`}>
                     🏆 Leaderboard
                 </button>
                 <button onClick={() => setTab('my')}
@@ -97,10 +97,10 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
 
             {/* Content */}
             {tab === 'leaderboard' ? (
-                <div className="bg-app-surface rounded-3xl border border-gray-50 overflow-hidden shadow-lg shadow-gray-100">
-                    <div className="p-6 border-b border-gray-50">
+                <div className="bg-app-surface rounded-3xl border border-app-border overflow-hidden shadow-lg shadow-gray-100">
+                    <div className="p-6 border-b border-app-border">
                         <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
-                            <Trophy size={20} className="text-amber-500" /> Top Performers
+                            <Trophy size={20} className="text-app-warning" /> Top Performers
                         </h2>
                     </div>
                     <div className="divide-y divide-gray-50">
@@ -130,11 +130,11 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                                         <div className="text-[10px] text-app-muted-foreground uppercase tracking-wider">score</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-sm font-bold text-emerald-600">{score.completion_rate}%</div>
+                                        <div className="text-sm font-bold text-app-success">{score.completion_rate}%</div>
                                         <div className="text-[10px] text-app-muted-foreground uppercase tracking-wider">completion</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-sm font-bold text-amber-500">{score.task_points} pts</div>
+                                        <div className="text-sm font-bold text-app-warning">{score.task_points} pts</div>
                                         <div className="text-[10px] text-app-muted-foreground uppercase tracking-wider">earned</div>
                                     </div>
                                 </div>
@@ -143,10 +143,10 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                     </div>
                 </div>
             ) : (
-                <div className="bg-app-surface rounded-3xl border border-gray-50 overflow-hidden shadow-lg shadow-gray-100">
-                    <div className="p-6 border-b border-gray-50">
+                <div className="bg-app-surface rounded-3xl border border-app-border overflow-hidden shadow-lg shadow-gray-100">
+                    <div className="p-6 border-b border-app-border">
                         <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
-                            <BarChart3 size={20} className="text-indigo-600" /> Performance History
+                            <BarChart3 size={20} className="text-app-info" /> Performance History
                         </h2>
                     </div>
                     <div className="divide-y divide-gray-50">
@@ -178,23 +178,23 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
 
             {/* KPI Weights */}
             {kpiConfig && (
-                <div className="bg-app-surface rounded-3xl border border-gray-50 p-6 shadow-lg shadow-gray-100">
+                <div className="bg-app-surface rounded-3xl border border-app-border p-6 shadow-lg shadow-gray-100">
                     <h3 className="text-sm font-bold text-app-muted-foreground mb-4 flex items-center gap-2"><Target size={16} /> KPI Weights</h3>
                     <div className="grid grid-cols-4 gap-4">
-                        <div className="bg-indigo-50 rounded-2xl p-4 text-center">
-                            <div className="text-2xl font-black text-indigo-600">{kpiConfig.task_completion_weight}%</div>
+                        <div className="bg-app-info-bg rounded-2xl p-4 text-center">
+                            <div className="text-2xl font-black text-app-info">{kpiConfig.task_completion_weight}%</div>
                             <div className="text-[10px] text-app-muted-foreground font-bold uppercase">Tasks</div>
                         </div>
-                        <div className="bg-sky-50 rounded-2xl p-4 text-center">
-                            <div className="text-2xl font-black text-sky-600">{kpiConfig.on_time_weight}%</div>
+                        <div className="bg-app-info-bg rounded-2xl p-4 text-center">
+                            <div className="text-2xl font-black text-app-info">{kpiConfig.on_time_weight}%</div>
                             <div className="text-[10px] text-app-muted-foreground font-bold uppercase">On Time</div>
                         </div>
-                        <div className="bg-emerald-50 rounded-2xl p-4 text-center">
-                            <div className="text-2xl font-black text-emerald-600">{kpiConfig.checklist_weight}%</div>
+                        <div className="bg-app-success-bg rounded-2xl p-4 text-center">
+                            <div className="text-2xl font-black text-app-success">{kpiConfig.checklist_weight}%</div>
                             <div className="text-[10px] text-app-muted-foreground font-bold uppercase">Checklists</div>
                         </div>
-                        <div className="bg-amber-50 rounded-2xl p-4 text-center">
-                            <div className="text-2xl font-black text-amber-600">{kpiConfig.evaluation_weight}%</div>
+                        <div className="bg-app-warning-bg rounded-2xl p-4 text-center">
+                            <div className="text-2xl font-black text-app-warning">{kpiConfig.evaluation_weight}%</div>
                             <div className="text-[10px] text-app-muted-foreground font-bold uppercase">Evaluations</div>
                         </div>
                     </div>
