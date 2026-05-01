@@ -142,27 +142,9 @@ export default function PurchaseInvoicesPage({ fromPo }: { fromPo?: string } = {
    return rows
  }, [orders, search, poScope])
 
- // When `from_po` is set, scroll the matching row into view and flash a
- // ring so the operator's eye finds it. Runs once per scope/load
- // transition, after the list has rendered.
- useEffect(() => {
-   if (!poScope || loading) return
-   if (typeof window === 'undefined') return
-   const tries = [50, 200, 500]
-   const timers = tries.map(ms => window.setTimeout(() => {
-     // DajingoListView keys rows by `getRowId(inv)` — find it by partial
-     // id match, then scroll into view + flash via a transient class.
-     const el = document.querySelector<HTMLElement>(`[data-row-id$="-p"][data-row-id^="${poScope}-"]`)
-       || document.querySelector<HTMLElement>(`[data-row-id$="-l"][data-row-id^="${poScope}-"]`)
-     if (el) {
-       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-       el.style.transition = 'box-shadow 600ms ease-out'
-       el.style.boxShadow = '0 0 0 2px var(--app-primary)'
-       window.setTimeout(() => { el.style.boxShadow = '' }, 1800)
-     }
-   }, ms))
-   return () => { timers.forEach(t => window.clearTimeout(t)) }
- }, [poScope, loading, orders.length])
+ // The scope filter already reduces the list to the single PO row, so
+ // we don't need to scroll-and-highlight — the row is the entire view.
+ // The banner up top supplies the "what am I looking at?" answer.
 
  const clearPoScope = () => {
    setPoScope(undefined)
@@ -266,7 +248,7 @@ export default function PurchaseInvoicesPage({ fromPo }: { fromPo?: string } = {
        searchPlaceholder="Search invoices, PO numbers, suppliers... (Ctrl+K)"
        searchRef={searchRef}
        hasFilters={hasFilters}
-       onClearFilters={() => setSearch('')}
+       onClearFilters={() => { setSearch(''); clearPoScope() }}
        onSetVisibleColumns={setVisibleColumns}
        onSetColumnOrder={setColumnOrder}
        moduleKey="purchases.invoices"

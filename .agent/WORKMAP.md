@@ -348,16 +348,24 @@
   - `/settings/purchase-analytics` redesigned to two-pane "Settings OS" layout (1913→294 lines): left section nav, right active section, bottom InspectorStrip, top HeaderBar with always-visible Health/Completeness/Warning chips, MidStrip consolidating banners + presets + actions. State extracted to 2 helper hooks; sections share via Context. 25 active files, all ≤294 lines.
 - **Follow-up MEDIUM** (added below): `/purchases/new` `?edit=` support, `/purchases/invoices` `?from_po=` support, pre-existing oversize PO sub-flow files (7 files 319-1035 lines).
 
-### [OPEN] `/purchases/new` doesn't honor `?edit=` query
+### [DONE 2026-05-01] `/purchases/new` doesn't honor `?edit=` query
 - **Discovered**: 2026-04-27
-- **Impact**: "Open Order" / Edit links navigate to `/purchases/new?edit=${po.id}` but the page ignores the param and shows a blank create form. (Current keeper navigates to detail page instead, so this isn't critical, but the form route can't currently edit.)
-- **Files**: `src/app/(privileged)/purchases/new/page.tsx` + `form.tsx`.
-- **Notes**: Needs (a) `searchParams.edit` reader, (b) SSR fetch of `purchase-orders/${edit}/`, (c) prefill props through `PurchaseForm`. Form would also need a "save changes" branch on `createPurchaseInvoice` action (today only creates).
+- **Impact**: "Open Order" / Edit links navigate to `/purchases/new?edit=${po.id}` but the page ignored the param and showed a blank create form.
+- **Files**: `src/app/(privileged)/purchases/new/page.tsx` + `form.tsx`, `src/app/actions/pos/purchases.ts`, `src/app/actions/commercial/purchases.ts`, `purchase-orders/page-client.tsx`.
+- **Fix**:
+  - `page.tsx` now reads `searchParams.edit` (Next 15 async), SSR-fetches `purchase-orders/${edit}/` via a local `getEditableOrder()` helper (graceful-null on miss), and forwards `mode + initialPO` props.
+  - `form.tsx` accepts `mode: 'create' | 'edit'` + `initialPO`. `useState` initializers seed reference/supplierRef/dates/scope/supplier/site/warehouse/assignee/driver/lines from the PO. Edit mode also starts `referenceTouched=true` so the sequence-peek doesn't clobber the saved code. Header title flips to `Edit PO <ref>`. Submit button reads `Save Changes` and the form action is swapped to `updatePurchaseInvoice`.
+  - Added `updatePurchaseOrder(id, data)` (PATCH) in `actions/pos/purchases.ts` for direct callers; added `updatePurchaseInvoice(prevState, formData)` in `actions/commercial/purchases.ts` mirroring `createPurchaseInvoice`'s shape but reading `__poId` + JSON-parsed lines and PATCHing `purchase-orders/{id}/`. Redirects to `/purchases/{id}` on success and revalidates both list + detail paths.
+  - Added an "Edit Order" entry (Pencil icon) to the PO list row menu so the `?edit=` route now has a real entry point.
 
-### [OPEN] `/purchases/invoices` doesn't honor `?from_po=` query
+### [DONE 2026-05-01] `/purchases/invoices` doesn't honor `?from_po=` query
 - **Discovered**: 2026-04-27
-- **Impact**: PO list "Purchase Invoice" menu/expanded action navigates to `/purchases/invoices?from_po=${po.id}` (or just bare). The list page doesn't pre-populate or scroll to the source PO. Honest URL but missing a "create invoice from PO" flow.
-- **Files**: `src/app/(privileged)/purchases/invoices/page-client.tsx`.
+- **Impact**: PO list "Purchase Invoice" menu/expanded action navigated to `/purchases/invoices` (without the source-PO id) and the list page didn't pre-populate or scope to the source PO.
+- **Files**: `src/app/(privileged)/purchases/invoices/page.tsx` + `page-client.tsx`, `purchase-orders/page-client.tsx`, `_components/POExpandedRow.tsx`.
+- **Fix**:
+  - `page.tsx` (server) now reads `searchParams.from_po` (digit-validated) and forwards as a typed `fromPo` prop.
+  - `page-client.tsx` accepts `fromPo`, holds it in `poScope` state, filters the merged invoice/PO list down to `id === fromPo` (or `po_id === fromPo`), and renders a clearable banner ("Showing invoices for PO `<ref>` · `<supplier>`") in the header strip. The toolbar's Clear-Filters and the banner's X both reset scope and `history.replaceState` strips the param without a navigation.
+  - PO list call sites (`purchase-orders/page-client.tsx` row menu + `_components/POExpandedRow.tsx` "→ Invoice" button) now pass `?from_po=${po.id}`. Receipt link already used the same convention.
 
 ### [OPEN] Pre-existing oversize files in PO sub-flows (code-quality.md violations)
 - **Discovered**: 2026-04-27

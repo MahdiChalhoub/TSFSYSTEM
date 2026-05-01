@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation'
 import { useAdmin } from '@/context/AdminContext'
 import {
   Plus, ClipboardList, DollarSign, Clock, CheckCircle, Truck, ArrowRightCircle,
-  Eye, Receipt, BarChart3,
+  Eye, Receipt, BarChart3, Pencil,
 } from 'lucide-react'
 
 /* ── Shared UI ── */
@@ -300,9 +300,10 @@ export default function PurchaseOrdersManager({
         onView={po => onView(po.id)}
         menuActions={po => [
           { label: 'Open Order', icon: <Eye size={12} className="text-app-muted-foreground" />, onClick: () => onView(po.id) },
+          { label: 'Edit Order', icon: <Pencil size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/purchases/new?edit=${po.id}` } },
           { label: '─── Transfer To ───', icon: <ArrowRightCircle size={12} className="text-app-muted-foreground/30" />, onClick: () => {} },
           { label: 'Purchase Receipt', icon: <Truck size={12} style={{ color: 'var(--app-success)' }} />, onClick: () => { window.location.href = `/purchases/receipts/new?from_po=${po.id}` } },
-          { label: 'Purchase Invoice', icon: <Receipt size={12} style={{ color: 'var(--app-warning)' }} />, onClick: () => { window.location.href = `/purchases/invoices` } },
+          { label: 'Purchase Invoice', icon: <Receipt size={12} style={{ color: 'var(--app-warning)' }} />, onClick: () => { window.location.href = `/purchases/invoices?from_po=${po.id}` } },
         ]}
         selectedIds={state.selectedIds}
         onToggleSelect={state.toggleSelect}

@@ -45,8 +45,8 @@ async function getSitesAndWarehouses() {
  */
 async function getEditableOrder(id: string): Promise<Record<string, unknown> | null> {
     try {
-        const po: any = await erpFetch(`purchase-orders/${id}/`)
-        return po && typeof po === 'object' ? po : null
+        const po = await erpFetch(`purchase-orders/${id}/`)
+        return po && typeof po === 'object' ? (po as Record<string, unknown>) : null
     } catch (e) {
         console.error('Failed to fetch PO for edit:', e)
         return null

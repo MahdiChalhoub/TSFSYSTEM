@@ -31,7 +31,7 @@ export function POExpandedRow({ po, onView, onRefresh }: { po: PO; onView: (id: 
                     className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
                     <Truck size={11} style={{ color: 'var(--app-success)' }} /> → Receipt
                 </button>
-                <button onClick={() => { window.location.href = `/purchases/invoices` }}
+                <button onClick={() => { window.location.href = `/purchases/invoices?from_po=${po.id}` }}
                     className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-app-border text-app-foreground hover:bg-app-surface transition-all">
                     <Receipt size={11} style={{ color: 'var(--app-warning)' }} /> → Invoice
                 </button>
