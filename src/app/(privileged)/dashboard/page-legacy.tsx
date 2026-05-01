@@ -187,7 +187,7 @@ export default function AdvancedIntelligenceDashboard() {
  <DollarSign size={28} />
  </div>
  {revenueChangePercent !== 0 && (
- <Badge variant="outline" className={`${revenueChangePercent > 0 ? 'text-app-primary bg-app-primary-light/50 border-app-success/30' : 'text-rose-600 bg-rose-50/50 border-rose-100'} font-black text-[10px] px-3 py-1 rounded-full`}>
+ <Badge variant="outline" className={`${revenueChangePercent > 0 ? 'text-app-primary bg-app-primary-light/50 border-app-success/30' : 'text-app-error bg-app-error-bg/50 border-app-error'} font-black text-[10px] px-3 py-1 rounded-full`}>
  {revenueChangePercent > 0 ? <TrendingUp size={12} className="mr-1.5" /> : <TrendingDown size={12} className="mr-1.5" />}
  {revenueChangePercent > 0 ? '+' : ''}{revenueChangePercent}%
  </Badge>
@@ -267,7 +267,7 @@ export default function AdvancedIntelligenceDashboard() {
  <span className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">Revenue</span>
  </div>
  <div className="flex items-center gap-3">
- <div className="w-4 h-4 rounded-full bg-rose-400 shadow-lg shadow-rose-200" />
+ <div className="w-4 h-4 rounded-full bg-app-error shadow-lg shadow-rose-200" />
  <span className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">Estimated COGS</span>
  </div>
  </div>
@@ -397,7 +397,7 @@ export default function AdvancedIntelligenceDashboard() {
  </div>
  </div>
  <div className="text-right">
- <p className={`text-[15px] font-black ${m.type === 'IN' ? 'text-app-primary' : 'text-rose-600'} tracking-tighter`}>
+ <p className={`text-[15px] font-black ${m.type === 'IN' ? 'text-app-primary' : 'text-app-error'} tracking-tighter`}>
  {m.type === 'IN' ? '+' : '−'}{parseFloat(m.quantity).toFixed(0)}
  </p>
  <p className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest">Units</p>

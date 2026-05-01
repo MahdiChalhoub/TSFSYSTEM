@@ -127,7 +127,7 @@ export default function SupplierProfilePage() {
 
     return (
         <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
-            <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-accent/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-3xl mx-auto relative z-10 space-y-8">
                 <div className="space-y-2">
@@ -140,8 +140,8 @@ export default function SupplierProfilePage() {
                 </div>
 
                 {/* Supplier Info Badge */}
-                <div className="p-5 bg-indigo-500/10 border border-app-accent/20 rounded-2xl flex items-center gap-4">
-                    <div className="w-14 h-14 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-app-accent text-xl font-black">
+                <div className="p-5 bg-app-accent/10 border border-app-accent/20 rounded-2xl flex items-center gap-4">
+                    <div className="w-14 h-14 bg-app-accent/20 rounded-2xl flex items-center justify-center text-app-accent text-xl font-black">
                         {session.user.name?.charAt(0).toUpperCase() || 'S'}
                     </div>
                     <div className="flex-1">
@@ -167,7 +167,7 @@ export default function SupplierProfilePage() {
                         </div>
                     )}
                     {saved && (
-                        <div className="p-3 bg-app-primary/10 border border-app-success/20 rounded-xl text-app-success text-sm flex items-center gap-2">
+                        <div className="p-3 bg-app-success/10 border border-app-success/20 rounded-xl text-app-success text-sm flex items-center gap-2">
                             <CheckCircle2 size={16} /> Profile updated successfully
                         </div>
                     )}
@@ -198,7 +198,7 @@ export default function SupplierProfilePage() {
                     </div>
 
                     <button onClick={handleSaveProfile} disabled={saving}
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+                        className="w-full bg-app-accent hover:bg-app-accent text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
                         <Save size={18} /> {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
@@ -215,7 +215,7 @@ export default function SupplierProfilePage() {
                         </div>
                     )}
                     {pwSaved && (
-                        <div className="p-3 bg-app-primary/10 border border-app-success/20 rounded-xl text-app-success text-sm flex items-center gap-2">
+                        <div className="p-3 bg-app-success/10 border border-app-success/20 rounded-xl text-app-success text-sm flex items-center gap-2">
                             <CheckCircle2 size={16} /> Password changed successfully
                         </div>
                     )}
@@ -225,19 +225,19 @@ export default function SupplierProfilePage() {
                             <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 block">Current Password</label>
                             <input type={showPasswords ? 'text' : 'password'} value={currentPassword}
                                 onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••"
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground pr-12" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-faint pr-12" />
                         </div>
                         <div>
                             <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 block">New Password</label>
                             <input type={showPasswords ? 'text' : 'password'} value={newPassword}
                                 onChange={e => setNewPassword(e.target.value)} placeholder="Min 8 characters"
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-faint" />
                         </div>
                         <div>
                             <label className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-2 block">Confirm New Password</label>
                             <input type={showPasswords ? 'text' : 'password'} value={confirmPassword}
                                 onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat new password"
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-faint" />
                         </div>
                     </div>
 
@@ -251,7 +251,7 @@ export default function SupplierProfilePage() {
                     </div>
 
                     <button onClick={handleChangePassword} disabled={pwSaving || !currentPassword || !newPassword}
-                        className="w-full bg-amber-600 hover:bg-amber-500 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+                        className="w-full bg-app-warning hover:bg-app-warning text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
                         <Lock size={18} /> {pwSaving ? 'Changing...' : 'Change Password'}
                     </button>
                 </div>

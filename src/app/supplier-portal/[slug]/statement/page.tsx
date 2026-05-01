@@ -88,7 +88,7 @@ export default function SupplierStatementPage() {
 
     return (
         <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
-            <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-sky-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-info/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-5xl mx-auto relative z-10 space-y-8">
                 <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function SupplierStatementPage() {
                     <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
                         className="bg-slate-950/50 border border-white/5 px-4 py-2 rounded-xl text-white text-sm outline-none focus:border-app-info transition-all" />
                     <button type="submit"
-                        className="px-5 py-2 bg-sky-600 text-white rounded-xl text-sm font-bold hover:bg-sky-500 transition-all">
+                        className="px-5 py-2 bg-app-info text-white rounded-xl text-sm font-bold hover:bg-app-info transition-all">
                         Apply
                     </button>
                 </form>

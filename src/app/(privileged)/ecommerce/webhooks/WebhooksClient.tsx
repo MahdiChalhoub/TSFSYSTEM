@@ -123,11 +123,11 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                                     <button onClick={() => handleToggle(h.id, h.is_active)} id={`toggle-hook-${h.id}`}
                                         className="transition-opacity hover:opacity-80">
                                         {h.is_active
-                                            ? <ToggleRight size={22} className="text-emerald-400" />
+                                            ? <ToggleRight size={22} className="text-app-success" />
                                             : <ToggleLeft size={22} className="text-[var(--app-text-muted)]" />}
                                     </button>
                                     <button onClick={() => handleDelete(h.id)} id={`delete-hook-${h.id}`}
-                                        className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                                        className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-app-error hover:bg-rose-500/10 transition-all">
                                         <Trash2 size={14} />
                                     </button>
                                 </div>
@@ -150,7 +150,7 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                                 <p className="text-xs text-[var(--app-text-muted)]">HTTP callback endpoint</p>
                             </div>
                         </div>
-                        {error && <p className="text-rose-400 text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
+                        {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
                         <div className="space-y-3">
                             <div>
                                 <label className="app-label">Event Type</label>

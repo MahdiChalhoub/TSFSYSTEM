@@ -222,9 +222,9 @@ export default function CustomDashboard() {
                             <p className="text-center py-4 text-app-muted-foreground text-sm">No movements</p>
                         ) : recentMovements.map((m: Record<string, any>, i: number) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
-                                <div className={`w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-green-400' : m.type === 'OUT' ? 'bg-red-400' : 'bg-amber-400'}`} />
+                                <div className={`w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-app-success' : m.type === 'OUT' ? 'bg-app-error' : 'bg-app-warning'}`} />
                                 <span className="flex-1 truncate font-medium">{m.product_name || `Product #${m.product}`}</span>
-                                <span className={`font-bold ${m.type === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
+                                <span className={`font-bold ${m.type === 'IN' ? 'text-app-success' : 'text-app-error'}`}>
                                     {m.type === 'IN' ? '+' : '−'}{parseFloat(m.quantity || 0).toFixed(0)}
                                 </span>
                                 <span className="text-app-muted-foreground w-14 text-right">
@@ -253,7 +253,7 @@ export default function CustomDashboard() {
                                 </div>
                                 <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-violet-400 rounded-full"
+                                        className="h-full bg-app-accent rounded-full"
                                         style={{ width: `${totalRevenue > 0 ? (stats.total / totalRevenue * 100) : 0}%` }}
                                     />
                                 </div>
@@ -275,8 +275,8 @@ export default function CustomDashboard() {
                             <p className="text-center py-4 text-app-muted-foreground text-sm">No data</p>
                         ) : topSellers.map(([name, stats]: [string, any], i) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
-                                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                                    <span className="text-[10px] font-bold text-blue-600">{(name || '?').charAt(0)}</span>
+                                <div className="w-6 h-6 rounded-full bg-app-info-bg flex items-center justify-center">
+                                    <span className="text-[10px] font-bold text-app-info">{(name || '?').charAt(0)}</span>
                                 </div>
                                 <span className="flex-1 truncate font-medium">{name}</span>
                                 <span className="text-app-muted-foreground">{stats.count} orders</span>
@@ -306,7 +306,7 @@ export default function CustomDashboard() {
                                             {fmt(val, currency)}
                                         </div>
                                         <div
-                                            className={`w-full rounded-t transition-all ${pct > 60 ? 'bg-violet-500' : pct > 20 ? 'bg-violet-300' : 'bg-violet-100'}`}
+                                            className={`w-full rounded-t transition-all ${pct > 60 ? 'bg-app-accent' : pct > 20 ? 'bg-app-accent/60' : 'bg-app-accent-bg'}`}
                                             style={{ height: `${Math.max(pct, 3)}%` }}
                                         />
                                         {h % 3 === 0 && (

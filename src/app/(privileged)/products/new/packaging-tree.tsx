@@ -99,7 +99,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                         {basePrice > 0 ? `${currency}${basePrice.toFixed(2)} per unit` : 'Set base price in Pricing tab'}
                     </div>
                 </div>
-                <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wide shrink-0">Base</span>
+                <span className="text-[9px] font-bold text-app-info bg-app-info-bg px-2 py-0.5 rounded-md uppercase tracking-wide shrink-0">Base</span>
             </div>
 
             {/* Dynamic Levels */}
@@ -119,7 +119,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                             {/* Level header */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-fuchsia-500/20 text-purple-600 flex items-center justify-center text-[10px] font-black border border-purple-200">
+                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-fuchsia-500/20 text-app-accent flex items-center justify-center text-[10px] font-black border border-app-accent">
                                         {idx + 2}
                                     </div>
                                     <span className="text-[12px] font-bold text-app-foreground">
@@ -135,7 +135,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                                 <button
                                     type="button"
                                     onClick={() => removeLevel(lvl.id)}
-                                    className="p-1 text-app-muted-foreground hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                    className="p-1 text-app-muted-foreground hover:text-app-error transition-colors opacity-0 group-hover:opacity-100"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -198,7 +198,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                                         onClick={() => updateLevel(idx, 'priceMode', 'FIXED')}
                                         className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[9px] font-bold transition-all
                                             ${lvl.priceMode === 'FIXED'
-                                                ? 'bg-amber-500/10 text-amber-600 border border-amber-300'
+                                                ? 'bg-amber-500/10 text-app-warning border border-app-warning'
                                                 : 'bg-transparent text-app-muted-foreground hover:text-app-foreground border border-transparent'
                                             }`}
                                     >
@@ -234,7 +234,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                                         {formulaPrice > 0 && (
                                             <p className="text-[9px] text-app-muted-foreground">
                                                 = {currency}{basePrice.toFixed(2)} × {totalUnits} pcs × {(1 - lvl.discountPct / 100).toFixed(2)}
-                                                {lvl.discountPct > 0 && <span className="text-emerald-600 font-bold"> (−{lvl.discountPct}%)</span>}
+                                                {lvl.discountPct > 0 && <span className="text-app-success font-bold"> (−{lvl.discountPct}%)</span>}
                                             </p>
                                         )}
                                     </div>
@@ -268,7 +268,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                                             Per unit: <span className="font-bold text-app-foreground">{currency}{perUnit.toFixed(2)}</span>
                                         </span>
                                         {savings > 0 && (
-                                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                            <span className="text-[9px] font-bold text-app-success bg-app-success-bg px-1.5 py-0.5 rounded">
                                                 −{savings.toFixed(1)}% vs base
                                             </span>
                                         )}
@@ -292,13 +292,13 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
 
             {/* Visual tree summary */}
             {levels.length > 0 && levels.some(l => l.ratio > 0 && l.unitId) && (
-                <div className="p-3 bg-gradient-to-r from-purple-500/5 to-fuchsia-500/5 border border-purple-200/30 rounded-xl">
-                    <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest mb-2">Packaging Tree</p>
+                <div className="p-3 bg-gradient-to-r from-purple-500/5 to-fuchsia-500/5 border border-app-accent/30 rounded-xl">
+                    <p className="text-[10px] font-bold text-app-accent uppercase tracking-widest mb-2">Packaging Tree</p>
                     <div className="flex items-center gap-2 flex-wrap text-[11px] font-semibold text-app-foreground">
                         {levels.filter(l => l.ratio > 0 && l.unitId).map((l, i) => (
                             <span key={l.id} className="flex items-center gap-1.5">
                                 {i > 0 && <span className="text-app-muted-foreground">→</span>}
-                                <Package className="w-3 h-3 text-purple-500" />
+                                <Package className="w-3 h-3 text-app-accent" />
                                 {getUnitName(l.unitId)} ({l.ratio}×)
                                 {getEffectivePrice(levels.indexOf(l)) > 0 && (
                                     <span className="text-app-primary text-[9px]">
@@ -309,7 +309,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                         ))}
                         <span className="text-app-muted-foreground">→</span>
                         <span className="flex items-center gap-1.5">
-                            <Package className="w-3 h-3 text-blue-500" />
+                            <Package className="w-3 h-3 text-app-info" />
                             Piece
                             {basePrice > 0 && <span className="text-app-primary text-[9px]">{currency}{basePrice.toFixed(2)}</span>}
                         </span>

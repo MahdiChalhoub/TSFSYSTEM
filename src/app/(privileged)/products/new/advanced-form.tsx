@@ -18,8 +18,8 @@ const card = "bg-app-surface rounded-xl border border-app-border/80 overflow-hid
 const cardHead = (accent: string) => `px-5 py-3.5 border-l-[3px] ${accent} flex items-center justify-between`;
 const cardTitle = "text-[15px] font-semibold text-app-foreground tracking-[-0.01em]";
 const fieldLabel = "block text-[12px] font-medium text-app-muted-foreground mb-1.5 uppercase tracking-wider";
-const fieldInput = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-app-info/30 outline-none transition-all text-app-foreground placeholder:text-app-muted-foreground";
-const fieldSelect = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-app-info/30 outline-none transition-all text-app-muted-foreground appearance-none";
+const fieldInput = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-app-info/20 focus:border-app-info/30 outline-none transition-all text-app-foreground placeholder:text-app-muted-foreground";
+const fieldSelect = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-app-info/20 focus:border-app-info/30 outline-none transition-all text-app-muted-foreground appearance-none";
 
 export default function AdvancedProductForm({
  categories,
@@ -289,7 +289,7 @@ export default function AdvancedProductForm({
  <div className={card}>
  <div className={cardHead('border-l-purple-500')}>
  <h3 className={cardTitle}>Variations & Barcoding</h3>
- <span className="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded-md uppercase tracking-wide">Mass Generate</span>
+ <span className="text-[10px] font-semibold text-app-accent bg-app-accent-bg px-2 py-1 rounded-md uppercase tracking-wide">Mass Generate</span>
  </div>
  <div className="p-5">
  <p className="text-[12px] text-app-muted-foreground mb-3 leading-relaxed">
@@ -322,13 +322,13 @@ export default function AdvancedProductForm({
  {variations.map((v, idx) => (
  <tr key={v.id} className="hover:bg-app-surface-2/50 transition-colors">
  <td className="px-4 py-2.5 font-semibold text-app-foreground flex items-center gap-2">
- <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold shrink-0">{idx + 1}</span>
+ <span className="w-5 h-5 rounded-full bg-app-accent-bg text-app-accent flex items-center justify-center text-[10px] font-bold shrink-0">{idx + 1}</span>
  {v.name}
  </td>
  <td className="px-4 py-2">
  <input
  type="text"
- className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-purple-400 focus:bg-app-surface font-mono placeholder:text-app-muted-foreground"
+ className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-app-accent focus:bg-app-surface font-mono placeholder:text-app-muted-foreground"
  placeholder="Scan / type..."
  value={v.barcode}
  onChange={(e) => {
@@ -341,7 +341,7 @@ export default function AdvancedProductForm({
  <td className="px-4 py-2">
  <input
  type="text"
- className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-purple-400 focus:bg-app-surface font-mono placeholder:text-app-muted-foreground"
+ className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-app-accent focus:bg-app-surface font-mono placeholder:text-app-muted-foreground"
  placeholder="Optional"
  value={v.sku}
  onChange={(e) => {
@@ -460,7 +460,7 @@ export default function AdvancedProductForm({
  { label: 'Serialize (IMEI)', name: 'isSerialized', default: false, desc: 'Track unique serial IDs', visible: true },
  ].map((toggle, i) => toggle.visible && (
  <label key={i} className="flex items-start gap-3 p-3 rounded-lg border border-app-border hover:bg-app-surface-2/50 transition-colors cursor-pointer group">
- <input type="checkbox" name={toggle.name} className="w-4 h-4 mt-0.5 text-app-info rounded border-app-border focus:ring-blue-500 shrink-0" defaultChecked={toggle.default} />
+ <input type="checkbox" name={toggle.name} className="w-4 h-4 mt-0.5 text-app-info rounded border-app-border focus:ring-app-info shrink-0" defaultChecked={toggle.default} />
  <div>
  <div className="text-[12px] font-semibold text-app-foreground group-hover:text-app-info transition-colors">{toggle.label}</div>
  <div className="text-[10px] text-app-muted-foreground font-medium leading-relaxed">{toggle.desc}</div>
@@ -651,12 +651,12 @@ export default function AdvancedProductForm({
  {activeTab === 'prices' && (
  <div className="space-y-3">
  <div className="p-3 bg-app-surface rounded-lg border border-app-border">
- <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><BarChart3 className="w-3.5 h-3.5 text-purple-500" /> Price Groups</h4>
+ <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><BarChart3 className="w-3.5 h-3.5 text-app-accent" /> Price Groups</h4>
  <p className="text-[10px] text-app-muted-foreground mb-2">Assign to VIP, Wholesale, etc.</p>
  <div className="h-16 flex items-center justify-center bg-app-background rounded-lg border border-dashed border-app-border text-[11px] text-app-muted-foreground">Save product first</div>
  </div>
  <div className="p-3 bg-app-surface rounded-lg border border-app-border">
- <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><Percent className="w-3.5 h-3.5 text-pink-500" /> Active Promos</h4>
+ <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><Percent className="w-3.5 h-3.5 text-app-accent" /> Active Promos</h4>
  <div className="h-16 flex items-center justify-center bg-app-background rounded-lg border border-dashed border-app-border text-[11px] text-app-muted-foreground">No live promos</div>
  </div>
  </div>

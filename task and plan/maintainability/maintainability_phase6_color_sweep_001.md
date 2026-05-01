@@ -1178,6 +1178,164 @@ All 39 residuals fall into documented skip categories:
 
 ---
 
+## Session 7 results — `(privileged)/products/`, `(privileged)/delivery/`, `(privileged)/ecommerce/`, `(privileged)/dashboard/` (2026-05-01)
+
+### Summary
+
+| Subdir | Before | After | Δ | % | Files modified |
+|---|---:|---:|---:|---:|---:|
+| `(privileged)/products/` | 116 | 7 | −109 | −94% | 7 |
+| `(privileged)/delivery/` | 115 | 4 | −111 | −97% | 6 |
+| `(privileged)/ecommerce/` | 45 | 12 | −33 | −73% | 8 |
+| `(privileged)/dashboard/` | 21 | 0 | −21 | −100% | 3 |
+| **Combined** | **297** | **23** | **−274** | **−92%** | **24** |
+
+(All counts use the same baseline regex as prior sessions: `\b(bg|text|border)-{color}-{N}\b`. `\b` boundaries between digit and `/` mean `bg-amber-500/10` returns `bg-amber-50` in counts, so opacity-modified classes still appear in the after-count. The four subdirs combined have **0 plain (non-opacity, non-gradient) hardcoded colors remaining**.)
+
+### Top hotspots per subdir
+
+**products** (top 7 files):
+- `new/smart-form.tsx` — 39 → 6 residual (all opacity-modified `bg-{amber,purple}-500/{10,20}` decorative + 1 `from-amber-50/30 to-orange-50/20` gradient + 2 `border-amber-200/{40,50}` opacity)
+- `new/form.tsx` — 23 → 0 (full sweep including brand `bg-green-600 hover:bg-green-700` CTA → `bg-app-primary hover:opacity-90`; success-banner combo `bg-green-50 text-green-600 border-green-200` → `bg-app-success-bg text-app-success border-app-success`)
+- `new/packaging-tree.tsx` — 15 → 1 residual (opacity-modified `bg-amber-500/10`)
+- `page.tsx` — 14 → 0 (`hover:bg-emerald-50` → `hover:bg-app-success-bg`, group block icon colors)
+- `new/pricing-engine.tsx` — 14 → 0 (margin tier color/bg map fully migrated; gradient `barColor` strings preserved as data tokens — they feed an unsafe-list TailwindCSS class string in a chart cell)
+- `new/advanced-form.tsx` — 6 → 0 (`focus:ring-blue-500/20` → `focus:ring-app-info/20`, `focus:ring-purple-400` → `focus:ring-app-accent`, `focus:ring-blue-500` → `focus:ring-app-info`)
+- `new/form-wrapper.tsx` — 5 → 0 (`text-red-500` asterisks + error banner combo)
+
+**delivery** (top 6 files):
+- `page.tsx` — 65 → 2 residual (opacity-modified `bg-blue-500/10` icon-tile glows on lines 290, 575). Migrated all status badge combos `bg-emerald-50 text-emerald-600 border border-emerald-100` → `bg-app-success-bg text-app-success border border-app-success`, KPI tile color/bg props ({ color: 'text-app-info', bg: 'bg-app-info-bg' }), ONLINE/BUSY/OFFLINE status pills, brand `bg-amber-500` driver tag → `bg-app-warning`. Gradient `from-blue-500 to-cyan-500` header preserved per skip rules.
+- `_components/DriverDashboard.tsx` — 27 → 1 residual (`border-emerald-500/20` opacity border preserved). `text-{blue,emerald,amber,purple}-400` icon trinity + `bg-{emerald,blue,rose,amber,purple}-500` MetricProgress/getStatusColor returns + getStatusBadge rose/blue/emerald/amber colors all migrated.
+- `_components/DriverStatement.tsx` — 11 → 0 (balance text +/- coloring `text-emerald-400`/`text-rose-400` → `text-app-success`/`text-app-error`, transaction icon colors, brand "Request Payout" button `bg-blue-500 hover:bg-blue-600` → `bg-app-info hover:opacity-90`)
+- `_components/AssignDriverModal.tsx` — 5 → 0 (online indicator dot, address icon, ONLINE highlight)
+- `_components/LogExpenseModal.tsx` — 4 → 1 residual (`bg-blue-500/20` selection bg opacity-modified — kept; full-color `border-blue-500` selection border migrated)
+- `_components/DriverProfileModal.tsx` — 3 → 0 (gradient `from-amber-400 to-orange-500` header preserved per skip rules; text-amber-500 avatar + ONLINE/BUSY status pill solid bgs migrated)
+
+**ecommerce** (top 8 files):
+- `coupons/CouponsClient.tsx` — 12 → 4 (auto/manual coupon-type pills `bg-violet-500/15 text-violet-400 border-violet-400/20` and `bg-sky-500/15 text-sky-400 border-sky-400/20` — text-portion migrated `text-app-accent`/`text-app-info`, opacity bg/border preserved per skip rules)
+- `shipping/ShippingClient.tsx` — 6 → 2 (opacity-modified rose-500/10 toast bgs)
+- `promotions/PromotionsClient.tsx` — 6 → 2 (same)
+- `webhooks/WebhooksClient.tsx` — 5 → 2 (same)
+- `storefront-config/new/page.tsx` — 6 → 0 (full red/green status banner combo migrated)
+- `orders/new/page.tsx` — 6 → 0 (same)
+- `quotes/QuotesClient.tsx` — 1 → 0
+- `catalog/reviews/page.tsx` — 3 → 0 (destructive button `text-rose-500 hover:text-rose-600 hover:bg-rose-50` → `text-app-error hover:opacity-80 hover:bg-app-error-bg`)
+
+**dashboard** (3 files, 100% clean):
+- `page.tsx` — 11 → 0 (IN/OUT/UPDATE colored dots `bg-{green,red,amber}-400` → `bg-app-{success,error,warning}`, +/- delta `text-{green,red}-600`, violet performance bar tiers `bg-violet-{500,300,100}` → `bg-app-accent`/`bg-app-accent/60`/`bg-app-accent-bg`, blue avatar circle)
+- `page-legacy.tsx` — 5 → 0 (revenue-change badge combo `text-rose-600 bg-rose-50/50 border-rose-100` → `text-app-error bg-app-error-bg/50 border-app-error`, ledger row IN/OUT colors)
+- `legacy/page.tsx` — 5 → 0 (same patterns as page-legacy)
+
+### Residuals breakdown by category (23 total)
+
+| Category | Count | Files affected |
+|---|---:|---|
+| Opacity-modified `bg-{color}-500/{10,15,20}` decorative tile glows / pill bgs | 14 | products/smart-form, products/packaging-tree, delivery/page (×2), delivery/LogExpenseModal, ecommerce/coupons (×2), ecommerce/shipping, ecommerce/promotions, ecommerce/webhooks, ecommerce/CouponsClient (×2 hover-bg), ecommerce/promotions/webhooks/shipping (toast bgs) |
+| Opacity-modified `border-{color}-{200-500}/{20,40,50}` | 6 | products/smart-form (amber-200/40, amber-200/50), ecommerce/coupons (violet-400/20, sky-400/20), delivery/DriverDashboard (emerald-500/20) |
+| Decorative gradients `from-/to-` (skip per rules) | 3 | products/smart-form (`from-amber-50/30 to-orange-50/20`), delivery/page (`from-blue-500 to-cyan-500` Hub header), delivery/DriverProfileModal (`from-amber-400 to-orange-500` header) |
+
+**No code changes needed** — all 23 residuals fall into documented skip categories.
+
+### TSC
+
+- Baseline before sweep: 0 errors.
+- After sweep: 0 errors. **Zero new TSC errors introduced.** ✓
+
+### Sample diffs (representative)
+
+`delivery/page.tsx` (KPI tile color/bg map):
+```diff
+-  { label: 'Zones', value: zones.length, icon: MapPin, color: 'text-blue-500', bg: 'bg-blue-50' },
+-  { label: 'Active Drivers', value: ..., icon: Truck, color: 'text-amber-600', bg: 'bg-amber-50' },
+-  { label: 'Shipping Rates', value: rates.length, icon: Package, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+-  { label: 'Avg Fee', value: ..., icon: DollarSign, color: 'text-purple-600', bg: 'bg-purple-50', prefix: '$' },
++  { label: 'Zones', value: zones.length, icon: MapPin, color: 'text-app-info', bg: 'bg-app-info-bg' },
++  { label: 'Active Drivers', value: ..., icon: Truck, color: 'text-app-warning', bg: 'bg-app-warning-bg' },
++  { label: 'Shipping Rates', value: rates.length, icon: Package, color: 'text-app-success', bg: 'bg-app-success-bg' },
++  { label: 'Avg Fee', value: ..., icon: DollarSign, color: 'text-app-accent', bg: 'bg-app-accent-bg', prefix: '$' },
+```
+
+`dashboard/page.tsx` (movement type dot trinity):
+```diff
+- <div className={`w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-green-400' : m.type === 'OUT' ? 'bg-red-400' : 'bg-amber-400'}`} />
++ <div className={`w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-app-success' : m.type === 'OUT' ? 'bg-app-error' : 'bg-app-warning'}`} />
+```
+
+`products/new/pricing-engine.tsx` (margin tier color/bg map):
+```diff
+- if (marginPercent >= 40) return { label: 'Excellent', color: 'text-emerald-600', bg: 'bg-emerald-500', barColor: 'from-emerald-400 to-emerald-600' };
+- if (marginPercent >= 25) return { label: 'Good',      color: 'text-blue-600',    bg: 'bg-blue-500',    barColor: 'from-blue-400 to-blue-600' };
+- if (marginPercent >= 10) return { label: 'Low',       color: 'text-amber-600',   bg: 'bg-amber-500',   barColor: 'from-amber-400 to-amber-600' };
+- if (marginPercent > 0)  return { label: 'Thin',       color: 'text-orange-600',  bg: 'bg-orange-500',  barColor: 'from-orange-400 to-orange-600' };
+- return                          { label: 'Loss',      color: 'text-red-600',     bg: 'bg-red-500',     barColor: 'from-red-400 to-red-600' };
++ if (marginPercent >= 40) return { label: 'Excellent', color: 'text-app-success', bg: 'bg-app-success', barColor: 'from-emerald-400 to-emerald-600' };
++ if (marginPercent >= 25) return { label: 'Good',      color: 'text-app-info',    bg: 'bg-app-info',    barColor: 'from-blue-400 to-blue-600' };
++ if (marginPercent >= 10) return { label: 'Low',       color: 'text-app-warning', bg: 'bg-app-warning', barColor: 'from-amber-400 to-amber-600' };
++ if (marginPercent > 0)  return { label: 'Thin',       color: 'text-app-warning', bg: 'bg-app-warning', barColor: 'from-orange-400 to-orange-600' };
++ return                          { label: 'Loss',      color: 'text-app-error',   bg: 'bg-app-error',   barColor: 'from-red-400 to-red-600' };
+```
+(`barColor` gradient strings preserved — they feed a TailwindCSS unsafe-class chart cell pattern; gradient-token phase will handle them.)
+
+### Nuance discovered
+
+- `app-{success,info,warning,error}-strong` tokens **do NOT exist** in `globals.css` (only `app-accent-strong` and `app-primary-dark` exist as the "darker" variant). When migrating `bg-blue-500 hover:bg-blue-600` brand-button patterns, the standard pattern adopted in Session 7 was `bg-app-info hover:opacity-90` (matching the same pattern Session 5/6 used for emerald CTAs as `bg-app-primary hover:opacity-90`).
+- Initial perl pass made one slip: `bg-app-info-strong` was emitted in `delivery/_components/DriverStatement.tsx` for the Request-Payout button — caught by tsc-check workflow and rolled back to `hover:opacity-90` immediately.
+
+---
+
+## Session 8 results — `(privileged)/pos/`, `(privileged)/client_portal/`, `(privileged)/supplier_portal/`, `(privileged)/mcp/` (2026-05-01)
+
+### Scope and pattern observation
+
+The four target subdirs in this batch turned out to be dominated by **auto-generated `/new/page.tsx` form scaffolds** with a uniform two-line color pattern: an error banner (`bg-red-50 text-red-800 border border-red-200`) and a success banner (`bg-green-50 text-green-800 border border-green-200`). All scaffold files carry `// @ts-nocheck` at the top so the swap is safe — directives left untouched per scope rules.
+
+### Per-subdir per-file deltas
+
+| Subdir | Before | After | Δ | Files |
+|---|---:|---:|---:|---:|
+| `(privileged)/pos/` | 42 | 0 | −42 (−100%) | 21 |
+| `(privileged)/client_portal/` | 32 | 0 | −32 (−100%) | 16 |
+| `(privileged)/supplier_portal/` | 22 | 0 | −22 (−100%) | 11 |
+| `(privileged)/mcp/` | 17 | 0 | −17 (−100%) | 8 |
+| **Total** | **113** | **0** | **−113** | **56** |
+
+### Migration commands (single perl invocation across all 4 subdirs)
+
+```bash
+find "src/app/(privileged)/pos" "src/app/(privileged)/client_portal" \
+     "src/app/(privileged)/supplier_portal" "src/app/(privileged)/mcp" \
+     -name "page.tsx" -path "*/new/*" | xargs perl -i -pe '
+  s|bg-red-50 text-red-800 border border-red-200|bg-app-error-bg text-app-error border border-app-error|g;
+  s|bg-green-50 text-green-800 border border-green-200|bg-app-success-bg text-app-success border border-app-success|g;
+'
+```
+
+### Manual edits
+
+- `(privileged)/mcp/chat/page.tsx` — the only non-scaffold file in scope. Migrated 5 occurrences of the "Coming Soon" info-tile chrome:
+  - `bg-blue-50` → `bg-app-info-bg`
+  - `text-blue-600` (Bot icon) → `text-app-info`
+  - `bg-blue-50 border border-blue-200` (notice card) → `bg-app-info-bg border border-app-info`
+  - `text-blue-900` (notice title) and `text-blue-700` (notice body) → `text-app-info`
+
+### Files modified (56 total)
+
+- **pos (21)**: every `/new/page.tsx` under `pos-audit-rules`, `quotations`, `consignment-settlements`, `purchase-orders`, `deliveries`, `pos-tickets`, `orders`, `credit-notes`, `pos-registers`, `sourcing`, `delivery-zones`, `purchase`, `pos-settings`, `pos`, `supplier-pricing`, `sales-returns`, `discount-rules`, `purchase-returns`, `manager-address-book`, `po-lines`, `pos-audit-events`.
+- **client_portal (16)**: every `/new/page.tsx` under `shipping-rates`, `admin-wallets`, `quote-requests`, `reviews`, `order-lines`, `my-wallet`, `client-access`, `cart-promotions`, `my-tickets`, `admin-orders`, `dashboard`, `config`, `admin-tickets`, `my-orders`, `coupons`, `wishlist`.
+- **supplier_portal (11)**: every `/new/page.tsx` under `config`, `my-orders`, `my-proformas`, `my-stock`, `dashboard`, `my-price-requests`, `portal-access`, `my-notifications`, `proforma-lines`, `admin-proformas`, `admin-price-requests`.
+- **mcp (8)**: 7 `/new/page.tsx` scaffolds (`tools`, `usage`, `agents`, `conversations`, `providers`, `agent-logs`) + manual edit on `chat/page.tsx`.
+
+### Residuals (out of scope per rules)
+
+- Hex literals in `error.tsx` `accentColor="#XXXXXX"` props (one per subdir — `#F59E0B`/`#0EA5E9`/`#8B5CF6`/`#14B8A6`) — these are intentional brand identifiers passed to `ModuleErrorBoundary` and belong in the hex-literal phase.
+- `client_portal/dashboard/page.tsx` carries 3 inline-style hex literals (`color-mix(in srgb, #10b981 15%, transparent)`, `color="#10b981"`) — also deferred to the hex-literal phase.
+
+### Verification
+
+`npx tsc --noEmit` exit 0 both before and after the sweep — pure class-name swap, byte-symmetric (113 insertions / 113 deletions).
+
+---
+
 ## Critical rules for the executing agent
 
 1. **PRESERVE VISUAL OUTPUT in light mode.** Don't replace `text-blue-600` with `text-app-error`. Match meaning.

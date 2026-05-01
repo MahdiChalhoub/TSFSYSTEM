@@ -158,7 +158,7 @@ export default function SupplierOrderDetail() {
                                             }
                                         }}
                                         disabled={actionLoading}
-                                        className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-app-text rounded-xl font-bold flex items-center gap-2 transition-all">
+                                        className="px-6 py-3 bg-app-info hover:bg-app-info disabled:opacity-50 text-app-text rounded-xl font-bold flex items-center gap-2 transition-all">
                                         <CheckCircle2 size={18} />
                                         {actionLoading ? 'Processing...' : 'Acknowledge Order'}
                                     </button>

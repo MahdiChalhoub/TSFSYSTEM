@@ -98,7 +98,7 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
                     </button>
 
                     <div className="absolute -bottom-12 left-8 flex items-end gap-6">
-                        <div className="w-24 h-24 rounded-3xl bg-app-surface border-[6px] border-app-surface shadow-xl flex items-center justify-center text-amber-500">
+                        <div className="w-24 h-24 rounded-3xl bg-app-surface border-[6px] border-app-surface shadow-xl flex items-center justify-center text-app-warning">
                             <Truck size={40} />
                         </div>
                         <div className="mb-14">
@@ -173,8 +173,8 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
                                             className={clsx(
                                                 "flex-1 py-2 rounded-xl text-[10px] font-black transition-all",
                                                 form.status === s
-                                                    ? s === 'ONLINE' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
-                                                        : s === 'BUSY' ? "bg-amber-500 text-white shadow-lg shadow-amber-200"
+                                                    ? s === 'ONLINE' ? "bg-app-success text-white shadow-lg shadow-emerald-200"
+                                                        : s === 'BUSY' ? "bg-app-warning text-white shadow-lg shadow-amber-200"
                                                             : "bg-app-muted-foreground text-white"
                                                     : "text-app-muted-foreground hover:bg-app-surface"
                                             )}

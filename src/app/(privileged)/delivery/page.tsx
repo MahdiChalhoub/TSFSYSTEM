@@ -173,7 +173,7 @@ function CreateUserModal({ roles, onClose, onCreated }: {
                         <div>
                             <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-1">First Name *</label>
                             <input value={form.first_name} onChange={set('first_name')} placeholder="Adham"
-                                className={clsx(inputClass, errors.first_name && 'border-rose-300 bg-rose-50')} />
+                                className={clsx(inputClass, errors.first_name && 'border-app-error bg-app-error-bg')} />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Last Name</label>
@@ -184,7 +184,7 @@ function CreateUserModal({ roles, onClose, onCreated }: {
                         <div>
                             <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Username *</label>
                             <input value={form.username} onChange={set('username')} placeholder="adham.c" autoComplete="off"
-                                className={clsx(inputClass, errors.username && 'border-rose-300 bg-rose-50')} />
+                                className={clsx(inputClass, errors.username && 'border-app-error bg-app-error-bg')} />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Email</label>
@@ -195,7 +195,7 @@ function CreateUserModal({ roles, onClose, onCreated }: {
                         <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Password *</label>
                         <div className="relative">
                             <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={set('password')} placeholder="Min 6 characters" autoComplete="new-password"
-                                className={clsx(inputClass, 'pr-10', errors.password && 'border-rose-300 bg-rose-50')} />
+                                className={clsx(inputClass, 'pr-10', errors.password && 'border-app-error bg-app-error-bg')} />
                             <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground">
                                 {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                             </button>
@@ -210,15 +210,15 @@ function CreateUserModal({ roles, onClose, onCreated }: {
                     </div>
                     <button type="button" onClick={() => setForm(f => ({ ...f, is_driver: !f.is_driver }))}
                         className={clsx("w-full flex items-center gap-4 px-4 py-4 rounded-2xl border-2 transition-all text-left",
-                            form.is_driver ? "border-amber-300 bg-amber-50/60" : "border-app-border bg-app-background")}>
+                            form.is_driver ? "border-app-warning bg-app-warning-bg/60" : "border-app-border bg-app-background")}>
                         <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                            form.is_driver ? "bg-amber-500 text-white" : "bg-app-surface border border-app-border text-app-muted-foreground")}><Truck size={18} /></div>
+                            form.is_driver ? "bg-app-warning text-white" : "bg-app-surface border border-app-border text-app-muted-foreground")}><Truck size={18} /></div>
                         <div className="flex-1">
-                            <p className={clsx("font-black text-sm", form.is_driver ? "text-amber-700" : "text-app-muted-foreground")}>Tag as Delivery Driver</p>
+                            <p className={clsx("font-black text-sm", form.is_driver ? "text-app-warning" : "text-app-muted-foreground")}>Tag as Delivery Driver</p>
                             <p className="text-xs text-app-muted-foreground mt-0.5">{form.is_driver ? "Will appear in POS delivery modal" : "Enable to add as driver"}</p>
                         </div>
                         <div className={clsx("w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0",
-                            form.is_driver ? "border-amber-500 bg-amber-500" : "border-app-border")}>
+                            form.is_driver ? "border-app-warning bg-app-warning" : "border-app-border")}>
                             {form.is_driver && <Check size={12} className="text-white" strokeWidth={3} />}
                         </div>
                     </button>
@@ -288,7 +288,7 @@ function ZonesTab({ zones, onReload, loading }: { zones: DeliveryZone[]; onReloa
                         <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                    <MapPin size={14} className="text-blue-500" />
+                                    <MapPin size={14} className="text-app-info" />
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-app-foreground text-sm">{zone.name}</h3>
@@ -299,15 +299,15 @@ function ZonesTab({ zones, onReload, loading }: { zones: DeliveryZone[]; onReloa
                                 <button onClick={() => setEditing(zone)} className="w-7 h-7 rounded-lg bg-app-surface-2 hover:bg-app-primary/10 flex items-center justify-center text-app-muted-foreground hover:text-app-primary">
                                     <Edit2 size={12} />
                                 </button>
-                                <button onClick={() => handleDelete(zone.id)} className="w-7 h-7 rounded-lg bg-app-surface-2 hover:bg-rose-50 flex items-center justify-center text-app-muted-foreground hover:text-rose-500">
+                                <button onClick={() => handleDelete(zone.id)} className="w-7 h-7 rounded-lg bg-app-surface-2 hover:bg-app-error-bg flex items-center justify-center text-app-muted-foreground hover:text-app-error">
                                     <Trash2 size={12} />
                                 </button>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 text-xs">
-                            <span className="flex items-center gap-1 font-bold text-emerald-600"><DollarSign size={12} />{fmt(parseFloat(zone.base_fee))}</span>
+                            <span className="flex items-center gap-1 font-bold text-app-success"><DollarSign size={12} />{fmt(parseFloat(zone.base_fee))}</span>
                             <span className="flex items-center gap-1 text-app-muted-foreground"><Clock size={12} />{zone.estimated_days}d</span>
-                            <span className={clsx("px-1.5 py-0.5 rounded text-[10px] font-bold", zone.is_active ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500")}>
+                            <span className={clsx("px-1.5 py-0.5 rounded text-[10px] font-bold", zone.is_active ? "bg-app-success-bg text-app-success" : "bg-app-error-bg text-app-error")}>
                                 {zone.is_active ? 'Active' : 'Inactive'}
                             </span>
                         </div>
@@ -443,8 +443,8 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
             <div className="grid grid-cols-3 gap-3">
                 {[
                     { label: 'Total Users', value: users.length, color: 'text-app-muted-foreground', bg: 'bg-app-surface-2', icon: User },
-                    { label: 'Tagged Drivers', value: driverCount, color: 'text-amber-600', bg: 'bg-amber-50', icon: Truck },
-                    { label: 'Fleet Online', value: onlineCount, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: Zap },
+                    { label: 'Tagged Drivers', value: driverCount, color: 'text-app-warning', bg: 'bg-app-warning-bg', icon: Truck },
+                    { label: 'Fleet Online', value: onlineCount, color: 'text-app-success', bg: 'bg-app-success-bg', icon: Zap },
                 ].map(s => (
                     <div key={s.label} className="bg-app-surface rounded-xl border border-app-border p-3 flex items-center gap-3">
                         <div className={clsx("w-10 h-10 rounded-lg flex items-center justify-center", s.bg)}>
@@ -502,7 +502,7 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
                             <div key={user.id} className="grid grid-cols-12 gap-4 px-5 py-3 items-center hover:bg-app-surface-2/50 transition-colors group">
                                 <div className="col-span-4 flex items-center gap-3 min-w-0">
                                     <div className={clsx("w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0",
-                                        user.is_driver ? "bg-amber-500 text-white" : "bg-app-surface-2 text-app-muted-foreground")}>
+                                        user.is_driver ? "bg-app-warning text-white" : "bg-app-surface-2 text-app-muted-foreground")}>
                                         {user.is_driver ? <Truck size={14} /> : initials(user)}
                                     </div>
                                     <div className="min-w-0">
@@ -514,20 +514,20 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
                                 <div className="col-span-2">
                                     {user.is_driver ? (() => {
                                         const p = getProfile(user.id);
-                                        if (!p) return <span className="text-[10px] font-bold text-amber-500 italic">No Profile</span>;
+                                        if (!p) return <span className="text-[10px] font-bold text-app-warning italic">No Profile</span>;
                                         return (
                                             <span className={clsx("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black tracking-tighter uppercase",
-                                                p.status === 'ONLINE' ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                                                    : p.status === 'BUSY' ? "bg-amber-50 text-amber-600 border border-amber-100"
+                                                p.status === 'ONLINE' ? "bg-app-success-bg text-app-success border border-app-success"
+                                                    : p.status === 'BUSY' ? "bg-app-warning-bg text-app-warning border border-app-warning"
                                                         : "bg-app-surface-2 text-app-muted-foreground")}>
                                                 <div className={clsx("w-1.5 h-1.5 rounded-full animate-pulse",
-                                                    p.status === 'ONLINE' ? "bg-emerald-500" : p.status === 'BUSY' ? "bg-amber-500" : "bg-app-muted-foreground")} />
+                                                    p.status === 'ONLINE' ? "bg-app-success" : p.status === 'BUSY' ? "bg-app-warning" : "bg-app-muted-foreground")} />
                                                 {p.status}
                                             </span>
                                         );
                                     })() : (
                                         <span className={clsx("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold",
-                                            user.is_active ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500")}>
+                                            user.is_active ? "bg-app-success-bg text-app-success" : "bg-app-error-bg text-app-error")}>
                                             {user.is_active ? 'Active' : 'Inactive'}
                                         </span>
                                     )}
@@ -559,7 +559,7 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
                                     <button onClick={() => handleToggle(user)} disabled={toggling === user.id}
                                         className={clsx("opacity-0 group-hover:opacity-100 w-8 h-8 rounded-lg flex items-center justify-center transition-all",
                                             toggling === user.id && "!opacity-60",
-                                            user.is_driver ? "bg-rose-50 text-rose-500 border border-rose-100" : "bg-app-surface-2 text-app-muted-foreground border border-app-border hover:border-amber-300")}
+                                            user.is_driver ? "bg-app-error-bg text-app-error border border-app-error" : "bg-app-surface-2 text-app-muted-foreground border border-app-border hover:border-app-warning")}
                                         title={user.is_driver ? "Remove Driver Tag" : "Tag as Driver"}
                                     >
                                         {toggling === user.id ? <Loader2 size={10} className="animate-spin" /> : user.is_driver ? <X size={14} /> : <Truck size={14} />}
@@ -572,7 +572,7 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
                                                 <button
                                                     onClick={() => handleViewStats(p)}
                                                     disabled={loadingExtra === p.id}
-                                                    className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                                    className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-app-info hover:bg-app-info hover:text-white transition-all shadow-sm"
                                                     title="View Dashboard"
                                                 >
                                                     {loadingExtra === p.id ? <Loader2 size={12} className="animate-spin" /> : <Eye size={14} />}
@@ -580,7 +580,7 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
                                                 <button
                                                     onClick={() => handleViewStatement(p)}
                                                     disabled={loadingExtra === p.id}
-                                                    className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                                    className="w-8 h-8 rounded-lg bg-app-success/10 flex items-center justify-center text-app-success hover:bg-app-success hover:text-white transition-all shadow-sm"
                                                     title="Financial Statement"
                                                 >
                                                     {loadingExtra === p.id ? <Loader2 size={12} className="animate-spin" /> : <FileText size={14} />}
@@ -614,8 +614,8 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
                         <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-white/[0.02]">
                             <div>
                                 <h2 className="text-2xl font-black text-white flex items-center gap-3 italic">
-                                    <Truck className="w-8 h-8 text-blue-400" />
-                                    Performance <span className="text-blue-400">Insight</span>
+                                    <Truck className="w-8 h-8 text-app-info" />
+                                    Performance <span className="text-app-info">Insight</span>
                                 </h2>
                                 <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-1">Real-time driver analytics & tracking</p>
                             </div>
@@ -641,8 +641,8 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
                         <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-white/[0.02]">
                             <div>
                                 <h2 className="text-2xl font-black text-white flex items-center gap-3 italic">
-                                    <FileText className="w-8 h-8 text-emerald-400" />
-                                    Financial <span className="text-emerald-400">Statement</span>
+                                    <FileText className="w-8 h-8 text-app-success" />
+                                    Financial <span className="text-app-success">Statement</span>
                                 </h2>
                                 <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-1">Verified Ledger History & Payouts</p>
                             </div>
@@ -757,7 +757,7 @@ function ShippingTab({ zones, rates, onReload, loading }: { zones: DeliveryZone[
                 return (
                     <div key={zoneId} className="bg-app-surface rounded-2xl border border-app-border overflow-hidden">
                         <div className="px-4 py-3 bg-app-background border-b border-app-border flex items-center gap-2">
-                            <MapPin size={14} className="text-blue-500" />
+                            <MapPin size={14} className="text-app-info" />
                             <span className="font-bold text-sm text-app-foreground">{zone?.name || `Zone #${zoneId}`}</span>
                             <span className="text-[10px] text-app-muted-foreground ml-auto">Base: {fmt(parseFloat(zone?.base_fee || '0'))}</span>
                         </div>
@@ -781,7 +781,7 @@ function ShippingTab({ zones, rates, onReload, loading }: { zones: DeliveryZone[
                                         </div>
                                         <div>
                                             <span className="text-[9px] text-app-muted-foreground uppercase font-bold">Fee</span>
-                                            <p className="font-black text-emerald-600">{fmt(parseFloat(rate.fee))}</p>
+                                            <p className="font-black text-app-success">{fmt(parseFloat(rate.fee))}</p>
                                         </div>
                                         <div>
                                             <span className="text-[9px] text-app-muted-foreground uppercase font-bold">Est. Days</span>
@@ -789,7 +789,7 @@ function ShippingTab({ zones, rates, onReload, loading }: { zones: DeliveryZone[
                                         </div>
                                     </div>
                                     <button onClick={() => handleDelete(rate.id)}
-                                        className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg bg-app-surface-2 hover:bg-rose-50 flex items-center justify-center text-app-muted-foreground hover:text-rose-500 transition-all">
+                                        className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg bg-app-surface-2 hover:bg-app-error-bg flex items-center justify-center text-app-muted-foreground hover:text-app-error transition-all">
                                         <Trash2 size={12} />
                                     </button>
                                 </div>
@@ -923,10 +923,10 @@ export default function DeliveryPage() {
             {/* KPI Strip */}
             <div className="grid grid-cols-4 gap-3">
                 {[
-                    { label: 'Zones', value: zones.length, icon: MapPin, color: 'text-blue-500', bg: 'bg-blue-50' },
-                    { label: 'Active Drivers', value: users.filter(u => u.is_driver).length, icon: Truck, color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { label: 'Shipping Rates', value: rates.length, icon: Package, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { label: 'Avg Fee', value: zones.length > 0 ? (zones.reduce((s, z) => s + parseFloat(z.base_fee), 0) / zones.length).toFixed(0) : '0', icon: DollarSign, color: 'text-purple-600', bg: 'bg-purple-50', prefix: '$' },
+                    { label: 'Zones', value: zones.length, icon: MapPin, color: 'text-app-info', bg: 'bg-app-info-bg' },
+                    { label: 'Active Drivers', value: users.filter(u => u.is_driver).length, icon: Truck, color: 'text-app-warning', bg: 'bg-app-warning-bg' },
+                    { label: 'Shipping Rates', value: rates.length, icon: Package, color: 'text-app-success', bg: 'bg-app-success-bg' },
+                    { label: 'Avg Fee', value: zones.length > 0 ? (zones.reduce((s, z) => s + parseFloat(z.base_fee), 0) / zones.length).toFixed(0) : '0', icon: DollarSign, color: 'text-app-accent', bg: 'bg-app-accent-bg', prefix: '$' },
                 ].map(k => (
                     <div key={k.label} className="bg-app-surface rounded-xl border border-app-border p-4 flex items-center gap-3 hover:shadow-sm transition-all">
                         <div className={clsx("w-10 h-10 rounded-lg flex items-center justify-center", k.bg)}>

@@ -299,7 +299,7 @@ export default function SmartProductForm({
 
             {/* Errors */}
             {state.message && (
-                <div className={`mb-5 px-4 py-3 rounded-xl border text-[13px] font-medium ${state.errors && Object.keys(state.errors).length > 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                <div className={`mb-5 px-4 py-3 rounded-xl border text-[13px] font-medium ${state.errors && Object.keys(state.errors).length > 0 ? 'bg-app-error-bg text-app-error border-app-error' : 'bg-app-success-bg text-app-success border-app-success'}`}>
                     <p className="font-bold">{state.message}</p>
                     {state.errors && Object.keys(state.errors).length > 0 && (
                         <ul className="list-disc pl-5 mt-1 space-y-0.5 text-[12px]">
@@ -484,10 +484,10 @@ export default function SmartProductForm({
                                 <div className="mt-1 pt-3 border-t border-app-border/40">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
-                                            <Tags className="w-3.5 h-3.5 text-amber-500" />
-                                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Product Attributes</span>
+                                            <Tags className="w-3.5 h-3.5 text-app-warning" />
+                                            <span className="text-[10px] font-bold text-app-warning uppercase tracking-widest">Product Attributes</span>
                                             {attrCount > 0 && (
-                                                <span className="text-[9px] font-bold bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded-full">
+                                                <span className="text-[9px] font-bold bg-amber-500/10 text-app-warning px-1.5 py-0.5 rounded-full">
                                                     {attrCount} selected
                                                 </span>
                                             )}
@@ -682,13 +682,13 @@ export default function SmartProductForm({
                                                     </thead>
                                                     <tbody className="divide-y divide-app-border/30">
                                                         {/* Base unit row */}
-                                                        <tr className="bg-blue-50/30">
+                                                        <tr className="bg-app-info-bg/30">
                                                             <td className="py-2 px-3 font-bold text-app-foreground flex items-center gap-1.5">
-                                                                <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[8px] font-black flex items-center justify-center">1</span>
+                                                                <span className="w-4 h-4 rounded-full bg-app-info text-white text-[8px] font-black flex items-center justify-center">1</span>
                                                                 Piece
                                                             </td>
                                                             <td className="py-2 px-3 text-center">
-                                                                <span className="text-[8px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">BASE</span>
+                                                                <span className="text-[8px] font-bold text-app-info bg-app-info-bg px-1.5 py-0.5 rounded">BASE</span>
                                                             </td>
                                                             <td className="py-2 px-3 text-right font-bold text-app-foreground">1</td>
                                                             <td className="py-2 px-3 text-right font-bold text-app-primary">{sellPrice > 0 ? `$${sellPrice.toFixed(2)}` : '—'}</td>
@@ -705,11 +705,11 @@ export default function SmartProductForm({
                                                             return (
                                                                 <tr key={lvl.id} className="hover:bg-app-primary/5 transition-colors">
                                                                     <td className="py-2 px-3 font-bold text-app-foreground flex items-center gap-1.5">
-                                                                        <span className="w-4 h-4 rounded-full bg-purple-500/20 text-purple-600 text-[8px] font-black flex items-center justify-center">{idx + 2}</span>
+                                                                        <span className="w-4 h-4 rounded-full bg-purple-500/20 text-app-accent text-[8px] font-black flex items-center justify-center">{idx + 2}</span>
                                                                         {unitName}
                                                                     </td>
                                                                     <td className="py-2 px-3 text-center">
-                                                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${lvl.priceMode === 'FORMULA' ? 'text-cyan-600 bg-cyan-50' : 'text-amber-600 bg-amber-50'}`}>
+                                                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${lvl.priceMode === 'FORMULA' ? 'text-app-info bg-app-info-bg' : 'text-app-warning bg-app-warning-bg'}`}>
                                                                             {lvl.priceMode}
                                                                             {lvl.priceMode === 'FORMULA' && lvl.discountPct > 0 ? ` −${lvl.discountPct}%` : ''}
                                                                         </span>
@@ -738,7 +738,7 @@ export default function SmartProductForm({
                                     {/* ── Product Groups (Combo) ── */}
                                     <div className="p-4 rounded-xl bg-app-surface border border-app-border">
                                         <h4 className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                                            <Package className="w-3.5 h-3.5 text-purple-500" />
+                                            <Package className="w-3.5 h-3.5 text-app-accent" />
                                             Product Groups / Combos
                                         </h4>
                                         <div className="space-y-2">
@@ -836,8 +836,8 @@ export default function SmartProductForm({
                                                 Expiry & Shelf Life
                                             </h4>
                                             <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="checkbox" name="isExpiryTracked" checked={expiryTracked} onChange={e => setExpiryTracked(e.target.checked)} className="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500" />
-                                                <span className="text-[10px] font-bold text-amber-700">Enabled</span>
+                                                <input type="checkbox" name="isExpiryTracked" checked={expiryTracked} onChange={e => setExpiryTracked(e.target.checked)} className="w-3.5 h-3.5 rounded border-app-warning text-app-warning focus:ring-app-warning" />
+                                                <span className="text-[10px] font-bold text-app-warning">Enabled</span>
                                             </label>
                                         </div>
 
@@ -900,9 +900,9 @@ export default function SmartProductForm({
                                                 {/* Computed summary */}
                                                 {mfgShelfLife > 0 && (
                                                     <div className="p-3 rounded-lg bg-app-surface/60 border border-amber-200/50 space-y-1.5">
-                                                        <p className="text-[9px] font-bold text-amber-800 uppercase tracking-wider">Shelf Life Summary</p>
+                                                        <p className="text-[9px] font-bold text-app-warning uppercase tracking-wider">Shelf Life Summary</p>
                                                         <div className="flex items-center gap-2">
-                                                            <div className="flex-1 h-5 bg-amber-100 rounded-full overflow-hidden relative">
+                                                            <div className="flex-1 h-5 bg-app-warning-bg rounded-full overflow-hidden relative">
                                                                 {/* Shipping bar */}
                                                                 {shippingDays > 0 && (
                                                                     <div
@@ -924,9 +924,9 @@ export default function SmartProductForm({
                                                         </div>
                                                         <div className="flex justify-between text-[8px] text-app-muted-foreground font-medium">
                                                             <span>Mfg: {(mfgShelfLife / 30).toFixed(0)}m</span>
-                                                            {shippingDays > 0 && <span className="text-red-500">Ship: {(shippingDays / 30).toFixed(0)}m</span>}
+                                                            {shippingDays > 0 && <span className="text-app-error">Ship: {(shippingDays / 30).toFixed(0)}m</span>}
                                                             {avgExpiry > 0 && (
-                                                                <span className="text-emerald-600 font-bold">
+                                                                <span className="text-app-success font-bold">
                                                                     Available: {(avgExpiry / 30).toFixed(0)}m
                                                                     {shippingDays > 0 && ` → Sellable: ${((avgExpiry - shippingDays) / 30).toFixed(1)}m`}
                                                                 </span>
@@ -1005,7 +1005,7 @@ export default function SmartProductForm({
                                 <div className="space-y-4">
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border space-y-3">
                                         <h4 className="text-[12px] font-bold text-app-foreground flex items-center gap-1.5">
-                                            <Truck className="w-3.5 h-3.5 text-blue-500" />
+                                            <Truck className="w-3.5 h-3.5 text-app-info" />
                                             Primary Supplier
                                         </h4>
                                         <div>
@@ -1023,7 +1023,7 @@ export default function SmartProductForm({
                                             </div>
                                             <div>
                                                 <label className="block text-[9px] font-semibold text-app-info mb-1 uppercase tracking-wider">Lead Time</label>
-                                                <input type="number" name="supplierLeadTimeDays" className="w-full bg-blue-50 border border-blue-200 rounded-lg px-3 py-[10px] text-[12px] outline-none font-bold text-blue-600 placeholder:text-blue-400" placeholder="Days" />
+                                                <input type="number" name="supplierLeadTimeDays" className="w-full bg-app-info-bg border border-app-info rounded-lg px-3 py-[10px] text-[12px] outline-none font-bold text-app-info placeholder:text-app-info" placeholder="Days" />
                                             </div>
                                         </div>
                                     </div>
@@ -1080,11 +1080,11 @@ function AttrGroupSelector({
                 <div className="flex-1 min-w-0">
                     <span className="text-[11px] font-bold text-app-foreground">
                         {group.name}
-                        {group.is_required && <span className="text-red-500 ml-0.5">*</span>}
+                        {group.is_required && <span className="text-app-error ml-0.5">*</span>}
                     </span>
                     <div className="flex items-center gap-1.5">
                         {group.show_in_name && (
-                            <span className="text-[7px] font-bold uppercase tracking-wider text-amber-600">📝 in name</span>
+                            <span className="text-[7px] font-bold uppercase tracking-wider text-app-warning">📝 in name</span>
                         )}
                         {group.is_variant && (
                             <span className="text-[7px] font-bold uppercase tracking-wider text-app-success">variant</span>

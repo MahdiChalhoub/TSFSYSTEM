@@ -124,7 +124,7 @@ export default function ReviewManagementPage() {
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => toggleVisibility(r)}>
                         {r.is_visible ? <EyeOff size={14} className="text-app-muted-foreground" /> : <Eye size={14} className="text-app-primary" />}
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50" onClick={() => deleteReview(r.id)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-app-error hover:opacity-80 hover:bg-app-error-bg" onClick={() => deleteReview(r.id)}>
                         <Trash2 size={14} />
                     </Button>
                 </div>

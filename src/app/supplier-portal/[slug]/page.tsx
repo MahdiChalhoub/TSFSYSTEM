@@ -93,13 +93,13 @@ export default function SupplierPortalPage() {
     return (
         <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative">
             {/* Ambient */}
-            <div className="fixed top-[-15%] left-[20%] w-[60%] h-[50%] bg-indigo-500/10 blur-[200px] rounded-full pointer-events-none z-0" />
-            <div className="fixed bottom-[-10%] right-[10%] w-[40%] h-[40%] bg-sky-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-15%] left-[20%] w-[60%] h-[50%] bg-app-accent/10 blur-[200px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] right-[10%] w-[40%] h-[40%] bg-app-info/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="w-full max-w-md relative z-10 space-y-8">
                 {/* Brand */}
                 <div className="text-center space-y-4">
-                    <div className="w-20 h-20 bg-indigo-500/20 border border-app-accent/30 rounded-3xl flex items-center justify-center mx-auto text-app-accent">
+                    <div className="w-20 h-20 bg-app-accent/20 border border-app-accent/30 rounded-3xl flex items-center justify-center mx-auto text-app-accent">
                         <Building2 size={36} />
                     </div>
                     <h1 className="text-3xl font-black text-white">Supplier Portal</h1>
@@ -123,7 +123,7 @@ export default function SupplierPortalPage() {
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required
-                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-foreground"
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-faint"
                         />
                         <input
                             type="password"
@@ -131,10 +131,10 @@ export default function SupplierPortalPage() {
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             required
-                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-foreground"
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-faint"
                         />
                         <button type="submit" disabled={loading}
-                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60">
+                            className="w-full bg-app-accent hover:bg-app-accent text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60">
                             {loading ? <Loader2 className="animate-spin" size={20} /> : <><LogIn size={20} /> Sign In</>}
                         </button>
                     </form>
@@ -185,16 +185,16 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
     }, [session.token])
 
     const navItems = [
-        { href: `/supplier-portal/${slug}/orders`, icon: ShoppingCart, label: 'My Purchase Orders', color: 'text-app-info', bg: 'bg-blue-500/10 border-app-info/20 hover:border-app-info/40' },
-        { href: `/supplier-portal/${slug}/proformas`, icon: FileText, label: 'Proformas', color: 'text-app-success', bg: 'bg-app-primary/10 border-app-success/20 hover:border-app-success/40' },
-        { href: `/supplier-portal/${slug}/price-requests`, icon: TrendingDown, label: 'Price Change Requests', color: 'text-app-warning', bg: 'bg-amber-500/10 border-app-warning/20 hover:border-app-warning/40' },
-        { href: `/supplier-portal/${slug}/statement`, icon: BarChart3, label: 'Financial Statement', color: 'text-app-info', bg: 'bg-sky-500/10 border-app-info/20 hover:border-app-info/40' },
+        { href: `/supplier-portal/${slug}/orders`, icon: ShoppingCart, label: 'My Purchase Orders', color: 'text-app-info', bg: 'bg-app-info/10 border-app-info/20 hover:border-app-info/40' },
+        { href: `/supplier-portal/${slug}/proformas`, icon: FileText, label: 'Proformas', color: 'text-app-success', bg: 'bg-app-success/10 border-app-success/20 hover:border-app-success/40' },
+        { href: `/supplier-portal/${slug}/price-requests`, icon: TrendingDown, label: 'Price Change Requests', color: 'text-app-warning', bg: 'bg-app-warning/10 border-app-warning/20 hover:border-app-warning/40' },
+        { href: `/supplier-portal/${slug}/statement`, icon: BarChart3, label: 'Financial Statement', color: 'text-app-info', bg: 'bg-app-info/10 border-app-info/20 hover:border-app-info/40' },
     ]
 
     return (
         <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
-            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
-            <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-sky-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-accent/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-info/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-5xl mx-auto relative z-10 space-y-8">
                 {/* Header */}
@@ -269,7 +269,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
 
                 {/* Unread Notifications */}
                 {stats?.unread_notifications > 0 && (
-                    <div className="p-5 bg-indigo-500/10 border border-app-accent/20 rounded-2xl flex items-center gap-4">
+                    <div className="p-5 bg-app-accent/10 border border-app-accent/20 rounded-2xl flex items-center gap-4">
                         <Bell size={20} className="text-app-accent" />
                         <span className="text-white font-medium flex-1">You have {stats.unread_notifications} unread notification{stats.unread_notifications > 1 ? 's' : ''}</span>
                     </div>

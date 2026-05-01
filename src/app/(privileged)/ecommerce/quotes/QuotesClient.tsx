@@ -202,7 +202,7 @@ export default function QuotesClient({ initialQuotes }: Props) {
             {/* Toast */}
             {toast && (
                 <div className="fixed bottom-6 right-6 z-50 app-card px-4 py-3 text-sm text-[var(--app-text)] shadow-xl flex items-center gap-2">
-                    <CheckCircle size={14} className="text-emerald-400" /> {toast}
+                    <CheckCircle size={14} className="text-app-success" /> {toast}
                 </div>
             )}
         </div>

@@ -110,7 +110,7 @@ export default function AddProductForm({
 
             {/* Error Message Global */}
             {state.message && (
-                <div className={`p-4 rounded-lg border flex flex-col gap-2 ${state.errors ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}>
+                <div className={`p-4 rounded-lg border flex flex-col gap-2 ${state.errors ? 'bg-app-error-bg text-app-error border-app-error' : 'bg-app-success-bg text-app-success border-app-success'}`}>
                     <p className="font-semibold">{state.message}</p>
                     {state.errors && Object.keys(state.errors).length > 0 && (
                         <ul className="list-disc pl-5 text-sm space-y-1">
@@ -163,12 +163,12 @@ export default function AddProductForm({
                                 )}
                             </select>
                             {selectedCategoryId && filteredBrands.length > 0 && (
-                                <p className="text-xs text-emerald-600 mt-1">
+                                <p className="text-xs text-app-success mt-1">
                                     Γ£ô Showing {filteredBrands.length} brand(s) for selected category
                                 </p>
                             )}
                             {!selectedCategoryId && (
-                                <p className="text-xs text-amber-600 mt-1">
+                                <p className="text-xs text-app-warning mt-1">
                                     ΓÜá Select a category first to filter brands
                                 </p>
                             )}
@@ -205,7 +205,7 @@ export default function AddProductForm({
                                 </datalist>
                             </div>
                             {selectedCategoryId && filteredAttributes.length > 0 && (
-                                <p className="text-xs text-emerald-600 mt-1">
+                                <p className="text-xs text-app-success mt-1">
                                     Γ£ô Showing {filteredAttributes.length} suggestion(s) for selected category
                                 </p>
                             )}
@@ -298,10 +298,10 @@ export default function AddProductForm({
                                     const finalName = parts.join(namingRule.separator);
                                     const nameInput = document.getElementsByName('name')[0] as HTMLInputElement;
                                     nameInput.value = finalName;
-                                }} className="text-xs text-blue-600 font-medium hover:underline">Auto-Format</button>
+                                }} className="text-xs text-app-info font-medium hover:underline">Auto-Format</button>
                             </div>
                             <input name="name" type="text" className="w-full input-field" placeholder="e.g. Organic Bananas" required defaultValue={initialData?.name} />
-                            {state.errors?.name && <p className="text-red-500 text-xs mt-1">{state.errors.name}</p>}
+                            {state.errors?.name && <p className="text-app-error text-xs mt-1">{state.errors.name}</p>}
                         </div>
                     </div>
                 </div>
@@ -317,10 +317,10 @@ export default function AddProductForm({
                                 <button type="button" onClick={() => {
                                     const input = document.getElementsByName('sku')[0] as HTMLInputElement;
                                     input.value = generateSku();
-                                }} className="text-xs text-blue-600 font-medium">Auto-Generate</button>
+                                }} className="text-xs text-app-info font-medium">Auto-Generate</button>
                             </div>
                             <input name="sku" type="text" className="w-full input-field font-mono" placeholder="PRD-000123" required defaultValue={initialData?.sku} />
-                            {state.errors?.sku && <p className="text-red-500 text-xs mt-1">{state.errors.sku}</p>}
+                            {state.errors?.sku && <p className="text-app-error text-xs mt-1">{state.errors.sku}</p>}
                         </div>
 
                         <div>
@@ -346,7 +346,7 @@ export default function AddProductForm({
                                         if (btn) btn.innerText = 'Generate';
                                     }}
                                     id="gen-btn"
-                                    className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-200 transition-colors"
+                                    className="px-3 py-2 bg-app-success-bg text-app-success rounded-lg text-sm font-semibold hover:opacity-90 transition-colors"
                                 >
                                     Generate
                                 </button>
@@ -366,7 +366,7 @@ export default function AddProductForm({
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-app-foreground mb-1">Selling Price ($)</label>
-                            <input name="basePrice" type="number" step="0.01" className="w-full input-field font-bold text-green-700" defaultValue={initialData?.basePrice || "0.00"} />
+                            <input name="basePrice" type="number" step="0.01" className="w-full input-field font-bold text-app-success" defaultValue={initialData?.basePrice || "0.00"} />
                         </div>
                     </div>
 
@@ -380,7 +380,7 @@ export default function AddProductForm({
                             </select>
                         </div>
                         <div className="flex items-center mt-6">
-                            <input type="checkbox" name="isTaxIncluded" id="taxInc" className="w-4 h-4 text-green-600 rounded" defaultChecked={initialData?.isTaxIncluded ?? true} />
+                            <input type="checkbox" name="isTaxIncluded" id="taxInc" className="w-4 h-4 text-app-success rounded" defaultChecked={initialData?.isTaxIncluded ?? true} />
                             <label htmlFor="taxInc" className="ml-2 text-sm text-app-foreground">Tax Included in Price?</label>
                         </div>
                     </div>
@@ -396,9 +396,9 @@ export default function AddProductForm({
                             <input name="minStockLevel" type="number" className="w-full input-field" defaultValue={initialData?.minStockLevel || "10"} />
                         </div>
 
-                        <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                        <div className="p-3 bg-app-warning-bg rounded-lg border border-app-warning">
                             <div className="flex items-center">
-                                <input type="checkbox" name="isExpiryTracked" id="exp" className="w-4 h-4 text-yellow-600 rounded" defaultChecked={initialData?.isExpiryTracked} />
+                                <input type="checkbox" name="isExpiryTracked" id="exp" className="w-4 h-4 text-app-warning rounded" defaultChecked={initialData?.isExpiryTracked} />
                                 <label htmlFor="exp" className="ml-2 text-sm font-medium text-app-foreground">Track Expiry Dates?</label>
                             </div>
                             <p className="text-xs text-app-muted-foreground mt-1 ml-6">Enabling this checks dates on every receipt/transfer.</p>
@@ -413,7 +413,7 @@ export default function AddProductForm({
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-6 py-2 bg-app-primary text-white rounded-lg font-medium hover:opacity-90 shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                     {isPending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>}
                     {isPending ? 'Creating...' : 'Create Product'}

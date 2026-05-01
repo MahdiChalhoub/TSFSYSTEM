@@ -53,7 +53,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                     <h2 className="text-xl font-bold text-white">Session Expired</h2>
                     <p className="text-app-muted-foreground text-sm">Please log in to access the supplier portal</p>
                     <Link href={`/supplier-portal/${slug}`}
-                        className="inline-block px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-500 transition-all">
+                        className="inline-block px-8 py-4 bg-app-accent text-white rounded-2xl font-bold hover:bg-app-accent transition-all">
                         Go to Login
                     </Link>
                 </div>
@@ -96,7 +96,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                 <div className="p-6 border-b border-white/5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-indigo-500/20 border border-app-accent/30 rounded-xl flex items-center justify-center text-app-accent">
+                            <div className="w-10 h-10 bg-app-accent/20 border border-app-accent/30 rounded-xl flex items-center justify-center text-app-accent">
                                 <Building2 size={20} />
                             </div>
                             <div>
@@ -117,7 +117,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                             onClick={() => setSidebarOpen(false)}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
                                 ${isActive(item.href)
-                                    ? 'bg-indigo-500/10 text-app-accent border border-app-accent/20'
+                                    ? 'bg-app-accent/10 text-app-accent border border-app-accent/20'
                                     : 'text-app-faint hover:text-white hover:bg-app-surface/5 border border-transparent'
                                 }`}>
                             <item.icon size={18} />
@@ -130,7 +130,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                 {/* User */}
                 <div className="p-4 border-t border-white/5">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 bg-indigo-500/20 rounded-lg flex items-center justify-center text-app-accent text-xs font-black">
+                        <div className="w-9 h-9 bg-app-accent/20 rounded-lg flex items-center justify-center text-app-accent text-xs font-black">
                             {session?.user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">

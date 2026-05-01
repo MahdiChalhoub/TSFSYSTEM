@@ -3,20 +3,16 @@
 /**
  * ProductCardGrid — Dajingo Pro V2 Card View for Product Master
  * ==============================================================
- * E-commerce style card inspired by the Samsung Galaxy S22 card reference.
- * - Large product image with clean background
- * - Stock status badge (top-right)
- * - Product name + Category • Brand subtitle
- * - Price prominent + stock quantity
- * - Action buttons row (View, Edit, Delete-style)
+ * Design-language.md compliant: auto-fit grid (§3), color-mix (§14),
+ * typography (§15), badges (§7), tokens (§17), states (§9/§10)
  *
- * Design-language.md compliance:
- *   auto-fit grid (§3), color-mix surfaces (§14), typography scale (§15),
- *   badge pattern (§7), semantic tokens only (§17),
- *   empty/loading states (§9/§10), animate-in (§16), custom-scrollbar (§16)
+ * NOTE: This component renders INSIDE a <main overflow-auto> → DajingoPageShell.
+ * We do NOT use flex-1 or overflow-y-auto here — the <main> is already the
+ * scroll container. Cards just flow naturally within the grid.
  */
 
-import { Package, AlertTriangle, Eye, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { memo } from 'react'
+import { Package, Eye, Pencil, Loader2, ShoppingCart, ArrowRightLeft, BellRing, Check } from 'lucide-react'
 import { ProductThumbnail } from '@/components/products/ProductThumbnail'
 import { TYPE_CONFIG, STATUS_CONFIG, fmt } from '../_lib/constants'
 import type { Product } from '../_lib/types'
@@ -26,11 +22,24 @@ interface Props {
   loading?: boolean
   onView?: (product: Product) => void
   onEdit?: (product: Product) => void
+  /** Bulk-selection state — same shape as the list view so toggling
+   *  carries between views. */
+  selectedIds?: Set<number>
+  onToggleSelect?: (id: number) => void
+  /** Action callbacks — wire to the same RequestFlow and ExpiryAlertDialog
+   *  the list view's expanded row uses, so the card and row paths produce
+   *  identical results. */
+  onPurchase?: (product: Product) => void
+  onTransfer?: (product: Product) => void
+  onExpiryAlert?: (product: Product) => void
 }
 
-export function ProductCardGrid({ data, loading, onView, onEdit }: Props) {
+export function ProductCardGrid({
+  data, loading, onView, onEdit,
+  selectedIds, onToggleSelect,
+  onPurchase, onTransfer, onExpiryAlert,
+}: Props) {
 
-  /* ── Loading State (§10) ── */
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -39,7 +48,6 @@ export function ProductCardGrid({ data, loading, onView, onEdit }: Props) {
     )
   }
 
-  /* ── Empty State (§9) ── */
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
@@ -52,37 +60,51 @@ export function ProductCardGrid({ data, loading, onView, onEdit }: Props) {
     )
   }
 
-  /* ── Card Grid — auto-fit (§3 MANDATORY) ── */
+  /* No flex-1 / overflow-y-auto — parent <main> handles scrolling.
+     Just render the grid and let it flow naturally. */
   return (
     <div
-      className="flex-1 overflow-y-auto custom-scrollbar p-3 animate-in fade-in duration-300"
+      className="p-4 animate-in fade-in duration-300"
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '12px',
-        alignContent: 'start',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '16px',
       }}
     >
       {data.map(product => (
         <ProductCard
           key={product.id}
           product={product}
-          onView={() => onView?.(product)}
-          onEdit={() => onEdit?.(product)}
+          isSelected={selectedIds?.has(product.id) ?? false}
+          onView={onView}
+          onEdit={onEdit}
+          onToggleSelect={onToggleSelect}
+          onPurchase={onPurchase}
+          onTransfer={onTransfer}
+          onExpiryAlert={onExpiryAlert}
         />
       ))}
     </div>
   )
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ProductCard — e-commerce style, inspired by reference
-   ═══════════════════════════════════════════════════════════ */
-
-function ProductCard({ product, onView, onEdit }: {
+/* Memoized so toggling one card's selection doesn't re-render the other 99.
+ * Relies on stable callback references from the manager — if the parent
+ * wraps `onView`, `onEdit`, `onPurchase`, `onTransfer`, `onExpiryAlert`
+ * with useCallback, only the card whose `isSelected` changed will re-render. */
+const ProductCard = memo(function ProductCard({
+  product, isSelected,
+  onView, onEdit, onToggleSelect,
+  onPurchase, onTransfer, onExpiryAlert,
+}: {
   product: Product
-  onView: () => void
-  onEdit: () => void
+  isSelected: boolean
+  onView?: (product: Product) => void
+  onEdit?: (product: Product) => void
+  onToggleSelect?: (id: number) => void
+  onPurchase?: (product: Product) => void
+  onTransfer?: (product: Product) => void
+  onExpiryAlert?: (product: Product) => void
 }) {
   const tc = TYPE_CONFIG[product.product_type] || {
     label: product.product_type || '—',
@@ -100,138 +122,238 @@ function ProductCard({ product, onView, onEdit }: {
     : isLowStock
       ? 'var(--app-warning, #f59e0b)'
       : 'var(--app-success, #22c55e)'
-
   const stockLabel = isOutOfStock ? 'Out of Stock' : isLowStock ? 'Low Stock' : 'In Stock'
 
   return (
     <div
-      className="group flex flex-col rounded-2xl overflow-hidden transition-all duration-200"
+      className="group rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
       style={{
         background: 'var(--app-surface)',
-        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+        // Highlight selected cards with a primary-tinted ring so bulk
+        // operations are visually obvious without taking extra layout.
+        border: isSelected
+          ? `1px solid var(--app-primary)`
+          : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+        boxShadow: isSelected ? '0 0 0 2px color-mix(in srgb, var(--app-primary) 18%, transparent)' : undefined,
       }}
     >
-      {/* ── 1. PRODUCT IMAGE — large, clean background ── */}
+      {/* ── IMAGE AREA ── */}
       <div
         className="relative w-full flex items-center justify-center cursor-pointer"
         style={{
-          height: '160px',
-          background: 'color-mix(in srgb, var(--app-border) 10%, var(--app-background))',
+          height: '180px',
+          background: 'color-mix(in srgb, var(--app-border) 8%, var(--app-background))',
         }}
-        onClick={onView}
+        onClick={() => onView?.(product)}
       >
+        {/* Selection checkbox — top-left, fades in on hover or when
+         *  any card in the grid is selected. Same idiom as the list-view
+         *  row checkbox. */}
+        {onToggleSelect && (
+          <button type="button"
+                  onClick={(e) => { e.stopPropagation(); onToggleSelect(product.id) }}
+                  className={`absolute top-3 left-3 z-10 w-6 h-6 rounded-md flex items-center justify-center transition-all ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                  style={{
+                      background: isSelected ? 'var(--app-primary)' : 'var(--app-surface)',
+                      border: isSelected
+                          ? '1px solid var(--app-primary)'
+                          : '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                      boxShadow: isSelected ? undefined : '0 1px 3px rgba(0,0,0,0.08)',
+                  }}
+                  aria-checked={isSelected} role="checkbox"
+                  aria-label={`Select ${product.name}`}>
+              {isSelected && <Check size={13} className="text-white" strokeWidth={3} />}
+          </button>
+        )}
         <ProductThumbnail
           image={product.image}
           productType={product.product_type}
           name={product.name}
-          size={80}
+          size={90}
           className="rounded-xl"
           color={tc.color}
         />
 
-        {/* Stock Status Badge — top-right, like the reference */}
-        <div className="absolute top-2.5 right-2.5">
-          <span
-            className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
-            style={{
-              background: `color-mix(in srgb, ${stockColor} 12%, var(--app-surface))`,
-              color: stockColor,
-              border: `1px solid color-mix(in srgb, ${stockColor} 25%, transparent)`,
-            }}
-          >
-            {stockLabel}
-          </span>
+        {/* Type badge — bottom-left of image area to avoid colliding with
+         *  the selection checkbox at top-left. Subtler position, still
+         *  scannable. */}
+        <span
+          className="absolute bottom-3 left-3 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
+          style={{
+            background: `color-mix(in srgb, ${tc.color} 12%, var(--app-surface))`,
+            color: tc.color,
+            border: `1px solid color-mix(in srgb, ${tc.color} 25%, transparent)`,
+          }}
+        >
+          {tc.label}
+        </span>
+
+        {/* Stock badge — top-right */}
+        <span
+          className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
+          style={{
+            background: `color-mix(in srgb, ${stockColor} 12%, var(--app-surface))`,
+            color: stockColor,
+            border: `1px solid color-mix(in srgb, ${stockColor} 25%, transparent)`,
+          }}
+        >
+          {stockLabel}
+        </span>
+
+        {/* Hover overlay */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-all duration-200">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{
+                background: 'var(--app-primary)',
+                boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+              }}
+            >
+              <Eye size={16} className="text-white" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── 2. PRODUCT INFO ── */}
-      <div className="flex-1 px-3.5 pt-3 pb-2 cursor-pointer" onClick={onView}>
-        {/* Category • Brand — subtitle */}
-        <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider truncate mb-1">
+      {/* ── PRODUCT INFO ── */}
+      <div className="px-4 pt-3.5 pb-3 cursor-pointer" onClick={() => onView?.(product)}>
+        {/* Category • Brand */}
+        <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider truncate mb-1.5">
           {[product.category_name, product.brand_name].filter(Boolean).join(' • ') || tc.label}
         </p>
 
-        {/* Product Name — prominent */}
-        <h3 className="text-[13px] font-bold text-app-foreground leading-snug line-clamp-2 mb-1" style={{ minHeight: '36px' }}>
+        {/* Product Name */}
+        <h3
+          className="text-[14px] font-bold text-app-foreground leading-snug mb-1"
+          style={{
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            minHeight: '40px',
+          }}
+        >
           {product.name}
         </h3>
 
-        {/* SKU — mono */}
+        {/* SKU */}
         <p className="font-mono text-[11px] font-bold text-app-muted-foreground truncate mb-3">
           {product.sku || '—'}
         </p>
 
-        {/* Price Row */}
+        {/* Price + Stock row */}
         <div className="flex items-end justify-between">
-          {/* Selling Price — large and prominent */}
           <div>
-            <span className="text-lg font-black text-app-foreground tabular-nums leading-none">
+            <span className="text-[18px] font-black text-app-foreground tabular-nums leading-none">
               {sellPrice > 0 ? fmt(sellPrice) : '—'}
             </span>
-            {costPrice > 0 && (
-              <span className="text-[11px] font-bold text-app-muted-foreground tabular-nums ml-1.5">
+            {costPrice > 0 && sellPrice > 0 && (
+              <span className="text-[11px] font-bold text-app-muted-foreground tabular-nums ml-1.5 opacity-70">
                 / {fmt(costPrice)}
               </span>
             )}
           </div>
-
-          {/* Stock Quantity — like "987 sold" in reference */}
-          <div className="flex items-center gap-1">
-            <Package size={11} style={{ color: stockColor }} />
-            <span className="text-[11px] font-bold tabular-nums" style={{ color: stockColor }}>
-              {stockQty} <span className="text-app-muted-foreground">in stock</span>
+          <div className="flex items-center gap-1.5">
+            <Package size={12} style={{ color: stockColor }} />
+            <span className="text-[12px] font-bold tabular-nums" style={{ color: stockColor }}>
+              {stockQty}
+            </span>
+            <span className="text-[10px] font-bold text-app-muted-foreground">
+              in stock
             </span>
           </div>
         </div>
       </div>
 
-      {/* ── 3. ACTION BUTTONS — bottom row, like reference ── */}
-      <div
-        className="flex items-center gap-1.5 px-3 py-2.5"
-        style={{
-          borderTop: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
-        }}
-      >
-        {/* View — primary */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onView() }}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-bold text-white transition-all hover:brightness-110"
-          style={{
-            background: 'var(--app-primary)',
-            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
-          }}
-        >
-          <Eye size={13} />
-          <span>View</span>
-        </button>
+      {/* ── ACTION BUTTONS ──
+       *  Top row: primary actions (View) + status pill (read-only).
+       *  Bottom row: icon-only secondary actions (Edit + Purchase /
+       *  Transfer / Expiry Alert). Splitting into two rows keeps each
+       *  row legible at the 280px card width and matches the same
+       *  ordering used by the list view's expanded row. */}
+      <div className="px-3 pt-2 pb-3 space-y-1.5"
+           style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+        {/* Primary row */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); onView?.(product) }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98]"
+            style={{ background: 'var(--app-primary)' }}
+          >
+            <Eye size={13} />
+            View
+          </button>
+          <div
+            className="flex items-center justify-center px-2.5 py-2 rounded-xl"
+            style={{
+              background: `color-mix(in srgb, ${sc?.color} 10%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${sc?.color} 20%, transparent)`,
+            }}
+          >
+            <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: sc?.color }}>
+              {sc?.label}
+            </span>
+          </div>
+        </div>
 
-        {/* Edit — secondary */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit() }}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-bold transition-all"
-          style={{
-            background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)',
-            color: 'var(--app-info, #3b82f6)',
-            border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
-          }}
-        >
-          <Pencil size={12} />
-          <span>Edit</span>
-        </button>
-
-        {/* Status badge — tertiary slot */}
-        <div
-          className="flex items-center justify-center px-2.5 py-2 rounded-xl"
-          style={{
-            background: `color-mix(in srgb, ${sc?.color} 10%, transparent)`,
-            border: `1px solid color-mix(in srgb, ${sc?.color} 20%, transparent)`,
-          }}
-        >
-          <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: sc?.color }}>
-            {sc?.label}
-          </span>
+        {/* Secondary row — icon-only quick actions, equal-weight grid. */}
+        <div className="grid grid-cols-4 gap-1.5">
+          <CardIconButton
+            label="Edit"
+            icon={<Pencil size={12} />}
+            color="var(--app-muted-foreground)"
+            onClick={(e) => { e.stopPropagation(); onEdit() }}
+          />
+          {onPurchase && (
+            <CardIconButton
+              label="Purchase"
+              icon={<ShoppingCart size={12} />}
+              color="var(--app-info, #3b82f6)"
+              onClick={(e) => { e.stopPropagation(); onPurchase() }}
+            />
+          )}
+          {onTransfer && (
+            <CardIconButton
+              label="Transfer"
+              icon={<ArrowRightLeft size={12} />}
+              color="var(--app-warning, #f59e0b)"
+              onClick={(e) => { e.stopPropagation(); onTransfer() }}
+            />
+          )}
+          {onExpiryAlert && (
+            <CardIconButton
+              label="Expiry alert"
+              icon={<BellRing size={12} />}
+              color="var(--app-error, #ef4444)"
+              onClick={(e) => { e.stopPropagation(); onExpiryAlert() }}
+            />
+          )}
         </div>
       </div>
     </div>
+  )
+})
+
+function CardIconButton({ label, icon, color, onClick }: {
+  label: string
+  icon: React.ReactNode
+  color: string
+  onClick: (e: React.MouseEvent) => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className="flex items-center justify-center py-1.5 rounded-lg transition-all hover:brightness-105 active:scale-[0.95]"
+      style={{
+        background: `color-mix(in srgb, ${color} 8%, transparent)`,
+        color,
+        border: `1px solid color-mix(in srgb, ${color} 18%, transparent)`,
+      }}
+    >
+      {icon}
+    </button>
   )
 }

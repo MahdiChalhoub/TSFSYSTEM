@@ -95,7 +95,7 @@ export default function ProformasPage() {
 
     return (
         <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
-            <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-primary/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-success/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-8">
                 <div className="flex items-start justify-between">
@@ -131,7 +131,7 @@ export default function ProformasPage() {
                             <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)}
                                 className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all" />
                             <textarea placeholder="Notes / description" value={notes} onChange={e => setNotes(e.target.value)} rows={3}
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-foreground resize-none" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint resize-none" />
                             <p className="text-[11px] text-app-muted-foreground">You can add line items after creating the proforma</p>
                             <button type="submit" disabled={creating}
                                 className="w-full bg-app-primary hover:bg-app-primary text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">

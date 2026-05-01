@@ -122,8 +122,8 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                 </td>
                                 <td className="px-4 py-3">
                                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${c.discount_type === 'PERCENT'
-                                        ? 'bg-violet-500/15 text-violet-400 border border-violet-400/20'
-                                        : 'bg-sky-500/15 text-sky-400 border border-sky-400/20'}`}>
+                                        ? 'bg-violet-500/15 text-app-accent border border-violet-400/20'
+                                        : 'bg-sky-500/15 text-app-info border border-sky-400/20'}`}>
                                         {c.discount_type}
                                     </span>
                                 </td>
@@ -132,7 +132,7 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                 </td>
                                 <td className="px-4 py-3 text-[var(--app-text-muted)]">{c.min_order_amount}</td>
                                 <td className="px-4 py-3 text-[var(--app-text-muted)]">
-                                    <span className={c.max_uses && c.used_count >= c.max_uses ? 'text-rose-400' : ''}>
+                                    <span className={c.max_uses && c.used_count >= c.max_uses ? 'text-app-error' : ''}>
                                         {c.used_count}{c.max_uses ? `/${c.max_uses}` : ''}
                                     </span>
                                 </td>
@@ -144,13 +144,13 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                         id={`toggle-coupon-${c.id}`}
                                         className="transition-opacity hover:opacity-80">
                                         {c.is_active
-                                            ? <ToggleRight size={22} className="text-emerald-400" />
+                                            ? <ToggleRight size={22} className="text-app-success" />
                                             : <ToggleLeft size={22} className="text-[var(--app-text-muted)]" />}
                                     </button>
                                 </td>
                                 <td className="px-4 py-3">
                                     <button onClick={() => handleDelete(c.id)} id={`delete-coupon-${c.id}`}
-                                        className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                                        className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-app-error hover:bg-rose-500/10 transition-all">
                                         <Trash2 size={14} />
                                     </button>
                                 </td>
@@ -174,7 +174,7 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                 <p className="text-xs text-[var(--app-text-muted)]">Create a discount code</p>
                             </div>
                         </div>
-                        {error && <p className="text-rose-400 text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
+                        {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
                         <div className="space-y-3">
                             <div>
                                 <label className="app-label">Code</label>

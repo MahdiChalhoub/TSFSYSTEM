@@ -18,11 +18,11 @@ interface Notification {
 }
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
-    ORDER: { icon: ShoppingCart, color: 'text-app-info', bg: 'bg-blue-500/10 border-app-info/20' },
-    PROFORMA: { icon: FileText, color: 'text-app-success', bg: 'bg-app-primary/10 border-app-success/20' },
-    PRICE_REQUEST: { icon: TrendingDown, color: 'text-app-warning', bg: 'bg-amber-500/10 border-app-warning/20' },
+    ORDER: { icon: ShoppingCart, color: 'text-app-info', bg: 'bg-app-info/10 border-app-info/20' },
+    PROFORMA: { icon: FileText, color: 'text-app-success', bg: 'bg-app-success/10 border-app-success/20' },
+    PRICE_REQUEST: { icon: TrendingDown, color: 'text-app-warning', bg: 'bg-app-warning/10 border-app-warning/20' },
     PAYMENT: { icon: Package, color: 'text-app-accent', bg: 'bg-purple-500/10 border-app-accent/20' },
-    SYSTEM: { icon: Info, color: 'text-app-info', bg: 'bg-sky-500/10 border-app-info/20' },
+    SYSTEM: { icon: Info, color: 'text-app-info', bg: 'bg-app-info/10 border-app-info/20' },
 }
 
 function getToken(slug: string): string | null {
@@ -105,7 +105,7 @@ export default function SupplierNotificationsPage() {
 
     return (
         <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
-            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-accent/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-3xl mx-auto relative z-10 space-y-8">
                 <div className="flex items-start justify-between">
@@ -121,7 +121,7 @@ export default function SupplierNotificationsPage() {
                     </div>
                     {unreadCount > 0 && (
                         <button onClick={markAllRead}
-                            className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all flex items-center gap-2">
+                            className="px-5 py-2.5 bg-app-accent text-white rounded-xl text-sm font-bold hover:bg-app-accent transition-all flex items-center gap-2">
                             <CheckCircle2 size={16} /> Mark All Read
                         </button>
                     )}
@@ -133,7 +133,7 @@ export default function SupplierNotificationsPage() {
                         <button key={f} onClick={() => setFilter(f)}
                             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all
                                 ${filter === f
-                                    ? 'bg-indigo-500/20 text-app-accent border border-app-accent/30'
+                                    ? 'bg-app-accent/20 text-app-accent border border-app-accent/30'
                                     : 'bg-app-surface/5 text-app-faint border border-transparent hover:text-white'
                                 }`}>
                             {f === 'all' ? `All (${notifications.length})` : `Unread (${unreadCount})`}
@@ -179,7 +179,7 @@ export default function SupplierNotificationsPage() {
                                                     {n.title}
                                                 </p>
                                                 {!n.is_read && (
-                                                    <div className="w-2 h-2 bg-indigo-500 rounded-full shrink-0" />
+                                                    <div className="w-2 h-2 bg-app-accent rounded-full shrink-0" />
                                                 )}
                                             </div>
                                             <p className={`text-sm mt-1 ${n.is_read ? 'text-app-muted-foreground' : 'text-app-faint'}`}>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
     User, MapPin, Warehouse, UserCheck,
     Settings2, X, Check, ChevronRight, ChevronDown,
-    Building2, Shield, Calendar, Hash, Clock, AlertCircle, Tag,
+    Building2, Shield, Calendar, Hash, Clock, AlertCircle, Tag, Lock,
 } from 'lucide-react'
 import AnalyticsProfileSelector from '@/components/analytics/AnalyticsProfileSelector'
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
@@ -73,7 +73,11 @@ export function AdminSidebar({
     scope, onScopeChange,
     assigneeId, onAssigneeChange,
     driverId, onDriverChange,
-    reference, onReferenceChange,
+    /* Reference is read-only in the panel; the prop stays in the API for
+     * the parent's auto-fill effect (scope toggle rewrites the value
+     * through the parent's setReference, not via this prop). Underscored
+     * to silence the unused-symbol lint. */
+    reference, onReferenceChange: _onReferenceChange,
     supplierRef = '', onSupplierRefChange,
     date, onDateChange,
     expectedDelivery, onExpectedDeliveryChange,
@@ -217,25 +221,36 @@ export function AdminSidebar({
                       summary={stepDone.document
                           ? `${reference}${supplierRef ? ` · ${supplierRef}` : ''} · ${date}`
                           : undefined}>
-                    {/* Primary reference — auto-filled from /settings/sequences,
-                     *  but always hand-editable. The "Auto" pill signals that
-                     *  the value came from the sequence so the operator knows
-                     *  it'll change if they don't override. */}
+                    {/* Primary reference — system-assigned, READ-ONLY.
+                     *  Comes from the tenant's PURCHASE_ORDER sequence in
+                     *  /settings/sequences. Operators can't edit it directly;
+                     *  to capture an alternate id (supplier's PO, internal
+                     *  code) they use the Supplier / Internal ref field
+                     *  below. The `onReferenceChange` prop is still fired
+                     *  by the parent's auto-fill effect when the scope
+                     *  toggle flips OFFICIAL ⇄ INTERNAL. */}
                     <div className="flex items-center justify-between mb-1.5">
                         <label className={labelCls + ' mb-0'}>Reference</label>
-                        <span className="text-tp-xxs font-bold uppercase tracking-widest px-1.5 py-px rounded"
+                        <span className="inline-flex items-center gap-1 text-tp-xxs font-bold uppercase tracking-widest px-1.5 py-px rounded"
                               style={{
                                   background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
                                   color: 'var(--app-primary)',
                               }}
-                              title="Auto-filled from /settings/sequences. Edit to override.">
-                            Auto · editable
+                              title="System-assigned from /settings/sequences. Read-only.">
+                            <Lock size={9} /> Auto
                         </span>
                     </div>
                     <Field icon={<Hash size={11} />}>
-                        <input value={reference} onChange={e => onReferenceChange(e.target.value)}
-                               placeholder="PO Reference / Invoice #"
-                               className={fieldBase + ' pl-8'} style={fieldStyle} />
+                        <input value={reference}
+                               readOnly
+                               aria-readonly
+                               tabIndex={-1}
+                               onChange={() => { /* read-only — handler intentionally a no-op */ }}
+                               className={fieldBase + ' pl-8 cursor-not-allowed select-all'}
+                               style={{
+                                   ...fieldStyle,
+                                   background: 'color-mix(in srgb, var(--app-bg) 60%, var(--app-surface))',
+                               }} />
                     </Field>
 
                     {/* Optional second reference — supplier PO/quote number,
@@ -277,6 +292,7 @@ export function AdminSidebar({
                                 { label: '+15d', from: 'order', delta: 15 },
                             ]}
                             anchorDate={date}
+                            align="end"
                         />
                     </div>
                 </Step>
@@ -524,7 +540,7 @@ function Field({ icon, children }: { icon?: React.ReactNode; children: React.Rea
  * ───────────────────────────────────────────────────────────────────── */
 type QuickAdd = { label: string; from: 'today' | 'order'; delta: number }
 
-function DateField({ label, icon, value, onChange, quickAdds, anchorDate }: {
+function DateField({ label, icon, value, onChange, quickAdds, anchorDate, align = 'start' }: {
     label: string
     icon: React.ReactNode
     value: string
@@ -532,8 +548,15 @@ function DateField({ label, icon, value, onChange, quickAdds, anchorDate }: {
     quickAdds?: QuickAdd[]
     /** Used when a preset's `from` is 'order' — typically the order date. */
     anchorDate?: string
+    /** Which side of the trigger the dropdown anchors to. Use `end` when
+     *  the field sits on the right of a 2-col grid so the menu stays
+     *  inside the parent's overflow box. */
+    align?: 'start' | 'end'
 }) {
     const [open, setOpen] = useState(false)
+    /* `presets` shows the quick-add list. `calendar` shows the themed
+     * mini-calendar (replaces the unstylable native browser picker). */
+    const [mode, setMode] = useState<'presets' | 'calendar'>('presets')
     const wrapperRef = useRef<HTMLDivElement | null>(null)
     const hiddenInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -543,6 +566,7 @@ function DateField({ label, icon, value, onChange, quickAdds, anchorDate }: {
         const onDocClick = (e: MouseEvent) => {
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
                 setOpen(false)
+                setMode('presets')
             }
         }
         document.addEventListener('mousedown', onDocClick)
@@ -565,9 +589,16 @@ function DateField({ label, icon, value, onChange, quickAdds, anchorDate }: {
         : 'Pick a date…'
 
     const openCustomPicker = () => {
+        // Switch to the themed calendar view. Stays inside the same dropdown
+        // surface so the user never leaves the panel's design language.
+        setMode('calendar')
+    }
+
+    /* Legacy native-picker fallback path — kept available behind the helper
+     * but no longer surfaced through the UI. We could remove it once we're
+     * confident the themed calendar covers every workflow. */
+    const _openNativePicker = () => {
         setOpen(false)
-        // Native calendar — `showPicker()` is the modern API; falls back
-        // to a synthesised click for older browsers.
         const el = hiddenInputRef.current
         if (!el) return
         try {
@@ -578,19 +609,25 @@ function DateField({ label, icon, value, onChange, quickAdds, anchorDate }: {
     return (
         <div ref={wrapperRef} className="relative">
             <label className={labelCls}>{label}</label>
-            {/* Trigger — looks identical to the other Field inputs. */}
-            <button type="button"
-                    onClick={() => setOpen(o => !o)}
-                    className={fieldBase + ' pl-8 pr-7 text-left flex items-center'}
-                    style={fieldStyle}>
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none">
+            {/* Trigger inner-wrapper is `relative` so the icon + chevron
+             *  position against the BUTTON's vertical center. Without this
+             *  wrapper, `absolute top-1/2` falls through to the outer
+             *  wrapper which spans label → button → dropdown — the icon
+             *  ends up pinned to the wrapper top, not the button center. */}
+            <div className="relative">
+                <button type="button"
+                        onClick={() => setOpen(o => !o)}
+                        className={fieldBase + ' pl-8 pr-7 text-left'}
+                        style={fieldStyle}>
+                    <span className={value ? '' : 'text-app-muted-foreground/60'}>{display}</span>
+                </button>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none flex items-center">
                     {icon}
                 </span>
-                <span className={value ? '' : 'text-app-muted-foreground/60'}>{display}</span>
                 <ChevronDown size={11}
                              className="absolute right-2 top-1/2 -translate-y-1/2 text-app-muted-foreground transition-transform pointer-events-none"
                              style={{ transform: open ? 'translateY(-50%) rotate(180deg)' : undefined }} />
-            </button>
+            </div>
 
             {/* Hidden native input — only used by the "Custom date…" path. */}
             <input ref={hiddenInputRef} type="date" value={value}
@@ -599,47 +636,279 @@ function DateField({ label, icon, value, onChange, quickAdds, anchorDate }: {
                    tabIndex={-1} aria-hidden />
 
             {open && (
-                <div className="absolute z-30 left-0 right-0 mt-1 rounded-xl shadow-xl overflow-hidden"
+                <div className={`absolute z-30 mt-1.5 rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 ${align === 'end' ? 'right-0' : 'left-0'}`}
                      style={{
+                         /* Min-width frees the menu from the trigger's narrow
+                          * grid cell (each date column is ~140px). When the
+                          * trigger is in the right column the parent passes
+                          * `align="end"` so the menu spills LEFT instead of
+                          * right — that keeps it inside the panel's
+                          * `overflow-hidden` box. */
+                         minWidth: '15rem',
+                         maxWidth: '17rem',
                          background: 'var(--app-surface)',
                          border: `1px solid ${FIRM_DIVIDER}`,
+                         boxShadow: '0 12px 32px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06)',
                      }}>
-                    {/* Quick-add presets */}
-                    {quickAdds && quickAdds.length > 0 && (
-                        <div className="py-1">
-                            {quickAdds.map(q => {
-                                const target = computeDate(q)
-                                const active = value === target
-                                return (
-                                    <button key={q.label} type="button"
-                                            onClick={() => { onChange(target); setOpen(false) }}
-                                            className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-tp-sm font-medium transition-colors hover:bg-app-surface-hover"
-                                            style={active ? { color: 'var(--app-primary)' } : { color: 'var(--app-foreground)' }}>
-                                        <span className="flex items-center gap-2">
-                                            {active && <Check size={11} strokeWidth={3} />}
-                                            <span className={active ? 'font-bold' : ''}>{q.label}</span>
-                                        </span>
-                                        <span className="text-tp-xxs font-mono text-app-muted-foreground">
-                                            {target}
-                                        </span>
-                                    </button>
-                                )
-                            })}
+                    {/* Header — surfaces the current selection prominently.
+                     *  Two-line layout (date on top, relative below) so the
+                     *  long-form date never has to compete for horizontal
+                     *  space with the relative chip. */}
+                    {value && (
+                        <div className="px-3 py-2"
+                             style={{
+                                 background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)',
+                                 borderBottom: `1px solid ${SOFT_DIVIDER}`,
+                             }}>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">
+                                    Current
+                                </div>
+                                <span className="text-tp-xxs font-bold tabular-nums"
+                                      style={{ color: 'var(--app-primary)' }}>
+                                    {relativeFromToday(value)}
+                                </span>
+                            </div>
+                            <div className="text-tp-sm font-bold text-app-foreground mt-0.5">
+                                {formatDateLong(value)}
+                            </div>
                         </div>
                     )}
-                    {/* Custom — opens the native calendar */}
-                    <button type="button"
-                            onClick={openCustomPicker}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-tp-sm font-bold transition-colors hover:bg-app-surface-hover"
-                            style={{
-                                color: 'var(--app-primary)',
-                                borderTop: quickAdds && quickAdds.length > 0 ? `1px solid ${SOFT_DIVIDER}` : undefined,
-                            }}>
-                        <Calendar size={11} />
-                        Custom date…
-                    </button>
+
+                    {mode === 'presets' ? (
+                        <>
+                            {/* Quick-add presets */}
+                            {quickAdds && quickAdds.length > 0 && (
+                                <div className="py-1">
+                                    {quickAdds.map(q => {
+                                        const target = computeDate(q)
+                                        const active = value === target
+                                        return (
+                                            <button key={q.label} type="button"
+                                                    onClick={() => { onChange(target); setOpen(false) }}
+                                                    className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-tp-sm transition-colors hover:bg-app-surface-hover active:scale-[0.98]"
+                                                    style={active
+                                                        ? { color: 'var(--app-primary)', background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)' }
+                                                        : { color: 'var(--app-foreground)' }}>
+                                                <span className="flex items-center gap-2 min-w-0">
+                                                    <span className="w-3 flex-shrink-0 flex items-center justify-center">
+                                                        {active && <Check size={11} strokeWidth={3} />}
+                                                    </span>
+                                                    <span className={active ? 'font-bold' : 'font-medium'}>{q.label}</span>
+                                                    <span className="text-tp-xxs text-app-muted-foreground/70 truncate">
+                                                        {dayOfWeekShort(target)}
+                                                    </span>
+                                                </span>
+                                                <span className="text-tp-xxs font-mono text-app-muted-foreground tabular-nums flex-shrink-0">
+                                                    {target}
+                                                </span>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            )}
+
+                            {/* "Custom date…" — switches to the themed mini-calendar
+                             *  view. We avoid the native browser picker entirely
+                             *  so the surface stays inside the app's design language. */}
+                            <button type="button"
+                                    onClick={openCustomPicker}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-tp-sm font-bold transition-colors hover:bg-app-surface-hover active:scale-[0.98] whitespace-nowrap"
+                                    style={{
+                                        color: 'var(--app-primary)',
+                                        background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)',
+                                        borderTop: quickAdds && quickAdds.length > 0 ? `1px solid ${SOFT_DIVIDER}` : undefined,
+                                    }}>
+                                <Calendar size={12} className="flex-shrink-0" />
+                                <span>Pick exact date…</span>
+                                <ChevronRight size={11} className="ml-auto opacity-60 flex-shrink-0" />
+                            </button>
+                        </>
+                    ) : (
+                        <MiniCalendar
+                            value={value}
+                            onPick={(d) => { onChange(d); setOpen(false); setMode('presets') }}
+                            onBack={() => setMode('presets')}
+                        />
+                    )}
                 </div>
             )}
+        </div>
+    )
+}
+
+/* ── Date formatting helpers — used only by the date dropdown header
+ * and preset row hints. Locale-aware, timezone-safe. */
+function formatDateLong(iso: string): string {
+    return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, {
+        weekday: 'short', year: 'numeric', month: 'short', day: '2-digit',
+    })
+}
+function dayOfWeekShort(iso: string): string {
+    return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' })
+}
+/** "Today", "Tomorrow", "in 5 days", "3 days ago" — short relative phrasing. */
+function relativeFromToday(iso: string): string {
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const target = new Date(iso + 'T00:00:00')
+    const days = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Tomorrow'
+    if (days === -1) return 'Yesterday'
+    if (days > 1) return `in ${days} days`
+    return `${Math.abs(days)} days ago`
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ *  MiniCalendar — themed month grid that replaces the native browser
+ *  calendar picker. ~80 lines, single dependency on date helpers above.
+ *  Locale-aware day-of-week labels via `Intl.DateTimeFormat`.
+ *
+ *  Design philosophy:
+ *    - Same surface as the preset list (no second popover).
+ *    - "Back" pivots to the preset view; "Today" jumps the calendar to
+ *      this month and selects today; the date numbers themselves are the
+ *      primary action.
+ *    - Today is outlined; selected is filled primary. No additional
+ *      decoration so the grid stays calm.
+ * ───────────────────────────────────────────────────────────────────── */
+function MiniCalendar({ value, onPick, onBack }: {
+    value: string
+    onPick: (iso: string) => void
+    onBack: () => void
+}) {
+    const today = useMemo(() => {
+        const d = new Date(); d.setHours(0, 0, 0, 0); return d
+    }, [])
+    /* Anchor the visible month on the selected date when there is one,
+     * otherwise on the current month. */
+    const seedMonth = useMemo(() => {
+        const src = value ? new Date(value + 'T00:00:00') : today
+        return new Date(src.getFullYear(), src.getMonth(), 1)
+    }, [value, today])
+    const [view, setView] = useState<Date>(seedMonth)
+
+    const monthLabel = view.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+    const firstDay = new Date(view.getFullYear(), view.getMonth(), 1)
+    const lastDay = new Date(view.getFullYear(), view.getMonth() + 1, 0)
+    /* Locale-aware short weekday headers (Su/Mo/… or Lu/Ma/… in fr, etc.). */
+    const weekdays = useMemo(() => {
+        const names: string[] = []
+        const sun = new Date(2024, 0, 7) // a known Sunday
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(sun); d.setDate(sun.getDate() + i)
+            names.push(d.toLocaleDateString(undefined, { weekday: 'narrow' }))
+        }
+        return names
+    }, [])
+
+    /* Build a 6-week grid (42 cells). Leading days of the week before the
+     * 1st come from the previous month; trailing days fill the last row. */
+    const cells = useMemo(() => {
+        const out: { date: Date; inMonth: boolean }[] = []
+        const start = new Date(firstDay)
+        start.setDate(start.getDate() - start.getDay()) // back up to Sunday
+        for (let i = 0; i < 42; i++) {
+            const d = new Date(start); d.setDate(start.getDate() + i)
+            out.push({ date: d, inMonth: d.getMonth() === view.getMonth() })
+        }
+        return out
+    }, [firstDay, view])
+
+    const toIso = (d: Date) => {
+        const y = d.getFullYear()
+        const m = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        return `${y}-${m}-${day}`
+    }
+    const valueIso = value
+    const todayIso = toIso(today)
+
+    const shiftMonth = (delta: number) => {
+        setView(v => new Date(v.getFullYear(), v.getMonth() + delta, 1))
+    }
+
+    return (
+        <div className="p-2">
+            {/* Top bar — Back · Month nav. Header text uses short month
+             *  ("May 2026") to fit the compact width. */}
+            <div className="flex items-center gap-0.5 mb-1.5">
+                <button type="button" onClick={onBack}
+                        title="Back to presets"
+                        className="w-6 h-6 flex items-center justify-center rounded-md text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface-hover transition-colors active:scale-[0.95]">
+                    <ChevronRight size={11} className="rotate-180" />
+                </button>
+                <button type="button" onClick={() => shiftMonth(-1)}
+                        title="Previous month"
+                        className="w-6 h-6 flex items-center justify-center rounded-md text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface-hover transition-colors active:scale-[0.95]">
+                    <ChevronRight size={11} className="rotate-180" />
+                </button>
+                <div className="flex-1 text-center text-tp-xs font-bold text-app-foreground select-none truncate">
+                    {monthLabel}
+                </div>
+                <button type="button" onClick={() => shiftMonth(1)}
+                        title="Next month"
+                        className="w-6 h-6 flex items-center justify-center rounded-md text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface-hover transition-colors active:scale-[0.95]">
+                    <ChevronRight size={11} />
+                </button>
+            </div>
+
+            {/* Day-of-week header */}
+            <div className="grid grid-cols-7 gap-px mb-0.5">
+                {weekdays.map((w, i) => (
+                    <div key={i}
+                         className="text-tp-xxs font-bold text-center text-app-muted-foreground/70 py-0.5">
+                        {w}
+                    </div>
+                ))}
+            </div>
+
+            {/* Day grid — square-ish cells (28×26) hit the sweet spot
+             *  between density and tap-target on a 240–272px container. */}
+            <div className="grid grid-cols-7 gap-px">
+                {cells.map(({ date: d, inMonth }, i) => {
+                    const iso = toIso(d)
+                    const isSelected = iso === valueIso
+                    const isToday = iso === todayIso
+                    return (
+                        <button key={i} type="button"
+                                onClick={() => onPick(iso)}
+                                aria-label={d.toLocaleDateString(undefined, { dateStyle: 'full' })}
+                                className="text-tp-xs h-7 rounded-md transition-all active:scale-[0.95] hover:bg-app-surface-hover tabular-nums"
+                                style={isSelected
+                                    ? {
+                                        background: 'var(--app-primary)',
+                                        color: 'white',
+                                        fontWeight: 700,
+                                    }
+                                    : {
+                                        color: inMonth ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
+                                        opacity: inMonth ? 1 : 0.4,
+                                        // Outline today (when not the selected day) so it's
+                                        // discoverable without competing with selection.
+                                        border: isToday && !isSelected
+                                            ? `1px solid color-mix(in srgb, var(--app-primary) 35%, transparent)`
+                                            : '1px solid transparent',
+                                    }}>
+                            {d.getDate()}
+                        </button>
+                    )
+                })}
+            </div>
+
+            {/* Footer — Today / Clear shortcuts */}
+            <div className="flex items-center justify-between mt-2 pt-2"
+                 style={{ borderTop: `1px solid ${SOFT_DIVIDER}` }}>
+                <button type="button" onClick={() => onPick('')}
+                        className="text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground transition-colors px-1.5 py-0.5 rounded">
+                    Clear
+                </button>
+                <button type="button" onClick={() => onPick(todayIso)}
+                        className="text-tp-xs font-bold transition-colors px-1.5 py-0.5 rounded"
+                        style={{ color: 'var(--app-primary)' }}>
+                    Today
+                </button>
+            </div>
         </div>
     )
 }

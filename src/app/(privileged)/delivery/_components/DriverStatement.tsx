@@ -54,7 +54,7 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
 
                     <div className="text-right">
                         <span className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-1 block">Account Balance</span>
-                        <div className={`text-4xl font-black ${currentBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <div className={`text-4xl font-black ${currentBalance >= 0 ? 'text-app-success' : 'text-app-error'}`}>
                             {currentBalance >= 0 ? '+' : ''}{currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg opacity-50 font-medium">USD</span>
                         </div>
                         <p className="text-[10px] text-white/30 mt-2 uppercase tracking-tighter">Due for next payout cycle</p>
@@ -66,7 +66,7 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
             <div className="GlassCard rounded-xl border border-white/5 overflow-hidden">
                 <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5">
                     <h3 className="font-semibold flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-400" />
+                        <FileText className="w-4 h-4 text-app-info" />
                         Transaction History
                     </h3>
                     <div className="flex gap-2">
@@ -74,9 +74,9 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
                             onClick={onLogExpense}
                             className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2 border border-white/10"
                         >
-                            <Fuel className="w-3.5 h-3.5 text-blue-400" /> Log Expense
+                            <Fuel className="w-3.5 h-3.5 text-app-info" /> Log Expense
                         </button>
-                        <button className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                        <button className="px-4 py-2 bg-app-info hover:opacity-90 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
                             <CreditCard className="w-3.5 h-3.5" /> Request Payout
                         </button>
                     </div>
@@ -99,14 +99,14 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
                                     <tr key={entry.id} className="hover:bg-white/[0.04] transition-colors group">
                                         <td className="px-6 py-5">
                                             <p className="text-sm font-medium">{new Date(entry.date).toLocaleDateString()}</p>
-                                            <p className="text-[10px] text-white/30 font-mono mt-0.5 tracking-tight group-hover:text-blue-400 transition-colors uppercase cursor-help">{entry.reference}</p>
+                                            <p className="text-[10px] text-white/30 font-mono mt-0.5 tracking-tight group-hover:text-app-info transition-colors uppercase cursor-help">{entry.reference}</p>
                                         </td>
                                         <td className="px-6 py-5">
                                             <p className="text-sm text-white/80">{entry.description}</p>
                                         </td>
                                         <td className="px-6 py-5">
                                             {parseFloat(entry.debit) > 0 ? (
-                                                <div className="flex items-center gap-2 text-rose-400 font-medium">
+                                                <div className="flex items-center gap-2 text-app-error font-medium">
                                                     <ArrowUpRight className="w-3 h-3" />
                                                     <span>{parseFloat(entry.debit).toLocaleString()}</span>
                                                 </div>
@@ -114,7 +114,7 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
                                         </td>
                                         <td className="px-6 py-5">
                                             {parseFloat(entry.credit) > 0 ? (
-                                                <div className="flex items-center gap-2 text-emerald-400 font-medium">
+                                                <div className="flex items-center gap-2 text-app-success font-medium">
                                                     <ArrowDownLeft className="w-3 h-3" />
                                                     <span>{parseFloat(entry.credit).toLocaleString()}</span>
                                                 </div>
@@ -122,9 +122,9 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
                                         </td>
                                         <td className="px-6 py-5 text-right font-bold text-sm">
                                             {parseFloat(entry.amount) > 0 ? (
-                                                <span className="text-emerald-400">+{parseFloat(entry.amount).toLocaleString()}</span>
+                                                <span className="text-app-success">+{parseFloat(entry.amount).toLocaleString()}</span>
                                             ) : (
-                                                <span className="text-rose-400">{parseFloat(entry.amount).toLocaleString()}</span>
+                                                <span className="text-app-error">{parseFloat(entry.amount).toLocaleString()}</span>
                                             )}
                                         </td>
                                     </tr>

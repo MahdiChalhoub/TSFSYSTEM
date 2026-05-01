@@ -37,28 +37,28 @@ export default function DriverDashboard({ driver, stats, deliveries }: DriverDas
                 <StatCard
                     label="Total Deliveries"
                     value={stats.total_deliveries.toString()}
-                    icon={<Package className="w-5 h-5 text-blue-400" />}
+                    icon={<Package className="w-5 h-5 text-app-info" />}
                     trend="+12% from last month"
                     trendPos={true}
                 />
                 <StatCard
                     label="Deliveries Today"
                     value={stats.today_deliveries.toString()}
-                    icon={<Truck className="w-5 h-5 text-emerald-400" />}
+                    icon={<Truck className="w-5 h-5 text-app-success" />}
                     trend="Currently Active"
                     trendPos={stats.status === 'BUSY'}
                 />
                 <StatCard
                     label="Avg. Transit Time"
                     value={`${stats.avg_delivery_time}m`}
-                    icon={<Clock className="w-5 h-5 text-amber-400" />}
+                    icon={<Clock className="w-5 h-5 text-app-warning" />}
                     trend="-2m from average"
                     trendPos={true}
                 />
                 <StatCard
                     label="Performance Rating"
                     value={`${stats.rating}/5`}
-                    icon={<TrendingUp className="w-5 h-5 text-purple-400" />}
+                    icon={<TrendingUp className="w-5 h-5 text-app-accent" />}
                     trend="Top 10% of fleet"
                     trendPos={true}
                 />
@@ -69,10 +69,10 @@ export default function DriverDashboard({ driver, stats, deliveries }: DriverDas
                 <div className="lg:col-span-2 GlassCard p-6 rounded-xl border border-white/5">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-semibold flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-blue-400" />
+                            <Clock className="w-5 h-5 text-app-info" />
                             Recent Dispatch Activity
                         </h3>
-                        <button className="text-xs text-blue-400 hover:underline">View All History</button>
+                        <button className="text-xs text-app-info hover:underline">View All History</button>
                     </div>
 
                     <div className="space-y-4">
@@ -114,19 +114,19 @@ export default function DriverDashboard({ driver, stats, deliveries }: DriverDas
                 {/* Current Status Tracker */}
                 <div className="GlassCard p-6 rounded-xl border border-white/5">
                     <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        <CheckCircle2 className="w-5 h-5 text-app-success" />
                         Reliability Metrics
                     </h3>
 
                     <div className="space-y-6">
-                        <MetricProgress label="On-Time Delivery" value={94} color="bg-emerald-500" />
-                        <MetricProgress label="Customer Satisfaction" value={88} color="bg-blue-500" />
-                        <MetricProgress label="Compliance Rate" value={100} color="bg-purple-500" />
-                        <MetricProgress label="Fuel Efficiency" value={76} color="bg-amber-500" />
+                        <MetricProgress label="On-Time Delivery" value={94} color="bg-app-success" />
+                        <MetricProgress label="Customer Satisfaction" value={88} color="bg-app-info" />
+                        <MetricProgress label="Compliance Rate" value={100} color="bg-app-accent" />
+                        <MetricProgress label="Fuel Efficiency" value={76} color="bg-app-warning" />
                     </div>
 
-                    <div className="mt-8 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                        <p className="text-xs text-emerald-400 font-medium mb-1">Monthly Bonus Eligibility</p>
+                    <div className="mt-8 p-4 rounded-lg bg-app-success/10 border border-emerald-500/20">
+                        <p className="text-xs text-app-success font-medium mb-1">Monthly Bonus Eligibility</p>
                         <p className="text-xs text-white/70">This driver is eligible for the performance bonus this month based on current metrics.</p>
                     </div>
                 </div>
@@ -146,7 +146,7 @@ function StatCard({ label, value, icon, trend, trendPos }: any) {
             </div>
             <div>
                 <div className="text-2xl font-bold mb-1 tracking-tight">{value}</div>
-                <p className={`text-[10px] ${trendPos ? 'text-emerald-400' : 'text-white/40'}`}>
+                <p className={`text-[10px] ${trendPos ? 'text-app-success' : 'text-white/40'}`}>
                     {trend}
                 </p>
             </div>
@@ -170,20 +170,20 @@ function MetricProgress({ label, value, color }: { label: string, value: number,
 
 function getStatusColor(status: string) {
     switch (status) {
-        case 'DELIVERED': return 'bg-emerald-500';
-        case 'IN_TRANSIT': return 'bg-blue-500';
-        case 'FAILED': return 'bg-rose-500';
+        case 'DELIVERED': return 'bg-app-success';
+        case 'IN_TRANSIT': return 'bg-app-info';
+        case 'FAILED': return 'bg-app-error';
         case 'CANCELLED': return 'bg-white/20';
-        default: return 'bg-amber-500';
+        default: return 'bg-app-warning';
     }
 }
 
 function getStatusBadge(status: string) {
     switch (status) {
-        case 'DELIVERED': return 'bg-emerald-500/20 text-emerald-400';
-        case 'IN_TRANSIT': return 'bg-blue-500/20 text-blue-400';
-        case 'FAILED': return 'bg-rose-500/20 text-rose-400';
+        case 'DELIVERED': return 'bg-app-success/20 text-app-success';
+        case 'IN_TRANSIT': return 'bg-app-info/20 text-app-info';
+        case 'FAILED': return 'bg-app-error/20 text-app-error';
         case 'CANCELLED': return 'bg-white/10 text-white/40';
-        default: return 'bg-amber-500/20 text-amber-400';
+        default: return 'bg-app-warning/20 text-app-warning';
     }
 }

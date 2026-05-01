@@ -47,6 +47,7 @@ import { ProductDetailCards } from './_components/ProductDetailCards'
 import { renderProductCell } from './_components/ProductColumns'
 import { ProductCardGrid } from './_components/ProductCardGrid'
 import { ProductThumbnail } from '@/components/products/ProductThumbnail'
+import { ExpiryAlertDialog } from '@/components/products/ExpiryAlertDialog'
 import { type RequestableProduct } from '@/components/products/RequestProductDialog'
 import { RequestFlowProvider, useRequestFlow } from '@/components/products/RequestFlowProvider'
 
@@ -86,6 +87,11 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [pageSize, setPageSize] = useState(50)
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list')
+  // Card-view-driven dialogs. The list view uses the per-row expanded
+  // ProductDetailCards which has its own dialog state; the card view drives
+  // a single shared ExpiryAlertDialog at the manager level so the user can
+  // trigger it from any card without each card duplicating the modal.
+  const [expiryDialogProduct, setExpiryDialogProduct] = useState<Product | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
 
   // ── SaaS ListViewPolicy enforcement ──
@@ -354,13 +360,50 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
         />
       )}
     >
-      {/* ═══════════════ CARD VIEW (overlay when active) ═══════════════ */}
+      {/* ═══════════════ CARD VIEW (overlay when active) ═══════════════
+       *  Renders the same Search + Filters + Customize toolbar as the
+       *  list view so the operator never loses these affordances when
+       *  switching between presentations. The toolbar is also wired to
+       *  the SAME state (search / showFilters / activeFilterCount /
+       *  visibleColumns / etc.) — flipping back to list keeps every
+       *  control in place. */}
       {viewMode === 'card' && (
-        <ProductCardGrid
-          data={paginated}
-          loading={loading}
-          onView={product => router.push(`/inventory/products/${product.id}`)}
-          onEdit={product => router.push(`/inventory/products/${product.id}`)}
+        <>
+          <CardViewToolbar
+              search={search}
+              onSearchChange={setSearch}
+              searchRef={searchRef}
+              showFilters={showFilters}
+              onToggleFilters={() => setShowFilters(!showFilters)}
+              activeFilterCount={activeFilterCount}
+              hasFilters={hasFilters}
+              onClearFilters={() => { setSearch(''); setFilters(EMPTY_FILTERS) }}
+              onToggleCustomize={() => setShowCustomize(true)}
+          />
+          <ProductCardGrid
+              data={paginated}
+              loading={loading}
+              onView={product => router.push(`/inventory/products/${product.id}`)}
+              onEdit={product => router.push(`/inventory/products/${product.id}`)}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onPurchase={(product) => triggerRequest('PURCHASE', [toRequestable(product)])}
+              onTransfer={(product) => triggerRequest('TRANSFER', [toRequestable(product)])}
+              onExpiryAlert={(product) => setExpiryDialogProduct(product)}
+          />
+        </>
+      )}
+
+      {/* Single ExpiryAlertDialog at the manager level — every card
+       *  triggers it through `setExpiryDialogProduct`, so we don't pay
+       *  the cost of mounting one dialog per card row. */}
+      {expiryDialogProduct && (
+        <ExpiryAlertDialog
+          open={!!expiryDialogProduct}
+          onClose={() => setExpiryDialogProduct(null)}
+          productId={expiryDialogProduct.id}
+          productName={expiryDialogProduct.name}
+          productSku={expiryDialogProduct.sku}
         />
       )}
 
@@ -468,5 +511,59 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
         activeProfileId={activeProfileId} setActiveProfileId={setActiveProfileId}
         policyHiddenColumns={policyHiddenColumns} policyHiddenFilters={policyHiddenFilters} />
     </DajingoPageShell>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ *  CardViewToolbar — search + filters + customize, mirroring the
+ *  DajingoListView toolbar visually so the user never feels they
+ *  switched tools when flipping between list and card presentations.
+ *  Single-source-of-truth state (search/filters/etc.) lives in the
+ *  manager; this component is purely view glue.
+ * ───────────────────────────────────────────────────────────────────── */
+function CardViewToolbar({
+  search, onSearchChange, searchRef,
+  showFilters, onToggleFilters, activeFilterCount,
+  hasFilters, onClearFilters, onToggleCustomize,
+}: {
+  search: string
+  onSearchChange: (v: string) => void
+  searchRef: React.RefObject<HTMLInputElement | null>
+  showFilters: boolean
+  onToggleFilters: () => void
+  activeFilterCount: number
+  hasFilters: boolean
+  onClearFilters: () => void
+  onToggleCustomize: () => void
+}) {
+  return (
+    <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5 border-b border-app-border/40">
+      <div className="flex-1 relative min-w-0">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+        <input ref={searchRef} type="text" value={search}
+               onChange={e => onSearchChange(e.target.value)}
+               placeholder="Search by name, SKU, or barcode… (Ctrl+K)"
+               className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
+      </div>
+      <button onClick={onToggleFilters}
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl border transition-all flex-shrink-0 ${showFilters ? 'border-app-primary text-app-primary' : 'border-app-border text-app-muted-foreground hover:text-app-foreground'}`}
+              style={showFilters ? { background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)' } : {}}>
+        <SlidersHorizontal size={13} /><span className="hidden sm:inline">Filters</span>
+        {activeFilterCount > 0 && (
+          <span className="text-[9px] font-black bg-app-primary text-white px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>
+        )}
+      </button>
+      {hasFilters && (
+        <button onClick={onClearFilters}
+                className="text-[11px] font-bold px-2 py-2 rounded-xl border transition-all flex-shrink-0"
+                style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 20%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
+          <X size={13} />
+        </button>
+      )}
+      <button onClick={onToggleCustomize} title="Customize Columns"
+              className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
+        <Settings2 size={13} /><span className="hidden sm:inline">Customize</span>
+      </button>
+    </div>
   )
 }

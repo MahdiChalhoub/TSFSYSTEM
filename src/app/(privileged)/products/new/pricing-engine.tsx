@@ -152,11 +152,11 @@ export default function PricingEngine({
 
     // Status determination
     const getStatus = () => {
-        if (marginPercent >= 40) return { label: 'Excellent', color: 'text-emerald-600', bg: 'bg-emerald-500', barColor: 'from-emerald-400 to-emerald-600' };
-        if (marginPercent >= 25) return { label: 'Good', color: 'text-blue-600', bg: 'bg-blue-500', barColor: 'from-blue-400 to-blue-600' };
-        if (marginPercent >= 10) return { label: 'Low', color: 'text-amber-600', bg: 'bg-amber-500', barColor: 'from-amber-400 to-amber-600' };
-        if (marginPercent > 0) return { label: 'Thin', color: 'text-orange-600', bg: 'bg-orange-500', barColor: 'from-orange-400 to-orange-600' };
-        return { label: 'Loss', color: 'text-red-600', bg: 'bg-red-500', barColor: 'from-red-400 to-red-600' };
+        if (marginPercent >= 40) return { label: 'Excellent', color: 'text-app-success', bg: 'bg-app-success', barColor: 'from-emerald-400 to-emerald-600' };
+        if (marginPercent >= 25) return { label: 'Good', color: 'text-app-info', bg: 'bg-app-info', barColor: 'from-blue-400 to-blue-600' };
+        if (marginPercent >= 10) return { label: 'Low', color: 'text-app-warning', bg: 'bg-app-warning', barColor: 'from-amber-400 to-amber-600' };
+        if (marginPercent > 0) return { label: 'Thin', color: 'text-app-warning', bg: 'bg-app-warning', barColor: 'from-orange-400 to-orange-600' };
+        return { label: 'Loss', color: 'text-app-error', bg: 'bg-app-error', barColor: 'from-red-400 to-red-600' };
     };
     const status = getStatus();
 
@@ -282,7 +282,7 @@ export default function PricingEngine({
                             step="0.01"
                             value={localMargin}
                             onChange={e => handleMarginChange(e.target.value)}
-                            className={metricInput + (marginPercent < 0 ? ' !text-red-500 !border-red-300' : '')}
+                            className={metricInput + (marginPercent < 0 ? ' !text-app-error !border-app-error' : '')}
                             placeholder="0.00"
                         />
                         <span className="absolute right-3 top-[8px] text-app-muted-foreground text-[11px] font-bold">%</span>
@@ -297,7 +297,7 @@ export default function PricingEngine({
                             step="0.01"
                             value={localMarkup}
                             onChange={e => handleMarkupChange(e.target.value)}
-                            className={metricInput + (markupPercent < 0 ? ' !text-red-500 !border-red-300' : '')}
+                            className={metricInput + (markupPercent < 0 ? ' !text-app-error !border-app-error' : '')}
                             placeholder="0.00"
                         />
                         <span className="absolute right-3 top-[8px] text-app-muted-foreground text-[11px] font-bold">%</span>

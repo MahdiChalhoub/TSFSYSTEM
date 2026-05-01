@@ -57,7 +57,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
 
     const fFee = (v: string) => {
         const n = parseFloat(v)
-        return n === 0 ? <span className="text-emerald-400 font-bold text-xs">FREE</span> : n.toLocaleString()
+        return n === 0 ? <span className="text-app-success font-bold text-xs">FREE</span> : n.toLocaleString()
     }
 
     return (
@@ -181,11 +181,11 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                     </td>
                                     <td className="px-4 py-3 text-[var(--app-text-muted)]">{r.sort_order}</td>
                                     <td className="px-4 py-3">
-                                        <span className={`w-2 h-2 rounded-full inline-block ${r.is_active ? 'bg-emerald-400' : 'bg-[var(--app-border)]'}`} />
+                                        <span className={`w-2 h-2 rounded-full inline-block ${r.is_active ? 'bg-app-success' : 'bg-[var(--app-border)]'}`} />
                                     </td>
                                     <td className="px-4 py-3">
                                         <button onClick={() => handleDelete(r.id)} id={`delete-rate-${r.id}`}
-                                            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                                            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-app-error hover:bg-rose-500/10 transition-all">
                                             <Trash2 size={14} />
                                         </button>
                                     </td>
@@ -209,7 +209,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                 <p className="text-xs text-[var(--app-text-muted)]">{selectedZone?.name}</p>
                             </div>
                         </div>
-                        {error && <p className="text-rose-400 text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
+                        {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
                         <div className="space-y-3">
                             <p className="text-xs font-semibold text-[var(--app-text-muted)] uppercase tracking-wider">Order Value Range</p>
                             <div className="grid grid-cols-2 gap-3">

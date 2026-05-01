@@ -105,7 +105,7 @@ export default function AssignDriverModal({ order, onClose, onAssigned }: Assign
 
                     <div className="bg-app-background/50 rounded-2xl p-4 mt-6 border border-app-border">
                         <div className="flex items-start gap-3">
-                            <MapPin size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+                            <MapPin size={16} className="text-app-success mt-0.5 shrink-0" />
                             <div>
                                 <p className="text-xs font-bold text-app-foreground truncate max-w-[300px]">{order.address}</p>
                                 <p className="text-[10px] text-app-muted-foreground font-medium">{order.contact_name}</p>
@@ -150,7 +150,7 @@ export default function AssignDriverModal({ order, onClose, onAssigned }: Assign
                                         <div className="w-12 h-12 rounded-xl bg-app-background flex items-center justify-center text-app-primary overflow-hidden border border-app-border">
                                             {driver.full_name.slice(0, 2).toUpperCase()}
                                         </div>
-                                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-app-surface"></div>
+                                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-app-success rounded-full border-2 border-app-surface"></div>
                                     </div>
 
                                     <div className="flex-1">
@@ -183,11 +183,11 @@ export default function AssignDriverModal({ order, onClose, onAssigned }: Assign
 
                 {/* Footer Tip */}
                 <div className="px-8 pb-8 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-app-info-bg flex items-center justify-center text-app-info shrink-0">
                         <AlertCircle size={14} />
                     </div>
                     <p className="text-[10px] text-app-muted-foreground font-medium leading-relaxed">
-                        Only <span className="text-emerald-500 font-black">ONLINE</span> drivers are shown. If a driver is busy or offline, you won't see them in this list to ensure delivery speed.
+                        Only <span className="text-app-success font-black">ONLINE</span> drivers are shown. If a driver is busy or offline, you won't see them in this list to ensure delivery speed.
                     </p>
                 </div>
             </div>

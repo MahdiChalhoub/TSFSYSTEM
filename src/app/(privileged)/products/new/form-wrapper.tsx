@@ -189,7 +189,7 @@ export default function ProductFormWrapper(props: any) {
                         <form action={qFormAction} className="space-y-4">
                             <input type="hidden" name="productType" value="SINGLE" />
                             <div>
-                                <label className="block text-[10px] font-bold text-app-muted-foreground mb-1.5 uppercase tracking-widest">Name <span className="text-red-500">*</span></label>
+                                <label className="block text-[10px] font-bold text-app-muted-foreground mb-1.5 uppercase tracking-widest">Name <span className="text-app-error">*</span></label>
                                 <input
                                     name="name"
                                     type="text"
@@ -202,7 +202,7 @@ export default function ProductFormWrapper(props: any) {
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-app-muted-foreground mb-1.5 uppercase tracking-widest">Selling Price <span className="text-red-500">*</span></label>
+                                <label className="block text-[10px] font-bold text-app-muted-foreground mb-1.5 uppercase tracking-widest">Selling Price <span className="text-app-error">*</span></label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-[14px] text-app-primary font-bold text-[13px]">$</span>
                                     <input
@@ -230,7 +230,7 @@ export default function ProductFormWrapper(props: any) {
                             </div>
 
                             {qState.message && (
-                                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[12px] font-medium">
+                                <div className="p-3 rounded-lg bg-app-error-bg border border-app-error text-app-error text-[12px] font-medium">
                                     {qState.message}
                                 </div>
                             )}

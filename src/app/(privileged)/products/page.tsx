@@ -100,7 +100,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                         <input
                             type="text"
                             placeholder="Search..."
-                            className="w-full pl-12 pr-4 py-3 bg-app-surface rounded-xl border border-app-border focus:border-emerald-500 outline-none transition-all shadow-sm"
+                            className="w-full pl-12 pr-4 py-3 bg-app-surface rounded-xl border border-app-border focus:border-app-primary outline-none transition-all shadow-sm"
                         />
                     </div>
                 </div>
@@ -169,7 +169,7 @@ function ProductRow({ product }: { product: Record<string, any> }) {
                 <div className="flex flex-col gap-1">
                     <span className="font-bold text-app-foreground">{product.name}</span>
                     <span className="text-xs text-app-muted-foreground">{product.brand?.name} ΓÇó {product.category?.name}</span>
-                    {product.productGroupId && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 rounded w-fit">Part of Group</span>}
+                    {product.productGroupId && <span className="text-[10px] bg-app-info-bg text-app-info px-1.5 rounded w-fit">Part of Group</span>}
                 </div>
             </td>
             <td className="py-6 px-8">
@@ -192,7 +192,7 @@ function ProductRow({ product }: { product: Record<string, any> }) {
                 </div>
             </td>
             <td className="py-6 px-8">
-                <span className={`font-bold ${totalStock > 0 ? 'text-emerald-700' : 'text-red-500'}`}>
+                <span className={`font-bold ${totalStock > 0 ? 'text-app-success' : 'text-app-error'}`}>
                     {totalStock} {product.unit?.shortName}
                 </span>
             </td>
@@ -200,14 +200,14 @@ function ProductRow({ product }: { product: Record<string, any> }) {
                 <div className="flex items-center justify-end gap-2">
                     <Link
                         href={`/products/new?cloneId=${product.id}`}
-                        className="p-2 text-app-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                        className="p-2 text-app-muted-foreground hover:text-app-success hover:bg-app-success-bg rounded-lg transition-all"
                         title="Clone Product"
                     >
                         <Copy size={18} />
                     </Link>
                     <Link
                         href={`/products/${product.id}/edit`}
-                        className="p-2 text-app-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        className="p-2 text-app-muted-foreground hover:text-app-info hover:bg-app-info-bg rounded-lg transition-all"
                         title="Edit Product"
                     >
                         <Edit2 size={18} />
@@ -234,7 +234,7 @@ function GroupRow({ group }: { group: Record<string, any> }) {
             <td className="py-6 px-8">
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                        <Layers size={16} className="text-emerald-600" />
+                        <Layers size={16} className="text-app-success" />
                         <span className="font-bold text-app-foreground text-lg">{group.name}</span>
                     </div>
                     <span className="text-xs text-app-muted-foreground pl-6">{group.brand?.name} ΓÇó {group.category?.name}</span>
@@ -257,12 +257,12 @@ function GroupRow({ group }: { group: Record<string, any> }) {
             </td>
             <td className="py-6 px-8">
                 <div className="flex flex-col">
-                    <span className="font-bold text-emerald-800 text-lg">{totalVarStock}</span>
-                    <span className="text-xs text-emerald-600">Total Units</span>
+                    <span className="font-bold text-app-success text-lg">{totalVarStock}</span>
+                    <span className="text-xs text-app-success">Total Units</span>
                 </div>
             </td>
             <td className="py-6 px-8 text-right">
-                <Link href={`/products/groups/${group.id}/edit`} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 flex items-center justify-end gap-1">
+                <Link href={`/products/groups/${group.id}/edit`} className="text-sm font-semibold text-app-success hover:text-app-success flex items-center justify-end gap-1">
                     <Edit2 size={16} /> Edit
                 </Link>
             </td>

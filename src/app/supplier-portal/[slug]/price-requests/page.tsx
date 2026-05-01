@@ -17,10 +17,10 @@ interface PriceRequest {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-    PENDING: 'text-app-warning bg-amber-500/10 border-app-warning/20',
-    APPROVED: 'text-app-success bg-app-primary/10 border-app-success/20',
+    PENDING: 'text-app-warning bg-app-warning/10 border-app-warning/20',
+    APPROVED: 'text-app-success bg-app-success/10 border-app-success/20',
     REJECTED: 'text-app-error bg-red-500/10 border-app-error/20',
-    COUNTER_OFFER: 'text-app-info bg-blue-500/10 border-app-info/20',
+    COUNTER_OFFER: 'text-app-info bg-app-info/10 border-app-info/20',
 }
 
 function getToken(slug: string): string | null {
@@ -112,7 +112,7 @@ export default function PriceRequestsPage() {
 
     return (
         <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
-            <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-warning/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-8">
                 <div className="flex items-start justify-between">
@@ -125,7 +125,7 @@ export default function PriceRequestsPage() {
                         <p className="text-app-muted-foreground text-sm">Request price adjustments for your products</p>
                     </div>
                     <button onClick={() => setShowCreate(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-500 transition-all">
+                        className="flex items-center gap-2 px-6 py-3 bg-app-warning text-white rounded-xl font-bold hover:bg-app-warning transition-all">
                         <Plus size={18} /> New Request
                     </button>
                 </div>
@@ -146,17 +146,17 @@ export default function PriceRequestsPage() {
                         )}
                         <form onSubmit={handleCreate} className="space-y-4">
                             <input type="text" placeholder="Product Name" value={productName} onChange={e => setProductName(e.target.value)} required
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-faint" />
                             <div className="grid grid-cols-2 gap-4">
                                 <input type="number" step="0.01" placeholder="Current Price" value={currentPrice} onChange={e => setCurrentPrice(e.target.value)} required
-                                    className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
+                                    className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-faint" />
                                 <input type="number" step="0.01" placeholder="Proposed Price" value={proposedPrice} onChange={e => setProposedPrice(e.target.value)} required
-                                    className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground" />
+                                    className="bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-faint" />
                             </div>
                             <textarea placeholder="Reason for price change" value={reason} onChange={e => setReason(e.target.value)} required rows={3}
-                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-foreground resize-none" />
+                                className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-warning transition-all placeholder:text-app-faint resize-none" />
                             <button type="submit" disabled={creating}
-                                className="w-full bg-amber-600 hover:bg-amber-500 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+                                className="w-full bg-app-warning hover:bg-app-warning text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
                                 {creating ? <Loader2 className="animate-spin" size={18} /> : <><Send size={18} /> Submit Request</>}
                             </button>
                         </form>

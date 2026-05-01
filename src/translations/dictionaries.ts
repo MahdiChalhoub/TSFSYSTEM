@@ -1515,6 +1515,9 @@ export const dictionaries = {
             },
         },
     },
+
+    // ════ DE — added 2026-05-01 (empty; falls back to English) ════
+    de: {},
 };
 
 export type Dictionary = typeof dictionaries.en;
@@ -1531,4 +1534,6 @@ export const LOCALES: { id: Locale; name: string; flag: string; dir: 'ltr' | 'rt
     { id: 'ar', name: 'العربية',     flag: '🇸🇦', dir: 'rtl' },
     { id: 'es', name: 'Español',    flag: '🇪🇸', dir: 'ltr' },
     { id: 'pt', name: 'Português',  flag: '🇧🇷', dir: 'ltr' },
+
+    { id: "de", name: "Deutsch", flag: "🇩🇪", dir: "ltr" },
 ];
