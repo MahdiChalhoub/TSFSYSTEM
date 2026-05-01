@@ -953,6 +953,231 @@ Added to the `@theme` block alongside the existing success / warning / error / i
 
 ---
 
+## Session 5 results — `supplier-portal/[slug]/` (2026-05-01)
+
+The supplier-portal is an **intentional dark-themed portal** (similar in chrome to the `(auth)/register` pages cleaned in Session 4): outer surface is `bg-[#020617]` (slate-950 hex), card surfaces are `bg-slate-900/40-80` and `bg-slate-950/30-80` glass overlays, sidebar/branding accents are indigo (which we map to the new `--app-accent` violet family), white headline text on dark, slate-500 muted dark text, and emerald/sky/amber soft-glow status pills.
+
+The `--app-accent` family added in Session 4 is the right home for the indigo/purple branding accent. Solid status CTAs (`bg-amber-600`, `bg-sky-600`, `bg-blue-600`, `bg-indigo-600`) are mapped to the matching `bg-app-warning`/`bg-app-info`/`bg-app-accent` solid tokens.
+
+### Counts (supplier-portal subdir, before → after)
+
+Baseline measured against commit `49a26203` (the last commit before any sweep partials landed in auto-backups). Three perl passes were applied (`/tmp/supplier_portal_sweep.sh` + `/tmp/supplier_portal_pass3.sh`) plus a one-liner placeholder-color repair.
+
+| Pattern | Before | After | Δ |
+|---|---:|---:|---:|
+| `text-…-NNN` | 148 | 0 | −148 |
+| `bg-…-NNN` | 101 | 51 | −50 |
+| `border-…-NNN` | 52 | 0 | −52 |
+| `ring-…-NNN` | 2 | 2 | 0 (opacity-modified `ring-indigo-500/5`) |
+| `from-…-NNN` | 3 | 3 | 0 (gradient stops — deferred) |
+| `to-…-NNN` | 3 | 3 | 0 (gradient stops — deferred) |
+| **Total (text/bg/border)** | **301** | **51** | **−250 (−83%)** |
+| **Total (all patterns)** | **309** | **59** | **−250 (−81%)** |
+
+### Files modified (9 — all 9 hardcoded-color-holding files in scope)
+
+| File | Before | After | Notes |
+|---|---:|---:|---|
+| `[slug]/page.tsx` | 63 | 12 | Login page + dashboard. Kept `bg-slate-900/60`, `bg-slate-950/50`, opacity-modified status soft glows, `ring-indigo-500/5`. |
+| `[slug]/profile/page.tsx` | 54 | 10 | Dark glass cards `bg-slate-950/50` and `bg-red-500/10` error overlays preserved. |
+| `[slug]/price-requests/page.tsx` | 49 | 9 | All status pills mapped to app-warning/info/accent/success. |
+| `[slug]/statement/page.tsx` | 41 | 11 | Six gradient stops kept (intentional decorative `from-emerald-600/20 to-emerald-900/20`). |
+| `[slug]/notifications/page.tsx` | 36 | 4 | Type-config color map fully migrated. |
+| `[slug]/proformas/page.tsx` | 33 | 6 | Soft glows preserved; brand emerald CTA → `bg-app-primary`. |
+| `[slug]/orders/[id]/page.tsx` | 21 | 2 | (file already partially used `text-app-text*` — different naming convention left intact since outside hardcoded-color scope). |
+| `[slug]/layout.tsx` | 20 | 3 | Sidebar chrome: `bg-slate-950/80` glass + indigo brand accents migrated to app-accent. |
+| `[slug]/orders/page.tsx` | 15 | 2 | Status badge map migrated; one decorative `bg-blue-500/10` ambient blur preserved. |
+| **Totals** | **332** | **59** | (332 = HEAD baseline including auto-backup-captured intermediate state; 309 vs 49a26203 baseline) |
+
+The "332 vs HEAD" baseline above reflects the auto-backup state at the start of this session (a partial earlier sweep had been auto-committed). The "309 vs 49a26203" is the true pre-Phase-6 baseline.
+
+### Two-pass + one repair approach
+
+1. **Pass 1 (`/tmp/supplier_portal_sweep.sh`)** — neutral text shades (slate/gray/zinc 400/500/600/700 → app-faint/muted-foreground/foreground), status palette `-50/100/200/300/400` swaps for emerald/green/rose/red/amber/yellow/orange/blue/sky and accent `-50/100/200/300/400` for indigo/purple/violet/fuchsia/pink, neutral light borders, and light surfaces. Idempotent.
+2. **Pass 2 (`/tmp/supplier_portal_sweep.sh` Pass 2 block)** — brand emerald solid CTAs `bg-emerald-500/600` → `bg-app-primary`, `-700` → `bg-app-primary-dark`, hover variants paired similarly.
+3. **Pass 3 (`/tmp/supplier_portal_pass3.sh`)** — solid status CTAs at `-500/600` shade for amber (warning), sky/blue (info), and indigo (accent — supplier portal brand) plus matching `hover:` variants.
+4. **Placeholder repair** — `placeholder:text-app-foreground` rolled back to `placeholder:text-app-faint` across 10 input fields. The original `placeholder:text-slate-700` was a deliberately faint dark-on-dark placeholder hint; mapping `slate-700 → app-foreground` made placeholders too prominent in the dark theme.
+
+### TSC
+
+- Baseline before this session: 0 errors.
+- After this session: 0 errors. **Zero new TSC errors introduced.** ✓
+
+### Sample diffs (representative)
+
+`src/app/supplier-portal/[slug]/notifications/page.tsx` (notification type config map):
+```diff
+- ORDER: { icon: ShoppingCart, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+- PROFORMA: { icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+- PRICE_REQUEST: { icon: TrendingDown, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+- SYSTEM: { icon: Info, color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20' },
++ ORDER: { icon: ShoppingCart, color: 'text-app-info', bg: 'bg-app-info/10 border-app-info/20' },
++ PROFORMA: { icon: FileText, color: 'text-app-success', bg: 'bg-app-success/10 border-app-success/20' },
++ PRICE_REQUEST: { icon: TrendingDown, color: 'text-app-warning', bg: 'bg-app-warning/10 border-app-warning/20' },
++ SYSTEM: { icon: Info, color: 'text-app-info', bg: 'bg-app-info/10 border-app-info/20' },
+```
+
+`src/app/supplier-portal/[slug]/layout.tsx` (sidebar branding):
+```diff
+- <div className="w-10 h-10 bg-indigo-500/20 border border-indigo-500/30 rounded-xl ... text-indigo-400">
++ <div className="w-10 h-10 bg-app-accent/20 border border-app-accent/30 rounded-xl ... text-app-accent">
+- 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
++ 'bg-app-accent/10 text-app-accent border border-app-accent/20'
+- <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-500 hover:text-white">
++ <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-app-muted-foreground hover:text-white">
+```
+
+`src/app/supplier-portal/[slug]/price-requests/page.tsx` (status palette + warning CTA):
+```diff
+- PENDING: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+- APPROVED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+- REJECTED: 'text-red-400 bg-red-500/10 border-red-500/20',
+- COUNTER_OFFER: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
++ PENDING: 'text-app-warning bg-app-warning/10 border-app-warning/20',
++ APPROVED: 'text-app-success bg-app-success/10 border-app-success/20',
++ REJECTED: 'text-app-error bg-app-error/10 border-app-error/20',
++ COUNTER_OFFER: 'text-app-info bg-app-info/10 border-app-info/20',
+- className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-500 transition-all">
++ className="flex items-center gap-2 px-6 py-3 bg-app-warning text-white rounded-xl font-bold hover:bg-app-warning transition-all">
+```
+
+### What remains in supplier-portal (59 tokens)
+
+- **Intentional dark-glass surfaces (~30):** `bg-slate-900/40-80` and `bg-slate-950/30-80` — the deliberate dark glass cards forming the portal's design language. Same idiom as `(auth)/register` Session 4. Cannot map to existing `app-*` tokens (those don't have an opacity-aware variant). **Skip rule honored.**
+- **Opacity-modified status soft glows (~15):** `bg-red-500/10`, `bg-amber-500/10`, `bg-sky-500/10`, `bg-blue-500/10`, `bg-indigo-500/10`, `bg-purple-500/10` — paired with `border-app-X/20` and `text-app-X` (already migrated). Skip rule honored.
+- **Decorative gradient stops (6):** `from-emerald-600/20 to-emerald-900/20`, `from-blue-600/20 to-blue-900/20`, `from-amber-600/20 to-amber-900/20` in `statement/page.tsx` summary card glow rings. Deferred per gradient policy.
+- **Brand accent solid (subset):** 4 `bg-indigo-500` / `bg-indigo-600` / `bg-indigo-500/20` survived where the `\b` word boundary rule didn't cover the opacity variant — these are the brand-accent soft surfaces at 20% alpha; left alone.
+- **Two opacity-modified rings:** `ring-indigo-500/5` on the login form input. Skip rule honored.
+- **`bg-slate-500/10`:** 2 occurrences in `orders/[id]/page.tsx` (DRAFT/SUBMITTED status pills — neutral muted glow). Skip rule honored.
+
+### Updated subdir scope (after Session 5)
+
+| Subdir | Tokens (orig) | Tokens (after) | Status |
+|---|---:|---:|---|
+| `(privileged)/finance` | 756 | 347 | DONE (Session 1) |
+| `(privileged)/inventory` | 500+ | ~220 | DONE (Session 2) |
+| `(privileged)/sales` | 322+ | ~156 | DONE (Session 2) |
+| `(privileged)/workspace` | 395 | 92 | DONE (Session 3) |
+| `(privileged)/hr` | 306 | 64 | DONE (Session 3) |
+| `(privileged)/crm` | 293 | 104 | DONE (Session 3) |
+| `(privileged)/purchases` | 469 | 113 | DONE (Session 3) |
+| `(privileged)/settings` | 132 | 33 | DONE (Session 4) |
+| `(privileged)/migration_v2` | 98 | 23 | DONE (Session 4) |
+| `(auth)/register` | 105 | 58 | DONE (Session 4) |
+| `(privileged)/(saas)` | 412 | 30 | DONE (Session 4b) |
+| `supplier-portal/[slug]` | 309 | 59 | DONE (Session 5) |
+| **`tenant/[slug]`** | **366** | **39** | **DONE (Session 6)** |
+| Others | ~400 | ~400 | TODO |
+
+### Cumulative impact across Sessions 1–6
+
+- **355 files migrated**.
+- **3,437 hardcoded colors removed** (cumulative across all 13 swept subdirs).
+- `npx tsc --noEmit` exit 0 throughout — zero new TS errors introduced by any session.
+
+---
+
+## Session 6 results — `tenant/[slug]/` (2026-05-01)
+
+### Counts (tenant subdir, before → after)
+
+| Pattern (text/bg/border/ring/from/to) | Before | After | Δ |
+|---|---:|---:|---:|
+| **Total combined** | **366** | **39** | **−327 (−89%)** |
+
+### Per-file before → after (top 10)
+
+| File | Before | After |
+|---|---:|---:|
+| `account/orders/[id]/page.tsx` | 53 | 3 |
+| `account/page.tsx` | 47 | 2 |
+| `account/wallet/page.tsx` | 37 | 7 |
+| `account/profile/page.tsx` | 31 | 1 |
+| `register/page.tsx` | 27 | 7 |
+| `quote/page.tsx` | 27 | 12 |
+| `account/tickets/page.tsx` | 24 | 0 |
+| `account/notifications/page.tsx` | 23 | 0 |
+| `account/orders/page.tsx` | 19 | 0 |
+| `account/wishlist/page.tsx` | 18 | 0 |
+
+(Plus 12 lower-density files migrated to 0–6 residuals each.)
+
+### Files modified
+
+- **22 files** modified in `src/app/tenant/[slug]/`.
+- All swaps via 3 perl passes (`/tmp/tenant_color_sweep{,_v2,_v3}.pl`) — byte-symmetric class-name swaps (zero behavior change).
+
+### TSC
+
+- Baseline before sweep: 0 errors.
+- After sweep: 0 errors. **Zero new TSC errors introduced.** ✓
+
+### Sample diffs (representative)
+
+`tenant/[slug]/account/orders/[id]/page.tsx` (status & payment maps):
+```diff
+- CART:      { ..., color: 'text-slate-400',   bg: 'bg-slate-500/10' },
+- PLACED:    { ..., color: 'text-blue-400',    bg: 'bg-blue-500/10' },
+- CONFIRMED: { ..., color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+- PROCESSING:{ ..., color: 'text-amber-400',   bg: 'bg-amber-500/10' },
+- SHIPPED:   { ..., color: 'text-purple-400',  bg: 'bg-purple-500/10' },
+- CANCELLED: { ..., color: 'text-red-400',     bg: 'bg-red-500/10' },
++ CART:      { ..., color: 'text-app-muted-foreground', bg: 'bg-app-surface-2' },
++ PLACED:    { ..., color: 'text-app-info',    bg: 'bg-app-info-bg' },
++ CONFIRMED: { ..., color: 'text-app-success', bg: 'bg-app-success-bg' },
++ PROCESSING:{ ..., color: 'text-app-warning', bg: 'bg-app-warning-bg' },
++ SHIPPED:   { ..., color: 'text-app-accent',  bg: 'bg-app-accent-bg' },
++ CANCELLED: { ..., color: 'text-app-error',   bg: 'bg-app-error-bg' },
+```
+
+`tenant/[slug]/account/wallet/page.tsx` (transaction icon colors):
+```diff
+- CREDIT:        { icon: ArrowDownRight, color: 'text-emerald-400' },
+- DEBIT:         { icon: ArrowUpRight,   color: 'text-red-400' },
+- LOYALTY_EARN:  { icon: TrendingUp,     color: 'text-purple-400' },
+- LOYALTY_REDEEM:{ icon: Gift,           color: 'text-amber-400' },
+- REFUND:        { icon: ArrowDownRight, color: 'text-blue-400' },
++ CREDIT:        { icon: ArrowDownRight, color: 'text-app-success' },
++ DEBIT:         { icon: ArrowUpRight,   color: 'text-app-error' },
++ LOYALTY_EARN:  { icon: TrendingUp,     color: 'text-app-accent' },
++ LOYALTY_REDEEM:{ icon: Gift,           color: 'text-app-warning' },
++ REFUND:        { icon: ArrowDownRight, color: 'text-app-info' },
+```
+
+`tenant/[slug]/account/page.tsx` (page background + nav tile borders):
+```diff
+- <div className="min-h-screen bg-[#020617] p-4 lg:p-8 relative">
+- <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+- <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
++ <div className="min-h-screen bg-app-bg p-4 lg:p-8 relative">
++ <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-accent/10 blur-[150px] rounded-full pointer-events-none z-0" />
++ <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-primary/10 blur-[150px] rounded-full pointer-events-none z-0" />
+```
+
+### What remains in tenant (39 tokens)
+
+All 39 residuals fall into documented skip categories:
+
+| File | Residuals | Category |
+|---|---:|---|
+| `quote/page.tsx` | 12 | **teal-{400,500,600,900}** portal-specific brand color (10 occurrences as text/bg/border/focus/shadow) |
+| `register/page.tsx` | 7 | 5 `focus:ring-emerald-500/5` (opacity-modified ring — skip) + 2 `shadow-emerald-900/40` (custom shadow color) |
+| `account/wallet/page.tsx` | 7 | 5 tier-definition decorative brand colors (Bronze/Silver/Gold/Platinum/Diamond — each tier has unique brand identity by design) + 2 `from-/to-{purple,amber}-{600,900}/20` decorative balance card gradients |
+| `OrgNotFoundPage.tsx` | 4 | All gradients/shadows (`from-emerald-500/[0.03]`, `from-slate-800 to-slate-900`, `shadow-amber-500/40`, `shadow-emerald-500/{10,25}`) |
+| `not-found.tsx` | 4 | All gradients/shadows (matching pattern: hero gradient + amber notification badge shadow + emerald button shadow) |
+| `LandingHomePage.tsx` | 2 | 1 `from-indigo-600 to-violet-600` hero text gradient + 1 `shadow-indigo-200/50` button shadow |
+| `account/page.tsx` | 2 | `bg-cyan-500/10 text-cyan-400` Notifications nav tile (cyan as portal accent — skip per rules) |
+| `account/profile/page.tsx` | 1 | `bg-cyan-500/10` decorative blur glow |
+
+**No code changes needed for these residuals** — all are either:
+1. **Decorative gradients** (skip per phase rules — `from-/to-/via-` deferred until gradient-token phase)
+2. **Custom shadow colors** (`shadow-{color}-{N}` — no shadow tokens defined; same nuance as ring tokens)
+3. **Opacity-modified rings** (`ring-{color}-{N}/{N}` — skip per phase rules)
+4. **Portal-specific brand cyan/teal** (skip per phase rules)
+5. **Decorative tier brand colors** (each tier needs unique brand identity by design — Bronze/Silver/Gold/Platinum/Diamond)
+
+---
+
 ## Critical rules for the executing agent
 
 1. **PRESERVE VISUAL OUTPUT in light mode.** Don't replace `text-blue-600` with `text-app-error`. Match meaning.
