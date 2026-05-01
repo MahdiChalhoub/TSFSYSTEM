@@ -36,15 +36,36 @@ export interface ProcurementRequestRecord {
     source_po: number | null
 }
 
-export async function listProcurementRequests(): Promise<ProcurementRequestRecord[]> {
+/**
+ * Result envelope so callers can distinguish "empty" from "failed".
+ * The previous version returned `[]` in both cases — when an auth error,
+ * tenant-context miss, or backend 500 fired, the page rendered the
+ * "No requests yet — go create some" empty state, hiding the real failure.
+ */
+export interface ListResult {
+    data: ProcurementRequestRecord[]
+    error?: string
+    /** Total count from the paginated response, if available. */
+    total?: number
+}
+
+export async function listProcurementRequests(): Promise<ListResult> {
     try {
         const data = await erpFetch('procurement-requests/', { cache: 'no-store' })
-        if (Array.isArray(data)) return data as ProcurementRequestRecord[]
-        if (data && Array.isArray(data.results)) return data.results as ProcurementRequestRecord[]
-        return []
-    } catch (e) {
+        if (Array.isArray(data)) {
+            return { data: data as ProcurementRequestRecord[], total: data.length }
+        }
+        if (data && Array.isArray(data.results)) {
+            return {
+                data: data.results as ProcurementRequestRecord[],
+                total: typeof data.count === 'number' ? data.count : data.results.length,
+            }
+        }
+        return { data: [], total: 0 }
+    } catch (e: any) {
+        const msg = e?.message || 'Failed to load requests'
         console.error('Failed to list procurement requests', e)
-        return []
+        return { data: [], error: msg }
     }
 }
 

@@ -58,6 +58,12 @@ function saveView(view: { visibleColumns: Record<string, boolean>; columnOrder: 
 export default function ProcurementRequestsPage() {
     const [requests, setRequests] = useState<ProcurementRequestRecord[]>([])
     const [loading, setLoading] = useState(true)
+    /* Track the last load's error so the "no requests" empty state can
+     * distinguish "you genuinely have none" from "the request failed".
+     * Without this, an auth/tenant-context/500 error rendered identically
+     * to a real empty list — operators with hundreds of requests were
+     * told "go create one". */
+    const [loadError, setLoadError] = useState<string | null>(null)
     const [search, setSearch] = useState('')
     const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
     const [focusMode, setFocusMode] = useState(false)
@@ -78,7 +84,11 @@ export default function ProcurementRequestsPage() {
 
     const refresh = () => {
         setLoading(true)
-        listProcurementRequests().then(data => { setRequests(data); setLoading(false) })
+        listProcurementRequests().then(result => {
+            setRequests(result.data)
+            setLoadError(result.error || null)
+            setLoading(false)
+        })
     }
     useEffect(() => { refresh() }, [])
 
@@ -254,9 +264,11 @@ export default function ProcurementRequestsPage() {
                 }}
                 emptyIcon={<Inbox size={36} />}
                 emptyMessage={
-                    activeFilterCount > 0 || search
-                        ? 'No requests match the current filters.'
-                        : 'No requests yet — open /inventory/products and click "Request Purchase" or "Request Transfer".'
+                    loadError
+                        ? `Couldn't load requests — ${loadError}. Check your connection or session and refresh.`
+                        : activeFilterCount > 0 || search
+                            ? 'No requests match the current filters.'
+                            : 'No requests yet — open /inventory/products and click "Request Purchase" or "Request Transfer".'
                 }
                 hasFilters={activeFilterCount > 0 || !!search}
                 onClearFilters={() => { setSearch(''); setFilters(EMPTY_FILTERS) }}

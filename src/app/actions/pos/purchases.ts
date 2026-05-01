@@ -3,10 +3,36 @@
 import { erpFetch } from '@/lib/erp-api'
 
 // ── Purchase Orders ─────────────────────────────────────────
-export async function fetchPurchaseOrders(params?: Record<string, string>) {
+
+/**
+ * Result envelope. Lets callers distinguish "loaded an empty list" from
+ * "auth/session/network failure" — without a 500. The previous version
+ * threw on auth errors, and because this is a `'use server'` function
+ * called from the client, an unhandled throw became a `POST 500` in the
+ * browser console (Next.js server-action contract). Wrapping the call
+ * here keeps the UI in graceful-failure territory.
+ */
+export interface FetchResult<T> {
+    data: T
+    error?: string
+    /** Set to true on 401 so the consumer can prompt the user to re-login. */
+    auth?: boolean
+}
+
+export async function fetchPurchaseOrders(
+    params?: Record<string, string>,
+): Promise<FetchResult<any[]>> {
     const query = new URLSearchParams(params || {})
     const url = `purchase-orders/${query.toString() ? `?${query.toString()}` : ''}`
-    return erpFetch(url)
+    try {
+        const data: any = await erpFetch(url)
+        const list = Array.isArray(data) ? data : (data?.results ?? [])
+        return { data: list }
+    } catch (e: any) {
+        const msg = e?.message || 'Failed to fetch purchase orders'
+        const isAuth = /token|auth|401/i.test(msg) || e?.status === 401
+        return { data: [], error: msg, auth: isAuth }
+    }
 }
 
 export async function fetchPurchaseOrder(id: number | string) {

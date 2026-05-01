@@ -157,8 +157,7 @@ export default function ReceivingScreen() {
             try {
                 // Fetch the PO to get warehouse + supplier
                 const po = await fetchPurchaseOrders()
-                const poList = Array.isArray(po) ? po : (po?.results ?? [])
-                const targetPO = poList.find((p: any) => String(p.id) === fromPO)
+                const targetPO = po.data.find((p: any) => String(p.id) === fromPO)
 
                 const warehouseId = targetPO?.warehouse_id || targetPO?.warehouse?.id || null
                 const supplierId = targetPO?.supplier?.id || targetPO?.supplier_id || null
@@ -190,9 +189,8 @@ export default function ReceivingScreen() {
 
     async function loadPurchaseOrders() {
         try {
-            const data = await fetchPurchaseOrders()
-            const list = Array.isArray(data) ? data : (data?.results ?? [])
-            setPurchaseOrders(list.filter((po: any) =>
+            const result = await fetchPurchaseOrders()
+            setPurchaseOrders(result.data.filter((po: any) =>
                 ['APPROVED', 'SENT', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'].includes(po.status)
             ))
         } catch { setPurchaseOrders([]) }

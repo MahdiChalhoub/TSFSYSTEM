@@ -97,12 +97,8 @@ export default function PurchaseInvoicesPage() {
  const load = useCallback(async () => {
    setLoading(true)
    try {
-     const [poData, legacyData] = await Promise.all([fetchPurchaseOrders(), getLegacyPurchases()])
-     const rawPO: Invoice[] = Array.isArray(poData)
-       ? (poData as Invoice[])
-       : ((poData && typeof poData === 'object' && 'results' in poData && Array.isArray((poData as { results?: unknown[] }).results))
-         ? ((poData as { results: Invoice[] }).results)
-         : [])
+     const [poResult, legacyData] = await Promise.all([fetchPurchaseOrders(), getLegacyPurchases()])
+     const rawPO = poResult.data as Invoice[]
      setOrders([...rawPO, ...legacyData].filter((o: Invoice) => ['RECEIVED', 'INVOICED', 'COMPLETED', 'FINAL'].includes(o.status)))
    } catch { setOrders([]) }
    setLoading(false)

@@ -67,12 +67,8 @@ export default function ReceiptsPage() {
  const load = useCallback(async () => {
    setLoading(true)
    try {
-     const data = await fetchPurchaseOrders()
-     const raw: PO[] = Array.isArray(data)
-       ? (data as PO[])
-       : ((data && typeof data === 'object' && 'results' in data && Array.isArray((data as { results?: unknown[] }).results))
-         ? ((data as { results: PO[] }).results)
-         : [])
+     const result = await fetchPurchaseOrders()
+     const raw = result.data as PO[]
      setOrders(raw.filter((o: PO) => ['ORDERED','CONFIRMED','IN_TRANSIT','PARTIALLY_RECEIVED','RECEIVED'].includes(o.status)))
    }
    catch { setOrders([]) }

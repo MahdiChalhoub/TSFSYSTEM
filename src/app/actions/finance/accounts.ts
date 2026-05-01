@@ -1,7 +1,8 @@
 'use server'
 
-import { erpFetch } from "@/lib/erp-api"
+import { erpFetch, ErpApiError } from "@/lib/erp-api"
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { serialize } from '@/lib/utils'
 import { z } from 'zod'
 
@@ -47,6 +48,12 @@ export async function getChartOfAccounts(includeInactive: boolean = false, scope
             directBalance: Number(acc.temp_balance ?? 0)
         })))
     } catch (error) {
+        // Auth failure = stale/expired token. Force re-auth instead of
+        // silently rendering an empty page (which looks like "no COA data"
+        // and hides the real cause).
+        if (error instanceof ErpApiError && (error.status === 401 || error.status === 403)) {
+            redirect('/login?error=session_expired')
+        }
         console.error("Failed to fetch COA:", error)
         return []
     }

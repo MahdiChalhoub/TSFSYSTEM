@@ -8,9 +8,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import {
-    updateAccountCategory, deleteAccountCategory,
-} from '../accounts/actions'
+import { deleteAccountCategory } from '../accounts/actions'
 import { getIcon, DEFAULT_COLOR } from './_components/constants'
 import { CategoryFormModal, type CategoryFormData } from './_components/CategoryFormModal'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'

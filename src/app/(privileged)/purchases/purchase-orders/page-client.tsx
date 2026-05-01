@@ -76,10 +76,26 @@ export default function PurchaseOrdersManager({
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    try {
-      const data = await fetchPurchaseOrders()
-      setOrders(Array.isArray(data) ? data : data?.results || [])
-    } catch { /* empty */ }
+    const result = await fetchPurchaseOrders()
+    setOrders(result.data)
+    if (result.error) {
+      // Auth failures get a prompt to re-login; everything else gets a
+      // generic toast so the user knows the list isn't authoritative.
+      // Without these, an expired session looked identical to "no POs"
+      // — operators thought their data was gone.
+      const { toast } = await import('sonner')
+      if (result.auth) {
+        toast.error('Session expired', {
+          description: 'Log out and back in to continue.',
+          duration: 8000,
+        })
+      } else {
+        toast.error('Couldn\'t refresh purchase orders', {
+          description: result.error,
+          duration: 6000,
+        })
+      }
+    }
     setLoading(false)
   }, [])
   // Initial data is hydrated SSR via props; only fetch client-side if SSR returned empty.
